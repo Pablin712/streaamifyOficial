@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('empleados', function (Blueprint $table) {
-            $table->id('idempleado'); // Auto-increment primary key
-            $table->string('nombre', 20);
-            $table->string('telefono', 15)->nullable(); // Teléfono opcional
+            $table->id('idemp'); // Cambiado a idemp
+            $table->string('nombreemp', 20); // Cambiado a nombreemp
+            $table->string('telefonoemp', 15)->nullable(); // Cambiado a telefonoemp
             $table->timestamps(); // Incluye columnas created_at y updated_at
         });
     }

@@ -12,40 +12,42 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('servicios', function (Blueprint $table) {
-            $table->string('idservicio', 10)->primary();
-            $table->string('nombre', 20);
-            $table->decimal('completo', 5, 2)->nullable();
-            $table->decimal('precio', 5, 2)->nullable();
-            $table->decimal('combo', 5, 2)->nullable();
-            $table->decimal('reventa', 5, 2)->nullable();
-            $table->decimal('revcomp', 5, 2)->nullable();
+            $table->string('idser', 10)->primary(); // Cambiado a idser
+            $table->string('nombreser', 20); // Cambiado a nombreser
+            $table->decimal('completoser', 5, 2)->nullable(); // Cambiado a completoser
+            $table->decimal('precioser', 5, 2)->nullable(); // Cambiado a precioser
+            $table->decimal('comboser', 5, 2)->nullable(); // Cambiado a comboser
+            $table->decimal('reventaser', 5, 2)->nullable(); // Cambiado a reventaser
+            $table->decimal('revcompser', 5, 2)->nullable(); // Cambiado a revcompser
             $table->timestamps(); // Optional if needed
         });
+
         Schema::create('proveedores', function (Blueprint $table) {
-            $table->id('idproveedor'); // Auto-increment primary key
-            $table->string('nombre', 20);
-            $table->string('telefono', 15)->nullable();
+            $table->id('idpro'); // Cambiado a idpro
+            $table->string('nombrepro', 20); // Cambiado a nombrepro
+            $table->string('telefonopro', 15)->nullable(); // Cambiado a telefonopro
             $table->timestamps(); // Optional if needed
         });
+
         Schema::create('valores', function (Blueprint $table) {
-            $table->string('idvalor', 20)->primary();
-            $table->string('idservicio', 10);
-            $table->unsignedBigInteger('idproveedor');
-            $table->decimal('costo', 5, 2)->nullable();
-            $table->integer('pantmin')->nullable();
-            $table->integer('pantmax')->nullable();
-            $table->integer('meses')->nullable();
+            $table->string('idval', 20)->primary(); // Cambiado a idval
+            $table->string('idser', 10); // Cambiado a idser
+            $table->unsignedBigInteger('idpro'); // Cambiado a idpro
+            $table->decimal('costoval', 5, 2)->nullable(); // Cambiado a costoval
+            $table->integer('pantminval')->nullable(); // Cambiado a pantminval
+            $table->integer('pantmaxval')->nullable(); // Cambiado a pantmaxval
+            $table->integer('mesesval')->nullable(); // Cambiado a mesesval
             $table->timestamps(); // Optional if needed
 
             // Foreign key constraints
-            $table->foreign('idservicio')
-                ->references('idservicio')
+            $table->foreign('idser')
+                ->references('idser')
                 ->on('servicios')
                 ->onDelete('restrict')
                 ->onUpdate('restrict');
 
-            $table->foreign('idproveedor')
-                ->references('idproveedor')
+            $table->foreign('idpro')
+                ->references('idpro')
                 ->on('proveedores')
                 ->onDelete('restrict')
                 ->onUpdate('restrict');
@@ -57,8 +59,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('servicios');
         Schema::dropIfExists('proveedores');
+        Schema::dropIfExists('servicios');
         Schema::dropIfExists('valores');
     }
 };

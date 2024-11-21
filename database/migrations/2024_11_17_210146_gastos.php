@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+
 return new class extends Migration
 {
     /**
@@ -12,21 +13,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tipo_gasto', function (Blueprint $table) {
-            $table->id('idtipo'); // Auto-increment primary key
-            $table->string('detalle', 30);
+            $table->id('idtip'); // Cambiado a idtip
+            $table->string('detalletip', 30); // Cambiado a detalletip
             $table->timestamps(); // Optional: created_at and updated_at
         });
+
         Schema::create('gastos', function (Blueprint $table) {
-            $table->id('idgasto'); // Auto-increment primary key
-            $table->unsignedBigInteger('idtipo'); // Foreign key to tipo_gasto
-            $table->date('fechagasto')->default(DB::raw('CURRENT_DATE'));
-            $table->decimal('monto', 8, 2);
-            $table->string('descripcion', 50)->nullable();
+            $table->id('idgas'); // Cambiado a idgas
+            $table->unsignedBigInteger('idtip'); // Cambiado a idtip
+            $table->date('fechagas')->default(DB::raw('CURRENT_DATE')); // Cambiado a fechagas
+            $table->decimal('montogas', 8, 2); // Cambiado a montogas
+            $table->string('descripciongas', 50)->nullable(); // Cambiado a descripciongas
             $table->timestamps();
 
             // Foreign key constraint
-            $table->foreign('idtipo')
-                ->references('idtipo')
+            $table->foreign('idtip')
+                ->references('idtip')
                 ->on('tipo_gasto')
                 ->onDelete('restrict')
                 ->onUpdate('restrict');
@@ -38,7 +40,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tipo_gasto');
         Schema::dropIfExists('gastos');
+        Schema::dropIfExists('tipo_gasto');
     }
 };

@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('clientes', function (Blueprint $table) {
-            $table->id('idcliente'); // Auto-increment primary key
-            $table->string('nombre', 20);
-            $table->string('telefono', 15)->nullable(); // Teléfono opcional
+            $table->id('idcli'); // Cambiado a idcli
+            $table->string('nombrecli', 20); // Cambiado a nombrecli
+            $table->string('telefonocli', 15)->nullable(); // Cambiado a telefonocli
             $table->timestamps(); // Incluye columnas created_at y updated_at
         });
     }
+
 
     /**
      * Reverse the migrations.
