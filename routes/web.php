@@ -13,6 +13,13 @@ Route::controller(CursoController::class)->group(function(){
     Route::get('/cursos/{curso}', 'show');    
 });
 
+Route::get('/login', function () {
+    return view('auth.login');
+}) -> name('login');
+
+Route::get('/register', function () {
+    return view('auth.register');
+})-> name('register');
 
 /*Route::get('cursos/{curso}', function($curso){
     

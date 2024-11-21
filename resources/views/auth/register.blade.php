@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamify HQ - Registro</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/register_styles.css">
+</head>
+<style>
+    /* Estilización del contenedor principal */
+.main-container {
+    display: flex;
+    width: 80%;
+    margin: 50px auto;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Sección izquierda en blanco */
+.left-section {
+    flex: 1;
+    background-color: #FFFFFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.logo-img {
+    max-width: 90%;
+    height: auto;
+}
+
+/* Sección derecha con fondo degradado */
+.right-section {
+    flex: 1;
+    background: linear-gradient(to bottom, #E4B100, #F2D06B);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.btn-danger-custom {
+    background-color: #D41216;
+    color: #FFFFFF;
+    border: none;
+    width: 100px;
+    height: 40px;
+    margin-bottom: 10px;
+}
+
+.btn-primary-custom {
+    background-color: #274698;
+    color: #FFFFFF;
+    border: none;
+    width: 100px;
+    height: 40px;
+}
+
+.input-field {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+    </style>
+<body>
+
+<div class="main-container">
+    <!-- Sección izquierda con la imagen -->
+    <div class="left-section">
+        <img src="../Imagenes/LogoEmpresa.jpg" alt="Streamify" class="logo-img">
+    </div>
+    
+    <!-- Sección derecha con fondo degradado y el formulario -->
+    <div class="right-section">
+        <form class="form-container">
+            <label class="form-title">Registrarse como admin</label>
+            <br>
+            <label>Nombre</label>
+            <input type="text" name="nombre" class="input-field">
+            <label>Apellido</label>
+            <input type="text" name="apellido" class="input-field">
+            <label>Correo</label>
+            <input type="email" name="correo" class="input-field">
+            <label>Contraseña</label>
+            <input type="password" name="password" class="input-field">
+            <label>Repite la contraseña</label>
+            <input type="password" name="confirm-password" class="input-field">
+            <label>Permiso de registro</label>
+            <input type="text" name="permiso" class="input-field">
+            <br>
+            <button type="submit" class="btn btn-danger-custom">Sign up</button>
+            <br>
+            <p>¿Ya eres un admin?</p>
+            <button type="button" class="btn btn-primary-custom"><a href="{{ route('login') }}">Login</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>
