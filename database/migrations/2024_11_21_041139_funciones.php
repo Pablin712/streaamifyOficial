@@ -21,48 +21,48 @@ return new class extends Migration
             CYCLE;
 
             --OBTIENE EL COSTO QUE SE HA ASUMIDO EN EL MES DE UNA CUENTA ESPECIFICA DEL NEGOCIO
-            CREATE OR REPLACE FUNCTION obtener_costo_mes_actual(id_cuenta_param VARCHAR)
+            CREATE OR REPLACE FUNCTION obtener_costo_mes_actual(idcue_param VARCHAR)
             RETURNS DECIMAL(8,2) AS $$
             BEGIN
                 RETURN COALESCE(
-                    (SELECT SUM(MONTO)
+                    (SELECT SUM(MONTOCOS)
                     FROM COSTOS
-                    WHERE IDCUENTA = id_cuenta_param
-                    AND EXTRACT(MONTH FROM FECHACOSTO) = EXTRACT(MONTH FROM CURRENT_DATE)
-                    AND EXTRACT(YEAR FROM FECHACOSTO) = EXTRACT(YEAR FROM CURRENT_DATE)), 0);
+                    WHERE IDCUE = idcue_param
+                    AND EXTRACT(MONTH FROM FECHACOS) = EXTRACT(MONTH FROM CURRENT_DATE)
+                    AND EXTRACT(YEAR FROM FECHACOS) = EXTRACT(YEAR FROM CURRENT_DATE)), 0);
             END;
             $$ LANGUAGE plpgsql;
 
 
+
             --CONTAR USUARIOS ACTIVOS EN UN PERFIL DE UNA CUENTA
-            CREATE OR REPLACE FUNCTION contar_usuarios_perfil(id_cuenta_param VARCHAR, perfil_numero INTEGER)
+            CREATE OR REPLACE FUNCTION contar_usuarios_perfil(idcue_param VARCHAR, numper INTEGER)
             RETURNS INTEGER AS $$
             BEGIN
                 RETURN COALESCE(
                     (SELECT COUNT(*)
                     FROM DETALLES_VENTA
-                    WHERE IDCUENTA = id_cuenta_param
-                    AND PERFIL = perfil_numero
-                    AND ACTIVO=TRUE), 0);
+                    WHERE IDCUE = idcue_param
+                    AND PERDET = numper
+                    AND ACTIVODET = TRUE), 0);
             END;
             $$ LANGUAGE plpgsql;
 
             --CONTAR USUARIOS ACTIVOS TOTALES EN LA CUENTA
-            CREATE OR REPLACE FUNCTION contar_usuarios_activos(id_cuenta_param VARCHAR)
+            CREATE OR REPLACE FUNCTION contar_usuarios_activos(idcue_param VARCHAR)
             RETURNS INTEGER AS $$
             BEGIN
                 RETURN COALESCE(
                     (SELECT COUNT(*)
                     FROM DETALLES_VENTA
-                    WHERE IDCUENTA = id_cuenta_param
-                    AND ACTIVO = TRUE), 0);
+                    WHERE IDCUE = idcue_param
+                    AND ACTIVODET = TRUE), 0);
             END;
             $$ LANGUAGE plpgsql;
 
-
             --CALCULAR EL TOTAL PAGADO DE UN CLIENTE EN UN MES ESPECIFICO
             CREATE OR REPLACE FUNCTION calcular_total_pagado_mes(
-                cliente_id INTEGER,
+                idcli BIGINT,
                 mes INTEGER,
                 anio INTEGER
             ) RETURNS DECIMAL(10, 2) AS $$
@@ -70,11 +70,11 @@ return new class extends Migration
                 total_pagado DECIMAL(10, 2);
             BEGIN
                 -- Calcular el total pagado por el cliente en el mes y año especificados
-                SELECT COALESCE(SUM(TOTALPAGO), 0) INTO total_pagado
+                SELECT COALESCE(SUM(TOTALPAGOVEN), 0) INTO total_pagado
                 FROM VENTAS
-                WHERE IDCLIENTE = cliente_id
-                AND EXTRACT(MONTH FROM FECHAVENTA) = mes
-                AND EXTRACT(YEAR FROM FECHAVENTA) = anio;
+                WHERE IDCLI = idcli
+                AND EXTRACT(MONTH FROM FECHAVEN) = mes
+                AND EXTRACT(YEAR FROM FECHAVEN) = anio;
 
                 RETURN total_pagado;
             END;
@@ -83,28 +83,34 @@ return new class extends Migration
 
 
 
+
             --FUNCIONES ESPECIALES, ESPECIFICAS PARA LAS ESTADISTICAS
             --A CONTINUACIÓN
             --FUNCIONES DE ESTADÍSTICA
-            CREATE OR REPLACE FUNCTION NUM_CUENTAS_SERVICIO(IDSERVICIO VARCHAR(10))
-            RETURNS INT AS $$
-            DECLARE TOTAL INT;
+            CREATE OR REPLACE FUNCTION num_cuentas_servicio(idser_param VARCHAR(10))
+            RETURNS INTEGER AS $$
+            DECLARE
+                total INTEGER;
             BEGIN
-                IF IDSERVICIO='OTRO' THEN
-                    SELECT COUNT(CU.IDCUENTA) INTO TOTAL FROM CUENTAS CU
-                    JOIN VALORES VA ON CON.IDVALOR=CU.IDVALOR
-                    WHERE VA.IDSERVICIO
-                    NOT IN (
-                            'NETFLIX', 'MAX', 'PRIME', 'DISNEYP','DISNEYS', 'CRUNCHY', 'SPOTIFY', 'MAGIS', 'PARAMOUNT'
-                        );
+                IF idser_param = 'OTRO' THEN
+                    SELECT COUNT(CU.IDCUE) INTO total
+                    FROM CUENTAS CU
+                    JOIN VALORES VA ON VA.IDVAL = CU.IDVAL
+                    WHERE VA.IDSER NOT IN (
+                        'NETFLIX', 'MAX', 'PRIME', 'DISNEYP', 'DISNEYS', 
+                        'CRUNCHY', 'SPOTIFY', 'MAGIS', 'PARAMOUNT'
+                    );
                 ELSE
-                    SELECT COUNT(CU.IDCUENTA) INTO TOTAL FROM CUENTAS CU
-                    JOIN VALORES VA ON VA.IDVALOR=CU.IDVALOR
-                    WHERE VA.IDSERVICIO=NUM_CUENTAS_SERVICIO.IDSERVICIO;
+                    SELECT COUNT(CU.IDCUE) INTO total
+                    FROM CUENTAS CU
+                    JOIN VALORES VA ON VA.IDVAL = CU.IDVAL
+                    WHERE VA.IDSER = idser_param;
                 END IF;
-                RETURN TOTAL;
+
+                RETURN total;
             END;
-            $$ LANGUAGE PLPGSQL;
+            $$ LANGUAGE plpgsql;
+
 
             CREATE OR REPLACE FUNCTION SUMA_INGRESOS_DE_SERVICIO_MES(IDSERVICIO VARCHAR(10), MES INT)
             RETURNS DECIMAL(8,2) AS $$
@@ -133,8 +139,6 @@ return new class extends Migration
                 RETURN TOTAL;
             END;
             $$ LANGUAGE PLPGSQL;
-
-
         ");
     }
 
@@ -146,6 +150,7 @@ return new class extends Migration
         DB::unprepared('
             -- DROP PARA SEQUENCE ventas_diarias_seq
             DROP SEQUENCE IF EXISTS ventas_diarias_seq;
+            DROP SEQUENCE IF EXISTS ventas_diarias_seq CASCADE;
 
             -- DROP PARA FUNCION obtener_costo_mes_actual
             DROP FUNCTION IF EXISTS obtener_costo_mes_actual(VARCHAR);
@@ -157,7 +162,7 @@ return new class extends Migration
             DROP FUNCTION IF EXISTS contar_usuarios_activos(VARCHAR);
 
             -- DROP PARA FUNCION calcular_total_pagado_mes
-            DROP FUNCTION IF EXISTS calcular_total_pagado_mes(INTEGER, INTEGER, INTEGER);
+            DROP FUNCTION IF EXISTS calcular_total_pagado_mes(BIGINT, INTEGER, INTEGER);
 
             -- DROP PARA FUNCION NUM_CUENTAS_SERVICIO
             DROP FUNCTION IF EXISTS NUM_CUENTAS_SERVICIO(VARCHAR);
