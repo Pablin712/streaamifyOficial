@@ -17,7 +17,7 @@ return new class extends Migration
             BEGIN
                 -- Calcula el total de la venta actual
                 UPDATE VENTAS
-                SET TOTALPAGOVEN = (SELECT COALESCE(SUM(MONTODET), 0) 
+                SET TOTALPAGOVEN = (SELECT COALESCE(SUM(MONTODET), 0.00) 
                                     FROM DETALLES_VENTA
                                     WHERE IDVEN = NEW.IDVEN)
                 WHERE IDVEN = NEW.IDVEN;

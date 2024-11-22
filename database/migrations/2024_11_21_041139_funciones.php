@@ -147,10 +147,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        //no se borra la secuencia de la bd, hay que hacerlo manualmente en pgadmin,
+        //solo para ventas_diarias_seq hay que borrar en pgadmin
+        //eliminar secuencia ventas_diarias_seq antes de ejecutar migraciones
         DB::unprepared('
             -- DROP PARA SEQUENCE ventas_diarias_seq
-            DROP SEQUENCE IF EXISTS ventas_diarias_seq;
-            DROP SEQUENCE IF EXISTS ventas_diarias_seq CASCADE;
+            DROP SEQUENCE ventas_diarias_seq CASCADE;
 
             -- DROP PARA FUNCION obtener_costo_mes_actual
             DROP FUNCTION IF EXISTS obtener_costo_mes_actual(VARCHAR);

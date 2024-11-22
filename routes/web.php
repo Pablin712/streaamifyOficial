@@ -3,9 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CursoController;
+use App\Http\Controllers\LoginController;
 use Illuminate\Routing\RouteGroup;
 
 Route::get('/', HomeController::class);
+
+Route::get('/login2',LoginController::class);
 
 Route::controller(CursoController::class)->group(function(){
     Route::get('/cursos', 'index');
