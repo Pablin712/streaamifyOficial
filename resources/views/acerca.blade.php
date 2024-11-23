@@ -1,8 +1,7 @@
 @extends('layouts.layout') 
 @section('title') 
-Home 
+Acerca
 @endsection 
 @section('content') 
-<h1>Home</h1> 
-Bienvenido {{ $nombre ?? "Invitado" }} 
+<h1>Acerca de la empresa</h1> 
 @endsection
