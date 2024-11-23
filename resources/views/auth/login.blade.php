@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Streamify HQ - Login</title>
-    <link rel="stylesheet" href="../../css/login_styles.css">
+    <link rel="stylesheet" href="{{asset('css/login_styles.css')}}">
     
 </head>
 <style>
@@ -85,7 +85,7 @@
 <div class="main-container">
     <!-- Sección izquierda con la imagen -->
     <div class="left-section">
-        <img src="../Imagenes/LogoEmpresa.jpg" alt="Streamify" class="logo-img"> 
+        <img src="{{asset('images/Icono.png')}}" alt="Streamify" class="logo-img"> 
     </div>
     
     <!-- Sección derecha con fondo degradado y el formulario de inicio de sesión -->

@@ -25,22 +25,14 @@ Route::get('/register', function () {
     return view('auth.register');
 })-> name('register');
 
+Route::get('/inicio', function () {
+    //$data = ['user' => 'John Doe'];
+    return view('inicio');
+})->name('inicio');
+
 Route::view('/portafolio','portafolio'); 
 Route::view('/acerca','acerca'); 
 Route::view('/contacto','contacto');
 Route::post('/contacto',[ContactoController::class,'store'])->name('contacto');
 Route::get('/portafolio',PortafolioController::class);
-
-/*Route::get('cursos/{curso}', function($curso){
-    
-});
-
-Route::get('cursos/{curso}/{categoria?}', function ($curso, $categoria = null) {
-    if($categoria){
-        return "Bienvenido al curso $curso, de la categoria $categoria";
-    }
-    else{
-        return "Bienvenido al curso:".$curso;
-    }
-});*/
 ?>

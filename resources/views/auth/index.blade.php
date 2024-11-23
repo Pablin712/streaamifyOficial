@@ -152,7 +152,7 @@
   <form>
     
     <div style="text-align: center;">
-      <img class="mb-4" src="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">
+      <img class="mb-4" src="{{ asset('images/Icono.png') }}" alt="" width="72" height="72">
       <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
     </div>
     

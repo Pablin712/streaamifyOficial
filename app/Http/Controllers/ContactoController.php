@@ -14,5 +14,5 @@ class ContactoController extends Controller
         'contenido'=>'required|min:3' 
         ]); 
         return 'Procesar el formulario'; 
-        }
+    }
 }
