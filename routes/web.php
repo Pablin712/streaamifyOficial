@@ -25,11 +25,26 @@ Route::get('/register', function () {
     return view('auth.register');
 })-> name('register');
 
+
+
+//rutas de navegación en negocio
 Route::get('/inicio', function () {
     //$data = ['user' => 'John Doe'];
     return view('inicio');
 })->name('inicio');
 
+Route::get('/dashboard', function () {
+    //$data = ['user' => 'John Doe'];
+    return view('dashboard');
+})->name('dashboard');
+
+Route::get('/servicios', function () {
+    //$data = ['user' => 'John Doe'];
+    return view('servicios');
+})->name('servicios');
+
+
+//ing Mauricio Rea
 Route::view('/portafolio','portafolio'); 
 Route::view('/acerca','acerca'); 
 Route::view('/contacto','contacto');
