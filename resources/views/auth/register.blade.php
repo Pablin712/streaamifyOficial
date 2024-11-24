@@ -85,7 +85,7 @@
 <div class="main-container">
     <!-- Sección izquierda con la imagen -->
     <div class="left-section">
-        <img src="../Imagenes/LogoEmpresa.jpg" alt="Streamify" class="logo-img">
+        <img src="{{asset('images/Icono.png')}}" alt="Streamify" class="logo-img">
     </div>
     
     <!-- Sección derecha con fondo degradado y el formulario -->
