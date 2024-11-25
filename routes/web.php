@@ -5,8 +5,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\LoginController;
 use Illuminate\Routing\RouteGroup;
-use App\Http\Controllers\PortafolioController; 
-use App\Http\Controllers\ContactoController;
 Route::get('/', HomeController::class);
 
 Route::get('/login2',LoginController::class);
@@ -45,9 +43,4 @@ Route::get('/servicios', function () {
 
 
 //ing Mauricio Rea
-Route::view('/portafolio','portafolio'); 
-Route::view('/acerca','acerca'); 
-Route::view('/contacto','contacto');
-Route::post('/contacto',[ContactoController::class,'store'])->name('contacto');
-Route::get('/portafolio',PortafolioController::class);
 ?>
