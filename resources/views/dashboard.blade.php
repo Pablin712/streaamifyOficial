@@ -2,7 +2,7 @@
 @section('title')
 Dashboard
 @endsection 
-@section('main') 
+@section('main')
 <h1>Revisa los resultados de Streamify HQ</h1>
 <p>a esta pantalla acceden ciertos usuarios</p>
 <h3>Tabla de contabilidad</h3>

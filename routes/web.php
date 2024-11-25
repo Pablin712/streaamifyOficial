@@ -5,15 +5,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CursoController;
 use App\Http\Controllers\LoginController;
 use Illuminate\Routing\RouteGroup;
+use App\Http\Controllers\ServicioController;
+
+
 Route::get('/', HomeController::class);
 
 Route::get('/login2',LoginController::class);
-
-Route::controller(CursoController::class)->group(function(){
-    Route::get('/cursos', 'index');
-    Route::get('/cursos/create', 'create');
-    Route::get('/cursos/{curso}', 'show');    
-});
 
 Route::get('/login', function () {
     return view('auth.login');
@@ -22,8 +19,6 @@ Route::get('/login', function () {
 Route::get('/register', function () {
     return view('auth.register');
 })-> name('register');
-
-
 
 //rutas de navegación en negocio
 Route::get('/inicio', function () {
@@ -36,11 +31,16 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
-Route::get('/servicios', function () {
-    //$data = ['user' => 'John Doe'];
-    return view('servicios');
-})->name('servicios');
+Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
 
+Route::get('/proveedores', function () {
+    //$data = ['user' => 'John Doe'];
+    return view('inventory.proveedores');
+})->name('proveedores');
+Route::get('/valores', function () {
+    //$data = ['user' => 'John Doe'];
+    return view('inventory.valores');
+})->name('valores');
 
 //ing Mauricio Rea
 ?>

@@ -108,10 +108,21 @@
                             </nav>
                         </div>
                         <div class="sb-sidenav-menu-heading">Inventory</div>
-                        <a class="nav-link" href="{{ route('servicios') }}">
-                            <div class="sb-nav-link-icon"><i class="fas fa-concierge-bell"></i></div>
-                            Services
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
+                            <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
+                            Stock
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                         </a>
+                        <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
+                            data-bs-parent="#sidenavAccordion">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="{{route('servicios')}}">Services</a>
+                                <a class="nav-link" href="{{route('proveedores')}}">Proveedores</a>
+                                <a class="nav-link" href="{{route('valores')}}">Values</a>
+                            </nav>
+                        </div>
+
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">
