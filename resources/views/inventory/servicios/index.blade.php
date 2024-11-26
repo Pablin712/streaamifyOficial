@@ -1,5 +1,3 @@
-
-
 @extends('layouts.table')
 @section('title')
     Servicios

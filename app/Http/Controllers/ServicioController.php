@@ -38,7 +38,7 @@ class ServicioController extends Controller
     public function edit($idser)
     {
         $servicio = Servicio::findOrFail($idser);
-        return view('inventory.servicios.index', compact('servicio'));
+        return view('inventory.servicios.edit', compact('servicio'));
     }
 
     public function update(Request $request, $idser)

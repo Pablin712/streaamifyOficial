@@ -2,9 +2,7 @@
 
 @section('title', 'Editar Servicio')
 
-@section('h1')
-    Actualizar Servicio
-@endsection
+@section('h1', 'Editar Servicio')
 
 @section('introduccion')
     Actualiza este servicio con los nuevos datos. Por favor, revisa cuidadosamente los campos antes de guardar los cambios.
@@ -61,7 +59,6 @@
         <button type="submit" class="btn btn-warning">Actualizar</button>
     </form>
 @endsection
-
 @section('pie')
     <p>¿No deseas realizar cambios? Regresa al listado de servicios:</p>
     <a href="{{ route('servicios') }}" class="btn btn-secondary">Volver a Servicios</a>
