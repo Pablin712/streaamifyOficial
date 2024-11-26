@@ -2,11 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CursoController;
 use App\Http\Controllers\LoginController;
 use Illuminate\Routing\RouteGroup;
 use App\Http\Controllers\ServicioController;
-
+use App\Models\Servicio;
 
 Route::get('/', HomeController::class);
 
@@ -31,7 +30,16 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
 
-Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
+//Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
+Route::controller(ServicioController::class)->group(function(){
+    Route::get('/servicios', 'index')->name('servicios');
+    Route::get('/servicios/create', 'create')->name('servicios.create');
+    Route::post('/servicios/createstore', 'store')->name('servicios.store');
+    Route::get('/servicios/{id}/edit', 'edit')->name('servicios.edit');
+    Route::put('/servicios/{id}', 'update')->name('servicios.update');
+    Route::delete('/servicios/{id}', 'destroy')->name('servicios.destroy');
+});
+
 
 Route::get('/proveedores', function () {
     //$data = ['user' => 'John Doe'];
@@ -42,5 +50,4 @@ Route::get('/valores', function () {
     return view('inventory.valores');
 })->name('valores');
 
-//ing Mauricio Rea
 ?>

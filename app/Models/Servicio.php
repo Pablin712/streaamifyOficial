@@ -9,6 +9,11 @@ class Servicio extends Model
     use HasFactory;
     protected $table = 'servicios'; //encargado de administrar la tabla ...
 
+    protected $primaryKey = 'idser'; // Nombre de la clave primaria
+
+    public $incrementing = false; // Si no es incremental, establece esto en false
+    protected $keyType = 'string'; // Si es de tipo string, define esto como 'string'
+
     public $timestamps = true;
 
     // Define los atributos que puedes asignar masivamente
