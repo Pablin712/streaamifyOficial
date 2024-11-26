@@ -158,6 +158,34 @@
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
         crossorigin="anonymous"></script>
     <script src="{{ asset('js/datatables-simple-demo.js') }}"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Espera a que los datos estén disponibles (ajusta el tiempo si es necesario)
+        setTimeout(function () {
+            const dataTableElement = document.querySelector('#datatablesSimple');
+            if (dataTableElement) {
+                const rows = dataTableElement.querySelectorAll('tbody tr');
+                if (rows.length > 0) {
+                    new simpleDatatables.DataTable(dataTableElement, {
+                        searchable: true,
+                        perPageSelect: [5, 10, 20],
+                        labels: {
+                            placeholder: "Buscar...",
+                            perPage: "{select} registros por página",
+                            noRows: "No se encontraron registros.",
+                            info: "Mostrando {start} a {end} de {rows} registros",
+                        },
+                    });
+                } else {
+                    console.warn('La tabla sigue sin filas después del tiempo de espera.');
+                }
+            }
+        }, 500); // Ajusta el tiempo de espera si es necesario
+    });
+</script>
+
+
 </body>
 
 </html>

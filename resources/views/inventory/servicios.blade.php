@@ -1,3 +1,5 @@
+
+
 @extends('layouts.table')
 @section('title')
     Servicios
@@ -21,37 +23,34 @@
 {{-- <a href="{{ route('servicios.create') }}" class="btn btn-primary">Crear Servicio</a> --}}
 @endsection
 @section('table1')
+<table id="datatablesSimple" class="table table-striped table-bordered">
     <thead>
         <tr>
-            <td>Código</td>
-            <td>Nombre</td>
-            <td>PVP completo</td>
-            <td>PVP individual</td>
-            <td>PVP combo</td>
-            <td>Reventa 1 pant</td>
-            <td>Reventa 1 cuent</td>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>PVP completo</th>
+            <th>PVP individual</th>
+            <th>PVP combo</th>
+            <th>Reventa 1 pant</th>
+            <th>Reventa 1 cuent</th>
         </tr>
     </thead>
-    <tfoot>
-        <tr>
-            <td>Código</td>
-            <td>Nombre</td>
-            <td>PVP completo</td>
-            <td>PVP individual</td>
-            <td>PVP combo</td>
-            <td>Reventa 1 pant</td>
-            <td>Reventa 1 cuent</td>
-        </tr>
-    </tfoot>
     <tbody>
-        @foreach ($servicios as $servicio)
-                <tr>
-                    <td>{{ $servicio->idser }}</td>
-                    <td>{{ $servicio->nombreser }}</td>
-                    <td>{{ $servicio->completoser }}</td>
-                    <td>${{ number_format($servicio->precio, 2) }}</td>
-                    
-                </tr>
-            @endforeach
+        @forelse ($servicios as $servicio)
+            <tr>
+                <td>{{ $servicio->idser }}</td>
+                <td>{{ $servicio->nombreser }}</td>
+                <td>${{ number_format($servicio->completoser, 2) }}</td>
+                <td>${{ number_format($servicio->precioser, 2) }}</td>
+                <td>${{ number_format($servicio->comboser, 2) }}</td>
+                <td>${{ number_format($servicio->reventaser, 2) }}</td>
+                <td>${{ number_format($servicio->revcompser, 2) }}</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="7" class="text-center">No hay servicios disponibles.</td>
+            </tr>
+        @endforelse
     </tbody>
+</table>
 @endsection

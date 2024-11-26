@@ -3,6 +3,7 @@
 Tabla de ejemplo
 @endsection 
 @section('main')
+
     <div class="container-fluid px-4">
         <h1 class="mt-4">@yield('h1')</h1>
         <ol class="breadcrumb mb-4">
@@ -26,7 +27,7 @@ Tabla de ejemplo
                 {{-- aqui empieza la tabla, se modifica, en cualquier tabla
                 se debe poner con style id="datatablesSimple"
                 example: <table id="datatablesSimple">--}}
-                <table id="datatablesSimple">
+            
                     @yield('table1')
                 </table>
             </div>
@@ -34,4 +35,5 @@ Tabla de ejemplo
         @yield('table2')
         @yield('table3')
     </div>
+
 @endsection
