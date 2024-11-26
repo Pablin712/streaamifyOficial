@@ -97,6 +97,15 @@
     scroll-behavior: smooth;
   }
 }
+.table-purple {
+  background-color: #800080 !important; /* Morado */
+  color: white; /* Texto blanco para contraste */
+}
+
+.bg-purple {
+  background-color: #800080 !important; /* Morado */
+  color: white; /* Texto blanco */
+}
 
 body {
   margin: 0;

@@ -71,4 +71,12 @@ Route::controller(ClienteController::class)->group(function(){
     Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');
 });
 
+Route::controller(CuentaController::class)->group(function(){
+    Route::get('/cuentas', 'index')->name('cuentas');
+    Route::get('/cuentas/create', 'create')->name('cuentas.create');
+    Route::post('/cuentas/createstore', 'store')->name('cuentas.store');
+    Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');
+    Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
+    Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
+});
 ?>

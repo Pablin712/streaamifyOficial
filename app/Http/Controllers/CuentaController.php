@@ -34,7 +34,7 @@ class CuentaController extends Controller
 
         Cuenta::create($request->all());
 
-        return redirect()->route('cuentas.index')->with('success', 'Cuenta creada con éxito.');
+        return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
     }
 
     // Mostrar formulario para editar una cuenta

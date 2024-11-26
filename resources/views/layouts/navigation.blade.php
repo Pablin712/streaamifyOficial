@@ -104,7 +104,7 @@
                         <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="users.html">Tables and Views</a>
+                                <a class="nav-link" href="{{route('cuentas')}}">Tables and Views</a>
                                 <a class="nav-link" href="settings.html">Active Users</a>
                             </nav>
                         </div>
