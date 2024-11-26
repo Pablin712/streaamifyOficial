@@ -87,7 +87,7 @@
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link" href="layout-static.html">Sales details</a>
-                                <a class="nav-link" href="layout-sidenav-light.html">Customers</a>
+                                <a class="nav-link" href="{{route('clientes')}}">Customers</a>
                             </nav>
                         </div>
                         {{-- Aquí termina el colapsable Sales --}}

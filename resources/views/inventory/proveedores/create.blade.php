@@ -6,7 +6,6 @@
     Aquí puedes guardar un nuevo proveedor. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
 @endsection
 @section('content')
-    <h1>Crear Proveedor</h1>
     <form action="{{ route('proveedores.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3">

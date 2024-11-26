@@ -7,6 +7,7 @@ use Illuminate\Routing\RouteGroup;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ValorController;
+use App\Http\Controllers\ClienteController;
 use App\Models\Servicio;
 
 Route::get('/', HomeController::class);
@@ -58,6 +59,15 @@ Route::controller(ValorController::class)->group(function(){
     Route::get('/valores/{id}/edit', 'edit')->name('valores.edit');
     Route::put('/valores/{id}', 'update')->name('valores.update');
     Route::delete('/valores/{id}', 'destroy')->name('valores.destroy');
+});
+
+Route::controller(ClienteController::class)->group(function(){
+    Route::get('/clientes', 'index')->name('clientes');
+    Route::get('/clientes/create', 'create')->name('clientes.create');
+    Route::post('/clientes/createstore', 'store')->name('clientes.store');
+    Route::get('/clientes/{id}/edit', 'edit')->name('clientes.edit');
+    Route::put('/clientes/{id}', 'update')->name('clientes.update');
+    Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');
 });
 
 ?>

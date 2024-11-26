@@ -8,7 +8,7 @@ class ProveedorController extends Controller
 {
     public function index()
     {
-        $proveedores = Proveedor::paginate();
+        $proveedores = Proveedor::all();
         return view('inventory.proveedores.index', compact('proveedores'));
     }
     // Crear un nuevo proveedor
