@@ -6,6 +6,7 @@ use App\Http\Controllers\LoginController;
 use Illuminate\Routing\RouteGroup;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
+use App\Http\Controllers\ValorController;
 use App\Models\Servicio;
 
 Route::get('/', HomeController::class);
@@ -50,10 +51,13 @@ Route::controller(ProveedorController::class)->group(function(){
     Route::delete('/proveedores/{id}', 'destroy')->name('proveedores.destroy');
 });
 
-
-Route::get('/valores', function () {
-    //$data = ['user' => 'John Doe'];
-    return view('inventory.valores');
-})->name('valores');
+Route::controller(ValorController::class)->group(function(){
+    Route::get('/valores', 'index')->name('valores');
+    Route::get('/valores/create', 'create')->name('valores.create');
+    Route::post('/valores/createstore', 'store')->name('valores.store');
+    Route::get('/valores/{id}/edit', 'edit')->name('valores.edit');
+    Route::put('/valores/{id}', 'update')->name('valores.update');
+    Route::delete('/valores/{id}', 'destroy')->name('valores.destroy');
+});
 
 ?>

@@ -549,3 +549,8 @@ SELECT
     ) AS FACTURADO
 FROM USUARIOS_ACTIVOS U
 GROUP BY U.IDCLIENTE, U.NOMBRE_CLIENTE;
+
+create or replace view view_valores as
+select v.idval,v.idser,p.nombrepro,v.costoval,v.pantmaxval,v.mesesval
+from valores v
+join proveedores p on p.idpro=v.idpro;

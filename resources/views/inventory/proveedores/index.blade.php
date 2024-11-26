@@ -13,7 +13,7 @@ Proveedores
 @section('table1')
 <h1>Proveedores</h1>
 <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Crear Proveedor</a>
-<table class="table table-striped table-bordered">
+<table id="datatablesSimple" class="table table-striped table-bordered">
     <thead>
         <tr>
             <th>ID</th>
