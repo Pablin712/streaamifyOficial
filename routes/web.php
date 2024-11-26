@@ -8,6 +8,7 @@ use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ValorController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\CuentaController;
 use App\Models\Servicio;
 
 Route::get('/', HomeController::class);

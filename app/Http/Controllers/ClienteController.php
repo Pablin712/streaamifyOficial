@@ -26,7 +26,7 @@ class ClienteController extends Controller
 
         Cliente::create($request->all());
 
-        return redirect()->route('proveedores')->with('success', 'Proveedor creado con éxito.');
+        return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
 
     // Editar un cliente existente

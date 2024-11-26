@@ -92,6 +92,7 @@
                         </div>
                         {{-- Aquí termina el colapsable Sales --}}
 
+                        <div class="sb-sidenav-menu-heading">Inventory</div>
                         <!-- Accounts collapsible -->
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseAccounts" aria-expanded="false"
@@ -107,7 +108,6 @@
                                 <a class="nav-link" href="settings.html">Active Users</a>
                             </nav>
                         </div>
-                        <div class="sb-sidenav-menu-heading">Inventory</div>
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
                             <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>

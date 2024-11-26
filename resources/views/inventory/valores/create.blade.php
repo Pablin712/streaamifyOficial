@@ -6,7 +6,6 @@
     Aquí puedes guardar un nuevo valor de servicio. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
 @endsection
 @section('content')
-    <h1>Crear Valor</h1>
     <form action="{{ route('valores.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3">

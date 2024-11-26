@@ -6,7 +6,7 @@
     Aquí puedes registrar un nuevo cliente. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
 @endsection
 @section('content')
-    <form action="{{ route('cliente.store') }}" method="POST">
+    <form action="{{ route('clientes.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3">
             <label for="nombrecli">Nombre</label>
@@ -21,5 +21,5 @@
 @endsection
 @section('pie')
     <p>¿No deseas guardar un cliente? Vuelve a la página de listado:</p>
-    <a href="{{ route('proveedores') }}" class="btn btn-secondary">Volver a Clientes</a>
+    <a href="{{ route('clientes') }}" class="btn btn-secondary">Volver a Clientes</a>
 @endsection
