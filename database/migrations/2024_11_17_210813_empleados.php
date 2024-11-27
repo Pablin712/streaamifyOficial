@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id('idemp'); // Cambiado a idemp
             $table->string('nombreemp', 20); // Cambiado a nombreemp
             $table->string('telefonoemp', 15)->nullable(); // Cambiado a telefonoemp
+            $table->string('usuarioemp',20); //Usuario y Contraseña para Login
+            $table->string('passwordemp',60);
             $table->timestamps(); // Incluye columnas created_at y updated_at
         });
     }
