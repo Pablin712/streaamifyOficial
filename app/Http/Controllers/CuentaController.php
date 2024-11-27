@@ -5,12 +5,25 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cuenta;
 use App\Models\Valor;
+use App\Models\Perfil;
+
 class CuentaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $cuentas = Cuenta::with(['valor'])->get(); // Cargar valor asociado
-        return view('inventory.cuentas.index', compact('cuentas'));
+        // Inicializar una colección vacía para los perfiles
+        $perfiles = collect();
+
+        $idcueSeleccionado = $request->idcue;
+
+        // Verificar si se seleccionó una cuenta para filtrar perfiles
+        if ($idcueSeleccionado) {
+            $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
+        }
+
+        // Pasar las cuentas y los perfiles a la vista
+        return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado'));
     }
 
     // Mostrar formulario para crear una nueva cuenta contratada

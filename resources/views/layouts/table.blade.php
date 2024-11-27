@@ -27,9 +27,7 @@ Tabla de ejemplo
                 {{-- aqui empieza la tabla, se modifica, en cualquier tabla
                 se debe poner con style id="datatablesSimple"
                 example: <table id="datatablesSimple">--}}
-            
-                    @yield('table1')
-                </table>
+                @yield('table1')
             </div>
         </div>
         @yield('table2')

@@ -30,4 +30,8 @@ class Cuenta extends Model
     {
         return $this->belongsTo(Valor::class, 'idval', 'idval');
     }
+    public function costos()
+    {
+        return $this->hasMany(Costo::class, 'idcue', 'idcue');
+    }
 }

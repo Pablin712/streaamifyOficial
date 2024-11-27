@@ -8,6 +8,7 @@ use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ValorController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\CostoController;
 use App\Http\Controllers\CuentaController;
 use App\Models\Servicio;
 
@@ -79,4 +80,13 @@ Route::controller(CuentaController::class)->group(function(){
     Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
     Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
 });
+
+Route::controller(CostoController::class)->group(function(){
+    Route::get('/costos','index')->name('costos');
+    Route::post('/costos', 'store')->name('costos.store');
+    Route::put('/costos/{id}', 'update')->name('costos.update');
+    Route::delete('/costos/{id}','destroy')->name('costos.destroy');
+});
+
+
 ?>

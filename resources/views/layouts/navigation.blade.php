@@ -71,7 +71,7 @@
                         <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="budget.html">Budget</a>
+                                <a class="nav-link" href="{{route('costos')}}">Costs</a>
                                 <a class="nav-link" href="expenses.html">Expenses</a>
                                 <a class="nav-link" href="reports.html">Reports</a>
                             </nav>
@@ -104,7 +104,7 @@
                         <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{route('cuentas')}}">Tables and Views</a>
+                                <a class="nav-link" href="{{route('cuentas')}}">Accounts and profiles</a>
                                 <a class="nav-link" href="settings.html">Active Users</a>
                             </nav>
                         </div>
@@ -184,8 +184,7 @@
         }, 500); // Ajusta el tiempo de espera si es necesario
     });
 </script>
-
-
+@yield('scripts')
 </body>
 
 </html>
