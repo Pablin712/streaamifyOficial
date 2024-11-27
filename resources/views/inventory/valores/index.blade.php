@@ -41,12 +41,12 @@
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>
                     <td>
-                        <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning  " ><i class="fas fa-edit"></i></a>
                         <form action="{{ route('valores.destroy', $valor->idval) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('¿Estás seguro?')">Eliminar</button>
+                            <button type="submit" class="btn btn-danger btn-circle"
+                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>

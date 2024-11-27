@@ -39,11 +39,11 @@
                 <td>${{ number_format($servicio->reventaser, 2) }}</td>
                 <td>${{ number_format($servicio->revcompser, 2) }}</td>
                 <td>
-                    <a href="{{ route('servicios.edit', $servicio->idser) }}" class="btn btn-warning">Editar</a>
+                    <a href="{{ route('servicios.edit', $servicio->idser) }}" class="btn btn-warning  " ><i class="fas fa-edit"></i></a>
                     <form action="{{ route('servicios.destroy', $servicio->idser) }}" method="POST" style="display: inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar este servicio?')">Eliminar</button>
+                        <button type="submit" class="btn btn-danger btn-circle" onclick="return confirm('¿Eliminar este servicio?')"><i class="fas fa-trash"></i></button>
                     </form>
                 </td>
             </tr>

@@ -38,7 +38,7 @@
                     <td>${{ number_format($gasto->montogas, 2) }}</td>
                     <td>
                         <!-- Editar gasto (abre el modal con los datos del gasto) -->
-                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editarGastoModal" 
+                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal" data-bs-target="#editarGastoModal" 
                             data-id="{{ $gasto->idgas }}"
                             data-idtip="{{ $gasto->idtip }}"
                             data-descripciongas="{{ $gasto->descripciongas }}"
@@ -50,7 +50,7 @@
                         <form action="{{ route('gastos.destroy', $gasto->idgas) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro?')">Eliminar</button>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
