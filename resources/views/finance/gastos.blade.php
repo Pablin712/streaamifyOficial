@@ -44,6 +44,7 @@
                             data-descripciongas="{{ $gasto->descripciongas }}"
                             data-montogas="{{ $gasto->montogas }}"
                             data-fechagas="{{ $gasto->fechagas }}">
+                            
                             Editar
                         </button>
                         <!-- Eliminar gasto -->
@@ -155,24 +156,40 @@
 
 @section('scripts')
 <script>
-    // Función para llenar el formulario del modal con los datos del gasto a editar
-    $('#editarGastoModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Botón que abrió el modal
-        var idgas = button.data('id');
-        var idtip = button.data('idtip'); // ID del tipo de gasto
-        var descripciongas = button.data('descripciongas');
-        var montogas = button.data('montogas');
-        var fechagas = button.data('fechagas');
+    $(document).ready(function () {
+        // Función para rellenar el formulario del modal al abrirlo
+        $('#editarGastoModal').on('show.bs.modal', function (event) {
+            // Obtén el elemento que activó el modal (el SVG en este caso)
+            var button = $(event.relatedTarget);
 
-        var modal = $(this);
-        modal.find('#edit_idtip').val(idtip); // Mostrar el ID del tipo de gasto (campo solo lectura)
-        modal.find('#edit_descripciongas').val(descripciongas);
-        modal.find('#edit_montogas').val(montogas);
-        modal.find('#edit_fechagas').val(fechagas);
+            // Extraer los datos del atributo data-*
+            var idgas = button.data('id');
+            var idtip = button.data('idtip');
+            var descripciongas = button.data('descripciongas');
+            var montogas = button.data('montogas');
+            var fechagas = button.data('fechagas');
 
-        // Cambiar la acción del formulario de edición a la ruta del gasto específico
-        var formAction = "{{ route('gastos.update', '') }}/" + idgas;
-        modal.find('#editGastoForm').attr('action', formAction);
+            // Imprime en la consola para depuración
+            console.log('ID Gasto:', idgas);
+            console.log('ID Tipo:', idtip);
+            console.log('Descripción:', descripciongas);
+            console.log('Monto:', montogas);
+            console.log('Fecha:', fechagas);
+
+            // Obtener el modal y rellenar los campos
+            var modal = $(this);
+            modal.find('#edit_idtip').val(idtip);
+            modal.find('#edit_descripciongas').val(descripciongas);
+            modal.find('#edit_montogas').val(montogas);
+            modal.find('#edit_fechagas').val(fechagas);
+
+            // Cambiar la acción del formulario para enviar al endpoint correcto
+            var formAction = "{{ route('gastos.update', '') }}/" + idgas;
+            modal.find('#editarGastoForm').attr('action', formAction);
+        });
     });
 </script>
+
+
+
 @endsection
