@@ -14,11 +14,11 @@ use App\Models\Servicio;
 
 Route::get('/', HomeController::class);
 
-Route::get('/login2',LoginController::class);
 
-Route::get('/login', function () {
-    return view('auth.login');
-}) -> name('login');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
+Route::post('/login', [LoginController::class, 'login']);                      // Procesa el formulario del login
+
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');    // Cierra la sesión
 
 Route::get('/register', function () {
     return view('auth.register');
