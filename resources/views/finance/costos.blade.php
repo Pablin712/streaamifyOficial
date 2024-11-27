@@ -15,7 +15,7 @@
         Crear Costo
     </button>
 @endsection
-
+@section('tablename', 'Costos')
 @section('table1')
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>

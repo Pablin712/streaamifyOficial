@@ -11,7 +11,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CostoController;
 use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\GastoController;
-
+use App\Http\Controllers\TipoGastoController;
 Route::get('/', HomeController::class);
 
 
@@ -93,5 +93,10 @@ Route::controller(GastoController::class)->group(function(){
     Route::put('/gastos/{id}', 'update')->name('gastos.update');
     Route::delete('/gastos/{id}','destroy')->name('gastos.destroy');
 });
-
+Route::controller(TipoGastoController::class)->group(function(){
+    Route::get('/tipos','index')->name('tipos');
+    Route::post('/tipos', 'store')->name('tipos.store');
+    Route::put('/tipos/{id}', 'update')->name('tipos.update');
+    Route::delete('/tipos/{id}','destroy')->name('tipos.destroy');
+});
 ?>
