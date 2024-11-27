@@ -72,7 +72,7 @@
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link" href="{{route('costos')}}">Costs</a>
-                                <a class="nav-link" href="expenses.html">Expenses</a>
+                                <a class="nav-link" href="{{route('gastos')}}">Expenses</a>
                                 <a class="nav-link" href="reports.html">Reports</a>
                             </nav>
                         </div> {{-- finance collapsible end --}}

@@ -53,7 +53,7 @@ class CostoController extends Controller
             'fechacos' => $request->fechacos,
         ]);
 
-        return redirect()->route('costos.index')->with('success', 'Costo actualizado con éxito.');
+        return redirect()->route('costos')->with('success', 'Costo actualizado con éxito.');
     }
 
     public function destroy($idcos)

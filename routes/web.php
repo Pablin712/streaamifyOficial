@@ -10,7 +10,7 @@ use App\Http\Controllers\ValorController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CostoController;
 use App\Http\Controllers\CuentaController;
-use App\Models\Servicio;
+use App\Http\Controllers\GastoController;
 
 Route::get('/', HomeController::class);
 
@@ -87,6 +87,11 @@ Route::controller(CostoController::class)->group(function(){
     Route::put('/costos/{id}', 'update')->name('costos.update');
     Route::delete('/costos/{id}','destroy')->name('costos.destroy');
 });
-
+Route::controller(GastoController::class)->group(function(){
+    Route::get('/gastos','index')->name('gastos');
+    Route::post('/gastos', 'store')->name('gastos.store');
+    Route::put('/gastos/{id}', 'update')->name('gastos.update');
+    Route::delete('/gastos/{id}','destroy')->name('gastos.destroy');
+});
 
 ?>
