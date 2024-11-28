@@ -6,6 +6,7 @@
 
 @section('descripcion')
     <h3>Gestión de Costos</h3>
+    <h4>Iniciado por Pablo Jiménez, terminado por Andrés Rincón</h4>
     <p>Aquí puedes ver todos los costos asociados al negocio y registrar nuevos costos. Si deseas ver los costos de una cuenta específica, selecciona una cuenta en el modal.</p>
 @endsection
 

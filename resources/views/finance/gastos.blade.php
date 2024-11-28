@@ -6,6 +6,7 @@
 
 @section('descripcion')
     <h3>Gestión de Gastos</h3>
+    <h4>Iniciado por Pablo Jiménez, terminado por Andrés Rincón</h4>
     <p>Aquí puedes ver todos los gastos asociados al negocio y registrar nuevos gastos. Si deseas ver los gastos de un tipo
         de gasto específico, selecciona un tipo de gasto en el modal.</p>
 @endsection
@@ -64,6 +65,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <h3>Gestión de Tipos de Gastos</h3>
+            <h4>Realizado por Pablo Jiménez</h4>
             <p>Aquí puedes ver todos los tipos de gastos, describe el tipo de gasto en el modal.</p>
             <div class="form-group mb-3">
                 <!-- Botón para abrir el modal -->

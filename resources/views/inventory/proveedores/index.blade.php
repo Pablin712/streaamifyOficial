@@ -6,8 +6,7 @@ Proveedores
 @section('descripcion')
     <h3>Revisa el inventario</h3>
     <p>a esta pantalla acceden ciertos usuarios</p>
-    <h3>Tabla de proveedores</h3>
-    <p>muestra la tabla de proveedores, un crud</p>
+    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
 @endsection
 @section('tablename', 'Proveedores')
 @section('table1')

@@ -8,9 +8,7 @@
 @section('descripcion')
     <h3>Revisa el inventario</h3>
     <p>a esta pantalla acceden ciertos usuarios</p>
-    <h3>Tabla de Valores de servicios</h3>
-    <p>muestra tabla de los valores que hay para adquirir (se puede agregar botón adquirir, y se agregaría a cuentas y se
-        registra nuevo costo)</p>
+    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
 @endsection
 @section('btncrear')
     <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>

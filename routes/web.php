@@ -11,6 +11,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CostoController;
 use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\GastoController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\TipoGastoController;
 Route::get('/', HomeController::class);
 
@@ -98,5 +99,14 @@ Route::controller(TipoGastoController::class)->group(function(){
     Route::post('/tipos', 'store')->name('tipos.store');
     Route::put('/tipos/{id}', 'update')->name('tipos.update');
     Route::delete('/tipos/{id}','destroy')->name('tipos.destroy');
+});
+//Route::resource('perfil',PerfilController::class);
+Route::controller(PerfilController::class)->group(function(){
+    Route::get('/perfil', 'index')->name('perfil');
+    //Route::get('/perfil/create', 'create')->name('perfil.create');
+    //Route::post('/perfil/createstore', 'store')->name('perfil.store');
+    Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
+    Route::put('/perfil/{id}', 'update')->name('perfil.update');
+    //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
 });
 ?>

@@ -5,8 +5,9 @@
 @section('h1', 'Crear Cuenta')
 
 @section('introduccion')
-    Aquí puedes agregar una nueva cuenta para llenar el stock de cuentas disponibles para los servicios. 
+    Aquí puedes agregar una nueva cuenta para llenar el stock de cuentas disponibles para los servicios.
     Asegúrate de ingresar todos los campos correctamente.
+    En esta vista, se agrega una cuenta a la tabla cuentas, 
 @endsection
 
 @section('content')
@@ -24,7 +25,9 @@
             <label for="idval">ID del Valor</label>
             <select name="idval" id="idval" class="form-control" required>
                 @foreach ($valores as $valor)
-                    <option value="{{ $valor->idval }}">{{ $valor->idval }} - {{ $valor->idser }} ({{ $valor->proveedor->nombrepro }})</option>
+                    <option value="{{ $valor->idval }}">{{ $valor->idval }} - {{ $valor->idser }}
+                        ({{ $valor->proveedor->nombrepro }})
+                    </option>
                 @endforeach
             </select>
         </div>
@@ -56,11 +59,118 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-success">Guardar</button>
+        <!-- Botón para abrir el modal de Costo -->
+        <button type="button" class="btn btn-info mb-3" data-bs-toggle="modal" data-bs-target="#seleccionarCuentaModal">
+            Agregar Costo
+        </button>
+        <!-- Mostrar datos de costo si se ingresaron en el modal -->
+        <div class="form-group mb-3">
+            <label for="descripcioncos">Descripción del Costo</label>
+            <p id="descripcioncos" class="form-control">
+                @if (session('descripcioncos'))
+                    {{ session('descripcioncos') }}
+                @else
+                    No se ha registrado un costo.
+                @endif
+            </p>
+        </div>
+        <div class="form-group mb-3">
+            <label for="montocos">Monto del Costo</label>
+            <p id="montocos" class="form-control">
+                @if (session('montocos'))
+                    ${{ number_format(session('montocos'), 2) }}
+                @else
+                    No se ha registrado un costo.
+                @endif
+            </p>
+        </div>
+
+
+        <button type="submit" class="btn btn-success">Guardar Cuenta</button>
     </form>
+
+    <!-- Modal para crear un nuevo costo -->
+    <div class="modal fade" id="seleccionarCuentaModal" tabindex="-1" aria-labelledby="seleccionarCuentaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="seleccionarCuentaModalLabel">Registrar Costo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('costos.store') }}" method="POST">
+                        @csrf
+                        <!-- Campos del Costo -->
+                        <div class="form-group mb-3">
+                            <label for="descripcioncos">Descripción</label>
+                            <input type="text" name="descripcioncos" id="descripcioncos" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="montocos">Monto</label>
+                            <input type="number" name="montocos" id="montocos" class="form-control" step="0.01"
+                                required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 @endsection
 
 @section('pie')
     <p>¿No deseas agregar una cuenta al stock? Vuelve a la página de listado:</p>
     <a href="{{ route('cuentas') }}" class="btn btn-secondary">Volver a Cuentas</a>
 @endsection
+<script>
+    document.getElementById('seleccionarCuentaModal').addEventListener('show.bs.modal', function(event) {
+        // Obtener el botón que abrió el modal
+        var button = event.relatedTarget;
+
+        // Limpiar los campos del formulario en el modal
+        document.getElementById('descripcioncos').value = '';
+        document.getElementById('montocos').value = '';
+    });
+
+    // Cuando se guarda el costo en el modal
+    document.getElementById('modal-costos-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Evitar el submit para validación antes
+
+        // Obtener los valores de los campos del modal
+        var descripcioncos = document.getElementById('descripcioncos').value;
+        var montocos = document.getElementById('montocos').value;
+
+        // Si hay valores, llenar los campos en el formulario
+        if (descripcioncos && montocos) {
+            document.getElementById('descripcioncos_show').value = descripcioncos;
+            document.getElementById('montocos_show').value = montocos;
+
+            // También podemos agregar los valores al formulario para enviarlos
+            var form = document.getElementById('modal-costos-form');
+            var hiddenInputDesc = document.createElement('input');
+            hiddenInputDesc.type = 'hidden';
+            hiddenInputDesc.name = 'descripcioncos';
+            hiddenInputDesc.value = descripcioncos;
+            form.appendChild(hiddenInputDesc);
+
+            var hiddenInputMonto = document.createElement('input');
+            hiddenInputMonto.type = 'hidden';
+            hiddenInputMonto.name = 'montocos';
+            hiddenInputMonto.value = montocos;
+            form.appendChild(hiddenInputMonto);
+        }
+
+        // Finalmente, cerrar el modal
+        var modal = new bootstrap.Modal(document.getElementById('seleccionarCuentaModal'));
+        modal.hide();
+
+        // Ahora podemos proceder con el submit real
+        form.submit();
+    });
+</script>

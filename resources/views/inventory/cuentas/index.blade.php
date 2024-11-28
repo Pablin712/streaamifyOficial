@@ -8,10 +8,7 @@
     <h3>Revisa las cuentas activas del <strong>Negocio</strong></h3>
     <p>Aquí podrás gestionar las cuentas de usuario asociadas a los servicios de streaming pertenecientes a Streamify HQ.
     </p>
-    <h3>Tabla de Cuentas</h3>
-    <p>En esta tabla puedes ver las cuentas, editar o eliminarlas según sea necesario. Cada cuenta está asociada a un valor
-        (plan de servicio) específico. Abajo de la tabla de cuentas, podrás consultar los perfiles asociadas a una cuenta
-        que seleccionas.</p>
+    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
 @endsection
 
 @section('btncrear')
@@ -27,7 +24,7 @@
                 <th>ID</th>
                 <th>Servicio</th>
                 <th>Usuario</th>
-                <th>Fecha Vencimiento</th>
+                <th>Vencimiento</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -120,6 +117,7 @@
                     <th>Número de Perfil</th>
                     <th>PIN del Perfil</th>
                     <th>Número de Personas Ocupando</th>
+                    <th>Editar</th>
                 </tr>
             </thead>
             <tbody>
@@ -128,6 +126,10 @@
                         <td>{{ $perfil->numeroper }}</td>
                         <td>{{ $perfil->pinper }}</td>
                         <td>1</td> <!-- Cada perfil cuenta como 1 ocupante -->
+                        <td>
+                            {{-- comment <a href="{{ route('perfil.edit', $perfil->id) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                        --}} editar
+                        </td>
                     </tr>
                 @endforeach
             </tbody>

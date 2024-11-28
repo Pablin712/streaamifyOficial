@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Cuenta;
 use App\Models\Valor;
 use App\Models\Perfil;
+use App\Models\Costo;
 
 class CuentaController extends Controller
 {
@@ -36,17 +37,38 @@ class CuentaController extends Controller
     // Guardar una nueva cuenta
     public function store(Request $request)
     {
-        $request->validate([
+        //$request->validate([
+        //    'idcue' => 'required|string|max:20|unique:cuentas,idcue',
+        //    'idval' => 'required|exists:valores,idval',
+        //    'fechavencue' => 'required|date',
+        //    'usuariocue' => 'required|string|max:50',
+        //    'contrasenacue' => 'required|string|max:50',
+        //    'caidacue' => 'required|boolean'
+        //]);
+        // Validar datos de la cuenta
+        $validated = $request->validate([
             'idcue' => 'required|string|max:20|unique:cuentas,idcue',
             'idval' => 'required|exists:valores,idval',
             'fechavencue' => 'required|date',
             'usuariocue' => 'required|string|max:50',
-            'contrasenacue' => 'required|string|max:50',
-            'caidacue' => 'required|boolean|min:1'
+            'contrasenacue' => 'required|string|min:8|max:50',
+            'caidacue' => 'required|boolean',
         ]);
 
-        Cuenta::create($request->all());
+        //Cuenta::create($request->all());
 
+        // Crear la cuenta (otra alternativa)
+        $cuenta = Cuenta::create($validated);
+        // Verificar si se recibieron datos de costo
+        if ($request->has('descripcioncos') && $request->has('montocos')) {
+            // Crear el costo asociado a la cuenta
+            Costo::create([
+                'idcue' => $cuenta->idcue,
+                'descripcioncos' => $request->descripcioncos,
+                'montocos' => $request->montocos,
+                'fechacos' => now(),  // O la fecha que desees
+            ]);
+        }
         return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
     }
 

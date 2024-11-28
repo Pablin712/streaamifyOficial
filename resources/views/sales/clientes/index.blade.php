@@ -5,9 +5,8 @@ Clientes
 @section('h1','Clientes')
 @section('descripcion')
     <h3>Revisa el inventario</h3>
-    <p>a esta pantalla acceden ciertos usuarios</p>
-    <h3>Tabla de clientes</h3>
-    <p>muestra la tabla de clientes, un crud</p>
+    <p>A esta pantalla acceden ciertos usuarios. Muestra la tabla de clientes, un crud</p>
+    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
 @endsection
 @section('tablename', 'Clientes')
 @section('table1')
