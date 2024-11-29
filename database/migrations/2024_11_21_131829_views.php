@@ -20,7 +20,7 @@ return new class extends Migration
             cl.NOMBRECLI AS nombre_cliente,
             p.IDCUE,  -- Relacionamos el perfil con la cuenta a través de IDCUE
             p.NUMEROPER AS perfil,  -- Número de perfil desde la tabla PERFILES
-            c.FECHAVENCUE AS fecha_vencimiento_cuenta
+            dv.FECHAVENdet AS fecha_vencimiento
         FROM 
             DETALLES_VENTA dv
             INNER JOIN VENTAS v ON dv.IDVEN = v.IDVEN  -- Conectamos DETALLES_VENTA con VENTAS

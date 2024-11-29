@@ -15,14 +15,18 @@ class EmpleadoSeeder extends Seeder
         DB::table('empleados')->insert([
             ['nombreemp' => 'MATEO JIMÉNEZ',
              'telefonoemp' => '0961702129',
-             'usuarioemp' => 'mateo.jimenez',
-            'passwordemp' => bcrypt('passAdmin')],
+             'usuarioemp' => 'mateo18lol',
+             'passwordemp' => bcrypt('passAdmin'),
+             'idrol' => 'administrador'
+            ],
             
              
             ['nombreemp' => 'RONALDO JIMÉNEZ', 
             'telefonoemp' => '0961412826',
             'usuarioemp' => 'RonaldMacDonald', 
-            'passwordemp' => bcrypt('hamburguesa')]
+            'passwordemp' => bcrypt('hamburguesa'),
+            'idrol' => 'vendedor'
+            ]
         ]);
     }
 }
