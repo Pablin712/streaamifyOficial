@@ -64,16 +64,18 @@ class PerfilController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'numeroper' => 'required|integer',
-            'pinper' => 'required|string|min:4|max:6', // Asegurarse de que el PIN tenga entre 4 y 6 caracteres
+            'pinper' => 'required|string|max:6', // Asegúrate de ajustar la validación según tus necesidades
         ]);
 
-        // Actualizar el perfil
+        // Buscar el perfil por ID
         $perfil = Perfil::findOrFail($id);
-        $perfil->update($request->all());
 
-        // Redirigir al listado de perfiles con mensaje de éxito
-        return redirect()->route('perfil', ['idcue' => $perfil->idcue])->with('success', 'Perfil actualizado satisfactoriamente');
+        // Actualizar el PIN
+        $perfil->pinper = $request->input('pinper');
+        $perfil->save(); // Guardar los cambios
+
+        // Redirigir con un mensaje de éxito
+        return redirect()->back()->with('success', 'PIN actualizado correctamente');
     }
 
     /**

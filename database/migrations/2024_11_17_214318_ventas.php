@@ -37,8 +37,7 @@ return new class extends Migration
         Schema::create('detalles_venta', function (Blueprint $table) {
             $table->id('iddet'); // Cambiado a iddet
             $table->string('idven', 20); // Cambiado a idven
-            $table->string('idcue', 20)->nullable(); // Cambiado a idcue
-            $table->integer('perdet')->nullable(); // Cambiado a perdet
+            $table->string('idper', 20)->nullable(); // Cambiado a idper
             $table->date('fechavendet'); // Cambiado a fechavendet
             $table->decimal('montodet', 8, 2); // Cambiado a montodet
             $table->boolean('activodet'); // Cambiado a activodet
@@ -51,9 +50,9 @@ return new class extends Migration
                 ->onUpdate('restrict')
                 ->onDelete('restrict'); // Relación con la tabla `ventas`
 
-            $table->foreign('idcue')
-                ->references('idcue')
-                ->on('cuentas')
+            $table->foreign('idper')
+                ->references('idper')
+                ->on('perfiles')
                 ->onUpdate('restrict')
                 ->onDelete('restrict'); // Relación con la tabla `cuentas`
         });
@@ -72,7 +71,7 @@ return new class extends Migration
 
         Schema::table('detalles_venta', function (Blueprint $table) {
             $table->dropForeign(['idven']); // Eliminar relación foránea
-            $table->dropForeign(['idcue']); // Eliminar relación foránea
+            $table->dropForeign(['idper']); // Eliminar relación foránea
         });
         Schema::dropIfExists('detalles_venta');
     }

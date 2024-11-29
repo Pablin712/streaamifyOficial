@@ -12,7 +12,7 @@ class CuentaController extends Controller
 {
     public function index(Request $request)
     {
-        $cuentas = Cuenta::with(['valor'])->get(); // Cargar valor asociado
+        $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get(); // Cargar valor asociado
         // Inicializar una colección vacía para los perfiles
         $perfiles = collect();
 

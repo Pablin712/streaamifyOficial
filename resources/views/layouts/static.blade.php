@@ -16,7 +16,7 @@
                 </p>
             </div>
         </div>
-        <div style="height: 100vh">@yield('content')</div>
+        <div>@yield('content')</div>
         <div class="card mb-4">
             <div class="card-body">@yield('pie')</div>
         </div>
