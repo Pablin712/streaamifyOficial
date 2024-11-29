@@ -5,6 +5,11 @@
 @section('h1', 'Cuentas')
 
 @section('descripcion')
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
     <h3>Revisa las cuentas activas del <strong>Negocio</strong></h3>
     <p>Aquí podrás gestionar las cuentas de usuario asociadas a los servicios de streaming pertenecientes a Streamify HQ.
     </p>
@@ -19,7 +24,7 @@
         <strong>3. Columna Usuarios activos en perfiles:</strong> que calcule los clientes que están ocupando ese perfil
         (vista y función ya hecha en sql de postgres). <br>
         <strong>4. Botón cambiar estado cuenta:</strong> que cambie el caidacue al darle clic (botón azul) <br>
-        <strong>5. Botón ver mensaje (Ver perfil):</strong> este permite copiar, o ver los detalles del perfil 
+        <strong>5. Botón ver mensaje (Ver perfil):</strong> este permite copiar, o ver los detalles del perfil
         para vender a un cliente, debe indicar un mensaje con el formato establecido para enviar por WhatsApp.
         <br><br>
         <strong>Nombre de servicio</strong><br>
@@ -170,7 +175,8 @@
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <!-- Botón para obtener o copiar el mensaje del perfil -->
-                                <a href="#" class="btn btn-success btn-sm" onclick="copyMessage('{{ $perfil->id }}')">
+                                <a href="#" class="btn btn-success btn-sm"
+                                    onclick="copyMessage('{{ $perfil->id }}')">
                                     <i class="fas fa-eye"></i> Ver mensaje
                                 </a>
                             </td>

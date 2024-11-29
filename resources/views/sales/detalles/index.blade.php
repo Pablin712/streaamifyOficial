@@ -5,17 +5,25 @@
 @section('h1', 'Ventas')
 
 @section('descripcion')
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
     <h3>Revisa las ventas realizadas</h3>
-    <p>Aquí podrás gestionar las ventas realizadas, ver los detalles de productos vendidos y gestionar acciones asociadas a ellas.
+    <p>Aquí podrás gestionar las ventas realizadas, ver los detalles de productos vendidos y gestionar acciones asociadas a
+        ellas.
     </p>
     <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
     <br>
     <h5>Por completar:</h5>
     <p>
-        <strong>1. Botón renovar (verde en columna acciones):</strong> Que habra una vista y permita renovar detalles de la venta.<br>
+        <strong>1. Botón renovar (verde en columna acciones):</strong> Que habra una vista y permita renovar detalles de la
+        venta.<br>
         <strong>2. Botón editar:</strong> que abre un modal que permita modificar la venta.<br>
         <strong>3. Botón cambiar estado:</strong> que cambie el estado de la venta (Ej. Entregado, Pendiente, etc.).<br>
-        <strong>4. Botón ver detalles:</strong> Este permite ver los detalles de una venta, incluyendo los productos asociados.
+        <strong>4. Botón ver detalles:</strong> Este permite ver los detalles de una venta, incluyendo los productos
+        asociados.
     </p>
 @endsection
 
@@ -64,12 +72,15 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('ventas.edit', $venta->id) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                        <a href="{{ route('ventas.show', $venta->id) }}" class="btn btn-info"><i class="fas fa-eye"></i> Ver Detalles</a>
+                        <a href="{{ route('ventas.edit', $venta->id) }}" class="btn btn-warning"><i
+                                class="fas fa-edit"></i></a>
+                        <a href="{{ route('ventas.show', $venta->id) }}" class="btn btn-info"><i class="fas fa-eye"></i> Ver
+                            Detalles</a>
                         <form action="{{ route('ventas.destroy', $venta->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle" onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                            <button type="submit" class="btn btn-danger btn-circle"
+                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>

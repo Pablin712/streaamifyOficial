@@ -5,6 +5,11 @@
 @section('h1', 'Gastos')
 
 @section('descripcion')
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
     <h3>Gestión de Gastos</h3>
     <h4>Iniciado por Pablo Jiménez, terminado por Andrés Rincón</h4>
     <p>Aquí puedes ver todos los gastos asociados al negocio y registrar nuevos gastos. Si deseas ver los gastos de un tipo
@@ -41,9 +46,9 @@
                     <td>
                         <!-- Editar gasto (abre el modal con los datos del gasto) -->
                         <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                            data-bs-target="#editarGastoModal" data-id="{{ $gasto->idgas }}" data-idtip="{{ $gasto->idtip }}"
-                            data-descripciongas="{{ $gasto->descripciongas }}" data-montogas="{{ $gasto->montogas }}"
-                            data-fechagas="{{ $gasto->fechagas }}">
+                            data-bs-target="#editarGastoModal" data-id="{{ $gasto->idgas }}"
+                            data-idtip="{{ $gasto->idtip }}" data-descripciongas="{{ $gasto->descripciongas }}"
+                            data-montogas="{{ $gasto->montogas }}" data-fechagas="{{ $gasto->fechagas }}">
 
                             Editar
                         </button>

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             ServicioSeeder::class,
             ProveedorSeeder::class,
             ValorSeeder::class,
+            RolSeeder::class,
             EmpleadoSeeder::class,
             TipoGastoSeeder::class,
             GastoSeeder::class,
@@ -23,8 +24,7 @@ class DatabaseSeeder extends Seeder
             CuentaSeeder::class,
             CostoSeeder::class,
             VentaSeeder::class,
-            DetalleVentaSeeder::class,
-            RolSeeder::class
+            DetalleVentaSeeder::class
         ]);
     }
 }

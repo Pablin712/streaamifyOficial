@@ -13,6 +13,7 @@ use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\TipoGastoController;
+use App\Http\Controllers\PermisoController;
 Route::get('/', HomeController::class);
 
 
@@ -108,5 +109,15 @@ Route::controller(PerfilController::class)->group(function(){
     Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
     Route::put('/perfil/{id}', 'update')->name('perfil.update');
     //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
+});
+
+//Route::resource('permiso',PermisoController::class);
+Route::controller(PermisoController::class)->group(function(){
+    Route::get('/permisos', 'index')->name('permisos');
+    Route::get('/permisos/create', 'create')->name('permisos.create');
+    Route::post('/permisos/createstore', 'store')->name('permisos.store');
+    Route::get('/permisos/{id}/edit', 'edit')->name('permisos.edit');
+    Route::put('/permisos/{id}', 'update')->name('permisos.update');
+    Route::delete('/permisos/{id}', 'destroy')->name('permisos.destroy');
 });
 ?>

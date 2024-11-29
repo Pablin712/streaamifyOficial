@@ -6,6 +6,11 @@
     Valores de servicios
 @endsection
 @section('descripcion')
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
     <h3>Revisa el inventario</h3>
     <p>a esta pantalla acceden ciertos usuarios</p>
     <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
@@ -39,7 +44,8 @@
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>
                     <td>
-                        <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning  " ><i class="fas fa-edit"></i></a>
+                        <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning  "><i
+                                class="fas fa-edit"></i></a>
                         <form action="{{ route('valores.destroy', $valor->idval) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('DELETE')
