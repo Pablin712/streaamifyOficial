@@ -82,6 +82,7 @@ Route::controller(CuentaController::class)->group(function () {
     Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
     Route::get('/cuentas/{id}', 'mensaje')->name('cuentas.mensaje');
     Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');
+    Route::get('/cuentas/{id}/renew', 'renew')->name('cuentas.renew');
     Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
     Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
 });
