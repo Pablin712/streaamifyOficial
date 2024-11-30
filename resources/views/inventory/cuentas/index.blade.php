@@ -197,10 +197,11 @@
                             <td class="usuarios-activos">{{ $perfil->usuarios_activos }}</td>
                             <!-- AQUI TIENES QUE AGREGAR EL CALCULO PARA VER LOS USUARIOS ACTIVOS -->
                             <td>
-                                <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editProfileModal"
-                                    data-id="{{ $perfil->id }}" data-pin="{{ $perfil->pinper }}">
-                                    <i class="fas fa-edit"></i>
+                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal"
+                                data-id="{{ $perfil->id }}" data-pin="{{ $perfil->pinper }}">
+                                <i class="fas fa-edit">Editar</i>
                                 </button>
+
                                 <!-- Botón para obtener o copiar el mensaje del perfil -->
                                 <button class="btn btn-success btn-sm" onclick="copyMessage('{{ $perfil->id }}')">
                                     <i class="fas fa-eye"></i> Ver mensaje
@@ -223,11 +224,12 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
+                    
                     <h5 class="modal-title" id="editProfileModalLabel">Editar PIN del Perfil</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editProfileForm" method="POST" action="{{ route('perfil.update', ':id') }}">
+                    <form id="editProfileForm" method="PUT" action="{{ route('perfil.update', ':id') }}">
                         @csrf
                         @method('PUT')
                         <input type="hidden" id="perfilId" name="perfilId">
@@ -259,20 +261,22 @@
     </script>
     {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
-        // Esto se ejecutará cuando se haga clic en el botón "Editar"
-        $('#editProfileModal').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget); // El botón que activó el modal
-            var perfilId = button.data('id'); // Obtener el ID del perfil
-            var pinper = button.data('pin'); // Obtener el PIN del perfil
+    // Esto se ejecutará cuando se haga clic en el botón "Editar"
+    $('#editProfileModal').on('show.bs.modal', function(event) {
+        var button = $(event.relatedTarget); // El botón que activó el modal
+        var perfilId = button.data('id'); // Obtener el ID del perfil
+        var pinper = button.data('pin'); // Obtener el PIN del perfil
 
-            var modal = $(this);
-            modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
-            modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
-            // Actualizar la URL del formulario para apuntar al perfil correcto
-            var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
-            modal.find('#editProfileForm').attr('action', formAction);
-        });
-    </script>
+        var modal = $(this);
+        modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
+        modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
+
+        // Actualizar la URL del formulario para apuntar al perfil correcto
+        var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
+        modal.find('#editProfileForm').attr('action', formAction);
+    });
+</script>
+
     {{-- script para sumar los usuarios activos de la tabla perfiles --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -141,7 +141,7 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         $cuenta->update($request->all());
 
-        return redirect()->route('cuentas.index')->with('success', 'Cuenta actualizada con éxito.');
+        return redirect()->route('cuentas')->with('success', 'Cuenta actualizada con éxito.');
     }
 
     // Eliminar una cuenta
@@ -150,6 +150,6 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         $cuenta->delete();
 
-        return redirect()->route('cuentas.index')->with('success', 'Cuenta eliminada con éxito.');
+        return redirect()->route('cuentas')->with('success', 'Cuenta eliminada con éxito.');
     }
 }
