@@ -1,4 +1,4 @@
-@extends('layouts.layout') 
+@extends('layouts.navigation') 
 @section('title') 
 Home 
 @endsection 
