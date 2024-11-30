@@ -203,9 +203,11 @@
                                 </button>
 
                                 <!-- Botón para obtener o copiar el mensaje del perfil -->
-                                <button class="btn btn-success btn-sm" onclick="copyMessage('{{ $perfil->id }}')">
-                                    <i class="fas fa-eye"></i> Ver mensaje
-                                </button>
+                                
+                    <button class="btn btn-success btn-sm" 
+                    onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
+                <i class="fas fa-eye"></i> Ver mensaje
+            </button>
                             </td>
                         </tr>
                     @endforeach
@@ -249,7 +251,6 @@
         </div>
     </div>
     <!-- Aquí puedes agregar un área oculta donde se almacenará el mensaje para copiarlo -->
-    <input type="text" id="mensajeParaCopiar" style="position: absolute; left: -9999px;">
 @endsection
 @section('scripts')
     <script>
@@ -298,5 +299,33 @@
         });
     </script>
     {{-- script para copiar un mensaje al portapapeles --}}
-    
+    <script>
+    function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
+    // 1. Limpiar el `idcue` para que solo contenga letras
+    var servicio = idcue.replace(/[^a-zA-Z]/g, '');  // Eliminar todo lo que no sea letra
+
+    // 2. Crear el mensaje con saltos de línea explícitos
+    var message = servicio + "\n\n";  // Usar el `idcue` limpio y un salto de línea extra
+    message += "Usuario: " + usuariocue + "\n";  // Usar el `usuariocue`
+    message += "Clave: " + contrasenacue + "\n";  // Usar el `contrasenacue`
+    message += "PIN de perfil Nro " + numeroper + " : " + pinper + "\n";  // Usar el `numeroper`
+
+    // 3. Crear un área de texto temporal para copiar el mensaje
+    var tempTextArea = document.createElement("textarea");
+    tempTextArea.value = message;  // Establecer el valor como el mensaje completo
+    document.body.appendChild(tempTextArea);
+
+    // 4. Seleccionar y copiar el texto al portapapeles
+    tempTextArea.select();
+    document.execCommand("copy");
+
+    // 5. Eliminar el área de texto temporal
+    document.body.removeChild(tempTextArea);
+
+    // 6. Avisar al usuario que el mensaje se ha copiado
+    alert("El mensaje se ha copiado al portapapeles.");
+}
+
+
+</script>
 @endsection
