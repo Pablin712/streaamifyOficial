@@ -56,7 +56,7 @@ class CuentaController extends Controller
             'idcue' => 'required|string|max:20|unique:cuentas,idcue',
             'idval' => 'required|exists:valores,idval',
             'fechavencue' => 'required|date',
-            'usuariocue' => 'required|string|max:50',
+            'usuariocue' => 'required|string|max:50|unique:cuentas,idcue',
             'contrasenacue' => 'required|string|min:8|max:50',
             'caidacue' => 'required|boolean',
         ]);
@@ -127,6 +127,14 @@ class CuentaController extends Controller
         return view('inventory.cuentas.edit', compact('cuenta', 'valores'));
     }
 
+    public function renew($idcue)
+    {
+        // Buscar la cuenta con la relacion valores
+        $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
+        $valor = $cuenta->idval;
+        return view('inventory.cuentas.renew', compact('cuenta', 'valor'));
+    }
+
     // Actualizar una cuenta existente
     public function update(Request $request, $idcue)
     {
@@ -141,7 +149,22 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         $cuenta->update($request->all());
 
-        return redirect()->route('cuentas.index')->with('success', 'Cuenta actualizada con éxito.');
+        if ($request->has('descripcioncos') && $request->has('montocos')) {
+            // Validar datos de costo si los campos están presentes
+            $validatedCosto = $request->validate([
+                'descripcioncos' => 'string|max:50',
+                'montocos' => 'numeric|min:0',
+            ]);
+
+            // Crear el costo asociado a la cuenta solo si los datos de costo están presentes
+            Costo::create([
+                'idcue' => $cuenta->idcue,
+                'descripcioncos' => $request->descripcioncos,
+                'montocos' => $request->montocos,
+                'fechacos' => now(),  // O la fecha que desees
+            ]);
+        }
+        return redirect()->route('cuentas')->with('success', 'Cuenta actualizada con éxito.');
     }
 
     // Eliminar una cuenta
@@ -150,6 +173,6 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         $cuenta->delete();
 
-        return redirect()->route('cuentas.index')->with('success', 'Cuenta eliminada con éxito.');
+        return redirect()->route('cuentas')->with('success', 'Cuenta eliminada con éxito.');
     }
 }
