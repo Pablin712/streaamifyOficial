@@ -80,7 +80,7 @@ Route::controller(CuentaController::class)->group(function () {
     Route::get('/cuentas/create', 'create')->name('cuentas.create');
     Route::post('/cuentas/createstore', 'store')->name('cuentas.store');
     Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
-    Route::get('/mensaje/{idcue}', 'mensaje')->name('cuentas.mensaje');
+    Route::get('/cuentas/{id}', 'mensaje')->name('cuentas.mensaje');
     Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');
     Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
     Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');

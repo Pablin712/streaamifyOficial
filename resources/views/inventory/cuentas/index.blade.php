@@ -120,13 +120,13 @@
                         <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="btn btn-info btn-sm">
+                            <button type="submit" class="btn btn-dark btn-sm">
                                 @if ($cuenta->caidacue)
-                                    <i class="fas fa-play fa-xs"></i>
+                                    <i class="fas fa-toggle-on fa-xs"></i>
                                 @else
-                                    <i class="fas fa-pause fa-xs"></i>
+                                    <i class="fas fa-toggle-off fa-xs"></i>
                                 @endif
-                            </button>
+                            </button>                                                                                                                                   
                         </form>
                     </td>
                     <td>
@@ -292,28 +292,5 @@
         });
     </script>
     {{-- script para copiar un mensaje al portapapeles --}}
-    <script>
-        function copyMessage(perfilId) {
-            // Llamar al controlador con AJAX para obtener el mensaje
-            $.ajax({
-                url: '{{ route('cuentas.mensaje') }}', // Ruta del controlador
-                method: 'GET',
-                data: {
-                    perfilId: perfilId
-                },
-                success: function(response) {
-                    // Establecer el mensaje en el campo de texto oculto
-                    document.getElementById('mensajeParaCopiar').value = response.mensaje;
-
-                    // Copiar al portapapeles
-                    var copyText = document.getElementById('mensajeParaCopiar');
-                    copyText.select();
-                    document.execCommand('copy');
-
-                    // Opcional: mostrar un mensaje de confirmación
-                    alert('Mensaje copiado al portapapeles!');
-                }
-            });
-        }
-    </script>
+    
 @endsection
