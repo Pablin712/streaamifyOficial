@@ -134,7 +134,7 @@
                                 class="fas fa-edit"></i></a>
                         <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
                         @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success"> {{-- {{ route('cuentas.renovar', $cuenta->idcue) }} --}}
+                            <a href="#" class="btn btn-success"> {{-- {{ route('cuentas.renovar', $cuenta->idcue) }} --}}
                                 <i class="fas fa-sync-alt"></i>
                             </a>
                         @endif
@@ -198,7 +198,7 @@
                             <!-- AQUI TIENES QUE AGREGAR EL CALCULO PARA VER LOS USUARIOS ACTIVOS -->
                             <td>
                             <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal"
-                                data-id="{{ $perfil->id }}" data-pin="{{ $perfil->pinper }}">
+                                data-id="{{ $perfil->idper }}" data-pin="{{ $perfil->pinper }}">
                                 <i class="fas fa-edit">Editar</i>
                                 </button>
 
@@ -229,15 +229,17 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editProfileForm" method="PUT" action="{{ route('perfil.update', ':id') }}">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" id="perfilId" name="perfilId">
-                        <div class="form-group">
-                            <label for="pinper">Nuevo PIN</label>
-                            <input type="text" class="form-control" id="pinper" name="pinper" required>
-                        </div>
-                    </form>
+                <form id="editProfileForm" method="POST" action="">
+    @csrf
+    @method('PUT')
+    <input type="hidden" id="perfilId" name="perfilId">
+    <div class="form-group">
+        <label for="pinper">Nuevo PIN</label>
+        <input type="text" class="form-control" id="pinper" name="pinper" required>
+    </div>
+</form>
+
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -261,20 +263,20 @@
     </script>
     {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
-    // Esto se ejecutará cuando se haga clic en el botón "Editar"
-    $('#editProfileModal').on('show.bs.modal', function(event) {
-        var button = $(event.relatedTarget); // El botón que activó el modal
-        var perfilId = button.data('id'); // Obtener el ID del perfil
-        var pinper = button.data('pin'); // Obtener el PIN del perfil
+   $('#editProfileModal').on('shown.bs.modal', function(event) {
+    var button = $(event.relatedTarget); // El botón que activó el modal
+    var perfilId = button.data('id'); // Obtener el ID del perfil
+    var pinper = button.data('pin'); // Obtener el PIN del perfil
 
-        var modal = $(this);
-        modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
-        modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
+    var modal = $(this);
+    modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
+    modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
 
-        // Actualizar la URL del formulario para apuntar al perfil correcto
-        var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
-        modal.find('#editProfileForm').attr('action', formAction);
-    });
+    // Actualizar la URL del formulario para apuntar al perfil correcto
+    var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
+    modal.find('#editProfileForm').attr('action', formAction); // Asignar la URL correcta al formulario
+});
+
 </script>
 
     {{-- script para sumar los usuarios activos de la tabla perfiles --}}

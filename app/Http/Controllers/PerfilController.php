@@ -12,38 +12,33 @@ class PerfilController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-{
-    // Fetch all cuentas, with 'valor' relationship, ordered by 'fechavencue'
-    $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
+    {
+        $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get(); // Cargar valor asociado
+        // Inicializar una colección vacía para los perfiles
+        $perfiles = collect();
 
-    // Get the selected account (if any)
-    $idcueSeleccionado = $request->input('idcue');
+        $idcueSeleccionado = $request->idcue;
 
-    // Initialize perfiles collection as empty by default
-    $perfiles = collect();
+        //$usuariosActivos = ViewUsuarioActivo::where('IDCUE', $idcueSeleccionado)->get(); //por si acaso
 
-    if ($idcueSeleccionado) {
-        // If a specific account is selected, fetch its profiles
-        $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
-        
-        // Loop through each profile to add the 'usuarios_activos' count
-        foreach ($perfiles as $perfil) {
-            $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
-                ->where('idcue', $idcueSeleccionado)
-                ->count();
-            $perfil->usuarios_activos = $usuariosActivos;
+        if ($idcueSeleccionado) {
+            //$usuarioscuenta = Cuenta::where('idcue',$idcueSeleccionado)->get();
+            $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
+            foreach ($perfiles as $perfil) {
+                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                    ->where('idcue', $idcueSeleccionado)
+                    ->count();
+                $perfil->usuarios_activos = $usuariosActivos;
+            }
         }
-    }
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
+        }
 
-    // Loop through each cuenta to add the 'usuarios_activos' count
-    foreach ($cuentas as $cuenta) {
-        $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
-        $cuenta->usuarios_activos = $usuarios;
+        // Pasar las cuentas y los perfiles a la vista
+        return view('inventory.cuentas', compact('cuentas', 'perfiles', 'idcueSeleccionado'));
     }
-
-    // Pass both cuentas and perfiles to the view
-    return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado'));
-}
 
 
     /**
@@ -91,12 +86,13 @@ class PerfilController extends Controller
             'pinper' => 'required|string|max:6', // Asegúrate de ajustar la validación según tus necesidades
         ]);
 
+      
         // Actualizar el PIN
         $perfil->pinper = $request->input('pinper');
         $perfil->save(); // Guardar los cambios
 
         // Redirigir con un mensaje de éxito
-        return redirect()->route('cuentas')->with('success', 'PIN actualizado correctamente');
+        return redirect()->back()->with('success', 'PIN actualizado correctamente');
     }
 
     /**

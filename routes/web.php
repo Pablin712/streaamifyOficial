@@ -108,10 +108,10 @@ Route::controller(TipoGastoController::class)->group(function () {
 //Route::resource('perfil',PerfilController::class);
 Route::controller(PerfilController::class)->group(function () {
     Route::get('/perfil', 'index')->name('perfil');
+    Route::put('/perfil/{id}', 'update')->name('perfil.update');
     //Route::get('/perfil/create', 'create')->name('perfil.create');
     Route::post('/perfil/createstore', 'store')->name('perfil.store');
     Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
-    Route::put('/perfil/{id}', 'update')->name('perfil.update');
 
     //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
 });
