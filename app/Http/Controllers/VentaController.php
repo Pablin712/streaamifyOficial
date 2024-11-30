@@ -15,19 +15,19 @@ class VentaController extends Controller
      */
     public function index(Request $request)
     {
-        $ventas = Venta::with(['empleado','cliente'])->orderBy('fechaven')->get(); // Cargar valor asociado
-        // Inicializar una colección vacía para los detalles
+        // Obtener todas las ventas con los detalles de cada una
+        $ventas = Venta::with(['detalles_venta'])->orderBy('fecha_venta')->get();
         $detalles_venta = collect();
 
-        $idvenSeleccionado = $request->idven;
+        $idventaSeleccionada = $request->idventa;
 
-        // Verificar si se seleccionó una cuenta para filtrar perfiles
-        if ($idvenSeleccionado) {
-            $detalles_venta = DetalleVenta::where('idven', $idvenSeleccionado)->get();
+        if ($idventaSeleccionada) {
+            // Obtener los detalles de venta asociados a una venta específica
+            $detalles_venta = DetalleVenta::where('idventa', $idventaSeleccionada)->get();
         }
 
-        // Pasar las cuentas y los perfiles a la vista
-        return view('sales.detalles.index', compact('ventas', 'detalles_venta', 'idvenSeleccionado'));
+        // Pasar las ventas y los detalles de venta a la vista
+        return view('sales.ventas.index', compact('ventas', 'detalles_venta', 'idventaSeleccionada'));
     }
 
     /**
@@ -37,33 +37,25 @@ class VentaController extends Controller
     {
         $clientes = Cliente::all(); // Obtener lista de clientes
         $empleados = Empleado::all(); //Obtener lista de empleados
-        return view('sales.detalles.create', compact('empleados','clientes'));
+        return view('sales.ventas.create', compact('empleados','clientes'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
+    // Guardar una nueva venta
     public function store(Request $request)
     {
+        // Validar los datos de la venta
         $validated = $request->validate([
+            'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
-            'idcli' => 'required|exists:clientes,idcli'
+            'fechaven' => 'required|date'
         ]);
 
-        //Cuenta::create($request->all());
-
-        // Crear la cuenta (otra alternativa)
+        // Crear la venta
         $venta = Venta::create($validated);
-        // Verificar si se recibieron datos de costo
-        if ($request->has('descripcioncos') && $request->has('montocos')) {
-            // Crear el costo asociado a la cuenta
-            DetalleVenta::create([
-                'idcue' => $venta->idcue,
-                'descripcioncos' => $request->descripcioncos,
-                'montocos' => $request->montocos,
-                'fechacos' => now(),  // O la fecha que desees
-            ]);
-        }
+
         return redirect()->route('ventas')->with('success', 'Venta creada con éxito.');
     }
 
@@ -78,24 +70,40 @@ class VentaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($idven)
     {
-        //
+        $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
+        $clientes = Cliente::all();
+        $empleados = Empleado::all();
+        return view('sales.ventas.edit', compact('venta', 'clientes', 'empleados'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $idven)
     {
-        //
+        $request->validate([
+            'idcli' => 'required|exists:clientes,idcli',
+            'idemp' => 'required|exists:empleados,idemp',
+            'fechaven' => 'required|date',
+            'caidaventa' => 'required|boolean',
+        ]);
+
+        $venta = Venta::findOrFail($idven);
+        $venta->update($request->all());
+
+        return redirect()->route('ventas')->with('success', 'Venta actualizada con éxito.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($idven)
     {
-        //
+        $venta = Venta::findOrFail($idven);
+        $venta->delete();
+
+        return redirect()->route('ventas.index')->with('success', 'Venta eliminada con éxito.');
     }
 }

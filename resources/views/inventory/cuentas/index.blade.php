@@ -134,7 +134,7 @@
                                 class="fas fa-edit"></i></a>
                         <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
                         @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                            <a href="#" class="btn btn-success"> {{-- {{ route('cuentas.renovar', $cuenta->idcue) }} --}}
+                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success"> {{--  --}}
                                 <i class="fas fa-sync-alt"></i>
                             </a>
                         @endif

@@ -23,7 +23,7 @@ class PerfilController extends Controller
 
         if ($idcueSeleccionado) {
             //$usuarioscuenta = Cuenta::where('idcue',$idcueSeleccionado)->get();
-            $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
+            $perfiles = Perfil::where('idcue', $idcueSeleccionado)->orderBy('idper')->get();
             foreach ($perfiles as $perfil) {
                 $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
                     ->where('idcue', $idcueSeleccionado)

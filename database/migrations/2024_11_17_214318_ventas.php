@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('idcli'); // Cambiado a idcli
             $table->date('fechaven')->default(DB::raw('CURRENT_DATE')); // Cambiado a fechaven
             $table->decimal('totalpagoven', 8, 2)->nullable(); // Cambiado a totalpagoven
+            $table->timestamps();
         });
 
         Schema::table('ventas', function (Blueprint $table) {
@@ -41,6 +42,7 @@ return new class extends Migration
             $table->date('fechavendet'); // Cambiado a fechavendet
             $table->decimal('montodet', 8, 2); // Cambiado a montodet
             $table->boolean('activodet'); // Cambiado a activodet
+            $table->timestamps();
         });
 
         Schema::table('detalles_venta', function (Blueprint $table) {

@@ -14,6 +14,7 @@ use App\Http\Controllers\GastoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\TipoGastoController;
 use App\Http\Controllers\PermisoController;
+use App\Http\Controllers\VentaController;
 
 Route::get('/', HomeController::class);
 
@@ -112,7 +113,6 @@ Route::controller(PerfilController::class)->group(function () {
     //Route::get('/perfil/create', 'create')->name('perfil.create');
     Route::post('/perfil/createstore', 'store')->name('perfil.store');
     Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
-
     //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
 });
 
@@ -124,4 +124,13 @@ Route::controller(PermisoController::class)->group(function () {
     Route::get('/permisos/{id}/edit', 'edit')->name('permisos.edit');
     Route::put('/permisos/{id}', 'update')->name('permisos.update');
     Route::delete('/permisos/{id}', 'destroy')->name('permisos.destroy');
+});
+
+Route::controller(VentaController::class)->group(function () {
+    Route::get('/ventas', 'index')->name('ventas');
+    Route::get('/ventas/create', 'create')->name('ventas.create');
+    Route::post('/ventas/createstore', 'store')->name('ventas.store');
+    Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
+    Route::put('/ventas/{id}', 'update')->name('ventas.update');
+    Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
 });
