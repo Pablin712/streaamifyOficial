@@ -1,9 +1,32 @@
 @extends('layouts.table')
 
 @section('title', 'Cuentas')
+@section('styles')
+    <style>
+        /* Personalizando el fondo oscuro de las filas de la tabla a morado */
+        .table-dark {
+            background-color: #800080 !important;
+            /* Color morado */
+            color: white !important;
+            /* Texto blanco para contraste */
+        }
 
+        /* Personalizando el badge bg-dark a morado */
+        .badge.bg-dark {
+            background-color: #800080 !important;
+            /* Color morado */
+            color: white !important;
+            /* Texto blanco para el badge */
+        }
+
+        .badge.bg-dark:hover {
+            background-color: #6a006a !important;
+            /* Color morado más oscuro en hover */
+        }
+    </style>
+
+@endsection
 @section('h1', 'Cuentas')
-
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">
@@ -21,9 +44,10 @@
         (extender fecha de vencimiento, registrar costo). <br>
         <strong>2. Botón editar perfil:</strong> que habra un modal que permita cambiar el pin del perfil de la cuenta (Solo
         el pin y nada más del perfil). <br>
-        <strong>3. Columna Usuarios activos en perfiles:</strong> que calcule los clientes que están ocupando ese perfil
+        <strong>3. Columna Usuarios activos en perfiles LISTO:</strong> que calcule los clientes que están ocupando ese
+        perfil
         (vista y función ya hecha en sql de postgres). <br>
-        <strong>4. Botón cambiar estado cuenta:</strong> que cambie el caidacue al darle clic (botón azul) <br>
+        <strong>4. Botón cambiar estado cuenta LISTO:</strong> que cambie el caidacue al darle clic (botón azul) <br>
         <strong>5. Botón ver mensaje (Ver perfil):</strong> este permite copiar, o ver los detalles del perfil
         para vender a un cliente, debe indicar un mensaje con el formato establecido para enviar por WhatsApp.
         <br><br>
@@ -48,6 +72,7 @@
                 <th>Servicio</th>
                 <th>Usuario</th>
                 <th>Vencimiento</th>
+                <th>Clientes</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -80,9 +105,10 @@
                     <td>{{ $cuenta->valor->idval }} ({{ $cuenta->valor->proveedor->nombrepro }})</td>
                     <td>{{ $cuenta->usuariocue }}</td>
                     <td>{{ $cuenta->fechavencue->format('d/m/Y') }}</td>
+                    <td>{{ $cuenta->usuarios_activos }}</td>
                     <td>
                         @if ($cuenta->caidacue)
-                            <span style="badge bg-dark">Dañada</span>
+                            <span class="badge bg-dark">Dañada</span>
                         @elseif ($diasRestantes <= 0)
                             <span class="badge bg-danger">Vencida</span>
                         @elseif ($diasRestantes <= 5)
@@ -91,14 +117,14 @@
                             <span class="badge bg-success">Activa</span>
                         @endif
                         <!-- Botón para cambiar estado -->
-                        <form action="#" method="POST" {{-- {{ route('cuentas.changeStatus', $cuenta->idcue) }} --}} style="display:inline;">
+                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="btn btn-info btn-sm">
-                                @if ($cuenta->estado == 'activa')
-                                    <i class="fas fa-pause"></i>
+                                @if ($cuenta->caidacue)
+                                    <i class="fas fa-play fa-xs"></i>
                                 @else
-                                    <i class="fas fa-play"></i>
+                                    <i class="fas fa-pause fa-xs"></i>
                                 @endif
                             </button>
                         </form>
@@ -168,17 +194,17 @@
                         <tr>
                             <td>{{ $perfil->numeroper }}</td>
                             <td>{{ $perfil->pinper }}</td>
-                            <td>1</td> <!-- Cada perfil cuenta como 1 ocupante -->
+                            <td class="usuarios-activos">{{ $perfil->usuarios_activos }}</td>
+                            <!-- AQUI TIENES QUE AGREGAR EL CALCULO PARA VER LOS USUARIOS ACTIVOS -->
                             <td>
                                 <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editProfileModal"
                                     data-id="{{ $perfil->id }}" data-pin="{{ $perfil->pinper }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <!-- Botón para obtener o copiar el mensaje del perfil -->
-                                <a href="#" class="btn btn-success btn-sm"
-                                    onclick="copyMessage('{{ $perfil->id }}')">
+                                <button class="btn btn-success btn-sm" onclick="copyMessage('{{ $perfil->id }}')">
                                     <i class="fas fa-eye"></i> Ver mensaje
-                                </a>
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -186,7 +212,7 @@
                 <tfoot>
                     <tr>
                         <td colspan="2" class="text-end"><strong>Total de Usuarios activos:</strong></td>
-                        <td><strong>{{ $perfiles->count() }}</strong></td>
+                        <td id="totalUsuariosActivos"><strong>0</strong></td> <!-- Aquí se mostrará la suma -->
                     </tr>
                 </tfoot>
             </table>
@@ -218,6 +244,8 @@
             </div>
         </div>
     </div>
+    <!-- Aquí puedes agregar un área oculta donde se almacenará el mensaje para copiarlo -->
+    <input type="text" id="mensajeParaCopiar" style="position: absolute; left: -9999px;">
 @endsection
 @section('scripts')
     <script>
@@ -229,6 +257,7 @@
             }
         });
     </script>
+    {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
         // Esto se ejecutará cuando se haga clic en el botón "Editar"
         $('#editProfileModal').on('show.bs.modal', function(event) {
@@ -243,5 +272,48 @@
             var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
             modal.find('#editProfileForm').attr('action', formAction);
         });
+    </script>
+    {{-- script para sumar los usuarios activos de la tabla perfiles --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sumar los valores de la columna "Usuarios Activos"
+            var totalUsuarios = 0;
+
+            // Obtener todos los valores de la columna "Usuarios Activos"
+            var usuariosActivos = document.querySelectorAll('.usuarios-activos');
+
+            // Recorrer todos los valores y sumarlos
+            usuariosActivos.forEach(function(item) {
+                totalUsuarios += parseInt(item.textContent) || 0;
+            });
+
+            // Mostrar el total en el pie de la tabla
+            document.getElementById('totalUsuariosActivos').textContent = totalUsuarios;
+        });
+    </script>
+    {{-- script para copiar un mensaje al portapapeles --}}
+    <script>
+        function copyMessage(perfilId) {
+            // Llamar al controlador con AJAX para obtener el mensaje
+            $.ajax({
+                url: '{{ route('cuentas.mensaje') }}', // Ruta del controlador
+                method: 'GET',
+                data: {
+                    perfilId: perfilId
+                },
+                success: function(response) {
+                    // Establecer el mensaje en el campo de texto oculto
+                    document.getElementById('mensajeParaCopiar').value = response.mensaje;
+
+                    // Copiar al portapapeles
+                    var copyText = document.getElementById('mensajeParaCopiar');
+                    copyText.select();
+                    document.execCommand('copy');
+
+                    // Opcional: mostrar un mensaje de confirmación
+                    alert('Mensaje copiado al portapapeles!');
+                }
+            });
+        }
     </script>
 @endsection

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Cuenta;
 use App\Models\Valor;
+use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
+use App\Models\ViewUsuarioActivo;
 
 class CuentaController extends Controller
 {
@@ -18,9 +20,21 @@ class CuentaController extends Controller
 
         $idcueSeleccionado = $request->idcue;
 
-        // Verificar si se seleccionó una cuenta para filtrar perfiles
+        //$usuariosActivos = ViewUsuarioActivo::where('IDCUE', $idcueSeleccionado)->get(); //por si acaso
+
         if ($idcueSeleccionado) {
+            //$usuarioscuenta = Cuenta::where('idcue',$idcueSeleccionado)->get();
             $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
+            foreach ($perfiles as $perfil) {
+                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                    ->where('idcue', $idcueSeleccionado)
+                    ->count();
+                $perfil->usuarios_activos = $usuariosActivos;
+            }
+        }
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
         }
 
         // Pasar las cuentas y los perfiles a la vista
@@ -37,14 +51,6 @@ class CuentaController extends Controller
     // Guardar una nueva cuenta
     public function store(Request $request)
     {
-        //$request->validate([
-        //    'idcue' => 'required|string|max:20|unique:cuentas,idcue',
-        //    'idval' => 'required|exists:valores,idval',
-        //    'fechavencue' => 'required|date',
-        //    'usuariocue' => 'required|string|max:50',
-        //    'contrasenacue' => 'required|string|max:50',
-        //    'caidacue' => 'required|boolean'
-        //]);
         // Validar datos de la cuenta
         $validated = $request->validate([
             'idcue' => 'required|string|max:20|unique:cuentas,idcue',
@@ -55,13 +61,17 @@ class CuentaController extends Controller
             'caidacue' => 'required|boolean',
         ]);
 
-        //Cuenta::create($request->all());
-
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);
         // Verificar si se recibieron datos de costo
         if ($request->has('descripcioncos') && $request->has('montocos')) {
-            // Crear el costo asociado a la cuenta
+            // Validar datos de costo si los campos están presentes
+            $validatedCosto = $request->validate([
+                'descripcioncos' => 'string|max:50',
+                'montocos' => 'numeric|min:0',
+            ]);
+
+            // Crear el costo asociado a la cuenta solo si los datos de costo están presentes
             Costo::create([
                 'idcue' => $cuenta->idcue,
                 'descripcioncos' => $request->descripcioncos,
@@ -70,6 +80,42 @@ class CuentaController extends Controller
             ]);
         }
         return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
+    }
+    // CuentaController.php
+    public function status($idcue)
+    {
+        $cuenta = Cuenta::findOrFail($idcue);
+        // Cambiar el estado de caidacue (de true a false o de false a true)
+        $cuenta->caidacue = !$cuenta->caidacue; // Invertir el valor (true -> false o false -> true)
+        // Guardar el cambio en la base de datos
+        $cuenta->save();
+
+        // Redirigir al usuario con un mensaje de éxito
+        return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
+    }
+    public function mensaje($perfilId)
+    {
+        // Obtener el perfil seleccionado
+        $perfil = Perfil::find($perfilId);
+
+        // Obtener la cuenta asociada al perfil
+        $cuenta = Cuenta::where('idcue', $perfil->idcue)->first();
+
+        // Obtener el valor asociado a la cuenta
+        $valor = Valor::find($cuenta->idval);
+
+        // Obtener el servicio asociado al valor
+        $servicio = Servicio::find($valor->idser);
+
+        // Construir el mensaje
+        $mensaje = "{$servicio->nombre}\n";
+        $mensaje .= "Usuario: {$cuenta->usuariocue}\n";
+        $mensaje .= "Clave: {$cuenta->contrasenacue}\n";
+        $mensaje .= "PIN de perfil {$perfil->numeroper}: ";
+        $mensaje .= "{$perfil->pinper}\n";
+
+        // Devolver el mensaje al frontend
+        return response()->json(['mensaje' => $mensaje]);
     }
 
     // Mostrar formulario para editar una cuenta

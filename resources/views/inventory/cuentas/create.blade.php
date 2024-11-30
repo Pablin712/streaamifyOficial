@@ -65,32 +65,13 @@
         </div>
 
         <!-- Botón para abrir el modal de Costo -->
-        <button type="button" class="btn btn-info mb-3" data-bs-toggle="modal" data-bs-target="#seleccionarCuentaModal">
-            Agregar Costo
-        </button>
-        <!-- Mostrar datos de costo si se ingresaron en el modal -->
         <div class="form-group mb-3">
+            <label for="caidacue"><strong>Agregar Costo de Cuenta</strong></label><br>
             <label for="descripcioncos">Descripción del Costo</label>
-            <p id="descripcioncos" class="form-control">
-                @if (session('descripcioncos'))
-                    {{ session('descripcioncos') }}
-                @else
-                    No se ha registrado un costo.
-                @endif
-            </p>
-        </div>
-        <div class="form-group mb-3">
+            <input type="text" name="descripcioncos" id="descripcioncos" class="form-control" required>
             <label for="montocos">Monto del Costo</label>
-            <p id="montocos" class="form-control">
-                @if (session('montocos'))
-                    ${{ number_format(session('montocos'), 2) }}
-                @else
-                    No se ha registrado un costo.
-                @endif
-            </p>
+            <input type="number" name="montocos" id="montocos" class="form-control" step="0.01" required>
         </div>
-
-
         <button type="submit" class="btn btn-success">Guardar Cuenta</button>
     </form>
     <!-- Modal para crear un nuevo costo -->
@@ -124,8 +105,6 @@
             </div>
         </div>
     </div>
-
-
 @endsection
 
 
