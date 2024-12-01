@@ -23,6 +23,8 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Teléfono</th>
+                <th>Usuarios</th>
+                <th>Facturado este mes</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -32,16 +34,21 @@
                     <td>{{ $cliente->idcli }}</td>
                     <td>{{ $cliente->nombrecli }}</td>
                     <td>{{ $cliente->telefonocli }}</td>
+                    <td>{{ $cliente->usuarios }}</td>
+                    <td>${{ $cliente->facturado }}</td>
                     <td>
                         <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning  "><i
                                 class="fas fa-edit"></i></a>
-                        <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
-                        </form>
+                        @if ($cliente->usuarios == 0)
+                            <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
+                                style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-circle"
+                                    onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                            </form>
+                        @endif
+
                     </td>
                 </tr>
             @endforeach

@@ -16,18 +16,18 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         // Obtener todas las ventas con los detalles de cada una
-        $ventas = Venta::with(['detalles_venta'])->orderBy('fecha_venta')->get();
+        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
         $detalles_venta = collect();
 
-        $idventaSeleccionada = $request->idventa;
+        $idvenSeleccionada = $request->idven;
 
-        if ($idventaSeleccionada) {
+        if ($idvenSeleccionada) {
             // Obtener los detalles de venta asociados a una venta específica
-            $detalles_venta = DetalleVenta::where('idventa', $idventaSeleccionada)->get();
+            $detalles_venta = DetalleVenta::where('idven', $idvenSeleccionada)->get();
         }
 
         // Pasar las ventas y los detalles de venta a la vista
-        return view('sales.ventas.index', compact('ventas', 'detalles_venta', 'idventaSeleccionada'));
+        return view('sales.ventas.index', compact('ventas', 'detalles_venta', 'idvenSeleccionada'));
     }
 
     /**
@@ -96,6 +96,18 @@ class VentaController extends Controller
         return redirect()->route('ventas')->with('success', 'Venta actualizada con éxito.');
     }
 
+    public function status($iddet)
+    {
+        $detalle = DetalleVenta::findOrFail($iddet);
+        // Cambiar el estado de activodet (de true a false o de false a true)
+        $detalle->activodet = !$detalle->activodet; // Invertir el valor (true -> false o false -> true)
+        // Guardar el cambio en la base de datos
+        $detalle->save();
+
+        // Redirigir al usuario con un mensaje de éxito
+        return redirect()->route('ventas')->with('success', 'Estado de la cuenta del cliente actualizado correctamente.');
+    }
+
     /**
      * Remove the specified resource from storage.
      */
@@ -104,6 +116,6 @@ class VentaController extends Controller
         $venta = Venta::findOrFail($idven);
         $venta->delete();
 
-        return redirect()->route('ventas.index')->with('success', 'Venta eliminada con éxito.');
+        return redirect()->route('ventas')->with('success', 'Venta eliminada con éxito.');
     }
 }

@@ -1,14 +1,25 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Cliente;
 use Illuminate\Http\Request;
-
+use App\Models\ViewClientesUsuarios;
 class ClienteController extends Controller
 {
     public function index()
     {
         $clientes = Cliente::all();
+        foreach ($clientes as $cliente) {
+            $usuarios = ViewClientesUsuarios::where('idcli', $cliente->idcli)->first();
+            if ($usuarios) {
+                $cliente->usuarios = $usuarios->usuarios; // Asignar el número de usuarios
+                $cliente->facturado = $usuarios->facturado; // Asignar el total facturado
+            } else {
+                $cliente->usuarios = 0; // Si no tiene registros, asignar 0
+                $cliente->facturado = 0; // Si no tiene registros, asignar 0
+            }
+        }
         return view('sales.clientes.index', compact('clientes'));
     }
     // Crear un nuevo proveedor
@@ -20,9 +31,19 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombrecli' => 'required|string|max:20',
-            'telefonocli' => 'string|max:15'
+            'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
+            'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
         ]);
+
+        $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
+            ->orWhere('telefonocli', $request->telefonocli)
+            ->first();
+
+        // Si el cliente ya existe, redirigir con mensaje de error
+        if ($clienteExistente) {
+            return redirect()->route('clientes.create')
+                ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
+        }
 
         Cliente::create($request->all());
 

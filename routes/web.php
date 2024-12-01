@@ -130,6 +130,7 @@ Route::controller(VentaController::class)->group(function () {
     Route::get('/ventas', 'index')->name('ventas');
     Route::get('/ventas/create', 'create')->name('ventas.create');
     Route::post('/ventas/createstore', 'store')->name('ventas.store');
+    Route::patch('/ventas/{id}/status', 'status')->name('ventas.status');
     Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
     Route::put('/ventas/{id}', 'update')->name('ventas.update');
     Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');

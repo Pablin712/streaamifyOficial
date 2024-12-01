@@ -92,7 +92,8 @@ class PerfilController extends Controller
         $perfil->save(); // Guardar los cambios
 
         // Redirigir con un mensaje de éxito
-        return redirect()->back()->with('success', 'PIN actualizado correctamente');
+        //return redirect()->back()->with('success', 'PIN actualizado correctamente');
+        return redirect()->route('cuentas')->with('success', 'Perfil actualizado con éxito.');
     }
 
     /**

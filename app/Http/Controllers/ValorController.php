@@ -28,7 +28,7 @@ class ValorController extends Controller
         $request->validate([
             'idval' => 'required|string|max:20|unique:valores,idval',
             'idser' => 'required|exists:servicios,idser',
-            'idpro' => 'required|exists:proveedors,idpro',
+            'idpro' => 'required|exists:proveedores,idpro',
             'costoval' => 'required|numeric|min:0|max:999.99',
             'pantminval' => 'required|integer|min:1',
             'pantmaxval' => 'required|integer|min:1',
@@ -37,7 +37,7 @@ class ValorController extends Controller
 
         Valor::create($request->all());
 
-        return redirect()->route('valores.index')->with('success', 'Valor creado con éxito.');
+        return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
     }
 
     // Mostrar formulario para editar un valor
@@ -55,7 +55,7 @@ class ValorController extends Controller
     {
         $request->validate([
             'idser' => 'required|exists:servicios,idser',
-            'idpro' => 'required|exists:proveedors,idpro',
+            'idpro' => 'required|exists:proveedores,idpro',
             'costoval' => 'required|numeric|min:0|max:999.99',
             'pantminval' => 'required|integer|min:1',
             'pantmaxval' => 'required|integer|min:1',
@@ -65,7 +65,7 @@ class ValorController extends Controller
         $valor = Valor::findOrFail($idval);
         $valor->update($request->all());
 
-        return redirect()->route('valores.index')->with('success', 'Valor actualizado con éxito.');
+        return redirect()->route('valores')->with('success', 'Valor actualizado con éxito.');
     }
 
     // Eliminar un valor
@@ -74,6 +74,6 @@ class ValorController extends Controller
         $valor = Valor::findOrFail($idval);
         $valor->delete();
 
-        return redirect()->route('valores.index')->with('success', 'Valor eliminado con éxito.');
+        return redirect()->route('valores')->with('success', 'Valor eliminado con éxito.');
     }
 }

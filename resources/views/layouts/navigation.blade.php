@@ -8,10 +8,13 @@
     <meta name="description" content="" />
     <meta name="author" content="" />
     <title>@yield('title')</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/icono2.ico') }}" type="image/x-icon">
+    <!-- Agregar el CSS de Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     @yield('styles')
 </head>
 
@@ -72,8 +75,8 @@
                         <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{route('costos')}}">Costs</a>
-                                <a class="nav-link" href="{{route('gastos')}}">Expenses</a>
+                                <a class="nav-link" href="{{ route('costos') }}">Costs</a>
+                                <a class="nav-link" href="{{ route('gastos') }}">Expenses</a>
                                 <a class="nav-link" href="reports.html">Reports</a>
                             </nav>
                         </div> {{-- finance collapsible end --}}
@@ -87,8 +90,8 @@
                         <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="layout-static.html">Sales details</a>
-                                <a class="nav-link" href="{{route('clientes')}}">Customers</a>
+                                <a class="nav-link" href="{{ route('ventas') }}">Sales details</a>
+                                <a class="nav-link" href="{{ route('clientes') }}">Customers</a>
                             </nav>
                         </div>
                         {{-- Aquí termina el colapsable Sales --}}
@@ -105,7 +108,7 @@
                         <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{route('cuentas')}}">Accounts and profiles</a>
+                                <a class="nav-link" href="{{ route('cuentas') }}">Accounts and profiles</a>
                                 <a class="nav-link" href="settings.html">Active Users</a>
                             </nav>
                         </div>
@@ -118,9 +121,9 @@
                         <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{route('servicios')}}">Services</a>
-                                <a class="nav-link" href="{{route('proveedores')}}">Proveedores</a>
-                                <a class="nav-link" href="{{route('valores')}}">Values</a>
+                                <a class="nav-link" href="{{ route('servicios') }}">Services</a>
+                                <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
+                                <a class="nav-link" href="{{ route('valores') }}">Values</a>
                             </nav>
                         </div>
 
@@ -150,44 +153,47 @@
             </footer>
         </div>
     </div>
-    
+
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
+    </script>
     <script src="{{ asset('js/scripts.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-   <!-- <script src="{{ asset('assets/demo/chart-area-demo.js') }}"></script>
+    <!-- <script src="{{ asset('assets/demo/chart-area-demo.js') }}"></script>
     <script src="{{ asset('assets/demo/chart-bar-demo.js') }}"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
         crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Espera a que los datos estén disponibles (ajusta el tiempo si es necesario)
-        setTimeout(function () {
-            const dataTableElement = document.querySelector('#datatablesSimple');
-            if (dataTableElement) {
-                const rows = dataTableElement.querySelectorAll('tbody tr');
-                if (rows.length > 0) {
-                    new simpleDatatables.DataTable(dataTableElement, {
-                        searchable: true,
-                        perPageSelect: [5, 10, 20],
-                        labels: {
-                            placeholder: "Buscar...",
-                            perPage: "{select} registros por página",
-                            noRows: "No se encontraron registros.",
-                            info: "Mostrando {start} a {end} de {rows} registros",
-                        },
-                    });
-                } else {
-                    console.warn('La tabla sigue sin filas después del tiempo de espera.');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Espera a que los datos estén disponibles (ajusta el tiempo si es necesario)
+            setTimeout(function() {
+                const dataTableElement = document.querySelector('#datatablesSimple');
+                if (dataTableElement) {
+                    const rows = dataTableElement.querySelectorAll('tbody tr');
+                    if (rows.length > 0) {
+                        new simpleDatatables.DataTable(dataTableElement, {
+                            searchable: true,
+                            perPageSelect: [5, 10, 20],
+                            labels: {
+                                placeholder: "Buscar...",
+                                perPage: "{select} registros por página",
+                                noRows: "No se encontraron registros.",
+                                info: "Mostrando {start} a {end} de {rows} registros",
+                            },
+                        });
+                    } else {
+                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
+                    }
                 }
-            }
-        }, 500); // Ajusta el tiempo de espera si es necesario
-    });
-</script>
-
-@yield('scripts')
+            }, 500); // Ajusta el tiempo de espera si es necesario
+        });
+    </script>
+    <!-- Agregar el JavaScript de Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    @yield('scripts')
 </body>
 
 </html>

@@ -29,9 +29,9 @@ class Venta extends Model
     }
     public function cliente()
     {
-        return $this->belongsTo(Empleado::class, 'idcli', 'idcli');
+        return $this->belongsTo(Cliente::class, 'idcli', 'idcli');
     }
-    public function detalle_venta()
+    public function detalles_venta()
     {
         return $this->hasMany(DetalleVenta::class, 'idven', 'idven');
     }

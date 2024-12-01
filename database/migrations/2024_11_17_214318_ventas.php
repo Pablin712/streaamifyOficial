@@ -39,6 +39,7 @@ return new class extends Migration
             $table->id('iddet'); // Cambiado a iddet
             $table->string('idven', 20); // Cambiado a idven
             $table->string('idper', 20)->nullable(); // Cambiado a idper
+            $table->string('descripciondet',60)->nullable();
             $table->date('fechavendet'); // Cambiado a fechavendet
             $table->decimal('montodet', 8, 2); // Cambiado a montodet
             $table->boolean('activodet'); // Cambiado a activodet

@@ -126,7 +126,7 @@
                                 @else
                                     <i class="fas fa-toggle-off fa-xs"></i>
                                 @endif
-                            </button>                                                                                                                                   
+                            </button>
                         </form>
                     </td>
                     <td>
@@ -134,7 +134,8 @@
                                 class="fas fa-edit"></i></a>
                         <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
                         @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success"> {{--  --}}
+                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success">
+                                {{--  --}}
                                 <i class="fas fa-sync-alt"></i>
                             </a>
                         @endif
@@ -143,7 +144,8 @@
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i>
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -197,17 +199,16 @@
                             <td class="usuarios-activos">{{ $perfil->usuarios_activos }}</td>
                             <!-- AQUI TIENES QUE AGREGAR EL CALCULO PARA VER LOS USUARIOS ACTIVOS -->
                             <td>
-                            <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editProfileModal"
-                                data-id="{{ $perfil->idper }}" data-pin="{{ $perfil->pinper }}">
-                                <i class="fas fa-edit">Editar</i>
+                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#editProfileModal" data-id="{{ $perfil->idper }}"
+                                    data-pin="{{ $perfil->pinper }}">
+                                    <i class="fas fa-edit">Editar</i>
                                 </button>
-
                                 <!-- Botón para obtener o copiar el mensaje del perfil -->
-                                
-                    <button class="btn btn-success btn-sm" 
-                    onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
-                <i class="fas fa-eye"></i> Ver mensaje
-            </button>
+                                <button class="btn btn-success btn-sm"
+                                    onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -226,22 +227,19 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    
                     <h5 class="modal-title" id="editProfileModalLabel">Editar PIN del Perfil</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                <form id="editProfileForm" method="POST" action="">
-    @csrf
-    @method('PUT')
-    <input type="hidden" id="perfilId" name="perfilId">
-    <div class="form-group">
-        <label for="pinper">Nuevo PIN</label>
-        <input type="text" class="form-control" id="pinper" name="pinper" required>
-    </div>
-</form>
-
-
+                    <form id="editProfileForm" method="POST" action="">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" id="perfilId" name="perfilId">
+                        <div class="form-group">
+                            <label for="pinper">Nuevo PIN</label>
+                            <input type="text" class="form-control" id="pinper" name="pinper" required>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -264,21 +262,30 @@
     </script>
     {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
-   $('#editProfileModal').on('shown.bs.modal', function(event) {
-    var button = $(event.relatedTarget); // El botón que activó el modal
-    var perfilId = button.data('id'); // Obtener el ID del perfil
-    var pinper = button.data('pin'); // Obtener el PIN del perfil
-
-    var modal = $(this);
-    modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
-    modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
-
-    // Actualizar la URL del formulario para apuntar al perfil correcto
-    var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
-    modal.find('#editProfileForm').attr('action', formAction); // Asignar la URL correcta al formulario
-});
-
-</script>
+        // Asegurarnos de que el código se ejecute cuando el DOM esté completamente cargado
+        $(document).ready(function() {
+            // Abre el modal y carga los datos cuando se hace clic en el botón de editar
+            $('#editProfileModal').on('shown.bs.modal', function(event) {
+                // Obtener el botón que abrió el modal
+                var button = $(event.relatedTarget); // El botón que abrió el modal
+    
+                // Obtener el ID del perfil y el PIN del botón (usando data attributes)
+                var perfilId = button.data('id');
+                var pinper = button.data('pin');
+    
+                // Referencia al modal
+                var modal = $(this);
+    
+                // Asignar los valores al formulario
+                modal.find('#perfilId').val(perfilId);
+                modal.find('#pinper').val(pinper);
+    
+                // Configurar la URL del formulario para enviar los datos al perfil correcto
+                var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
+                modal.find('#editProfileForm').attr('action', formAction);
+            });
+        });
+    </script>    
 
     {{-- script para sumar los usuarios activos de la tabla perfiles --}}
     <script>
@@ -300,32 +307,30 @@
     </script>
     {{-- script para copiar un mensaje al portapapeles --}}
     <script>
-    function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
-    // 1. Limpiar el `idcue` para que solo contenga letras
-    var servicio = idcue.replace(/[^a-zA-Z]/g, '');  // Eliminar todo lo que no sea letra
+        function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
+            // 1. Limpiar el `idcue` para que solo contenga letras
+            var servicio = idcue.replace(/[^a-zA-Z]/g, ''); // Eliminar todo lo que no sea letra
 
-    // 2. Crear el mensaje con saltos de línea explícitos
-    var message = servicio + "\n\n";  // Usar el `idcue` limpio y un salto de línea extra
-    message += "Usuario: " + usuariocue + "\n";  // Usar el `usuariocue`
-    message += "Clave: " + contrasenacue + "\n";  // Usar el `contrasenacue`
-    message += "PIN de perfil Nro " + numeroper + " : " + pinper + "\n";  // Usar el `numeroper`
+            // 2. Crear el mensaje con saltos de línea explícitos
+            var message = servicio + "\n"; // Usar el `idcue` limpio y un salto de línea extra
+            message += "Usuario: " + usuariocue + "\n"; // Usar el `usuariocue`
+            message += "Clave: " + contrasenacue + "\n"; // Usar el `contrasenacue`
+            message += "PIN de perfil Nro " + numeroper + ": " + pinper; // Usar el `numeroper`
 
-    // 3. Crear un área de texto temporal para copiar el mensaje
-    var tempTextArea = document.createElement("textarea");
-    tempTextArea.value = message;  // Establecer el valor como el mensaje completo
-    document.body.appendChild(tempTextArea);
+            // 3. Crear un área de texto temporal para copiar el mensaje
+            var tempTextArea = document.createElement("textarea");
+            tempTextArea.value = message; // Establecer el valor como el mensaje completo
+            document.body.appendChild(tempTextArea);
 
-    // 4. Seleccionar y copiar el texto al portapapeles
-    tempTextArea.select();
-    document.execCommand("copy");
+            // 4. Seleccionar y copiar el texto al portapapeles
+            tempTextArea.select();
+            document.execCommand("copy");
 
-    // 5. Eliminar el área de texto temporal
-    document.body.removeChild(tempTextArea);
+            // 5. Eliminar el área de texto temporal
+            document.body.removeChild(tempTextArea);
 
-    // 6. Avisar al usuario que el mensaje se ha copiado
-    alert("El mensaje se ha copiado al portapapeles.");
-}
-
-
-</script>
+            // 6. Avisar al usuario que el mensaje se ha copiado
+            alert("El mensaje se ha copiado al portapapeles.");
+        }
+    </script>
 @endsection

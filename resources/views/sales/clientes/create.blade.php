@@ -1,11 +1,17 @@
 @extends('layouts.static')
 
 @section('title', 'Registrar Cliente')
-@section('h1','Registrar nuevo Cliente')
+@section('h1', 'Registrar nuevo Cliente')
 @section('introduccion')
-    Aquí puedes registrar un nuevo cliente. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
+    Aquí puedes registrar un nuevo cliente. Por favor, llena todos los campos requeridos y asegúrate de que la información
+    sea correcta.
 @endsection
 @section('content')
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
     <form action="{{ route('clientes.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3">
