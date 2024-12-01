@@ -262,30 +262,19 @@
     </script>
     {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
-        // Asegurarnos de que el código se ejecute cuando el DOM esté completamente cargado
-        $(document).ready(function() {
-            // Abre el modal y carga los datos cuando se hace clic en el botón de editar
-            $('#editProfileModal').on('shown.bs.modal', function(event) {
-                // Obtener el botón que abrió el modal
-                var button = $(event.relatedTarget); // El botón que abrió el modal
-    
-                // Obtener el ID del perfil y el PIN del botón (usando data attributes)
-                var perfilId = button.data('id');
-                var pinper = button.data('pin');
-    
-                // Referencia al modal
-                var modal = $(this);
-    
-                // Asignar los valores al formulario
-                modal.find('#perfilId').val(perfilId);
-                modal.find('#pinper').val(pinper);
-    
-                // Configurar la URL del formulario para enviar los datos al perfil correcto
-                var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
-                modal.find('#editProfileForm').attr('action', formAction);
-            });
+        $('#editProfileModal').on('shown.bs.modal', function(event) {
+            var button = $(event.relatedTarget); // El botón que activó el modal
+            var perfilId = button.data('id'); // Obtener el ID del perfil
+            var pinper = button.data('pin'); // Obtener el PIN del perfil
+
+            var modal = $(this);
+            modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
+            modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
+            // Actualizar la URL del formulario para apuntar al perfil correcto
+            var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
+            modal.find('#editProfileForm').attr('action', formAction); // Asignar la URL correcta al formulario
         });
-    </script>    
+    </script>
 
     {{-- script para sumar los usuarios activos de la tabla perfiles --}}
     <script>
