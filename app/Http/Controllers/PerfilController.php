@@ -90,10 +90,10 @@ class PerfilController extends Controller
         // Actualizar el PIN
         $perfil->pinper = $request->input('pinper');
         $perfil->save(); // Guardar los cambios
-
+        
         // Redirigir con un mensaje de éxito
         //return redirect()->back()->with('success', 'PIN actualizado correctamente');
-        return redirect()->route('cuentas')->with('success', 'Perfil actualizado con éxito.');
+        return back()->with('success', 'Perfil actualizado con éxito.')->withInput()->with('focus', 'idcue');;
     }
 
     /**

@@ -73,6 +73,7 @@
                 <th>Usuario</th>
                 <th>Vencimiento</th>
                 <th>Clientes</th>
+                <th>Espacio Disponible</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -106,6 +107,15 @@
                     <td>{{ $cuenta->usuariocue }}</td>
                     <td>{{ $cuenta->fechavencue->format('d/m/Y') }}</td>
                     <td>{{ $cuenta->usuarios_activos }}</td>
+                    <td>
+                    @php
+                        $pantmaxval = $cuenta->valor->pantmaxval;
+                        $usuarios_activos = $cuenta->usuarios_activos;
+                        $resta = $pantmaxval - $usuarios_activos;
+                        @endphp
+                    {{ $resta }}                   
+                    </td>
+
                     <td>
                         @if ($cuenta->caidacue)
                             <span class="badge bg-dark">Dañada</span>
@@ -154,25 +164,27 @@
     </table>
 @endsection
 @section('table2')
-    <div class="card mb-4">
-        <div class="card-body">
-            Busca los perfiles de una cuenta específica.
-            <div class="form-group mb-3">
-                <label for="idcue">Seleccionar Cuenta</label>
-                <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
-                    <select name="idcue" id="idcue" class="form-control" onchange="this.form.submit()">
-                        <option value="">-- Selecciona una Cuenta --</option>
-                        @foreach ($cuentas as $cuenta)
-                            <option value="{{ $cuenta->idcue }}"
-                                {{ request('idcue') == $cuenta->idcue ? 'selected' : '' }}>
-                                {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
+<div class="card mb-4">
+    <div class="card-body">
+        Busca los perfiles de una cuenta específica.
+        <div class="form-group mb-3">
+            <label for="idcue">Seleccionar Cuenta</label>
+            
+            <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
+                <select name="idcue" id="idcue" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Selecciona una Cuenta --</option>
+                    @foreach ($cuentas as $cuenta)
+                        <option value="{{ $cuenta->idcue }}" {{ request('idcue') == $cuenta->idcue ? 'selected' : '' }}>
+                            {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
         </div>
     </div>
+</div>
+
+
     <div id="tabla-perfiles" class="card mb-4">
         <div class="card-header">
             <i class="fas fa-table me-1"></i>
@@ -191,7 +203,7 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="Perfil">
                     @foreach ($perfiles as $perfil)
                         <tr>
                             <td>{{ $perfil->numeroper }}</td>
@@ -234,7 +246,7 @@
                     <form id="editProfileForm" method="POST" action="">
                         @csrf
                         @method('PUT')
-                        <input type="hidden" id="perfilId" name="perfilId">
+                        <input type="hidden" id="perfilId" name="idper">
                         <div class="form-group">
                             <label for="pinper">Nuevo PIN</label>
                             <input type="text" class="form-control" id="pinper" name="pinper" required>
@@ -322,4 +334,20 @@
             alert("El mensaje se ha copiado al portapapeles.");
         }
     </script>
+    @if(session('focus'))
+    <script>
+        document.getElementById("{{ session('focus') }}").focus();
+    </script>
+@endif
+<script>
+    // Inicializa Select2 en el select con el id 'idcue'
+    $(document).ready(function() {
+        $('#idcue').select2({
+            placeholder: "Selecciona una Cuenta",
+            allowClear: true  // Permite borrar la selección
+        });
+    });
+</script>
+
+
 @endsection
