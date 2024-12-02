@@ -108,12 +108,12 @@
                     <td>{{ $cuenta->fechavencue->format('d/m/Y') }}</td>
                     <td>{{ $cuenta->usuarios_activos }}</td>
                     <td>
-                    @php
-                        $pantmaxval = $cuenta->valor->pantmaxval;
-                        $usuarios_activos = $cuenta->usuarios_activos;
-                        $resta = $pantmaxval - $usuarios_activos;
+                        @php
+                            $pantmaxval = $cuenta->valor->pantmaxval;
+                            $usuarios_activos = $cuenta->usuarios_activos;
+                            $resta = $pantmaxval - $usuarios_activos;
                         @endphp
-                    {{ $resta }}                   
+                        {{ $resta }}
                     </td>
 
                     <td>
@@ -127,7 +127,8 @@
                             <span class="badge bg-success">Activa</span>
                         @endif
                         <!-- Botón para cambiar estado -->
-                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST" style="display:inline;">
+                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
+                            style="display:inline;">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="btn btn-dark btn-sm">
@@ -164,25 +165,26 @@
     </table>
 @endsection
 @section('table2')
-<div class="card mb-4">
-    <div class="card-body">
-        Busca los perfiles de una cuenta específica.
-        <div class="form-group mb-3">
-            <label for="idcue">Seleccionar Cuenta</label>
-            
-            <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
-                <select name="idcue" id="idcue" class="form-control" onchange="this.form.submit()">
-                    <option value="">-- Selecciona una Cuenta --</option>
-                    @foreach ($cuentas as $cuenta)
-                        <option value="{{ $cuenta->idcue }}" {{ request('idcue') == $cuenta->idcue ? 'selected' : '' }}>
-                            {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
-                        </option>
-                    @endforeach
-                </select>
-            </form>
+    <div class="card mb-4">
+        <div class="card-body">
+            Busca los perfiles de una cuenta específica.
+            <div class="form-group mb-3">
+                <label for="idcue">Seleccionar Cuenta</label>
+
+                <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
+                    <select name="idcue" id="idcue" class="form-control" onchange="this.form.submit()">
+                        <option value="">-- Selecciona una Cuenta --</option>
+                        @foreach ($cuentas as $cuenta)
+                            <option value="{{ $cuenta->idcue }}"
+                                {{ request('idcue') == $cuenta->idcue ? 'selected' : '' }}>
+                                {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
 
     <div id="tabla-perfiles" class="card mb-4">
@@ -334,20 +336,20 @@
             alert("El mensaje se ha copiado al portapapeles.");
         }
     </script>
-    @if(session('focus'))
+    @if (session('focus'))
+        <script>
+            document.getElementById("{{ session('focus') }}").focus();
+        </script>
+    @endif
     <script>
-        document.getElementById("{{ session('focus') }}").focus();
-    </script>
-@endif
-<script>
-    // Inicializa Select2 en el select con el id 'idcue'
-    $(document).ready(function() {
-        $('#idcue').select2({
-            placeholder: "Selecciona una Cuenta",
-            allowClear: true  // Permite borrar la selección
+        // Inicializa Select2 en el select con el id 'idcue'
+        $(document).ready(function() {
+            $('#idcue').select2({
+                placeholder: "Selecciona una Cuenta",
+                allowClear: true // Permite borrar la selección
+            });
         });
-    });
-</script>
+    </script>
 
 
 @endsection

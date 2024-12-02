@@ -37,7 +37,7 @@ class VentaController extends Controller
     {
         $clientes = Cliente::all(); // Obtener lista de clientes
         $empleados = Empleado::all(); //Obtener lista de empleados
-        return view('sales.ventas.create', compact('empleados','clientes'));
+        return view('sales.ventas.create', compact('empleados', 'clientes'));
     }
 
     /**
@@ -58,6 +58,31 @@ class VentaController extends Controller
 
         return redirect()->route('ventas')->with('success', 'Venta creada con éxito.');
     }
+
+    public function storeCliente(Request $request)
+    {
+        // Validación de los datos recibidos
+        $request->validate([
+            'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
+            'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
+        ]);
+
+        $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
+            ->orWhere('telefonocli', $request->telefonocli)
+            ->first();
+
+        // Si el cliente ya existe, redirigir con mensaje de error
+        if ($clienteExistente) {
+            return redirect()->route('ventas.create')
+                ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
+        }
+
+        $cliente = Cliente::create($request->all());
+
+        // Retornar el cliente recién creado como respuesta
+        return response()->json(['cliente' => $cliente]);
+    }
+
 
     /**
      * Display the specified resource.

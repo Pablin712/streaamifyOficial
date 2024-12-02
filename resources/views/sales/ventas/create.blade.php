@@ -27,16 +27,21 @@
     <form id="form-venta" method="POST" action="{{ route('ventas.store') }}">
         @csrf
         <div class="form-group mb-3">
-            <label for="idcli">Seleccionar Cliente</label>
-            <select name="idcli" id="idcli" class="form-control select2">
-                <option value="">-- Selecciona un Cliente --</option>
-                @foreach ($clientes as $cliente)
-                    <option value="{{ $cliente->idcli }}">{{ $cliente->nombrecli }}</option>
-                @endforeach
-            </select>
+            <label for="idcue">Seleccionar Cliente</label>
+            
+            <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
+                <select name="idcli" id="idcli" class="form-control" onchange="this.form.submit()">
+                    <option value="">-- Selecciona un Cliente --</option>
+                    @foreach ($clientes as $cliente)
+                        <option value="{{ $cliente->idcli }}" {{ request('idcli') == $cliente->idcli ? 'selected' : '' }}>
+                            {{ $cliente->nombrecli }} - {{ $cliente->telefonocli }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
         </div>
 
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoClienteModal">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
             Nuevo Cliente
         </button>
 
@@ -69,27 +74,32 @@
 </div>
 <br>
 
-<!-- Modal Nuevo Cliente -->
-<div class="modal fade" id="nuevoClienteModal" tabindex="-1" aria-labelledby="nuevoClienteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<!-- Modal para agregar un nuevo cliente -->
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" role="dialog" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="nuevoClienteModalLabel">Nuevo Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="modalNuevoClienteLabel">Nuevo Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="nuevo-cliente-form">
+            <form id="formNuevoCliente">
+                <div class="modal-body">
                     <div class="form-group">
-                        <label for="nombrecli">Nombre Cliente</label>
-                        <input type="text" id="nombrecli" class="form-control" required>
+                        <label for="nombrecli">Nombre del Cliente</label>
+                        <input type="text" class="form-control" id="nombrecli" required>
                     </div>
                     <div class="form-group">
-                        <label for="telefono">Teléfono</label>
-                        <input type="text" id="telefonocli" class="form-control" required>
+                        <label for="telefonocli">Teléfono</label>
+                        <input type="text" class="form-control" id="telefonocli" required>
                     </div>
-                    <button type="button" class="btn btn-primary mt-3" id="guardar-cliente">Guardar Cliente</button>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="editClienteForm" class="btn btn-primary">Registrar Cliente</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -126,75 +136,27 @@
 
 @section('scripts')
 <script>
-    // Variables para manejar los detalles y el total
-    let detallesVenta = [];
-    let totalVenta = 0;
-
-    // Función para agregar un detalle a la tabla
-    document.getElementById('agregar-detalle').addEventListener('click', function() {
-        const descripcion = document.getElementById('descripciondet').value;
-        const monto = parseFloat(document.getElementById('montodet').value);
-
-        if (descripcion && !isNaN(monto) && monto > 0) {
-            // Agregar detalle al arreglo
-            detallesVenta.push({ descripcion, monto });
-            totalVenta += monto;
-
-            // Actualizar la tabla
-            const row = `<tr>
-                            <td>${descripcion}</td>
-                            <td>$${monto.toFixed(2)}</td>
-                            <td><button class="btn btn-danger btn-sm" onclick="eliminarDetalle(this)">Eliminar</button></td>
-                          </tr>`;
-            document.getElementById('tabla-detalles').innerHTML += row;
-
-            // Actualizar total
-            document.getElementById('total-venta').textContent = totalVenta.toFixed(2);
-
-            // Limpiar el formulario del modal
-            document.getElementById('form-detalle').reset();
-            // Cerrar modal
-            bootstrap.Modal.getInstance(document.getElementById('agregarDetalleModal')).hide();
-        } else {
-            alert("Por favor, ingresa una descripción y monto válidos.");
-        }
-    });
-
-    // Función para eliminar un detalle
-    function eliminarDetalle(button) {
-        const row = button.closest('tr');
-        const monto = parseFloat(row.children[1].textContent.replace('$', ''));
-        
-        // Eliminar del arreglo y actualizar el total
-        detallesVenta = detallesVenta.filter(detalle => detalle.monto !== monto);
-        totalVenta -= monto;
-
-        // Actualizar la tabla y el total
-        row.remove();
-        document.getElementById('total-venta').textContent = totalVenta.toFixed(2);
-    }
-
-    // Función para guardar un nuevo cliente (aún no implementado backend)
-    document.getElementById('guardar-cliente').addEventListener('click', function() {
-        const nombre = document.getElementById('nombrecli').value;
-        const correo = document.getElementById('correo').value;
-        const telefono = document.getElementById('telefono').value;
-
-        if (nombre && correo && telefono) {
-            // Aquí agregaríamos una llamada AJAX o un formulario real para guardar el cliente
-            alert("Nuevo cliente agregado: " + nombre);
-            bootstrap.Modal.getInstance(document.getElementById('nuevoClienteModal')).hide();
-        } else {
-            alert("Por favor, completa todos los campos.");
-        }
-    });
-
-    // Enviar el formulario de venta al registrar la venta
-    document.getElementById('form-venta').addEventListener('submit', function(event) {
-        event.preventDefault(); // Evita que se envíe el formulario antes de completar la venta
-
-        // Aquí procesarías el envío de la venta con los detalles y el cliente
-        alert("Venta registrada con éxito. (Esta parte aún debe conectarse al backend)");
+    // Inicializa Select2 en el select con el id 'idcli'
+    $(document).ready(function() {
+        $('#idcli').select2({
+            placeholder: "Selecciona un Cliente",
+            allowClear: true  // Permite borrar la selección
+        });
     });
 </script>
+<script>
+    $('#modalNuevoCliente').on('shown.bs.modal', function(event) {
+        var button = $(event.relatedTarget); // El botón que activó el modal
+        var clienteId = button.data('id'); // Obtener el ID del perfil
+        var pinper = button.data('pin'); // Obtener el PIN del perfil
+
+        var modal = $(this);
+        modal.find('#clienteId').val(clienteId); // Asignar el ID al campo oculto
+        modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
+        // Actualizar la URL del formulario para apuntar al perfil correcto
+        var formAction = "{{ route('ventas.storeCliente', ':id') }}".replace(':id', clienteId);
+        modal.find('#editClienteForm').attr('action', formAction); // Asignar la URL correcta al formulario
+    });
+</script>
+
 @endsection
