@@ -87,6 +87,7 @@
                     $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
 
                     // Determinar la clase CSS para la fila
+                    /*
                     if ($cuenta->caidacue) {
                         // Cuenta dañada (morado)
                         $estadoClase = 'table-dark'; // Clase personalizada para morado
@@ -100,8 +101,9 @@
                         // Cuenta activa (verde)
                         $estadoClase = 'table-success';
                     }
+                    */
                 @endphp
-                <tr class="{{ $estadoClase }}">
+                <tr> {{-- class="{{ $estadoClase }}" --}}
                     <td>{{ $cuenta->idcue }}</td>
                     <td>{{ $cuenta->valor->idval }} ({{ $cuenta->valor->proveedor->nombrepro }})</td>
                     <td>{{ $cuenta->usuariocue }}</td>

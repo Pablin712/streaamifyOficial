@@ -109,7 +109,7 @@
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link" href="{{ route('cuentas') }}">Accounts and profiles</a>
-                                <a class="nav-link" href="settings.html">Active Users</a>
+                                <a class="nav-link" href="{{ route('usuarios') }}">Active Users</a>
                             </nav>
                         </div>
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"

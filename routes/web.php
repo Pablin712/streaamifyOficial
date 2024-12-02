@@ -15,6 +15,7 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\TipoGastoController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\VentaController;
+use App\Http\Controllers\UsuarioController;
 
 Route::get('/', HomeController::class);
 
@@ -135,4 +136,13 @@ Route::controller(VentaController::class)->group(function () {
     Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
     Route::put('/ventas/{id}', 'update')->name('ventas.update');
     Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
+});
+Route::controller(UsuarioController::class)->group(function () {
+    Route::get('/usuarios', 'index')->name('usuarios');
+    Route::get('/usuarios/create', 'create')->name('usuarios.create');
+    Route::post('/usuarios/createstore', 'store')->name('usuarios.store');
+    Route::get('/usuarios/{id}/edit', 'edit')->name('usuarios.edit');
+    Route::get('/usuarios/{id}/renew', 'renew')->name('usuarios.renew');
+    Route::put('/usuarios/{id}', 'update')->name('usuarios.update');
+    Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
 });

@@ -144,6 +144,7 @@
         });
     });
 </script>
+{{-- script modal para cliente --}}
 <script>
     $('#modalNuevoCliente').on('shown.bs.modal', function(event) {
         var button = $(event.relatedTarget); // El botón que activó el modal
