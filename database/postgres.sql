@@ -554,3 +554,33 @@ create or replace view view_valores as
 select v.idval,v.idser,p.nombrepro,v.costoval,v.pantmaxval,v.mesesval
 from valores v
 join proveedores p on p.idpro=v.idpro;
+
+
+
+CREATE TABLE contabilidad (
+    idcon SERIAL PRIMARY KEY,            -- idcon como clave primaria, autoincremental
+    mes INTEGER DEFAULT EXTRACT(MONTH FROM CURRENT_DATE),  -- mes por defecto es el mes actual
+    año INTEGER DEFAULT EXTRACT(YEAR FROM CURRENT_DATE),  -- año por defecto es el año actual
+    detalle TEXT,                         -- detalle de la transacción
+    num_cuentas INTEGER,                  -- número de cuentas involucradas
+    num_usuarios INTEGER,                 -- número de usuarios involucrados
+    ingresos DECIMAL(15, 2),              -- ingresos (con 2 decimales para centavos)
+    costos DECIMAL(15, 2),                -- costos (con 2 decimales para centavos)
+    ganancias DECIMAL(15, 2),             -- ganancias (con 2 decimales)
+    renta DECIMAL(5, 2)                  -- renta (con 2 decimales)
+);
+
+-- Crear un trigger para calcular las ganancias automáticamente
+CREATE OR REPLACE FUNCTION calcular_ganancias() 
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.ganancias := NEW.ingresos - NEW.costos;  -- calcula las ganancias
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear un trigger que se activa antes de insertar un registro
+CREATE TRIGGER before_insert_contabilidad
+BEFORE INSERT ON contabilidad
+FOR EACH ROW
+EXECUTE FUNCTION calcular_ganancias();

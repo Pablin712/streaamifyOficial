@@ -8,6 +8,7 @@ use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ValorController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\ContabilidadController;
 use App\Http\Controllers\CostoController;
 use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\GastoController;
@@ -35,11 +36,14 @@ Route::get('/inicio', function () {
     return view('inicio');
 })->name('inicio');
 
-Route::get('/dashboard', function () {
+//Route::get('/dashboard', function () {
     //$data = ['user' => 'John Doe'];
-    return view('dashboard');
-})->name('dashboard');
+//    return view('dashboard');
+//})->name('dashboard');
 
+Route::controller(ContabilidadController::class)->group(function () {
+    Route::get('/dashboard', 'index')->name('dashboard');
+});
 //Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
 Route::controller(ServicioController::class)->group(function () {
     Route::get('/servicios', 'index')->name('servicios');
