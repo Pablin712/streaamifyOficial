@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             CuentaSeeder::class,
             CostoSeeder::class,
             VentaSeeder::class,
-            DetalleVentaSeeder::class
+            DetalleVentaSeeder::class,
+            ContabilidadSeeder::class
         ]);
     }
 }

@@ -1,6 +1,6 @@
-@extends('layouts.static') 
+@extends('layouts.static')
 @section('title')
-Dashboard
+    Dashboard
 @endsection
 @section('styles')
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -10,6 +10,8 @@ Dashboard
 
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 @endsection
 @section('h1', 'Dashboard')
 @section('introduccion')
@@ -40,7 +42,7 @@ Dashboard
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                             Earnings (Monthly)</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{$ingresos_mes}}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_mes }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -58,7 +60,7 @@ Dashboard
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                             Earnings (Annual)</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{$ingresos_ano}}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_ano }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -82,9 +84,8 @@ Dashboard
                                             </div>
                                             <div class="col">
                                                 <div class="progress progress-sm mr-2">
-                                                    <div class="progress-bar bg-info" role="progressbar"
-                                                        style="width: 50%" aria-valuenow="50" aria-valuemin="0"
-                                                        aria-valuemax="100"></div>
+                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 50%"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -105,7 +106,7 @@ Dashboard
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                             Cuentas caidas</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{$cuentas_caidas}}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $cuentas_caidas }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-tools fa-2x text-gray-300"></i>
@@ -126,7 +127,7 @@ Dashboard
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                             Clientes Activos</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{$clientes_activos}}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $clientes_activos }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -144,7 +145,7 @@ Dashboard
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                             Usuarios Activos</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{$usuarios_activos}}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_activos }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-id-badge fa-2x text-gray-300"></i>
@@ -168,9 +169,8 @@ Dashboard
                                             </div>
                                             <div class="col">
                                                 <div class="progress progress-sm mr-2">
-                                                    <div class="progress-bar bg-info" role="progressbar"
-                                                        style="width: 50%" aria-valuenow="50" aria-valuemin="0"
-                                                        aria-valuemax="100"></div>
+                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 50%"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -191,7 +191,7 @@ Dashboard
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                             Pending Payments</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{$usuarios_acobrar}}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_acobrar }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-clock fa-2x text-gray-300"></i>
@@ -201,89 +201,8 @@ Dashboard
                         </div>
                     </div>
                 </div>
-                <div class="row">
-
-                    <div class="col-lg-6">
-
-                        <!-- Default Card Example -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                Default Card Example
-                            </div>
-                            <div class="card-body">
-                                This card uses Bootstrap's default styling with no utility classes added. Global
-                                styles are the only things modifying the look and feel of this default card example.
-                            </div>
-                        </div>
-
-                        <!-- Basic Card Example -->
-                        <div class="card shadow mb-4">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Basic Card Example</h6>
-                            </div>
-                            <div class="card-body">
-                                The styling for this basic card example is created by using default Bootstrap
-                                utility classes. By using utility classes, the style of the card component can be
-                                easily modified with no need for any custom CSS!
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="col-lg-6">
-
-                        <!-- Dropdown Card Example -->
-                        <div class="card shadow mb-4">
-                            <!-- Card Header - Dropdown -->
-                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                <h6 class="m-0 font-weight-bold text-primary">Dropdown Card Example</h6>
-                                <div class="dropdown no-arrow">
-                                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                        aria-labelledby="dropdownMenuLink">
-                                        <div class="dropdown-header">Dropdown Header:</div>
-                                        <a class="dropdown-item" href="#">Action</a>
-                                        <a class="dropdown-item" href="#">Another action</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#">Something else here</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Card Body -->
-                            <div class="card-body">
-                                Dropdown menus can be placed in the card header in order to extend the functionality
-                                of a basic card. In this dropdown card example, the Font Awesome vertical ellipsis
-                                icon in the card header can be clicked on in order to toggle a dropdown menu.
-                            </div>
-                        </div>
-
-                        <!-- Collapsable Card Example -->
-                        <div class="card shadow mb-4">
-                            <!-- Card Header - Accordion -->
-                            <a href="#collapseCardExample" class="d-block card-header py-3" data-toggle="collapse"
-                                role="button" aria-expanded="true" aria-controls="collapseCardExample">
-                                <h6 class="m-0 font-weight-bold text-primary">Collapsable Card Example</h6>
-                            </a>
-                            <!-- Card Content - Collapse -->
-                            <div class="collapse show" id="collapseCardExample">
-                                <div class="card-body">
-                                    This is a collapsable card example using Bootstrap's built in collapse
-                                    functionality. <strong>Click on the card header</strong> to see the card body
-                                    collapse and expand!
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-
             </div>
             <!-- /.container-fluid -->
-
         </div>
         <!-- End of Main Content -->
     </div>
@@ -291,7 +210,699 @@ Dashboard
     {{--  <h3>Mapa de erp</h3>
     <img src="{{ asset('images/BASE2.png') }}" alt="imagen de mapa">
     --}}
+
+    {{-- tabla de resultados del mes --}}
+    <div id="resultados" class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-money-bill-wave me-1"></i>
+            Resultados del mes
+        </div>
+        <div class="card-body">
+            <table id="datatablesSimple" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Cta</th>
+                        <th>Usuarios</th>
+                        <th>usu/cue</th>
+                        <th>Ingresos</th>
+                        <th>Costos</th>
+                        <th>Ganancias</th>
+                        <th>Renta</th>
+                        <th>Ing/Cli</th>
+                        <th>Cos/Cli</th>
+                        <th>Gan/Cli</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Netflix</td>
+                        <td>{{ $cuentas_netflix }}</td>
+                        <td>{{ $usuarios_netflix }}</td>
+                        <td>
+                            @if ($cuentas_netflix != 0)
+                                {{ number_format($usuarios_netflix / $cuentas_netflix, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_netflix }}</td>
+                        <td>{{ $costos_netflix }}</td>
+                        <td>{{ $ingresos_netflix - $costos_netflix }}</td>
+                        <td>
+                            @if ($costos_netflix != 0)
+                                {{ number_format($ingresos_netflix / $costos_netflix, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_netflix != 0)
+                                {{ number_format($ingresos_netflix / $usuarios_netflix, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_netflix != 0)
+                                {{ number_format($costos_netflix / $usuarios_netflix, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_netflix != 0)
+                                {{ number_format(($ingresos_netflix - $costos_netflix) / $usuarios_netflix, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Disney</td>
+                        <td>{{ $cuentas_disney }}</td>
+                        <td>{{ $usuarios_disney }}</td>
+                        <td>
+                            @if ($cuentas_disney != 0)
+                                {{ number_format($usuarios_disney / $cuentas_disney, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_disney }}</td>
+                        <td>{{ $costos_disney }}</td>
+                        <td>{{ $ingresos_disney - $costos_disney }}</td>
+                        <td>
+                            @if ($costos_netflix != 0)
+                                {{ number_format($ingresos_disney / $costos_disney, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_disney != 0)
+                                {{ number_format($ingresos_disney / $usuarios_disney, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_disney != 0)
+                                {{ number_format($costos_disney / $usuarios_disney, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_disney != 0)
+                                {{ number_format(($ingresos_disney - $costos_disney) / $usuarios_disney, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Prime</td>
+                        <td>{{ $cuentas_prime }}</td>
+                        <td>{{ $usuarios_prime }}</td>
+                        <td>
+                            @if ($cuentas_prime != 0)
+                                {{ number_format($usuarios_prime / $cuentas_prime, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_prime }}</td>
+                        <td>{{ $costos_prime }}</td>
+                        <td>{{ $ingresos_prime - $costos_prime }}</td>
+                        <td>
+                            @if ($costos_prime != 0)
+                                {{ number_format($ingresos_prime / $costos_prime, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_prime != 0)
+                                {{ number_format($ingresos_prime / $usuarios_prime, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_prime != 0)
+                                {{ number_format($costos_prime / $usuarios_prime, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_prime != 0)
+                                {{ number_format(($ingresos_prime - $costos_prime) / $usuarios_prime, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Max</td>
+                        <td>{{ $cuentas_max }}</td>
+                        <td>{{ $usuarios_max }}</td>
+                        <td>
+                            @if ($cuentas_max != 0)
+                                {{ number_format($usuarios_max / $cuentas_max, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_max }}</td>
+                        <td>{{ $costos_max }}</td>
+                        <td>{{ $ingresos_max - $costos_max }}</td>
+                        <td>
+                            @if ($costos_max != 0)
+                                {{ number_format($ingresos_max / $costos_max, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_max != 0)
+                                {{ number_format($ingresos_max / $usuarios_max, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_max != 0)
+                                {{ number_format($costos_max / $usuarios_max, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_max != 0)
+                                {{ number_format(($ingresos_max - $costos_max) / $usuarios_max, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Magis</td>
+                        <td>{{ $cuentas_magis }}</td>
+                        <td>{{ $usuarios_magis }}</td>
+                        <td>
+                            @if ($cuentas_magis != 0)
+                                {{ number_format($usuarios_magis / $cuentas_magis, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_magis }}</td>
+                        <td>{{ $costos_magis }}</td>
+                        <td>{{ $ingresos_magis - $costos_magis }}</td>
+                        <td>
+                            @if ($costos_magis != 0)
+                                {{ number_format($ingresos_magis / $costos_magis, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_magis != 0)
+                                {{ number_format($ingresos_magis / $usuarios_magis, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_magis != 0)
+                                {{ number_format($costos_magis / $usuarios_magis, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_magis != 0)
+                                {{ number_format(($ingresos_magis - $costos_magis) / $usuarios_magis, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Crunchy</td>
+                        <td>{{ $cuentas_crunchy }}</td>
+                        <td>{{ $usuarios_crunchy }}</td>
+                        <td>
+                            @if ($cuentas_crunchy != 0)
+                                {{ number_format($usuarios_crunchy / $cuentas_crunchy, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_crunchy }}</td>
+                        <td>{{ $costos_crunchy }}</td>
+                        <td>{{ $ingresos_crunchy - $costos_crunchy }}</td>
+                        <td>
+                            @if ($costos_crunchy != 0)
+                                {{ number_format($ingresos_crunchy / $costos_crunchy, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_crunchy != 0)
+                                {{ number_format($ingresos_crunchy / $usuarios_crunchy, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_crunchy != 0)
+                                {{ number_format($costos_crunchy / $usuarios_crunchy, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_crunchy != 0)
+                                {{ number_format(($ingresos_crunchy - $costos_crunchy) / $usuarios_crunchy, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Paramount</td>
+                        <td>{{ $cuentas_paramount }}</td>
+                        <td>{{ $usuarios_paramount }}</td>
+                        <td>
+                            @if ($cuentas_paramount != 0)
+                                {{ number_format($usuarios_paramount / $cuentas_paramount, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_paramount }}</td>
+                        <td>{{ $costos_paramount }}</td>
+                        <td>{{ $ingresos_paramount - $costos_paramount }}</td>
+                        <td>
+                            @if ($costos_paramount != 0)
+                                {{ number_format($ingresos_paramount / $costos_paramount, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_paramount != 0)
+                                {{ number_format($ingresos_paramount / $usuarios_paramount, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_paramount != 0)
+                                {{ number_format($costos_paramount / $usuarios_paramount, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_paramount != 0)
+                                {{ number_format(($ingresos_paramount - $costos_paramount) / $usuarios_paramount, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Spotify</td>
+                        <td>{{ $cuentas_spotify }}</td>
+                        <td>{{ $usuarios_spotify }}</td>
+                        <td>
+                            @if ($cuentas_spotify != 0)
+                                {{ number_format($usuarios_spotify / $cuentas_spotify, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_spotify }}</td>
+                        <td>{{ $costos_spotify }}</td>
+                        <td>{{ $ingresos_spotify - $costos_spotify }}</td>
+                        <td>
+                            @if ($costos_spotify != 0)
+                                {{ number_format($ingresos_spotify / $costos_spotify, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_spotify != 0)
+                                {{ number_format($ingresos_spotify / $usuarios_spotify, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_spotify != 0)
+                                {{ number_format($costos_spotify / $usuarios_spotify, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_spotify != 0)
+                                {{ number_format(($ingresos_spotify - $costos_spotify) / $usuarios_spotify, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Otros</td>
+                        <td>{{ $cuentas_otros }}</td>
+                        <td>{{ $usuarios_otros }}</td>
+                        <td>
+                            @if ($cuentas_otros != 0)
+                                {{ number_format($usuarios_otros / $cuentas_otros, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>{{ $ingresos_otros }}</td>
+                        <td>{{ $costos_otros }}</td>
+                        <td>{{ $ingresos_otros - $costos_otros }}</td>
+                        <td>
+                            @if ($costos_otros != 0)
+                                {{ number_format($ingresos_otros / $costos_otros, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_otros != 0)
+                                {{ number_format($ingresos_otros / $usuarios_otros, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_otros != 0)
+                                {{ number_format($costos_otros / $usuarios_otros, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_otros != 0)
+                                {{ number_format(($ingresos_otros - $costos_otros) / $usuarios_otros, 2) }}
+                            @else
+                                0
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Totales</strong></td>
+                        <td><strong>{{ $num_cuentas }}</strong></td>
+                        <td><strong>{{ $usuarios_activos }}</strong></td>
+                        <td>
+                            @if ($num_cuentas != 0)
+                                <strong>{{ number_format($usuarios_activos / $num_cuentas, 2) }}</strong>
+                            @else
+                                <strong>0</strong>
+                            @endif
+                        </td>
+                        <td><strong>{{ $ingresos_mes }}</strong></td>
+                        <td><strong>{{ $costos_mes }}</strong></td>
+                        <td><strong>{{ $ingresos_mes - $costos_mes }}</strong></td>
+                        <td>
+                            @if ($costos_mes != 0)
+                                <strong>{{ number_format($ingresos_mes / $costos_mes, 2) }}</strong>
+                            @else
+                                <strong>0</strong>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_activos != 0)
+                                <strong>{{ number_format($ingresos_mes / $usuarios_activos, 2) }}</strong>
+                            @else
+                                <strong>0</strong>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_activos != 0)
+                                <strong>{{ number_format($costos_mes / $usuarios_activos, 2) }}</strong>
+                            @else
+                                <strong>0</strong>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($usuarios_activos != 0)
+                                <strong>{{ number_format(($ingresos_mes - $costos_mes) / $usuarios_activos, 2) }}</strong>
+                            @else
+                                <strong>0</strong>
+                            @endif
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            Chart.js is a third party plugin that is used to generate the charts in this template. The charts below have
+            been customized - for further customization options, please visit the official
+            <a target="_blank" href="https://www.chartjs.org/docs/latest/">Chart.js documentation</a>
+            .
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Area Chart Example
+        </div>
+        <div class="card-body"><canvas id="myAreaChart" width="100%" height="30"></canvas></div>
+        <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    Bar Chart Example
+                </div>
+                <div class="card-body">
+                    <canvas id="myBarChart" width="100%" height="50"></canvas>
+                </div>
+                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    Pie Chart Example
+                </div>
+                <div class="card-body"><canvas id="myPieChart" width="100%" height="50"></canvas></div>
+                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('pie')
     Realiza las tareas
+@endsection
+@section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('myAreaChart').getContext('2d');
+
+
+        var mesesHistorial = @json($meses_historial).reverse(); // Etiquetas de los meses, invertidas
+        var ingresosHistorial = @json($ingresos_historial).reverse(); // Ingresos invertidos
+        var costosHistorial = @json($costos_historial).reverse(); // Costos invertidos
+        var gananciasHistorial = @json($ganancias_historial).reverse();
+
+        var myAreaChart = new Chart(ctx, {
+            type: 'line', // Tipo de gráfico: línea (pero con área rellena)
+            data: {
+                labels: mesesHistorial, // Etiquetas del eje X, que son los meses pasados desde el controlador
+                datasets: [{
+                        label: 'Ingresos', // Nombre de la primera serie (Ingresos)
+                        data: ingresosHistorial, // Los datos de la serie de ingresos
+                        fill: true, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(78, 115, 223, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(78, 115, 223, 1)', // Color de la línea
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Costos', // Nombre de la segunda serie (Costos)
+                        data: costosHistorial, // Los datos de la serie de costos
+                        fill: true, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(255, 159, 64, 1)', // Color de la línea
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Ganancias', // Nombre de la tercera serie (Ganancias)
+                        data: gananciasHistorial, // Los datos de la serie de ganancias
+                        fill: true, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(28, 200, 138, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(28, 200, 138, 1)', // Color de la línea
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true, // Hacer el gráfico responsivo
+                scales: {
+                    x: {
+                        beginAtZero: true // Comenzar el eje X desde 0
+                    },
+                    y: {
+                        beginAtZero: true // Comenzar el eje Y desde 0
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true, // Mostrar la leyenda
+                        position: 'top' // Posición de la leyenda
+                    },
+                    tooltip: {
+                        enabled: true // Habilitar los tooltips
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        var ctx = document.getElementById('myBarChart').getContext('2d');
+    
+        // Ingresos, costos y ganancias de Netflix
+        var ingNetflix = @json($ingresos_netflix); // Ingresos
+        var cosNetflix = @json($costos_netflix); // Costos
+        var ganNetflix = ingNetflix.map((ing, index) => parseFloat(ing) - parseFloat(cosNetflix[index])); // Ganancias de Netflix
+    
+        // Ingresos, costos y ganancias de Disney
+        var ingDisney = @json($ingresos_disney); // Ingresos de Disney
+        var cosDisney = @json($costos_disney); // Costos de Disney
+        var ganDisney = ingDisney.map((ing, index) => parseFloat(ing) - parseFloat(cosDisney[index])); // Ganancias de Disney
+    
+        // Ingresos, costos y ganancias de Prime
+        var ingPrime = @json($ingresos_prime); // Ingresos de Prime
+        var cosPrime = @json($costos_prime); // Costos de Prime
+        var ganPrime = ingPrime.map((ing, index) => parseFloat(ing) - parseFloat(cosPrime[index])); // Ganancias de Prime
+    
+        // Ingresos, costos y ganancias de Max
+        var ingMax = @json($ingresos_max); // Ingresos de Max
+        var cosMax = @json($costos_max); // Costos de Max
+        var ganMax = ingMax.map((ing, index) => parseFloat(ing) - parseFloat(cosMax[index])); // Ganancias de Max
+    
+        // Ingresos, costos y ganancias de Magis
+        var ingMagis = @json($ingresos_magis); // Ingresos de Magis
+        var cosMagis = @json($costos_magis); // Costos de Magis
+        var ganMagis = ingMagis.map((ing, index) => parseFloat(ing) - parseFloat(cosMagis[index])); // Ganancias de Magis
+    
+        // Ingresos, costos y ganancias de Crunchy
+        var ingCrunchy = @json($ingresos_crunchy); // Ingresos de Crunchy
+        var cosCrunchy = @json($costos_crunchy); // Costos de Crunchy
+        var ganCrunchy = ingCrunchy.map((ing, index) => parseFloat(ing) - parseFloat(cosCrunchy[index])); // Ganancias de Crunchy
+    
+        // Ingresos, costos y ganancias de Paramount
+        var ingParamount = @json($ingresos_paramount); // Ingresos de Paramount
+        var cosParamount = @json($costos_paramount); // Costos de Paramount
+        var ganParamount = ingParamount.map((ing, index) => parseFloat(ing) - parseFloat(cosParamount[index])); // Ganancias de Paramount
+    
+        // Ingresos, costos y ganancias de Spotify
+        var ingSpotify = @json($ingresos_spotify); // Ingresos de Spotify
+        var cosSpotify = @json($costos_spotify); // Costos de Spotify
+        var ganSpotify = ingSpotify.map((ing, index) => parseFloat(ing) - parseFloat(cosSpotify[index])); // Ganancias de Spotify
+    
+        // Ingresos, costos y ganancias de Otros
+        var ingOtros = @json($ingresos_otros); // Ingresos de Otros
+        var cosOtros = @json($costos_otros); // Costos de Otros
+        var ganOtros = ingOtros.map((ing, index) => parseFloat(ing) - parseFloat(cosOtros[index])); // Ganancias de Otros
+    
+        var myBarChart = new Chart(ctx, {
+            type: 'bar', // Tipo de gráfico: barra
+            data: {
+                labels: ['Netflix', 'Disney', 'Prime', 'Max', 'Magis', 'Crunchy', 'Paramount', 'Spotify', 'Otros'], // Etiquetas de las categorías (eje X)
+                datasets: [
+                    {
+                        label: 'Ingresos', // Etiqueta para la primera barra
+                        data: [ingNetflix, ingDisney, ingPrime, ingMax, ingMagis, ingCrunchy, ingParamount, ingSpotify, ingOtros], // Datos para la serie 1
+                        backgroundColor: '#3aff00', // Color de las barras de la primera serie
+                        borderColor: '#3aff00', // Color del borde de las barras
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Costos', // Etiqueta para la segunda barra
+                        data: [cosNetflix, cosDisney, cosPrime, cosMax, cosMagis, cosCrunchy, cosParamount, cosSpotify, cosOtros], // Datos para la serie 2
+                        backgroundColor: '#ff0000', // Color de las barras de la segunda serie
+                        borderColor: '#ff0000', // Color del borde de las barras
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Ganancias', // Etiqueta para la tercera barra
+                        data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, ganSpotify, ganOtros], // Datos para la serie 3
+                        backgroundColor: '#18af00', // Color de las barras de la tercera serie
+                        borderColor: '#18af00', // Color del borde de las barras
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true, // Hacer el gráfico responsivo
+                scales: {
+                    x: {
+                        stacked: false // No apilar las barras, es necesario para barras agrupadas
+                    },
+                    y: {
+                        stacked: false // No apilar las barras en el eje Y
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true, // Mostrar la leyenda
+                        position: 'top' // Posición de la leyenda
+                    }
+                }
+            }
+        });
+    </script>
+    
+    <script>
+        var ctx = document.getElementById('myPieChart').getContext('2d');
+        var myPieChart = new Chart(ctx, {
+            type: 'pie', // Tipo de gráfico: pastel
+            data: {
+                labels: ['Red', 'Blue', 'Yellow'], // Etiquetas para cada porción del pastel
+                datasets: [{
+                    data: [12, 19, 3], // Datos para cada porción del pastel
+                    backgroundColor: ['#FF6347', '#36b9cc', '#FFDD57'], // Colores para las porciones
+                    borderColor: ['#FF6347', '#36b9cc', '#FFDD57'], // Color de los bordes
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, // Hacer el gráfico responsivo
+                plugins: {
+                    legend: {
+                        display: true, // Mostrar la leyenda
+                        position: 'top' // Posición de la leyenda
+                    },
+                    tooltip: {
+                        enabled: true, // Habilitar los tooltips
+                    }
+                }
+            }
+        });
+    </script>
+
 @endsection
