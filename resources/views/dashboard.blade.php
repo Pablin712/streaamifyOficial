@@ -152,7 +152,8 @@
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                             Media de pago por cliente</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($promedio_pagos_mes,2) }}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            ${{ number_format($promedio_pagos_mes, 2) }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-coins fa-2x text-gray-300"></i>
@@ -170,8 +171,8 @@
                                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                             Cliente más facturado</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                            {{ $cliente_mas_facturado->nombre_cliente }} 
-                                            ${{$cliente_mas_facturado->facturado}}
+                                            {{ $cliente_mas_facturado->nombre_cliente }}
+                                            ${{ $cliente_mas_facturado->facturado }}
                                         </div>
                                     </div>
                                     <div class="col-auto">
@@ -665,7 +666,7 @@
     <div class="card mb-4">
         <div class="card-header">
             <i class="fas fa-chart-area me-1"></i>
-            Area Chart Example
+            Progreso en los últimos 6 meses
         </div>
         <div class="card-body"><canvas id="myAreaChart" width="100%" height="30"></canvas></div>
         <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
@@ -676,7 +677,7 @@
             <div class="card mb-4">
                 <div class="card-header">
                     <i class="fas fa-chart-bar me-1"></i>
-                    Bar Chart Example
+                    Finanzas de los servicios este mes
                 </div>
                 <div class="card-body">
                     <canvas id="myBarChart" width="100%" height="50"></canvas>
@@ -688,7 +689,7 @@
             <div class="card mb-4">
                 <div class="card-header">
                     <i class="fas fa-chart-pie me-1"></i>
-                    Pie Chart Example
+                    Porcentaje de Ganancias
                 </div>
                 <div class="card-body"><canvas id="myPieChart" width="100%" height="50"></canvas></div>
                 <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
@@ -764,75 +765,70 @@
     </script>
     <script>
         var ctx = document.getElementById('myBarChart').getContext('2d');
-    
-        // Ingresos, costos y ganancias de Netflix
+
         var ingNetflix = @json($ingresos_netflix); // Ingresos
         var cosNetflix = @json($costos_netflix); // Costos
-        var ganNetflix = ingNetflix.map((ing, index) => parseFloat(ing) - parseFloat(cosNetflix[index])); // Ganancias de Netflix
-    
+        var ganNetflix = ingNetflix - cosNetflix;
+
         // Ingresos, costos y ganancias de Disney
         var ingDisney = @json($ingresos_disney); // Ingresos de Disney
         var cosDisney = @json($costos_disney); // Costos de Disney
-        var ganDisney = ingDisney.map((ing, index) => parseFloat(ing) - parseFloat(cosDisney[index])); // Ganancias de Disney
-    
+        var ganDisney = ingDisney - cosDisney; // Ganancias de Disney
         // Ingresos, costos y ganancias de Prime
         var ingPrime = @json($ingresos_prime); // Ingresos de Prime
         var cosPrime = @json($costos_prime); // Costos de Prime
-        var ganPrime = ingPrime.map((ing, index) => parseFloat(ing) - parseFloat(cosPrime[index])); // Ganancias de Prime
-    
+        var ganPrime = ingPrime - cosPrime; // Ganancias de Prime
         // Ingresos, costos y ganancias de Max
         var ingMax = @json($ingresos_max); // Ingresos de Max
         var cosMax = @json($costos_max); // Costos de Max
-        var ganMax = ingMax.map((ing, index) => parseFloat(ing) - parseFloat(cosMax[index])); // Ganancias de Max
-    
+        var ganMax = ingMax - cosMax; // Ganancias de Max
         // Ingresos, costos y ganancias de Magis
         var ingMagis = @json($ingresos_magis); // Ingresos de Magis
         var cosMagis = @json($costos_magis); // Costos de Magis
-        var ganMagis = ingMagis.map((ing, index) => parseFloat(ing) - parseFloat(cosMagis[index])); // Ganancias de Magis
-    
+        var ganMagis = ingMagis - cosMagis; // Ganancias de Magis
         // Ingresos, costos y ganancias de Crunchy
         var ingCrunchy = @json($ingresos_crunchy); // Ingresos de Crunchy
         var cosCrunchy = @json($costos_crunchy); // Costos de Crunchy
-        var ganCrunchy = ingCrunchy.map((ing, index) => parseFloat(ing) - parseFloat(cosCrunchy[index])); // Ganancias de Crunchy
-    
+        var ganCrunchy = ingCrunchy - cosCrunchy;// Ganancias de Crunchy
         // Ingresos, costos y ganancias de Paramount
         var ingParamount = @json($ingresos_paramount); // Ingresos de Paramount
         var cosParamount = @json($costos_paramount); // Costos de Paramount
-        var ganParamount = ingParamount.map((ing, index) => parseFloat(ing) - parseFloat(cosParamount[index])); // Ganancias de Paramount
-    
+        var ganParamount = ingParamount - cosParamount; // Ganancias de Paramount
         // Ingresos, costos y ganancias de Spotify
         var ingSpotify = @json($ingresos_spotify); // Ingresos de Spotify
         var cosSpotify = @json($costos_spotify); // Costos de Spotify
-        var ganSpotify = ingSpotify.map((ing, index) => parseFloat(ing) - parseFloat(cosSpotify[index])); // Ganancias de Spotify
-    
+        var ganSpotify = ingSpotify - cosSpotify; // Ganancias de Spotify
         // Ingresos, costos y ganancias de Otros
         var ingOtros = @json($ingresos_otros); // Ingresos de Otros
         var cosOtros = @json($costos_otros); // Costos de Otros
-        var ganOtros = ingOtros.map((ing, index) => parseFloat(ing) - parseFloat(cosOtros[index])); // Ganancias de Otros
-    
+        var ganOtros = ingOtros - cosOtros; // Ganancias de Otros
+        // Ingresos, costos y ganancias de Netflix
         var myBarChart = new Chart(ctx, {
             type: 'bar', // Tipo de gráfico: barra
             data: {
-                labels: ['Netflix', 'Disney', 'Prime', 'Max', 'Magis', 'Crunchy', 'Paramount', 'Spotify', 'Otros'], // Etiquetas de las categorías (eje X)
-                datasets: [
-                    {
+                labels: ['Netflix', 'Disney', 'Prime', 'Max', 'Magis', 'Crunchy', 'Paramount', 'Spotify',
+                    'Otros'
+                ], // Etiquetas de las categorías (eje X)
+                datasets: [{
                         label: 'Ingresos', // Etiqueta para la primera barra
-                        data: [ingNetflix, ingDisney, ingPrime, ingMax, ingMagis, ingCrunchy, ingParamount, ingSpotify, ingOtros], // Datos para la serie 1
+                        data: [ingNetflix, ingDisney, ingPrime, ingMax, ingMagis, ingCrunchy, ingParamount,
+                            ingSpotify, ingOtros], // Datos para la serie 1
                         backgroundColor: '#3aff00', // Color de las barras de la primera serie
                         borderColor: '#3aff00', // Color del borde de las barras
                         borderWidth: 1
                     },
                     {
                         label: 'Costos', // Etiqueta para la segunda barra
-                        data: [cosNetflix, cosDisney, cosPrime, cosMax, cosMagis, cosCrunchy, cosParamount, cosSpotify, cosOtros], // Datos para la serie 2
+                        data: [cosNetflix, cosDisney, cosPrime, cosMax, cosMagis, cosCrunchy, cosParamount,
+                            cosSpotify, cosOtros], // Datos para la serie 2
                         backgroundColor: '#ff0000', // Color de las barras de la segunda serie
                         borderColor: '#ff0000', // Color del borde de las barras
                         borderWidth: 1
                     },
                     {
                         label: 'Ganancias', // Etiqueta para la tercera barra
-                        //data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, ganSpotify, ganOtros], // Datos para la serie 3
-                        data:[12,43,12,32,44,12,45,76,12],
+                        data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, 
+                            ganSpotify, ganOtros], // Datos para la serie 3
                         backgroundColor: '#18af00', // Color de las barras de la tercera serie
                         borderColor: '#18af00', // Color del borde de las barras
                         borderWidth: 1
@@ -858,17 +854,24 @@
             }
         });
     </script>
-    
+
     <script>
         var ctx = document.getElementById('myPieChart').getContext('2d');
         var myPieChart = new Chart(ctx, {
             type: 'pie', // Tipo de gráfico: pastel
             data: {
-                labels: ['Red', 'Blue', 'Yellow'], // Etiquetas para cada porción del pastel
+                labels: ['Netflix', 'Disney', 'Prime', 'Max', 'Magis', 'Crunchy', 'Paramount', 'Spotify',
+                    'Otros'
+                ], // Etiquetas para cada porción del pastel
                 datasets: [{
-                    data: [12, 19, 3], // Datos para cada porción del pastel
-                    backgroundColor: ['#FF6347', '#36b9cc', '#FFDD57'], // Colores para las porciones
-                    borderColor: ['#FF6347', '#36b9cc', '#FFDD57'], // Color de los bordes
+                    data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, 
+                            ganSpotify, ganOtros], // Datos para cada porción del pastel
+                    backgroundColor: ['#ff0000', '#00babd', '#00f7ff', '#003aff', '#ff8f00',
+                        '#ffcd00', '#009eff', '#1abd00', '#d100ff'
+                    ], // Colores para las porciones
+                    borderColor: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff',
+                        '#ffffff', '#ffffff', '#ffffff', '#ffffff'
+                    ], // Color de los bordes
                     borderWidth: 1
                 }]
             },
