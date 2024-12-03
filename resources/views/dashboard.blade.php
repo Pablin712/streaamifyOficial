@@ -70,28 +70,18 @@
                         </div>
                     </div>
 
-                    <!-- Tasks Card Example -->
+                    <!-- Pending Requests Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card border-left-warning shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasks
-                                        </div>
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col-auto">
-                                                <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">50%</div>
-                                            </div>
-                                            <div class="col">
-                                                <div class="progress progress-sm mr-2">
-                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 50%"
-                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Pending Payments</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_acobrar }}</div>
                                     </div>
                                     <div class="col-auto">
-                                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
                             </div>
@@ -155,46 +145,37 @@
                         </div>
                     </div>
 
-                    <!-- Tasks Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card border-left-success shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasks
-                                        </div>
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col-auto">
-                                                <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">50%</div>
-                                            </div>
-                                            <div class="col">
-                                                <div class="progress progress-sm mr-2">
-                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 50%"
-                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Media de pago por cliente</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($promedio_pagos_mes,2) }}</div>
                                     </div>
                                     <div class="col-auto">
-                                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                        <i class="fas fa-coins fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Pending Requests Card Example -->
+                    {{-- otro card --}}
                     <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card border-left-success shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                            Pending Payments</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_acobrar }}</div>
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Cliente más facturado</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ $cliente_mas_facturado->nombre_cliente }} 
+                                            ${{$cliente_mas_facturado->facturado}}
+                                        </div>
                                     </div>
                                     <div class="col-auto">
-                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                        <i class="fas fa-user fa-2x text-gray-300"></i>
                                     </div>
                                 </div>
                             </div>
@@ -850,7 +831,8 @@
                     },
                     {
                         label: 'Ganancias', // Etiqueta para la tercera barra
-                        data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, ganSpotify, ganOtros], // Datos para la serie 3
+                        //data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, ganSpotify, ganOtros], // Datos para la serie 3
+                        data:[12,43,12,32,44,12,45,76,12],
                         backgroundColor: '#18af00', // Color de las barras de la tercera serie
                         borderColor: '#18af00', // Color del borde de las barras
                         borderWidth: 1
