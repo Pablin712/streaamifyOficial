@@ -657,10 +657,7 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            Chart.js is a third party plugin that is used to generate the charts in this template. The charts below have
-            been customized - for further customization options, please visit the official
-            <a target="_blank" href="https://www.chartjs.org/docs/latest/">Chart.js documentation</a>
-            .
+            Visualiza los gráficos de resultados del mes actual.
         </div>
     </div>
     <div class="card mb-4">

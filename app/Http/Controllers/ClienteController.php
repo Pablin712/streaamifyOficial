@@ -50,6 +50,29 @@ class ClienteController extends Controller
         return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
 
+    public function store2(Request $request)
+    {
+        // Validar los datos
+        $request->validate([
+            'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
+            'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
+        ]);
+        $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
+            ->orWhere('telefonocli', $request->telefonocli)
+            ->first();
+
+        // Si el cliente ya existe, redirigir con mensaje de error
+        if ($clienteExistente) {
+            return redirect()->route('ventas.create')
+                ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
+        }
+
+        // Crear un nuevo costo
+        $cliente = Cliente::create($request->all());
+
+        return redirect()->route('ventas.create')->with('success', 'Cliente creado correctamente.')->with('cliente', $cliente);;
+    }
+
     // Editar un cliente existente
     public function edit($idcli)
     {

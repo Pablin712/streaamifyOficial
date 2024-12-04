@@ -213,4 +213,13 @@
             });
         });
     </script>
+    <script>
+        // Inicializa Select2 en el select con el id 'idcue'
+        $(document).ready(function() {
+            $('#idven').select2({
+                placeholder: "Selecciona una Venta",
+                allowClear: true // Permite borrar la selección
+            });
+        });
+    </script>
 @endsection

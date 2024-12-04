@@ -76,6 +76,7 @@ Route::controller(ClienteController::class)->group(function () {
     Route::get('/clientes', 'index')->name('clientes');
     Route::get('/clientes/create', 'create')->name('clientes.create');
     Route::post('/clientes/createstore', 'store')->name('clientes.store');
+    Route::post('/clientes/createstore', 'store2')->name('clientes.store2');
     Route::get('/clientes/{id}/edit', 'edit')->name('clientes.edit');
     Route::put('/clientes/{id}', 'update')->name('clientes.update');
     Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');

@@ -72,7 +72,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="seleccionarCuentaModalLabel">Seleccionar Cuenta</h5>
+                <h5 class="modal-title" id="seleccionarCuentaModalLabel">Crear Costo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
@@ -175,6 +175,15 @@
             // Cambiar la acción del formulario de edición a la ruta del costo específico
             var formAction = "{{ route('costos.update', '') }}/" + idcos;
             modal.find('#editCostoForm').attr('action', formAction);
+        });
+    </script>
+    <script>
+        // Inicializa Select2 en el select con el id 'idcue'
+        $(document).ready(function() {
+            $('#idcu').select2({
+                placeholder: "Selecciona una Cuenta",
+                allowClear: true // Permite borrar la selección
+            });
         });
     </script>
 @endsection

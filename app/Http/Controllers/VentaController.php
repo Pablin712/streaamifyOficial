@@ -6,6 +6,9 @@ use App\Models\DetalleVenta;
 use App\Models\Venta;
 use App\Models\Cliente;
 use App\Models\Empleado;
+use App\Models\Cuenta;
+use App\Models\Perfil;
+use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
 
 class VentaController extends Controller
@@ -37,7 +40,20 @@ class VentaController extends Controller
     {
         $clientes = Cliente::all(); // Obtener lista de clientes
         $empleados = Empleado::all(); //Obtener lista de empleados
-        return view('sales.ventas.create', compact('empleados', 'clientes'));
+        // Obtener las cuentas con sus perfiles
+        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
+            foreach ($cuenta->perfiles as $perfil) {
+                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                    ->where('idcue', $cuenta->idcue)
+                    ->count();
+                $perfil->usuarios_activos = $usuariosActivos;
+            }
+        }
+        return view('sales.ventas.create', compact('empleados', 'clientes', 'cuentas'));
     }
 
     /**
@@ -46,17 +62,51 @@ class VentaController extends Controller
     // Guardar una nueva venta
     public function store(Request $request)
     {
-        // Validar los datos de la venta
-        $validated = $request->validate([
+        // Validación
+        $request->validate([
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
-            'fechaven' => 'required|date'
+            'detalles_venta' => 'required|json',
         ]);
 
         // Crear la venta
-        $venta = Venta::create($validated);
+        $venta = Venta::create([
+            'idcli' => $request->idcli,
+            'idemp' => $request->idemp,
+            'fechaven' => now(),
+            'totalpagoven' => 0,  // Puedes calcular el total si lo deseas
+        ]);
 
-        return redirect()->route('ventas')->with('success', 'Venta creada con éxito.');
+        // Decodificar los detalles de venta desde el JSON
+        $detalles = json_decode($request->detalles_venta, true);
+
+        // Registrar los detalles de venta
+        foreach ($detalles as $detalle) {
+            // Obtener el idcue de la cuenta
+            $idcue = $detalle['cuenta'];
+
+            // Aquí dividimos el perfil para obtener el número del perfil
+            $numeroper = $detalle['perfil']; // Asumiendo que 'perfil' es algo como '1.5'
+
+            // Concatenar el idcue y el numeroper para obtener el idperfil
+            $idper = $idcue . '.' . $numeroper;
+            // Guardar cada detalle en la tabla detalles_venta
+            DetalleVenta::create([
+                'idven' => $venta->idven,
+                'idper' => $idper,
+                'descripciondet' => $detalle['descripcion'],
+                'fechavendet' => $detalle['fecha_vencimiento'],
+                'montodet' => $detalle['monto'],
+                'activodet' => true,
+            ]);
+        }
+
+        // Puedes calcular el total de la venta aquí y actualizarlo
+        //$venta->total_venta = collect($detalles)->sum('monto');
+        //$venta->save();
+
+        // Redirigir a una página de éxito o mostrar un mensaje
+        return redirect()->route('ventas')->with('success', 'Venta registrada correctamente');
     }
 
     public function storeCliente(Request $request)
@@ -80,7 +130,8 @@ class VentaController extends Controller
         $cliente = Cliente::create($request->all());
 
         // Retornar el cliente recién creado como respuesta
-        return response()->json(['cliente' => $cliente]);
+        //return response()->json(['cliente' => $cliente]);
+        return redirect()->route('ventas.create')->with('success', 'Cliente creado con éxito.');
     }
 
 

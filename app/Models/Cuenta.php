@@ -34,4 +34,8 @@ class Cuenta extends Model
     {
         return $this->hasMany(Costo::class, 'idcue', 'idcue');
     }
+    public function perfiles()
+    {
+        return $this->hasMany(Perfil::class, 'idcue', 'idcue');
+    }
 }
