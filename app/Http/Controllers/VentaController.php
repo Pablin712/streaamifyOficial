@@ -10,7 +10,7 @@ use App\Models\Cuenta;
 use App\Models\Perfil;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
-
+use Carbon\Carbon;
 class VentaController extends Controller
 {
     /**
@@ -73,7 +73,7 @@ class VentaController extends Controller
         $venta = Venta::create([
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
-            'fechaven' => now(),
+            'fechaven' => Carbon::now(),
             'totalpagoven' => 0,  // Puedes calcular el total si lo deseas
         ]);
 

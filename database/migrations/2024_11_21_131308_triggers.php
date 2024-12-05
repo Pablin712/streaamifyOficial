@@ -33,22 +33,30 @@ return new class extends Migration
             EXECUTE FUNCTION actualizar_total_venta();
 
 
+            CREATE TABLE ventas_diarias_last_reset (
+                last_reset DATE
+            );
+
             --TRIGGER QUE SE UNE DESPUES DE LA SECUENCIA Y FUNCION DE GENERARIDVENTA()
             CREATE OR REPLACE FUNCTION generar_idventa()
             RETURNS TRIGGER AS $$
             DECLARE
                 numero_venta TEXT;
             BEGIN
-                -- Reinicia la secuencia cada día
-                IF CURRENT_DATE != (SELECT TO_DATE(last_value::text, 'YYYYMMDD') FROM ventas_diarias_seq) THEN
+                -- Verificar si la fecha de hoy es diferente de la última fecha registrada
+                IF CURRENT_DATE != (SELECT last_reset FROM ventas_diarias_last_reset LIMIT 1) THEN
+                    -- Reiniciar la secuencia
                     PERFORM setval('ventas_diarias_seq', 1, false);  -- Reinicia la secuencia a 1
+                    
+                    -- Actualizar la fecha de reinicio
+                    UPDATE ventas_diarias_last_reset SET last_reset = CURRENT_DATE;
                 END IF;
 
                 -- Genera el número de venta con tres cifras
                 numero_venta := LPAD(NEXTVAL('ventas_diarias_seq')::TEXT, 3, '0');
 
                 -- Asigna el IDVEN en el formato deseado
-                NEW.IDVEN := 'FAC' || numero_venta || TO_CHAR(CURRENT_DATE, 'DDMMYYYY');
+                NEW.IDVEN := 'FAC' || numero_venta ||'-'|| TO_CHAR(CURRENT_DATE, 'DDMMYYYY');
                 
                 RETURN NEW;
             END;

@@ -67,33 +67,6 @@
                     </thead>
                     <tbody id="tabla-detalles">
                         <!-- Los detalles se agregarán aquí mediante JavaScript -->
-                        <tr>
-                            <td>
-                                <input type="hidden" class="cuenta" value="${cuenta}">
-                                ${cuenta}
-                            </td>
-                            <td>
-                                <input type="hidden" class="perfil" value="${perfil}">
-                                ${perfil}
-                            </td>
-                            <td>
-                                <input type="hidden" class="descripcion" value="${descripcion}">
-                                ${descripcion}
-                            </td>
-                            <td>
-                                <input type="hidden" class="fecha-vencimiento" value="${fechaVencimiento}">
-                                ${fechaVencimiento}
-                            </td>
-                            <td>
-                                <input type="hidden" class="monto" value="${monto}">
-                                $${monto.toFixed(2)}
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>                        
                     </tbody>
                 </table>
 
@@ -103,7 +76,7 @@
             </div>
             <!-- Campo oculto para enviar los detalles de la venta -->
             <input type="hidden" name="detalles_venta" id="detalles_venta">
-            {{-- Campo oculto para enviar la información del empleado que registró la venta (CON LOGIN)--}}
+            {{-- Campo oculto para enviar la información del empleado que registró la venta (CON LOGIN) --}}
             <input type="hidden" name="idemp" id="idemp" value=1>
             <button type="submit" class="btn btn-primary mt-4" id="registrar-venta">Registrar Venta</button>
         </form>
@@ -351,27 +324,30 @@
             // Crear un arreglo para almacenar los detalles de venta
             let detalles = [];
 
-            // Obtener todas las filas de la tabla
+            // Obtener todas las filas de la tabla #tabla-detalles (cada fila es un detalle de venta)
             document.querySelectorAll('#tabla-detalles tr').forEach(function(row) {
-                let cuenta = row.querySelector('.cuenta').value;
-                let perfil = row.querySelector('.perfil').value;
-                let descripcion = row.querySelector('.descripcion').value;
-                let fechaVencimiento = row.querySelector('.fecha-vencimiento').value;
-                let monto = row.querySelector('.monto').value;
+                // Obtener los valores de cada celda de la fila
+                let cuenta = row.cells[0].innerText; // La primera celda es la Cuenta
+                let perfil = row.cells[1].innerText; // La segunda celda es el Perfil
+                let descripcion = row.cells[2].innerText; // La tercera celda es la Descripción
+                let fechaVencimiento = row.cells[3].innerText; // La cuarta celda es la Fecha de Vencimiento
+                let monto = parseFloat(row.cells[4].innerText.replace('$', '')
+            .trim()); // La quinta celda es el Monto
 
-                console.log(cuenta, perfil, descripcion, fechaVencimiento, monto); // Verifica si se están seleccionando correctamente
-                // Agregar cada detalle al arreglo
-                detalles.push({
-                    cuenta: cuenta,
-                    perfil: perfil,
-                    descripcion: descripcion,
-                    fecha_vencimiento: fechaVencimiento,
-                    monto: monto
-                });
+                // Asegurarse de que los campos no estén vacíos (esto es opcional, según tu caso)
+                if (cuenta && perfil && descripcion && fechaVencimiento && monto) {
+                    // Agregar cada detalle al arreglo
+                    detalles.push({
+                        cuenta: cuenta,
+                        perfil: perfil,
+                        descripcion: descripcion,
+                        fecha_vencimiento: fechaVencimiento,
+                        monto: monto
+                    });
+                }
             });
 
-            console.log("Detalles a enviar: ", detalles);
-            // Asignar los detalles al campo oculto
+            // Asignar los detalles serializados al campo oculto para enviarlos en el formulario
             document.getElementById('detalles_venta').value = JSON.stringify(detalles);
 
             // Ahora enviamos el formulario
