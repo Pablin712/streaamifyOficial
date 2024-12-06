@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ViewUsuarioActivo;
+use App\Models\DetalleVenta;
+
 class UsuarioController extends Controller
 {
     public function index()
@@ -23,36 +25,42 @@ class UsuarioController extends Controller
     }
 
     // Editar un usuario existente
-    public function edit($idcli)
+    public function change($iddet)
     {
-        $usuario = ViewUsuarioActivo::findOrFail($idcli);
-        return view('inventory.usuarios.edit', compact('usuario'));
+        $usuario = ViewUsuarioActivo::where('iddet',$iddet);
+        return view('inventory.usuarios.change', compact('usuario'));
     }
 
-    public function update(Request $request, $idser)
+    public function update(Request $request, $iddet)
     {
         $request->validate([
-            'nombreser' => 'required|string|max:20', // varchar(20)
-            'completoser' => 'nullable|numeric',
-            'precioser' => 'nullable|numeric',
-            'comboser' => 'nullable|numeric',
-            'reventaser' => 'nullable|numeric',
-            'revcompser' => 'nullable|numeric',
+            'idcue' => 'required|exists:cuentas,id', // La cuenta debe existir en la tabla 'cuentas'
+            'perfil' => 'required|integer|min:1', // Validación para un número entero
+            'fecha_vencimiento' => 'required'
         ]);
+        //$iddet = $request->iddet;
+        $detalle = DetalleVenta::findOrFail($iddet);
 
-        //$servicio = Servicio::findOrFail($idser);
-        //$servicio->update($request->all());
+        // Actualizar los campos del usuario
+        $detalle->idper = $request->idcue.'.'.$request->perfil;
+        $detalle->fechavendet = $request->fecha_vencimiento;
+        // Guardar los cambios
+        $detalle->save();
 
-        return redirect()->route('usuarios')->with('success', 'Usuario actualizado con éxito.');
+        // Redirigir con un mensaje de éxito
+        return redirect()->route('usuarios')->with('success', 'Usuario actualizado exitosamente.');
     }
 
     // Eliminar un usuario
-    public function destroy($idcli)
+    public function destroy($iddet)
     {
-        $usuario = ViewUsuarioActivo::findOrFail($idcli);
-        //$usuario->delete(); es una vista, hay que implementar lógica, se elimina al usuario, mediante
-        //poner false en activodet de la tabla detalles_venta, de esta forma se quitará un usuario
+        $detalle = DetalleVenta::findOrFail($iddet);
+        // Cambiar el estado de activodet (de true a false o de false a true)
+        $detalle->activodet = !$detalle->activodet; // Invertir el valor (true -> false o false -> true)
+        // Guardar el cambio en la base de datos
+        $detalle->save();
 
-        return redirect()->route('usuarios')->with('success', 'Usuario eliminado con éxito.');
+        // Redirigir al usuario con un mensaje de éxito
+        return redirect()->route('usuarios')->with('success', 'Usuario eliminado con éxito.');;
     }
 }

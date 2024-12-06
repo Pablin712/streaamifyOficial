@@ -18,6 +18,8 @@ return new class extends Migration
         SELECT 
             v.IDCLI,
             cl.NOMBRECLI AS nombre_cliente,
+            dv.idven,
+            dv.iddet,
             p.IDCUE,  -- Relacionamos el perfil con la cuenta a través de IDCUE
             p.NUMEROPER AS perfil,  -- Número de perfil desde la tabla PERFILES
             dv.FECHAVENdet AS fecha_vencimiento

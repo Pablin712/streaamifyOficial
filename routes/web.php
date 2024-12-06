@@ -139,14 +139,13 @@ Route::controller(VentaController::class)->group(function () {
     Route::post('/ventas/storeCliente', 'storeCliente')->name('ventas.storeCliente');
     Route::patch('/ventas/{id}/status', 'status')->name('ventas.status');
     Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
+    Route::get('/ventas/{id}/renew', 'renew')->name('ventas.renew');
     Route::put('/ventas/{id}', 'update')->name('ventas.update');
     Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
 });
 Route::controller(UsuarioController::class)->group(function () {
     Route::get('/usuarios', 'index')->name('usuarios');
-    Route::get('/usuarios/create', 'create')->name('usuarios.create');
-    Route::post('/usuarios/createstore', 'store')->name('usuarios.store');
-    Route::get('/usuarios/{id}/edit', 'edit')->name('usuarios.edit');
+    Route::get('/usuarios/{id}/change', 'change')->name('usuarios.change');
     Route::get('/usuarios/{id}/renew', 'renew')->name('usuarios.renew');
     Route::put('/usuarios/{id}', 'update')->name('usuarios.update');
     Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');

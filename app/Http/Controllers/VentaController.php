@@ -11,6 +11,7 @@ use App\Models\Perfil;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+
 class VentaController extends Controller
 {
     /**
@@ -19,18 +20,26 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         // Obtener todas las ventas con los detalles de cada una
-        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
-        $detalles_venta = collect();
+        $ventas = Venta::with(['detalles_venta' => function($query) {
+            $query->where('activodet', true);
+        }])->whereHas('detalles_venta', function($query) {
+            $query->where('activodet', true);
+        })->orderBy('fechaven')->get();
+        
+        //$ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
+        
+        
+        //$detalles_venta = collect();
 
-        $idvenSeleccionada = $request->idven;
+        //$idvenSeleccionada = $request->idven;
 
-        if ($idvenSeleccionada) {
+        //if ($idvenSeleccionada) {
             // Obtener los detalles de venta asociados a una venta específica
-            $detalles_venta = DetalleVenta::where('idven', $idvenSeleccionada)->get();
-        }
+            //$detalles_venta = DetalleVenta::where('idven', $idvenSeleccionada)->get();
+        //}
 
         // Pasar las ventas y los detalles de venta a la vista
-        return view('sales.ventas.index', compact('ventas', 'detalles_venta', 'idvenSeleccionada'));
+        return view('sales.ventas.index', compact('ventas'));
     }
 
     /**
@@ -149,27 +158,90 @@ class VentaController extends Controller
     public function edit($idven)
     {
         $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
-        $clientes = Cliente::all();
         $empleados = Empleado::all();
-        return view('sales.ventas.edit', compact('venta', 'clientes', 'empleados'));
+
+        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
+            foreach ($cuenta->perfiles as $perfil) {
+                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                    ->where('idcue', $cuenta->idcue)
+                    ->count();
+                $perfil->usuarios_activos = $usuariosActivos;
+            }
+        }
+        return view('sales.ventas.edit', compact('venta', 'empleados', 'cuentas'));
     }
 
+    public function renew($idven){
+
+    }
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, $idven)
     {
+        // Validación
         $request->validate([
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
-            'fechaven' => 'required|date',
-            'caidaventa' => 'required|boolean',
+            'detalles_venta' => 'required|json',
         ]);
 
+        // Obtener la venta existente
         $venta = Venta::findOrFail($idven);
-        $venta->update($request->all());
 
-        return redirect()->route('ventas')->with('success', 'Venta actualizada con éxito.');
+        // Comprobamos que el cliente no cambie, ya que no es editable
+        if ($venta->idcli != $request->idcli) {
+            return redirect()->route('ventas.edit', $idven)->with('error', 'El cliente no puede modificarse.');
+        }
+
+        // Actualizamos la venta (sin modificar el cliente)
+        //$venta->idemp = $request->idemp;
+        $venta->fechaven = Carbon::now();  // Actualizamos la fecha si es necesario
+        $venta->totalpagoven = 0;  // Lo inicializamos a 0 para el nuevo cálculo
+        $venta->save();
+
+        // Decodificar los detalles de venta desde el JSON
+        $detalles = json_decode($request->detalles_venta, true);
+
+        // Primero, eliminamos los detalles anteriores
+        $venta->detalles_venta()->delete();
+
+        // Registrar los nuevos detalles de venta
+        $totalVenta = 0;
+        foreach ($detalles as $detalle) {
+            // Obtener el idcue de la cuenta
+            $idcue = $detalle['cuenta'];
+
+            // Aquí dividimos el perfil para obtener el número del perfil
+            $numeroper = $detalle['perfil']; // Asumiendo que 'perfil' es algo como '1.5'
+
+            // Concatenar el idcue y el numeroper para obtener el idperfil
+            $idper = $idcue. '.' . $numeroper;
+
+            // Guardar cada detalle en la tabla detalles_venta
+            DetalleVenta::create([
+                'idven' => $venta->idven,
+                'idper' => $idper,
+                'descripciondet' => $detalle['descripcion'],
+                'fechavendet' => $detalle['fecha_vencimiento'],
+                'montodet' => $detalle['monto'],
+                'activodet' => $detalle['estado'],
+            ]);
+
+            // Acumulamos el total de la venta
+            $totalVenta += $detalle['monto'];
+        }
+
+        // Actualizamos el total de la venta
+        //$venta->totalpagoven = $totalVenta;
+        $venta->save();
+
+        // Redirigir a una página de éxito o mostrar un mensaje
+        return redirect()->route('ventas')->with('success', 'Venta actualizada correctamente');
     }
 
     public function status($iddet)

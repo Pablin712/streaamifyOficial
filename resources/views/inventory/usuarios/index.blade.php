@@ -18,7 +18,7 @@
 @endsection
 @section('tablename', 'Usuarios')
 @section('btncrear')
-    <a href="{{ route('servicios.create') }}" class="btn btn-primary">Crear Servicio</a>
+    <a href="{{ route('ventas.create') }}" class="btn btn-primary">Nueva Venta</a>
 @endsection
 @section('table1')
     <table id="datatablesSimple" class="table table-striped table-bordered">
@@ -54,14 +54,14 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('usuarios.edit', $usuario->idcli) }}" class="btn btn-warning  "><i
-                                class="fas fa-edit"></i></a>
+                        <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning  "><i
+                                class="fas fa-exchange-alt"></i></a>
                         @if ($diasRestantes <= 3)
-                            <a href="{{ route('usuarios.renew', $usuario->idcli) }}" class="btn btn-success">
+                            <a href="{{ route('ventas.renew', $usuario->idven) }}" class="btn btn-success">
                                 {{--  --}}
                                 <i class="fas fa-sync-alt"></i>
                             </a>
-                            <form action="{{ route('usuarios.destroy', $usuario->idcli) }}" method="POST"
+                            <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
                                 style="display: inline;">
                                 @csrf
                                 @method('DELETE')

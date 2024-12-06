@@ -71,130 +71,25 @@
                         <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
                                 class="fas fa-edit"></i></a>
 
+                        <a href="{{ route('ventas.renew', $venta->idven) }}" class="btn btn-success">
+                            {{--  --}}
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
                         <!-- Eliminar venta
-                        <form action="{ route('ventas.destroy', $venta->idven) }}" method="POST" style="display: inline;">
-                            @ csrf
-                            @ method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Estás seguro?')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                        -->
+                            <form action="{ route('ventas.destroy', $venta->idven) }}" method="POST" style="display: inline;">
+                                @ csrf
+                                @ method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-circle"
+                                    onclick="return confirm('¿Estás seguro?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            -->
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
-@endsection
-
-@section('table2')
-    <div class="card mb-4">
-        <div class="card-body">
-            Busca una venta específica para ver sus detalles.
-            <div class="form-group mb-3">
-                <label for="idven">Seleccionar Venta</label>
-                <form method="GET" action="{{ route('ventas') }}#tabla-detalles">
-                    <select name="idven" id="idven" class="form-control" onchange="this.form.submit()">
-                        <option value="">-- Selecciona una Venta --</option>
-                        @foreach ($ventas as $venta)
-                            <option value="{{ $venta->idven }}" {{ request('idven') == $venta->idven ? 'selected' : '' }}>
-                                {{ $venta->idven }} - {{ $venta->cliente->nombrecli }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div id="tabla-detalles" class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>
-            Detalles de Venta de {{ $idvenSeleccionada }}
-        </div>
-        <div class="card-body">
-            <table id="datatablesSimple" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID de Cuenta</th>
-                        <th>Perfil</th>
-                        <th>Descripcion</th>
-                        <th>Vencimiento</th>
-                        <th>Monto</th>
-                        <th>Activa</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($detalles_venta as $detalle)
-                        <tr>
-                            <td>{{ $detalle->perfil->cuenta->idcue }}</td>
-                            <td>{{ $detalle->perfil->numeroper }}</td>
-                            <td>{{ $detalle->descripciondet }}</td>
-                            <td>{{ $detalle->fechavendet }}</td>
-                            <td>{{ $detalle->montodet }}</td>
-                            <td>
-                                @if ($detalle->activodet)
-                                    <span class="badge bg-success">Activa</span>
-                                @else
-                                    <span class="badge bg-danger">Vencida</span>
-                                @endif
-                                <!-- Botón para cambiar estado -->
-                                <form action="{{ route('ventas.status', $detalle->iddet) }}" method="POST"
-                                    style="display:inline;">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-dark btn-sm">
-                                        @if ($detalle->activodet)
-                                            <i class="fas fa-toggle-on fa-xs"></i>
-                                        @else
-                                            <i class="fas fa-toggle-off fa-xs"></i>
-                                        @endif
-                                    </button>
-                                </form>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#editDetalleModal" data-id="{{ $detalle->iddet }}">
-                                    <i class="fas fa-edit">Editar</i>
-                                </button>
-                                <!-- Botón Eliminar -->
-                                <form action="{{ route('ventas.destroy', $detalle->iddet) }}" method="POST"
-                                    style="display:inline;"
-                                    onsubmit="return confirm('¿Estás seguro de que deseas eliminar este detalle?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Modal para ver detalles de la venta -->
-    <div class="modal fade" id="viewDetailModal" tabindex="-1" aria-labelledby="viewDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewDetailModalLabel">Detalles de la Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="detailDescripcion"></p>
-                    <p id="detailCosto"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
@@ -214,7 +109,7 @@
         });
     </script>
     <script>
-        // Inicializa Select2 en el select con el id 'idcue'
+        // Inicializa Select2 en el select con el id 'idven'
         $(document).ready(function() {
             $('#idven').select2({
                 placeholder: "Selecciona una Venta",
