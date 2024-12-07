@@ -136,10 +136,13 @@ Route::controller(VentaController::class)->group(function () {
     Route::get('/ventas', 'index')->name('ventas');
     Route::get('/ventas/create', 'create')->name('ventas.create');
     Route::post('/ventas/createstore', 'store')->name('ventas.store');
+
+    Route::post('/ventas/storeRenew', 'storeRenew')->name('ventas.storeRenew');
+
     Route::post('/ventas/storeCliente', 'storeCliente')->name('ventas.storeCliente');
     Route::patch('/ventas/{id}/status', 'status')->name('ventas.status');
     Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
-    Route::get('/ventas/{id}/renew', 'renew')->name('ventas.renew');
+    Route::get('/ventas/renew/{idcli}/{idven}' ,'renew')->name('ventas.renew');
     Route::put('/ventas/{id}', 'update')->name('ventas.update');
     Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
 });

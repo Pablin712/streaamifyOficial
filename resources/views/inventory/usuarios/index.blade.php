@@ -57,9 +57,9 @@
                         <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning  "><i
                                 class="fas fa-exchange-alt"></i></a>
                         @if ($diasRestantes <= 3)
-                            <a href="{{ route('ventas.renew', $usuario->idven) }}" class="btn btn-success">
-                                {{--  --}}
-                                <i class="fas fa-sync-alt"></i>
+                        <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}" 
+                               class="btn btn-success">
+                            <i class="fas fa-sync-alt"></i>
                             </a>
                             <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
                                 style="display: inline;">
