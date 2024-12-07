@@ -71,7 +71,7 @@
                         <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
                                 class="fas fa-edit"></i></a>
 
-                        <a href="{{ route('ventas.renew', $venta->idven) }}" class="btn btn-success">
+                        <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}" class="btn btn-success">
                             {{--  --}}
                             <i class="fas fa-sync-alt"></i>
                         </a>

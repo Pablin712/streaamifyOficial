@@ -20,13 +20,13 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         // Obtener todas las ventas con los detalles de cada una
-        $ventas = Venta::with(['detalles_venta' => function($query) {
-            $query->where('activodet', true);
-        }])->whereHas('detalles_venta', function($query) {
-            $query->where('activodet', true);
-        })->orderBy('fechaven')->get();
+        //$ventas = Venta::with(['detalles_venta' => function($query) {
+        //    $query->where('activodet', true);
+        //}])->whereHas('detalles_venta', function($query) {
+        //    $query->where('activodet', true);
+        //})->orderBy('fechaven')->get();
         
-        //$ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
+        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
         
         
         //$detalles_venta = collect();
@@ -118,6 +118,58 @@ class VentaController extends Controller
         return redirect()->route('ventas')->with('success', 'Venta registrada correctamente');
     }
 
+    public function storeRenew(Request $request)
+    {
+        // Validación
+        $request->validate([
+            'idcli' => 'required|exists:clientes,idcli',
+            'idemp' => 'required|exists:empleados,idemp',
+            'detalles_venta' => 'required|json',
+        ]);
+    
+        // Obtener el idven anterior
+        $idvenPasado = $request->idvenPasado;
+        
+
+        DetalleVenta::where('idven', $idvenPasado)->update(['activodet' => false]);
+    
+        // Crear la nueva venta
+        $ventaNueva = Venta::create([
+            'idcli' => $request->idcli,
+            'idemp' => $request->idemp,
+            'fechaven' => Carbon::now(),
+            'totalpagoven' => 0,  // Calcula el total si es necesario
+        ]);
+    
+        // Decodificar los detalles de venta desde el JSON
+        $detalles = json_decode($request->detalles_venta, true);
+    
+        // Registrar los detalles de venta
+        foreach ($detalles as $detalle) {
+            // Obtener el idcue de la cuenta
+            $idcue = $detalle['cuenta'];
+    
+            // Obtener el número de perfil
+            $numeroper = $detalle['perfil'];
+    
+            // Crear el idperfil combinando idcue y numeroper
+            $idper = $idcue . '.' . $numeroper;
+    
+            // Guardar cada detalle en la tabla detalles_venta
+            DetalleVenta::create([
+                'idven' => $ventaNueva->idven,
+                'idper' => $idper,
+                'descripciondet' => $detalle['descripcion'],
+                'fechavendet' => $detalle['fecha_vencimiento'],
+                'montodet' => $detalle['monto'],
+                'activodet' => true,
+            ]);
+        }
+        
+        // Redirigir a una página de éxito o mostrar un mensaje
+        return redirect()->route('ventas')->with('success', 'Venta registrada correctamente.');
+    }
+    
     public function storeCliente(Request $request)
     {
         // Validación de los datos recibidos
@@ -175,9 +227,48 @@ class VentaController extends Controller
         return view('sales.ventas.edit', compact('venta', 'empleados', 'cuentas'));
     }
 
-    public function renew($idven){
+    public function renew($idcli, $idven)
+    {
+        $venta = Venta::with('detalles_venta', 'cliente')->findOrFail($idven);
 
+        $empleados = Empleado::all(); //Obtener lista de empleados
+        // Obtener las cuentas con sus perfiles
+        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+
+        if ($venta->idcli != $idcli) {
+            abort(404, 'Cliente no coincide con la venta.');
+        }
+    
+        $cuentas = Cuenta::with('perfiles')->get();
+    
+        $detalles = $venta->detalles_venta->map(function ($detalle) {
+            $detalle->fechavendet_suma = Carbon::parse($detalle->fechavendet)->addMonth()->format('Y-m-d');
+            return $detalle;
+        });
+    
+        $totalVenta = $venta->detalles_venta->sum('montodet'); // Calcular total de la venta
+    
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
+            foreach ($cuenta->perfiles as $perfil) {
+                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                    ->where('idcue', $cuenta->idcue)
+                    ->count();
+                $perfil->usuarios_activos = $usuariosActivos;
+            }
+        }
+
+        return view('sales.ventas.renew', [
+            'empleados' => $empleados,
+            'cuentas' => $cuentas,
+            'venta' => $venta,
+            'detalles' => $detalles,
+            'totalVenta' => $totalVenta
+        ]);
     }
+    
+
     /**
      * Update the specified resource in storage.
      */
