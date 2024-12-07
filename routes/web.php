@@ -17,6 +17,7 @@ use App\Http\Controllers\TipoGastoController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\InicioController;
 
 Route::get('/', HomeController::class);
 
@@ -31,10 +32,7 @@ Route::get('/register', function () {
 })->name('register');
 
 //rutas de navegación en negocio
-Route::get('/inicio', function () {
-    //$data = ['user' => 'John Doe'];
-    return view('inicio');
-})->name('inicio');
+Route::get('/inicio',[InicioController::class,'show'])->name('inicio');
 
 //Route::get('/dashboard', function () {
     //$data = ['user' => 'John Doe'];
