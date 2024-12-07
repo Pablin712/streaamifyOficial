@@ -20,22 +20,22 @@ class VentaController extends Controller
     public function index(Request $request)
     {
         // Obtener todas las ventas con los detalles de cada una
-        $ventas = Venta::with(['detalles_venta' => function($query) {
+        $ventas = Venta::with(['detalles_venta' => function ($query) {
             $query->where('activodet', true);
-        }])->whereHas('detalles_venta', function($query) {
+        }])->whereHas('detalles_venta', function ($query) {
             $query->where('activodet', true);
         })->orderBy('fechaven')->get();
-        
+
         //$ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
-        
-        
+
+
         //$detalles_venta = collect();
 
         //$idvenSeleccionada = $request->idven;
 
         //if ($idvenSeleccionada) {
-            // Obtener los detalles de venta asociados a una venta específica
-            //$detalles_venta = DetalleVenta::where('idven', $idvenSeleccionada)->get();
+        // Obtener los detalles de venta asociados a una venta específica
+        //$detalles_venta = DetalleVenta::where('idven', $idvenSeleccionada)->get();
         //}
 
         // Pasar las ventas y los detalles de venta a la vista
@@ -175,9 +175,7 @@ class VentaController extends Controller
         return view('sales.ventas.edit', compact('venta', 'empleados', 'cuentas'));
     }
 
-    public function renew($idven){
-
-    }
+    public function renew($idven) {}
     /**
      * Update the specified resource in storage.
      */
@@ -220,7 +218,10 @@ class VentaController extends Controller
             $numeroper = $detalle['perfil']; // Asumiendo que 'perfil' es algo como '1.5'
 
             // Concatenar el idcue y el numeroper para obtener el idperfil
-            $idper = $idcue. '.' . $numeroper;
+            $idper = $idcue . '.' . $numeroper;
+
+            // Verificar si el estado es 'Activa' o 'Vencida' y convertirlo en booleano
+            //$estado = $detalle['estado'] == 'Activa' ? true : false; // Activa = true, Vencida = false
 
             // Guardar cada detalle en la tabla detalles_venta
             DetalleVenta::create([

@@ -60,10 +60,13 @@
                                 <td>{{ $fechaVencimiento = $detalle->fechavendet }}</td>
                                 <td>${{ $monto = number_format($detalle->montodet, 2) }}</td>
                                 <td>
-                                    <span
+                                    <span 
+                                        @php
+                                            $estado = $detalle->activodet 
+                                        @endphp
                                         class="estado-{{ $detalle->iddet }} badge 
-                                        @if ($detalle->activodet) bg-success @else bg-danger @endif">
-                                        @if ($estado=$detalle->activodet)
+                                        @if ($estado) bg-success @else bg-danger @endif">
+                                        @if ($estado)
                                             Activa
                                         @else
                                             Vencida
@@ -72,7 +75,7 @@
                                     <!-- Botón para cambiar estado -->
                                     <button type="button" class="btn btn-dark btn-sm toggleEstadoBtn"
                                         data-id="{{ $detalle->iddet }}" data-estado="{{ $detalle->activodet }}">
-                                        @if ($detalle->activodet)
+                                        @if ($estado)
                                             <i class="fas fa-toggle-on fa-xs"></i>
                                         @else
                                             <i class="fas fa-toggle-off fa-xs"></i>
@@ -175,11 +178,11 @@
         document.querySelectorAll('.toggleEstadoBtn').forEach(button => {
             button.addEventListener('click', function() {
                 const detalleId = this.getAttribute('data-id');
-                const estadoActual = this.getAttribute('data-estado') === '1';
+                const estado = this.getAttribute('data-estado') === '1';
 
                 // Cambiar el estado visualmente
                 const badge = document.querySelector(`.estado-${detalleId}`);
-                if (estadoActual) {
+                if (estado) {
                     badge.classList.remove('bg-success');
                     badge.classList.add('bg-danger');
                     badge.innerText = 'Vencida';
@@ -190,11 +193,11 @@
                 }
 
                 // Actualizamos el atributo "data-estado" para reflejar el cambio
-                this.setAttribute('data-estado', estadoActual ? '0' : '1');
+                this.setAttribute('data-estado', estado ? '0' : '1');
 
                 // Opcional: Cambiar el ícono del botón también
                 const icon = this.querySelector('i');
-                if (estadoActual) {
+                if (estado) {
                     icon.classList.remove('fa-toggle-on');
                     icon.classList.add('fa-toggle-off');
                 } else {
@@ -220,8 +223,7 @@
             var fechaVencimiento = $('#fechaVencimiento').val();
             var descripcion = $('#descripcion').val();
             var monto = parseFloat($('#monto').val());
-            var estado = $('#estado').val();
-
+            var estado = true;
             if (cuenta && perfil && fechaVencimiento && descripcion && monto) {
                 var totalVenta = parseFloat($('#total-venta').text()) + monto;
 
@@ -231,7 +233,15 @@
                     <td>${descripcion}</td>
                     <td>${fechaVencimiento}</td>
                     <td>$${monto.toFixed(2)}</td>
-                    <td>${estado}</td>
+                    <td>
+                        <span class="estado-${cuenta} badge ${estado ? 'bg-success' : 'bg-danger'}">
+                            ${estado ? 'Activa' : 'Vencida'}
+                        </span>
+                        <button type="button" class="btn btn-dark btn-sm toggleEstadoBtn"
+                            data-id="${cuenta}" data-estado="${estado ? '1' : '0'}">
+                            <i class="fas ${estado ? 'fa-toggle-on' : 'fa-toggle-off'} fa-xs"></i>
+                        </button>
+                    </td>
                     <td>
                         <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
                             <i class="fas fa-trash"></i>
@@ -278,7 +288,10 @@
                 let fechaVencimiento = row.cells[3].innerText; // La cuarta celda es la Fecha de Vencimiento
                 let monto = parseFloat(row.cells[4].innerText.replace('$', '')
                     .trim()); // La quinta celda es el Monto
-                let estado = row.cells[5].innerText;
+                let estadoBadge = row.querySelector('.toggleEstadoBtn');
+                let estado = estadoBadge.getAttribute('data-estado') ===
+                '1'; // Capturamos el valor actualizado
+
                 // Asegurarse de que los campos no estén vacíos (esto es opcional, según tu caso)
                 if (cuenta && perfil && descripcion && fechaVencimiento && monto) {
                     // Agregar cada detalle al arreglo

@@ -13,7 +13,7 @@ class ViewUsuarioActivo extends Model
 
     // Si quieres seleccionar solo algunas columnas, puedes especificarlas así
     protected $fillable = [
-        'idcli', 'nombre_cliente', 'idcue', 'perfil', 'fecha_vencimiento'
+        'idcli', 'nombre_cliente','idven','iddet', 'idcue', 'perfil', 'fecha_vencimiento'
     ];
 
     // Si se desea, también puedes establecer relaciones con otros modelos
@@ -27,5 +27,10 @@ class ViewUsuarioActivo extends Model
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'IDCLI', 'idcli');
+    }
+    
+    public function detalle_venta()
+    {
+        return $this->belongsTo(Cliente::class, 'iddet', 'iddet');
     }
 }

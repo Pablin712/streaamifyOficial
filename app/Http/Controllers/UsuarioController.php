@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ViewUsuarioActivo;
 use App\Models\DetalleVenta;
-
+use App\Models\Cuenta;
 class UsuarioController extends Controller
 {
     public function index()
@@ -27,14 +27,27 @@ class UsuarioController extends Controller
     // Editar un usuario existente
     public function change($iddet)
     {
-        $usuario = ViewUsuarioActivo::where('iddet',$iddet);
-        return view('inventory.usuarios.change', compact('usuario'));
+        $usuario = ViewUsuarioActivo::where('iddet',$iddet)->first();
+        //$detalle = DetalleVenta::where('iddet',$iddet)->first();
+        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
+            foreach ($cuenta->perfiles as $perfil) {
+                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                    ->where('idcue', $cuenta->idcue)
+                    ->count();
+                $perfil->usuarios_activos = $usuariosActivos;
+            }
+        }
+        return view('inventory.usuarios.change', compact('usuario','cuentas'));
     }
 
     public function update(Request $request, $iddet)
     {
         $request->validate([
-            'idcue' => 'required|exists:cuentas,id', // La cuenta debe existir en la tabla 'cuentas'
+            'idcue' => 'required|exists:cuentas,idcue', // La cuenta debe existir en la tabla 'cuentas'
             'perfil' => 'required|integer|min:1', // Validación para un número entero
             'fecha_vencimiento' => 'required'
         ]);
