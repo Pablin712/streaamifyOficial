@@ -64,7 +64,7 @@ class CuentaController extends Controller
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);
         // Verificar si se recibieron datos de costo
-        if ($request->has('descripcioncos') && $request->has('montocos')) {
+        if (!empty($request->descripcioncos) && !empty($request->montocos)) {
             // Validar datos de costo si los campos están presentes
             $validatedCosto = $request->validate([
                 'descripcioncos' => 'string|max:50',
@@ -108,7 +108,7 @@ class CuentaController extends Controller
         $servicio = Servicio::find($valor->idser);
 
         // Construir el mensaje
-        $mensaje = "{$servicio->nombre}\n";
+        $mensaje = "<strong>{$servicio->nombre}</strong>\n";
         $mensaje .= "Usuario: {$cuenta->usuariocue}\n";
         $mensaje .= "Clave: {$cuenta->contrasenacue}\n";
         $mensaje .= "PIN de perfil {$perfil->numeroper}: ";
@@ -149,7 +149,7 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         $cuenta->update($request->all());
 
-        if ($request->has('descripcioncos') && $request->has('montocos')) {
+        if (!empty($request->descripcioncos) && !empty($request->montocos)) {
             // Validar datos de costo si los campos están presentes
             $validatedCosto = $request->validate([
                 'descripcioncos' => 'string|max:50',

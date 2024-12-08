@@ -38,7 +38,6 @@
     </p>
     <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
     <br>
-    <h5>Por completar:</h5>
     <p>
         <strong>1. Botón renovar (verde en columna acciones):</strong> Que habra una vista y permita renovar cuenta
         (extender fecha de vencimiento, registrar costo). <br>
@@ -73,7 +72,7 @@
                 <th>Usuario</th>
                 <th>Vencimiento</th>
                 <th>Clientes</th>
-                <th>Espacio Disponible</th>
+                {{-- <th>Espacio Disponible</th> --}}
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -102,22 +101,33 @@
                         $estadoClase = 'table-success';
                     }
                     */
+
                 @endphp
                 <tr> {{-- class="{{ $estadoClase }}" --}}
                     <td>{{ $cuenta->idcue }}</td>
                     <td>{{ $cuenta->valor->idval }} ({{ $cuenta->valor->proveedor->nombrepro }})</td>
                     <td>{{ $cuenta->usuariocue }}</td>
                     <td>{{ $cuenta->fechavencue->format('d/m/Y') }}</td>
-                    <td>{{ $cuenta->usuarios_activos }}</td>
                     <td>
+                        @php
+                            $users = $cuenta->usuarios_activos;
+                        @endphp
+                        @if ($cuenta->valor->pantmaxval < $users)
+                            <span class="badge bg-dark">{{$users}}</span>
+                        @elseif ($cuenta->valor->pantminval > $users)
+                            <span class="badge bg-danger">{{$users}}</span>
+                        @else
+                            <span class="badge bg-success">{{$users}}</span>
+                        @endif
+                    </td>
+                    {{-- <td>
                         @php
                             $pantmaxval = $cuenta->valor->pantmaxval;
                             $usuarios_activos = $cuenta->usuarios_activos;
                             $resta = $pantmaxval - $usuarios_activos;
                         @endphp
                         {{ $resta }}
-                    </td>
-
+                    </td> --}}
                     <td>
                         @if ($cuenta->caidacue)
                             <span class="badge bg-dark">Dañada</span>
@@ -129,8 +139,7 @@
                             <span class="badge bg-success">Activa</span>
                         @endif
                         <!-- Botón para cambiar estado -->
-                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
-                            style="display:inline;">
+                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="btn btn-dark btn-sm">

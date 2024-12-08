@@ -2,9 +2,6 @@
 
 @section('introduccion') 
 <h1>Bienvenido user (employee)</h1>
-<p>pantalla principal al que se accede</p>
-<h2>What do you do today?</h2>
-<h3>¿Qué harás hoy?</h3>
 
 @endsection
 @section('content')
@@ -58,7 +55,7 @@
 </div>
 
 <div class="container mt-4">
-    <h1 class="text-center my-4">Acciones Frecuentes</h1>
+    <!--<h1 class="text-center my-4">Acciones Frecuentes</h1>-->
     <div class="row">
         <!-- Registrar Venta (Azul) -->
         <div class="col-md-4 mb-4">

@@ -21,7 +21,6 @@ use App\Http\Controllers\InicioController;
 
 Route::get('/', HomeController::class);
 
-
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
 Route::post('/login', [LoginController::class, 'login']);                      // Procesa el formulario del login
 
@@ -41,6 +40,7 @@ Route::get('/inicio',[InicioController::class,'show'])->name('inicio');
 
 Route::controller(ContabilidadController::class)->group(function () {
     Route::get('/dashboard', 'index')->name('dashboard');
+    Route::post('/dashboard/createstore','store')->name('dashboard.store');
 });
 //Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
 Route::controller(ServicioController::class)->group(function () {

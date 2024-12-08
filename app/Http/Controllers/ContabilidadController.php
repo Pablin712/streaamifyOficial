@@ -43,7 +43,7 @@ class ContabilidadController extends Controller
         // Pasar las ventas y los detalles de venta a la vista
 
         $promedio_pagos_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->avg('totalpagoven');
-        $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente','facturado')->first();
+        $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first();
         $num_cuentas = Cuenta::all()->count();
         $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
 
@@ -283,6 +283,42 @@ class ContabilidadController extends Controller
         ];
 
         return $meses[$mes] ?? 'Mes Desconocido'; // Retorna el nombre del mes
+    }
+    public function store(Request $request)
+    {
+        // Acceder a las variables enviadas
+        $ventas = $request->input('ventas');
+        $ingresos_mes = $request->input('ingresos_mes');
+        $ingresos_ano = $request->input('ingresos_ano');
+        $clientes_activos = $request->input('clientes_activos');
+        $usuarios_activos = $request->input('usuarios_activos');
+        $cuentas_caidas = $request->input('cuentas_caidas');
+        $usuarios_acobrar = $request->input('usuarios_acobrar');
+        $num_cuentas = $request->input('num_cuentas');
+        $costos_mes = $request->input('costos_mes');
+        $promedio_pagos_mes = $request->input('promedio_pagos_mes');
+        $cliente_mas_facturado = $request->input('cliente_mas_facturado');
+
+        $mes = now()->month;  // Obtiene el mes actual (1-12)
+        $ano = now()->year;
+        $detalle = now()->format('M-y');
+
+        Contabilidad::updateOrCreate(
+            [
+                'mes' => $mes,               // Condición para buscar el registro
+                'año' => $ano,               // Condición para buscar el registro
+            ],
+            [
+                'detalle' => $detalle,       // 'Jul-24' o el formato que necesites
+                'num_cuentas' => $num_cuentas,
+                'num_usuarios' => $usuarios_activos,
+                'ingresos' => $ingresos_mes,
+                'costos' => $costos_mes,
+                //'ganancias' => $ingresos_mes - $costos_mes,  // Si necesitas calcular las ganancias
+            ]
+        );    
+
+        return redirect()->route('dashboard')->with('success', 'Reporte guardado con éxito.');
     }
     /*
     public function calcular_ingresos_mes($ventas){ //para evitar varias consultas y reducir costos

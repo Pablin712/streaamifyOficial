@@ -15,7 +15,82 @@
 @endsection
 @section('h1', 'Dashboard')
 @section('introduccion')
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
     <h1>Bienvenido user (employee)</h1>
+    <form method="POST" action="{{ route('dashboard.store') }}">
+        @csrf
+        <!-- Otras entradas del formulario -->
+        <input type="hidden" name="ventas" value="{{ $ventas }}">
+        <input type="hidden" name="ingresos_mes" value="{{ $ingresos_mes }}">
+        <input type="hidden" name="ingresos_ano" value="{{ $ingresos_ano }}">
+        <input type="hidden" name="clientes_activos" value="{{ $clientes_activos }}">
+        <input type="hidden" name="usuarios_activos" value="{{ $usuarios_activos }}">
+        <input type="hidden" name="cuentas_caidas" value="{{ $cuentas_caidas }}">
+        <input type="hidden" name="usuarios_acobrar" value="{{ $usuarios_acobrar }}">
+        <input type="hidden" name="num_cuentas" value="{{ $num_cuentas }}">
+        <input type="hidden" name="costos_mes" value="{{ $costos_mes }}">
+        <input type="hidden" name="promedio_pagos_mes" value="{{ $promedio_pagos_mes }}">
+        <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
+
+        <!-- Variables de historial -->
+        <input type="hidden" name="meses_historial" value="{{ $meses_historial }}">
+        <input type="hidden" name="ingresos_historial" value="{{ $ingresos_historial }}">
+        <input type="hidden" name="costos_historial" value="{{ $costos_historial }}">
+        <input type="hidden" name="ganancias_historial" value="{{ $ganancias_historial }}">
+
+        <!-- Variables de servicios específicos -->
+        <input type="hidden" name="cuentas_netflix" value="{{ $cuentas_netflix }}">
+        <input type="hidden" name="usuarios_netflix" value="{{ $usuarios_netflix }}">
+        <input type="hidden" name="ingresos_netflix" value="{{ $ingresos_netflix }}">
+        <input type="hidden" name="costos_netflix" value="{{ $costos_netflix }}">
+
+        <input type="hidden" name="cuentas_disney" value="{{ $cuentas_disney }}">
+        <input type="hidden" name="usuarios_disney" value="{{ $usuarios_disney }}">
+        <input type="hidden" name="ingresos_disney" value="{{ $ingresos_disney }}">
+        <input type="hidden" name="costos_disney" value="{{ $costos_disney }}">
+
+        <input type="hidden" name="cuentas_prime" value="{{ $cuentas_prime }}">
+        <input type="hidden" name="usuarios_prime" value="{{ $usuarios_prime }}">
+        <input type="hidden" name="ingresos_prime" value="{{ $ingresos_prime }}">
+        <input type="hidden" name="costos_prime" value="{{ $costos_prime }}">
+
+        <input type="hidden" name="cuentas_max" value="{{ $cuentas_max }}">
+        <input type="hidden" name="usuarios_max" value="{{ $usuarios_max }}">
+        <input type="hidden" name="ingresos_max" value="{{ $ingresos_max }}">
+        <input type="hidden" name="costos_max" value="{{ $costos_max }}">
+
+        <input type="hidden" name="cuentas_magis" value="{{ $cuentas_magis }}">
+        <input type="hidden" name="usuarios_magis" value="{{ $usuarios_magis }}">
+        <input type="hidden" name="ingresos_magis" value="{{ $ingresos_magis }}">
+        <input type="hidden" name="costos_magis" value="{{ $costos_magis }}">
+
+        <input type="hidden" name="cuentas_crunchy" value="{{ $cuentas_crunchy }}">
+        <input type="hidden" name="usuarios_crunchy" value="{{ $usuarios_crunchy }}">
+        <input type="hidden" name="ingresos_crunchy" value="{{ $ingresos_crunchy }}">
+        <input type="hidden" name="costos_crunchy" value="{{ $costos_crunchy }}">
+
+        <input type="hidden" name="cuentas_paramount" value="{{ $cuentas_paramount }}">
+        <input type="hidden" name="usuarios_paramount" value="{{ $usuarios_paramount }}">
+        <input type="hidden" name="ingresos_paramount" value="{{ $ingresos_paramount }}">
+        <input type="hidden" name="costos_paramount" value="{{ $costos_paramount }}">
+
+        <input type="hidden" name="cuentas_spotify" value="{{ $cuentas_spotify }}">
+        <input type="hidden" name="usuarios_spotify" value="{{ $usuarios_spotify }}">
+        <input type="hidden" name="ingresos_spotify" value="{{ $ingresos_spotify }}">
+        <input type="hidden" name="costos_spotify" value="{{ $costos_spotify }}">
+
+        <input type="hidden" name="cuentas_otros" value="{{ $cuentas_otros }}">
+        <input type="hidden" name="usuarios_otros" value="{{ $usuarios_otros }}">
+        <input type="hidden" name="ingresos_otros" value="{{ $ingresos_otros }}">
+        <input type="hidden" name="costos_otros" value="{{ $costos_otros }}">
+        <!-- Agrega los demás campos como ocultos si es necesario -->
+        <button type="submit" class="btn btn-primary mb-3">Guardar reporte de mes</button>
+    </form>
+
 @endsection
 @section('content')
     <!-- Content Wrapper -->
@@ -31,6 +106,7 @@
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">Resumen de Streamify HQ</h1>
                 </div>
+
 
                 <div class="row">
 
@@ -786,7 +862,7 @@
         // Ingresos, costos y ganancias de Crunchy
         var ingCrunchy = @json($ingresos_crunchy); // Ingresos de Crunchy
         var cosCrunchy = @json($costos_crunchy); // Costos de Crunchy
-        var ganCrunchy = ingCrunchy - cosCrunchy;// Ganancias de Crunchy
+        var ganCrunchy = ingCrunchy - cosCrunchy; // Ganancias de Crunchy
         // Ingresos, costos y ganancias de Paramount
         var ingParamount = @json($ingresos_paramount); // Ingresos de Paramount
         var cosParamount = @json($costos_paramount); // Costos de Paramount
@@ -809,7 +885,8 @@
                 datasets: [{
                         label: 'Ingresos', // Etiqueta para la primera barra
                         data: [ingNetflix, ingDisney, ingPrime, ingMax, ingMagis, ingCrunchy, ingParamount,
-                            ingSpotify, ingOtros], // Datos para la serie 1
+                            ingSpotify, ingOtros
+                        ], // Datos para la serie 1
                         backgroundColor: '#3aff00', // Color de las barras de la primera serie
                         borderColor: '#3aff00', // Color del borde de las barras
                         borderWidth: 1
@@ -817,15 +894,17 @@
                     {
                         label: 'Costos', // Etiqueta para la segunda barra
                         data: [cosNetflix, cosDisney, cosPrime, cosMax, cosMagis, cosCrunchy, cosParamount,
-                            cosSpotify, cosOtros], // Datos para la serie 2
+                            cosSpotify, cosOtros
+                        ], // Datos para la serie 2
                         backgroundColor: '#ff0000', // Color de las barras de la segunda serie
                         borderColor: '#ff0000', // Color del borde de las barras
                         borderWidth: 1
                     },
                     {
                         label: 'Ganancias', // Etiqueta para la tercera barra
-                        data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, 
-                            ganSpotify, ganOtros], // Datos para la serie 3
+                        data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount,
+                            ganSpotify, ganOtros
+                        ], // Datos para la serie 3
                         backgroundColor: '#18af00', // Color de las barras de la tercera serie
                         borderColor: '#18af00', // Color del borde de las barras
                         borderWidth: 1
@@ -861,8 +940,9 @@
                     'Otros'
                 ], // Etiquetas para cada porción del pastel
                 datasets: [{
-                    data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount, 
-                            ganSpotify, ganOtros], // Datos para cada porción del pastel
+                    data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount,
+                        ganSpotify, ganOtros
+                    ], // Datos para cada porción del pastel
                     backgroundColor: ['#ff0000', '#00babd', '#00f7ff', '#003aff', '#ff8f00',
                         '#ffcd00', '#009eff', '#1abd00', '#d100ff'
                     ], // Colores para las porciones
