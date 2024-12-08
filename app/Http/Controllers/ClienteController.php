@@ -50,7 +50,7 @@ class ClienteController extends Controller
         return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
 
-    public function store2(Request $request)
+    public function storeInVenta(Request $request)
     {
         // Validar los datos
         $request->validate([

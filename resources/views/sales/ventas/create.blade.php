@@ -93,7 +93,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="{{ route('clientes.store2') }}" method="POST">
+                    <form action="{{ route('clientes.storeInVenta') }}" method="POST">
                         @csrf
                         <!-- Campos del Cliente -->
                         <div class="form-group mb-3">
