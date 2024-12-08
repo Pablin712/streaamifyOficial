@@ -1,7 +1,7 @@
 @extends('layouts.static') 
 
 @section('introduccion') 
-<h1>Bienvenido user (employee)</h1>
+<h1>Bienvenido, {{ Auth::user()->nombreemp }}</h1>
 
 @endsection
 @section('content')

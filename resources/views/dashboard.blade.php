@@ -20,7 +20,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <h1>Bienvenido user (employee)</h1>
+    <h1>{{ Auth::user()->nombreemp }}</h1>
     <form method="POST" action="{{ route('dashboard.store') }}">
         @csrf
         <!-- Otras entradas del formulario -->
