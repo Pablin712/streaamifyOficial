@@ -60,6 +60,9 @@ class CuentaController extends Controller
             'contrasenacue' => 'required|string|min:8|max:50',
             'caidacue' => 'required|boolean',
         ]);
+        $request->merge([
+            'idcue' => strtoupper($request->idcue)
+        ]);
 
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);

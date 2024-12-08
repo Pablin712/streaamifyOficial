@@ -29,6 +29,9 @@ class ServicioController extends Controller
             'revcompser' => 'nullable|numeric',
         ]);
 
+        $request->merge([
+            'nombreser' => ucwords(strtolower($request->nombreser))
+        ]);
         Servicio::create($request->all());
 
         return redirect()->route('servicios')->with('success', 'Servicio creado con éxito.');
@@ -50,6 +53,9 @@ class ServicioController extends Controller
             'comboser' => 'nullable|numeric',
             'reventaser' => 'nullable|numeric',
             'revcompser' => 'nullable|numeric',
+        ]);
+        $request->merge([
+            'nombreser' => ucwords(strtolower($request->nombreser))
         ]);
 
         $servicio = Servicio::findOrFail($idser);

@@ -12,7 +12,7 @@
             {{ session('error') }}
         </div>
     @endif
-    <form action="{{ route('clientes.store') }}" method="POST">
+    <form method="POST" action="{{ route('clientes.store') }}">
         @csrf
         <div class="form-group mb-3">
             <label for="nombrecli">Nombre</label>

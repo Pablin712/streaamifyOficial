@@ -23,7 +23,9 @@ class ProveedorController extends Controller
             'nombrepro' => 'required|string|max:20',
             'telefonopro' => 'string|max:15'
         ]);
-
+        $request->merge([
+            'nombrepro' => ucwords(strtolower($request->nombrepro))
+        ]);
         Proveedor::create($request->all());
 
         return redirect()->route('proveedores')->with('success', 'Proveedor creado con éxito.');
@@ -42,7 +44,9 @@ class ProveedorController extends Controller
             'nombrepro' => 'required|string|max:20', // varchar(20)
             'telefonopro' => 'nullable|string|max:15'
         ]);
-
+        $request->merge([
+            'nombrepro' => ucwords(strtolower($request->nombrepro))
+        ]);
         $proveedor = Proveedor::findOrFail($idpro);
         $proveedor->update($request->all());
 

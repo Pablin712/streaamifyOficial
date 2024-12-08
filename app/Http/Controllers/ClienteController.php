@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Models\ViewClientesUsuarios;
+
 class ClienteController extends Controller
 {
     public function index()
@@ -34,7 +35,10 @@ class ClienteController extends Controller
             'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
             'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
         ]);
-
+        // Formatear el nombre del cliente a tipo oración (primera letra en mayúscula)
+        $request->merge([
+            'nombrecli' => ucwords(strtolower($request->nombrecli))
+        ]);
         $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
             ->orWhere('telefonocli', $request->telefonocli)
             ->first();
@@ -56,6 +60,10 @@ class ClienteController extends Controller
         $request->validate([
             'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
             'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
+        ]);
+        // Formatear el nombre del cliente a tipo oración (primera letra en mayúscula)
+        $request->merge([
+            'nombrecli' => ucwords(strtolower($request->nombrecli))
         ]);
         $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
             ->orWhere('telefonocli', $request->telefonocli)

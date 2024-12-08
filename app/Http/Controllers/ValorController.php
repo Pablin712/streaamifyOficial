@@ -34,7 +34,9 @@ class ValorController extends Controller
             'pantmaxval' => 'required|integer|min:1',
             'mesesval' => 'required|integer|min:1',
         ]);
-
+        $request->merge([
+            'idval' => strtoupper($request->idval)
+        ]);
         Valor::create($request->all());
 
         return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
@@ -61,7 +63,6 @@ class ValorController extends Controller
             'pantmaxval' => 'required|integer|min:1',
             'mesesval' => 'required|integer|min:1',
         ]);
-
         $valor = Valor::findOrFail($idval);
         $valor->update($request->all());
 
