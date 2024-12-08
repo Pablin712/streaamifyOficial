@@ -15,7 +15,7 @@
 @endsection
 @section('h1', 'Dashboard')
 @section('introduccion')
-    <h1>Bienvenido user (employee)</h1>
+    <h1>{{ Auth::user()->nombreemp }}</h1>
 @endsection
 @section('content')
     <!-- Content Wrapper -->

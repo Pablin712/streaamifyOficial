@@ -13,15 +13,19 @@ class LoginController extends Controller
      */
     public function showLoginForm()
     {
-        return view('auth.login'); // Asegúrate de tener la vista 'auth/login.blade.php'
+        // Redirigir si el usuario ya está autenticado
+        if (Auth::check()) {
+            return redirect()->route('dashboard')->with('info', 'Ya estás autenticado.');
+        }
+
+        return view('auth.login'); // Vista de login
     }
 
     /**
      * Procesa la solicitud de inicio de sesión.
      */
-  
-     public function login(Request $request)
-   {
+    public function login(Request $request)
+    {
         // Validar los datos de entrada
         $request->validate([
             'usuarioemp' => 'required|string',
@@ -31,18 +35,25 @@ class LoginController extends Controller
         // Buscar al usuario por usuarioemp
         $empleado = \App\Models\Empleado::where('usuarioemp', $request->usuarioemp)->first();
 
-        if ($empleado && Hash::check($request->passwordemp, $empleado->passwordemp)) {
-            // Autenticar manualmente al usuario si la contraseña coincide
-            Auth::login($empleado);
-
-            // Redirige al usuario a su página de inicio o dashboard
-            return redirect()->intended('dashboard')->with('success', 'Inicio de sesión exitoso.');
+        if (!$empleado) {
+            // Retorna un mensaje de error si el usuario no existe
+            return back()->withErrors([
+                'usuarioemp' => 'El usuario no existe.',
+            ])->withInput($request->except('passwordemp'));
         }
 
-        // Si falla, regresa con un mensaje de error
-        return back()->withErrors([
-            'usuarioemp' => 'Las credenciales no coinciden con nuestros registros.',
-        ])->withInput($request->except('passwordemp'));
+        // Verificar la contraseña
+        if (!Hash::check($request->passwordemp, $empleado->passwordemp)) {
+            return back()->withErrors([
+                'passwordemp' => 'La contraseña es incorrecta.',
+            ])->withInput($request->except('passwordemp'));
+        }
+
+        // Autenticar al usuario manualmente
+        Auth::login($empleado);
+
+        // Redirigir al dashboard o ruta protegida
+        return redirect()->intended('inicio')->with('success', 'Inicio de sesión exitoso.');
     }
 
     /**
@@ -51,7 +62,8 @@ class LoginController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect('/login')->with('success', 'Sesión cerrada correctamente.');
+
+        // Redirigir al login con un mensaje
+        return redirect()->route('login')->with('success', 'Sesión cerrada correctamente.');
     }
 }
-

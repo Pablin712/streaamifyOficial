@@ -1,7 +1,7 @@
 @extends('layouts.static') 
 
 @section('introduccion') 
-<h1>Bienvenido user (employee)</h1>
+<h1>Bienvenido, {{ Auth::user()->nombreemp }}</h1>
 <p>pantalla principal al que se accede</p>
 <h2>What do you do today?</h2>
 <h3>¿Qué harás hoy?</h3>
