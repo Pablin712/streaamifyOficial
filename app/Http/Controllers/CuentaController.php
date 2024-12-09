@@ -16,7 +16,6 @@ class CuentaController extends Controller
 {
     public function index(Request $request)
     {
-        
         $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
         $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get(); // Cargar valor asociado
         // Inicializar una colección vacía para los perfiles
@@ -179,6 +178,7 @@ class CuentaController extends Controller
     public function destroy($idcue)
     {
         $cuenta = Cuenta::findOrFail($idcue);
+        $cuenta->perfiles()->delete();
         $cuenta->delete();
 
         return redirect()->route('cuentas')->with('success', 'Cuenta eliminada con éxito.');
