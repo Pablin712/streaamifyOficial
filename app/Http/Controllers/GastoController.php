@@ -1,20 +1,18 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Gasto;
 use App\Models\TipoGasto;
+use Illuminate\Support\Facades\Auth;
+
 class GastoController extends Controller
 {
-    //public function __construct()
-    //{
-    //    $this->middleware('auth'); // Solo usuarios autenticados pueden acceder
-    //}
-
     // Mostrar todos los gastos
     public function index()
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         // Obtener todos los gastos con el tipo de gasto relacionado
         $gastos = Gasto::with('tipoGasto')->get();
         // Obtener todos los tipos de gasto para el formulario
@@ -26,6 +24,8 @@ class GastoController extends Controller
     // Crear un nuevo gasto desde el modal
     public function store(Request $request)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $request->validate([
             'idtip' => 'required|exists:tipo_gasto,idtip',
             'fechagas' => 'required|date',
@@ -46,6 +46,8 @@ class GastoController extends Controller
     // Mostrar el formulario para editar un gasto (modal)
     public function edit($id)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $gasto = Gasto::findOrFail($id);
         $tipoGastos = TipoGasto::all();
 
@@ -58,6 +60,8 @@ class GastoController extends Controller
     // Actualizar un gasto (desde el modal)
     public function update(Request $request, $idgas)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $request->validate([
             'idtip' => 'required|exists:tipo_gasto,idtip',
             'fechagas' => 'required|date',
@@ -78,9 +82,21 @@ class GastoController extends Controller
     // Eliminar un gasto
     public function destroy($id)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $gasto = Gasto::findOrFail($id);
         $gasto->delete();
 
         return redirect()->route('gastos')->with('success', 'Gasto eliminado con éxito');
+    }
+
+    private function authorizeRole(array $roles)
+    {
+        $userRole = Auth::user()->idrol;
+
+        if (!in_array($userRole, $roles)) {
+            // Redirigir a la vista anterior con una alerta
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+        }
     }
 }

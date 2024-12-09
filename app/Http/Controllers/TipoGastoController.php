@@ -1,21 +1,25 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\TipoGasto;
+use Illuminate\Support\Facades\Auth;
+
 class TipoGastoController extends Controller
 {
     public function index()
     {
-        $tipoGastos = TipoGasto::with('tipoGasto')->get();
+        $this->authorizeRole(['administrador', 'contador']);
+
+        $tipoGastos = TipoGasto::all();
 
         return view('finance.gastos', compact('tipoGastos'));
     }
 
-    // Crear un nuevo tipogasto desde el modal
     public function store(Request $request)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $request->validate([
             'detalletip' => 'required|string|max:50',
         ]);
@@ -27,19 +31,21 @@ class TipoGastoController extends Controller
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto creado con éxito');
     }
 
-    // Mostrar el formulario para editar un tipo gasto (modal)
     public function edit($id)
     {
-        $tipoGastos = TipoGasto::findOrFail($id);
+        $this->authorizeRole(['administrador', 'contador']);
+
+        $tipoGasto = TipoGasto::findOrFail($id);
 
         return response()->json([
-            'tipoGastos' => $tipoGastos
+            'tipoGastos' => $tipoGasto
         ]);
     }
 
-    // Actualizar un tipo de gasto (desde el modal)
     public function update(Request $request, $idtip)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $request->validate([
             'detalletip' => 'required|string|max:50',
         ]);
@@ -52,12 +58,23 @@ class TipoGastoController extends Controller
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto actualizado con éxito');
     }
 
-    // Eliminar un gasto
     public function destroy($id)
     {
+        $this->authorizeRole(['administrador', 'contador']);
+
         $tipoGasto = TipoGasto::findOrFail($id);
         $tipoGasto->delete();
 
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto eliminado con éxito');
+    }
+
+    private function authorizeRole(array $roles)
+    {
+        $userRole = Auth::user()->idrol;
+
+        if (!in_array($userRole, $roles)) {
+            // Redirigir a la vista anterior con una alerta
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+        }
     }
 }

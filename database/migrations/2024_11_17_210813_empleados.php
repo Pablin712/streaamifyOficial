@@ -29,19 +29,6 @@ return new class extends Migration
             // Llave foránea a roles.idrol
             $table->foreign('idrol')->references('idrol')->on('roles')->onDelete('cascade');
         });
-
-        // Crear tabla permisos
-        Schema::create('permisos', function (Blueprint $table) {
-            $table->id('idperm'); // Serial primary key
-            $table->string('idrol', 20);
-            $table->string('name_table', 50);
-            $table->string('accion', 50);
-            $table->boolean('allowed');
-            $table->timestamps(); // Opcional, elimina si no necesitas las columnas created_at y updated_at
-
-            // Llave foránea
-            $table->foreign('idrol')->references('idrol')->on('roles')->onDelete('cascade');
-        });
     }
 
     /**
@@ -51,6 +38,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('roles');
         Schema::dropIfExists('empleados');
-        Schema::dropIfExists('permisos');
     }
 };
