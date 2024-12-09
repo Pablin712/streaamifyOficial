@@ -10,6 +10,12 @@ Tabla de ejemplo
             <li class="breadcrumb-item"><a href="{{ route('inicio') }}">Inicio</a></li>
             <li class="breadcrumb-item active">@yield('h1')</li>
         </ol>
+        @if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+@endif
+
         <div class="card mb-4">
             <div class="card-body">
                 @yield('descripcion')

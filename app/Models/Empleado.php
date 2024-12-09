@@ -28,6 +28,7 @@ class Empleado extends Authenticatable
         'telefonoemp',   // Teléfono del empleado
         'usuarioemp',    // Usuario del empleado
         'passwordemp',   // Contraseña hasheada
+        'idrol', 
     ];
 
    

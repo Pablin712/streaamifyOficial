@@ -13,6 +13,7 @@
             <div class="card-body">
                 <p class="mb-0">
                     @yield('introduccion')
+                    
                 </p>
             </div>
         </div>

@@ -42,6 +42,7 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\AuthenticateEmpleado::class, // Tu middleware
+        'roles' => \App\Http\Middleware\CheckRole::class,  
         
     ];
 }
