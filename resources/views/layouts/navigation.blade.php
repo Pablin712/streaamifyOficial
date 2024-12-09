@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8" />
@@ -43,8 +43,8 @@
                         <i class="fas fa-user fa-fw"></i> {{ Auth::user()->nombreemp }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#!">Settings</a></li>
-                        <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+                        <li><a class="dropdown-item" href="#!">Ajustes</a></li>
+                        <li><a class="dropdown-item" href="#!">Actividad</a></li>
                         <li>
                             <hr class="dropdown-divider" />
                         </li>
@@ -67,7 +67,7 @@
             <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
                 <div class="sb-sidenav-menu">
                     <div class="nav">
-                        <div class="sb-sidenav-menu-heading">Core</div>
+                        <div class="sb-sidenav-menu-heading">Principal</div>
                         <a class="nav-link" href="{{ route('inicio') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-home"></i></div>
                             Inicio
@@ -76,73 +76,73 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                             Dashboard
                         </a>
-                        <div class="sb-sidenav-menu-heading">Business</div>
+                        <div class="sb-sidenav-menu-heading">Negocio</div>
                         <!-- Finance collapsible -->
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
                             <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                            Finance
+                            Finanza
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                         </a>
                         <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('costos') }}">Costs</a>
-                                <a class="nav-link" href="{{ route('gastos') }}">Expenses</a>
-                                <a class="nav-link" href="reports.html">Reports</a>
+                                <a class="nav-link" href="{{ route('costos') }}">Costos</a>
+                                <a class="nav-link" href="{{ route('gastos') }}">Gastos</a>
+                                <!--<a class="nav-link" href="reports.html">Reports</a>-->
                             </nav>
                         </div> {{-- finance collapsible end --}}
                         {{-- Aquí empieza el colapsable Sales --}}
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                             <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
-                            Sales
+                            Comercio
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                         </a>
                         <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('ventas') }}">Sales details</a>
-                                <a class="nav-link" href="{{ route('clientes') }}">Customers</a>
+                                <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
+                                <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
                             </nav>
                         </div>
                         {{-- Aquí termina el colapsable Sales --}}
 
-                        <div class="sb-sidenav-menu-heading">Inventory</div>
+                        <div class="sb-sidenav-menu-heading">Stock</div>
                         <!-- Accounts collapsible -->
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseAccounts" aria-expanded="false"
                             aria-controls="collapseAccounts">
                             <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
-                            Accounts
+                            Cuentas
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                         </a>
                         <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('cuentas') }}">Accounts and profiles</a>
-                                <a class="nav-link" href="{{ route('usuarios') }}">Active Users</a>
+                                <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
+                                <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
                             </nav>
                         </div>
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
                             <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                            Stock
+                            Inventario
                             <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                         </a>
                         <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('servicios') }}">Services</a>
+                                <a class="nav-link" href="{{ route('servicios') }}">Servicios</a>
                                 <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
-                                <a class="nav-link" href="{{ route('valores') }}">Values</a>
+                                <a class="nav-link" href="{{ route('valores') }}">Valores</a>
                             </nav>
                         </div>
 
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">
-                    <div class="small">Logged in as:</div>
+                    <div class="small">Iniciado como:</div>
                     {{ Auth::user()->nombreemp ?? 'Guest' }}
                 </div>
             </nav>
@@ -156,9 +156,9 @@
                     <div class="d-flex align-items-center justify-content-between small">
                         <div class="text-muted">Copyright &copy; Streamify 2024</div>
                         <div>
-                            <a href="#">Privacy Policy</a>
+                            <a href="#">Politicas de Privacidad</a>
                             &middot;
-                            <a href="#">Terms &amp; Conditions</a>
+                            <a href="#">Terminos &amp; Condiciones</a>
                         </div>
                     </div>
                 </div>
