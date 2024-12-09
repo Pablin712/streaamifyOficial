@@ -8,13 +8,14 @@ Tabla de ejemplo
         <h1 class="mt-4">@yield('h1')</h1>
         <ol class="breadcrumb mb-4">
             <li class="breadcrumb-item"><a href="{{ route('inicio') }}">Inicio</a></li>
-            <li class="breadcrumb-item active">@yield('h1')</li>@if (session('error'))
+            <li class="breadcrumb-item active">@yield('h1')</li>
+        </ol>
+        @if (session('error'))
     <div class="alert alert-danger">
         {{ session('error') }}
     </div>
 @endif
 
-        </ol>
         <div class="card mb-4">
             <div class="card-body">
                 @yield('descripcion')
