@@ -9,9 +9,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa el inventario</h3>
-    <p>a esta pantalla acceden ciertos usuarios</p>
-    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
+    <p>Agrega un nuevo proveedor al negocio, para poder contactarlo y adquirir sus cuentas.</p>
 @endsection
 @section('tablename', 'Proveedores')
 @section('table1')

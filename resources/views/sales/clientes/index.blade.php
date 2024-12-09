@@ -9,9 +9,8 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa el inventario</h3>
-    <p>A esta pantalla acceden ciertos usuarios. Muestra la tabla de clientes, un crud</p>
-    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
+    <h3>Información de clientes</h3>
+    <p>Muestra la tabla de clientes, el número de usuarios que posee y lo facturado en el mes actual.</p>
 @endsection
 @section('tablename', 'Clientes')
 @section('table1')

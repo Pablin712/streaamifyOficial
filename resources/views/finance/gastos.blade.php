@@ -1,7 +1,9 @@
 @extends('layouts.table')
 
 @section('title', 'Gastos')
-
+@section('styles')
+    <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
+@endsection
 @section('h1', 'Gastos')
 
 @section('descripcion')
@@ -10,8 +12,6 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Gestión de Gastos</h3>
-    <h4>Iniciado por Pablo Jiménez, terminado por Andrés Rincón</h4>
     <p>Aquí puedes ver todos los gastos asociados al negocio y registrar nuevos gastos. Si deseas ver los gastos de un tipo
         de gasto específico, selecciona un tipo de gasto en el modal.</p>
 @endsection

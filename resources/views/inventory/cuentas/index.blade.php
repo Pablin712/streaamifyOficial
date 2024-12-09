@@ -33,32 +33,14 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa las cuentas activas del <strong>Negocio</strong></h3>
-    <p>Aquí podrás gestionar las cuentas de usuario asociadas a los servicios de streaming pertenecientes a Streamify HQ.
-    </p>
-    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
-    <br>
-    <p>
-        <strong>1. Botón renovar (verde en columna acciones):</strong> Que habra una vista y permita renovar cuenta
-        (extender fecha de vencimiento, registrar costo). <br>
-        <strong>2. Botón editar perfil:</strong> que habra un modal que permita cambiar el pin del perfil de la cuenta (Solo
-        el pin y nada más del perfil). <br>
-        <strong>3. Columna Usuarios activos en perfiles LISTO:</strong> que calcule los clientes que están ocupando ese
-        perfil
-        (vista y función ya hecha en sql de postgres). <br>
-        <strong>4. Botón cambiar estado cuenta LISTO:</strong> que cambie el caidacue al darle clic (botón azul) <br>
-        <strong>5. Botón ver mensaje (Ver perfil):</strong> este permite copiar, o ver los detalles del perfil
-        para vender a un cliente, debe indicar un mensaje con el formato establecido para enviar por WhatsApp.
-        <br><br>
-        <strong>Nombre de servicio</strong><br>
-        <strong>Usuario:</strong> usuariocue<br>
-        <strong>Clave:</strong> contrasenacue<br>
-        <strong>PIN de perfil numeroper:</strong> pinper
+    <p>Revisa las cuentas activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario 
+        asociadas a los servicios de streaming pertenecientes a Streamify HQ.
     </p>
 @endsection
 
 @section('btncrear')
     <a href="{{ route('cuentas.create') }}" class="btn btn-primary mb-3">Crear Cuenta</a>
+    <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
 @endsection
 
 @section('tablename', 'Cuentas')

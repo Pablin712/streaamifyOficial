@@ -1,7 +1,4 @@
 @extends('layouts.navigation') 
-@section('title')
-Tabla de ejemplo
-@endsection 
 @section('main')
 
     <div class="container-fluid px-4">

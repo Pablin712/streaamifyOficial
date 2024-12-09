@@ -1,7 +1,4 @@
 @extends('layouts.navigation')
-@section('title')
-    Tabla de ejemplo
-@endsection
 @section('main')
     <div class="container-fluid px-4">
         <h1 class="mt-4">@yield('h1')</h1>

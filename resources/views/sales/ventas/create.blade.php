@@ -15,16 +15,6 @@
         </div>
     @endif
     Aquí puedes agregar una nueva venta.
-    En esta vista, se agrega una venta a la tabla ventas y detalles_venta.
-    <h5>Por completar:</h5>
-    <strong>Modal de crear cliente:</strong> que al registrar nuevo cliente, se seleccione
-    automáticamente para la venta actual. <br>
-    <strong>Modal de agregar detalle:</strong> que al llenar los datos en modal, y dar clic en agregar, se agregue
-    a la tabla de la vista actual, <strong>NO A LA BD</strong> todavia, es solo para llenar el formulario de la
-    creación de venta y sus detalles. <br>
-    <strong>Botón Registrar Venta:</strong> que al dar clic, registrar la venta ahora si en la BD, registrar también
-    sus detalles, que fueron almacenados en la tabla de la vista, ahora si se almacenarán en la tabla oficial de
-    detalles_venta y ventas.
 @endsection
 @section('content')
     <div class="container">

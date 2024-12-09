@@ -28,18 +28,8 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa las ventas activas y detalles de los productos vendidos.</h3>
+    <h3>Revisa las ventas activas y detalles de los servicios vendidos.</h3>
     <p>Aquí podrás gestionar las ventas y los detalles asociados, ver los usuarios activos y las opciones de renovación.</p>
-    <h4>Desarrollado por Pablo Jiménez, terminado por Andrés Rincón</h4>
-    <br>
-    <h5>Por completar:</h5>
-    <p>
-        <strong>1. Botón renovar:</strong> Permite renovar la venta extendiendo la fecha de vencimiento. <br>
-        <strong>2. Botón editar perfil:</strong> Cambiar PIN del perfil de la venta. <br>
-        <strong>3. Usuarios activos en las ventas:</strong> Ya implementado, muestra los usuarios actuales en cada
-        venta.<br>
-        <strong>4. Cambiar estado de la venta:</strong> Botón que cambia el estado de la venta (activa/inactiva).
-    </p>
 @endsection
 
 @section('btncrear')

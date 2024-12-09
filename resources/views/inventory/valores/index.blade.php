@@ -11,12 +11,12 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa el inventario</h3>
-    <p>a esta pantalla acceden ciertos usuarios</p>
-    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
+    <p>Revisa el inventario y crea nuevos posibles contratos para luego agregarlas a stock.</p>
 @endsection
 @section('btncrear')
     <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
+    <a href="{{ route('clientes.create') }}" class="btn btn-primary mb-3">Nuevo Cliente</a>
+    <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Nuevo Proveedor</a>
 @endsection
 @section('tablename', 'Valores')
 @section('table1')

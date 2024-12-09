@@ -18,7 +18,6 @@
     <h3>Gestiona los permisos asignados</h3>
     <p>En esta pantalla se pueden visualizar y administrar los permisos asignados a cada rol.</p>
     <p>Incluye un CRUD para gestionar permisos y su relación con roles.</p>
-    <h4>Realizado por Pablo Jiménez, adaptado por Andrés Rincón</h4>
 @endsection
 
 @section('tablename', 'Permisos')

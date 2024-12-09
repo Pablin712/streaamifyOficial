@@ -3,7 +3,7 @@
     Servicios
 @endsection
 @section('h1')
-    Services
+    Servicios
 @endsection
 @section('descripcion')
     @if (session('success'))
@@ -11,10 +11,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa el inventario de servicios</h3>
-    <p>A esta pantalla acceden ciertos usuarios</p>
-    <p>Muestra tabla de todos los servicios y sus precios, un crud</p>
-    <h4>Realizado por Pablo Jiménez, terminado por Andrés Rincón</h4>
+    <p>Muestra tabla de todos los servicios y sus precios para la venta.</p>
 @endsection
 @section('tablename', 'Servicios')
 @section('btncrear')

@@ -11,10 +11,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <h3>Revisa la actividad de todos los clientes y su fecha de vencimiento</h3>
-    <p>A esta pantalla acceden ciertos usuarios</p>
-    <p>Muestra vista de todos los usuarios y sus fecha de caducidad para controlar actividad, un crud</p>
-    <h4>Realizado por Pablo Jiménez</h4>
+    <p>Muestra vista de todos los usuarios y sus fecha de caducidad para controlar actividad.</p>
 @endsection
 @section('tablename', 'Usuarios')
 @section('btncrear')
