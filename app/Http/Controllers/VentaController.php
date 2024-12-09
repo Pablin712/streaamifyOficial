@@ -12,6 +12,8 @@ use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
+use Illuminate\Support\Facades\Auth;
+
 class VentaController extends Controller
 {
     /**

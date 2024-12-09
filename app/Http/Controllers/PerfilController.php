@@ -100,8 +100,7 @@ class PerfilController extends Controller
         $userRole = Auth::user()->idrol;
 
         if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+            abort(403, 'Acción no autorizada.');
         }
     }
 }

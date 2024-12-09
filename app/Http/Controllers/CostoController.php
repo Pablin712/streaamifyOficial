@@ -5,31 +5,33 @@ namespace App\Http\Controllers;
 use App\Models\Costo;
 use App\Models\Cuenta;
 use Illuminate\Http\Request;
+
+
 use Illuminate\Support\Facades\Auth;
 
 class CostoController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorizeRole(['administrador', 'contador']);
-
+        
+        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
         // Obtener todas las cuentas para el selector
         $cuentas = Cuenta::all();
 
         // Filtrar costos por cuenta seleccionada
-        $idcueSeleccionado = $request->idcue;
+        $idcueSeleccionado = $request->idcue; // ID de la cuenta seleccionada
+        //$costos = $idcueSeleccionado
+        //  ? Costo::where('idcue', $idcueSeleccionado)->get()
+        // : collect(); // Colección vacía si no se selecciona ninguna cuenta
         $costos = Costo::all();
-
         return view('finance.costos', compact('cuentas', 'costos', 'idcueSeleccionado'));
     }
 
     public function store(Request $request)
     {
-        $this->authorizeRole(['administrador']);
-
         // Validar los datos
         $request->validate([
-            'idcue' => 'required|exists:cuentas,idcue',
+            'idcue' => 'required|exists:cuentas,idcue', // Debe ser una cuenta válida
             'descripcioncos' => 'required|string|max:50',
             'montocos' => 'required|numeric|min:0',
             'fechacos' => 'nullable|date'
@@ -43,8 +45,6 @@ class CostoController extends Controller
 
     public function update(Request $request, $idcos)
     {
-        $this->authorizeRole(['administrador']);
-
         $request->validate([
             'descripcioncos' => 'required|string|max:50',
             'montocos' => 'required|numeric',
@@ -63,15 +63,13 @@ class CostoController extends Controller
 
     public function destroy($idcos)
     {
-        $this->authorizeRole(['administrador']);
-
+        // Eliminar el costo
         $costo = Costo::findOrFail($idcos);
-        $idcue = $costo->idcue;
+        $idcue = $costo->idcue; // Para volver a la cuenta seleccionada
         $costo->delete();
 
         return redirect()->route('costos', ['idcue' => $idcue])->with('success', 'Costo eliminado correctamente.');
     }
-
     private function authorizeRole(array $roles)
     {
         $userRole = Auth::user()->idrol;
