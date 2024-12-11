@@ -752,8 +752,8 @@
                             @endif
                         </td>
                     </tr>
-                </tbody>
-                <tfoot>
+                
+                
                     <tr>
                         <td><strong>Totales</strong></td>
                         <td><strong>{{ $num_cuentas }}</strong></td>
@@ -797,7 +797,7 @@
                             @endif
                         </td>
                     </tr>
-                </tfoot>
+                </tbody>
             </table>
         </div>
     </div>
