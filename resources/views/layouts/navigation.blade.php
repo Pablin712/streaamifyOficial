@@ -72,12 +72,16 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-home"></i></div>
                             Inicio
                         </a>
+                        @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador')
                         <a class="nav-link" href="{{ route('dashboard') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                             Dashboard
                         </a>
+                        @endif
                         <div class="sb-sidenav-menu-heading">Negocio</div>
                         <!-- Finance collapsible -->
+                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador'
+                        || Auth::user()->idrol == 'bodeguero')
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
                             <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
@@ -87,12 +91,18 @@
                         <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
+                                
                                 <a class="nav-link" href="{{ route('costos') }}">Costos</a>
+                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador')
                                 <a class="nav-link" href="{{ route('gastos') }}">Gastos</a>
+                                @endif
                                 <!--<a class="nav-link" href="reports.html">Reports</a>-->
                             </nav>
-                        </div> {{-- finance collapsible end --}}
+                        </div>
+                        @endif {{-- finance collapsible end --}}
                         {{-- Aquí empieza el colapsable Sales --}}
+                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
+                        || Auth::user()->idrol == 'tecnico')
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                             <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -106,8 +116,10 @@
                                 <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
                             </nav>
                         </div>
+                        @endif
                         {{-- Aquí termina el colapsable Sales --}}
-
+                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
+                        || Auth::user()->idrol == 'tecnico' || Auth::user()->idrol == 'bodeguero')
                         <div class="sb-sidenav-menu-heading">Stock</div>
                         <!-- Accounts collapsible -->
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
@@ -120,10 +132,16 @@
                         <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
+                                @if(Auth::user()->idrol != 'vendedor')
                                 <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
+                                @endif
                                 <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
                             </nav>
                         </div>
+                        @endif
+
+                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'bodeguero'
+                        || Auth::user()->idrol == 'contador' || Auth::user()->idrol == 'vendedor')
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
                             <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
@@ -134,11 +152,13 @@
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link" href="{{ route('servicios') }}">Servicios</a>
+                                @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'bodeguero')
                                 <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
+                                @endif
                                 <a class="nav-link" href="{{ route('valores') }}">Valores</a>
                             </nav>
                         </div>
-
+                        @endif
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">

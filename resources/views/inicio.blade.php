@@ -10,7 +10,7 @@
 
 
 <div class="container">
-    <h1 class="text-center my-4"> Que haras hoy?</h1>
+    <h1 class="text-center my-4">¿Qué harás hoy?</h1>
 
     <div class="container mt-4">
     <h1 class="text-center my-4">Acciones Frecuentes</h1>
