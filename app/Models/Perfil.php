@@ -25,4 +25,8 @@ class Perfil extends Model
     {
         return $this->belongsTo(Cuenta::class, 'idcue', 'idcue');
     }
+    public function detalles_venta()
+    {
+        return $this->hasMany(DetalleVenta::class, 'idper', 'idper')->onDelete('cascade');
+    }
 }

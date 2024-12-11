@@ -35,6 +35,7 @@
         <input type="hidden" name="costos_mes" value="{{ $costos_mes }}">
         <input type="hidden" name="promedio_pagos_mes" value="{{ $promedio_pagos_mes }}">
         <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
+        <input type="hidden" name="ventas_mes" value="{{ $ventas_mes }}">
 
         <!-- Variables de historial -->
         <input type="hidden" name="meses_historial" value="{{ $meses_historial }}">
@@ -145,14 +146,87 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Earnings (Annual) Card Example -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Ventas este mes</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $ventas_mes }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Ventas este Año</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ $ventas_ano }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- otro card --}}
+                    
+                </div>
+                <div class="row">
+                    <!-- Clientes activos (Monthly) Card Example -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Cuentas Activas</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $num_cuentas }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-crown fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Espacios disponibles</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ $espacios }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-warehouse fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Pending Requests Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">
                         <div class="card border-left-warning shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                             Pending Payments</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_acobrar }}</div>
                                     </div>
@@ -163,14 +237,13 @@
                             </div>
                         </div>
                     </div>
-
                     <!-- Pending Requests Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">
                         <div class="card border-left-warning shadow h-100 py-2">
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
                                             Cuentas caidas</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $cuentas_caidas }}</div>
                                     </div>
@@ -182,7 +255,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="row">
 
                     <!-- Clientes activos (Monthly) Card Example -->
@@ -226,7 +298,7 @@
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                             Media de pago por cliente</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                                             ${{ number_format($promedio_pagos_mes, 2) }}</div>
@@ -244,7 +316,7 @@
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                             Cliente más facturado</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                                             {{ $cliente_mas_facturado->nombre_cliente }}
@@ -680,6 +752,8 @@
                             @endif
                         </td>
                     </tr>
+                </tbody>
+                <tfoot>
                     <tr>
                         <td><strong>Totales</strong></td>
                         <td><strong>{{ $num_cuentas }}</strong></td>
@@ -723,9 +797,6 @@
                             @endif
                         </td>
                     </tr>
-                </tbody>
-                <tfoot>
-
                 </tfoot>
             </table>
         </div>

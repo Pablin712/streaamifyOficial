@@ -49,6 +49,19 @@ class ContabilidadController extends Controller
         $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first();
         $num_cuentas = Cuenta::all()->count();
         $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
+        $ventas_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->count();
+        $ventas_ano = Venta::whereYear('fechaven', $year)->count();
+
+        $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
+        $espacios = 0;
+        foreach ($cuentas as $cuenta) {
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $cuenta->usuarios_activos = $usuarios;
+            $pantmaxval = $cuenta->valor->pantmaxval;
+            $usuarios_activos = $cuenta->usuarios_activos;
+            $resta = $pantmaxval - $usuarios_activos;
+            $espacios += $resta;
+        }
 
 
         $cuentas_netflix = Cuenta::where('idcue', 'like', 'NETFLIX%')->count();
@@ -216,6 +229,9 @@ class ContabilidadController extends Controller
             'costos_mes',
             'promedio_pagos_mes',
             'cliente_mas_facturado',
+            'ventas_mes',
+            'ventas_ano',
+            'espacios',
 
             'meses_historial',
             'ingresos_historial',
@@ -301,6 +317,7 @@ class ContabilidadController extends Controller
         $costos_mes = $request->input('costos_mes');
         $promedio_pagos_mes = $request->input('promedio_pagos_mes');
         $cliente_mas_facturado = $request->input('cliente_mas_facturado');
+        $ventas_mes = $request->input('ventas_mes');
 
         $mes = now()->month;  // Obtiene el mes actual (1-12)
         $ano = now()->year;
@@ -317,9 +334,10 @@ class ContabilidadController extends Controller
                 'num_usuarios' => $usuarios_activos,
                 'ingresos' => $ingresos_mes,
                 'costos' => $costos_mes,
+                'num_ventas' => $ventas_mes,
                 //'ganancias' => $ingresos_mes - $costos_mes,  // Si necesitas calcular las ganancias
             ]
-        );    
+        );
 
         return redirect()->route('dashboard')->with('success', 'Reporte guardado con éxito.');
     }

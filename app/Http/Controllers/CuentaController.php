@@ -9,6 +9,7 @@ use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
 use App\Models\ViewUsuarioActivo;
+use App\Models\DetalleVenta;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -47,7 +48,7 @@ class CuentaController extends Controller
     // Mostrar formulario para crear una nueva cuenta contratada
     public function create()
     {
-        
+
         $valores = Valor::all(); // Obtener lista de valores
         return view('inventory.cuentas.create', compact('valores'));
     }
@@ -178,6 +179,14 @@ class CuentaController extends Controller
     public function destroy($idcue)
     {
         $cuenta = Cuenta::findOrFail($idcue);
+        // Verificar si los perfiles están registrados en detalles_venta
+        foreach ($cuenta->perfiles as $perfil) {
+            $perfilInDetalleVenta = DetalleVenta::where('perfil_id', $perfil->id)->exists();
+
+            if ($perfilInDetalleVenta) {
+                return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más perfiles están registrados en detalles_venta.');
+            }
+        }
         $cuenta->perfiles()->delete();
         $cuenta->delete();
 

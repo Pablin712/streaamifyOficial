@@ -32,10 +32,10 @@ class Cuenta extends Model
     }
     public function costos()
     {
-        return $this->hasMany(Costo::class, 'idcue', 'idcue');
+        return $this->hasMany(Costo::class, 'idcue', 'idcue')->onDelete('cascade');
     }
     public function perfiles()
     {
-        return $this->hasMany(Perfil::class, 'idcue', 'idcue');
+        return $this->hasMany(Perfil::class, 'idcue', 'idcue')->onDelete('cascade');
     }
 }

@@ -34,6 +34,7 @@ class Contabilidad extends Model
         'costos',
         'ganancias',
         'renta',
+        'num_ventas'
     ];
 
     public function setMesAttribute($value)

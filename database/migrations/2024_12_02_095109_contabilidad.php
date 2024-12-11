@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('costos', 15, 2);  // costos (con 2 decimales)
             $table->decimal('ganancias', 15, 2);  // ganancias (con 2 decimales)
             $table->decimal('renta', 5, 2);  // renta (con 2 decimales)
+            $table->integer('num_ventas');
             
             // Para agregar índices o relaciones, si es necesario
             // $table->timestamps();  // Si deseas incluir las marcas de tiempo created_at y updated_at
