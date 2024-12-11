@@ -30,17 +30,7 @@ class VentaController extends Controller
         //    $query->where('activodet', true);
         //})->orderBy('fechaven')->get();
         
-        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
-        
-        
-        //$detalles_venta = collect();
-
-        //$idvenSeleccionada = $request->idven;
-
-        //if ($idvenSeleccionada) {
-        // Obtener los detalles de venta asociados a una venta específica
-        //$detalles_venta = DetalleVenta::where('idven', $idvenSeleccionada)->get();
-        //}
+        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven','desc')->get();
 
         // Pasar las ventas y los detalles de venta a la vista
         return view('sales.ventas.index', compact('ventas'));

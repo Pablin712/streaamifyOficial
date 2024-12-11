@@ -55,7 +55,7 @@
                     <td>{{ $venta->idven }}</td>
                     <td>{{ $venta->cliente->nombrecli }}</td>
                     <td>{{ $venta->empleado->nombreemp }}</td>
-                    <td>{{ $venta->fechaven->format('d/m/Y') }}</td>
+                    <td>{{ $venta->fechaven->format('Y/m/d') }}</td>
                     <td>
                         <!-- Botón para editar venta -->
                         <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
