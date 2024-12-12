@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ValorController;
@@ -26,6 +27,22 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');    /
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
+
+Route::get('/principal', function () {
+    return view('principal');
+})->name('principal');
+
+//probando
+/*
+Route::get('/logincliente', function () {
+    return view('logincliente');
+})->name('logincliente');
+*/
+Route::get('/logincliente', [LoginClienteController::class, 'showLoginForm'])->name('logincliente'); // Muestra la vista del login
+Route::post('/logincliente', [LoginClienteController::class, 'logincliente']);                      // Procesa el formulario del login
+Route::post('/logoutcliente', [LoginClienteController::class, 'logout'])->name('logoutcliente'); 
+
+
 
 Route::middleware(['auth'])->group(function () {
 
