@@ -9,7 +9,9 @@
 <body>
     <section>
         <h1>Home</h1> 
-        Bienvenido nuevo
+        Bienvenido, miembro de Streamify HQ, ahora podrás iniciar sesión si tienes un usuario
+        autorizado.
+        Si no tienes uno, solicita que te creen uno.
     </section>
 </body>
 </html>

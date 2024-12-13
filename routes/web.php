@@ -18,7 +18,7 @@ use App\Http\Controllers\VentaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\InicioController;
 
-Route::get('/', HomeController::class);
+Route::get('/admin', HomeController::class);
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
 Route::post('/login', [LoginController::class, 'login']);                      // Procesa el formulario del login
@@ -28,7 +28,7 @@ Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
 
-Route::get('/principal', function () {
+Route::get('/', function () {
     return view('principal');
 })->name('principal');
 
@@ -37,11 +37,7 @@ Route::get('/principal', function () {
 Route::get('/logincliente', function () {
     return view('logincliente');
 })->name('logincliente');
-*/
-Route::get('/logincliente', [LoginClienteController::class, 'showLoginForm'])->name('logincliente'); // Muestra la vista del login
-Route::post('/logincliente', [LoginClienteController::class, 'logincliente']);                      // Procesa el formulario del login
-Route::post('/logoutcliente', [LoginClienteController::class, 'logout'])->name('logoutcliente'); 
-
+*/ 
 
 
 Route::middleware(['auth'])->group(function () {

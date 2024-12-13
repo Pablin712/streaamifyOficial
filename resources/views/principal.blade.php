@@ -29,8 +29,8 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ms-auto me-4 my-3 my-lg-0">
-                        <li class="nav-item"><a class="nav-link me-lg-3" href="#features">Features</a></li>
-                        <li class="nav-item"><a class="nav-link me-lg-3" href="#download">Download</a></li>
+                        <li class="nav-item"><a class="nav-link me-lg-3" href="#features">Fortalezas</a></li>
+                        <li class="nav-item"><a class="nav-link me-lg-3" href="#combos">Combos</a></li>
                     </ul>
                     <a href="https://wa.me/593961412826" target="_blank">
                         <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">
@@ -84,7 +84,7 @@
                                 <!-- Aquí va la imagen promocional -->
                                 <img 
                                     {{-- src="{{ asset('images/tik tok miniatura.png') }}" --}}  
-                                    src="{{ asset('images/cuadrado/agosto 6 combinado/33.png') }}"
+                                    src="{{ asset('images/cuadrado/combos/33.png') }}"
                                     alt="Promoción de Streaming" 
                                     class="rounded shadow-lg"
                                     style="width: 80%; max-width: 600px; height: auto; object-fit: cover;"
@@ -95,7 +95,7 @@
                 </div>
             </div>
         </header>
-        <section id="features" class="py-5 bg-light">
+        <section id="features" class="py-5 bg-light"> {{-- style="background-color: #E4B100;" --}}
             <div class="container">
                 <h2 class="text-center fw-bold mb-5">¿Por qué elegir Streamify?</h2>
                 <div class="row text-center">
@@ -136,35 +136,46 @@
         </section>
         
         <!-- Sección de combos -->
-        <section id="combos" class="py-5">
+        <section id="combos" class="py-5 bg-light">
             <div class="container">
                 <h2 class="text-center fw-bold mb-5">Nuestros Combos</h2>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="combo-box text-center p-3 shadow-sm rounded">
-                            <img src="{{ asset('images/combo1.png') }}" alt="Combo 1" class="img-fluid rounded mb-3">
-                            <h5 class="fw-bold">Combo 1: Netflix + Disney+</h5>
-                            <p class="text-muted">Solo por $7.99/mes</p>
+                            <img src="{{ asset('images/cuadrado/combos/32.png') }}" alt="Combo 1" class="img-fluid rounded mb-3">
+                            <h5 class="fw-bold">Combo Básico: Spotify + Disney + Prime Video</h5>
+                            <p class="text-muted">Solo por $6.00/mes</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="combo-box text-center p-3 shadow-sm rounded">
-                            <img src="{{ asset('images/combo2.png') }}" alt="Combo 2" class="img-fluid rounded mb-3">
-                            <h5 class="fw-bold">Combo 2: Amazon + HBO Max</h5>
-                            <p class="text-muted">Solo por $8.99/mes</p>
+                            <img src="{{ asset('images/cuadrado/combos/34.png') }}" alt="Combo 2" class="img-fluid rounded mb-3">
+                            <h5 class="fw-bold">Combo Maratón: Netflix + Disney + HBO Max</h5>
+                            <p class="text-muted">Solo por $7.50/mes</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="combo-box text-center p-3 shadow-sm rounded">
-                            <img src="{{ asset('images/combo3.png') }}" alt="Combo 3" class="img-fluid rounded mb-3">
-                            <h5 class="fw-bold">Combo 3: Todo incluido</h5>
-                            <p class="text-muted">Solo por $12.99/mes</p>
+                            <img src="{{ asset('images/cuadrado/combos/36.png') }}" alt="Combo 3" class="img-fluid rounded mb-3">
+                            <h5 class="fw-bold">Super Combo: HBO Max + Disney + Paramount + Crunchyroll</h5>
+                            <p class="text-muted">Solo por $7.00/mes</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        
+        <footer id="pie" class="bg-dark text-white text-center py-4">
+            <div class="container">
+                <p class="mb-2">© 2024 Streamify. Todos los derechos reservados.</p>
+                <p class="small">Diseñado por Pablo Jiménez</p>
+                <div>
+                    <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-white"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+        </footer>        
         <!-- Bootstrap core JS-->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <!-- Core theme JS-->
