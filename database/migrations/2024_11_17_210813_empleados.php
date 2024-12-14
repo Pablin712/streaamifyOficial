@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('nombreemp', 20); // Nombre del empleado
             $table->string('telefonoemp', 15)->nullable(); // Teléfono opcional
             $table->string('usuarioemp', 20); // Usuario para login
+            $table->string('foto_url')->nullable(); // Columna para la foto, opcional
             $table->string('passwordemp', 60); // Contraseña para login
             $table->string('idrol', 20); // Rol asignado al empleado
             $table->timestamps(); // Incluye columnas created_at y updated_at

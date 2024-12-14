@@ -17,6 +17,7 @@ use App\Http\Controllers\TipoGastoController;
 use App\Http\Controllers\VentaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\EmpleadoController;
 
 Route::get('/admin', HomeController::class);
 
@@ -160,5 +161,14 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
         });
     
+        Route::controller(EmpleadoController::class)->group(function(){
+            Route::get('/empleados', 'index')->name('empleados');
+            Route::get('/empleados/create', 'create')->name('empleados.create');
+            Route::post('/empleados/createstore', 'store')->name('empleados.store');
+            Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
+            Route::put('/empleados/{id}', 'update')->name('empleados.update');
+            Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
+
+        });
     
 });
