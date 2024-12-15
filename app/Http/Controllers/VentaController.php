@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\DetalleVenta;
 use App\Models\Venta;
 use App\Models\Cliente;
@@ -21,7 +22,7 @@ class VentaController extends Controller
      */
     public function index(Request $request)
     {
-        
+
         $this->authorizeRole(['administrador', 'vendedor']);
         // Obtener todas las ventas con los detalles de cada una
         //$ventas = Venta::with(['detalles_venta' => function($query) {
@@ -29,8 +30,8 @@ class VentaController extends Controller
         //}])->whereHas('detalles_venta', function($query) {
         //    $query->where('activodet', true);
         //})->orderBy('fechaven')->get();
-        
-        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven','desc')->get();
+
+        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven', 'desc')->get();
 
         // Pasar las ventas y los detalles de venta a la vista
         return view('sales.ventas.index', compact('ventas'));
@@ -41,7 +42,7 @@ class VentaController extends Controller
      */
     public function create()
     {
-        
+
         $this->authorizeRole(['administrador', 'vendedor']);
         $clientes = Cliente::all(); // Obtener lista de clientes
         $empleados = Empleado::all(); //Obtener lista de empleados
@@ -74,16 +75,48 @@ class VentaController extends Controller
             'detalles_venta' => 'required|json',
         ]);
 
-        // Crear la venta
-        $venta = Venta::create([
-            'idcli' => $request->idcli,
-            'idemp' => $request->idemp,
-            'fechaven' => Carbon::now(),
-            'totalpagoven' => 0,  // Puedes calcular el total si lo deseas
-        ]);
+        // Verificar si ya existe un registro de ventas para el día de hoy
+        $ventaDiaria = DB::table('ventas_diarias')->where('fecha', Carbon::today()->toDateString())->first();
+        if (!$ventaDiaria) {
+            // Si no existe, creamos un nuevo registro para hoy con el contador inicializado
+            DB::table('ventas_diarias')->insert([
+                'fecha' => Carbon::today()->toDateString(),
+                'numero_venta' => 2,  // Iniciamos el contador en 1
+            ]);
+            $numeroVenta = 1;
+        } else {
+            // Si ya existe un registro, incrementamos el contador
+            $numeroVenta = $ventaDiaria->numero_venta;
+            DB::table('ventas_diarias')
+                ->where('fecha', Carbon::today()->toDateString())
+                ->update(['numero_venta' => $numeroVenta + 1]);
+        }
+        // Generar el ID de venta
+        $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . Carbon::now()->format('dmy');
+        // Depurar si $idVenta está siendo generado correctamente
+        //dd($idVenta);  // Esto debería mostrar el valor de $idVenta antes de continuar
 
         // Decodificar los detalles de venta desde el JSON
         $detalles = json_decode($request->detalles_venta, true);
+
+        // Depurar los detalles para ver si están bien formateados
+        //dd($detalles);  // Esto debería mostrar los detalles que se están enviando
+
+        // Calcular el total de la venta sumando los montos de los detalles
+        $total_venta = collect($detalles)->sum('monto');
+
+        // Depurar el cálculo del total
+        //dd($total_venta);  // Esto debería mostrar el valor calculado de $total_venta
+
+
+        // Crear la venta
+        $venta = Venta::create([
+            'idven' => $idVenta,
+            'idcli' => $request->idcli,
+            'idemp' => $request->idemp,
+            'fechaven' => Carbon::now(),
+            'totalpagoven' => $total_venta,  // Puedes calcular el total si lo deseas
+        ]);
 
         // Registrar los detalles de venta
         foreach ($detalles as $detalle) {
@@ -107,7 +140,7 @@ class VentaController extends Controller
         }
 
         // Puedes calcular el total de la venta aquí y actualizarlo
-        //$venta->total_venta = collect($detalles)->sum('monto');
+        //$venta->totalpagoven = collect($detalles)->sum('monto');
         //$venta->save();
 
         // Redirigir a una página de éxito o mostrar un mensaje
@@ -122,35 +155,57 @@ class VentaController extends Controller
             'idemp' => 'required|exists:empleados,idemp',
             'detalles_venta' => 'required|json',
         ]);
-    
         // Obtener el idven anterior
         $idvenPasado = $request->idvenPasado;
-        
 
         DetalleVenta::where('idven', $idvenPasado)->update(['activodet' => false]);
-    
+
+
+        // Verificar si ya existe un registro de ventas para el día de hoy
+        $ventaDiaria = DB::table('ventas_diarias')->where('fecha', Carbon::today()->toDateString())->first();
+        if (!$ventaDiaria) {
+            // Si no existe, creamos un nuevo registro para hoy con el contador inicializado
+            DB::table('ventas_diarias')->insert([
+                'fecha' => Carbon::today()->toDateString(),
+                'numero_venta' => 1,  // Iniciamos el contador en 1
+            ]);
+            $numeroVenta = 1;
+        } else {
+            // Si ya existe un registro, incrementamos el contador
+            $numeroVenta = $ventaDiaria->numero_venta + 1;
+            DB::table('ventas_diarias')
+                ->where('fecha', Carbon::today()->toDateString())
+                ->update(['numero_venta' => $numeroVenta + 1]);
+        }
+        // Generar el ID de venta
+        $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . Carbon::now()->format('dmy');
+
+
+        // Decodificar los detalles de venta desde el JSON
+        $detalles = json_decode($request->detalles_venta, true);
+
+        // Calcular el total de la venta sumando los montos de los detalles
+        $total_venta = collect($detalles)->sum('monto');
         // Crear la nueva venta
         $ventaNueva = Venta::create([
+            'idven' => $idVenta,
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
             'fechaven' => Carbon::now(),
-            'totalpagoven' => 0,  // Calcula el total si es necesario
+            'totalpagoven' => $total_venta,  // Calcula el total si es necesario
         ]);
-    
-        // Decodificar los detalles de venta desde el JSON
-        $detalles = json_decode($request->detalles_venta, true);
-    
+
         // Registrar los detalles de venta
         foreach ($detalles as $detalle) {
             // Obtener el idcue de la cuenta
             $idcue = $detalle['cuenta'];
-    
+
             // Obtener el número de perfil
             $numeroper = $detalle['perfil'];
-    
+
             // Crear el idperfil combinando idcue y numeroper
             $idper = $idcue . '.' . $numeroper;
-    
+
             // Guardar cada detalle en la tabla detalles_venta
             DetalleVenta::create([
                 'idven' => $ventaNueva->idven,
@@ -161,11 +216,11 @@ class VentaController extends Controller
                 'activodet' => true,
             ]);
         }
-        
+
         // Redirigir a una página de éxito o mostrar un mensaje
         return redirect()->route('ventas')->with('success', 'Venta registrada correctamente.');
     }
-    
+
     public function storeCliente(Request $request)
     {
         // Validación de los datos recibidos
@@ -205,7 +260,7 @@ class VentaController extends Controller
      */
     public function edit($idven)
     {
-        
+
         $this->authorizeRole(['administrador', 'vendedor']);
         $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
         $empleados = Empleado::all();
@@ -236,16 +291,16 @@ class VentaController extends Controller
         if ($venta->idcli != $idcli) {
             abort(404, 'Cliente no coincide con la venta.');
         }
-    
+
         $cuentas = Cuenta::with('perfiles')->get();
-    
+
         $detalles = $venta->detalles_venta->map(function ($detalle) {
             $detalle->fechavendet_suma = Carbon::parse($detalle->fechavendet)->addMonth()->format('Y-m-d');
             return $detalle;
         });
-    
+
         $totalVenta = $venta->detalles_venta->sum('montodet'); // Calcular total de la venta
-    
+
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
             $cuenta->usuarios_activos = $usuarios;
@@ -265,7 +320,7 @@ class VentaController extends Controller
             'totalVenta' => $totalVenta
         ]);
     }
-    
+
 
     /**
      * Update the specified resource in storage.
@@ -329,7 +384,7 @@ class VentaController extends Controller
         }
 
         // Actualizamos el total de la venta
-        //$venta->totalpagoven = $totalVenta;
+        $venta->totalpagoven = $totalVenta;
         $venta->save();
 
         // Redirigir a una página de éxito o mostrar un mensaje

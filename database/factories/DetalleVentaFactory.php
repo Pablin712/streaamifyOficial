@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Factories;
+
 use App\Models\DetalleVenta;
 use App\Models\Venta;
 use App\Models\Perfil;
@@ -20,7 +21,9 @@ class DetalleVentaFactory extends Factory
     public function definition(): array
     {
         return [
-            'idven' => Venta::inRandomOrder()->first()->idven, // Relación aleatoria con una venta
+            'idven' => $this->state(function (array $attributes) {
+                return $attributes['idven'];  // Usar el idven proporcionado desde el factory de Venta
+            }),
             'idper' => Perfil::inRandomOrder()->first()->idper, // Relación aleatoria con un perfil
             'fechavendet' => $this->faker->dateTimeBetween('2024-12-16', '2025-02-13'), // Fecha aleatoria dentro de este año
             'montodet' => $this->faker->randomFloat(2, 1.5, 10), // Monto aleatorio entre 1.5 y 10

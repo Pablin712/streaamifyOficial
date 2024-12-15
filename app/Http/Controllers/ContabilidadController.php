@@ -321,6 +321,12 @@ class ContabilidadController extends Controller
         $cliente_mas_facturado = $request->input('cliente_mas_facturado');
         $ventas_mes = $request->input('ventas_mes');
 
+        if ($costos_mes != 0) {
+            $renta_variable = number_format($ingresos_mes / $costos_mes, 2);
+        } else {
+            $renta_variable = 0;
+        }
+
         $mes = now()->month;  // Obtiene el mes actual (1-12)
         $ano = now()->year;
         $detalle = now()->format('M-y');
@@ -337,7 +343,8 @@ class ContabilidadController extends Controller
                 'ingresos' => $ingresos_mes,
                 'costos' => $costos_mes,
                 'num_ventas' => $ventas_mes,
-                //'ganancias' => $ingresos_mes - $costos_mes,  // Si necesitas calcular las ganancias
+                'ganancias' => $ingresos_mes - $costos_mes,  // Si necesitas calcular las ganancias
+                'renta' => $renta_variable,
             ]
         );
 

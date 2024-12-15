@@ -27,39 +27,6 @@ return new class extends Migration
             // Para agregar índices o relaciones, si es necesario
             // $table->timestamps();  // Si deseas incluir las marcas de tiempo created_at y updated_at
         });
-
-        DB::unprepared('
-            CREATE OR REPLACE FUNCTION calcular_ganancias() 
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.ganancias := NEW.ingresos - NEW.costos;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER before_insert_contabilidad
-            BEFORE INSERT ON contabilidad
-            FOR EACH ROW
-            EXECUTE FUNCTION calcular_ganancias();
-        ');
-        DB::unprepared('
-            CREATE OR REPLACE FUNCTION calcular_renta() 
-            RETURNS TRIGGER AS $$
-            BEGIN
-                -- Asegurarse de que los ingresos no sean 0 para evitar división por 0
-                IF NEW.ingresos != 0 THEN
-                    NEW.renta := (NEW.ganancias / NEW.ingresos) * 100;
-                ELSE
-                    NEW.renta := 0; -- Si los ingresos son 0, asignamos 0 a la renta
-                END IF;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-            CREATE TRIGGER before_insert_update_contabilidad
-            BEFORE INSERT OR UPDATE ON contabilidad
-            FOR EACH ROW
-            EXECUTE FUNCTION calcular_renta();
-        ');
     }
 
     /**
@@ -67,10 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::unprepared('DROP TRIGGER IF EXISTS before_insert_contabilidad ON contabilidad;');
-        DB::unprepared('DROP FUNCTION IF EXISTS calcular_ganancias;');
-        DB::unprepared('DROP TRIGGER IF EXISTS before_insert_update_contabilidad ON contabilidad');
-        DB::unprepared('DROP FUNCTION IF EXISTS calcular_renta');
         Schema::dropIfExists('contabilidad');
     }
 };

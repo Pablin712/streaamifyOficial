@@ -59,6 +59,12 @@ return new class extends Migration
                 ->onUpdate('restrict')
                 ->onDelete('restrict'); // Relación con la tabla `cuentas`
         });
+        Schema::create('ventas_diarias', function (Blueprint $table) {
+            $table->id();
+            $table->date('fecha')->unique();  // Guardamos la fecha de la venta diaria
+            $table->integer('numero_venta')->default(1);  // Inicia el contador de ventas en 1
+            $table->timestamps();
+        });   
     }
 
     /**
@@ -77,5 +83,6 @@ return new class extends Migration
             $table->dropForeign(['idper']); // Eliminar relación foránea
         });
         Schema::dropIfExists('detalles_venta');
+        Schema::dropIfExists('ventas_diarias');
     }
 };

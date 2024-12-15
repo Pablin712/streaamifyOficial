@@ -13,62 +13,6 @@ return new class extends Migration
     public function up(): void
     {
         DB::unprepared("
-            CREATE OR REPLACE FUNCTION actualizar_total_venta()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                -- Calcula el total de la venta actual
-                UPDATE VENTAS
-                SET TOTALPAGOVEN = (SELECT COALESCE(SUM(MONTODET), 0.00) 
-                                    FROM DETALLES_VENTA
-                                    WHERE IDVEN = NEW.IDVEN)
-                WHERE IDVEN = NEW.IDVEN;
-
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER trg_actualizar_total_venta
-            AFTER INSERT OR UPDATE OR DELETE ON DETALLES_VENTA
-            FOR EACH ROW
-            EXECUTE FUNCTION actualizar_total_venta();
-
-
-            CREATE TABLE ventas_diarias_last_reset (
-                last_reset DATE
-            );
-
-            --TRIGGER QUE SE UNE DESPUES DE LA SECUENCIA Y FUNCION DE GENERARIDVENTA()
-            CREATE OR REPLACE FUNCTION generar_idventa()
-            RETURNS TRIGGER AS $$
-            DECLARE
-                numero_venta TEXT;
-            BEGIN
-                -- Verificar si la fecha de hoy es diferente de la última fecha registrada
-                IF CURRENT_DATE != (SELECT last_reset FROM ventas_diarias_last_reset LIMIT 1) THEN
-                    -- Reiniciar la secuencia
-                    PERFORM setval('ventas_diarias_seq', 1, false);  -- Reinicia la secuencia a 1
-                    
-                    -- Actualizar la fecha de reinicio
-                    UPDATE ventas_diarias_last_reset SET last_reset = CURRENT_DATE;
-                END IF;
-
-                -- Genera el número de venta con tres cifras
-                numero_venta := LPAD(NEXTVAL('ventas_diarias_seq')::TEXT, 3, '0');
-
-                -- Asigna el IDVEN en el formato deseado
-                NEW.IDVEN := 'FAC' || numero_venta ||'-'|| TO_CHAR(CURRENT_DATE, 'DDMMYYYY');
-                
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER trg_generar_idventa
-            BEFORE INSERT ON VENTAS
-            FOR EACH ROW
-            WHEN (NEW.IDVEN IS NULL)
-            EXECUTE FUNCTION generar_idventa();
-
-
             -- Crear la función INSERTAR PERFILES
             CREATE OR REPLACE FUNCTION insertar_perfiles()
             RETURNS TRIGGER AS $$
@@ -167,10 +111,6 @@ return new class extends Migration
     public function down(): void
     {
         DB::unprepared("
-            DROP TRIGGER IF EXISTS trg_actualizar_total_venta ON DETALLES_VENTA;
-            DROP FUNCTION IF EXISTS actualizar_total_venta;
-            DROP TRIGGER IF EXISTS trg_generar_idventa ON VENTAS;
-            DROP FUNCTION IF EXISTS generar_idventa;
             DROP TRIGGER IF EXISTS TG_insertar_perfiles ON Cuentas;
             DROP FUNCTION IF EXISTS insertar_perfiles;
         ");

@@ -52,7 +52,6 @@ return new class extends Migration
     public function down(): void
     {
         DB::unprepared("
-        DROP VIEW IF EXISTS view_cuentas_perfiles;
         DROP VIEW IF EXISTS view_usuarios_activos;
         DROP VIEW IF EXISTS view_clientes_usuarios;
     ");
