@@ -5,16 +5,15 @@
 --hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 --hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 --hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-
 CREATE OR REPLACE FUNCTION actualizar_total_venta()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Calcula el total de la venta actual
     UPDATE VENTAS
-    SET TOTALPAGO = (SELECT COALESCE(SUM(MONTO), 0) 
+    SET TOTALPAGOVEN = (SELECT COALESCE(SUM(MONTODET), 0) 
                      FROM DETALLES_VENTA
-                     WHERE IDVENTA = NEW.IDVENTA)
-    WHERE IDVENTA = NEW.IDVENTA;
+                     WHERE IDVEN = NEW.IDVEN)
+    WHERE IDVEN = NEW.IDVEN;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -31,26 +30,45 @@ CREATE OR REPLACE FUNCTION generar_idventa()
 RETURNS TRIGGER AS $$
 DECLARE
     numero_venta TEXT;
+    max_numero_venta INTEGER;
 BEGIN
-    -- Reinicia la secuencia cada día
-    IF CURRENT_DATE != (SELECT TO_DATE(last_value::text, 'YYYYMMDD') FROM ventas_diarias_seq) THEN
-        PERFORM setval('ventas_diarias_seq', 1, false);  -- Reinicia la secuencia a 1
+    -- Verificar el número máximo de ventas del día actual en la tabla ventas_diarias
+    SELECT COALESCE(MAX(vd.numero_venta), 0)
+    INTO max_numero_venta
+    FROM ventas_diarias vd
+    WHERE vd.fecha = CURRENT_DATE;
+
+    -- Incrementar el número de venta del día actual
+    max_numero_venta := max_numero_venta + 1;
+
+    -- Si ya existe un registro para la fecha actual, actualizamos el número de venta
+    IF EXISTS (SELECT 1 FROM ventas_diarias WHERE fecha = CURRENT_DATE) THEN
+        UPDATE ventas_diarias
+        SET numero_venta = max_numero_venta
+        WHERE fecha = CURRENT_DATE;
+    ELSE
+        -- Si no existe, insertamos un nuevo registro
+        INSERT INTO ventas_diarias (fecha, numero_venta)
+        VALUES (CURRENT_DATE, max_numero_venta);
     END IF;
 
-    -- Genera el número de venta con tres cifras
-    numero_venta := LPAD(NEXTVAL('ventas_diarias_seq')::TEXT, 3, '0');
+    -- Generar el número de venta en el formato deseado
+    numero_venta := LPAD(max_numero_venta::TEXT, 3, '0');
+    NEW.IDVEN := 'FAC' || numero_venta || TO_CHAR(CURRENT_DATE, 'DDMMYYYY');
 
-    -- Asigna el IDVENTA en el formato deseado
-    NEW.IDVENTA := 'FAC' || numero_venta || TO_CHAR(CURRENT_DATE, 'DDMMYYYY');
-    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_generar_idventa BEFORE
-INSERT
-    ON VENTAS FOR EACH ROW WHEN (NEW.IDVENTA IS NULL)
-EXECUTE FUNCTION generar_idventa ();
+
+
+-- Crear el trigger asociado
+CREATE or replace TRIGGER trg_generar_idventa
+BEFORE INSERT
+ON ventas
+FOR EACH ROW
+WHEN (NEW.IDVEN IS NULL)
+EXECUTE FUNCTION generar_idventa();
 
 -- Crear la función INSERTAR PERFILES
 CREATE OR REPLACE FUNCTION insertar_perfiles()
@@ -154,42 +172,35 @@ EXECUTE FUNCTION insertar_perfiles ();
 --hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 
 --VISTA USUARIOS ACTIVOS
-CREATE OR REPLACE VIEW usuarios_activos AS
-SELECT
-    v.IDCLIENTE,
-    cl.NOMBRE AS nombre_cliente,
-    dv.IDCUENTA,
-    DV.PERFIL,
-    c.FECHAVENC AS fecha_vencimiento_cuenta
-FROM
+CREATE OR REPLACE VIEW view_usuarios_activos AS
+SELECT 
+    v.IDCLI,
+    cl.NOMBRECLI AS nombre_cliente,
+    dv.idven,
+    dv.iddet,
+    p.IDCUE,  -- Relacionamos el perfil con la cuenta a través de IDCUE
+    p.NUMEROPER AS perfil,  -- Número de perfil desde la tabla PERFILES
+    dv.FECHAVENdet AS fecha_vencimiento
+FROM 
     DETALLES_VENTA dv
-    INNER JOIN VENTAS v ON dv.IDVENTA = v.IDVENTA
-    INNER JOIN CLIENTES cl ON v.IDCLIENTE = cl.IDCLIENTE
-    INNER JOIN CUENTAS c ON dv.IDCUENTA = c.IDCUENTA
-WHERE
-    dv.ACTIVO = TRUE;
+    INNER JOIN VENTAS v ON dv.IDVEN = v.IDVEN  -- Conectamos DETALLES_VENTA con VENTAS
+    INNER JOIN CLIENTES cl ON v.IDCLI = cl.IDCLI  -- Conectamos VENTAS con CLIENTES
+    INNER JOIN PERFILES p ON dv.IDPER = p.IDPER  -- Conectamos DETALLES_VENTA con PERFILES
+    INNER JOIN CUENTAS c ON p.IDCUE = c.IDCUE  -- Conectamos PERFILES con CUENTAS
+WHERE 
+    dv.ACTIVODET = TRUE;  -- Filtra solo los detalles de venta activos
 
-CREATE OR REPLACE VIEW CLIENTES_USUARIOS AS
-SELECT
-    U.IDCLIENTE,
-    U.nombre_cliente,
-    COUNT(U.IDCLIENTE) AS USUARIOS,
-    calcular_total_pagado_mes (
-        U.IDCLIENTE,
-        CAST(
-            EXTRACT(
-                MONTH
-                FROM CURRENT_DATE
-            ) AS INTEGER
-        ),
-        CAST(
-            EXTRACT(
-                YEAR
-                FROM CURRENT_DATE
-            ) AS INTEGER
-        )
-    ) AS FACTURADO
-FROM USUARIOS_ACTIVOS U
-GROUP BY
-    U.IDCLIENTE,
-    U.NOMBRE_CLIENTE;
+
+        -- VISTA CLIENTES USUARIOS
+CREATE OR REPLACE VIEW view_clientes_usuarios AS
+SELECT 
+    u.IDCLI,
+    u.nombre_cliente,
+    COUNT(u.IDCLI) AS usuarios,
+    calcular_total_pagado_mes(
+        u.IDCLI, 
+        CAST(EXTRACT(MONTH FROM CURRENT_DATE) AS INTEGER), 
+        CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTEGER)
+    ) AS facturado
+FROM view_usuarios_activos u
+GROUP BY u.IDCLI, u.nombre_cliente;

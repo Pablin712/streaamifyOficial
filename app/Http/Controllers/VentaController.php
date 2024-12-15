@@ -93,21 +93,12 @@ class VentaController extends Controller
         }
         // Generar el ID de venta
         $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . Carbon::now()->format('dmy');
-        // Depurar si $idVenta está siendo generado correctamente
-        //dd($idVenta);  // Esto debería mostrar el valor de $idVenta antes de continuar
 
         // Decodificar los detalles de venta desde el JSON
         $detalles = json_decode($request->detalles_venta, true);
 
-        // Depurar los detalles para ver si están bien formateados
-        //dd($detalles);  // Esto debería mostrar los detalles que se están enviando
-
         // Calcular el total de la venta sumando los montos de los detalles
         $total_venta = collect($detalles)->sum('monto');
-
-        // Depurar el cálculo del total
-        //dd($total_venta);  // Esto debería mostrar el valor calculado de $total_venta
-
 
         // Crear la venta
         $venta = Venta::create([

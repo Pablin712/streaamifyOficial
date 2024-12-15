@@ -23,8 +23,8 @@ class DatabaseSeeder extends Seeder
             ClienteSeeder::class,
             CuentaSeeder::class,
             CostoSeeder::class,
-            VentaSeeder::class,
-            DetalleVentaSeeder::class,
+            //VentaSeeder::class,
+            //DetalleVentaSeeder::class,
             ContabilidadSeeder::class,
             MantenimientoSeeder::class,
         ]);
