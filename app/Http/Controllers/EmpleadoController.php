@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Empleado;
-
+use Carbon\Carbon;
 class EmpleadoController extends Controller
 {
     /**
@@ -12,7 +12,18 @@ class EmpleadoController extends Controller
      */
     public function index()
     {
-        $empleados = Empleado::all(); // Recuperar todos los empleados
+        //$empleados = Empleado::all(); // Recuperar todos los empleados
+        $empleados = Empleado::with(['ventas' => function ($query) {
+            $query->select('idemp'); // Solo seleccionamos idemp para optimizar
+        }])
+        ->withCount('ventas') // Total de ventas por empleado
+        ->withCount([
+            'ventas as ventas_mes_actual' => function ($query) {
+                $query->whereMonth('fechaven', Carbon::now()->month)
+                      ->whereYear('fechaven', Carbon::now()->year);
+            }
+        ])
+        ->get();
         return view('employee.index', compact('empleados'));
     }
 

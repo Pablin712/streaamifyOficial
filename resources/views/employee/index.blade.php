@@ -24,6 +24,8 @@
                             <strong>Teléfono:</strong> {{ $empleado->telefonoemp }}<br>
                             <strong>Usuario:</strong> {{ $empleado->usuarioemp }}<br>
                             <strong>Rol:</strong> {{ $empleado->idrol }}<br>
+                            <strong>Ventas este mes:</strong> {{ $empleado->ventas_mes_actual }}<br>
+                            <strong>Total de Ventas:</strong> {{ $empleado->ventas_count }}<br>
                         </p>
                         <a href="{{ route('empleados.edit', $empleado->idemp) }}" class="btn btn-warning"><i
                                 class="fas fa-edit"></i> Editar</a>

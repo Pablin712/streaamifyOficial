@@ -13,6 +13,7 @@ class DetalleVentaSeeder extends Seeder
      */
     public function run(): void
     {
+        /*
         DB::table('detalles_venta')->insert([
             // Primeras 5 ventas con fechas modificadas
             ['idven' => 'FAC001-25112024', 'idper' => 'NETFLIX-3.1', 'descripciondet' => 'vendido', 'fechavendet' => '2024-12-25', 'montodet' => 2.5, 'activodet' => true],
@@ -100,7 +101,7 @@ class DetalleVentaSeeder extends Seeder
             ['idven' => 'FAC021-15122024', 'idper' => 'DISNEY-5.1', 'descripciondet' => 'vendido', 'fechavendet' => '2025-01-15', 'montodet' => 4.1, 'activodet' => true],
             ['idven' => 'FAC021-15122024', 'idper' => 'NETFLIX-6.1', 'descripciondet' => 'vendido', 'fechavendet' => '2025-01-15', 'montodet' => 3.5, 'activodet' => true],
             ['idven' => 'FAC021-15122024', 'idper' => 'MAX-4.5', 'descripciondet' => 'vendido', 'fechavendet' => '2025-01-15', 'montodet' => 4.2, 'activodet' => true],
-
-        ]);
+        
+        ]);*/
     }
 }

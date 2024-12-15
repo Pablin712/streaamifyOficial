@@ -33,7 +33,7 @@
         <input type="hidden" name="ingresos_mes" value="{{ $ingresos_mes }}">
         <input type="hidden" name="ingresos_ano" value="{{ $ingresos_ano }}">
         <input type="hidden" name="clientes_activos" value="{{ $clientes_activos }}">
-        <input type="hidden" name="usuarios_activos" value="{{ $usuarios_activos }}">
+        <input type="hidden" name="usuarios_activos" value="{{ $total_usuarios_activos }}">
         <input type="hidden" name="cuentas_caidas" value="{{ $cuentas_caidas }}">
         <input type="hidden" name="usuarios_acobrar" value="{{ $usuarios_acobrar }}">
         <input type="hidden" name="num_cuentas" value="{{ $num_cuentas }}">
@@ -288,7 +288,7 @@
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                             Usuarios Activos</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_activos }}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $total_usuarios_activos }}</div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-id-badge fa-2x text-gray-300"></i>
@@ -762,10 +762,10 @@
                     <tr>
                         <td><strong>Totales</strong></td>
                         <td><strong>{{ $num_cuentas }}</strong></td>
-                        <td><strong>{{ $usuarios_activos }}</strong></td>
+                        <td><strong>{{ $total_usuarios_activos }}</strong></td>
                         <td>
                             @if ($num_cuentas != 0)
-                                <strong>{{ number_format($usuarios_activos / $num_cuentas, 2) }}</strong>
+                                <strong>{{ number_format($total_usuarios_activos / $num_cuentas, 2) }}</strong>
                             @else
                                 <strong>0</strong>
                             @endif
@@ -781,22 +781,22 @@
                             @endif
                         </td>
                         <td>
-                            @if ($usuarios_activos != 0)
-                                <strong>{{ number_format($ingresos_mes / $usuarios_activos, 2) }}</strong>
+                            @if ($total_usuarios_activos != 0)
+                                <strong>{{ number_format($ingresos_mes / $total_usuarios_activos, 2) }}</strong>
                             @else
                                 <strong>0</strong>
                             @endif
                         </td>
                         <td>
-                            @if ($usuarios_activos != 0)
-                                <strong>{{ number_format($costos_mes / $usuarios_activos, 2) }}</strong>
+                            @if ($total_usuarios_activos != 0)
+                                <strong>{{ number_format($costos_mes / $total_usuarios_activos, 2) }}</strong>
                             @else
                                 <strong>0</strong>
                             @endif
                         </td>
                         <td>
-                            @if ($usuarios_activos != 0)
-                                <strong>{{ number_format(($ingresos_mes - $costos_mes) / $usuarios_activos, 2) }}</strong>
+                            @if ($total_usuarios_activos != 0)
+                                <strong>{{ number_format(($ingresos_mes - $costos_mes) / $total_usuarios_activos, 2) }}</strong>
                             @else
                                 <strong>0</strong>
                             @endif

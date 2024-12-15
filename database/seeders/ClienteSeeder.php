@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cliente;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+
 class ClienteSeeder extends Seeder
 {
     /**
@@ -12,6 +14,8 @@ class ClienteSeeder extends Seeder
      */
     public function run(): void
     {
+        Cliente::factory()->count(100)->create();  // Crea 200 registros de clientes
+        /*
         DB::table('clientes')->insert([
             ['nombrecli' => 'FRANCISCO PEREZ', 'telefonocli' => null],
             ['nombrecli' => 'ALEX IBARRA', 'telefonocli' => null],
@@ -72,6 +76,6 @@ class ClienteSeeder extends Seeder
             ['nombrecli' => 'ALAN RIVADENEIRA', 'telefonocli' => null],
             ['nombrecli' => 'JEAN PEREZ', 'telefonocli' => null],
             ['nombrecli' => 'SHIRLEY ROSERO', 'telefonocli' => null],
-        ]);
+        ]);*/
     }
 }

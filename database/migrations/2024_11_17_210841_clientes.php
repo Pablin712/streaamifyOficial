@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('idcli'); // Cambiado a idcli
             $table->string('nombrecli', 50); // Cambiado a nombrecli
-            $table->string('telefonocli', 15)->nullable(); // Cambiado a telefonocli
+            $table->string('telefonocli', 50)->nullable(); // Cambiado a telefonocli
             $table->timestamps(); // Incluye columnas created_at y updated_at
         });
     }

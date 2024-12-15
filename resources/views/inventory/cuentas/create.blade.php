@@ -13,14 +13,6 @@
     Aquí puedes agregar una nueva cuenta para llenar el stock de cuentas disponibles para los servicios.
     Asegúrate de ingresar todos los campos correctamente.
     En esta vista, se agrega una cuenta a la tabla cuentas.
-    <h5>Por completar:</h5>
-    <strong>input costo y descripcion costo: </strong> que al registrar la nueva cuenta, se pueda registrar de una vez el
-    costo,
-    solo con descripcion costo y el monto que se pagó, y se registra tanto la cuenta como el costo, esto puede ser
-    solucionado
-    con modal, inputs con sentencia. <Strong>Nota:</Strong> El registro del costo es voluntario, por lo que se puede
-    registrar
-    una cuenta sin necesidad de registrar el costo, solo la cuenta.
 @endsection
 
 @section('content')
@@ -83,8 +75,6 @@
         <button type="submit" class="btn btn-success">Guardar Cuenta</button>
     </form>
 @endsection
-
-
 @section('pie')
     <p>¿No deseas agregar una cuenta al stock? Vuelve a la página de listado:</p>
     <a href="{{ route('cuentas') }}" class="btn btn-secondary">Volver a Cuentas</a>

@@ -54,6 +54,18 @@ return new class extends Migration
                 ->onUpdate('restrict')
                 ->onDelete('restrict'); // Relación con la tabla `cuentas`
         });
+        Schema::create('mantenimientos',function(Blueprint $table){
+            $table->id('idman');
+            $table->string('idcue',20)->unique();
+            $table->string('descripcionman');
+            $table->date('fechaman');
+
+            $table->foreign('idcue')
+                ->references('idcue')
+                ->on('cuentas')
+                ->onUpdate('restrict')
+                ->onDelete('restrict');
+        });
     }
 
     /**
@@ -63,6 +75,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('perfiles');
         Schema::dropIfExists('costos');
+        Schema::dropIfExists('mantenimientos');
         Schema::dropIfExists('cuentas');
     }
 };

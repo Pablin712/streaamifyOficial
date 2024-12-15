@@ -80,6 +80,20 @@
                         @endif
                         <div class="sb-sidenav-menu-heading">Negocio</div>
                         <!-- Finance collapsible -->
+                        @if(Auth::user()->idrol == 'administrador')
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseAdministration" aria-expanded="false" aria-controls="collapseAdministration">
+                            <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
+                            Administracion
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseAdministration" aria-labelledby="headingAdministration"
+                            data-bs-parent="#sidenavAccordion">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
+                            </nav>
+                        </div>
+                        @endif
                         @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador'
                         || Auth::user()->idrol == 'bodeguero')
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
@@ -136,6 +150,9 @@
                                 <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
                                 @endif
                                 <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
+                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'tecnico')
+                                <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>
+                                @endif
                             </nav>
                         </div>
                         @endif
@@ -156,21 +173,6 @@
                                 <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
                                 @endif
                                 <a class="nav-link" href="{{ route('valores') }}">Valores</a>
-                            </nav>
-                        </div>
-                        @endif
-                    
-                        @if(Auth::user()->idrol == 'administrador')
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#collapseAdministration" aria-expanded="false" aria-controls="collapseAdministration">
-                            <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                            Administracion
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseAdministration" aria-labelledby="headingAdministration"
-                            data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
                             </nav>
                         </div>
                         @endif

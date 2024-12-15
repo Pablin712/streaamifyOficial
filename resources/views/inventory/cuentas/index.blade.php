@@ -52,6 +52,7 @@
                 <th>ID</th>
                 <th>Servicio</th>
                 <th>Usuario</th>
+                <th>Contraseña</th>
                 <th>Vencimiento</th>
                 <th>Clientes</th>
                 {{-- <th>Espacio Disponible</th> --}}
@@ -87,9 +88,10 @@
                 @endphp
                 <tr> {{-- class="{{ $estadoClase }}" --}}
                     <td>{{ $cuenta->idcue }}</td>
-                    <td>{{ $cuenta->valor->idval }} ({{ $cuenta->valor->proveedor->nombrepro }})</td>
+                    <td>{{ $cuenta->valor->idser }} - {{ $cuenta->valor->proveedor->nombrepro }}</td>
                     <td>{{ $cuenta->usuariocue }}</td>
-                    <td>{{ $cuenta->fechavencue->format('d/m/Y') }}</td>
+                    <td>{{ $cuenta->contrasenacue }}</td>
+                    <td>{{ $cuenta->fechavencue }}</td>
                     <td>
                         @php
                             $users = $cuenta->usuarios_activos;

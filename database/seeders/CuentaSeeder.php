@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Cuenta;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+
 class CuentaSeeder extends Seeder
 {
     /**
@@ -12,6 +14,7 @@ class CuentaSeeder extends Seeder
      */
     public function run(): void
     {
+        /*
         DB::table('cuentas')->insert([
             ['idcue' => 'DISNEY-1', 'idval' => 'DISNEYP-JUAN', 'usuariocue' => 'combosjose01@scarlitamail.com', 'fechavencue' => '2024-08-15', 'contrasenacue' => 'legopoli7P$$', 'caidacue' => false],
             ['idcue' => 'DISNEY-2', 'idval' => 'DISNEYP-JUAN', 'usuariocue' => 'combosjose60@scarlitamail.com', 'fechavencue' => '2024-08-09', 'contrasenacue' => 'cuenta123', 'caidacue' => false],
@@ -38,5 +41,7 @@ class CuentaSeeder extends Seeder
             ['idcue' => 'SPOTIFY-2', 'idval' => 'NETFLIX-JUAN', 'usuariocue' => 'tel: 0999947287', 'fechavencue' => '2024-08-26', 'contrasenacue' => 'teléfono ma', 'caidacue' => false],
             ['idcue' => 'SPOTIFY-3', 'idval' => 'NETFLIX-JUAN', 'usuariocue' => 'pdjimeneze@utn.edu.ec', 'fechavencue' => '2024-08-13', 'contrasenacue' => 'legopoli7$', 'caidacue' => false],
         ]);
+        */
+        Cuenta::factory()->count(30)->create();  // Crea 130 registros de cuentas
     }
 }

@@ -1,9 +1,7 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ValorController;
@@ -18,6 +16,7 @@ use App\Http\Controllers\VentaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\EmpleadoController;
+use App\Http\Controllers\MantenimientoController;
 
 Route::get('/admin', HomeController::class);
 
@@ -168,7 +167,14 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
             Route::put('/empleados/{id}', 'update')->name('empleados.update');
             Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
-
         });
     
+        Route::controller(MantenimientoController::class)->group(function(){
+            Route::get('/mantenimientos', 'index')->name('mantenimientos');
+            Route::get('/mantenimientos/create', 'create')->name('mantenimientos.create');
+            Route::post('/mantenimientos/createstore', 'store')->name('mantenimientos.store');
+            Route::get('/mantenimientos/{id}/edit', 'edit')->name('mantenimientos.edit');
+            Route::put('/mantenimientos/{id}', 'update')->name('mantenimientos.update');
+            Route::delete('/mantenimientos/{id}', 'destroy')->name('mantenimientos.destroy');
+        });
 });

@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Venta;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+
 class VentaSeeder extends Seeder
 {
     /**
@@ -12,6 +14,12 @@ class VentaSeeder extends Seeder
      */
     public function run(): void
     {
+
+        Venta::factory()
+            ->count(150) // Crea 400 ventas
+            ->withDetalles() // Asocia un número aleatorio de detalles (entre 1 y 7) por cada venta
+            ->create();
+        /*
         DB::table('ventas')->insert([
             ['idven' => 'FAC001-25112024', 'idemp' => 2, 'idcli' => 14, 'fechaven' => '2024-11-25', 'totalpagoven' => null],
             ['idven' => 'FAC002-26112024', 'idemp' => 2, 'idcli' => 45, 'fechaven' => '2024-11-26', 'totalpagoven' => null],
@@ -34,6 +42,6 @@ class VentaSeeder extends Seeder
             ['idven' => 'FAC019-13122024', 'idemp' => 2, 'idcli' => 43, 'fechaven' => '2024-12-13', 'totalpagoven' => null],
             ['idven' => 'FAC020-14122024', 'idemp' => 2, 'idcli' => 54, 'fechaven' => '2024-12-14', 'totalpagoven' => null],
             ['idven' => 'FAC021-15122024', 'idemp' => 1, 'idcli' => 59, 'fechaven' => '2024-12-15', 'totalpagoven' => null],
-        ]);
+        ]);*/
     }
 }

@@ -40,4 +40,8 @@ class Empleado extends Authenticatable
     {
         $this->attributes['passwordemp'] = bcrypt($value);
     }
+    public function ventas()
+    {
+        return $this->hasMany(Venta::class, 'idemp', 'idemp');
+    }
 }

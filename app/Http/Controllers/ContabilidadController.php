@@ -25,9 +25,11 @@ class ContabilidadController extends Controller
         $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
         $month = Carbon::now()->month;
         $year = Carbon::now()->year;
+        $total_usuarios_activos = ViewUsuarioActivo::count();
         $usuarios = ViewUsuarioActivo::all();
 
         $usuarios_acobrar = 0;
+        //$usuarios_activos = 0;
         foreach ($usuarios as $usuario) {
             $fechaVencimiento = \Carbon\Carbon::parse($usuario->fecha_vencimiento);
             $hoy = \Carbon\Carbon::today();
@@ -35,9 +37,9 @@ class ContabilidadController extends Controller
             if ($diasRestantes <= 3) {
                 $usuarios_acobrar += 1;
             }
+            //$usuarios_activos+=1;
         }
         $clientes_activos = ViewClientesUsuarios::count();
-        $usuarios_activos = ViewUsuarioActivo::count();
         $cuentas_caidas = Cuenta::where('caidacue', true)->count();
 
         $ingresos_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->sum('totalpagoven');
@@ -222,7 +224,7 @@ class ContabilidadController extends Controller
             'ingresos_mes',
             'ingresos_ano',
             'clientes_activos',
-            'usuarios_activos',
+            'total_usuarios_activos',
             'cuentas_caidas',
             'usuarios_acobrar',
             'num_cuentas',

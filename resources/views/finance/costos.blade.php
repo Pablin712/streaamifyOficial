@@ -40,7 +40,7 @@
                 <tr>
                     <td>{{ $costo->idcos }}</td>
                     <td>{{ $costo->cuenta->idcue }} - {{ $costo->cuenta->usuariocue }}</td>
-                    <td>{{ \Carbon\Carbon::parse($costo->fechacos)->format('d/m/Y') }}</td>
+                    <td>{{ $costo->fechacos }}</td>
                     <td>{{ $costo->descripcioncos }}</td>
                     <td>${{ number_format($costo->montocos, 2) }}</td>
                     <td>
