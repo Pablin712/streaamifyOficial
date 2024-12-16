@@ -169,10 +169,10 @@
                 <p class="mb-2">© 2024 Streamify. Todos los derechos reservados.</p>
                 <p class="small">Diseñado por Pablo Jiménez</p>
                 <div>
-                    <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
-                    <a href="#" class="text-white"><i class="bi bi-linkedin"></i></a>
+                    <a href="https://www.facebook.com/share/1Cco5izY9Y/?mibextid=wwXIfr" class="text-white me-3" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook"></i></a>
+                    {{-- <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a> --}}
+                    <a href="https://www.instagram.com/stribarra" class="text-white me-3" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@lv_pablin" class="text-white" target="_blank" rel="noopener noreferrer"><i class="bi bi-tiktok"></i></a>
                 </div>
             </div>
         </footer>        

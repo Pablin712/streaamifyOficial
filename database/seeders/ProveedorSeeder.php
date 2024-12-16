@@ -16,6 +16,8 @@ class ProveedorSeeder extends Seeder
             ['nombrepro' => 'Juan Domínguez', 'telefonopro' => '0992905379'],
             ['nombrepro' => 'José Mora Moormix', 'telefonopro' => '0990880300'],
             ['nombrepro' => 'Ec Virtual Store', 'telefonopro' => '0960523682'],
+            ['nombrepro' => 'Full Entretenimiento', 'telefonopro' => '+573205045002'],
+            ['nombrepro' => 'Fenix Store', 'telefonopro' => '0963433482'],
         ]);
     }
 }
