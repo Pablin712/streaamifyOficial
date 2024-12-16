@@ -19,14 +19,14 @@ class DatabaseSeeder extends Seeder
             RolSeeder::class,
             EmpleadoSeeder::class,
             TipoGastoSeeder::class,
-            GastoSeeder::class,
-            ClienteSeeder::class,
-            CuentaSeeder::class,
-            CostoSeeder::class,
+            //GastoSeeder::class,
+            //ClienteSeeder::class,
+            //CuentaSeeder::class,
+            //CostoSeeder::class,
             //VentaSeeder::class,
             //DetalleVentaSeeder::class,
             ContabilidadSeeder::class,
-            MantenimientoSeeder::class,
+            //MantenimientoSeeder::class,
         ]);
     }
 }

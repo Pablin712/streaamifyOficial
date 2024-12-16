@@ -56,6 +56,9 @@ class CuentaController extends Controller
     // Guardar una nueva cuenta
     public function store(Request $request)
     {
+        $request->merge([
+            'idcue' => strtoupper($request->idcue)
+        ]);
         // Validar datos de la cuenta
         $validated = $request->validate([
             'idcue' => 'required|string|max:20|unique:cuentas,idcue',
@@ -65,26 +68,23 @@ class CuentaController extends Controller
             'contrasenacue' => 'required|string|min:8|max:50',
             'caidacue' => 'required|boolean',
         ]);
-        $request->merge([
-            'idcue' => strtoupper($request->idcue)
-        ]);
 
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);
-        // Verificar si se recibieron datos de costo
-        if (!empty($request->descripcioncos) && !empty($request->montocos)) {
-            // Validar datos de costo si los campos están presentes
-            $validatedCosto = $request->validate([
-                'descripcioncos' => 'string|max:50',
-                'montocos' => 'numeric|min:0',
-            ]);
+        // Comprobar si los datos de costo están presentes
+        if ($request->filled('descripcioncos') && $request->filled('montocos')) {
+            // Validar y crear el costo asociado a la cuenta
+            //$validatedCosto = $request->validate([
+              //  'descripcioncos' => 'string|max:50',
+                //'montocos' => 'numeric|min:0',
+            //]);
 
-            // Crear el costo asociado a la cuenta solo si los datos de costo están presentes
+            // Crear el costo solo si la validación es exitosa
             Costo::create([
-                'idcue' => $cuenta->idcue,
-                'descripcioncos' => $request->descripcioncos,
+                'idcue' => $cuenta->idcue,  // Asociar el costo a la cuenta recién creada
+                'fechacos' => now(),  // Usar la fecha actual para el costo
                 'montocos' => $request->montocos,
-                'fechacos' => now(),  // O la fecha que desees
+                'descripcioncos' => $request->descripcioncos,
             ]);
         }
         return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
@@ -152,6 +152,9 @@ class CuentaController extends Controller
             'usuariocue' => 'required|string|max:50',
             'contrasenacue' => 'required|string|max:50',
             'caidacue' => 'required|boolean|min:1'
+        ]);
+        $request->merge([
+            'idcue' => strtoupper($request->idcue)
         ]);
 
         $cuenta = Cuenta::findOrFail($idcue);

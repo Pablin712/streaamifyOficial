@@ -112,92 +112,82 @@ AFTER INSERT ON cuentas
 FOR EACH ROW
 BEGIN
     -- Insertar perfiles para Netflix
-    IF NEW.IDCUE LIKE 'NETFLIX%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, '1000'),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, '5555'),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, '8833'),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, '6622'),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, '9000');
-    END IF;
-
+    IF NEW.idcue LIKE 'NETFLIX%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, '1000'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, '5555'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '8833'),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, '6622'),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '9000');
     -- Insertar perfiles para Disney
-    IF NEW.IDCUE LIKE 'DISNEY%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, '1000'),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, '5555'),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, '8833'),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, '6622'),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, '9000'),
-        (CONCAT(NEW.IDCUE, '.6'), NEW.IDCUE, 6, '2012'),
-        (CONCAT(NEW.IDCUE, '.7'), NEW.IDCUE, 7, '2000');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'DISNEY%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, '1000'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, '5555'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '8833'),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, '6622'),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '9000'),
+        (CONCAT(NEW.idcue, '.6'), NEW.idcue, 6, '2012'),
+        (CONCAT(NEW.idcue, '.7'), NEW.idcue, 7, '2000');
     -- Insertar perfiles para Prime Video
-    IF NEW.IDCUE LIKE 'PRIME%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, '10000'),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, '55555'),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, '88333'),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, '66222'),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, '90000'),
-        (CONCAT(NEW.IDCUE, '.6'), NEW.IDCUE, 6, '20122');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'PRIME%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, '10000'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, '55555'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '88333'),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, '66222'),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '90000'),
+        (CONCAT(NEW.idcue, '.6'), NEW.idcue, 6, '20122');
     -- Insertar perfiles para Max
-    IF NEW.IDCUE LIKE 'MAX%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, '1000'),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, '5555'),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, '8833'),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, '6622'),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, '9000');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'MAX%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, '1000'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, '5555'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '8833'),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, '6622'),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '9000');
     -- Insertar perfiles para Paramount
-    IF NEW.IDCUE LIKE 'PARAMOUNT%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, '1000'),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, '5555'),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, '8833'),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, '6622'),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, '9000'),
-        (CONCAT(NEW.IDCUE, '.6'), NEW.IDCUE, 6, '2012');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'PARAMOUNT%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, '1000'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, '5555'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '8833'),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, '6622'),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '9000'),
+        (CONCAT(NEW.idcue, '.6'), NEW.idcue, 6, '2012');
     -- Insertar perfiles para Spotify
-    IF NEW.IDCUE LIKE 'SPOTIFY%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, 'owner'),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, 'invit'),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, 'invit'),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, 'invit'),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, 'invit'),
-        (CONCAT(NEW.IDCUE, '.6'), NEW.IDCUE, 6, 'invit');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'SPOTIFY%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, 'owner'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, 'invit'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, 'invit'),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, 'invit'),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, 'invit'),
+        (CONCAT(NEW.idcue, '.6'), NEW.idcue, 6, 'invit');
     -- Insertar perfiles para MAGIS
-    IF NEW.IDCUE LIKE 'MAGIS%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, ''),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, ''),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, '');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'MAGIS%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, ''),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, ''),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '');
     -- Insertar perfiles para Crunchyroll
-    IF NEW.IDCUE LIKE 'CRUNCHY%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, ''),
-        (CONCAT(NEW.IDCUE, '.2'), NEW.IDCUE, 2, ''),
-        (CONCAT(NEW.IDCUE, '.3'), NEW.IDCUE, 3, ''),
-        (CONCAT(NEW.IDCUE, '.4'), NEW.IDCUE, 4, ''),
-        (CONCAT(NEW.IDCUE, '.5'), NEW.IDCUE, 5, '');
-    END IF;
-
+    ELSEIF NEW.idcue LIKE 'CRUNCHY%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, ''),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, ''),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, ''),
+        (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, ''),
+        (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '');
     -- Insertar perfiles para IND
-    IF NEW.IDCUE LIKE 'ind%' THEN
-        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
-        (CONCAT(NEW.IDCUE, '.1'), NEW.IDCUE, 1, 'aparte');
+    ELSEIF NEW.idcue LIKE 'ind%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, 'aparte');
+    ELSE
+        -- Insertar 3 perfiles predeterminados si no corresponde a ningún tipo conocido
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, '1111'),
+        (CONCAT(NEW.idcue, '.2'), NEW.idcue, 2, '2222'),
+        (CONCAT(NEW.idcue, '.3'), NEW.idcue, 3, '3333');
     END IF;
 END$$
 
@@ -207,24 +197,21 @@ DELIMITER ;
 -- Vista de Usuarios Activos
 CREATE VIEW view_usuarios_activos AS
 SELECT 
-    v.IDCLI,
-    cl.NOMBRECLI AS nombre_cliente,
+    v.idcli,
+    cl.nombrecli AS nombre_cliente,
     dv.idven,
     dv.iddet,
-    p.IDCUE,  -- Relacionamos el perfil con la cuenta a través de IDCUE
-    p.NUMEROPER AS perfil,  -- Número de perfil desde la tabla PERFILES
-    dv.FECHAVENdet AS fecha_vencimiento
+    p.idcue,  -- Relacionamos el perfil con la cuenta a través de idcue
+    p.numeroper AS perfil,  -- Número de perfil desde la tabla perfiles
+    dv.fechavendet AS fecha_vencimiento
 FROM 
-    DETALLES_VENTA dv
-    INNER JOIN VENTAS v ON dv.IDVEN = v.IDVEN  -- Conectamos DETALLES_VENTA con VENTAS
-    INNER JOIN CLIENTES cl ON v.IDCLI = cl.IDCLI  -- Conectamos VENTAS con CLIENTES
-    INNER JOIN PERFILES p ON dv.IDPER = p.IDPER  -- Conectamos DETALLES_VENTA con PERFILES
-    INNER JOIN CUENTAS c ON p.IDCUE = c.IDCUE  -- Conectamos PERFILES con CUENTAS
+    detalles_venta dv
+    INNER JOIN ventas v ON dv.idven = v.idven  -- Conectamos detalles_venta con ventas
+    INNER JOIN clientes cl ON v.idcli = cl.idcli  -- Conectamos ventas con clientes
+    INNER JOIN perfiles p ON dv.idper = p.idper  -- Conectamos detalles_venta con perfiles
+    INNER JOIN cuentas c ON p.idcue = c.idcue  -- Conectamos perfiles con cuentas
 WHERE 
-    dv.ACTIVODET = TRUE;  -- Filtra solo los detalles de venta activos
-
-
-
+    dv.activodet = TRUE;  -- Filtra solo los detalles de venta activos
 
 DELIMITER $$
 
@@ -239,27 +226,36 @@ BEGIN
     DECLARE total_pagado DECIMAL(10, 2);
 
     -- Calcular el total pagado por el cliente en el mes y año especificados
-    SELECT COALESCE(SUM(TOTALPAGO), 0) INTO total_pagado
-    FROM VENTAS
-    WHERE IDCLIENTE = cliente_id
-      AND MONTH(FECHAVENTA) = mes
-      AND YEAR(FECHAVENTA) = anio;
+    SELECT COALESCE(SUM(totalpago), 0) INTO total_pagado
+    FROM ventas
+    WHERE idcliente = cliente_id
+      AND MONTH(fechaventa) = mes
+      AND YEAR(fechaventa) = anio;
 
     RETURN total_pagado;
 END$$
 
 DELIMITER ;
 
--- Vista de Clientes Usuarios
+-- Vista de clientes usuarios
 CREATE VIEW view_clientes_usuarios AS
 SELECT 
-    u.IDCLI,
+    u.idcli,
     u.nombre_cliente,
-    COUNT(u.IDCLI) AS usuarios,
+    COUNT(u.idcli) AS usuarios,
     calcular_total_pagado_mes(
-        u.IDCLI, 
+        u.idcli, 
         MONTH(CURRENT_DATE),  -- Obtenemos el mes actual
         YEAR(CURRENT_DATE)    -- Obtenemos el año actual
     ) AS facturado
 FROM view_usuarios_activos u
-GROUP BY u.IDCLI, u.nombre_cliente;
+GROUP BY u.idcli, u.nombre_cliente;
+
+
+
+-- Modificaciones
+ALTER TABLE contabilidad 
+MODIFY COLUMN idcon INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
+
+ALTER TABLE clientes 
+MODIFY COLUMN idcli INT NOT NULL AUTO_INCREMENT PRIMARY KEY;

@@ -62,7 +62,7 @@
         <!-- Campo oculto para enviar los detalles de la venta -->
         <input type="hidden" name="detalles_venta" id="detalles_venta">
         {{-- Campo oculto para enviar la información del empleado que registró la venta (CON LOGIN) --}}
-        <input type="hidden" name="idemp" id="idemp" value=1>
+        <input type="hidden" name="idemp" id="idemp" value={{ Auth::user()->idemp }}>
         <button type="submit" class="btn btn-primary mt-4" id="registrar-venta">Registrar Venta</button>
     </form>
 </div>

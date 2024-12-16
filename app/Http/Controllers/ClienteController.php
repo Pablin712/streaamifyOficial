@@ -41,7 +41,9 @@ class ClienteController extends Controller
             'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
             'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
         ]);
-
+        $request->merge([
+            'nombrecli' => ucwords($request->nombrecli)
+        ]);
         $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
             ->orWhere('telefonocli', $request->telefonocli)
             ->first();
@@ -63,6 +65,9 @@ class ClienteController extends Controller
         $request->validate([
             'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
             'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
+        ]);
+        $request->merge([
+            'nombrecli' => ucwords($request->nombrecli)
         ]);
         $clienteExistente = Cliente::where('nombrecli', $request->nombrecli)
             ->orWhere('telefonocli', $request->telefonocli)
@@ -92,7 +97,10 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombrecli' => 'required|string|max:20', // varchar(20)
-            'telefonocli' => 'nullable|string|max:15'
+            'telefonocli' => 'nullable|string|max:25'
+        ]);
+        $request->merge([
+            'nombrecli' => ucwords($request->nombrecli)
         ]);
 
         $cliente = Cliente::findOrFail($idcli);

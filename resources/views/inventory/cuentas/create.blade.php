@@ -70,7 +70,7 @@
             <label for="descripcioncos">Descripción del Costo</label>
             <input type="text" name="descripcioncos" id="descripcioncos" class="form-control">
             <label for="montocos">Monto del Costo</label>
-            <input type="number" name="montocos" id="montocos" class="form-control" step="0.01">
+            <input type="number" name="montocos" id="montocos" class="form-control" step="0.01" min=0>
         </div>
         <button type="submit" class="btn btn-success">Guardar Cuenta</button>
     </form>

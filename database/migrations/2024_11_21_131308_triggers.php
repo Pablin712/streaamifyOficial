@@ -94,9 +94,8 @@ return new class extends Migration
                     (NEW.IDCUE || '.3', NEW.IDCUE, 3, '8833'),
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000');
-                END IF;
                 -- Insertar perfiles para Disney
-                IF NEW.IDCUE LIKE 'DISNEY%' THEN
+                ELSEIF NEW.IDCUE LIKE 'DISNEY%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
@@ -105,9 +104,8 @@ return new class extends Migration
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000'),
                     (NEW.IDCUE || '.6', NEW.IDCUE, 6, '2012'),
                     (NEW.IDCUE || '.7', NEW.IDCUE, 7, '2000');
-                END IF;
                 -- Insertar perfiles para Prime Video
-                IF NEW.IDCUE LIKE 'PRIME%' THEN
+                ELSEIF NEW.IDCUE LIKE 'PRIME%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, '10000'),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, '55555'),
@@ -115,18 +113,16 @@ return new class extends Migration
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, '66222'),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '90000'),
                     (NEW.IDCUE || '.6', NEW.IDCUE, 6, '20122');
-                END IF;
                 -- Insertar perfiles para Max
-                IF NEW.IDCUE LIKE 'MAX%' THEN
+                ELSEIF NEW.IDCUE LIKE 'MAX%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
                     (NEW.IDCUE || '.3', NEW.IDCUE, 3, '8833'),
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000');
-                END IF;
                 -- Insertar perfiles para Paramount
-                IF NEW.IDCUE LIKE 'PARAMOUNT%' THEN
+                ELSEIF NEW.IDCUE LIKE 'PARAMOUNT%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
@@ -134,9 +130,8 @@ return new class extends Migration
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000'),
                     (NEW.IDCUE || '.6', NEW.IDCUE, 6, '2012');
-                END IF;
                 -- Insertar perfiles para Spotify
-                IF NEW.IDCUE LIKE 'SPOTIFY%' THEN
+                ELSEIF NEW.IDCUE LIKE 'SPOTIFY%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, 'owner'),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, 'invit'),
@@ -144,24 +139,26 @@ return new class extends Migration
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, 'invit'),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, 'invit'),
                     (NEW.IDCUE || '.6', NEW.IDCUE, 6, 'invit');
-                END IF;
-                IF NEW.IDCUE LIKE 'MAGIS%' THEN
+                ELSEIF NEW.IDCUE LIKE 'MAGIS%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, ''),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, ''),
                     (NEW.IDCUE || '.3', NEW.IDCUE, 3, '');
-                END IF;
-                IF NEW.IDCUE LIKE 'CRUNCHY%' THEN
+                ELSEIF NEW.IDCUE LIKE 'CRUNCHY%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, ''),
                     (NEW.IDCUE || '.2', NEW.IDCUE, 2, ''),
                     (NEW.IDCUE || '.3', NEW.IDCUE, 3, ''),
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, ''),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '');
-                END IF;
-                IF NEW.IDCUE LIKE 'ind%' THEN
+                ELSEIF NEW.IDCUE LIKE 'ind%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, 'aparte');
+                ELSE
+                    INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+                    (NEW.IDCUE || '.1', NEW.IDCUE, 1, 'vac'),
+                    (NEW.IDCUE || '.2', NEW.IDCUE, 2, 'vac'),
+                    (NEW.IDCUE || '.3', NEW.IDCUE, 3, 'vac');
                 END IF;
                 RETURN NEW;
             END;

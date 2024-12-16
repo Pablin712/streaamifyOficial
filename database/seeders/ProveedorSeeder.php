@@ -13,9 +13,9 @@ class ProveedorSeeder extends Seeder
     public function run(): void
     {
         DB::table('proveedores')->insert([
-            ['nombrepro' => 'JUAN DOMÍNGUEZ', 'telefonopro' => '0992905379'],
-            ['nombrepro' => 'JOSÉ MORA MOORMIX', 'telefonopro' => '0990880300'],
-            ['nombrepro' => 'EC VIRTUAL STORE', 'telefonopro' => '0960523682'],
+            ['nombrepro' => 'Juan Domínguez', 'telefonopro' => '0992905379'],
+            ['nombrepro' => 'José Mora Moormix', 'telefonopro' => '0990880300'],
+            ['nombrepro' => 'Ec Virtual Store', 'telefonopro' => '0960523682'],
         ]);
     }
 }

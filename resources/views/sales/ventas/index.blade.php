@@ -61,20 +61,22 @@
                         <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
                                 class="fas fa-edit"></i></a>
 
-                        <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}" class="btn btn-success">
+                        <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}"
+                            class="btn btn-success">
                             {{--  --}}
                             <i class="fas fa-sync-alt"></i>
                         </a>
-                        <!-- Eliminar venta
-                            <form action="{ route('ventas.destroy', $venta->idven) }}" method="POST" style="display: inline;">
-                                @ csrf
-                                @ method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-circle"
-                                    onclick="return confirm('¿Estás seguro?')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                            -->
+                        <!-- Eliminar venta -->
+                        @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor')
+                        <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST" style="display: inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-circle"
+                                onclick="return confirm('¿Estás seguro?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach

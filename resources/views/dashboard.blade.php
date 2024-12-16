@@ -324,8 +324,8 @@
                                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                             Cliente más facturado</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                            {{ $cliente_mas_facturado->nombre_cliente }}
-                                            ${{ $cliente_mas_facturado->facturado }}
+                                            {{ $cliente_mas_facturado->nombre_cliente ?? 'No encontrado' }}
+                                            ${{ $cliente_mas_facturado->facturado ?? 0}}
                                         </div>
                                     </div>
                                     <div class="col-auto">

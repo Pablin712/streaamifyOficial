@@ -400,6 +400,7 @@ class VentaController extends Controller
     public function destroy($idven)
     {
         $venta = Venta::findOrFail($idven);
+        $venta->detalles_venta()->delete();
         $venta->delete();
 
         return redirect()->route('ventas')->with('success', 'Venta eliminada con éxito.');
