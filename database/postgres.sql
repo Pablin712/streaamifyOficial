@@ -75,93 +75,90 @@ CREATE OR REPLACE FUNCTION insertar_perfiles()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Insertar perfiles para Netflix
-    IF NEW.IDCUENTA LIKE 'NETFLIX%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, '1000'),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, '5555'),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, '8833'),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, '6622'),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, '9000');
+    IF NEW.IDCUE LIKE 'NETFLIX%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, '8833'),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000');
     END IF;
     -- Insertar perfiles para Disney
-    IF NEW.IDCUENTA LIKE 'DISNEY%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, '1000'),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, '5555'),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, '8833'),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, '6622'),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, '9000'),
-        (NEW.IDCUENTA || '.6', NEW.IDCUENTA, 6, '2012'),
-        (NEW.IDCUENTA || '.7', NEW.IDCUENTA, 7, '2000');
+    IF NEW.IDCUE LIKE 'DISNEY%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, '8833'),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000'),
+        (NEW.IDCUE || '.6', NEW.IDCUE, 6, '2012'),
+        (NEW.IDCUE || '.7', NEW.IDCUE, 7, '2000');
     END IF;
     -- Insertar perfiles para Prime Video
-    IF NEW.IDCUENTA LIKE 'PRIME%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, '10000'),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, '55555'),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, '88333'),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, '66222'),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, '90000'),
-        (NEW.IDCUENTA || '.6', NEW.IDCUENTA, 6, '20122');
+    IF NEW.IDCUE LIKE 'PRIME%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, '10000'),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, '55555'),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, '88333'),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, '66222'),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, '90000'),
+        (NEW.IDCUE || '.6', NEW.IDCUE, 6, '20122');
     END IF;
     -- Insertar perfiles para Max
-    IF NEW.IDCUENTA LIKE 'MAX%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, '1000'),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, '5555'),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, '8833'),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, '6622'),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, '9000');
+    IF NEW.IDCUE LIKE 'MAX%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, '8833'),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000');
     END IF;
     -- Insertar perfiles para Paramount
-    IF NEW.IDCUENTA LIKE 'PARAMOUNT%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, '1000'),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, '5555'),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, '8833'),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, '6622'),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, '9000'),
-        (NEW.IDCUENTA || '.6', NEW.IDCUENTA, 6, '2012');
+    IF NEW.IDCUE LIKE 'PARAMOUNT%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, '1000'),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, '5555'),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, '8833'),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, '6622'),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, '9000'),
+        (NEW.IDCUE || '.6', NEW.IDCUE, 6, '2012');
     END IF;
     -- Insertar perfiles para Spotify
-    IF NEW.IDCUENTA LIKE 'SPOTIFY%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, 'owner'),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, 'invit'),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, 'invit'),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, 'invit'),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, 'invit'),
-        (NEW.IDCUENTA || '.6', NEW.IDCUENTA, 6, 'invit');
+    IF NEW.IDCUE LIKE 'SPOTIFY%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, 'owner'),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, 'invit'),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, 'invit'),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, 'invit'),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, 'invit'),
+        (NEW.IDCUE || '.6', NEW.IDCUE, 6, 'invit');
     END IF;
-    IF NEW.IDCUENTA LIKE 'MAGIS%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, ''),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, ''),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, '');
+    IF NEW.IDCUE LIKE 'MAGIS%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, ''),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, ''),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, '');
     END IF;
-    IF NEW.IDCUENTA LIKE 'CRUNCHY%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, ''),
-        (NEW.IDCUENTA || '.2', NEW.IDCUENTA, 2, ''),
-        (NEW.IDCUENTA || '.3', NEW.IDCUENTA, 3, ''),
-        (NEW.IDCUENTA || '.4', NEW.IDCUENTA, 4, ''),
-        (NEW.IDCUENTA || '.5', NEW.IDCUENTA, 5, '');
+    IF NEW.IDCUE LIKE 'CRUNCHY%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, ''),
+        (NEW.IDCUE || '.2', NEW.IDCUE, 2, ''),
+        (NEW.IDCUE || '.3', NEW.IDCUE, 3, ''),
+        (NEW.IDCUE || '.4', NEW.IDCUE, 4, ''),
+        (NEW.IDCUE || '.5', NEW.IDCUE, 5, '');
     END IF;
-    IF NEW.IDCUENTA LIKE 'ind%' THEN
-        INSERT INTO Perfiles (IDPERFIL, IDCUENTA, NUMERO, PIN) VALUES
-        (NEW.IDCUENTA || '.1', NEW.IDCUENTA, 1, 'aparte');
+    IF NEW.IDCUE LIKE 'ind%' THEN
+        INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
+        (NEW.IDCUE || '.1', NEW.IDCUE, 1, 'aparte');
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 -- Crear el trigger
-CREATE
-OR
-REPLACE
-    TRIGGER TG_insertar_perfiles AFTER
-INSERT
-    ON Cuentas FOR EACH ROW
-EXECUTE FUNCTION insertar_perfiles ();
+CREATE OR REPLACE TRIGGER TG_insertar_perfiles
+AFTER INSERT ON cuentas
+FOR EACH ROW
+EXECUTE FUNCTION insertar_perfiles();
 
 --hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 --hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
@@ -191,7 +188,25 @@ WHERE
     dv.ACTIVODET = TRUE;  -- Filtra solo los detalles de venta activos
 
 
-        -- VISTA CLIENTES USUARIOS
+CREATE OR REPLACE FUNCTION calcular_total_pagado_mes(
+    cliente_id INTEGER,
+    mes INTEGER,
+    anio INTEGER
+) RETURNS DECIMAL(10, 2) AS $$
+DECLARE
+    total_pagado DECIMAL(10, 2);
+BEGIN
+    -- Calcular el total pagado por el cliente en el mes y año especificados
+    SELECT COALESCE(SUM(TOTALPAGO), 0) INTO total_pagado
+    FROM VENTAS
+    WHERE IDCLIENTE = cliente_id
+    AND EXTRACT(MONTH FROM FECHAVENTA) = mes
+    AND EXTRACT(YEAR FROM FECHAVENTA) = anio;
+    RETURN total_pagado;
+END;
+$$ LANGUAGE plpgsql;
+
+-- VISTA CLIENTES USUARIOS
 CREATE OR REPLACE VIEW view_clientes_usuarios AS
 SELECT 
     u.IDCLI,

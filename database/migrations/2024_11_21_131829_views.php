@@ -12,6 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'pgsql') {
         DB::unprepared("
         -- VISTA USUARIOS ACTIVOS 
         CREATE OR REPLACE VIEW view_usuarios_activos AS
@@ -32,6 +33,24 @@ return new class extends Migration
         WHERE 
             dv.ACTIVODET = TRUE;  -- Filtra solo los detalles de venta activos
 
+            --CALCULAR EL TOTAL PAGADO DE UN CLIENTE EN UN MES ESPECIFICO
+        CREATE OR REPLACE FUNCTION calcular_total_pagado_mes(
+            cliente_id INTEGER,
+            mes INTEGER,
+            anio INTEGER
+        ) RETURNS DECIMAL(10, 2) AS $$
+        DECLARE
+            total_pagado DECIMAL(10, 2);
+        BEGIN
+            -- Calcular el total pagado por el cliente en el mes y año especificados
+            SELECT COALESCE(SUM(TOTALPAGO), 0) INTO total_pagado
+            FROM VENTAS
+            WHERE IDCLIENTE = cliente_id
+            AND EXTRACT(MONTH FROM FECHAVENTA) = mes
+            AND EXTRACT(YEAR FROM FECHAVENTA) = anio;
+            RETURN total_pagado;
+        END;
+        $$ LANGUAGE plpgsql;
 
         -- VISTA CLIENTES USUARIOS
         CREATE OR REPLACE VIEW view_clientes_usuarios AS
@@ -44,16 +63,20 @@ return new class extends Migration
                 CAST(EXTRACT(MONTH FROM CURRENT_DATE) AS INTEGER), 
                 CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTEGER)
             ) AS facturado
-        FROM view_usuarios_activos u
-        GROUP BY u.IDCLI, u.nombre_cliente;
-    ");
+            FROM view_usuarios_activos u
+            GROUP BY u.IDCLI, u.nombre_cliente;
+        ");
+        }
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'pgsql') {
         DB::unprepared("
+        DROP FUNCTION IF EXISTS calcular_total_pagado_mes;
         DROP VIEW IF EXISTS view_usuarios_activos;
         DROP VIEW IF EXISTS view_clientes_usuarios;
-    ");
+        ");
+        }
     }
 };

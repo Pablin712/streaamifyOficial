@@ -12,6 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() === 'pgsql') {
         DB::unprepared("
         CREATE OR REPLACE FUNCTION actualizar_total_venta()
             RETURNS TRIGGER AS $$
@@ -171,6 +172,7 @@ return new class extends Migration
             FOR EACH ROW
             EXECUTE FUNCTION insertar_perfiles();
         ");
+        }
     }
 
     /**
@@ -178,6 +180,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() === 'pgsql') {
         DB::unprepared("
         DROP TRIGGER IF EXISTS trg_actualizar_total_venta ON DETALLES_VENTA;
             DROP FUNCTION IF EXISTS actualizar_total_venta;
@@ -187,5 +190,6 @@ return new class extends Migration
             DROP TRIGGER IF EXISTS TG_insertar_perfiles ON Cuentas;
             DROP FUNCTION IF EXISTS insertar_perfiles;
         ");
+        }
     }
 };
