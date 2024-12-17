@@ -18,6 +18,7 @@ class DetalleVenta extends Model
     protected $fillable = [
         'idven',
         'idper',
+        'descripciondet',
         'fechavendet',
         'montodet',
         'activodet'

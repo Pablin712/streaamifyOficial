@@ -73,30 +73,31 @@ CREATE TRIGGER trg_generar_idventa
 BEFORE INSERT ON ventas
 FOR EACH ROW
 BEGIN
-    DECLARE numero_venta INT;
-    
+    DECLARE num_venta_dia INT;
+
     -- Verificar el número máximo de ventas del día actual en la tabla ventas_diarias
     SELECT COALESCE(MAX(numero_venta), 0)
-    INTO numero_venta
+    INTO num_venta_dia
     FROM ventas_diarias
     WHERE fecha = CURRENT_DATE;
 
     -- Incrementar el número de venta del día actual
-    SET numero_venta = numero_venta + 1;
+    SET num_venta_dia = num_venta_dia + 1;
 
-    -- Si ya existe un registro para la fecha actual, actualizamos el número de venta
+    -- Actualizar o insertar en ventas_diarias
     IF EXISTS (SELECT 1 FROM ventas_diarias WHERE fecha = CURRENT_DATE) THEN
+        -- Actualizar el número de venta si ya existe la fecha
         UPDATE ventas_diarias
-        SET numero_venta = numero_venta
+        SET numero_venta = num_venta_dia
         WHERE fecha = CURRENT_DATE;
     ELSE
-        -- Si no existe, insertamos un nuevo registro
+        -- Insertar nuevo registro si no existe la fecha
         INSERT INTO ventas_diarias (fecha, numero_venta)
-        VALUES (CURRENT_DATE, numero_venta);
+        VALUES (CURRENT_DATE, num_venta_dia);
     END IF;
 
-    -- Generar el número de venta en el formato deseado
-    SET NEW.idven = CONCAT('FAC', LPAD(numero_venta, 3, '0'), '-', DATE_FORMAT(CURRENT_DATE, '%d%m%Y'));
+    -- Generar el ID de venta en el formato deseado: FAC + número + fecha
+    SET NEW.idven = CONCAT('FAC', LPAD(num_venta_dia, 3, '0'), '-', DATE_FORMAT(CURRENT_DATE, '%d%m%Y'));
 END$$
 
 DELIMITER ;

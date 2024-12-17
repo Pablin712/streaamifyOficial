@@ -75,7 +75,7 @@ class VentaController extends Controller
             'detalles_venta' => 'required|json',
         ]);
 
-        // Verificar si ya existe un registro de ventas para el día de hoy
+        /* Verificar si ya existe un registro de ventas para el día de hoy
         $ventaDiaria = DB::table('ventas_diarias')->where('fecha', Carbon::today()->toDateString())->first();
         if (!$ventaDiaria) {
             // Si no existe, creamos un nuevo registro para hoy con el contador inicializado
@@ -93,7 +93,7 @@ class VentaController extends Controller
         }
         // Generar el ID de venta
         $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . Carbon::now()->format('dmy');
-
+        */
         // Decodificar los detalles de venta desde el JSON
         $detalles = json_decode($request->detalles_venta, true);
 
@@ -102,13 +102,12 @@ class VentaController extends Controller
 
         // Crear la venta
         $venta = Venta::create([
-            'idven' => $idVenta,
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
             'fechaven' => Carbon::now(),
             'totalpagoven' => $total_venta,  // Puedes calcular el total si lo deseas
         ]);
-
+        $venta->refresh(); //linea importante que recupera el idven
         // Registrar los detalles de venta
         foreach ($detalles as $detalle) {
             // Obtener el idcue de la cuenta
@@ -119,6 +118,7 @@ class VentaController extends Controller
 
             // Concatenar el idcue y el numeroper para obtener el idperfil
             $idper = $idcue . '.' . $numeroper;
+            //dd($detalle['descripcion']);
             // Guardar cada detalle en la tabla detalles_venta
             DetalleVenta::create([
                 'idven' => $venta->idven,
@@ -257,7 +257,7 @@ class VentaController extends Controller
         $empleados = Empleado::all();
 
         $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
-
+        
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
             $cuenta->usuarios_activos = $usuarios;
