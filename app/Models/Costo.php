@@ -16,7 +16,6 @@ class Costo extends Model
 
     // Define los atributos que puedes asignar masivamente
     protected $fillable = [
-        'idcos',
         'idcue',
         'fechacos',
         'montocos',

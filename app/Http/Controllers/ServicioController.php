@@ -37,7 +37,7 @@ class ServicioController extends Controller
         ]);
 
         $request->merge([
-            'idser' => strtoupper($request->nombreser),
+            'idser' => strtoupper($request->idser),
             'nombreser' => ucwords(strtolower($request->nombreser))
         ]);
 

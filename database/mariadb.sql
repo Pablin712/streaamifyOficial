@@ -254,7 +254,7 @@ GROUP BY u.idcli, u.nombre_cliente;
 
 
 
--- Modificaciones
+-- Modificaciones forma 1 no para mysql mariadb
 ALTER TABLE contabilidad 
 MODIFY COLUMN idcon INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
 
@@ -281,3 +281,8 @@ MODIFY COLUMN idpro INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
 
 ALTER TABLE tipo_gasto 
 MODIFY COLUMN idtip INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
+
+-- Modificacion en la forma 2
+ALTER TABLE clientes 
+CHANGE idcli idcli INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (idcli);
