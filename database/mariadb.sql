@@ -180,7 +180,7 @@ BEGIN
         (CONCAT(NEW.idcue, '.4'), NEW.idcue, 4, ''),
         (CONCAT(NEW.idcue, '.5'), NEW.idcue, 5, '');
     -- Insertar perfiles para IND
-    ELSEIF NEW.idcue LIKE 'ind%' THEN
+    ELSEIF NEW.idcue LIKE 'IND%' THEN
         INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
         (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, 'aparte');
     ELSE

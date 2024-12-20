@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             TipoGastoSeeder::class,
             //GastoSeeder::class,
             //ClienteSeeder::class,
-            //CuentaSeeder::class,
+            CuentaSeeder::class,
             //CostoSeeder::class,
             //VentaSeeder::class,
             //DetalleVentaSeeder::class,

@@ -151,7 +151,7 @@ return new class extends Migration
                     (NEW.IDCUE || '.3', NEW.IDCUE, 3, ''),
                     (NEW.IDCUE || '.4', NEW.IDCUE, 4, ''),
                     (NEW.IDCUE || '.5', NEW.IDCUE, 5, '');
-                ELSEIF NEW.IDCUE LIKE 'ind%' THEN
+                ELSEIF NEW.IDCUE LIKE 'IND%' THEN
                     INSERT INTO Perfiles (IDPER, IDCUE, NUMEROPER, PINPER) VALUES
                     (NEW.IDCUE || '.1', NEW.IDCUE, 1, 'aparte');
                 ELSE

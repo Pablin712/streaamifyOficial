@@ -185,7 +185,7 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         // Verificar si los perfiles están registrados en detalles_venta
         foreach ($cuenta->perfiles as $perfil) {
-            $perfilInDetalleVenta = DetalleVenta::where('perfil_id', $perfil->id)->exists();
+            $perfilInDetalleVenta = DetalleVenta::where('idper', $perfil->idper)->exists();
 
             if ($perfilInDetalleVenta) {
                 return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más perfiles están registrados en detalles_venta.');
