@@ -14,7 +14,7 @@ class CostoController extends Controller
     public function index(Request $request)
     {
         
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
+        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico','contador']);
         // Obtener todas las cuentas para el selector
         $cuentas = Cuenta::all();
 
