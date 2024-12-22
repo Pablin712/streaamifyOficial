@@ -39,7 +39,7 @@ class ClienteController extends Controller
     {
         $request->validate([
             'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
-            'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
+            'telefonocli' => 'string|max:50|unique:clientes,telefonocli'
         ]);
         $request->merge([
             'nombrecli' => ucwords($request->nombrecli)
@@ -64,7 +64,7 @@ class ClienteController extends Controller
         // Validar los datos
         $request->validate([
             'nombrecli' => 'required|string|max:50|unique:clientes,nombrecli',
-            'telefonocli' => 'string|max:15|unique:clientes,telefonocli'
+            'telefonocli' => 'string|max:50|unique:clientes,telefonocli'
         ]);
         $request->merge([
             'nombrecli' => ucwords($request->nombrecli)
@@ -79,7 +79,7 @@ class ClienteController extends Controller
                 ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
         }
 
-        // Crear un nuevo costo
+        // Crear un nuevo cliente
         $cliente = Cliente::create($request->all());
 
         return redirect()->route('ventas.create')->with('success', 'Cliente creado correctamente.')->with('cliente', $cliente);;

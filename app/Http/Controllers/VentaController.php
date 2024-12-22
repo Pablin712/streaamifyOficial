@@ -100,14 +100,25 @@ class VentaController extends Controller
         // Calcular el total de la venta sumando los montos de los detalles
         $total_venta = collect($detalles)->sum('monto');
 
+        $fecha = Carbon::today()->toDateString();  // Solo la fecha sin la hora
+
+
         // Crear la venta
         $venta = Venta::create([
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
-            'fechaven' => Carbon::now(),
+            'fechaven' => $fecha,
             'totalpagoven' => $total_venta,  // Puedes calcular el total si lo deseas
         ]);
-        $venta->refresh(); //linea importante que recupera el idven
+
+        $venta->idven = DB::table('ventas')->where('idcli', $request->idcli)
+        ->where('idemp', $request->idemp)
+        ->where('fechaven', $fecha)
+        ->orderBy('idven', 'desc')
+        ->value('idven');
+
+        //$venta->refresh(); //linea importante que recupera el idven
+        //dd($venta); verificar que la variable tenga los valores correctos
         // Registrar los detalles de venta
         foreach ($detalles as $detalle) {
             // Obtener el idcue de la cuenta

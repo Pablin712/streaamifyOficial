@@ -20,7 +20,7 @@
         </div>
         <div class="form-group mb-3">
             <label for="telefonocli">Teléfono</label>
-            <input type="text" name="telefonocli" id="telefonocli" class="form-control" maxlength="15" required>
+            <input type="text" name="telefonocli" id="telefonocli" class="form-control" maxlength="50" required>
         </div>
         <button type="submit" class="btn btn-success">Guardar</button>
     </form>
