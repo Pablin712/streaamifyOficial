@@ -12,7 +12,7 @@ class DetalleVenta extends Model
     protected $primaryKey = 'iddet'; // Nombre de la clave primaria
     //public $incrementing = false; // Si no es incremental, establece esto en false
     //protected $keyType = 'string'; // Si es de tipo string, define esto como 'string'
-    public $timestamps = false;
+    public $timestamps = true;
 
     // Define los atributos que puedes asignar masivamente
     protected $fillable = [

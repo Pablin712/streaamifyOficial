@@ -71,20 +71,21 @@ class CuentaController extends Controller
 
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);
+        $cuenta->refresh();
         // Comprobar si los datos de costo están presentes
-        if ($request->filled('descripcioncos') && $request->filled('montocos')) {
-            // Validar y crear el costo asociado a la cuenta
-            //$validatedCosto = $request->validate([
-              //  'descripcioncos' => 'string|max:50',
-                //'montocos' => 'numeric|min:0',
-            //]);
+        // Si hay campos de costo, validarlos y crear el costo
+        if ($request->filled('descripcioncos') || $request->filled('montocos')) {
+            $validatedCosto = $request->validate([
+                'descripcioncos' => 'required|string|max:50',
+                'montocos' => 'required|numeric|min:0',
+            ]);
 
-            // Crear el costo solo si la validación es exitosa
+            // Crear el costo asociado a la cuenta
             Costo::create([
-                'idcue' => $cuenta->idcue,  // Asociar el costo a la cuenta recién creada
-                'fechacos' => now(),  // Usar la fecha actual para el costo
-                'montocos' => $request->montocos,
-                'descripcioncos' => $request->descripcioncos,
+                'idcue' => $cuenta->idcue, // Asociar el costo a la cuenta recién creada
+                'fechacos' => now(),
+                'montocos' => $validatedCosto['montocos'],
+                'descripcioncos' => $validatedCosto['descripcioncos'],
             ]);
         }
         return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
@@ -184,7 +185,7 @@ class CuentaController extends Controller
         $cuenta = Cuenta::findOrFail($idcue);
         // Verificar si los perfiles están registrados en detalles_venta
         foreach ($cuenta->perfiles as $perfil) {
-            $perfilInDetalleVenta = DetalleVenta::where('perfil_id', $perfil->id)->exists();
+            $perfilInDetalleVenta = DetalleVenta::where('idper', $perfil->idper)->exists();
 
             if ($perfilInDetalleVenta) {
                 return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más perfiles están registrados en detalles_venta.');

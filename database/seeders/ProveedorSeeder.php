@@ -18,6 +18,8 @@ class ProveedorSeeder extends Seeder
             ['nombrepro' => 'Ec Virtual Store', 'telefonopro' => '0960523682'],
             ['nombrepro' => 'Full Entretenimiento', 'telefonopro' => '+573205045002'],
             ['nombrepro' => 'Fenix Store', 'telefonopro' => '0963433482'],
+            ['nombrepro' => 'Spotify', 'telefonopro' => 'PayPal'],
+            ['nombrepro' => 'Google', 'telefonopro' => 'Tarjeta'],
         ]);
     }
 }
