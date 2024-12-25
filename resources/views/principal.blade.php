@@ -65,7 +65,7 @@
                                     </span>
                                 </a>
                                 --}}
-                                <a href="https://wa.me/593961412826" target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
+                                <a href="https://wa.me/593961412826?text=Hola%20quiero%20más%20información%20sobre%20el%20servicio%20de" target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
                                     <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">
                                         <span class="d-flex align-items-center">
                                             <!-- Icono de WhatsApp -->

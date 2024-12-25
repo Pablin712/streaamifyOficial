@@ -8,6 +8,7 @@ use App\Models\Cliente;
 use App\Models\Cuenta;
 use App\Models\Empleado;
 use App\Models\Costo;
+use App\Models\Gasto;
 use App\Models\ViewClientesUsuarios;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Contabilidad;
@@ -51,6 +52,9 @@ class ContabilidadController extends Controller
         $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first();
         $num_cuentas = Cuenta::all()->count();
         $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
+
+        $gastos_mes = Gasto::whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas');
+
         $ventas_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->count();
         $ventas_ano = Venta::whereYear('fechaven', $year)->count();
 
@@ -229,6 +233,7 @@ class ContabilidadController extends Controller
             'usuarios_acobrar',
             'num_cuentas',
             'costos_mes',
+            'gastos_mes',
             'promedio_pagos_mes',
             'cliente_mas_facturado',
             'ventas_mes',

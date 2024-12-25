@@ -17,7 +17,7 @@ class CuentaController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
+        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico', 'vendedor']);
         $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get(); // Cargar valor asociado
         // Inicializar una colección vacía para los perfiles
         $perfiles = collect();
@@ -71,7 +71,6 @@ class CuentaController extends Controller
 
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);
-        $cuenta->refresh();
         // Comprobar si los datos de costo están presentes
         // Si hay campos de costo, validarlos y crear el costo
         if ($request->filled('descripcioncos') || $request->filled('montocos')) {
@@ -82,7 +81,7 @@ class CuentaController extends Controller
 
             // Crear el costo asociado a la cuenta
             Costo::create([
-                'idcue' => $cuenta->idcue, // Asociar el costo a la cuenta recién creada
+                'idcue' => $request->idcue, // Asociar el costo a la cuenta recién creada
                 'fechacos' => now(),
                 'montocos' => $validatedCosto['montocos'],
                 'descripcioncos' => $validatedCosto['descripcioncos'],

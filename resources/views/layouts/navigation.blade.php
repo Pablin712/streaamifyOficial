@@ -146,9 +146,7 @@
                         <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                @if(Auth::user()->idrol != 'vendedor')
                                 <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
-                                @endif
                                 <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
                                 @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'tecnico')
                                 <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>

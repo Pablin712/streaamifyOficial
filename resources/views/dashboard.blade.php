@@ -288,7 +288,8 @@
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                             Usuarios Activos</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $total_usuarios_activos }}</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $total_usuarios_activos }}
+                                        </div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-id-badge fa-2x text-gray-300"></i>
@@ -325,7 +326,7 @@
                                             Cliente más facturado</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">
                                             {{ $cliente_mas_facturado->nombre_cliente ?? 'No encontrado' }}
-                                            ${{ $cliente_mas_facturado->facturado ?? 0}}
+                                            ${{ $cliente_mas_facturado->facturado ?? 0 }}
                                         </div>
                                     </div>
                                     <div class="col-auto">
@@ -757,8 +758,8 @@
                             @endif
                         </td>
                     </tr>
-                
-                
+
+
                     <tr>
                         <td><strong>Totales</strong></td>
                         <td><strong>{{ $num_cuentas }}</strong></td>
@@ -809,7 +810,30 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            Visualiza los gráficos de resultados del mes actual.
+            <h5>Resumen financiero:</h5>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Ingresos:</strong></div>
+                <div class="col-6 text-end">{{ $ingresos_mes }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Costos:</strong></div>
+                <div class="col-6 text-end">{{ $costos_mes }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Gastos:</strong></div>
+                <div class="col-6 text-end">{{ $gastos_mes }}</div>
+            </div>
+            <div class="row mb-2">
+                <div class="col-6"><strong>Balance:</strong></div>
+                <div class="col-6 text-end">
+                    <strong>
+                        <span class="{{ ($ingresos_mes - $costos_mes - $gastos_mes) >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{$ingresos_mes - $costos_mes - $gastos_mes}}
+                        </span>
+                    </strong>
+                </div>
+            </div>
+            <p class="mt-3">Visualiza los gráficos de resultados del mes actual.</p>
         </div>
     </div>
     <div class="card mb-4">
