@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Empleado;
 use Carbon\Carbon;
 class EmpleadoController extends Controller
@@ -12,6 +13,8 @@ class EmpleadoController extends Controller
      */
     public function index()
     {
+        
+        $this->authorizeRole(['administrador']);
         //$empleados = Empleado::all(); // Recuperar todos los empleados
         $empleados = Empleado::with(['ventas' => function ($query) {
             $query->select('idemp'); // Solo seleccionamos idemp para optimizar
@@ -32,6 +35,7 @@ class EmpleadoController extends Controller
      */
     public function create()
     {
+        $this->authorizeRole(['administrador']);
         return view('employee.create');
     }
 
@@ -80,7 +84,12 @@ class EmpleadoController extends Controller
     public function edit(string $id)
     {
         $empleado = Empleado::findOrFail($id);
-        return view('employee.edit', compact('empleado'));
+        if(Auth::user()->idemp == $id){
+            return view('employee.edit', compact('empleado'));
+        }
+        else{
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+        }
     }
 
     /**
@@ -125,12 +134,21 @@ class EmpleadoController extends Controller
     {
         $empleado = Empleado::findOrFail($id);
 
-        if ($empleado->idrol === 'administrador') {
-            return redirect()->route('empleados')->with('error', 'No puedes eliminar a un administrador.');
+        if ($empleado->idrol !== 'administrador') {
+            exit;
         }
 
         $empleado->delete();
 
         return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente.');
+    }
+    private function authorizeRole(array $roles)
+    {
+        $userRole = Auth::user()->idrol;
+
+        if (!in_array($userRole, $roles)) {
+            // Redirigir a la vista anterior con una alerta
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+        }
     }
 }

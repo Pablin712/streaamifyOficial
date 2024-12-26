@@ -43,7 +43,7 @@
                         <i class="fas fa-user fa-fw"></i> {{ Auth::user()->nombreemp }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#!">Ajustes</a></li>
+                        <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp)}}">Ajustes</a></li>
                         <li><a class="dropdown-item" href="#!">Actividad</a></li>
                         <li>
                             <hr class="dropdown-divider" />
@@ -228,7 +228,7 @@
                             perPageSelect: [5, 10, 20],
                             labels: {
                                 placeholder: "Buscar...",
-                                perPage: "{select} registros por página",
+                                perPage: "Registros por página",
                                 noRows: "No se encontraron registros.",
                                 info: "Mostrando {start} a {end} de {rows} registros",
                             },
