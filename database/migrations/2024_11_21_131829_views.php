@@ -59,7 +59,7 @@ return new class extends Migration
             u.nombre_cliente,
             COUNT(u.IDCLI) AS usuarios,
             calcular_total_pagado_mes(
-                u.IDCLI, 
+                CAST(u.IDCLI AS INTEGER), 
                 CAST(EXTRACT(MONTH FROM CURRENT_DATE) AS INTEGER), 
                 CAST(EXTRACT(YEAR FROM CURRENT_DATE) AS INTEGER)
             ) AS facturado

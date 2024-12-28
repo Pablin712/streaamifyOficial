@@ -32,6 +32,9 @@ Route::get('/', function () {
     return view('principal');
 })->name('principal');
 
+Route::get('/recover',function(){
+    return view('auth.recover');
+})->name('recover');
 //probando
 /*
 Route::get('/logincliente', function () {

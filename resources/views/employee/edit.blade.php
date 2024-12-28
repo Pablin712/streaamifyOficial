@@ -3,7 +3,7 @@
 @section('h1', 'Empleados')
 @section('content')
 <div class="container">
-    <h1>Editar Empleado</h1>
+    <h1>Actualizar Datos</h1>
     <form action="{{ route('empleados.update', $empleado->idemp) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
@@ -23,7 +23,7 @@
             <label for="passwordemp" class="form-label">Nueva Contraseña (opcional)</label>
             <input type="password" name="passwordemp" id="passwordemp" class="form-control">
         </div>
-
+        @if (Auth::user()->idrol == 'administrador')
         <div class="mb-3">
             <label for="idrol" class="form-label">Rol</label>
             <select name="idrol" id="idrol" class="form-select" required>
@@ -34,6 +34,7 @@
                 <option value="administrador" {{ $empleado->idrol === 'administrador' ? 'selected' : '' }}>Administrador</option>
             </select>
         </div>
+        @endif
         <div class="mb-3">
             <label for="foto_url" class="form-label">Foto (opcional)</label>
             <input type="file" name="foto_url" id="foto_url" class="form-control">
