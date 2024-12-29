@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Gasto;
 use App\Models\TipoGasto;
+use App\Models\Historial;
 
 use Illuminate\Support\Facades\Auth;
 class GastoController extends Controller
@@ -37,11 +38,17 @@ class GastoController extends Controller
             'descripciongas' => 'required|string|max:50',
         ]);
 
-        Gasto::create([
+        $gasto = Gasto::create([
             'idtip' => $request->idtip,
             'fechagas' => $request->fechagas,
             'montogas' => $request->montogas,
             'descripciongas' => $request->descripciongas,
+        ]);
+        Historial::create([
+            'accion' => 'Se creo el gasto con ID: ' . $gasto->idgas,
+            'descripcion' =>  'Datos: ' . json_encode($gasto), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
         ]);
 
         return redirect()->route('gastos')->with('success', 'Gasto creado con éxito');
@@ -70,6 +77,14 @@ class GastoController extends Controller
         ]);
 
         $gasto = Gasto::findOrFail($idgas);
+
+        Historial::create([
+            'accion' => 'Se actualizo el cliente con ID: ' . $idgas,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($gasto), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $gasto->update([
             'fechagas' => $request->fechagas,
             'montogas' => $request->montogas,
@@ -83,6 +98,12 @@ class GastoController extends Controller
     public function destroy($id)
     {
         $gasto = Gasto::findOrFail($id);
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el gasto con ID: ' . $gasto->idgas,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($gasto), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $gasto->delete();
 
         return redirect()->route('gastos')->with('success', 'Gasto eliminado con éxito');

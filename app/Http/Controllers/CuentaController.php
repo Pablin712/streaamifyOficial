@@ -13,6 +13,7 @@ use App\Models\DetalleVenta;
 
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\Historial;
 class CuentaController extends Controller
 {
     public function index(Request $request)
@@ -71,6 +72,13 @@ class CuentaController extends Controller
 
         // Crear la cuenta (otra alternativa)
         $cuenta = Cuenta::create($validated);
+
+        Historial::create([
+            'accion' => 'Se creo la cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' =>  'Datos: ' . json_encode($cuenta), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Comprobar si los datos de costo están presentes
         // Si hay campos de costo, validarlos y crear el costo
         if ($request->filled('descripcioncos') || $request->filled('montocos')) {
@@ -80,11 +88,18 @@ class CuentaController extends Controller
             ]);
 
             // Crear el costo asociado a la cuenta
-            Costo::create([
+            $costo = Costo::create([
                 'idcue' => $request->idcue, // Asociar el costo a la cuenta recién creada
                 'fechacos' => now(),
                 'montocos' => $validatedCosto['montocos'],
                 'descripcioncos' => $validatedCosto['descripcioncos'],
+            ]);
+
+            Historial::create([
+                'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
+                'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
+                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'fecha' => now(),
             ]);
         }
         return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
@@ -97,6 +112,12 @@ class CuentaController extends Controller
         $cuenta->caidacue = !$cuenta->caidacue; // Invertir el valor (true -> false o false -> true)
         // Guardar el cambio en la base de datos
         $cuenta->save();
+        Historial::create([
+            'accion' => 'Se actualizo el estado de cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' =>  'estado cambiado a '.$cuenta->caidacue,
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
 
         // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
@@ -122,6 +143,12 @@ class CuentaController extends Controller
         $mensaje .= "PIN de perfil {$perfil->numeroper}: ";
         $mensaje .= "{$perfil->pinper}\n";
 
+        Historial::create([
+            'accion' => 'Se solicito los datos de perfil'. $perfil->numeroper .' de la cuenta: ' . $cuenta->idcue,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Devolver el mensaje al frontend
         return response()->json(['mensaje' => $mensaje]);
     }
@@ -158,6 +185,14 @@ class CuentaController extends Controller
         ]);
 
         $cuenta = Cuenta::findOrFail($idcue);
+
+        Historial::create([
+            'accion' => 'Se actualizo la cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $cuenta->update($request->all());
 
         if (!empty($request->descripcioncos) && !empty($request->montocos)) {
@@ -190,6 +225,12 @@ class CuentaController extends Controller
                 return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más perfiles están registrados en detalles_venta.');
             }
         }
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de la cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($cuenta), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $cuenta->perfiles()->delete();
         $cuenta->delete();
 

@@ -6,7 +6,7 @@ use App\Models\Costo;
 use App\Models\Cuenta;
 use Illuminate\Http\Request;
 
-
+use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 
 class CostoController extends Controller
@@ -38,7 +38,15 @@ class CostoController extends Controller
         ]);
 
         // Crear un nuevo costo
-        Costo::create($request->all());
+        $costo = Costo::create($request->all());
+
+        Historial::create([
+            'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
+            'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
 
         return redirect()->route('costos', ['idcue' => $request->idcue])->with('success', 'Costo creado correctamente.');
     }
@@ -52,6 +60,14 @@ class CostoController extends Controller
         ]);
 
         $costo = Costo::findOrFail($idcos);
+
+        Historial::create([
+            'accion' => 'Se actualizo el costo con ID: ' . $costo->idcli,
+            'descripcion' =>  'Datos antiguos : ' . json_encode($costo), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $costo->update([
             'descripcioncos' => $request->descripcioncos,
             'montocos' => $request->montocos,
@@ -66,6 +82,14 @@ class CostoController extends Controller
         // Eliminar el costo
         $costo = Costo::findOrFail($idcos);
         $idcue = $costo->idcue; // Para volver a la cuenta seleccionada
+
+        Historial::create([
+            'accion' => 'Se eliminaron datos de el costo con ID: ' . $costo->idcos,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($costo), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $costo->delete();
 
         return redirect()->route('costos', ['idcue' => $idcue])->with('success', 'Costo eliminado correctamente.');

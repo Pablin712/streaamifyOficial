@@ -17,6 +17,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
+use App\Http\Controllers\HistorialController;
 
 Route::get('/admin', HomeController::class);
 
@@ -47,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
 
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
+    Route::get('/historial',[HistorialController::class,'show'])->name('historial');
 
     //Route::middleware(['auth:administrador,contador'])->group(function () {
         Route::controller(ContabilidadController::class)->group(function () {

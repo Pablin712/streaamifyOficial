@@ -6,6 +6,7 @@ use App\Models\Perfil;
 use App\Models\Cuenta;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Historial;
 
 class PerfilController extends Controller
 {
@@ -52,7 +53,15 @@ class PerfilController extends Controller
             'pinper' => 'required|string|max:6',
         ]);
 
-        Perfil::create($request->all());
+        $perfil = Perfil::create($request->all());
+
+        Historial::create([
+            'accion' => 'Se creo el perfil con ID: ' . $perfil->idper,
+            'descripcion' =>  'Datos: ' . json_encode($perfil), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
 
         return redirect()->route('cuentas')->with('success', 'Perfil creado con éxito.');
     }
@@ -74,6 +83,13 @@ class PerfilController extends Controller
             'pinper' => 'required|string|max:6',
         ]);
 
+        Historial::create([
+            'accion' => 'Se actualizo el perfil con ID: ' . $id,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($perfil), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $perfil->update([
             'pinper' => $request->input('pinper'),
         ]);
@@ -90,6 +106,14 @@ class PerfilController extends Controller
         }
 
         $perfil = Perfil::findOrFail($id);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el perfil con ID: ' . $id,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($perfil), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $perfil->delete();
 
         return redirect()->route('cuentas')->with('success', 'Perfil eliminado con éxito.');

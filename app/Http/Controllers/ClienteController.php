@@ -6,7 +6,7 @@ use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Models\ViewClientesUsuarios;
 
-
+use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class ClienteController extends Controller
 {
@@ -54,7 +54,14 @@ class ClienteController extends Controller
                 ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
         }
 
-        Cliente::create($request->all());
+        $cliente = Cliente::create($request->all());
+
+        Historial::create([
+            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
+            'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
 
         return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
@@ -82,6 +89,13 @@ class ClienteController extends Controller
         // Crear un nuevo cliente
         $cliente = Cliente::create($request->all());
 
+        Historial::create([
+            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
+            'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         return redirect()->route('ventas.create')->with('success', 'Cliente creado correctamente.')->with('cliente', $cliente);;
     }
 
@@ -104,6 +118,14 @@ class ClienteController extends Controller
         ]);
 
         $cliente = Cliente::findOrFail($idcli);
+
+        Historial::create([
+            'accion' => 'Se actualizo datos de el cliente con ID: ' . $idcli,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($cliente), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $cliente->update($request->all());
 
         return redirect()->route('clientes')->with('success', 'Cliente actualizado con éxito.');
@@ -113,6 +135,13 @@ class ClienteController extends Controller
     public function destroy($idcli)
     {
         $cliente = Cliente::findOrFail($idcli);
+
+        Historial::create([
+            'accion' => 'Se eliminó el cliente con ID: ' . $idcli,
+            'descripcion' => 'Datos borrados: ' . json_encode($cliente), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $cliente->delete();
 
         return redirect()->route('clientes')->with('success', 'Cliente eliminado con éxito.');

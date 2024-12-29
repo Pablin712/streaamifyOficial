@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Proveedor;
+use App\Models\Historial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,7 +37,15 @@ class ProveedorController extends Controller
             'nombrepro' => ucwords(strtolower($request->nombrepro))
         ]);
 
-        Proveedor::create($request->all());
+        $proveedor = Proveedor::create($request->all());
+
+        Historial::create([
+            'accion' => 'Se creo el proveedor con ID: ' . $proveedor->idpro,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
 
         return redirect()->route('proveedores')->with('success', 'Proveedor creado con éxito.');
     }
@@ -63,6 +72,14 @@ class ProveedorController extends Controller
         ]);
 
         $proveedor = Proveedor::findOrFail($idpro);
+
+        Historial::create([
+            'accion' => 'Se actualizo el proveedor con ID: ' . $idpro,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($proveedor), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $proveedor->update($request->all());
 
         return redirect()->route('proveedores')->with('success', 'Proveedor actualizado con éxito.');
@@ -73,6 +90,14 @@ class ProveedorController extends Controller
         $this->authorizeRole(['administrador', 'bodeguero']);
 
         $proveedor = Proveedor::findOrFail($idpro);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el proveedor con ID: ' . $idpro,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($proveedor), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $proveedor->delete();
 
         return redirect()->route('proveedores')->with('success', 'Proveedor eliminado con éxito.');

@@ -44,7 +44,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp)}}">Ajustes</a></li>
-                        <li><a class="dropdown-item" href="#!">Actividad</a></li>
+                        <li><a class="dropdown-item" href="{{ route('historial') }}">Actividad</a></li>
                         <li>
                             <hr class="dropdown-divider" />
                         </li>

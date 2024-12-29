@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Valor;
 use App\Models\Servicio;
 use App\Models\Proveedor;
+use App\Models\Historial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,7 +43,15 @@ class ValorController extends Controller
         $request->merge([
             'idval' => strtoupper($request->idval)
         ]);
-        Valor::create($request->all());
+        $valor = Valor::create($request->all());
+
+        Historial::create([
+            'accion' => 'Se creo el cliente con ID: ' . $valor->idval,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
 
         return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
     }
@@ -70,6 +79,14 @@ class ValorController extends Controller
             'mesesval' => 'required|integer|min:1',
         ]);
         $valor = Valor::findOrFail($idval);
+
+        Historial::create([
+            'accion' => 'Se actualizo el valor con ID: ' . $idval,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($valor), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $valor->update($request->all());
 
         return redirect()->route('valores')->with('success', 'Valor actualizado con éxito.');
@@ -80,6 +97,14 @@ class ValorController extends Controller
         $this->authorizeRole(['administrador', 'bodeguero']);
 
         $valor = Valor::findOrFail($idval);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el valor con ID: ' . $idval,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($valor), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $valor->delete();
 
         return redirect()->route('valores')->with('success', 'Valor eliminado con éxito.');

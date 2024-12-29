@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Mantenimiento;
 use App\Models\Cuenta;
+use App\Models\Historial;
+
+use Illuminate\Support\Facades\Auth;
 
 class MantenimientoController extends Controller
 {
@@ -44,10 +47,17 @@ class MantenimientoController extends Controller
             'descripcionman' => 'required|string|max:255', // Descripción obligatoria
         ]);
         // Crear el nuevo mantenimiento
-        Mantenimiento::create([
+        $mantenimiento = Mantenimiento::create([
             'idcue' => $request->idcue,                  // Asignamos el idcue del formulario
             'fechaman' => $request->fechaman,            // Asignamos la fecha de mantenimiento
             'descripcionman' => $request->descripcionman, // Asignamos la descripción del mantenimiento
+        ]);
+
+        Historial::create([
+            'accion' => 'Se creo la orden de mantenimiento con ID: ' . $mantenimiento,
+            'descripcion' =>  'Datos: ' . json_encode($mantenimiento), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
         ]);
         // Redirigir al índice de mantenimientos con mensaje de éxito
         return redirect()->route('mantenimientos')->with('success', 'Mantenimiento creado exitosamente.');
@@ -90,6 +100,12 @@ class MantenimientoController extends Controller
         // Obtener el mantenimiento a editar
         $mantenimiento = Mantenimiento::findOrFail($id);
 
+        Historial::create([
+            'accion' => 'Se actualizo la orden de mantenimiento con ID: ' . $id,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($mantenimiento), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Actualizar los datos
         $mantenimiento->update([
             //'idcue' => $request->idcue,
@@ -112,6 +128,13 @@ class MantenimientoController extends Controller
     {
         // Buscar el mantenimiento por su ID
         $mantenimiento = Mantenimiento::findOrFail($id);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el cliente con ID: ' . $id,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($mantenimiento), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Eliminar el mantenimiento
         $mantenimiento->delete();
         // Redirigir al índice de mantenimientos con un mensaje de éxito

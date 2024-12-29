@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Servicio;
+use App\Models\Historial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -41,7 +42,14 @@ class ServicioController extends Controller
             'nombreser' => ucwords(strtolower($request->nombreser))
         ]);
 
-        Servicio::create($request->all());
+        $servicio = Servicio::create($request->all());
+
+        Historial::create([
+            'accion' => 'Se creo el servicio con ID: ' . $servicio->idser,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
 
         return redirect()->route('servicios')->with('success', 'Servicio creado con éxito.');
     }
@@ -72,6 +80,14 @@ class ServicioController extends Controller
         ]);
 
         $servicio = Servicio::findOrFail($idser);
+
+        Historial::create([
+            'accion' => 'Se actualizo el cliente con ID: ' . $idser,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($servicio), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $servicio->update($request->all());
 
         return redirect()->route('servicios')->with('success', 'Servicio actualizado con éxito.');
@@ -82,6 +98,14 @@ class ServicioController extends Controller
         $this->authorizeRole(['administrador', 'bodeguero']);
 
         $servicio = Servicio::findOrFail($idser);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el cliente con ID: ' . $idser,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($servicio), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $servicio->delete();
 
         return redirect()->route('servicios')->with('success', 'Servicio eliminado con éxito.');

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Empleado;
+
+use App\Models\Historial;
 use Carbon\Carbon;
 class EmpleadoController extends Controller
 {

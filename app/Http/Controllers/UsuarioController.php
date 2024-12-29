@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\ViewUsuarioActivo;
 use App\Models\DetalleVenta;
 use App\Models\Cuenta;
+use App\Models\Historial;
+
+use Illuminate\Support\Facades\Auth;
 class UsuarioController extends Controller
 {
     public function index()
@@ -57,6 +60,12 @@ class UsuarioController extends Controller
         // Actualizar los campos del usuario
         $detalle->idper = $request->idcue.'.'.$request->perfil;
         $detalle->fechavendet = $request->fecha_vencimiento;
+        Historial::create([
+            'accion' => 'Se actualizo un usuario con ID: ' . $iddet,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($detalle), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Guardar los cambios
         $detalle->save();
 
@@ -73,6 +82,12 @@ class UsuarioController extends Controller
         // Guardar el cambio en la base de datos
         $detalle->save();
 
+        Historial::create([
+            'accion' => 'Se cambio el estado del usuario con ID: ' . $iddet,
+            'descripcion' =>  'Dato cambiado a: ' . $detalle->activodet, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('usuarios')->with('success', 'Usuario eliminado con éxito.');;
     }

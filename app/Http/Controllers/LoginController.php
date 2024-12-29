@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Historial;
 
 class LoginController extends Controller
 {
@@ -52,6 +53,12 @@ class LoginController extends Controller
         // Autenticar al usuario manualmente
         Auth::login($empleado);
 
+        Historial::create([
+            'accion' => 'Ingreso al sistema mediante el empleado: ' . $empleado->usuarioemp,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => $empleado->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Redirigir al dashboard o ruta protegida
         return redirect()->intended('inicio')->with('success', 'Inicio de sesión exitoso.');
     }

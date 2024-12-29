@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\TipoGasto;
+use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 
 class TipoGastoController extends Controller
@@ -24,8 +25,15 @@ class TipoGastoController extends Controller
             'detalletip' => 'required|string|max:50',
         ]);
 
-        TipoGasto::create([
+        $tipogasto = TipoGasto::create([
             'detalletip' => $request->detalletip,
+        ]);
+
+        Historial::create([
+            'accion' => 'Se creo un tipo de gasto con ID: ' . $tipogasto->idtip,
+            'descripcion' => null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
         ]);
 
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto creado con éxito');
@@ -51,6 +59,14 @@ class TipoGastoController extends Controller
         ]);
 
         $tipoGasto = TipoGasto::findOrFail($idtip);
+
+        Historial::create([
+            'accion' => 'Se actualizo el tipo de gasto con ID: ' . $idtip,
+            'descripcion' =>  'Datos antiguos: ' . json_encode($tipoGasto), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $tipoGasto->update([
             'detalletip' => $request->detalletip,
         ]);
@@ -63,6 +79,14 @@ class TipoGastoController extends Controller
         $this->authorizeRole(['administrador', 'contador']);
 
         $tipoGasto = TipoGasto::findOrFail($id);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de el tipo de gasto con ID: ' . $id,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($tipoGasto), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $tipoGasto->delete();
 
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto eliminado con éxito');

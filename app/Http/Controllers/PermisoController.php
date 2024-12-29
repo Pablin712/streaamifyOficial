@@ -6,6 +6,7 @@ use App\Models\Permiso;
 use App\Models\Rol;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Historial;
 
 class PermisoController extends Controller
 {

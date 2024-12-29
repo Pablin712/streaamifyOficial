@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Models\Cuenta;
 use App\Models\Perfil;
+use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -112,10 +113,10 @@ class VentaController extends Controller
         ]);
 
         $venta->idven = DB::table('ventas')->where('idcli', $request->idcli)
-        ->where('idemp', $request->idemp)
-        ->where('fechaven', $fecha)
-        ->orderBy('idven', 'desc')
-        ->value('idven');
+            ->where('idemp', $request->idemp)
+            ->where('fechaven', $fecha)
+            ->orderBy('idven', 'desc')
+            ->value('idven');
 
         //$venta->refresh(); //linea importante que recupera el idven
         //dd($venta); verificar que la variable tenga los valores correctos
@@ -139,8 +140,21 @@ class VentaController extends Controller
                 'montodet' => $detalle['monto'],
                 'activodet' => true,
             ]);
+
+            Historial::create([
+                'accion' => 'Se creo el detalle venta: ' . $detalle->idven,
+                'descripcion' =>  'Perteneciente a la venta' . $venta->idven, // Campo opcional
+                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'fecha' => now(),
+            ]);
         }
 
+        Historial::create([
+            'accion' => 'Se creo la venta con ID: ' . $venta->idven,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         // Puedes calcular el total de la venta aquí y actualizarlo
         //$venta->totalpagoven = collect($detalles)->sum('monto');
         //$venta->save();
@@ -197,6 +211,13 @@ class VentaController extends Controller
             'totalpagoven' => $total_venta,  // Calcula el total si es necesario
         ]);
 
+        Historial::create([
+            'accion' => 'Se renovo la venta con ID: ' . $idvenPasado,
+            'descripcion' =>  'Nueva venta creada con ID' . $ventaNueva->idven, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         // Registrar los detalles de venta
         foreach ($detalles as $detalle) {
             // Obtener el idcue de la cuenta
@@ -216,6 +237,13 @@ class VentaController extends Controller
                 'fechavendet' => $detalle['fecha_vencimiento'],
                 'montodet' => $detalle['monto'],
                 'activodet' => true,
+            ]);
+
+            Historial::create([
+                'accion' => 'Se añadio a la renovacion el siguiente item con ID: ' . $detalle->iddet,
+                'descripcion' =>  $detalle->descripciondet, // Campo opcional
+                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'fecha' => now(),
             ]);
         }
 
@@ -239,13 +267,20 @@ class VentaController extends Controller
         if ($clienteExistente) {
             return redirect()->route('ventas.create')
                 ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
+        } else {
+
+            $cliente = Cliente::create($request->all());
+
+            Historial::create([
+                'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
+                'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
+                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'fecha' => now(),
+            ]);
+            // Retornar el cliente recién creado como respuesta
+            //return response()->json(['cliente' => $cliente]);
+            return redirect()->route('ventas.create')->with('success', 'Cliente creado con éxito.');
         }
-
-        $cliente = Cliente::create($request->all());
-
-        // Retornar el cliente recién creado como respuesta
-        //return response()->json(['cliente' => $cliente]);
-        return redirect()->route('ventas.create')->with('success', 'Cliente creado con éxito.');
     }
 
 
@@ -268,7 +303,7 @@ class VentaController extends Controller
         $empleados = Empleado::all();
 
         $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
-        
+
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
             $cuenta->usuarios_activos = $usuarios;
@@ -380,7 +415,6 @@ class VentaController extends Controller
                 'montodet' => $detalle['monto'],
                 'activodet' => $detalle['estado'],
             ]);
-
             // Acumulamos el total de la venta
             $totalVenta += $detalle['monto'];
         }
@@ -388,6 +422,13 @@ class VentaController extends Controller
         // Actualizamos el total de la venta
         $venta->totalpagoven = $totalVenta;
         $venta->save();
+
+        Historial::create([
+            'accion' => 'Se actualizacion de datos de la venta con ID: ' . $venta->idven,
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
 
         // Redirigir a una página de éxito o mostrar un mensaje
         return redirect()->route('ventas')->with('success', 'Venta actualizada correctamente');
@@ -401,6 +442,13 @@ class VentaController extends Controller
         // Guardar el cambio en la base de datos
         $detalle->save();
 
+        Historial::create([
+            'accion' => 'Se cambio el estado del Item con ID: ' . $iddet,
+            'descripcion' =>  'Estado cambiado a' . $detalle->activodet, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('ventas')->with('success', 'Estado de la cuenta del cliente actualizado correctamente.');
     }
@@ -411,6 +459,16 @@ class VentaController extends Controller
     public function destroy($idven)
     {
         $venta = Venta::findOrFail($idven);
+
+        Historial::create([
+            'accion' => 'Se eliminaron los datos de la venta con ID: ' . $idven,
+            'descripcion' =>  'Datos Eliminados: ' . json_encode($venta), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
+        $venta->detalles_venta()();
+
         $venta->detalles_venta()->delete();
         $venta->delete();
 
