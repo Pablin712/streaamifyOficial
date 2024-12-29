@@ -66,7 +66,7 @@ class CuentaController extends Controller
             'idval' => 'required|exists:valores,idval',
             'fechavencue' => 'required|date',
             'usuariocue' => 'required|string|max:50|unique:cuentas,idcue',
-            'contrasenacue' => 'required|string|min:8|max:50',
+            'contrasenacue' => 'required|string|max:50',
             'caidacue' => 'required|boolean',
         ]);
 
