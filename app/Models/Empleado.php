@@ -21,7 +21,7 @@ class Empleado extends Authenticatable
     public $incrementing = true;
     protected $keyType = 'int';
 
-    public $timestamps = false; // Cambiar a `false` si no quieres que se usen.
+    public $timestamps = true; // Cambiar a `false` si no quieres que se usen.
 
     protected $fillable = [
         'nombreemp',     // Nombre del empleado

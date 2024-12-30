@@ -43,11 +43,11 @@ return new class extends Migration
             total_pagado DECIMAL(10, 2);
         BEGIN
             -- Calcular el total pagado por el cliente en el mes y año especificados
-            SELECT COALESCE(SUM(TOTALPAGO), 0) INTO total_pagado
+            SELECT COALESCE(SUM(TOTALPAGOVEN), 0) INTO total_pagado
             FROM VENTAS
-            WHERE IDCLIENTE = cliente_id
-            AND EXTRACT(MONTH FROM FECHAVENTA) = mes
-            AND EXTRACT(YEAR FROM FECHAVENTA) = anio;
+            WHERE IDCLI = cliente_id
+            AND EXTRACT(MONTH FROM FECHAVEN) = mes
+            AND EXTRACT(YEAR FROM FECHAVEN) = anio;
             RETURN total_pagado;
         END;
         $$ LANGUAGE plpgsql;

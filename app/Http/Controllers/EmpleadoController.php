@@ -86,7 +86,7 @@ class EmpleadoController extends Controller
     public function edit(string $id)
     {
         $empleado = Empleado::findOrFail($id);
-        if(Auth::user()->idemp == $id){
+        if(Auth::user()->idemp == $id || Auth::user()->idemp == 1){
             return view('employee.edit', compact('empleado'));
         }
         else{
