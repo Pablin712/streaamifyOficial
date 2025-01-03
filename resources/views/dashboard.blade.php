@@ -813,22 +813,22 @@
             <h5>Resumen financiero:</h5>
             <div class="row mb-2">
                 <div class="col-6"><strong>Ingresos:</strong></div>
-                <div class="col-6 text-end">{{ $ingresos_mes }}</div>
+                <div class="col-6 text-end">{{ number_format($ingresos_mes, 2) }}</div>
             </div>
             <div class="row mb-2">
                 <div class="col-6"><strong>Costos:</strong></div>
-                <div class="col-6 text-end">{{ $costos_mes }}</div>
+                <div class="col-6 text-end">{{ number_format($costos_mes, 2) }}</div>
             </div>
             <div class="row mb-2">
                 <div class="col-6"><strong>Gastos:</strong></div>
-                <div class="col-6 text-end">{{ $gastos_mes }}</div>
+                <div class="col-6 text-end">{{ number_format($gastos_mes, 2) }}</div>
             </div>
             <div class="row mb-2">
                 <div class="col-6"><strong>Balance:</strong></div>
                 <div class="col-6 text-end">
                     <strong>
                         <span class="{{ ($ingresos_mes - $costos_mes - $gastos_mes) >= 0 ? 'text-success' : 'text-danger' }}">
-                            {{$ingresos_mes - $costos_mes - $gastos_mes}}
+                            {{number_format($ingresos_mes - $costos_mes - $gastos_mes, 2)}}
                         </span>
                     </strong>
                 </div>

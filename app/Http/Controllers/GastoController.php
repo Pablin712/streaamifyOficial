@@ -21,7 +21,7 @@ class GastoController extends Controller
         
         $this->authorizeRole(['administrador', 'contador']);
         // Obtener todos los gastos con el tipo de gasto relacionado
-        $gastos = Gasto::with('tipoGasto')->get();
+        $gastos = Gasto::with('tipoGasto')->orderBy('fechagas', 'desc')->get();
         // Obtener todos los tipos de gasto para el formulario
         $tipoGastos = TipoGasto::all();
 

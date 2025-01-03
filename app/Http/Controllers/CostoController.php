@@ -23,7 +23,7 @@ class CostoController extends Controller
         //$costos = $idcueSeleccionado
         //  ? Costo::where('idcue', $idcueSeleccionado)->get()
         // : collect(); // Colección vacía si no se selecciona ninguna cuenta
-        $costos = Costo::all();
+        $costos = Costo::orderBy('fechacos', 'desc')->get();
         return view('finance.costos', compact('cuentas', 'costos', 'idcueSeleccionado'));
     }
 

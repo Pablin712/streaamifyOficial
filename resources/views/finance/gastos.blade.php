@@ -40,7 +40,7 @@
                 <tr>
                     <td>{{ $gasto->idgas }}</td>
                     <td>{{ $gasto->tipoGasto->detalletip }}</td>
-                    <td>{{ \Carbon\Carbon::parse($gasto->fechagas)->format('d/m/Y') }}</td>
+                    <td>{{ $gasto->fechagas }}</td>
                     <td>{{ $gasto->descripciongas }}</td>
                     <td>${{ number_format($gasto->montogas, 2) }}</td>
                     <td>

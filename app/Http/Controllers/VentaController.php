@@ -132,7 +132,7 @@ class VentaController extends Controller
             $idper = $idcue . '.' . $numeroper;
             //dd($detalle['descripcion']);
             // Guardar cada detalle en la tabla detalles_venta
-            DetalleVenta::create([
+            $detalle=DetalleVenta::create([
                 'idven' => $venta->idven,
                 'idper' => $idper,
                 'descripciondet' => $detalle['descripcion'],
@@ -142,7 +142,7 @@ class VentaController extends Controller
             ]);
 
             Historial::create([
-                'accion' => 'Se creo el detalle venta: ' . $detalle->idven,
+                'accion' => 'Se creo el detalle venta: ' . $detalle->iddet,
                 'descripcion' =>  'Perteneciente a la venta' . $venta->idven, // Campo opcional
                 'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
                 'fecha' => now(),
@@ -466,8 +466,6 @@ class VentaController extends Controller
             'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
-
-        $venta->detalles_venta()();
 
         $venta->detalles_venta()->delete();
         $venta->delete();
