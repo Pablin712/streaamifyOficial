@@ -18,7 +18,7 @@ class CuentaController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico', 'vendedor']);
+        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico', 'vendedor','contador']);
         $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get(); // Cargar valor asociado
         // Inicializar una colección vacía para los perfiles
         $perfiles = collect();

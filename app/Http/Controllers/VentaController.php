@@ -202,14 +202,20 @@ class VentaController extends Controller
 
         // Calcular el total de la venta sumando los montos de los detalles
         $total_venta = collect($detalles)->sum('monto');
+        $fecha = Carbon::today()->toDateString(); 
         // Crear la nueva venta
         $ventaNueva = Venta::create([
             'idven' => $idVenta,
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
-            'fechaven' => Carbon::now(),
+            'fechaven' => $fecha,
             'totalpagoven' => $total_venta,  // Calcula el total si es necesario
         ]);
+        $ventaNueva->idven = DB::table('ventas')->where('idcli', $request->idcli)
+            ->where('idemp', $request->idemp)
+            ->where('fechaven', $fecha)
+            ->orderBy('idven', 'desc')
+            ->value('idven');
 
         Historial::create([
             'accion' => 'Se renovo la venta con ID: ' . $idvenPasado,
@@ -230,7 +236,7 @@ class VentaController extends Controller
             $idper = $idcue . '.' . $numeroper;
 
             // Guardar cada detalle en la tabla detalles_venta
-            DetalleVenta::create([
+            $detalle2=DetalleVenta::create([
                 'idven' => $ventaNueva->idven,
                 'idper' => $idper,
                 'descripciondet' => $detalle['descripcion'],
@@ -240,8 +246,8 @@ class VentaController extends Controller
             ]);
 
             Historial::create([
-                'accion' => 'Se añadio a la renovacion el siguiente item con ID: ' . $detalle->iddet,
-                'descripcion' =>  $detalle->descripciondet, // Campo opcional
+                'accion' => 'Se añadio a la renovacion el siguiente item con ID: ' . $detalle2->iddet,
+                'descripcion' =>  $detalle2->descripciondet, // Campo opcional
                 'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
@@ -381,7 +387,7 @@ class VentaController extends Controller
 
         // Actualizamos la venta (sin modificar el cliente)
         //$venta->idemp = $request->idemp;
-        $venta->fechaven = Carbon::now();  // Actualizamos la fecha si es necesario
+        //$venta->fechaven = Carbon::now();  // Actualizamos la fecha si es necesario
         $venta->totalpagoven = 0;  // Lo inicializamos a 0 para el nuevo cálculo
         $venta->save();
 

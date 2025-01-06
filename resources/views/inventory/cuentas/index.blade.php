@@ -88,7 +88,7 @@
                 @endphp
                 <tr> {{-- class="{{ $estadoClase }}" --}}
                     <td>{{ $cuenta->idcue }}</td>
-                    <td>{{ $cuenta->valor->idser }} - {{ $cuenta->valor->proveedor->nombrepro }}</td>
+                    <td>{{ $cuenta->valor->idser }}-{{ $cuenta->valor->proveedor->nombrepro }}</td>
                     <td>{{ $cuenta->usuariocue }}</td>
                     <td>{{ $cuenta->contrasenacue }}</td>
                     <td>{{ $cuenta->fechavencue->format('Y/m/d') }}</td>
