@@ -29,6 +29,7 @@ class Empleado extends Authenticatable
         'usuarioemp',    // Usuario del empleado
         'passwordemp',   // Contraseña hasheada
         'idrol', 
+        'foto_url',      // Agregar esta columna para permitir asignación masiva
     ];
 
    
