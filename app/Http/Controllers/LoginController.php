@@ -60,7 +60,7 @@ class LoginController extends Controller
             'fecha' => now(),
         ]);
         // Redirigir al dashboard o ruta protegida
-        return redirect()->intended('inicio')->with('success', 'Inicio de sesión exitoso.');
+        return redirect()->route('inicio')->with('success', 'Inicio de sesión exitoso.');
     }
 
     /**
