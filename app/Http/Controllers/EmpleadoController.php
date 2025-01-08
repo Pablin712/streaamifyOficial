@@ -58,7 +58,7 @@ class EmpleadoController extends Controller
         $data = $request->all();
 
         // Encriptar la contraseña
-        $data['passwordemp'] = bcrypt($request->passwordemp);
+        //$data['passwordemp'] = bcrypt($request->passwordemp);
 
         // Subir la foto si existe
         if ($request->hasFile('foto_url')) {
@@ -111,9 +111,9 @@ class EmpleadoController extends Controller
         $empleado = Empleado::findOrFail($idemp);
         $data = $request->all();
 
-        // Encriptar la nueva contraseña solo si se proporciona
+        // Contraseña opcional
         if ($request->filled('passwordemp')) {
-            $data['passwordemp'] = bcrypt($request->passwordemp);
+            
         } else {
             unset($data['passwordemp']); // No actualizar si no se envía
         }
