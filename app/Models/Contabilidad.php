@@ -32,6 +32,7 @@ class Contabilidad extends Model
         'num_usuarios',
         'ingresos',
         'costos',
+        'gastos',
         'ganancias',
         'renta',
         'num_ventas'

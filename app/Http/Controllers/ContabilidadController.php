@@ -222,6 +222,7 @@ class ContabilidadController extends Controller
         $ingresos_historial = $contabilidad->pluck('ingresos');
         $costos_historial = $contabilidad->pluck('costos');
         $ganancias_historial = $contabilidad->pluck('ganancias');
+        $gastos_historial = $contabilidad->pluck('gastos');
 
         return view('dashboard', compact(
             'ventas',
@@ -244,6 +245,7 @@ class ContabilidadController extends Controller
             'ingresos_historial',
             'costos_historial',
             'ganancias_historial',
+            'gastos_historial',
 
             'cuentas_netflix',
             'usuarios_netflix',
@@ -322,6 +324,7 @@ class ContabilidadController extends Controller
         $usuarios_acobrar = $request->input('usuarios_acobrar');
         $num_cuentas = $request->input('num_cuentas');
         $costos_mes = $request->input('costos_mes');
+        $gastos_mes = $request->input('gastos_mes');
         $promedio_pagos_mes = $request->input('promedio_pagos_mes');
         $cliente_mas_facturado = $request->input('cliente_mas_facturado');
         $ventas_mes = $request->input('ventas_mes');
@@ -347,8 +350,9 @@ class ContabilidadController extends Controller
                 'num_usuarios' => $usuarios_activos,
                 'ingresos' => $ingresos_mes,
                 'costos' => $costos_mes,
+                'gastos' => $gastos_mes,
                 'num_ventas' => $ventas_mes,
-                'ganancias' => $ingresos_mes - $costos_mes,  // Si necesitas calcular las ganancias
+                'ganancias' => $ingresos_mes - $costos_mes - $gastos_mes,  // Si necesitas calcular las ganancias
                 'renta' => $renta_variable,
             ]
         );

@@ -38,6 +38,7 @@
         <input type="hidden" name="usuarios_acobrar" value="{{ $usuarios_acobrar }}">
         <input type="hidden" name="num_cuentas" value="{{ $num_cuentas }}">
         <input type="hidden" name="costos_mes" value="{{ $costos_mes }}">
+        <input type="hidden" name="gastos_mes" value="{{ $gastos_mes }}">
         <input type="hidden" name="promedio_pagos_mes" value="{{ $promedio_pagos_mes }}">
         <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
         <input type="hidden" name="ventas_mes" value="{{ $ventas_mes }}">
@@ -827,8 +828,9 @@
                 <div class="col-6"><strong>Balance:</strong></div>
                 <div class="col-6 text-end">
                     <strong>
-                        <span class="{{ ($ingresos_mes - $costos_mes - $gastos_mes) >= 0 ? 'text-success' : 'text-danger' }}">
-                            {{number_format($ingresos_mes - $costos_mes - $gastos_mes, 2)}}
+                        <span
+                            class="{{ $ingresos_mes - $costos_mes - $gastos_mes >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ number_format($ingresos_mes - $costos_mes - $gastos_mes, 2) }}
                         </span>
                     </strong>
                 </div>
@@ -882,6 +884,7 @@
         var mesesHistorial = @json($meses_historial).reverse(); // Etiquetas de los meses, invertidas
         var ingresosHistorial = @json($ingresos_historial).reverse(); // Ingresos invertidos
         var costosHistorial = @json($costos_historial).reverse(); // Costos invertidos
+        var gastosHistorial = @json($gastos_historial).reverse();
         var gananciasHistorial = @json($ganancias_historial).reverse();
 
         var myAreaChart = new Chart(ctx, {
@@ -905,7 +908,15 @@
                         borderWidth: 1
                     },
                     {
-                        label: 'Ganancias', // Nombre de la tercera serie (Ganancias)
+                        label: 'Gastos', // Nombre de la tercera serie (Ganancias)
+                        data: gastosHistorial, // Los datos de la serie de ganancias
+                        fill: true, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(255, 99, 132, 1)', // Color de la línea
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Balance', // Nombre de la tercera serie (Ganancias)
                         data: gananciasHistorial, // Los datos de la serie de ganancias
                         fill: true, // Rellenar el área debajo de la línea
                         backgroundColor: 'rgba(28, 200, 138, 0.2)', // Color del área (con transparencia)

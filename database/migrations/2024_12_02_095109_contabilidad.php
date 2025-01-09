@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('num_usuarios');  // número de usuarios involucrados
             $table->decimal('ingresos', 15, 2);  // ingresos (con 2 decimales)
             $table->decimal('costos', 15, 2);  // costos (con 2 decimales)
+            $table->decimal('gastos', 15, 2); //gastos (nueva tabla)
             $table->decimal('ganancias', 15, 2);  // ganancias (con 2 decimales)
             $table->decimal('renta', 5, 2);  // renta (con 2 decimales)
             $table->integer('num_ventas');

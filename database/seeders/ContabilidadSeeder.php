@@ -22,6 +22,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 20,   // Asumiendo que el número de usuarios es 5
                 'ingresos' => 115.00,
                 'costos' => 36.22,
+                'gastos' => 0.00,
                 'ganancias' => 78.78,
                 'renta' => 0.68,  // Ejemplo de valor de renta
                 'num_ventas' => 20
@@ -34,6 +35,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 6,
                 'ingresos' => 381.00,
                 'costos' => 187.21,
+                'gastos' => 0.00,
                 'ganancias' => 193.79,
                 'renta' => 0.51,
                 'num_ventas' => 120
@@ -46,6 +48,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 4,
                 'ingresos' => 152.00,
                 'costos' => 82.54,
+                'gastos' => 0.00,
                 'ganancias' => 69.46,
                 'renta' => 0.54,
                 'num_ventas' => 70
@@ -58,6 +61,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 5,
                 'ingresos' => 178.00,
                 'costos' => 122.63,
+                'gastos' => 0.00,
                 'ganancias' => 55.37,
                 'renta' => 0.31,
                 'num_ventas' => 50
@@ -70,6 +74,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 8,
                 'ingresos' => 276.00,
                 'costos' => 114.03,
+                'gastos' => 0.00,
                 'ganancias' => 161.97,
                 'renta' => 0.58,
                 'num_ventas' => 120
@@ -82,6 +87,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 6,
                 'ingresos' => 352.00,
                 'costos' => 170.00,
+                'gastos' => 0.00,
                 'ganancias' => 182.00,
                 'renta' => 0.52,
                 'num_ventas' => 110
@@ -94,6 +100,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 7,
                 'ingresos' => 333.00,
                 'costos' => 156.60,
+                'gastos' => 0.00,
                 'ganancias' => 176.40,
                 'renta' => 0.53,
                 'num_ventas' => 140
@@ -106,6 +113,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 5,
                 'ingresos' => 329.00,
                 'costos' => 149.36,
+                'gastos' => 0.00,
                 'ganancias' => 179.64,
                 'renta' => 0.55,
                 'num_ventas' => 120
@@ -118,6 +126,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 10,
                 'ingresos' => 394.00,
                 'costos' => 125.04,
+                'gastos' => 0.00,
                 'ganancias' => 268.96,
                 'renta' => 0.32,
                 'num_ventas' => 160
@@ -130,6 +139,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 8,
                 'ingresos' => 370.00,
                 'costos' => 154.53,
+                'gastos' => 0.00,
                 'ganancias' => 215.47,
                 'renta' => 0.42,
                 'num_ventas' => 150
@@ -142,6 +152,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 7,
                 'ingresos' => 361.00,
                 'costos' => 170.07,
+                'gastos' => 0.00,
                 'ganancias' => 190.93,
                 'renta' => 0.47,
                 'num_ventas' => 150
@@ -154,6 +165,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 20,
                 'ingresos' => 2252.12,
                 'costos' => 735.59,
+                'gastos' => 0.00,
                 'ganancias' => 1516.53,
                 'renta' => 0.33,
                 'num_ventas' => 340
@@ -166,6 +178,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 12,
                 'ingresos' => 1200.00,
                 'costos' => 460.00,
+                'gastos' => 0.00,
                 'ganancias' => 740.00,
                 'renta' => 0.38,
                 'num_ventas' => 220
@@ -178,6 +191,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 5,
                 'ingresos' => 500.00,
                 'costos' => 200.00,
+                'gastos' => 0.00,
                 'ganancias' => 300.00,
                 'renta' => 0.40,
                 'num_ventas' => 180
@@ -190,6 +204,7 @@ class ContabilidadSeeder extends Seeder
                 'num_usuarios' => 0,
                 'ingresos' => 180.00,
                 'costos' => 100.00,
+                'gastos' => 0.00,
                 'ganancias' => 0.00,
                 'renta' => 0.00,
                 'num_ventas' => 130
