@@ -124,7 +124,7 @@
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                            Earnings (Monthly)</div>
+                                            Ingresos (Mensual)</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_mes }}</div>
                                     </div>
                                     <div class="col-auto">
@@ -142,7 +142,7 @@
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Earnings (Annual)</div>
+                                            Ingresos (Anual)</div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_ano }}</div>
                                     </div>
                                     <div class="col-auto">

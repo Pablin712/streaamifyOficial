@@ -29,7 +29,96 @@
         </div>
     @endif
     <h3>Revisa las ventas activas y detalles de los servicios vendidos.</h3>
-    <p>Aquí podrás gestionar las ventas y los detalles asociados, ver los usuarios activos y las opciones de renovación.</p>
+    <p>Aquí podrás gestionar las ventas y los detalles asociados, ver los usuarios activos y las opciones de renovación.
+        Es necesario realizar más de 5 ventas al día.
+    </p>
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Ingresos (Hoy)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_dia }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Ventas (Hoy)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $ventas_dia }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Ingresos/Venta</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @if ($ventas_dia > 0)
+                                    ${{ number_format($ingresos_dia / $ventas_dia, 2) }}
+                                @else
+                                    N/A
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Rendimiento del Día -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Rendimiento del Día</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @php
+                                    $rendimiento = '';
+                                    if ($ventas_dia < 4) {
+                                        $rendimiento = 'Bajo';
+                                    } elseif ($ventas_dia <= 7) {
+                                        $rendimiento = 'Regular';
+                                    } elseif ($ventas_dia <= 10) {
+                                        $rendimiento = 'Bueno';
+                                    } else {
+                                        $rendimiento = 'Excelente';
+                                    }
+                                @endphp
+                                {{ $rendimiento }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('btncrear')
@@ -68,14 +157,15 @@
                         </a>
                         <!-- Eliminar venta -->
                         @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor')
-                        <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Estás seguro?')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                            <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST"
+                                style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-circle"
+                                    onclick="return confirm('¿Estás seguro?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         @endif
                     </td>
                 </tr>

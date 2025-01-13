@@ -2,6 +2,7 @@
 
 @section('title', 'Cuentas')
 @section('styles')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla a morado */
         .table-dark {
@@ -345,6 +346,8 @@
             });
         });
     </script>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    
 
 @endsection

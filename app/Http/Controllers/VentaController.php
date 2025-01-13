@@ -34,8 +34,12 @@ class VentaController extends Controller
 
         $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven', 'desc')->get();
 
+        $hoy = Carbon::today(); // Fecha del inicio del día
+        $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
+        $ventas_dia = Venta::whereDate('fechaven',$hoy)->count();
+
         // Pasar las ventas y los detalles de venta a la vista
-        return view('sales.ventas.index', compact('ventas'));
+        return view('sales.ventas.index', compact('ventas','ingresos_dia','ventas_dia'));
     }
 
     /**
