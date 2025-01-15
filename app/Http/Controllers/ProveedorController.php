@@ -42,7 +42,7 @@ class ProveedorController extends Controller
         Historial::create([
             'accion' => 'Se creo el proveedor con ID: ' . $proveedor->idpro,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -76,7 +76,7 @@ class ProveedorController extends Controller
         Historial::create([
             'accion' => 'Se actualizo el proveedor con ID: ' . $idpro,
             'descripcion' =>  'Datos antiguos: ' . json_encode($proveedor), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp .' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -94,7 +94,7 @@ class ProveedorController extends Controller
         Historial::create([
             'accion' => 'Se eliminaron los datos de el proveedor con ID: ' . $idpro,
             'descripcion' =>  'Datos Eliminados: ' . json_encode($proveedor), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 

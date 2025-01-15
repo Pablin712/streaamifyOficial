@@ -148,7 +148,7 @@ class VentaController extends Controller
             Historial::create([
                 'accion' => 'Se creo el detalle venta: ' . $detalle->iddet,
                 'descripcion' =>  'Perteneciente a la venta' . $venta->idven, // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
         }
@@ -156,7 +156,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se creo la venta con ID: ' . $venta->idven,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Puedes calcular el total de la venta aquí y actualizarlo
@@ -224,7 +224,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se renovo la venta con ID: ' . $idvenPasado,
             'descripcion' =>  'Nueva venta creada con ID' . $ventaNueva->idven, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -252,7 +252,7 @@ class VentaController extends Controller
             Historial::create([
                 'accion' => 'Se añadio a la renovacion el siguiente item con ID: ' . $detalle2->iddet,
                 'descripcion' =>  $detalle2->descripciondet, // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
         }
@@ -284,7 +284,7 @@ class VentaController extends Controller
             Historial::create([
                 'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
                 'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
             // Retornar el cliente recién creado como respuesta
@@ -436,7 +436,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se actualizacion de datos de la venta con ID: ' . $venta->idven,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -455,7 +455,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se cambio el estado del Item con ID: ' . $iddet,
             'descripcion' =>  'Estado cambiado a' . $detalle->activodet, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -473,7 +473,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se eliminaron los datos de la venta con ID: ' . $idven,
             'descripcion' =>  'Datos Eliminados: ' . json_encode($venta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 

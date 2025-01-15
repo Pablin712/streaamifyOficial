@@ -59,7 +59,7 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -92,7 +92,7 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -122,7 +122,7 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Se actualizo datos de el cliente con ID: ' . $idcli,
             'descripcion' =>  'Datos antiguos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -139,7 +139,7 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Se eliminó el cliente con ID: ' . $idcli,
             'descripcion' => 'Datos borrados: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         $cliente->delete();

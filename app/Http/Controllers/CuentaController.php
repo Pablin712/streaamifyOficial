@@ -76,7 +76,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se creo la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' =>  'Datos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(),  // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Comprobar si los datos de costo están presentes
@@ -98,7 +98,7 @@ class CuentaController extends Controller
             Historial::create([
                 'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
                 'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+                'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(),  // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
         }
@@ -115,7 +115,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se actualizo el estado de cuenta con ID: ' . $cuenta->idcue,
             'descripcion' =>  'estado cambiado a '.$cuenta->caidacue,
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(),  // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -146,7 +146,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se solicito los datos de perfil'. $perfil->numeroper .' de la cuenta: ' . $cuenta->idcue,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Devolver el mensaje al frontend
@@ -189,7 +189,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se actualizo la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp .' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -228,7 +228,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se eliminaron los datos de la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' =>  'Datos Eliminados: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         $cuenta->perfiles()->delete();

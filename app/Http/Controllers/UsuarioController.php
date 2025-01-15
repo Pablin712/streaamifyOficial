@@ -63,7 +63,7 @@ class UsuarioController extends Controller
         Historial::create([
             'accion' => 'Se actualizo un usuario con ID: ' . $iddet,
             'descripcion' =>  'Datos antiguos: ' . json_encode($detalle), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Guardar los cambios
@@ -85,7 +85,7 @@ class UsuarioController extends Controller
         Historial::create([
             'accion' => 'Se cambio el estado del usuario con ID: ' . $iddet,
             'descripcion' =>  'Dato cambiado a: ' . $detalle->activodet, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Redirigir al usuario con un mensaje de éxito
