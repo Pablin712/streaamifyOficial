@@ -37,6 +37,12 @@ class LoginController extends Controller
         $empleado = \App\Models\Empleado::where('usuarioemp', $request->usuarioemp)->first();
 
         if (!$empleado) {
+            Historial::create([
+                'accion' => 'Intento fallido de ingreso',
+                'descripcion' =>  'Fallo en el ingreso de usuario', // Campo opcional
+                'realizado_por' => $ipAddress = $request->ip(), // Almacena el nombre del usuario e IP
+                'fecha' => now(),
+            ]);
             // Retorna un mensaje de error si el usuario no existe
             return back()->withErrors([
                 'usuarioemp' => 'El usuario no existe.',
@@ -45,6 +51,14 @@ class LoginController extends Controller
 
         // Verificar la contraseña
         if (!Hash::check($request->passwordemp, $empleado->passwordemp)) {
+            
+            Historial::create([
+                'accion' => 'Intento fallido de ingreso',
+                'descripcion' =>  'Fallo en el ingreso de contraseña', // Campo opcional
+                'realizado_por' => $ipAddress = $request->ip(), // Almacena el nombre del usuario e IP
+                'fecha' => now(),
+            ]);
+
             return back()->withErrors([
                 'passwordemp' => 'La contraseña es incorrecta.',
             ])->withInput($request->except('passwordemp'));
@@ -56,7 +70,7 @@ class LoginController extends Controller
         Historial::create([
             'accion' => 'Ingreso de ' . $empleado->usuarioemp,
             'descripcion' =>  'Autenticación e ingreso al sistema', // Campo opcional
-            'realizado_por' => $empleado->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => $empleado->nombreemp. ' | '.$ipAddress = $request->ip(), // Almacena el nombre del usuario e IP
             'fecha' => now(),
         ]);
         // Redirigir al dashboard o ruta protegida

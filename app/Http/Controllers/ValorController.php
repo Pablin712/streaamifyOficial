@@ -46,9 +46,9 @@ class ValorController extends Controller
         $valor = Valor::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $valor->idval,
+            'accion' => 'Se creo el valor con ID: ' . $valor->idval,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -83,7 +83,7 @@ class ValorController extends Controller
         Historial::create([
             'accion' => 'Se actualizo el valor con ID: ' . $idval,
             'descripcion' =>  'Datos antiguos: ' . json_encode($valor), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -101,7 +101,7 @@ class ValorController extends Controller
         Historial::create([
             'accion' => 'Se eliminaron los datos de el valor con ID: ' . $idval,
             'descripcion' =>  'Datos Eliminados: ' . json_encode($valor), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 

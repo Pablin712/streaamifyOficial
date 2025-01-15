@@ -15,12 +15,21 @@ use App\Models\Contabilidad;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
+use App\Models\Historial;
+
 use Illuminate\Support\Facades\Auth;
 
 class ContabilidadController extends Controller
 {
     public function index(Request $request)
     {
+        Historial::create([
+            'accion' => 'Ingreso al Modulo de contabilidad ',
+            'descripcion' =>  null, // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
+
         $this->authorizeRole(['administrador', 'contador']);
         // Obtener todas las ventas con los detalles de cada una
         $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();

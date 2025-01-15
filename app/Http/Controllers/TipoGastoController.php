@@ -32,7 +32,7 @@ class TipoGastoController extends Controller
         Historial::create([
             'accion' => 'Se creo un tipo de gasto con ID: ' . $tipogasto->idtip,
             'descripcion' => null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -63,7 +63,7 @@ class TipoGastoController extends Controller
         Historial::create([
             'accion' => 'Se actualizo el tipo de gasto con ID: ' . $idtip,
             'descripcion' =>  'Datos antiguos: ' . json_encode($tipoGasto), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -83,7 +83,7 @@ class TipoGastoController extends Controller
         Historial::create([
             'accion' => 'Se eliminaron los datos de el tipo de gasto con ID: ' . $id,
             'descripcion' =>  'Datos Eliminados: ' . json_encode($tipoGasto), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
