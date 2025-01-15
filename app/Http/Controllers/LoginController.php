@@ -54,8 +54,8 @@ class LoginController extends Controller
         Auth::login($empleado);
 
         Historial::create([
-            'accion' => 'Ingreso al sistema mediante el empleado: ' . $empleado->usuarioemp,
-            'descripcion' =>  null, // Campo opcional
+            'accion' => 'Ingreso de ' . $empleado->usuarioemp,
+            'descripcion' =>  'Autenticación e ingreso al sistema', // Campo opcional
             'realizado_por' => $empleado->nombreemp, // Almacena el nombre del usuario
             'fecha' => now(),
         ]);

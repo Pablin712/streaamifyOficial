@@ -57,7 +57,7 @@ class ClienteController extends Controller
         $cliente = Cliente::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
+            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli. ' y su nombre es '.$cliente->nombrecli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
             'fecha' => now(),
@@ -90,7 +90,7 @@ class ClienteController extends Controller
         $cliente = Cliente::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
+            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli. ' y su nombre es '.$cliente->nombrecli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
             'fecha' => now(),
@@ -102,7 +102,6 @@ class ClienteController extends Controller
     // Editar un cliente existente
     public function edit($idcli)
     {
-        
         $cliente = Cliente::findOrFail($idcli);
         return view('sales.clientes.edit', compact('cliente'));
     }
@@ -137,7 +136,7 @@ class ClienteController extends Controller
         $cliente = Cliente::findOrFail($idcli);
 
         Historial::create([
-            'accion' => 'Se eliminó el cliente con ID: ' . $idcli,
+            'accion' => 'Se eliminó el cliente con ID: ' . $idcli. ' y su nombre es '.$cliente->nombrecli,
             'descripcion' => 'Datos borrados: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
             'fecha' => now(),

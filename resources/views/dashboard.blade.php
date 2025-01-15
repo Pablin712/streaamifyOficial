@@ -43,11 +43,13 @@
         <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
         <input type="hidden" name="ventas_mes" value="{{ $ventas_mes }}">
 
-        <!-- Variables de historial -->
-        <input type="hidden" name="meses_historial" value="{{ $meses_historial }}">
-        <input type="hidden" name="ingresos_historial" value="{{ $ingresos_historial }}">
-        <input type="hidden" name="costos_historial" value="{{ $costos_historial }}">
-        <input type="hidden" name="ganancias_historial" value="{{ $ganancias_historial }}">
+        <!-- Variables para guardar estadísticas del día -->
+        <input type="hidden" name="activeUsers" value="{{ $activeUsers }}">
+        <input type="hidden" name="dailyRevenue" value="{{ $dailyRevenue }}">
+        <input type="hidden" name="dailyCost" value="{{ $dailyCost }}">
+        <input type="hidden" name="dailyBill" value="{{ $dailyBill }}">
+        <input type="hidden" name="dailySales" value="{{ $dailySales }}">
+        <input type="hidden" name="newCustomers" value="{{ $newCustomers }}">
 
         <!-- Variables de servicios específicos -->
         <input type="hidden" name="cuentas_netflix" value="{{ $cuentas_netflix }}">
@@ -838,15 +840,28 @@
             <p class="mt-3">Visualiza los gráficos de resultados del mes actual.</p>
         </div>
     </div>
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-chart-area me-1"></i>
-            Progreso en los últimos 6 meses
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-chart-area me-1"></i>
+                    Progreso en los últimos 20 días
+                </div>
+                <div class="card-body"><canvas id="myAreaChartDays" width="100%" height="50"></canvas></div>
+                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+            </div>
         </div>
-        <div class="card-body"><canvas id="myAreaChart" width="100%" height="30"></canvas></div>
-        <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+        <div class="col-lg-6"> {{-- class="card mb-4" --}}
+            <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-chart-area me-1"></i>
+                Progreso en los últimos 6 meses
+            </div>
+            <div class="card-body"><canvas id="myAreaChart" width="100%" height="50"></canvas></div>
+            <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+            </div>
+        </div>
     </div>
-
     <div class="row">
         <div class="col-lg-6">
             <div class="card mb-4">
@@ -921,7 +936,91 @@
                         fill: true, // Rellenar el área debajo de la línea
                         backgroundColor: 'rgba(28, 200, 138, 0.2)', // Color del área (con transparencia)
                         borderColor: 'rgba(28, 200, 138, 1)', // Color de la línea
-                        borderWidth: 1
+                        borderWidth: 1,
+                        hidden: false // Ocultar por defecto
+                    }
+                ]
+            },
+            options: {
+                responsive: true, // Hacer el gráfico responsivo
+                scales: {
+                    x: {
+                        beginAtZero: true // Comenzar el eje X desde 0
+                    },
+                    y: {
+                        beginAtZero: true // Comenzar el eje Y desde 0
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true, // Mostrar la leyenda
+                        position: 'top' // Posición de la leyenda
+                    },
+                    tooltip: {
+                        enabled: true // Habilitar los tooltips
+                    }
+                }
+            }
+        });
+    </script>
+    <script>
+        var ctxDays = document.getElementById('myAreaChartDays').getContext('2d');
+
+        var diasHistorial = @json($dateHistory).reverse();
+        var usuariosHistorial = @json($activeUsersHistory).reverse(); // Etiquetas de los meses, invertidas
+        var ingresosHistorial = @json($dailyRevenueHistory).reverse(); // Ingresos invertidos
+        var costosHistorial = @json($dailyCostHistory).reverse(); // Costos invertidos
+        var gastosHistorial = @json($dailyBillHistory).reverse();
+        var ventasHistorial = @json($dailySalesHistory).reverse();
+
+        var myAreaChartDays = new Chart(ctxDays, {
+            type: 'line', // Tipo de gráfico: línea (pero con área rellena)
+            data: {
+                labels: diasHistorial, // Etiquetas del eje X, que son los meses pasados desde el controlador
+                datasets: [{
+                        label: 'Usuarios', // Nombre de la primera serie (Ingresos)
+                        data: usuariosHistorial, // Los datos de la serie de ingresos
+                        fill: false, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(78, 115, 223, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(78, 115, 223, 1)', // Color de la línea
+                        borderWidth: 1,
+                        hidden: false // Ocultar por defecto
+                    },
+                    {
+                        label: 'Ingresos', // Nombre de la primera serie (Ingresos)
+                        data: ingresosHistorial, // Los datos de la serie de ingresos
+                        fill: false, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(78, 115, 223, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(78, 115, 223, 1)', // Color de la línea
+                        borderWidth: 1,
+                        hidden: true // Ocultar por defecto
+                    },
+                    {
+                        label: 'Costos', // Nombre de la segunda serie (Costos)
+                        data: costosHistorial, // Los datos de la serie de costos
+                        fill: false, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(255, 159, 64, 1)', // Color de la línea
+                        borderWidth: 1,
+                        hidden: true // Ocultar por defecto
+                    },
+                    {
+                        label: 'Gastos', // Nombre de la tercera serie (Ganancias)
+                        data: gastosHistorial, // Los datos de la serie de ganancias
+                        fill: false, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(255, 99, 132, 1)', // Color de la línea
+                        borderWidth: 1,
+                        hidden: true // Ocultar por defecto
+                    },
+                    {
+                        label: 'Ventas', // Nombre de la tercera serie (Ganancias)
+                        data: ventasHistorial, // Los datos de la serie de ganancias
+                        fill: true, // Rellenar el área debajo de la línea
+                        backgroundColor: 'rgba(28, 200, 138, 0.2)', // Color del área (con transparencia)
+                        borderColor: 'rgba(28, 200, 138, 1)', // Color de la línea
+                        borderWidth: 1,
+                        hidden: true // Ocultar por defecto
                     }
                 ]
             },

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\DailyStatistic;
 use App\Models\DetalleVenta;
 use App\Models\Venta;
 use App\Models\Cliente;
@@ -57,6 +57,16 @@ class ContabilidadController extends Controller
 
         $ventas_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->count();
         $ventas_ano = Venta::whereYear('fechaven', $year)->count();
+
+        
+        $today = Carbon::today();
+        $activeUsers = ViewUsuarioActivo::count();
+        $dailyRevenue = Venta::whereDate('created_at', $today)->sum('totalpagoven');
+        $dailyCost = Costo::whereDate('fechacos', $today)->sum('montocos');
+        $dailyBill = Gasto::whereDate('created_at', $today)->sum('montogas');
+        $dailySales = Venta::whereDate('created_at', $today)->count();
+        $newCustomers = Cliente::whereDate('created_at', $today)->count();
+        
 
         $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
         $espacios = 0;
@@ -224,6 +234,24 @@ class ContabilidadController extends Controller
         $ganancias_historial = $contabilidad->pluck('ganancias');
         $gastos_historial = $contabilidad->pluck('gastos');
 
+        // Obtener las últimas 6 estadísticas ordenadas por fecha (date)
+        $dailyStatistics = DailyStatistic::orderByDesc('date')
+            ->take(20)
+            ->get();
+
+        // Crear los arrays para las fechas y datos específicos
+        $dateHistory = $dailyStatistics->map(function ($item) {
+            // Devuelve la fecha en formato "d-m-Y"
+            return Carbon::parse($item->date)->format('d-m-Y');
+        });
+
+        $activeUsersHistory = $dailyStatistics->pluck('active_users');   // Historial de usuarios activos
+        $dailyRevenueHistory = $dailyStatistics->pluck('daily_revenue'); // Historial de ingresos diarios
+        $dailyCostHistory = $dailyStatistics->pluck('daily_cost');       // Historial de costos diarios
+        $dailyBillHistory = $dailyStatistics->pluck('daily_bill');       // Historial de facturas diarias
+        $dailySalesHistory = $dailyStatistics->pluck('daily_sales');     // Historial de ventas diarias
+        $newCustomersHistory = $dailyStatistics->pluck('new_customers'); // Historial de nuevos clientes
+
         return view('dashboard', compact(
             'ventas',
             'ingresos_mes',
@@ -240,6 +268,21 @@ class ContabilidadController extends Controller
             'ventas_mes',
             'ventas_ano',
             'espacios',
+
+            'activeUsers',
+            'dailyRevenue',
+            'dailyCost',
+            'dailyBill',
+            'dailySales',
+            'newCustomers',
+
+            'dateHistory',
+            'activeUsersHistory',
+            'dailyRevenueHistory',
+            'dailyCostHistory',
+            'dailyBillHistory',
+            'dailySalesHistory',
+            'newCustomersHistory',
 
             'meses_historial',
             'ingresos_historial',
@@ -329,6 +372,13 @@ class ContabilidadController extends Controller
         $cliente_mas_facturado = $request->input('cliente_mas_facturado');
         $ventas_mes = $request->input('ventas_mes');
 
+        $activeUsers = $request->input('activeUsers');
+        $dailyRevenue = $request->input('dailyRevenue');
+        $dailyCost = $request->input('dailyCost');
+        $dailyBill = $request->input('dailyBill');
+        $dailySales = $request->input('dailySales');
+        $newCustomers = $request->input('newCustomers');
+
         if ($costos_mes != 0) {
             $renta_variable = number_format($ingresos_mes / $costos_mes, 2);
         } else {
@@ -337,6 +387,7 @@ class ContabilidadController extends Controller
 
         $mes = now()->month;  // Obtiene el mes actual (1-12)
         $ano = now()->year;
+        $today = Carbon::today();
         $detalle = now()->format('M-y');
 
         Contabilidad::updateOrCreate(
@@ -354,6 +405,18 @@ class ContabilidadController extends Controller
                 'num_ventas' => $ventas_mes,
                 'ganancias' => $ingresos_mes - $costos_mes - $gastos_mes,  // Si necesitas calcular las ganancias
                 'renta' => $renta_variable,
+            ]
+        );
+
+        DailyStatistic::updateOrCreate(
+            ['date' => $today], // Fecha única
+            [
+                'active_users' => $activeUsers,
+                'daily_revenue' => $dailyRevenue,
+                'daily_cost' => $dailyCost,
+                'daily_bill' => $dailyBill,
+                'daily_sales' => $dailySales,
+                'new_customers' => $newCustomers,
             ]
         );
 

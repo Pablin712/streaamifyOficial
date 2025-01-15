@@ -36,10 +36,10 @@ class VentaController extends Controller
 
         $hoy = Carbon::today(); // Fecha del inicio del día
         $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
-        $ventas_dia = Venta::whereDate('fechaven',$hoy)->count();
+        $ventas_dia = Venta::whereDate('fechaven', $hoy)->count();
 
         // Pasar las ventas y los detalles de venta a la vista
-        return view('sales.ventas.index', compact('ventas','ingresos_dia','ventas_dia'));
+        return view('sales.ventas.index', compact('ventas', 'ingresos_dia', 'ventas_dia'));
     }
 
     /**
@@ -125,6 +125,9 @@ class VentaController extends Controller
         //$venta->refresh(); //linea importante que recupera el idven
         //dd($venta); verificar que la variable tenga los valores correctos
         // Registrar los detalles de venta
+        $descripcionDetalles = ""; // Para construir la descripción del historial
+        $totalDetalles = count($detalles); // Contar la cantidad total de detalles
+        $totalVenta = 0.00;
         foreach ($detalles as $detalle) {
             // Obtener el idcue de la cuenta
             $idcue = $detalle['cuenta'];
@@ -136,7 +139,7 @@ class VentaController extends Controller
             $idper = $idcue . '.' . $numeroper;
             //dd($detalle['descripcion']);
             // Guardar cada detalle en la tabla detalles_venta
-            $detalle=DetalleVenta::create([
+            $detalleRec = DetalleVenta::create([
                 'idven' => $venta->idven,
                 'idper' => $idper,
                 'descripciondet' => $detalle['descripcion'],
@@ -145,17 +148,16 @@ class VentaController extends Controller
                 'activodet' => true,
             ]);
 
-            Historial::create([
-                'accion' => 'Se creo el detalle venta: ' . $detalle->iddet,
-                'descripcion' =>  'Perteneciente a la venta' . $venta->idven, // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
-                'fecha' => now(),
-            ]);
+            // Agregar el monto al total de la venta
+            $totalVenta += $detalleRec->montodet;
+            $descripcionDetalles .= "Cuenta: {$idcue}, Perfil: {$numeroper}, Monto: {$detalleRec->montodet}; ";
         }
+        // Agregar el total de detalles a la descripción
+        $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
 
         Historial::create([
-            'accion' => 'Se creo la venta con ID: ' . $venta->idven,
-            'descripcion' =>  null, // Campo opcional
+            'accion' => 'Factura: ' . $venta->idven,
+            'descripcion' =>  "Detalles: $descripcionDetalles",
             'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -206,7 +208,7 @@ class VentaController extends Controller
 
         // Calcular el total de la venta sumando los montos de los detalles
         $total_venta = collect($detalles)->sum('monto');
-        $fecha = Carbon::today()->toDateString(); 
+        $fecha = Carbon::today()->toDateString();
         // Crear la nueva venta
         $ventaNueva = Venta::create([
             'idven' => $idVenta,
@@ -240,7 +242,7 @@ class VentaController extends Controller
             $idper = $idcue . '.' . $numeroper;
 
             // Guardar cada detalle en la tabla detalles_venta
-            $detalle2=DetalleVenta::create([
+            $detalle2 = DetalleVenta::create([
                 'idven' => $ventaNueva->idven,
                 'idper' => $idper,
                 'descripciondet' => $detalle['descripcion'],

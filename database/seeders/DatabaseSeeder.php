@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             //DetalleVentaSeeder::class,
             ContabilidadSeeder::class,
             //MantenimientoSeeder::class,
+            DailyStatisticSeeder::class,
         ]);
     }
 }
