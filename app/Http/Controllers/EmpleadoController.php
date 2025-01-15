@@ -63,7 +63,11 @@ class EmpleadoController extends Controller
 
         // Subir la foto si existe
         if ($request->hasFile('foto_url')) {
-            $data['foto_url'] = $request->file('foto_url')->store('fotos', 'public');
+            $file = $request->file('foto_url');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
+            $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos
+            $file->move($destinationPath, $filename); // Mover el archivo
+            $data['foto_url'] = 'fotos/' . $filename; // Ruta para guardar
         }
 
         Empleado::create($data);
@@ -130,7 +134,11 @@ class EmpleadoController extends Controller
 
         // Subir la foto si existe
         if ($request->hasFile('foto_url')) {
-            $data['foto_url'] = $request->file('foto_url')->store('fotos', 'public');
+            $file = $request->file('foto_url');
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
+            $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos
+            $file->move($destinationPath, $filename); // Mover el archivo
+            $data['foto_url'] = 'fotos/' . $filename; // Ruta para guardar
         }
 
         $empleado->update($data);

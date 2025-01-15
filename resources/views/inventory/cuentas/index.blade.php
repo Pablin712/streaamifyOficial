@@ -24,8 +24,13 @@
             background-color: #6a006a !important;
             /* Color morado más oscuro en hover */
         }
+        .btn-xs {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1;
+            border-radius: 0.2rem;
+        }
     </style>
-
 @endsection
 @section('h1', 'Cuentas')
 @section('descripcion')
@@ -34,7 +39,7 @@
             {{ session('success') }}
         </div>
     @endif
-    <p>Revisa las cuentas activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario 
+    <p>Revisa las cuentas activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario
         asociadas a los servicios de streaming pertenecientes a Streamify HQ.
     </p>
 @endsection
@@ -53,10 +58,9 @@
                 <th>ID</th>
                 <th>Servicio</th>
                 <th>Usuario</th>
-                <th>Contraseña</th>
-                <th>Vencimiento</th>
+                <th>Clave</th>
+                <th>Vence</th>
                 <th>Clientes</th>
-                {{-- <th>Espacio Disponible</th> --}}
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -98,11 +102,11 @@
                             $users = $cuenta->usuarios_activos;
                         @endphp
                         @if ($cuenta->valor->pantmaxval < $users)
-                            <span class="badge bg-dark">{{$users}}</span>
+                            <span class="badge bg-dark">{{ $users }}</span>
                         @elseif ($cuenta->valor->pantminval > $users)
-                            <span class="badge bg-danger">{{$users}}</span>
+                            <span class="badge bg-danger">{{ $users }}</span>
                         @else
-                            <span class="badge bg-success">{{$users}}</span>
+                            <span class="badge bg-success">{{ $users }}</span>
                         @endif
                     </td>
                     {{-- <td>
@@ -124,7 +128,8 @@
                             <span class="badge bg-success">Activa</span>
                         @endif
                         <!-- Botón para cambiar estado -->
-                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST" style="display:inline;">
+                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
+                            style="display:inline;">
                             @csrf
                             @method('PATCH')
                             <button type="submit" class="btn btn-dark btn-sm">
@@ -137,11 +142,11 @@
                         </form>
                     </td>
                     <td>
-                        <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning  "><i
+                        <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs"><i
                                 class="fas fa-edit"></i></a>
                         <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
                         @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success">
+                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success btn-xs">
                                 {{--  --}}
                                 <i class="fas fa-sync-alt"></i>
                             </a>
@@ -150,7 +155,7 @@
                             style="display: inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
+                            <button type="submit" class="btn btn-danger btn-xs"
                                 onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -348,6 +353,5 @@
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    
 
 @endsection
