@@ -19,12 +19,9 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\HistorialController;
 
-Route::get('/admin', HomeController::class);
+use App\Http\Controllers\LoginClienteController;
 
-Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
-Route::post('/admin/login', [LoginController::class, 'login'])->name('login');                      // Procesa el formulario del login
-Route::post('/admin/logout', [LoginController::class, 'logout'])->name('logout');    // Cierra la sesión
-
+//cliente
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
@@ -33,16 +30,30 @@ Route::get('/', function () {
     return view('principal');
 })->name('principal');
 
+Route::get('/shop',function(){
+    return view('shopping.index');
+})->name('shop');
+//probando
+Route::get('/login', function () {
+    return view('logincliente');
+})->name('logincliente');
+
+Route::controller(LoginClienteController::class)->group(function () {
+    Route::get('/cliente/login', 'showLoginForm')->name('cliente.login');
+    Route::post('/cliente/login', 'login')->name('cliente.login');
+    Route::post('/cliente/logout', 'logout')->name('cliente.logout');
+});
+
+
+// administración
+Route::get('/admin', HomeController::class);
+
+Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
+Route::post('/admin/login', [LoginController::class, 'login'])->name('login');                      // Procesa el formulario del login
+Route::post('/admin/logout', [LoginController::class, 'logout'])->name('logout');    // Cierra la sesión
 Route::get('/admin/recover',function(){
     return view('auth.recover');
 })->name('recover');
-//probando
-/*
-Route::get('/logincliente', function () {
-    return view('logincliente');
-})->name('logincliente');
-*/ 
-
 
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
 

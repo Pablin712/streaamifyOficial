@@ -1,109 +1,134 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streamify HQ - Login</title>
-    <link rel="stylesheet" href="{{ asset('css/login_styles.css') }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Login Cliente</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #E4B100, #274698);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            color: #333;
+        }
+
+        .form-container h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #274698;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .form-container .btn-primary {
+            background-color: #E4B100;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .form-container .btn-primary:hover {
+            background-color: #D41216;
+        }
+
+        .form-container .form-floating label {
+            color: #555;
+        }
+
+        .form-container .form-control {
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .form-container img {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 15px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-container .extra-links {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .form-container .extra-links a {
+            color: #274698;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .form-container .extra-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
-<style>
-    /* Estilización del contenedor principal */
-    .main-container {
-        display: flex;
-        width: 80%;
-        margin: 50px auto;
-        border: 2px solid #ccc;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
 
-    /* Sección izquierda en blanco */
-    .left-section {
-        flex: 1;
-        background-color: #FFFFFF;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    .logo-img {
-        max-width: 90%;
-        height: auto;
-    }
-
-    /* Sección derecha con fondo degradado */
-    .right-section {
-        flex: 1;
-        background: linear-gradient(to bottom, #E4B100, #F2D06B);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 30px;
-    }
-
-    .form-container {
-        width: 100%;
-        max-width: 400px;
-    }
-
-    .form-title {
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-
-    .btn-danger-custom {
-        background-color: #D41216;
-        color: #FFFFFF;
-        border: none;
-        width: 100px;
-        height: 40px;
-        margin-bottom: 10px;
-    }
-
-    .btn-primary-custom {
-        background-color: #274698;
-        color: #FFFFFF;
-        border: none;
-        width: 100px;
-        height: 40px;
-        text-decoration: none;
-    }
-
-    .input-field {
-        width: 100%;
-        margin-bottom: 10px;
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-</style>
 <body>
-<div class="main-container">
-    <!-- Sección izquierda con la imagen -->
-    <div class="left-section">
-        <img src="{{ asset('images/Icono.png') }}" alt="Streamify" class="logo-img">
-    </div>
-    
-    <!-- Sección derecha con fondo degradado y el formulario de inicio de sesión -->
-    <div class="right-section">
-        <form action="{{ route('login') }}" method="POST" class="form-container">
+    <div class="form-container">
+        <form action="{{ route('cliente.login') }}" method="POST">
             @csrf
-            <label class="form-title">Admin</label>
-            <br>
-            <label>Usuario</label>
-            <input type="text" name="usuarioemp" class="input-field" required>
-            <label>Contraseña</label>
-            <input type="password" name="passwordemp" class="input-field" required>
-            <br>
-            <button type="submit" class="btn btn-danger-custom">Login</button>
-            <br><br>
-            <a href="#" class="text-dark-custom">¿Olvidaste tu contraseña?</a>
-            <br>
-            <a href="{{ route('register') }}" class="btn btn-primary-custom mt-2">Sign up</a>
+            <img src="{{ asset('images/Icono.png') }}" alt="Logo">
+            <h1>Inicia Sesión</h1>
+
+            <!-- Validation Errors -->
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="floatingInput" name="email" placeholder="Usuario">
+                <label for="floatingInput">Usuario</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="floatingPassword" name="password"
+                    placeholder="Contraseña">
+                <label for="floatingPassword">Contraseña</label>
+            </div>
+
+            <button class="btn btn-primary w-100 py-2" type="submit">Iniciar Sesión</button>
+
+            <div class="extra-links mt-3">
+                <a href="#">¿Olvidaste tu contraseña?</a> <br>
+                <a href="#">¿No tienes cuenta? Regístrate</a>
+            </div>
         </form>
     </div>
-</div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+    </script>
 </body>
+
 </html>

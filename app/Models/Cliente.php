@@ -19,6 +19,21 @@ class Cliente extends Authenticatable
     // Define los atributos que puedes asignar masivamente
     protected $fillable = [
         'nombrecli',
-        'telefonocli'
+        'telefonocli',
+        'email',
+        'password',
+        'saldo',
     ];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
+    }
+    public function ventas()
+    {
+        return $this->hasMany(Venta::class, 'idcli', 'idcli');
+    }
 }
