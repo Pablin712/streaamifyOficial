@@ -35,6 +35,10 @@
                 <label for="passwordemp" class="form-label">Nueva Contraseña (opcional)</label>
                 <input type="password" name="passwordemp" id="passwordemp" class="form-control">
             </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" id="email" class="form-control">
+            </div>
             @if (Auth::user()->idrol == 'administrador')
                 <div class="mb-3">
                     <label for="idrol" class="form-label">Rol</label>

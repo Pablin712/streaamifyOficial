@@ -193,7 +193,8 @@
     <button class="btn btn-primary w-100 py-2" style="background-color: #E4B100;" type="submit">Sign in</button>
     
     <br>
-    <a class="btn btn-secondary py-1" style="background-color: #E4B100;" href="{{ route ('recover')}}">Recuperar Contraseña</button>
+    <a class="btn btn-secondary py-1" style="background-color: #E4B100;" href="{{ route('recover') }}">Recuperar Contraseña</a>
+
   </form>
 </main>
 

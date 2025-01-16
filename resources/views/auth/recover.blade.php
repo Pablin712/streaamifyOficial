@@ -88,10 +88,10 @@
     
     <!-- Sección derecha con fondo degradado y el formulario Solicitud -->
     <div class="right-section">
-        <form action="{{ route('recover') }}" method="POST" class="form-container">
+        <form action="{{ route('recover.email') }}" method="POST" class="form-container">
             @csrf
             <label>correo</label>
-            <input type="correo" name="correoemp" class="input-field" required>
+            <input type="email" name="email" id="email" class="input-field" required>
             <br>
             <button type="submit" class="btn btn-primary">Solicitar Cambio de Contraseña</button>
             <br>

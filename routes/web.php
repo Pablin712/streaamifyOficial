@@ -18,6 +18,7 @@ use App\Http\Controllers\InicioController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\HistorialController;
+use App\Http\Controllers\EmailController;
 
 Route::get('/admin', HomeController::class);
 
@@ -36,6 +37,9 @@ Route::get('/', function () {
 Route::get('/admin/recover',function(){
     return view('auth.recover');
 })->name('recover');
+
+Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->name('recover.email');
+
 //probando
 /*
 Route::get('/logincliente', function () {
