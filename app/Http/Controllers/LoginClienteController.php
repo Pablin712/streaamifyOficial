@@ -27,7 +27,7 @@ class LoginClienteController extends Controller
         if (!$cliente) {
             // Retorna un mensaje de error si el usuario no existe
             return back()->withErrors([
-                'usuarioemp' => 'El usuario no existe.',
+                'usuarioemp' => 'El usuario de cliente no existe.',
             ])->withInput($request->except('passwordemp'));
         }
 
@@ -35,7 +35,7 @@ class LoginClienteController extends Controller
         if (!Hash::check($request->password, $cliente->password)) {
             
             return back()->withErrors([
-                'password' => 'La contraseña es incorrecta.',
+                'password' => 'La contraseña de cliente es incorrecta.',
             ])->withInput($request->except('password'));
         }
 

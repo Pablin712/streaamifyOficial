@@ -20,7 +20,7 @@ use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\HistorialController;
 
 use App\Http\Controllers\LoginClienteController;
-
+use App\Http\Controllers\ShopController;
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
@@ -30,9 +30,7 @@ Route::get('/', function () {
     return view('principal');
 })->name('principal');
 
-Route::get('/shop',function(){
-    return view('shopping.index');
-})->name('shop');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 //probando
 Route::get('/login', function () {
     return view('logincliente');
@@ -43,7 +41,11 @@ Route::controller(LoginClienteController::class)->group(function () {
     Route::post('/cliente/login', 'login')->name('cliente.login');
     Route::post('/cliente/logout', 'logout')->name('cliente.logout');
 });
-
+/*
+Route::post('/cart/add/{producto}', [CarritoController::class, 'add'])->name('cart.add');
+Route::post('/comprar/{producto}', [CompraController::class, 'comprar'])->name('comprar');
+Route::post('/pedido/{producto}', [CompraController::class, 'pedido'])->name('pedido');
+*/
 
 // administración
 Route::get('/admin', HomeController::class);
