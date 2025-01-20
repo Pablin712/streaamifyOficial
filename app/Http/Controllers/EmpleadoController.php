@@ -54,6 +54,7 @@ class EmpleadoController extends Controller
             'passwordemp' => 'required|string|min:4', // Validar longitud y confirmación
             'idrol' => 'required|string',
             'foto_url' => 'nullable|image|max:2048',
+            'email' => 'nullable|email|max:255',
         ]);
 
         $data = $request->all();
@@ -110,6 +111,7 @@ class EmpleadoController extends Controller
             'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp,' . $idemp . ',idemp',
             'passwordemp' => 'nullable|string|min:4',
             'foto_url' => 'nullable|image|max:2048',
+            'email' => 'nullable|email|max:255',
         ];
 
         // Si el usuario es administrador, validar el campo `idrol`

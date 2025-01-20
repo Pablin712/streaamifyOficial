@@ -18,6 +18,7 @@ use App\Http\Controllers\InicioController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\HistorialController;
+use App\Http\Controllers\EmailController;
 
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ShopController;
@@ -59,6 +60,9 @@ Route::post('/admin/logout', [LoginController::class, 'logout'])->name('logout')
 Route::get('/admin/recover',function(){
     return view('auth.recover');
 })->name('recover');
+
+Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->name('recover.email');
+
 
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
 

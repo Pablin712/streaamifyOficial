@@ -19,12 +19,13 @@ return new class extends Migration
         });
         Schema::create('empleados', function (Blueprint $table) {
             $table->id('idemp'); // Clave primaria idemp
-            $table->string('nombreemp', 20); // Nombre del empleado
+            $table->string('nombreemp', 50); // Nombre del empleado
             $table->string('telefonoemp', 15)->nullable(); // Teléfono opcional
             $table->string('usuarioemp', 20); // Usuario para login
             $table->string('foto_url')->nullable(); // Columna para la foto, opcional
             $table->string('passwordemp', 60); // Contraseña para login
             $table->string('idrol', 20); // Rol asignado al empleado
+            $table->string('email', 50)->nullable();
             $table->timestamps(); // Incluye columnas created_at y updated_at
         
             // Llave foránea a roles.idrol

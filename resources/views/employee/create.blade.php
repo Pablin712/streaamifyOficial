@@ -33,6 +33,10 @@
                 <input type="password" name="passwordemp" id="passwordemp" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" id="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
                 <label for="idrol" class="form-label">Rol</label>
                 <select name="idrol" id="idrol" class="form-select" required>
                     <option value="vendedor" {{  old('idrol') === 'vendedor' ? 'selected' : '' }}>Vendedor</option>

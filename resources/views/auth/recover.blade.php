@@ -1,102 +1,97 @@
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streamify HQ - Recovery System</title>
-    <link rel="stylesheet" href="{{ asset('css/login_styles.css') }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Streamify HQ Recovery System">
+    <meta name="author" content="Streamify HQ">
+    <title>Recuperar Contraseña - Streamify HQ</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+    </script>
+    <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
+
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        .form-recover {
+            max-width: 380px;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .form-recover img {
+            max-width: 100px;
+            margin-bottom: 15px;
+        }
+
+        .form-recover h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .btn-recover {
+            background-color: #E4B100;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn-recover:hover {
+            background-color: #274698;
+        }
+
+        .alert {
+            text-align: left;
+        }
+
+        .form-text {
+            color: #6c757d;
+        }
+    </style>
 </head>
-<style>
-    /* Estilización del contenedor principal */
-    .main-container {
-        display: flex;
-        width: 80%;
-        margin: 50px auto;
-        border: 2px solid #ccc;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
 
-    /* Sección izquierda en blanco */
-    .left-section {
-        flex: 1;
-        background-color: #FFFFFF;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    .logo-img {
-        max-width: 90%;
-        height: auto;
-    }
-
-    /* Sección derecha con fondo degradado */
-    .right-section {
-        flex: 1;
-        background: linear-gradient(to bottom, #E4B100, #F2D06B);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 30px;
-    }
-
-    .form-container {
-        width: 100%;
-        max-width: 400px;
-    }
-
-    .form-title {
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-
-    .btn-danger-custom {
-        background-color: #D41216;
-        color: #FFFFFF;
-        border: none;
-        width: 100px;
-        height: 40px;
-        margin-bottom: 10px;
-    }
-
-    .btn-primary-custom {
-        background-color: #274698;
-        color: #FFFFFF;
-        border: none;
-        width: 100px;
-        height: 40px;
-        text-decoration: none;
-    }
-
-    .input-field {
-        width: 100%;
-        margin-bottom: 10px;
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-</style>
 <body>
-<div class="main-container">
-    <!-- Sección izquierda con la imagen -->
-    <div class="left-section">
-        <img src="{{ asset('images/Icono.png') }}" alt="Streamify" class="logo-img">
-    </div>
-    
-    <!-- Sección derecha con fondo degradado y el formulario Solicitud -->
-    <div class="right-section">
-        <form action="{{ route('recover') }}" method="POST" class="form-container">
+    <main class="form-recover">
+        <img src="{{ asset('images/Icono.png') }}" alt="Streamify HQ">
+        <h1 class="h3 mb-3 fw-normal">Recuperar Contraseña</h1>
+
+        @if (session('success'))
+            <div class="alert alert-success" role="alert">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <form action="{{ route('recover.email') }}" method="POST">
             @csrf
-            <label>correo</label>
-            <input type="correo" name="correoemp" class="input-field" required>
-            <br>
-            <button type="submit" class="btn btn-primary">Solicitar Cambio de Contraseña</button>
-            <br>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                <label for="email">Correo electrónico</label>
+            </div>
+            <button class="btn btn-recover w-100 py-2" type="submit">Solicitar Cambio</button>
         </form>
-    </div>
-</div>
+        <p class="mt-3 form-text">Ingresa el correo asociado a tu cuenta para recibir instrucciones de recuperación.</p>
+        <a href="{{ route('login') }}" class="text-decoration-none">Volver al inicio de sesión</a>
+    </main>
 </body>
+
 </html>
