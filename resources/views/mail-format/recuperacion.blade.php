@@ -40,7 +40,7 @@
             <h1>Recuperación de Contraseña</h1>
         </div>
         <div class="content">
-            <p>Estimado/a {{ $user}}, </p>
+            <p>Estimado/a {{ $user->nombreemp }}, </p>
             <p>Hemos recibido una solicitud para restablecer su contraseña. Su nueva contraseña es:</p>
             <p><strong>{{ $password }}</strong></p>
             <p>Por favor, utilice esta contraseña para iniciar sesión y asegúrese de cambiarla por una más segura una vez que tenga acceso a su cuenta.</p>
