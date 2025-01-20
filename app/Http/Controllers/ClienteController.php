@@ -8,11 +8,12 @@ use App\Models\ViewClientesUsuarios;
 
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
+
 class ClienteController extends Controller
 {
     public function index()
     {
-        
+
         $this->authorizeRole(['administrador', 'vendedor', 'tecnico']);
 
         $clientes = Cliente::all();
@@ -57,9 +58,9 @@ class ClienteController extends Controller
         $cliente = Cliente::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli. ' y su nombre es '.$cliente->nombrecli,
+            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli . ' y su nombre es ' . $cliente->nombrecli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -90,9 +91,9 @@ class ClienteController extends Controller
         $cliente = Cliente::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli. ' y su nombre es '.$cliente->nombrecli,
+            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli . ' y su nombre es ' . $cliente->nombrecli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -121,7 +122,7 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Se actualizo datos de el cliente con ID: ' . $idcli,
             'descripcion' =>  'Datos antiguos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -136,14 +137,53 @@ class ClienteController extends Controller
         $cliente = Cliente::findOrFail($idcli);
 
         Historial::create([
-            'accion' => 'Se eliminó el cliente con ID: ' . $idcli. ' y su nombre es '.$cliente->nombrecli,
+            'accion' => 'Se eliminó el cliente con ID: ' . $idcli . ' y su nombre es ' . $cliente->nombrecli,
             'descripcion' => 'Datos borrados: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         $cliente->delete();
 
         return redirect()->route('clientes')->with('success', 'Cliente eliminado con éxito.');
+    }
+    public function register(Request $request)
+    {
+        try{
+            // Validación de los datos del formulario
+        $request->validate([
+            'first_name' => 'required|string|max:255', // Primer nombre
+            'last_name' => 'required|string|max:255',  // Apellidos
+            'email' => 'required|email|unique:clientes,email', // Email único
+            'password' => [
+                'required',
+                'confirmed',
+                'min:6', // Mínimo de 6 caracteres
+                'regex:/[0-9]/', // Al menos un número
+                'regex:/[@$!%*?&]/', // Al menos un símbolo especial
+            ],
+        ]);
+        $request->merge([
+            'first_name' => ucwords($request->first_name),
+            'last_name' => ucwords($request->last_name)
+        ]);
+        // Crear el cliente en la base de datos
+        Cliente::create([
+            'nombrecli' => $request->first_name . ' ' . $request->last_name, // Combina nombres y apellidos
+            'email' => $request->email,
+            'password' => $request->password, // El atributo `password` ya aplica bcrypt automáticamente
+            'telefonocli' => $request->telefonocli ?? null, // Campo opcional (si quieres manejarlo)
+            'saldo' => 0, // Por defecto, saldo inicial en 0
+        ]);
+        // Redirigir con mensaje de éxito
+        return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
+        }
+        catch (\Illuminate\Validation\ValidationException $e) {
+            // Si hay errores de validación, redirigir con los errores y datos antiguos
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('error', 'Por favor, corrige los errores en el formulario.');
+        }
     }
     private function authorizeRole(array $roles)
     {

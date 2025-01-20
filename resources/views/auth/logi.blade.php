@@ -15,7 +15,7 @@
     <!-- Custom CSS -->
     <style>
         body {
-            background: linear-gradient(135deg, #E4B100, #274698);
+            background: #E4B100; /* linear-gradient(135deg, #E4B100, #274698); */
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -120,7 +120,7 @@
 
             <div class="extra-links mt-3">
                 <a href="#">¿Olvidaste tu contraseña?</a> <br>
-                <a href="#">¿No tienes cuenta? Regístrate</a>
+                <a href="{{ route('cliente.register')}}">¿No tienes cuenta? Regístrate</a>
             </div>
         </form>
     </div>

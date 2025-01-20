@@ -41,6 +41,9 @@ Route::controller(LoginClienteController::class)->group(function () {
     Route::post('/cliente/login', 'login')->name('cliente.login');
     Route::post('/cliente/logout', 'logout')->name('cliente.logout');
 });
+
+Route::post('/register', [ClienteController::class, 'register'])->name('cliente.register');
+
 /*
 Route::post('/cart/add/{producto}', [CarritoController::class, 'add'])->name('cart.add');
 Route::post('/comprar/{producto}', [CompraController::class, 'comprar'])->name('comprar');

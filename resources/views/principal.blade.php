@@ -1,55 +1,52 @@
 @extends('layouts.cliente')
 @section('header')
-    <!-- Mashead header-->
-    <header class="masthead">
-        <div class="container px-5">
-            <div class="row gx-5 align-items-center">
-                <div class="col-lg-6">
-                    <!-- Masthead text and app badges-->
-                    <div class="mb-5 mb-lg-0 text-center text-lg-start">
-                        <h1 class="display-1 lh-1 mb-3">Más que ver, vivir el Streaming Premium</h1>
-                        <p class="lead fw-normal text-muted mb-5">Únete a nuestras suscripciones premium y disfruta de acceso
-                            ilimitado a las mejores plataformas de streaming.
-                            Experimenta contenido exclusivo, calidad superior y la comodidad de ver lo que amas, cuando
-                            quieras.</p>
-                        <!-- Botón WhatsApp -->
-                        <div class="mt-4">
-                            {{--  
-                            <a href="https://wa.me/593961412826" target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6">
+                <!-- Masthead text and app badges-->
+                <div class="mb-5 mb-lg-0 text-center text-lg-start">
+                    <h1 class="display-1 lh-1 mb-3">Más que ver, vivir el Streaming Premium</h1>
+                    <p class="lead fw-normal text-muted mb-5">Únete a nuestras suscripciones premium y disfruta de acceso
+                        ilimitado a las mejores plataformas de streaming.
+                        Experimenta contenido exclusivo, calidad superior y la comodidad de ver lo que amas, cuando
+                        quieras.</p>
+                    <!-- Botón WhatsApp -->
+                    <div class="mt-4">
+                        {{--  
+                    <a href="https://wa.me/593961412826" target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
+                        <span class="d-flex align-items-center">
+                            <!-- Icono de WhatsApp -->
+                            <i class="bi bi-whatsapp me-2"></i>
+                            <span class="small">Contáctanos por WhatsApp</span>
+                        </span>
+                    </a>
+                    --}}
+                        <a href="https://wa.me/593961412826?text=Hola%20quiero%20más%20información%20sobre%20el%20servicio%20de"
+                            target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
+                            <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">
                                 <span class="d-flex align-items-center">
                                     <!-- Icono de WhatsApp -->
                                     <i class="bi bi-whatsapp me-2"></i>
-                                    <span class="small">Contáctanos por WhatsApp</span>
+                                    <span class="small">Contacta por WhatsApp</span>
                                 </span>
-                            </a>
-                            --}}
-                            <a href="https://wa.me/593961412826?text=Hola%20quiero%20más%20información%20sobre%20el%20servicio%20de"
-                                target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
-                                <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">
-                                    <span class="d-flex align-items-center">
-                                        <!-- Icono de WhatsApp -->
-                                        <i class="bi bi-whatsapp me-2"></i>
-                                        <span class="small">Contacta por WhatsApp</span>
-                                    </span>
-                                </button>
-                            </a>
-                        </div>
+                            </button>
+                        </a>
                     </div>
                 </div>
-                <div class="col-lg-6 d-flex align-items-center justify-content-center">
-                    <!-- Reemplazamos el dispositivo con una imagen promocional -->
-                    <div class="masthead-device-mockup">
-                        <div class="text-center">
-                            <!-- Aquí va la imagen promocional -->
-                            <img {{-- src="{{ asset('images/tik tok miniatura.png') }}" --}} src="{{ asset('images/cuadrado/combos/33.png') }}"
-                                alt="Promoción de Streaming" class="rounded shadow-lg"
-                                style="width: 80%; max-width: 600px; height: auto; object-fit: cover;" />
-                        </div>
+            </div>
+            <div class="col-lg-6 d-flex align-items-center justify-content-center">
+                <!-- Reemplazamos el dispositivo con una imagen promocional -->
+                <div class="masthead-device-mockup">
+                    <div class="text-center">
+                        <!-- Aquí va la imagen promocional -->
+                        <img {{-- src="{{ asset('images/tik tok miniatura.png') }}" --}} src="{{ asset('images/cuadrado/combos/33.png') }}"
+                            alt="Promoción de Streaming" class="rounded shadow-lg"
+                            style="width: 80%; max-width: 600px; height: auto; object-fit: cover;" />
                     </div>
                 </div>
             </div>
         </div>
-    </header>
+    </div>
 @endsection
 @section('sections')
     <section id="features" class="py-5 bg-light"> {{-- style="background-color: #E4B100;" --}}

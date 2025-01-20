@@ -76,7 +76,7 @@ return [
         // Provider para clientes
         'clientes' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Cliente::class, // Modelo Cliente
+            'model' => env('AUTH_MODEL',App\Models\Cliente::class), // Modelo Cliente
         ],
     ],
 

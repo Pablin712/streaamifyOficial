@@ -89,7 +89,7 @@
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">
                 <div class="text-center">
-                    <img src="{{ asset('images/cuadrado/combos/33.png') }}" alt="Promoción de Streaming"
+                    <img src="{{ asset('images/cuadrado/combos/35.png') }}" alt="Promoción de Streaming"
                         class="rounded shadow-lg" style="width: 80%; max-width: 600px; height: auto; object-fit: cover;" />
                 </div>
             </div>
