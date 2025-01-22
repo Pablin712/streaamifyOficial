@@ -67,7 +67,7 @@
                     </button>
                 </a>
                 <div class="d-flex align-items-center">
-                    @dd(Auth::guard('web')->user())
+                    {{-- @dd(Auth::guard('web')->user()) --}}
                     @if (Auth::guard('cliente')->check())
                         <!-- Menú de usuario autenticado -->
                         <div class="dropdown">

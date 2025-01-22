@@ -19,8 +19,11 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\TipoProductoController;
 
 use App\Http\Controllers\LoginClienteController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ShopController;
 //cliente
 Route::get('/register', function () {
@@ -202,4 +205,17 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
             Route::put('/mantenimientos/{id}', 'update')->name('mantenimientos.update');
             Route::delete('/mantenimientos/{id}', 'destroy')->name('mantenimientos.destroy');
         });
+
+        Route::prefix('gestion-productos')->group(function () {
+            // Rutas para Categorías
+            Route::get('/', [CategoriaController::class, 'index'])->name('gestion.index');
+            Route::post('categorias', [CategoriaController::class, 'store'])->name('categorias.store');
+            Route::put('categorias/{id}', [CategoriaController::class, 'update'])->name('categorias.update');
+            Route::delete('categorias/{id}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
+    
+            Route::post('tipos-producto', [TipoProductoController::class, 'store'])->name('tipos_producto.store');
+            Route::put('tipos-producto/{id}', [TipoProductoController::class, 'update'])->name('tipos_producto.update');
+            Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
+        });
+        Route::resource('productos', ProductoController::class);
 });

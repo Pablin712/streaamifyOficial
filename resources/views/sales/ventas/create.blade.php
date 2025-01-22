@@ -166,6 +166,55 @@
             </div>
         </div>
     </div>
+    <!-- Modal para editar detalle -->
+    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle de la Venta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarDetalle">
+                        <!-- Cuenta -->
+                        <div class="mb-3">
+                            <label for="editarCuenta" class="form-label">Cuenta</label>
+                            <input type="text" class="form-control" id="editarCuenta" readonly>
+                        </div>
+
+                        <!-- Perfil -->
+                        <div class="mb-3">
+                            <label for="editarPerfil" class="form-label">Perfil</label>
+                            <input type="text" class="form-control" id="editarPerfil" readonly>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="editarDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="editarDescripcion" rows="2" required></textarea>
+                        </div>
+
+                        <!-- Fecha de Vencimiento -->
+                        <div class="mb-3">
+                            <label for="editarFechaVencimiento" class="form-label">Fecha de Vencimiento</label>
+                            <input type="date" class="form-control" id="editarFechaVencimiento" required>
+                        </div>
+
+                        <!-- Monto -->
+                        <div class="mb-3">
+                            <label for="editarMonto" class="form-label">Monto</label>
+                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0"
+                                required>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalleBtn">Guardar
+                            Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('pie')
     <p>¿No deseas agregar una cuenta al stock? Vuelve a la página de listado:</p>

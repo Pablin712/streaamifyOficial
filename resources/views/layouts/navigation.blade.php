@@ -115,8 +115,7 @@
                         </div>
                         @endif {{-- finance collapsible end --}}
                         {{-- Aquí empieza el colapsable Sales --}}
-                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
-                        || Auth::user()->idrol == 'tecnico')
+                        @if(Auth::user()->idrol != 'contador')
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                             <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -126,8 +125,16 @@
                         <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
-                                <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
+                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
+                                    || Auth::user()->idrol == 'tecnico')
+                                    <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
+                                    <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
+                                @endif
+                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
+                                    || Auth::user()->idrol == 'bodeguero')
+                                    <a class="nav-link" href="{{ route('gestion.index') }}">Gestión de Productos</a>
+                                    <a class="nav-link" href="{{ route('productos.index') }}">Productos</a>
+                                @endif
                             </nav>
                         </div>
                         @endif

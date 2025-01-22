@@ -60,10 +60,8 @@
                                 <td>{{ $fechaVencimiento = $detalle->fechavendet }}</td>
                                 <td>${{ $monto = number_format($detalle->montodet, 2) }}</td>
                                 <td>
-                                    <span 
-                                        @php
-                                            $estado = $detalle->activodet 
-                                        @endphp
+                                    <span @php
+$estado = $detalle->activodet @endphp
                                         class="estado-{{ $detalle->iddet }} badge 
                                         @if ($estado) bg-success @else bg-danger @endif">
                                         @if ($estado)
@@ -83,6 +81,15 @@
                                     </button>
                                 </td>
                                 <td>
+                                    <!-- Botón Editar -->
+                                    <button type="button" class="btn btn-warning btn-sm editarDetalleBtn"
+                                        data-cuenta="{{ $cuenta }}" data-perfil="{{ $perfil }}"
+                                        data-descripcion="{{ $descripcion }}"
+                                        data-fechavencimiento="{{ $fechaVencimiento }}" data-monto="{{ $monto }}"
+                                        data-id="{{ $detalle->iddet }}" data-bs-toggle="modal"
+                                        data-bs-target="#editarDetalleModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                     <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -166,6 +173,55 @@
             </div>
         </div>
     </div>
+    <!-- Modal para editar detalle -->
+    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle de la Venta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarDetalle">
+                        <!-- Cuenta -->
+                        <div class="mb-3">
+                            <label for="editarCuenta" class="form-label">Cuenta</label>
+                            <input type="text" class="form-control" id="editarCuenta" readonly>
+                        </div>
+
+                        <!-- Perfil -->
+                        <div class="mb-3">
+                            <label for="editarPerfil" class="form-label">Perfil</label>
+                            <input type="text" class="form-control" id="editarPerfil" readonly>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="editarDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="editarDescripcion" rows="2" required></textarea>
+                        </div>
+
+                        <!-- Fecha de Vencimiento -->
+                        <div class="mb-3">
+                            <label for="editarFechaVencimiento" class="form-label">Fecha de Vencimiento</label>
+                            <input type="date" class="form-control" id="editarFechaVencimiento" required>
+                        </div>
+
+                        <!-- Monto -->
+                        <div class="mb-3">
+                            <label for="editarMonto" class="form-label">Monto</label>
+                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0"
+                                required>
+                        </div>
+
+                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalleBtn">Guardar
+                            Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('pie')
@@ -175,6 +231,9 @@
 
 @section('scripts')
     <script>
+        let detalleEditando = null; // Variable para guardar el detalle que se está editando
+
+        // Cambiar estado (mantiene la funcionalidad existente)
         document.querySelectorAll('.toggleEstadoBtn').forEach(button => {
             button.addEventListener('click', function() {
                 const detalleId = this.getAttribute('data-id');
@@ -195,7 +254,7 @@
                 // Actualizamos el atributo "data-estado" para reflejar el cambio
                 this.setAttribute('data-estado', estado ? '0' : '1');
 
-                // Opcional: Cambiar el ícono del botón también
+                // Cambiar el ícono del botón también
                 const icon = this.querySelector('i');
                 if (estado) {
                     icon.classList.remove('fa-toggle-on');
@@ -206,17 +265,60 @@
                 }
             });
         });
-    </script>
-    <script>
-        // Inicializa Select2 en el select con el id 'idcli'
-        $(document).ready(function() {
-            $('#idcli').select2({
-                placeholder: "Selecciona un Cliente",
-                allowClear: true // Permite borrar la selección
-            });
+
+        // Función para abrir el modal de edición y cargar los datos
+        $(document).on('click', '.editarDetalleBtn', function() {
+            const cuenta = $(this).closest('tr').find('td').eq(0).text();
+            const perfil = $(this).closest('tr').find('td').eq(1).text();
+            const descripcion = $(this).closest('tr').find('td').eq(2).text();
+            const fechaVencimiento = $(this).closest('tr').find('td').eq(3).text();
+            const monto = parseFloat($(this).closest('tr').find('td').eq(4).text().replace('$', '').trim());
+
+            // Guardar la referencia a la fila que se está editando
+            detalleEditando = $(this).closest('tr');
+
+            // Cargar los valores en los campos del modal
+            $('#editarCuenta').val(cuenta);
+            $('#editarPerfil').val(perfil);
+            $('#editarDescripcion').val(descripcion);
+            $('#editarFechaVencimiento').val(fechaVencimiento);
+            $('#editarMonto').val(monto);
+
+            // Abrir el modal de edición
+            $('#editarDetalleModal').modal('show');
         });
 
-        // Manejo del formulario para agregar detalles a la venta
+        // Guardar cambios en el detalle editado
+        $('#guardarCambiosDetalleBtn').on('click', function() {
+            if (!detalleEditando) return; // Si no hay un detalle cargado, salir
+
+            // Obtener los valores del modal
+            const descripcion = $('#editarDescripcion').val();
+            const fechaVencimiento = $('#editarFechaVencimiento').val();
+            const nuevoMonto = parseFloat($('#editarMonto').val());
+
+            // Validar los campos
+            if (descripcion && fechaVencimiento && !isNaN(nuevoMonto)) {
+                // Obtener el monto anterior de la fila editada
+                const montoAnterior = parseFloat(detalleEditando.find('td').eq(4).text().replace('$', '').trim());
+
+                // Actualizar los datos en la fila correspondiente
+                detalleEditando.find('td').eq(2).text(descripcion);
+                detalleEditando.find('td').eq(3).text(fechaVencimiento);
+                detalleEditando.find('td').eq(4).text(`$${nuevoMonto.toFixed(2)}`);
+
+                // Recalcular el total de la venta (ajustando con la diferencia entre el nuevo y el anterior)
+                const totalVentaActual = parseFloat($('#total-venta').text());
+                const nuevoTotal = totalVentaActual - montoAnterior + nuevoMonto;
+                $('#total-venta').text(nuevoTotal.toFixed(2));
+
+                // Cerrar el modal
+                $('#editarDetalleModal').modal('hide');
+            } else {
+                alert('Por favor, completa todos los campos correctamente.');
+            }
+        });
+        // Manejo para agregar detalles (mantiene la funcionalidad existente)
         $('#guardarDetalleBtn').on('click', function() {
             var cuenta = $('#selectCuenta').val();
             var perfil = $('#selectPerfil').val();
@@ -228,26 +330,29 @@
                 var totalVenta = parseFloat($('#total-venta').text()) + monto;
 
                 var nuevaFila = `<tr>
-                    <td>${cuenta}</td>
-                    <td>${perfil}</td>
-                    <td>${descripcion}</td>
-                    <td>${fechaVencimiento}</td>
-                    <td>$${monto.toFixed(2)}</td>
-                    <td>
-                        <span class="estado-${cuenta} badge ${estado ? 'bg-success' : 'bg-danger'}">
-                            ${estado ? 'Activa' : 'Vencida'}
-                        </span>
-                        <button type="button" class="btn btn-dark btn-sm toggleEstadoBtn"
-                            data-id="${cuenta}" data-estado="${estado ? '1' : '0'}">
-                            <i class="fas ${estado ? 'fa-toggle-on' : 'fa-toggle-off'} fa-xs"></i>
-                        </button>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>`;
+                <td>${cuenta}</td>
+                <td>${perfil}</td>
+                <td>${descripcion}</td>
+                <td>${fechaVencimiento}</td>
+                <td>$${monto.toFixed(2)}</td>
+                <td>
+                    <span class="estado-${cuenta} badge ${estado ? 'bg-success' : 'bg-danger'}">
+                        ${estado ? 'Activa' : 'Vencida'}
+                    </span>
+                    <button type="button" class="btn btn-dark btn-sm toggleEstadoBtn"
+                        data-id="${cuenta}" data-estado="${estado ? '1' : '0'}">
+                        <i class="fas ${estado ? 'fa-toggle-on' : 'fa-toggle-off'} fa-xs"></i>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-warning btn-sm editarDetalleBtn">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
 
                 $('#tabla-detalles').append(nuevaFila);
                 $('#total-venta').text(totalVenta.toFixed(2));
@@ -264,52 +369,49 @@
             }
         });
 
-        // Eliminar fila de la tabla
+        // Eliminar una fila de detalles (mantiene la funcionalidad existente)
         $('#tabla-detalles').on('click', '.eliminarDetalleBtn', function() {
             var montoEliminado = parseFloat($(this).closest('tr').find('td').eq(4).text().replace('$', ''));
             var totalVenta = parseFloat($('#total-venta').text()) - montoEliminado;
             $(this).closest('tr').remove();
             $('#total-venta').text(totalVenta.toFixed(2));
         });
-    </script>
-    <script>
-        document.getElementById('form-venta').addEventListener('submit', function(event) {
-            event.preventDefault(); // Evitar que se envíe el formulario inmediatamente
-
-            // Crear un arreglo para almacenar los detalles de venta
-            let detalles = [];
-
-            // Obtener todas las filas de la tabla #tabla-detalles (cada fila es un detalle de venta)
-            document.querySelectorAll('#tabla-detalles tr').forEach(function(row) {
-                // Obtener los valores de cada celda de la fila
-                let cuenta = row.cells[0].innerText; // La primera celda es la Cuenta
-                let perfil = row.cells[1].innerText; // La segunda celda es el Perfil
-                let descripcion = row.cells[2].innerText; // La tercera celda es la Descripción
-                let fechaVencimiento = row.cells[3].innerText; // La cuarta celda es la Fecha de Vencimiento
-                let monto = parseFloat(row.cells[4].innerText.replace('$', '')
-                    .trim()); // La quinta celda es el Monto
-                let estadoBadge = row.querySelector('.toggleEstadoBtn');
-                let estado = estadoBadge.getAttribute('data-estado') ===
-                '1'; // Capturamos el valor actualizado
-
-                // Asegurarse de que los campos no estén vacíos (esto es opcional, según tu caso)
-                if (cuenta && perfil && descripcion && fechaVencimiento && monto) {
-                    // Agregar cada detalle al arreglo
-                    detalles.push({
-                        cuenta: cuenta,
-                        perfil: perfil,
-                        descripcion: descripcion,
-                        fecha_vencimiento: fechaVencimiento,
-                        monto: monto,
-                        estado: estado
-                    });
+        // Función para calcular y actualizar el total de la venta
+        function actualizarTotalVenta() {
+            let total = 0;
+            $('#tabla-detalles tr').each(function() {
+                const monto = parseFloat($(this).find('td').eq(4).text().replace('$', '').trim());
+                if (!isNaN(monto)) {
+                    total += monto;
                 }
             });
+            $('#total-venta').text(total.toFixed(2));
+        }
+        // Enviar los detalles al backend (mantiene la funcionalidad existente)
+        document.getElementById('form-venta').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-            // Asignar los detalles serializados al campo oculto para enviarlos en el formulario
+            let detalles = [];
+            document.querySelectorAll('#tabla-detalles tr').forEach(function(row) {
+                let cuenta = row.cells[0].innerText;
+                let perfil = row.cells[1].innerText;
+                let descripcion = row.cells[2].innerText;
+                let fechaVencimiento = row.cells[3].innerText;
+                let monto = parseFloat(row.cells[4].innerText.replace('$', '').trim());
+                let estadoBadge = row.querySelector('.toggleEstadoBtn');
+                let estado = estadoBadge.getAttribute('data-estado') === '1';
+
+                detalles.push({
+                    cuenta,
+                    perfil,
+                    descripcion,
+                    fecha_vencimiento: fechaVencimiento,
+                    monto,
+                    estado
+                });
+            });
+
             document.getElementById('detalles_venta').value = JSON.stringify(detalles);
-
-            // Ahora enviamos el formulario
             this.submit();
         });
     </script>
