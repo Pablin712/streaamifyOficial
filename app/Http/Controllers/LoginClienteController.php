@@ -40,7 +40,7 @@ class LoginClienteController extends Controller
         }
 
         // Autenticar al usuario manualmente
-        Auth::login($cliente);
+        Auth::guard('cliente')->login($cliente);
         // Redirigir al dashboard o ruta protegida
         return redirect()->route('shop')->with('success', 'Inicio de sesión exitoso.');
     }

@@ -67,21 +67,29 @@
                     </button>
                 </a>
                 <div class="d-flex align-items-center">
+<<<<<<< Updated upstream
                     {{-- @dd(Auth::guard('web')->user()) --}}
+=======
+>>>>>>> Stashed changes
                     @if (Auth::guard('cliente')->check())
                         <!-- Menú de usuario autenticado -->
                         <div class="dropdown">
                             <button class="btn btn-light border rounded-pill text-dark fw-bold dropdown-toggle"
                                 type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false"
                                 style="background-color: #E4B100;">
-                                <i class="bi bi-person-circle me-2 text-dark"></i>{{ auth()->user()->name }}
+                                <i class="bi bi-person-circle me-2 text-dark"></i>{{ Auth::guard('cliente')->user()->nombrecli }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu"
                                 style="background-color: #FFFFFF; border-color: #E4B100;">
                                 <li><a class="dropdown-item text-dark fw-semibold"
-                                        href="{{ route('profile') }}">Perfil</a></li>
-                                <li><a class="dropdown-item text-danger fw-semibold" href="{{ route('logout') }}">Cerrar
-                                        sesión</a></li>
+                                        href="">Perfil</a></li>
+                                <li><a class="dropdown-item text-danger fw-semibold" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    Cerrar sesión
+                                    </a>
+                                </li>
+                                    <form id="logout-form" action="{{ route('cliente.logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                    </form>
                             </ul>
                         </div>
                     @else
