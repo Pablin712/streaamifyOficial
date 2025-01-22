@@ -67,10 +67,6 @@
                     </button>
                 </a>
                 <div class="d-flex align-items-center">
-<<<<<<< Updated upstream
-                    {{-- @dd(Auth::guard('web')->user()) --}}
-=======
->>>>>>> Stashed changes
                     @if (Auth::guard('cliente')->check())
                         <!-- Menú de usuario autenticado -->
                         <div class="dropdown">
