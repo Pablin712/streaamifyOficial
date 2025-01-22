@@ -119,7 +119,7 @@
             <button class="btn btn-primary w-100 py-2" type="submit">Iniciar Sesión</button>
 
             <div class="extra-links mt-3">
-                <a href="#">¿Olvidaste tu contraseña?</a> <br>
+                <a href="{{ route('cliente.recover') }}">¿Olvidaste tu contraseña?</a> <br>
                 <a href="{{ route('cliente.register')}}">¿No tienes cuenta? Regístrate</a>
             </div>
         </form>

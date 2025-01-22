@@ -43,8 +43,13 @@ Route::get('/login', function () {
 Route::controller(LoginClienteController::class)->group(function () {
     Route::get('/cliente/login', 'showLoginForm')->name('cliente.login');
     Route::post('/cliente/login', 'login')->name('cliente.login');
-    Route::post('/cliente/logout', 'logout')->name('cliente.logout');
+    Route::post('/cliente/logout', 'logout')->name('cliente.logout'); 
+    Route::get('/cliente/recover',function(){
+        return view('auth.recoverCliente');
+    })->name('cliente.recover');   
 });
+
+
 
 Route::post('/register', [ClienteController::class, 'register'])->name('cliente.register');
 
@@ -64,6 +69,8 @@ Route::get('/admin/recover',function(){
     return view('auth.recover');
 })->name('recover');
 
+
+Route::post('/cliente/recover', [EmailController::class, 'sendRecoverClienteEmail'])->name('recoverCliente.email');
 Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->name('recover.email');
 
 
