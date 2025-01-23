@@ -36,9 +36,6 @@ Route::get('/', function () {
 
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 //probando
-Route::get('/login', function () {
-    return view('logincliente');
-})->name('logincliente');
 
 Route::controller(LoginClienteController::class)->group(function () {
     Route::get('/cliente/login', 'showLoginForm')->name('cliente.login');

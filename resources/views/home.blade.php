@@ -58,8 +58,6 @@
                             --}}
                             <a href="{{ route('login') }}" class="btn rounded-pill px-4"
                                 style="background-color: #E4B100; color: #1D1D1B; border: none;">Iniciar Sesión</a>
-                            <a href="{{ route('register') }}" class="btn rounded-pill px-4"
-                                style="background-color: #575756; color: #FFFFFF; border: none;">Registrarse</a>
 
                         </div>
                     </div>

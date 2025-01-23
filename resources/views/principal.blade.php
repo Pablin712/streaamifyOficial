@@ -1,4 +1,5 @@
 @extends('layouts.cliente')
+@section('title','Streamify HQ')
 @section('header')
     <div class="container px-5">
         <div class="row gx-5 align-items-center">

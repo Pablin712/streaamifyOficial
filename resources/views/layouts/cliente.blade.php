@@ -45,7 +45,7 @@
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
         <div class="container px-5">
-            <a class="navbar-brand fw-bold" href="#page-top">Streamify HQ</a>
+            <a class="navbar-brand fw-bold" href="{{route('principal')}}">Streamify HQ</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive"
                 aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                 Menu
@@ -53,9 +53,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ms-auto me-4 my-3 my-lg-0">
-                    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
-                    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a></li>
-                    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a></li>
+                    <li class="nav-item"><a class="nav-link me-lg-3"
+                            href="{{ route('principal') }}#features">Fortalezas</a></li>
+                    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+                    </li>
                 </ul>
                 <a href="https://wa.me/593961412826" target="_blank" class="me-3">
                     <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">
@@ -68,29 +71,35 @@
                 </a>
                 <div class="d-flex align-items-center">
                     @if (Auth::guard('cliente')->check())
+                        <!-- Mostrar saldo del cliente -->
+                        <span class="me-3 text-dark fw-bold">
+                            Saldo: ${{ number_format(Auth::guard('cliente')->user()->saldo, 2) }}
+                        </span>
                         <!-- Menú de usuario autenticado -->
                         <div class="dropdown">
                             <button class="btn btn-light border rounded-pill text-dark fw-bold dropdown-toggle"
                                 type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false"
                                 style="background-color: #E4B100;">
-                                <i class="bi bi-person-circle me-2 text-dark"></i>{{ Auth::guard('cliente')->user()->nombrecli }}
+                                <i
+                                    class="bi bi-person-circle me-2 text-dark"></i>{{ Auth::guard('cliente')->user()->nombrecli }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu"
                                 style="background-color: #FFFFFF; border-color: #E4B100;">
-                                <li><a class="dropdown-item text-dark fw-semibold"
-                                        href="">Perfil</a></li>
-                                <li><a class="dropdown-item text-danger fw-semibold" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    Cerrar sesión
+                                <li><a class="dropdown-item text-dark fw-semibold" href="">Perfil</a></li>
+                                <li><a class="dropdown-item text-danger fw-semibold" onclick="document.getElementById('logout-form').submit();">
+                                        Cerrar sesión
                                     </a>
                                 </li>
-                                    <form id="logout-form" action="{{ route('cliente.logout') }}" method="POST" class="d-none">
+                                <form id="logout-form" action="{{ route('cliente.logout') }}" method="POST"
+                                    class="d-none">
                                     @csrf
-                                    </form>
+                                </form>
                             </ul>
                         </div>
                     @else
                         <!-- Opciones de Sign Up y Login -->
-                        <a href="{{ route('cliente.login') }}" class="btn btn-outline-primary me-2 rounded-pill fw-bold"> {{-- style="border-color: #274698; color: #274698; --}}
+                        <a href="{{ route('cliente.login') }}"
+                            class="btn btn-outline-primary me-2 rounded-pill fw-bold"> {{-- style="border-color: #274698; color: #274698; --}}
                             <i class="bi bi-box-arrow-in-right me-1"></i>Login
                         </a>
                         <a href="{{ route('register') }}" class="btn rounded-pill fw-bold text-white"
@@ -103,6 +112,7 @@
             </div>
         </div>
     </nav>
+    @yield('mensaje')
     <header class="masthead">
         @yield('header')
     </header>
