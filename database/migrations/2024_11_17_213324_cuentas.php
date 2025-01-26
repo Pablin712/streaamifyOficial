@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('usuariocue', 50); // Cambiado a usuariocue
             $table->string('contrasenacue', 50); // Cambiado a contrasenacue
             $table->boolean('caidacue'); // Cambiado a caidacue
+            $table->boolean('activocue')->default(true); // Cambiado a activodet
             $table->timestamps(); // Incluye columnas created_at y updated_at
             
             $table->foreign('idval')

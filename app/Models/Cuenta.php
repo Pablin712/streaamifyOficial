@@ -24,7 +24,8 @@ class Cuenta extends Model
         'fechavencue',
         'usuariocue',
         'contrasenacue',
-        'caidacue'
+        'caidacue',
+        'activocue'
     ];
     public function valor()
     {

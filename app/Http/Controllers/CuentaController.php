@@ -14,12 +14,13 @@ use App\Models\DetalleVenta;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\Historial;
+
 class CuentaController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico', 'vendedor','contador']);
-        $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get(); // Cargar valor asociado
+        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico', 'vendedor', 'contador']);
+        $cuentas = Cuenta::with(['valor'])->where('activocue', true)->orderBy('fechavencue')->get(); // Cargar valor asociado
         // Inicializar una colección vacía para los perfiles
         $perfiles = collect();
 
@@ -76,7 +77,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se creo la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' =>  'Datos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(),  // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Comprobar si los datos de costo están presentes
@@ -98,7 +99,7 @@ class CuentaController extends Controller
             Historial::create([
                 'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
                 'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(),  // Almacena el nombre del usuario
+                'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
         }
@@ -114,8 +115,8 @@ class CuentaController extends Controller
         $cuenta->save();
         Historial::create([
             'accion' => 'Se actualizo el estado de cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' =>  'estado cambiado a '.$cuenta->caidacue,
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(),  // Almacena el nombre del usuario
+            'descripcion' =>  'estado cambiado a ' . $cuenta->caidacue,
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),  // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -144,9 +145,9 @@ class CuentaController extends Controller
         $mensaje .= "{$perfil->pinper}\n";
 
         Historial::create([
-            'accion' => 'Se solicito los datos de perfil'. $perfil->numeroper .' de la cuenta: ' . $cuenta->idcue,
+            'accion' => 'Se solicito los datos de perfil' . $perfil->numeroper . ' de la cuenta: ' . $cuenta->idcue,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Devolver el mensaje al frontend
@@ -189,7 +190,7 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se actualizo la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp .' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -218,23 +219,20 @@ class CuentaController extends Controller
     {
         $cuenta = Cuenta::findOrFail($idcue);
         // Verificar si los perfiles están registrados en detalles_venta
-        foreach ($cuenta->perfiles as $perfil) {
-            $perfilInDetalleVenta = DetalleVenta::where('idper', $perfil->idper)->exists();
+        $cuentaInUsuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->exists();
 
-            if ($perfilInDetalleVenta) {
-                return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más perfiles están registrados en detalles_venta.');
-            }
+        if ($cuentaInUsuariosActivos) {
+            return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más clientes aun la usan');
         }
         Historial::create([
-            'accion' => 'Se eliminaron los datos de la cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' =>  'Datos Eliminados: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'accion' => 'Se desactivó la cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' =>  'Datos inactivos: ' . json_encode($cuenta), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
-        $cuenta->perfiles()->delete();
-        $cuenta->delete();
+        $cuenta->update(['activocue' => false]);
 
-        return redirect()->route('cuentas')->with('success', 'Cuenta eliminada con éxito.');
+        return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
     }
     private function authorizeRole(array $roles)
     {
