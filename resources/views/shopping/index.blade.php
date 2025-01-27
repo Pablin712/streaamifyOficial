@@ -102,7 +102,7 @@
     <section id="inmediata-individual" class="py-5 bg-light">
         <div class="container">
             <h2 class="text-center fw-bold mb-5">Entrega Inmediata - Individual</h2>
-            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosInmediataIndividual as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
@@ -158,7 +158,7 @@
     <section id="combos" class="py-5">
         <div class="container">
             <h2 class="text-center fw-bold mb-5">Combos</h2>
-            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosCombos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
@@ -188,7 +188,7 @@
                                 <!-- Hacer Pedido para otros -->
                                 <form action="#" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
-                                    <button type="submit" class="btn btn-warning btn-sm">Hacer Pedido</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Pedir</button>
                                 </form>
                             </div>
                         </div>
@@ -202,7 +202,7 @@
     <section id="pedidos" class="py-5 bg-light">
         <div class="container">
             <h2 class="text-center fw-bold mb-5">Pedidos</h2>
-            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosPedidos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
@@ -233,7 +233,7 @@
                                 <!-- Hacer Pedido para otros -->
                                 <form action="#" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
-                                    <button type="submit" class="btn btn-warning btn-sm">Hacer Pedido</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Pedir</button>
                                 </form>
                             </div>
                         </div>
@@ -247,7 +247,7 @@
     <section id="personalizadas" class="py-5">
         <div class="container">
             <h2 class="text-center fw-bold mb-5">Personalizadas</h2>
-            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosPersonalizados as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
@@ -278,7 +278,7 @@
                                 <!-- Hacer Pedido para otros -->
                                 <form action="#" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
-                                    <button type="submit" class="btn btn-warning btn-sm">Hacer Pedido</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Pedir</button>
                                 </form>
                             </div>
                         </div>
@@ -292,7 +292,7 @@
     <section id="completos" class="py-5 bg-light">
         <div class="container">
             <h2 class="text-center fw-bold mb-5">Completos</h2>
-            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosCompletos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
@@ -323,7 +323,7 @@
                                 <!-- Hacer Pedido para otros -->
                                 <form action="#" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
-                                    <button type="submit" class="btn btn-warning btn-sm">Hacer Pedido</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">Pedir</button>
                                 </form>
                             </div>
                         </div>

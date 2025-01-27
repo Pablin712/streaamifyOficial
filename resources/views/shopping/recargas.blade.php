@@ -7,10 +7,15 @@
     <div class="row gx-5 align-items-center">
         <div class="col-lg-6">
             <h1 class="display-1 lh-1 mb-3">Recarga tu saldo fácilmente</h1>
-            <p class="lead fw-normal text-muted mb-5">Selecciona un banco para realizar tu recarga de saldo.</p>
+            <p class="lead fw-normal text-muted mb-5">Selecciona un banco para realizar tu recarga de saldo.
+                No pongas descripción en el comprobante de pago.
+            </p>
         </div>
-        <div class="col-lg-6 text-center">
-            <img src="{{ asset('images/recargar_saldo.png') }}" alt="Recargar Saldo" class="img-fluid">
+        <div class="col-lg-6 d-flex align-items-center justify-content-center">
+            <div class="text-center">
+            <img src="{{ asset('images/saldo.png') }}" alt="Recargar Saldo" class="img-fluid" 
+            style="width: 80%; max-width: 600px; height: auto; object-fit: cover;">
+            </div>
         </div>
     </div>
 </div>
@@ -87,7 +92,7 @@
                                 </div>
                                 <div class="modal-body">
                                     <input type="hidden" name="idban" value="{{ $banco->idban }}">
-                                    <input type="hidden" name="idcli" value="{{ Auth::user()->idcli }}">
+                                    {{-- <input type="hidden" name="idcli" value="{{ Auth::user()->idcli }}"> --}}
                                     <div class="mb-3">
                                         <label for="numcomprobante" class="form-label">Número de Comprobante</label>
                                         <input type="text" class="form-control" id="numcomprobante" name="numcomprobante"
@@ -95,7 +100,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label for="valor" class="form-label">Valor a Recargar</label>
-                                        <input type="number" class="form-control" id="valor" name="valor" step="0.01"
+                                        <input type="number" class="form-control" id="valor" name="valor" step="0.01" min="2"
                                             required>
                                     </div>
                                     <div class="mb-3">
