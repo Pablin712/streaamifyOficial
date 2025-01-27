@@ -39,7 +39,9 @@ class CuentaController extends Controller
             }
         }
         foreach ($cuentas as $cuenta) {
-            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)
+            ->where('fecha_vencimiento', '>', now()) // Solo usuarios con fecha_vencimiento mayor a hoy
+            ->count();
             $cuenta->usuarios_activos = $usuarios;
         }
 
