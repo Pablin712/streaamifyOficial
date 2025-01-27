@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\TipoProductoController;
 
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;
 //cliente
 Route::get('/register', function () {
@@ -40,16 +42,23 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::controller(LoginClienteController::class)->group(function () {
     Route::get('/cliente/login', 'showLoginForm')->name('cliente.login');
     Route::post('/cliente/login', 'login')->name('cliente.login');
-    Route::post('/cliente/logout', 'logout')->name('cliente.logout'); 
-    Route::get('/cliente/recover',function(){
+    Route::post('/cliente/logout', 'logout')->name('cliente.logout');
+    Route::get('/cliente/recover', function () {
         return view('auth.recoverCliente');
-    })->name('cliente.recover');   
+    })->name('cliente.recover');
 });
 
 
 
 Route::post('/register', [ClienteController::class, 'register'])->name('cliente.register');
 
+//rutas protegidas del cliente
+//Route::middleware(['auth'])->group(function () {
+    Route::controller(RecargaController::class)->group(function () {
+        Route::get('/recargar-saldo', 'recargarSaldo')->name('recargar.index');
+        Route::post('/recargar-saldo', 'procesarRecarga')->name('recargar.saldo');
+    });
+//});
 /*
 Route::post('/cart/add/{producto}', [CarritoController::class, 'add'])->name('cart.add');
 Route::post('/comprar/{producto}', [CompraController::class, 'comprar'])->name('comprar');
@@ -62,7 +71,7 @@ Route::get('/admin', HomeController::class);
 Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
 Route::post('/admin/login', [LoginController::class, 'login'])->name('login');                      // Procesa el formulario del login
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('logout');    // Cierra la sesión
-Route::get('/admin/recover',function(){
+Route::get('/admin/recover', function () {
     return view('auth.recover');
 })->name('recover');
 
@@ -75,151 +84,151 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
-    Route::get('/historial',[HistorialController::class,'show'])->name('historial');
+    Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
 
     //Route::middleware(['auth:administrador,contador'])->group(function () {
-        Route::controller(ContabilidadController::class)->group(function () {
-            Route::get('/dashboard', 'index')->name('dashboard');
-            Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
-        });
+    Route::controller(ContabilidadController::class)->group(function () {
+        Route::get('/dashboard', 'index')->name('dashboard');
+        Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
+    });
 
-        Route::controller(CostoController::class)->group(function () {
-            Route::get('/costos', 'index')->name('costos');
-            Route::post('/costos', 'store')->name('costos.store');
-            Route::put('/costos/{id}', 'update')->name('costos.update');
-            Route::delete('/costos/{id}', 'destroy')->name('costos.destroy');
-        });
+    Route::controller(CostoController::class)->group(function () {
+        Route::get('/costos', 'index')->name('costos');
+        Route::post('/costos', 'store')->name('costos.store');
+        Route::put('/costos/{id}', 'update')->name('costos.update');
+        Route::delete('/costos/{id}', 'destroy')->name('costos.destroy');
+    });
 
-        Route::controller(GastoController::class)->group(function () {
-            Route::get('/gastos', 'index')->name('gastos');
-            Route::post('/gastos', 'store')->name('gastos.store');
-            Route::put('/gastos/{id}', 'update')->name('gastos.update');
-            Route::delete('/gastos/{id}', 'destroy')->name('gastos.destroy');
-        });
-        
-        Route::controller(TipoGastoController::class)->group(function () {
-            Route::get('/tipos', 'index')->name('tipos');
-            Route::post('/tipos', 'store')->name('tipos.store');
-            Route::put('/tipos/{id}', 'update')->name('tipos.update');
-            Route::delete('/tipos/{id}', 'destroy')->name('tipos.destroy');
-        });
-   // });
+    Route::controller(GastoController::class)->group(function () {
+        Route::get('/gastos', 'index')->name('gastos');
+        Route::post('/gastos', 'store')->name('gastos.store');
+        Route::put('/gastos/{id}', 'update')->name('gastos.update');
+        Route::delete('/gastos/{id}', 'destroy')->name('gastos.destroy');
+    });
 
-    
-        //Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
-        Route::controller(ServicioController::class)->group(function () {
-            Route::get('/servicios', 'index')->name('servicios');
-            Route::get('/servicios/create', 'create')->name('servicios.create');
-            Route::post('/servicios/createstore', 'store')->name('servicios.store');
-            Route::get('/servicios/{id}/edit', 'edit')->name('servicios.edit');
-            Route::put('/servicios/{id}', 'update')->name('servicios.update');
-            Route::delete('/servicios/{id}', 'destroy')->name('servicios.destroy');
-        });
+    Route::controller(TipoGastoController::class)->group(function () {
+        Route::get('/tipos', 'index')->name('tipos');
+        Route::post('/tipos', 'store')->name('tipos.store');
+        Route::put('/tipos/{id}', 'update')->name('tipos.update');
+        Route::delete('/tipos/{id}', 'destroy')->name('tipos.destroy');
+    });
+    // });
 
-        Route::controller(ValorController::class)->group(function () {
-            Route::get('/valores', 'index')->name('valores');
-            Route::get('/valores/create', 'create')->name('valores.create');
-            Route::post('/valores/createstore', 'store')->name('valores.store');
-            Route::get('/valores/{id}/edit', 'edit')->name('valores.edit');
-            Route::put('/valores/{id}', 'update')->name('valores.update');
-            Route::delete('/valores/{id}', 'destroy')->name('valores.destroy');
-        });
-   
 
-        
-        Route::controller(ProveedorController::class)->group(function () {
-            Route::get('/proveedores', 'index')->name('proveedores');
-            Route::get('/proveedores/create', 'create')->name('proveedores.create');
-            Route::post('/proveedores/createstore', 'store')->name('proveedores.store');
-            Route::get('/proveedores/{id}/edit', 'edit')->name('proveedores.edit');
-            Route::put('/proveedores/{id}', 'update')->name('proveedores.update');
-            Route::delete('/proveedores/{id}', 'destroy')->name('proveedores.destroy');
-        });
+    //Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
+    Route::controller(ServicioController::class)->group(function () {
+        Route::get('/servicios', 'index')->name('servicios');
+        Route::get('/servicios/create', 'create')->name('servicios.create');
+        Route::post('/servicios/createstore', 'store')->name('servicios.store');
+        Route::get('/servicios/{id}/edit', 'edit')->name('servicios.edit');
+        Route::put('/servicios/{id}', 'update')->name('servicios.update');
+        Route::delete('/servicios/{id}', 'destroy')->name('servicios.destroy');
+    });
 
-        Route::controller(ClienteController::class)->group(function () {
-            Route::get('/clientes', 'index')->name('clientes');
-            Route::get('/clientes/create', 'create')->name('clientes.create');
-            Route::post('/clientes/createstore', 'store')->name('clientes.store');
-            Route::post('/clientes/storeInVenta', 'storeInVenta')->name('clientes.storeInVenta');
-            Route::get('/clientes/{id}/edit', 'edit')->name('clientes.edit');
-            Route::put('/clientes/{id}', 'update')->name('clientes.update');
-            Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');
-        });
+    Route::controller(ValorController::class)->group(function () {
+        Route::get('/valores', 'index')->name('valores');
+        Route::get('/valores/create', 'create')->name('valores.create');
+        Route::post('/valores/createstore', 'store')->name('valores.store');
+        Route::get('/valores/{id}/edit', 'edit')->name('valores.edit');
+        Route::put('/valores/{id}', 'update')->name('valores.update');
+        Route::delete('/valores/{id}', 'destroy')->name('valores.destroy');
+    });
 
-        
-    
-        Route::controller(CuentaController::class)->group(function () {
-            Route::get('/cuentas', 'index')->name('cuentas');
-            Route::get('/cuentas/create', 'create')->name('cuentas.create');
-            Route::post('/cuentas/createstore', 'store')->name('cuentas.store');
-            Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
-            Route::get('/cuentas/{id}', 'mensaje')->name('cuentas.mensaje');
-            Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');
-            Route::get('/cuentas/{id}/renew', 'renew')->name('cuentas.renew');
-            Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
-            Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
-        });
-            //Route::resource('perfil',PerfilController::class);
-        Route::controller(PerfilController::class)->group(function () {
-            Route::get('/perfil', 'index')->name('perfil');
-            Route::put('/perfil/{id}', 'update')->name('perfil.update');
-            //Route::get('/perfil/create', 'create')->name('perfil.create');
-            Route::post('/perfil/createstore', 'store')->name('perfil.store');
-            Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
-            //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
-        
-        });
-   
 
-        Route::controller(VentaController::class)->group(function () {
-            Route::get('/ventas', 'index')->name('ventas');
-            Route::get('/ventas/create', 'create')->name('ventas.create');
-            Route::post('/ventas/createstore', 'store')->name('ventas.store');
-            Route::post('/ventas/storeRenew', 'storeRenew')->name('ventas.storeRenew');
-            Route::post('/ventas/storeCliente', 'storeCliente')->name('ventas.storeCliente');
-            Route::patch('/ventas/{id}/status', 'status')->name('ventas.status');
-            Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
-            Route::get('/ventas/renew/{idcli}/{idven}', 'renew')->name('ventas.renew');
-            Route::put('/ventas/{id}', 'update')->name('ventas.update');
-            Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
-        });
-    
-        Route::controller(UsuarioController::class)->group(function () {
-            Route::get('/usuarios', 'index')->name('usuarios');
-            Route::get('/usuarios/{id}/change', 'change')->name('usuarios.change');
-            Route::get('/usuarios/{id}/renew', 'renew')->name('usuarios.renew');
-            Route::put('/usuarios/{id}', 'update')->name('usuarios.update');
-            Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
-        });
-    
-        Route::controller(EmpleadoController::class)->group(function(){
-            Route::get('/empleados', 'index')->name('empleados');
-            Route::get('/empleados/create', 'create')->name('empleados.create');
-            Route::post('/empleados/createstore', 'store')->name('empleados.store');
-            Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
-            Route::put('/empleados/{id}', 'update')->name('empleados.update');
-            Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
-        });
-    
-        Route::controller(MantenimientoController::class)->group(function(){
-            Route::get('/mantenimientos', 'index')->name('mantenimientos');
-            Route::get('/mantenimientos/create', 'create')->name('mantenimientos.create');
-            Route::post('/mantenimientos/createstore', 'store')->name('mantenimientos.store');
-            Route::get('/mantenimientos/{id}/edit', 'edit')->name('mantenimientos.edit');
-            Route::put('/mantenimientos/{id}', 'update')->name('mantenimientos.update');
-            Route::delete('/mantenimientos/{id}', 'destroy')->name('mantenimientos.destroy');
-        });
 
-        Route::prefix('gestion-productos')->group(function () {
-            // Rutas para Categorías
-            Route::get('/', [CategoriaController::class, 'index'])->name('gestion.index');
-            Route::post('categorias', [CategoriaController::class, 'store'])->name('categorias.store');
-            Route::put('categorias/{id}', [CategoriaController::class, 'update'])->name('categorias.update');
-            Route::delete('categorias/{id}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
-    
-            Route::post('tipos-producto', [TipoProductoController::class, 'store'])->name('tipos_producto.store');
-            Route::put('tipos-producto/{id}', [TipoProductoController::class, 'update'])->name('tipos_producto.update');
-            Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
-        });
-        Route::resource('productos', ProductoController::class);
+    Route::controller(ProveedorController::class)->group(function () {
+        Route::get('/proveedores', 'index')->name('proveedores');
+        Route::get('/proveedores/create', 'create')->name('proveedores.create');
+        Route::post('/proveedores/createstore', 'store')->name('proveedores.store');
+        Route::get('/proveedores/{id}/edit', 'edit')->name('proveedores.edit');
+        Route::put('/proveedores/{id}', 'update')->name('proveedores.update');
+        Route::delete('/proveedores/{id}', 'destroy')->name('proveedores.destroy');
+    });
+
+    Route::controller(ClienteController::class)->group(function () {
+        Route::get('/clientes', 'index')->name('clientes');
+        Route::get('/clientes/create', 'create')->name('clientes.create');
+        Route::post('/clientes/createstore', 'store')->name('clientes.store');
+        Route::post('/clientes/storeInVenta', 'storeInVenta')->name('clientes.storeInVenta');
+        Route::get('/clientes/{id}/edit', 'edit')->name('clientes.edit');
+        Route::put('/clientes/{id}', 'update')->name('clientes.update');
+        Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');
+    });
+
+
+
+    Route::controller(CuentaController::class)->group(function () {
+        Route::get('/cuentas', 'index')->name('cuentas');
+        Route::get('/cuentas/create', 'create')->name('cuentas.create');
+        Route::post('/cuentas/createstore', 'store')->name('cuentas.store');
+        Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
+        Route::get('/cuentas/{id}', 'mensaje')->name('cuentas.mensaje');
+        Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');
+        Route::get('/cuentas/{id}/renew', 'renew')->name('cuentas.renew');
+        Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
+        Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
+    });
+    //Route::resource('perfil',PerfilController::class);
+    Route::controller(PerfilController::class)->group(function () {
+        Route::get('/perfil', 'index')->name('perfil');
+        Route::put('/perfil/{id}', 'update')->name('perfil.update');
+        //Route::get('/perfil/create', 'create')->name('perfil.create');
+        Route::post('/perfil/createstore', 'store')->name('perfil.store');
+        Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
+        //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
+
+    });
+
+
+    Route::controller(VentaController::class)->group(function () {
+        Route::get('/ventas', 'index')->name('ventas');
+        Route::get('/ventas/create', 'create')->name('ventas.create');
+        Route::post('/ventas/createstore', 'store')->name('ventas.store');
+        Route::post('/ventas/storeRenew', 'storeRenew')->name('ventas.storeRenew');
+        Route::post('/ventas/storeCliente', 'storeCliente')->name('ventas.storeCliente');
+        Route::patch('/ventas/{id}/status', 'status')->name('ventas.status');
+        Route::get('/ventas/{id}/edit', 'edit')->name('ventas.edit');
+        Route::get('/ventas/renew/{idcli}/{idven}', 'renew')->name('ventas.renew');
+        Route::put('/ventas/{id}', 'update')->name('ventas.update');
+        Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
+    });
+
+    Route::controller(UsuarioController::class)->group(function () {
+        Route::get('/usuarios', 'index')->name('usuarios');
+        Route::get('/usuarios/{id}/change', 'change')->name('usuarios.change');
+        Route::get('/usuarios/{id}/renew', 'renew')->name('usuarios.renew');
+        Route::put('/usuarios/{id}', 'update')->name('usuarios.update');
+        Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
+    });
+
+    Route::controller(EmpleadoController::class)->group(function () {
+        Route::get('/empleados', 'index')->name('empleados');
+        Route::get('/empleados/create', 'create')->name('empleados.create');
+        Route::post('/empleados/createstore', 'store')->name('empleados.store');
+        Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
+        Route::put('/empleados/{id}', 'update')->name('empleados.update');
+        Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
+    });
+
+    Route::controller(MantenimientoController::class)->group(function () {
+        Route::get('/mantenimientos', 'index')->name('mantenimientos');
+        Route::get('/mantenimientos/create', 'create')->name('mantenimientos.create');
+        Route::post('/mantenimientos/createstore', 'store')->name('mantenimientos.store');
+        Route::get('/mantenimientos/{id}/edit', 'edit')->name('mantenimientos.edit');
+        Route::put('/mantenimientos/{id}', 'update')->name('mantenimientos.update');
+        Route::delete('/mantenimientos/{id}', 'destroy')->name('mantenimientos.destroy');
+    });
+
+    Route::prefix('gestion-productos')->group(function () {
+        // Rutas para Categorías
+        Route::get('/', [CategoriaController::class, 'index'])->name('gestion.index');
+        Route::post('categorias', [CategoriaController::class, 'store'])->name('categorias.store');
+        Route::put('categorias/{id}', [CategoriaController::class, 'update'])->name('categorias.update');
+        Route::delete('categorias/{id}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
+
+        Route::post('tipos-producto', [TipoProductoController::class, 'store'])->name('tipos_producto.store');
+        Route::put('tipos-producto/{id}', [TipoProductoController::class, 'update'])->name('tipos_producto.update');
+        Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
+    });
+    Route::resource('productos', ProductoController::class);
 });

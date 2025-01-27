@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             TipoProductoSeeder::class,
             CategoriaSeeder::class,
             ProductoSeeder::class,
+            BancosSeeder::class,
+            EstadoRecargaSeeder::class,
             VentaSeeder::class,
             DailyStatisticSeeder::class,
         ]);
