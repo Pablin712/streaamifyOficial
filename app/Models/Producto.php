@@ -23,18 +23,18 @@ class Producto extends Model
     // Relación con TipoProducto
     public function tipoProducto()
     {
-        return $this->belongsTo(TipoProducto::class, 'tipo_producto_id');
+        return $this->belongsTo(TipoProducto::class,'tipo_producto_id', 'id');
     }
 
     // Relación con Categoria
     public function categoria()
     {
-        return $this->belongsTo(Categoria::class, 'categoria_id');
+        return $this->belongsTo(Categoria::class, 'categoria_id', 'id');
     }
 
     // Relación con DetalleProducto
     public function detalles()
     {
-        return $this->hasMany(DetalleProducto::class, 'producto_id');
+        return $this->hasMany(DetalleProducto::class, 'producto_id', 'id');
     }
 }

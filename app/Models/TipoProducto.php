@@ -17,6 +17,6 @@ class TipoProducto extends Model
     // Relación con Producto
     public function productos()
     {
-        return $this->hasMany(Producto::class, 'tipo_producto_id');
+        return $this->hasMany(Producto::class, 'tipo_producto_id', 'id');
     }
 }

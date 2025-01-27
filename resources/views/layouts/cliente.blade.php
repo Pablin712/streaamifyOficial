@@ -86,6 +86,7 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu"
                                 style="background-color: #FFFFFF; border-color: #E4B100;">
                                 <li><a class="dropdown-item text-dark fw-semibold" href="">Perfil</a></li>
+                                <li><a class="dropdown-item text-dark fw-semibold" href="">Recargar saldo</a></li>
                                 <li><a class="dropdown-item text-danger fw-semibold" onclick="document.getElementById('logout-form').submit();">
                                         Cerrar sesión
                                     </a>
