@@ -167,32 +167,36 @@
         </div>
     </div>
     <!-- Modal para editar detalle -->
-    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle de la Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formEditarDetalle">
-                        <!-- Cuenta -->
+                    <form id="editarDetalleForm">
+                        <!-- Select Cuenta -->
                         <div class="mb-3">
-                            <label for="editarCuenta" class="form-label">Cuenta</label>
-                            <input type="text" class="form-control" id="editarCuenta" readonly>
+                            <label for="editarSelectCuenta" class="form-label">Cuenta</label>
+                            <select class="form-select" id="editarSelectCuenta" required>
+                                <option value="">Seleccione una cuenta</option>
+                                @foreach ($cuentas as $cuenta)
+                                    <option value="{{ $cuenta->idcue }}">
+                                        {{ $cuenta->idcue }}: Oc: {{ $cuenta->usuarios_activos }} ::
+                                        @foreach ($cuenta->perfiles as $perfil)
+                                            <!-- Mostrar todos los perfiles y sus usuarios activos -->
+                                            P{{ $perfil->numeroper }}: {{ $perfil->usuarios_activos }}&nbsp;&nbsp;
+                                        @endforeach
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
-                        <!-- Perfil -->
+                        <!-- Select Perfil -->
                         <div class="mb-3">
-                            <label for="editarPerfil" class="form-label">Perfil</label>
-                            <input type="text" class="form-control" id="editarPerfil" readonly>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="mb-3">
-                            <label for="editarDescripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="editarDescripcion" rows="2" required></textarea>
+                            <label for="editarSelectPerfil" class="form-label">Perfil</label>
+                            <input type="number" class="form-control" id="editarSelectPerfil" min="1" max="7" required>
                         </div>
 
                         <!-- Fecha de Vencimiento -->
@@ -204,13 +208,19 @@
                         <!-- Monto -->
                         <div class="mb-3">
                             <label for="editarMonto" class="form-label">Monto</label>
-                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0"
-                                required>
+                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0" required>
                         </div>
 
-                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalleBtn">Guardar
-                            Cambios</button>
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="editarDescripcion" class="form-label">Descripción</label>
+                            <input type="text" class="form-control" id="editarDescripcion" required>
+                        </div>
                     </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="guardarCambiosDetalleBtn">Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -304,11 +314,13 @@
             <td>${descripcion}</td>
             <td>${fechaVencimiento}</td>
             <td>$${monto.toFixed(2)}</td>
-            <td>
+            <td> 
+                <button type="button" class="btn btn-warning btn-sm editarDetalleBtn"><i class="fas fa-edit"></i></button>
                 <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
+
         </tr>`;
 
                 // Agregar la nueva fila a la tabla
@@ -391,6 +403,50 @@
 
             // Ahora enviamos el formulario
             this.submit();
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Inicializa Select2 en el select con el id 'idcli'
+            $('#idcli').select2();
+
+            // Maneja el evento de clic en el botón "Editar Detalle"
+            $(document).on('click', '.editarDetalleBtn', function() {
+                var row = $(this).closest('tr');
+                var cuenta = row.find('td:eq(0)').text().split(':')[0].trim();
+                var perfil = row.find('td:eq(1)').text().trim();
+                var descripcion = row.find('td:eq(2)').text().trim();
+                var fechaVencimiento = row.find('td:eq(3)').text().trim();
+                var monto = row.find('td:eq(4)').text().replace('$', '').trim();
+
+                $('#editarSelectCuenta').val(cuenta);
+                $('#editarSelectPerfil').val(perfil);
+                $('#editarDescripcion').val(descripcion);
+                $('#editarFechaVencimiento').val(fechaVencimiento);
+                $('#editarMonto').val(monto);
+
+                $('#guardarCambiosDetalleBtn').data('row', row);
+                $('#editarDetalleModal').modal('show');
+            });
+
+            // Maneja el evento de clic en el botón "Guardar Cambios"
+            $('#guardarCambiosDetalleBtn').click(function() {
+                var row = $(this).data('row');
+                var cuenta = $('#editarSelectCuenta').val();
+                var perfil = $('#editarSelectPerfil').val();
+                var descripcion = $('#editarDescripcion').val();
+                var fechaVencimiento = $('#editarFechaVencimiento').val();
+                var monto = $('#editarMonto').val();
+
+                var cuentaText = $('#editarSelectCuenta option:selected').text().split(':')[0].trim();
+                row.find('td:eq(0)').text(cuentaText).data('id', cuenta);
+                row.find('td:eq(1)').text(perfil);
+                row.find('td:eq(2)').text(descripcion);
+                row.find('td:eq(3)').text(fechaVencimiento);
+                row.find('td:eq(4)').text('$' + parseFloat(monto).toFixed(2));
+
+                $('#editarDetalleModal').modal('hide');
+            });
         });
     </script>
 @endsection
