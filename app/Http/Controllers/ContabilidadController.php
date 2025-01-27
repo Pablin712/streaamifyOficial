@@ -59,7 +59,7 @@ class ContabilidadController extends Controller
 
         $promedio_pagos_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->avg('totalpagoven');
         $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first();
-        $num_cuentas = Cuenta::all()->count();
+        $num_cuentas = Cuenta::where('activocue', true)->count();
         $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
 
         $gastos_mes = Gasto::whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas');
@@ -77,7 +77,7 @@ class ContabilidadController extends Controller
         $newCustomers = Cliente::whereDate('created_at', $today)->count();
         
 
-        $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
+        $cuentas = Cuenta::with(['valor'])->where('activocue', true)->orderBy('fechavencue')->get();
         $espacios = 0;
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
@@ -89,7 +89,7 @@ class ContabilidadController extends Controller
         }
 
 
-        $cuentas_netflix = Cuenta::where('idcue', 'like', 'NETFLIX%')->count();
+        $cuentas_netflix = Cuenta::where('idcue', 'like', 'NETFLIX%')->where('activocue', true)->count();
         $usuarios_netflix = ViewUsuarioActivo::where('idcue', 'like', 'NETFLIX%')->count();
         $ingresos_netflix = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -101,7 +101,7 @@ class ContabilidadController extends Controller
 
 
 
-        $cuentas_disney = Cuenta::where('idcue', 'like', 'DISNEY%')->count();
+        $cuentas_disney = Cuenta::where('idcue', 'like', 'DISNEY%')->where('activocue', true)->count();
         $usuarios_disney = ViewUsuarioActivo::where('idcue', 'like', 'DISNEY%')->count();
         $ingresos_disney = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -113,7 +113,7 @@ class ContabilidadController extends Controller
 
 
 
-        $cuentas_prime = Cuenta::where('idcue', 'like', 'PRIME%')->count();
+        $cuentas_prime = Cuenta::where('idcue', 'like', 'PRIME%')->where('activocue', true)->count();
         $usuarios_prime = ViewUsuarioActivo::where('idcue', 'like', 'PRIME%')->count();
         $ingresos_prime = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -124,7 +124,7 @@ class ContabilidadController extends Controller
         $costos_prime = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->where('idcue', 'like', 'PRIME%')->sum('montocos');
 
 
-        $cuentas_max = Cuenta::where('idcue', 'like', 'MAX%')->count();
+        $cuentas_max = Cuenta::where('idcue', 'like', 'MAX%')->where('activocue', true)->count();
         $usuarios_max = ViewUsuarioActivo::where('idcue', 'like', 'MAX%')->count();
         $ingresos_max = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -136,7 +136,7 @@ class ContabilidadController extends Controller
 
 
 
-        $cuentas_magis = Cuenta::where('idcue', 'like', 'MAGIS%')->count();
+        $cuentas_magis = Cuenta::where('idcue', 'like', 'MAGIS%')->where('activocue', true)->count();
         $usuarios_magis = ViewUsuarioActivo::where('idcue', 'like', 'MAGIS%')->count();
         $ingresos_magis = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -147,7 +147,7 @@ class ContabilidadController extends Controller
         $costos_magis = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->where('idcue', 'like', 'MAGIS%')->sum('montocos');
 
 
-        $cuentas_crunchy = Cuenta::where('idcue', 'like', 'CRUNCHY%')->count();
+        $cuentas_crunchy = Cuenta::where('idcue', 'like', 'CRUNCHY%')->where('activocue', true)->count();
         $usuarios_crunchy = ViewUsuarioActivo::where('idcue', 'like', 'CRUNCHY%')->count();
         $ingresos_crunchy = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -158,7 +158,7 @@ class ContabilidadController extends Controller
         $costos_crunchy = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->where('idcue', 'like', 'CRUNCHY%')->sum('montocos');
 
 
-        $cuentas_paramount = Cuenta::where('idcue', 'like', 'PARAMOUNT%')->count();
+        $cuentas_paramount = Cuenta::where('idcue', 'like', 'PARAMOUNT%')->where('activocue', true)->count();
         $usuarios_paramount = ViewUsuarioActivo::where('idcue', 'like', 'PARAMOUNT%')->count();
         $ingresos_paramount = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -170,7 +170,7 @@ class ContabilidadController extends Controller
 
 
 
-        $cuentas_spotify = Cuenta::where('idcue', 'like', 'SPOTIFY%')->count();
+        $cuentas_spotify = Cuenta::where('idcue', 'like', 'SPOTIFY%')->where('activocue', true)->count();
         $usuarios_spotify = ViewUsuarioActivo::where('idcue', 'like', 'SPOTIFY%')->count();
         $ingresos_spotify = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -183,7 +183,7 @@ class ContabilidadController extends Controller
 
 
 
-        $cuentas_otros = Cuenta::where('idcue', 'not like', 'NETFLIX%')
+        $cuentas_otros = Cuenta::where('idcue', 'not like', 'NETFLIX%')->where('activocue', true)
             ->where('idcue', 'not like', 'DISNEY%')
             ->where('idcue', 'not like', 'PRIME%')
             ->where('idcue', 'not like', 'MAX%')
