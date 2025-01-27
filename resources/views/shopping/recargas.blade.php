@@ -22,6 +22,23 @@
 @endsection
 
 @section('sections')
+<!-- Mensajes de éxito -->
+@if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Mensajes de error -->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 <section class="py-5">
     <div class="container">
         <h2 class="text-center fw-bold mb-5">Bancos Disponibles</h2>
