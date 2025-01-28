@@ -149,6 +149,10 @@ class ProductoController extends Controller
         $data = $request->all();
         // Subir la foto si existe
         if ($request->hasFile('foto')) {
+            // Eliminar la foto anterior si existe
+            if (!empty($producto->foto) && file_exists(public_path('storage/' . $producto->foto))) {
+                unlink(public_path('storage/' . $producto->foto)); // Eliminar el archivo antiguo
+            }
             $file = $request->file('foto');
             $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
             $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos

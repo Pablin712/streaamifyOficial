@@ -54,10 +54,10 @@ Route::post('/register', [ClienteController::class, 'register'])->name('cliente.
 
 //rutas protegidas del cliente
 //Route::middleware(['auth'])->group(function () {
-    Route::controller(RecargaController::class)->group(function () {
-        Route::get('/recargar-saldo', 'recargarSaldo')->name('recargar.index');
-        Route::post('/recargar-saldo', 'procesarRecarga')->name('recargar.saldo');
-    });
+Route::controller(RecargaController::class)->group(function () {
+    Route::get('/recargar-saldo', 'recargarSaldo')->name('recargar.index');
+    Route::post('/recargar-saldo', 'procesarRecarga')->name('recargar.saldo');
+});
 //});
 /*
 Route::post('/cart/add/{producto}', [CarritoController::class, 'add'])->name('cart.add');
@@ -231,4 +231,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
     });
     Route::resource('productos', ProductoController::class);
+
+    Route::controller(RecargaController::class)->group(function () {
+        Route::get('/recargas', 'index')->name('empleado.recargas.index');
+        Route::post('/recargas/{idrec}/estado', 'updateEstado')->name('empleado.recargas.updateEstado');
+    });
 });

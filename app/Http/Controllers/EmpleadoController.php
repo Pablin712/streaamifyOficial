@@ -136,6 +136,10 @@ class EmpleadoController extends Controller
 
         // Subir la foto si existe
         if ($request->hasFile('foto_url')) {
+            // Eliminar la foto anterior si existe
+            if (!empty($empleado->foto_url) && file_exists(public_path('storage/' . $empleado->foto_url))) {
+                unlink(public_path('storage/' . $empleado->foto_url)); // Eliminar el archivo antiguo
+            }
             $file = $request->file('foto_url');
             $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
             $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos

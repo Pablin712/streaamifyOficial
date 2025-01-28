@@ -23,7 +23,7 @@ class Recarga extends Model
     // Relación con Cliente (una recarga pertenece a un cliente)
     public function cliente()
     {
-        return $this->belongsTo(Cliente::class, 'idcli', 'id');
+        return $this->belongsTo(Cliente::class, 'idcli', 'idcli');
     }
 
     // Relación con EstadoRecarga (una recarga tiene un estado)

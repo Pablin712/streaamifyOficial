@@ -91,6 +91,7 @@
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
                                 <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
+                                <a class="nav-link" href="{{ route('empleado.recargas.index') }}">Recargas</a>
                             </nav>
                         </div>
                         @endif
