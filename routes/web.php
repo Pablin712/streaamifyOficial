@@ -20,9 +20,9 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\EmailController;
+use App\Http\Middleware\AuthCliente;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\TipoProductoController;
-
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\RecargaController;
@@ -53,12 +53,12 @@ Route::controller(LoginClienteController::class)->group(function () {
 Route::post('/register', [ClienteController::class, 'register'])->name('cliente.register');
 
 //rutas protegidas del cliente
-//Route::middleware(['auth'])->group(function () {
+Route::middleware([AuthCliente::class])->group(function () {
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargar-saldo', 'recargarSaldo')->name('recargar.index');
         Route::post('/recargar-saldo', 'procesarRecarga')->name('recargar.saldo');
     });
-//});
+});
 /*
 Route::post('/cart/add/{producto}', [CarritoController::class, 'add'])->name('cart.add');
 Route::post('/comprar/{producto}', [CompraController::class, 'comprar'])->name('comprar');
