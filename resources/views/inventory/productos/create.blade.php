@@ -173,6 +173,47 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para editar detalle del producto -->
+    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle del Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarDetalle">
+                        <!-- ID Servicio -->
+                        <div class="mb-3">
+                            <label for="editarIdServicio" class="form-label">ID Servicio</label>
+                            <select class="form-select" id="editarIdServicio" required>
+                                <option value="">Seleccione un Servicio</option>
+                                @foreach ($servicios as $servicio)
+                                    <option value="{{ $servicio->idser }}">
+                                        {{ $servicio->idser }}: {{ $servicio->nombreser }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="editarDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="editarDescripcion" rows="3" required></textarea>
+                        </div>
+
+                        <!-- Meses -->
+                        <div class="mb-3">
+                            <label for="editarMeses" class="form-label">Meses</label>
+                            <input type="number" class="form-control" id="editarMeses" min="1" required>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalle">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('pie')
@@ -200,6 +241,9 @@
                         <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
                             <i class="fas fa-trash"></i>
                         </button>
+                        <button type="button" class="btn btn-warning btn-sm editarDetalleBtn">
+                            <i class="fas fa-edit"></i>
+                        </button>
                     </td>
                 </tr>`;
 
@@ -221,6 +265,31 @@
         // Eliminar fila de la tabla
         $('#tabla-detalles').on('click', '.eliminarDetalleBtn', function() {
             $(this).closest('tr').remove();
+        });
+
+        // Editar fila de la tabla
+        $('#tabla-detalles').on('click', '.editarDetalleBtn', function() {
+            var fila = $(this).closest('tr');
+            var idser = fila.find('td').eq(0).text();
+            var descripcion = fila.find('td').eq(1).text();
+            var meses = fila.find('td').eq(2).text();
+            $('#editarIdServicio').val(idser);
+            $('#editarDescripcion').val(descripcion);
+            $('#editarMeses').val(meses);
+            $('#editarDetalleModal').modal('show');
+        });
+
+        // Guardar cambios del detalle editado
+        $('#guardarCambiosDetalle').on('click', function() {
+            var idser = $('#editarIdServicio').val();
+            var descripcion = $('#editarDescripcion').val();
+            var meses = $('#editarMeses').val();
+            var fila = $('#tabla-detalles').find('tr').filter(function() {
+                return $(this).find('td').eq(0).text() === idser;
+            });
+            fila.find('td').eq(1).text(descripcion);
+            fila.find('td').eq(2).text(meses);
+            $('#editarDetalleModal').modal('hide');
         });
 
         // Enviar detalles al backend
@@ -250,5 +319,30 @@
                 $(this).prevAll().addClass('selected'); // Agregar selección a las estrellas anteriores
             });
         });
+
+        // Función para abrir el modal de edición con los datos del detalle seleccionado
+        function editarDetalle(idServicio, descripcion, meses) {
+            $('#editarIdServicio').val(idServicio);
+            $('#editarDescripcion').val(descripcion);
+            $('#editarMeses').val(meses);
+            $('#editarDetalleModal').modal('show');
+        }
+
+        // Ejemplo de cómo agregar una fila con el botón de editar
+        function agregarFilaDetalle(idServicio, descripcion, meses) {
+            var tabla = document.getElementById('tabla-detalles');
+            var fila = tabla.insertRow();
+            fila.insertCell(0).innerText = idServicio;
+            fila.insertCell(1).innerText = descripcion;
+            fila.insertCell(2).innerText = meses;
+            var acciones = fila.insertCell(3);
+            var botonEditar = document.createElement('button');
+            botonEditar.className = 'btn btn-warning';
+            botonEditar.innerText = 'Editar';
+            botonEditar.onclick = function() {
+                editarDetalle(idServicio, descripcion, meses);
+            };
+            acciones.appendChild(botonEditar);
+        }
     </script>
 @endsection
