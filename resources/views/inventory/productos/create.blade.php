@@ -109,7 +109,7 @@
                     Agregar Detalle
                 </button>
 
-                <table class="table table-bordered mt-3" id="detalles-producto">
+                <table class="table table-bordered mt-3" id="tabla-detalles">
                     <thead>
                         <tr>
                             <th>ID Servicio</th>
@@ -123,10 +123,11 @@
                     </tbody>
                 </table>
 
-                <!-- Campo oculto para enviar los detalles del producto -->
-                <input type="hidden" name="detalles_producto" id="detalles_producto">
             </div>
 
+            
+                <!-- Campo oculto para enviar los detalles del producto -->
+                <input type="hidden" name="detalles_producto" id="detalles_producto">
             <button type="submit" class="btn btn-primary mt-4">Registrar Producto</button>
         </form>
     </div>
@@ -248,7 +249,7 @@
                 </tr>`;
 
                 // Agregar la nueva fila a la tabla
-                $('#tabla-detalles').append(nuevaFila);
+                $('#tabla-detalles tbody').append(nuevaFila);
 
                 // Limpiar los campos del modal
                 $('#idser').val('');
@@ -307,8 +308,12 @@
                     });
                 }
             });
+
             $('#detalles_producto').val(JSON.stringify(detalles));
+
+            this.submit(); // Enviar el formulario
         });
+
         // Script para manejar la selección de estrellas
         $(document).ready(function() {
             $('.star').on('click', function() {
