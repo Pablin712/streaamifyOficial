@@ -92,7 +92,7 @@ class ProductoController extends Controller
                 'meses' => $detalle['meses'] ?? null,
             ]);
         }
-        dd($detalles);
+
         Historial::create([
             'accion' => 'Se creó el producto con ID: ' . $producto->id,
             'descripcion' => 'Datos: ' . json_encode($producto),
