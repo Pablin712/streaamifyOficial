@@ -104,8 +104,13 @@ class ShopController extends Controller
     {
         $producto = Producto::findOrFail($id);
 
-        // Aquí puedes agregar la lógica de compra, como guardar en la base de datos
-        // y enviar confirmaciones de compra.
+        //si tiene saldo suficiente, entonces proceder sino mandar mensaje de error de compra
+
+        //ver en los perfiles
+
+        //descontar saldo
+
+        //registrar venta con idemp del sistema
 
         // Guardamos la compra en la sesión para mostrar en el modal de éxito
         session()->flash('compra_exitosa', [
