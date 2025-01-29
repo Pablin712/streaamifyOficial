@@ -112,6 +112,18 @@
                         <h5 class="mt-3">{{ session('compra_exitosa')['nombre'] }}</h5>
                         <p class="text-muted">Precio: ${{ number_format(session('compra_exitosa')['precio'], 2) }}</p>
                         <p>Tu compra ha sido procesada con éxito.</p>
+
+                        <!-- Mostrar los servicios adquiridos -->
+                        <div class="mt-3">
+                            <h6>Detalles de los servicios adquiridos:</h6>
+                            <ul class="list-group">
+                                @foreach (session('compra_exitosa')['servicios'] as $servicio)
+                                    <li class="list-group-item">
+                                        <pre>{{ $servicio }}</pre>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" onclick="cerrarModal()">Aceptar</button>
@@ -126,6 +138,21 @@
                 document.getElementById('compraExitosaModal').classList.add('d-none');
             }
         </script>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if (session('pedido_registrado'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Pedido registrado:</strong>
+            <p>Producto: <b>{{ session('pedido_registrado')['nombre'] }}</b></p>
+            <p>Precio: ${{ number_format(session('pedido_registrado')['precio'], 2) }}</p>
+            <p>Nos pondremos en contacto para finalizar el proceso.</p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
     <!-- Sección Entrega Inmediata - Individual -->
     <section id="inmediata-individual" class="py-5 bg-light">
@@ -286,9 +313,53 @@
                                     data-bs-target="#infoModal{{ $producto->id }}">
                                     <i class="bi bi-info-circle"></i>
                                 </button>
+                                <!-- Modal de Información del Producto -->
+                                <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                    aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                    {{ $producto->nombrepro }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body text-center">
+                                                <!-- Imagen del producto -->
+                                                <img src="{{ asset($producto->foto) }}"
+                                                    alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                    style="max-width: 100%; height: auto;">
+
+                                                <!-- Descripción del producto -->
+                                                <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                <!-- Precio -->
+                                                <h5 class="text-primary">Precio:
+                                                    ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                <!-- Estrellas (Valoración) -->
+                                                <div class="mb-3">
+                                                    @for ($i = 1; $i <= 5; $i++)
+                                                        <i
+                                                            class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                    @endfor
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cerrar</button>
+                                                <!-- Botón para agregar al carrito -->
+                                                <button type="button" class="btn btn-success"
+                                                    onclick="addToCart({{ $producto->id }})">
+                                                    <i class="bi bi-cart-plus"></i> Añadir al Carrito
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <!-- Botón Añadir al Carrito -->
-                                <form action="#" method="POST"> {{-- {{ route('cart.add', $producto->id) }} --}}
+                                <form action="{{ route('cart.add', $producto->id) }}" method="POST"> {{--  --}}
                                     @csrf
                                     <button type="submit" class="btn btn-success btn-sm">
                                         <i class="bi bi-cart-plus"></i>

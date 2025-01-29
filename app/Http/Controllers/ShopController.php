@@ -4,6 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Producto;
+use App\Models\Pedido;
+use App\Models\DetalleVenta;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Venta;
+use App\Models\Perfil;
+use App\Models\Cuenta;
+use App\Models\Empleado;
+use App\Models\Cliente;
+use App\Models\ViewUsuarioActivo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class ShopController extends Controller
@@ -100,24 +110,132 @@ class ShopController extends Controller
         return view('cliente.checkout', compact('cart'));
     }
 
-    public function comprar(Request $request, $id)
+    //probando comprar v1
+    public function comprar(Request $request, $productoId)
     {
-        $producto = Producto::findOrFail($id);
+        $producto = Producto::with('detalles')->findOrFail($productoId);
+        // Obtener el ID del cliente autenticado
+        $idCliente = Auth::guard('cliente')->user()->idcli;
+        // Buscar el cliente en la base de datos
+        $usuario = Cliente::findOrFail($idCliente);
+        // Verificar saldo
+        if ($usuario->saldo < $producto->preciopro) {
+            return back()->with('error', 'Saldo insuficiente para realizar la compra.');
+        }
+        
+        // Si el producto es de tipo inmediata (id=1)
+        if ($producto->tipo_producto_id == 1) {
+            DB::beginTransaction();
+            try {
+                // Crear venta
+                $venta = new Venta();
+                $venta->idemp = Empleado::where('nombreemp', 'Laravel')->value('idemp');
+                $venta->idcli = $usuario->idcli;
+                $venta->fechaven = now();
+                $venta->save();
+                // Procesar cada detalle del producto
+                foreach ($producto->detalles as $detalle) {
+                    // Buscar cuenta disponible
+                    $cuenta = $this->buscarCuentaDisponible($detalle->idser);
 
-        //si tiene saldo suficiente, entonces proceder sino mandar mensaje de error de compra
+                    if (!$cuenta) {
+                        throw new \Exception("No hay cuentas disponibles para el servicio.");
+                    }
 
-        //ver en los perfiles
+                    // Buscar perfil disponible
+                    $perfil = $this->buscarPerfilDisponible($cuenta);
 
-        //descontar saldo
+                    if (!$perfil) {
+                        throw new \Exception("No hay perfiles disponibles en la cuenta seleccionada.");
+                    }
 
-        //registrar venta con idemp del sistema
+                    // Registrar detalle de venta
+                    $detalleVenta = new DetalleVenta();
+                    $detalleVenta->idven = $venta->idven;
+                    $detalleVenta->idper = $perfil->idper;
+                    $detalleVenta->fechavendet = now()->addMonths($detalle->meses)->subDay();
+                    $detalleVenta->descripciondet = "Vendido en automático";
+                    $detalleVenta->montodet = $producto->preciopro / count($producto->detalles);
+                    $detalleVenta->activodet = true;
+                    $detalleVenta->save();
+                    
+                    // Enviar mensaje de entrega
+                    // Generar mensaje de servicio adquirido
+                    $mensaje = "**" . $perfil->cuenta->valor->servicio->nombreser . "**\n" .
+                        "Usuario: " . $perfil->cuenta->usuariocue . "\n" .
+                        "Clave: " . $perfil->cuenta->contrasenacue . "\n" .
+                        "PIN perfil {$perfil->numeroper}: " . $perfil->pinper;
 
-        // Guardamos la compra en la sesión para mostrar en el modal de éxito
-        session()->flash('compra_exitosa', [
-            'nombre' => $producto->nombrepro,
-            'precio' => $producto->preciopro
-        ]);
+                    $mensajesServicios[] = $mensaje;
+                }
 
-        return redirect()->route('shop');
+                // Descontar saldo al usuario
+                $usuario->saldo -= $producto->preciopro;
+                $usuario->save();
+
+                // Verificar si la cuenta se llenó
+                $this->verificarCuentaLlena($cuenta);
+                //dd($cuenta);
+                // Guardar mensaje de éxito en sesión
+                session()->flash('compra_exitosa', [
+                    'nombre' => $producto->nombrepro,
+                    'precio' => $producto->preciopro,
+                    'servicios' => $mensajesServicios // Aquí guardamos los servicios adquiridos
+                ]);
+
+                DB::commit();
+                return redirect()->route('shop');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', $e->getMessage());
+            }
+        } else {
+            // Registrar pedido sin descontar saldo
+            session()->flash('pedido_registrado', [
+                'nombre' => $producto->nombrepro,
+                'precio' => $producto->preciopro
+            ]);
+            return redirect()->route('shop');
+        }
+    }
+
+    private function buscarCuentaDisponible($idser)
+    {
+        return Cuenta::whereHas('valor', function ($query) use ($idser) {
+            $query->where('idser', $idser);
+        })
+        ->where('caidacue', false)
+        ->where('activocue', true)
+        ->whereHas('valor', function ($query) {
+            $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
+        })
+        ->first();
+    }
+
+    private function buscarPerfilDisponible($cuenta)
+    {
+        return Perfil::where('idcue', $cuenta->idcue)
+        ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
+                    WHERE view_usuarios_activos.idcue = perfiles.idcue 
+                    AND view_usuarios_activos.perfil = perfiles.numeroper) <= 1')
+        ->first();
+    }
+
+    private function enviarMensajeEntrega($perfil)
+    {
+        $mensaje = "**" . $perfil->cuenta->valor->servicio->nombre . "**\n" .
+            "Usuario: " . $perfil->cuenta->usuariocue . "\n" .
+            "Clave: " . $perfil->cuenta->contrasenacue . "\n" .
+            "PIN perfil #{$perfil->numeroper}: " . $perfil->pinper;
+
+        session()->flash('mensaje_entrega', $mensaje);
+    }
+
+    private function verificarCuentaLlena($cuenta)
+    {
+        $usuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
+        if ($usuariosActivos >= $cuenta->valor->pantmaxval) {
+            $cuenta->update(['activocue' => false]);
+        }
     }
 }

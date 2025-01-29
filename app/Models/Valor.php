@@ -33,4 +33,9 @@ class Valor extends Model
     {
         return $this->belongsTo(Proveedor::class, 'idpro', 'idpro');
     }
+    public function cuentas()
+    {
+        return $this->hasMany(Cuenta::class, 'idval', 'idval');
+        //->onDelete('cascade');
+    }
 }
