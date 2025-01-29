@@ -152,7 +152,7 @@
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="password" class="form-control" name="password" id="password"
-                            placeholder="Contraseña" required>
+                            placeholder="Agrega número y simbolo" required>
                         <label for="password">Contraseña</label>
                     </div>
                 </div>

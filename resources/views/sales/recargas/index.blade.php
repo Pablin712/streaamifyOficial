@@ -68,12 +68,12 @@
                     <td>
                         <span
                             class="badge 
-                            @if ($recarga->estado->nombre === 'pendiente') bg-warning 
-                            @elseif ($recarga->estado->nombre === 'rechazado') bg-danger 
-                            @elseif ($recarga->estado->nombre === 'aprobado') bg-success @endif">
+                            @if ($recarga->estado->nombre === 'Pendiente') bg-warning 
+                            @elseif ($recarga->estado->nombre === 'Rechazado') bg-danger 
+                            @elseif ($recarga->estado->nombre === 'Aprobado') bg-success @endif">
                             {{ ucfirst($recarga->estado->nombre) }}
                         </span>
-                        @if ($recarga->estado->nombre === 'pendiente')
+                        @if ($recarga->estado->nombre === 'Pendiente')
                             <form action="{{ route('empleado.recargas.updateEstado', $recarga->idrec) }}" method="POST"
                                 style="display: inline;">
                                 @csrf

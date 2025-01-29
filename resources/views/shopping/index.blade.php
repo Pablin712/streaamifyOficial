@@ -97,7 +97,36 @@
     </div>
 @endsection
 @section('sections')
+    @if (session('compra_exitosa'))
+        <div class="modal fade show d-block" id="compraExitosaModal" tabindex="-1" aria-labelledby="compraExitosaLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="compraExitosaLabel">¡Compra Exitosa!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            onclick="cerrarModal()"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">{{ session('compra_exitosa')['nombre'] }}</h5>
+                        <p class="text-muted">Precio: ${{ number_format(session('compra_exitosa')['precio'], 2) }}</p>
+                        <p>Tu compra ha sido procesada con éxito.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="cerrarModal()">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <script>
+            function cerrarModal() {
+                document.getElementById('compraExitosaModal').classList.remove('show');
+                document.getElementById('compraExitosaModal').classList.add('d-none');
+            }
+        </script>
+    @endif
     <!-- Sección Entrega Inmediata - Individual -->
     <section id="inmediata-individual" class="py-5 bg-light">
         <div class="container">
@@ -131,6 +160,50 @@
                                         data-bs-target="#infoModal{{ $producto->id }}">
                                         <i class="bi bi-info-circle"></i>
                                     </button>
+                                    <!-- Modal de Información del Producto -->
+                                    <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                        {{ $producto->nombrepro }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <!-- Imagen del producto -->
+                                                    <img src="{{ asset($producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100%; height: auto;">
+
+                                                    <!-- Descripción del producto -->
+                                                    <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                    <!-- Precio -->
+                                                    <h5 class="text-primary">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                    <!-- Estrellas (Valoración) -->
+                                                    <div class="mb-3">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                    <!-- Botón para agregar al carrito -->
+                                                    <button type="button" class="btn btn-success"
+                                                        onclick="addToCart({{ $producto->id }})">
+                                                        <i class="bi bi-cart-plus"></i> Añadir al Carrito
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!-- Botón Añadir al Carrito -->
                                     <form action="#" method="POST"> {{-- {{ route('cart.add', $producto->id) }} --}}
@@ -141,10 +214,47 @@
                                     </form>
 
                                     <!-- Comprar para Entrega Inmediata -->
-                                    <form action="#" method="POST"> {{-- {{ route('comprar', $producto->id) }} --}}
+                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                        {{-- --}}
                                         @csrf
-                                        <button type="submit" class="btn btn-primary btn-sm">Comprar</button>
+                                        <!-- Botón Comprar -->
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                            Comprar
+                                        </button>
                                     </form>
+                                    <!-- Modal de Confirmación de Compra -->
+                                    <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
+                                                        Confirmar Compra</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="{{ asset($producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100px;">
+                                                    <h5>{{ $producto->nombrepro }}</h5>
+                                                    <p class="text-muted">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</p>
+                                                    <p>¿Deseas confirmar la compra?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-primary">Confirmar
+                                                            Compra</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -162,7 +272,8 @@
                 @foreach ($productosCombos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}" />
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                                alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
                                 <div>
@@ -332,7 +443,84 @@
             </div>
         </div>
     </section>
+
+    {{-- carrito flotante --}}
+    <div class="cart-float">
+        <button type="button" class="btn rounded-circle position-relative" id="cartButton" data-bs-toggle="modal"
+            data-bs-target="#cartModal">
+            <i class="bi bi-cart"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">
+                0
+            </span>
+        </button>
+    </div>
+
+    {{-- modal de carrito --}}
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cartModalLabel">Tu Carrito</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group" id="cart-items">
+                        <!-- Aquí se llenarán los productos del carrito -->
+                        <li class="list-group-item text-center text-muted">El carrito está vacío</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir Comprando</button>
+                    {{-- <a href="{{ route('cart.checkout') }}" class="btn btn-primary">Finalizar Compra</a> --}}
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
+    <script>
+        let cart = [];
 
+        // Simula la adición de productos al carrito
+        function addToCart(productId, productName, productPrice) {
+            const existingProduct = cart.find(item => item.id === productId);
+            if (existingProduct) {
+                existingProduct.quantity++;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    quantity: 1
+                });
+            }
+            updateCartUI();
+        }
+
+        // Actualiza el indicador del carrito y los elementos del modal
+        function updateCartUI() {
+            const cartCount = document.getElementById('cart-count');
+            const cartItems = document.getElementById('cart-items');
+
+            // Actualizar el contador
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalItems;
+
+            // Actualizar el contenido del modal
+            cartItems.innerHTML = '';
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
+            } else {
+                cart.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    listItem.innerHTML = `
+                    ${item.name} (x${item.quantity})
+                    <span class="badge bg-primary rounded-pill">$${(item.price * item.quantity).toFixed(2)}</span>
+                `;
+                    cartItems.appendChild(listItem);
+                });
+            }
+        }
+    </script>
 @endsection

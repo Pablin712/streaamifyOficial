@@ -36,8 +36,15 @@ Route::get('/', function () {
     return view('principal');
 })->name('principal');
 
-Route::get('/shop', [ShopController::class, 'index'])->name('shop');
-//probando
+Route::controller(ShopController::class)->group(function () {
+    Route::get('/shop', 'index')->name('shop');
+    Route::post('/cart/add/{id}', 'addToCart')->name('cart.add');
+    Route::get('/cart', 'viewCart')->name('cart.view');
+    Route::post('/cart/remove/{id}', 'removeFromCart')->name('cart.remove');
+    Route::post('/cart/clear', 'clearCart')->name('cart.clear');
+    Route::get('/checkout', 'checkout')->name('cart.checkout');
+    Route::post('/comprar/{id}', 'comprar')->name('comprar');
+});
 
 Route::controller(LoginClienteController::class)->group(function () {
     Route::get('/cliente/login', 'showLoginForm')->name('cliente.login');
