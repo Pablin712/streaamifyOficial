@@ -72,7 +72,7 @@ class ShopController extends Controller
         }
 
         Session::put('cart', $cart);
-        return response()->json(['message' => 'Producto añadido al carrito', 'cart' => $cart]);
+        return redirect()->route('shop')->with('success', 'Producto añadido al carrito');
     }
 
     // Ver el carrito
