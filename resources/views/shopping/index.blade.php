@@ -547,78 +547,90 @@
     </div>
 @endsection
 @section('scripts')
-    <script>
-        let cart = JSON.parse(localStorage.getItem('cart')) || {}; // Guardar el carrito en localStorage
+<script>
+    let cart = @json($cart); // Inicializar el carrito con los datos de la sesión
 
-        // Añadir producto al carrito
-        function addToCart(productId) {
-            fetch(`/cart/add/${productId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    cart = data.cart;
-                    localStorage.setItem('cart', JSON.stringify(cart)); // Guardar en localStorage
-                    updateCartUI();
-                })
-                .catch(error => console.error('Error:', error));
+    // Guardar el carrito en localStorage
+    localStorage.setItem('cart', JSON.stringify(cart));
+
+    // Añadir producto al carrito
+    function addToCart(productId) {
+        fetch(`/cart/add/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                cart = data.cart;
+                localStorage.setItem('cart', JSON.stringify(cart)); // Guardar en localStorage
+                updateCartUI();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Actualizar la interfaz del carrito
+    function updateCartUI() {
+        const cartItems = document.getElementById('cart-items');
+        const cartCount = document.getElementById('cart-count');
+        cartItems.innerHTML = '';
+
+        let totalItems = 0;
+
+        if (Object.keys(cart).length === 0) {
+            cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
+            if (cartCount) {
+                cartCount.textContent = '0';
+            }
+            return;
         }
 
-        // Actualizar la interfaz del carrito
-        function updateCartUI() {
-            const cartItems = document.getElementById('cart-items');
-            const cartCount = document.getElementById('cart-count');
-            cartItems.innerHTML = '';
+        Object.values(cart).forEach(item => {
+            totalItems += item.cantidad;
+            let listItem = document.createElement('li');
+            listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+            listItem.innerHTML = `
+            <img src="${item.foto}" alt="${item.nombre}" style="width: 50px;">
+            <span>${item.nombre} (x${item.cantidad})</span>
+            <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
+            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑</button>
+        `;
+            cartItems.appendChild(listItem);
+        });
 
-            let totalItems = 0;
-
-            if (Object.keys(cart).length === 0) {
-                cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
-                cartCount.textContent = '0';
-                return;
-            }
-
-            Object.values(cart).forEach(item => {
-                totalItems += item.cantidad;
-                let listItem = document.createElement('li');
-                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                listItem.innerHTML = `
-                <img src="${item.foto}" alt="${item.nombre}" style="width: 50px;">
-                <span>${item.nombre} (x${item.cantidad})</span>
-                <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
-                <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑</button>
-            `;
-                cartItems.appendChild(listItem);
-            });
-
+        if (cartCount) {
             cartCount.textContent = totalItems;
         }
+    }
 
-        // Eliminar un producto del carrito
-        function removeFromCart(productId) {
-            fetch(`/cart/remove/${productId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    cart = data.cart;
-                    localStorage.setItem('cart', JSON.stringify(cart)); // Actualizar en localStorage
-                    updateCartUI();
-                })
-                .catch(error => console.error('Error:', error));
-        }
+    // Eliminar un producto del carrito
+    function removeFromCart(productId) {
+        delete cart[productId];
+        localStorage.setItem('cart', JSON.stringify(cart)); // Actualizar en localStorage
+        updateCartUI();
 
-        // Cargar el carrito cuando se abra la página
-        document.addEventListener("DOMContentLoaded", () => {
-            updateCartUI();
-        });
-    </script>
+        // Enviar solicitud AJAX al servidor para actualizar la sesión
+        fetch(`/cart/remove/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}' // Asegúrate de incluir el token CSRF
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Producto eliminado de la sesión');
+            } else {
+                console.error('Error al eliminar el producto de la sesión');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Llamar a updateCartUI cuando la página se cargue
+    document.addEventListener('DOMContentLoaded', updateCartUI);
+</script>
 @endsection

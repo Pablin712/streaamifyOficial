@@ -42,12 +42,16 @@ class ShopController extends Controller
             ->where('activo', true)
             ->get();
 
+        // Recuperar el carrito desde la sesión
+        $cart = session()->get('cart', []);
+
         return view('shopping.index', compact(
             'productosInmediataIndividual',
             'productosCombos',
             'productosPedidos',
             'productosPersonalizados',
-            'productosCompletos'
+            'productosCompletos',
+            'cart'
         ));
     }
     // Añadir un producto al carrito
@@ -69,7 +73,7 @@ class ShopController extends Controller
         }
 
         Session::put('cart', $cart);
-        return response()->json(['message' => 'Producto añadido al carrito', 'cart' => $cart]);
+        return redirect()->route('shop')->with('success', 'Producto añadido al carrito');
     }
 
     // Ver el carrito
@@ -79,17 +83,17 @@ class ShopController extends Controller
         return view('cliente.carrito', compact('cart'));
     }
 
-    // Eliminar un producto del carrito
     public function removeFromCart($id)
     {
-        $cart = Session::get('cart', []);
+        $cart = session()->get('cart', []);
 
         if (isset($cart[$id])) {
             unset($cart[$id]);
-            Session::put('cart', $cart);
+            session()->put('cart', $cart);
+            return response()->json(['success' => true]);
         }
 
-        return response()->json(['message' => 'Producto eliminado del carrito', 'cart' => $cart]);
+        return response()->json(['success' => false]);
     }
 
     // Vaciar el carrito
