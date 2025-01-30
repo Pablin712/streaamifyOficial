@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Producto;
 use App\Models\DetalleProducto;
+
 class ProductoSeeder extends Seeder
 {
     /**
@@ -21,14 +22,16 @@ class ProductoSeeder extends Seeder
                 'preciopro' => 3.50,
                 'estrellaspro' => 4,
                 'descripcionpro' => '1 dispositivo por un mes, para renovar realizar el pago al menos 1 día antes para evitar corte.',
-                'foto' => 'storage/fotos/netflix.png',
+                'foto' => 'storage/fotos/netflix.jpg',
                 'tipo_producto_id' => 1, // ID de 'Inmediata' en la tabla tipos_producto
                 'categoria_id' => 1, // ID de 'Individual' en la tabla categorias
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'NETFLIX',
-                    'descripcion' => 'Netflix es la plataforma más popular, para código hogar solicitar con soporte técnico. Disfruta de un mes de contenido ilimitado en calidad premium.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'NETFLIX',
+                        'descripcion' => 'Netflix es la plataforma más popular, para código hogar solicitar con soporte técnico. Disfruta de un mes de contenido ilimitado en calidad premium.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -41,10 +44,12 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1, // ID de 'Inmediata'
                 'categoria_id' => 1, // ID de 'Individual'
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'PRIME',
-                    'descripcion' => 'Disfruta de contenido exclusivo de Amazon Prime Video durante un mes. Incluye series, películas y más.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'PRIME',
+                        'descripcion' => 'Disfruta de contenido exclusivo de Amazon Prime Video durante un mes. Incluye series, películas y más.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -57,10 +62,12 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1,
                 'categoria_id' => 1,
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'MAX',
-                    'descripcion' => 'Max es una plataforma que ofrece contenido exclusivo de alta calidad. Incluye series, películas y documentales.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'MAX',
+                        'descripcion' => 'Max es una plataforma que ofrece contenido exclusivo de alta calidad. Incluye series, películas y documentales.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -73,10 +80,12 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1,
                 'categoria_id' => 1,
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'DISNEYP',
-                    'descripcion' => 'Disney Premium incluye acceso a todas las películas y series exclusivas de Disney durante un mes.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'DISNEYP',
+                        'descripcion' => 'Disney Premium incluye acceso a todas las películas y series exclusivas de Disney durante un mes.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -89,10 +98,12 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1,
                 'categoria_id' => 1,
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'DISNEYS',
-                    'descripcion' => 'Disfruta de Disney Plus con acceso a contenido exclusivo de Disney, Pixar, Marvel y más.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'DISNEYS',
+                        'descripcion' => 'Disfruta de Disney Plus con acceso a contenido exclusivo de Disney, Pixar, Marvel y más.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -105,10 +116,12 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1,
                 'categoria_id' => 1,
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'MAGIS',
-                    'descripcion' => 'Flujo TV te ofrece una experiencia única de entretenimiento con contenido exclusivo y canales premium.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'MAGIS',
+                        'descripcion' => 'Flujo TV te ofrece una experiencia única de entretenimiento con contenido exclusivo y canales premium.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -121,10 +134,12 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1,
                 'categoria_id' => 1,
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'PARAMOUNT',
-                    'descripcion' => 'Paramount te ofrece una gran variedad de contenido exclusivo de películas y series premium.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'PARAMOUNT',
+                        'descripcion' => 'Paramount te ofrece una gran variedad de contenido exclusivo de películas y series premium.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
             [
@@ -137,10 +152,190 @@ class ProductoSeeder extends Seeder
                 'tipo_producto_id' => 1,
                 'categoria_id' => 1,
                 'activo' => true,
-                'detalle' => [
-                    'idser' => 'CRUNCHY',
-                    'descripcion' => 'Crunchyroll es la mejor plataforma para disfrutar de anime en alta calidad y con estrenos semanales.',
-                    'meses' => 1,
+                'detalles' => [
+                    [
+                        'idser' => 'CRUNCHY',
+                        'descripcion' => 'Crunchyroll es la mejor plataforma para disfrutar de anime en alta calidad y con estrenos semanales.',
+                        'meses' => 1,
+                    ],
+                ],
+            ],
+            [
+                'codigopro' => 'COMBO_TRIO1',
+                'nombrepro' => 'Combo Trio 1',
+                'preciopro' => 6.00,
+                'estrellaspro' => 4,
+                'descripcionpro' => 'Combo que incluye Spotify, Prime Video y Disney Plus.',
+                'foto' => 'storage/fotos/32.png',
+                'tipo_producto_id' => 2, // Supongamos que 2 es para pedidos
+                'categoria_id' => 2, // Supongamos que 2 es categoría de combos
+                'activo' => true,
+                'detalles' => [
+                    [
+                        'idser' => 'SPOTIFY',
+                        'descripcion' => 'Acceso a Spotify Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'PRIME',
+                        'descripcion' => 'Acceso a Prime Video por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'DISNEYS',
+                        'descripcion' => 'Acceso a Disney Plus por 1 mes.',
+                        'meses' => 1,
+                    ],
+                ],
+            ],
+            [
+                'codigopro' => 'COMBO_TRIO2',
+                'nombrepro' => 'Combo Trio 2',
+                'preciopro' => 8.00,
+                'estrellaspro' => 4,
+                'descripcionpro' => 'Combo que incluye Netflix, Disney Plus y Spotify Premium.',
+                'foto' => 'storage/fotos/33.png',
+                'tipo_producto_id' => 2, // Supongamos que 2 es para pedidos
+                'categoria_id' => 2, // Supongamos que 2 es categoría de combos
+                'activo' => true,
+                'detalles' => [
+                    [
+                        'idser' => 'NETFLIX',
+                        'descripcion' => 'Acceso a Netflix Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'DISNEYS',
+                        'descripcion' => 'Acceso a Disney Plus por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'SPOTIFY',
+                        'descripcion' => 'Acceso a Spotify Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                ],
+            ],
+            [
+                'codigopro' => 'COMBO_TRIO3',
+                'nombrepro' => 'Combo Trio 3',
+                'preciopro' => 7.50,
+                'estrellaspro' => 5,
+                'descripcionpro' => 'Combo que incluye Netflix, Disney Premium con ESPN y MAX.',
+                'foto' => 'storage/fotos/34.png',
+                'tipo_producto_id' => 1, // Supongamos que 1 es para inmediata
+                'categoria_id' => 2, // Supongamos que 2 es categoría de combos
+                'activo' => true,
+                'detalles' => [
+                    [
+                        'idser' => 'NETFLIX',
+                        'descripcion' => 'Acceso a Netflix Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'DISNEYP',
+                        'descripcion' => 'Acceso a Disney Premium con ESPN por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'MAX',
+                        'descripcion' => 'Acceso a MAX por 1 mes.',
+                        'meses' => 1,
+                    ],
+                ],
+            ],
+            [
+                'codigopro' => 'COMBO_TRIO4',
+                'nombrepro' => 'Combo Trio 4',
+                'preciopro' => 7.50,
+                'estrellaspro' => 5,
+                'descripcionpro' => 'Combo que incluye Netflix, Spotify Premium y MAX.',
+                'foto' => 'storage/fotos/35.png',
+                'tipo_producto_id' => 2, // Supongamos que 2 es para pedidos
+                'categoria_id' => 2, // Supongamos que 2 es categoría de combos
+                'activo' => true,
+                'detalles' => [
+                    [
+                        'idser' => 'NETFLIX',
+                        'descripcion' => 'Acceso a Netflix Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'SPOTIFY',
+                        'descripcion' => 'Acceso a Spotify Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'MAX',
+                        'descripcion' => 'Acceso a MAX por 1 mes.',
+                        'meses' => 1,
+                    ],
+                ],
+            ],
+            [
+                'codigopro' => 'COMBO_CUARTETO1',
+                'nombrepro' => 'Combo Cuarteto 1',
+                'preciopro' => 7.00,
+                'estrellaspro' => 5,
+                'descripcionpro' => 'Combo que incluye MAX, Disney Plus, Paramount Plus y Crunchyroll Mega Fan.',
+                'foto' => 'storage/fotos/36.png',
+                'tipo_producto_id' => 1, // Supongamos que 1 es para inmediata
+                'categoria_id' => 2, // Supongamos que 2 es categoría de combos
+                'activo' => true,
+                'detalles' => [
+                    [
+                        'idser' => 'MAX',
+                        'descripcion' => 'Acceso a MAX por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'DISNEYS',
+                        'descripcion' => 'Acceso a Disney Plus por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'PARAMOUNT',
+                        'descripcion' => 'Acceso a Paramount Plus por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'CRUNCHY',
+                        'descripcion' => 'Acceso a Crunchyroll por 1 mes.',
+                        'meses' => 1,
+                    ],
+                ],
+            ],
+            [
+                'codigopro' => 'COMBO_CUARTETO2',
+                'nombrepro' => 'Combo Cuarteto 2',
+                'preciopro' => 8.25,
+                'estrellaspro' => 5,
+                'descripcionpro' => 'Combo que incluye Netflix Premium, Disney Premium, Paramount Plus y Crunchyroll Mega Fan.',
+                'foto' => 'storage/fotos/37.png',
+                'tipo_producto_id' => 1, // Supongamos que 1 es para inmediata
+                'categoria_id' => 2, // Supongamos que 2 es categoría de combos
+                'activo' => true,
+                'detalles' => [
+                    [
+                        'idser' => 'NETFLIX',
+                        'descripcion' => 'Acceso a Netflix Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'DISNEYP',
+                        'descripcion' => 'Acceso a Disney Premium por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'PARAMOUNT',
+                        'descripcion' => 'Acceso a Paramount Plus por 1 mes.',
+                        'meses' => 1,
+                    ],
+                    [
+                        'idser' => 'CRUNCHY',
+                        'descripcion' => 'Acceso a Crunchyroll por 1 mes.',
+                        'meses' => 1,
+                    ],
                 ],
             ],
         ];
@@ -160,13 +355,17 @@ class ProductoSeeder extends Seeder
                 'activo' => $producto['activo'],
             ]);
 
-            // Crear el detalle asociado al producto
-            DetalleProducto::create([
-                'producto_id' => $nuevoProducto->id,
-                'idser' => $producto['detalle']['idser'],
-                'descripcion' => $producto['detalle']['descripcion'],
-                'meses' => $producto['detalle']['meses'],
-            ]);
+            // Verificar si el producto tiene detalles antes de iterar
+            if (isset($producto['detalles']) && is_array($producto['detalles'])) {
+                foreach ($producto['detalles'] as $detalle) {
+                    DetalleProducto::create([
+                        'producto_id' => $nuevoProducto->id,
+                        'idser' => $detalle['idser'],
+                        'descripcion' => $detalle['descripcion'],
+                        'meses' => $detalle['meses'],
+                    ]);
+                }
+            }
         }
     }
 }
