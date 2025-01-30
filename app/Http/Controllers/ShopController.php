@@ -26,6 +26,7 @@ class ShopController extends Controller
             ->get();
 
         $productosCombos = Producto::where('categoria_id', 2) // Categoría Combo
+            ->where('tipo_producto_id', 1)
             ->where('activo', true)
             ->get();
 
