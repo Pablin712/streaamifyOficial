@@ -64,11 +64,11 @@ class EmpleadoSeeder extends Seeder
                 'idrol' => 'bodeguero'
             ],
             [
-                'nombreemp' => 'Isabella Salazar',
+                'nombreemp' => 'Laravel',
                 'telefonoemp' => '0961412826',
-                'usuarioemp' => 'tecnico',
-                'passwordemp' => bcrypt('tecnicojunior'),
-                'idrol' => 'tecnico'
+                'usuarioemp' => 'vendedodr',
+                'passwordemp' => bcrypt('vendedorjunior'),
+                'idrol' => 'vendedor'
             ],
         ]);
     }

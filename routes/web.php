@@ -28,6 +28,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\HistorialClientesController;
+use App\Http\Controllers\PedidoController;
 
 //cliente
 Route::get('/register', function () {
@@ -45,7 +46,6 @@ Route::controller(ShopController::class)->group(function () {
     Route::post('/cart/remove/{id}', 'removeFromCart')->name('cart.remove');
     Route::post('/cart/clear', 'clearCart')->name('cart.clear');
     Route::get('/checkout', 'checkout')->name('cart.checkout');
-    Route::post('/comprar/{id}', 'comprar')->name('comprar');
 });
 
 Route::controller(LoginClienteController::class)->group(function () {
@@ -56,9 +56,6 @@ Route::controller(LoginClienteController::class)->group(function () {
         return view('auth.recoverCliente');
     })->name('cliente.recover');
 });
-
-
-
 Route::post('/register', [ClienteController::class, 'register'])->name('cliente.register');
 
 //rutas protegidas del cliente
@@ -69,6 +66,9 @@ Route::middleware([AuthCliente::class])->group(function () {
     });
     Route::controller(HistorialClientesController::class)->group(function () {
         Route::get('/historial-cliente', 'index')->name('historial.cliente');
+    });
+    Route::controller(ShopController::class)->group(function(){
+        Route::post('/comprar/{id}', 'comprar')->name('comprar');
     });
 });
 /*
@@ -247,5 +247,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargas', 'index')->name('empleado.recargas.index');
         Route::post('/recargas/{idrec}/estado', 'updateEstado')->name('empleado.recargas.updateEstado');
+    });
+    Route::controller(PedidoController::class)->group(function () {
+        Route::get('/empleado/pedidos', 'index')->name('empleado.pedidos.index');
+        Route::post('/empleado/pedidos/{id}', 'update')->name('empleado.pedidos.update');
     });
 });

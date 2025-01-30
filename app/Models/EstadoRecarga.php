@@ -21,4 +21,8 @@ class EstadoRecarga extends Model
     {
         return $this->hasMany(Recarga::class, 'idestado', 'idestado');
     }
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'idestado', 'idestado');
+    }
 }

@@ -88,6 +88,7 @@
         .form-container .extra-links a:hover {
             text-decoration: underline;
         }
+
         .form-container img {
             width: 70px;
             height: 70px;
@@ -101,6 +102,12 @@
 
 <body class="bg-gradient-primary">
     <div class="form-container">
+        @if (session('autenticate'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Atención:</strong> {{ session('autenticate') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <form method="POST" action="{{ route('cliente.register') }}">
             @csrf
             <img src="{{ asset('images/Icono.png') }}" alt="Logo">
@@ -166,10 +173,6 @@
             </div>
             <button type="submit" class="btn btn-primary w-100">Registrar Cuenta</button>
         </form>
-
-        <div class="extra-links">
-            <a href="#">¿Olvidaste tu contraseña?</a>
-        </div>
         <div class="extra-links">
             <a href="{{ route('cliente.login') }}">¿Ya tienes cuenta? Inicia sesión</a>
         </div>

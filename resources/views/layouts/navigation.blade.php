@@ -129,6 +129,7 @@
                                 @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
                                     || Auth::user()->idrol == 'tecnico')
                                     <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
+                                    <a class="nav-link" href="{{ route('empleado.pedidos.index') }}">Pedidos</a>
                                     <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
                                 @endif
                                 @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'

@@ -22,12 +22,10 @@ class ShopController extends Controller
     {
         $productosInmediataIndividual = Producto::where('tipo_producto_id', 1) // Entrega Inmediata
             ->where('categoria_id', 1) // Categoría Individual
-            ->where('activo', true)
             ->get();
 
         $productosCombos = Producto::where('categoria_id', 2) // Categoría Combo
             ->where('tipo_producto_id', 1)
-            ->where('activo', true)
             ->get();
 
         $productosPedidos = Producto::where('tipo_producto_id', 2) // Pedido
@@ -127,7 +125,7 @@ class ShopController extends Controller
         if ($usuario->saldo < $producto->preciopro) {
             return back()->with('error', 'Saldo insuficiente para realizar la compra.');
         }
-        
+
         // Si el producto es de tipo inmediata (id=1)
         if ($producto->tipo_producto_id == 1) {
             DB::beginTransaction();
@@ -163,7 +161,7 @@ class ShopController extends Controller
                     $detalleVenta->montodet = $producto->preciopro / count($producto->detalles);
                     $detalleVenta->activodet = true;
                     $detalleVenta->save();
-                    
+
                     // Enviar mensaje de entrega
                     // Generar mensaje de servicio adquirido
                     $mensaje = "**" . $perfil->cuenta->valor->servicio->nombreser . "**\n" .
@@ -195,7 +193,15 @@ class ShopController extends Controller
                 return back()->with('error', $e->getMessage());
             }
         } else {
-            // Registrar pedido sin descontar saldo
+            // Registrar el pedido sin descontar saldo
+            Pedido::create([
+                'idcli' => $usuario->idcli,
+                'producto_id' => $producto->id,
+                //'idestado' => 1,
+                'fechapedido' => now(),
+                'respuesta' => 'Sin responder',
+            ]);
+            // Mensaje de sesión para mostrar en la vista
             session()->flash('pedido_registrado', [
                 'nombre' => $producto->nombrepro,
                 'precio' => $producto->preciopro
@@ -209,21 +215,21 @@ class ShopController extends Controller
         return Cuenta::whereHas('valor', function ($query) use ($idser) {
             $query->where('idser', $idser);
         })
-        ->where('caidacue', false)
-        ->where('activocue', true)
-        ->whereHas('valor', function ($query) {
-            $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
-        })
-        ->first();
+            ->where('caidacue', false)
+            ->where('activocue', true)
+            ->whereHas('valor', function ($query) {
+                $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
+            })
+            ->first();
     }
 
     private function buscarPerfilDisponible($cuenta)
     {
         return Perfil::where('idcue', $cuenta->idcue)
-        ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
+            ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
                     WHERE view_usuarios_activos.idcue = perfiles.idcue 
                     AND view_usuarios_activos.perfil = perfiles.numeroper) <= 1')
-        ->first();
+            ->first();
     }
 
     private function enviarMensajeEntrega($perfil)

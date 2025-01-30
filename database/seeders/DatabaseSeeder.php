@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             ProductoSeeder::class,
             BancosSeeder::class,
             EstadoRecargaSeeder::class,
-            VentaSeeder::class,
+            //VentaSeeder::class,
             DailyStatisticSeeder::class,
         ]);
     }

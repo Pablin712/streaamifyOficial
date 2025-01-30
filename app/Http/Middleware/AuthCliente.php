@@ -15,8 +15,8 @@ class AuthCliente
     {
 
         if (!Auth::guard('cliente')->check()) {
-            session()->flash('error', 'No tienes permisos para acceder a esta página.');
-            return redirect()->route('principal'); // Redirige a principal
+            session()->flash('autenticate', 'Regístrate y recarga saldo para poder comprar con Streamify de forma segura.');
+            return redirect()->route('cliente.register'); // Redirige a principal
         }
 
         // Si pasa las validaciones, continúa con la solicitud
