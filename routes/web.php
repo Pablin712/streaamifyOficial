@@ -27,6 +27,8 @@ use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\HistorialClientesController;
+
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
@@ -64,6 +66,9 @@ Route::middleware([AuthCliente::class])->group(function () {
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargar-saldo', 'recargarSaldo')->name('recargar.index');
         Route::post('/recargar-saldo', 'procesarRecarga')->name('recargar.saldo');
+    });
+    Route::controller(HistorialClientesController::class)->group(function () {
+        Route::get('/historial-cliente', 'index')->name('historial.cliente');
     });
 });
 /*
