@@ -177,7 +177,7 @@ class ShopController extends Controller
                 $usuario->save();
 
                 // Verificar si la cuenta se llenó
-                $this->verificarCuentaLlena($cuenta);
+                $this->verificarCuentaLlena($cuenta, $producto);
                 //dd($cuenta);
                 // Guardar mensaje de éxito en sesión
                 session()->flash('compra_exitosa', [
@@ -242,11 +242,11 @@ class ShopController extends Controller
         session()->flash('mensaje_entrega', $mensaje);
     }
 
-    private function verificarCuentaLlena($cuenta)
+    private function verificarCuentaLlena($cuenta, $producto)
     {
         $usuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
         if ($usuariosActivos >= $cuenta->valor->pantmaxval) {
-            $cuenta->update(['activocue' => false]);
+            $producto->update(['activo' => false]);
         }
     }
 }

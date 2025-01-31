@@ -193,7 +193,7 @@
                     <div class="col mb-5">
                         <div class="card h-100">
                             <!-- Imagen del producto -->
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
 
                             <!-- Detalles del producto -->
@@ -234,7 +234,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset($producto->foto) }}"
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 100%; height: auto;">
 
@@ -292,7 +292,7 @@
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
-                                                    <img src="{{ asset($producto->foto) }}"
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 100px;">
                                                     <h5>{{ $producto->nombrepro }}</h5>
@@ -329,7 +329,7 @@
                 @foreach ($productosCombos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -346,94 +346,98 @@
                                     @endfor
                                 </div>
                                 <p class="text-muted">${{ number_format($producto->preciopro, 2) }}</p>
-                                <!-- Botón Info -->
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#infoModal{{ $producto->id }}">
-                                    <i class="bi bi-info-circle"></i>
-                                </button>
-                                <!-- Modal de Información del Producto -->
-                                <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
-                                                    {{ $producto->nombrepro }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <!-- Imagen del producto -->
-                                                <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                    class="img-fluid rounded mb-3" style="max-width: 100%; height: auto;">
-
-                                                <!-- Descripción del producto -->
-                                                <p class="text-muted">{{ $producto->descripcionpro }}</p>
-
-                                                <!-- Precio -->
-                                                <h5 class="text-primary">Precio:
-                                                    ${{ number_format($producto->preciopro, 2) }}</h5>
-
-                                                <!-- Estrellas (Valoración) -->
-                                                <div class="mb-3">
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        <i
-                                                            class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
-                                                    @endfor
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Botón Info -->
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#infoModal{{ $producto->id }}">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <!-- Modal de Información del Producto -->
+                                    <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                        {{ $producto->nombrepro }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cerrar</button>
+                                                <div class="modal-body text-center">
+                                                    <!-- Imagen del producto -->
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100%; height: auto;">
+
+                                                    <!-- Descripción del producto -->
+                                                    <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                    <!-- Precio -->
+                                                    <h5 class="text-primary">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                    <!-- Estrellas (Valoración) -->
+                                                    <div class="mb-3">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Botón Añadir al Carrito -->
-                                <form action="{{ route('cart.add', $producto->id) }}" method="POST">
-                                    {{--  --}}
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
-                                </form>
-                                <!-- Hacer Pedido para otros -->
-                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
-                                    {{-- {{ route('pedido', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#confirmCompraModal{{ $producto->id }}">
-                                        Comprar
-                                    </button>
-                                </form>
-                                <!-- Modal de Confirmación de Compra -->
-                                <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
-                                                    Confirmar Compra</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                    class="img-fluid rounded mb-3" style="max-width: 100px;">
-                                                <h5>{{ $producto->nombrepro }}</h5>
-                                                <p class="text-muted">Precio:
-                                                    ${{ number_format($producto->preciopro, 2) }}</p>
-                                                <p>¿Deseas confirmar la compra?</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cancelar</button>
-                                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-primary">Confirmar
-                                                        Compra</button>
-                                                </form>
+                                    <!-- Botón Añadir al Carrito -->
+                                    <form action="{{ route('cart.add', $producto->id) }}" method="POST">
+                                        {{--  --}}
+                                        @csrf
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                    </form>
+                                    <!-- Hacer Pedido para otros -->
+                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                        {{-- {{ route('pedido', $producto->id) }} --}}
+                                        @csrf
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                            Comprar
+                                        </button>
+                                    </form>
+                                    <!-- Modal de Confirmación de Compra -->
+                                    <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
+                                                        Confirmar Compra</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100px;">
+                                                    <h5>{{ $producto->nombrepro }}</h5>
+                                                    <p class="text-muted">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</p>
+                                                    <p>¿Deseas confirmar la compra?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-primary">Confirmar
+                                                            Compra</button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -454,7 +458,7 @@
                 @foreach ($productosPedidos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -465,93 +469,90 @@
                                     @endfor
                                 </div>
                                 <p class="text-muted">${{ number_format($producto->preciopro, 2) }}</p>
-                                <!-- Botón Info -->
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#infoModal{{ $producto->id }}">
-                                    <i class="bi bi-info-circle"></i>
-                                </button>
-                                <!-- Modal de Información del Producto -->
-                                <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
-                                                    {{ $producto->nombrepro }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <!-- Imagen del producto -->
-                                                <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                    class="img-fluid rounded mb-3" style="max-width: 100%; height: auto;">
-
-                                                <!-- Descripción del producto -->
-                                                <p class="text-muted">{{ $producto->descripcionpro }}</p>
-
-                                                <!-- Precio -->
-                                                <h5 class="text-primary">Precio:
-                                                    ${{ number_format($producto->preciopro, 2) }}</h5>
-
-                                                <!-- Estrellas (Valoración) -->
-                                                <div class="mb-3">
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        <i
-                                                            class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
-                                                    @endfor
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Botón Info -->
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#infoModal{{ $producto->id }}">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <!-- Modal de Información del Producto -->
+                                    <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                        {{ $producto->nombrepro }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cerrar</button>
+                                                <div class="modal-body text-center">
+                                                    <!-- Imagen del producto -->
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100%; height: auto;">
+
+                                                    <!-- Descripción del producto -->
+                                                    <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                    <!-- Precio -->
+                                                    <h5 class="text-primary">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                    <!-- Estrellas (Valoración) -->
+                                                    <div class="mb-3">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- Botón Añadir al Carrito -->
-                                <form action="#" method="POST"> {{-- {{ route('cart.add', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
-                                </form>
-                                <!-- Hacer Pedido para otros -->
-                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
-                                    {{-- {{ route('pedido', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#confirmCompraModal{{ $producto->id }}">
-                                        Pedir
-                                    </button>
-                                </form>
-                                <!-- Modal de Confirmación de Compra -->
-                                <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
-                                                    Confirmar Pedido</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                    class="img-fluid rounded mb-3" style="max-width: 100px;">
-                                                <h5>{{ $producto->nombrepro }}</h5>
-                                                <p class="text-muted">Precio:
-                                                    ${{ number_format($producto->preciopro, 2) }}</p>
-                                                <p>¿Deseas confirmar la compra?</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cancelar</button>
-                                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-primary">Confirmar
-                                                        Pedido</button>
-                                                </form>
+                                    <!-- Hacer Pedido para otros -->
+                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                        {{-- {{ route('pedido', $producto->id) }} --}}
+                                        @csrf
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                            Pedir
+                                        </button>
+                                    </form>
+                                    <!-- Modal de Confirmación de Compra -->
+                                    <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
+                                                        Confirmar Pedido</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100px;">
+                                                    <h5>{{ $producto->nombrepro }}</h5>
+                                                    <p class="text-muted">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</p>
+                                                    <p>¿Deseas confirmar la compra?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-primary">Confirmar
+                                                            Pedido</button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -572,7 +573,7 @@
                 @foreach ($productosPersonalizados as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -583,65 +584,62 @@
                                     @endfor
                                 </div>
                                 <p class="text-muted">${{ number_format($producto->preciopro, 2) }}</p>
-                                <!-- Botón Info -->
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#infoModal{{ $producto->id }}">
-                                    <i class="bi bi-info-circle"></i>
-                                </button>
-                                <!-- Modal de Información del Producto -->
-                                <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
-                                                    {{ $producto->nombrepro }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <!-- Imagen del producto -->
-                                                <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                    class="img-fluid rounded mb-3" style="max-width: 100%; height: auto;">
-
-                                                <!-- Descripción del producto -->
-                                                <p class="text-muted">{{ $producto->descripcionpro }}</p>
-
-                                                <!-- Precio -->
-                                                <h5 class="text-primary">Precio:
-                                                    ${{ number_format($producto->preciopro, 2) }}</h5>
-
-                                                <!-- Estrellas (Valoración) -->
-                                                <div class="mb-3">
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        <i
-                                                            class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
-                                                    @endfor
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Botón Info -->
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#infoModal{{ $producto->id }}">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <!-- Modal de Información del Producto -->
+                                    <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                        {{ $producto->nombrepro }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cerrar</button>
+                                                <div class="modal-body text-center">
+                                                    <!-- Imagen del producto -->
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100%; height: auto;">
+
+                                                    <!-- Descripción del producto -->
+                                                    <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                    <!-- Precio -->
+                                                    <h5 class="text-primary">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                    <!-- Estrellas (Valoración) -->
+                                                    <div class="mb-3">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Hacer Pedido para otros -->
+                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                        {{-- {{ route('pedido', $producto->id) }} --}}
+                                        @csrf
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                            Pedir
+                                        </button>
+                                    </form>
                                 </div>
-                                <!-- Botón Añadir al Carrito -->
-                                <form action="#" method="POST"> {{-- {{ route('cart.add', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
-                                </form>
-                                <!-- Hacer Pedido para otros -->
-                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
-                                    {{-- {{ route('pedido', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#confirmCompraModal{{ $producto->id }}">
-                                        Pedir
-                                    </button>
-                                </form>
                             </div>
                             <!-- Modal de Confirmación de Pedido -->
                             <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
@@ -655,8 +653,9 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body text-center">
-                                            <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                class="img-fluid rounded mb-3" style="max-width: 100px;">
+                                            <img src="{{ asset('public/' . $producto->foto) }}"
+                                                alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                style="max-width: 100px;">
                                             <h5>{{ $producto->nombrepro }}</h5>
                                             <p class="text-muted">Precio:
                                                 ${{ number_format($producto->preciopro, 2) }}</p>
@@ -689,7 +688,7 @@
                 @foreach ($productosCompletos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -700,66 +699,62 @@
                                     @endfor
                                 </div>
                                 <p class="text-muted">${{ number_format($producto->preciopro, 2) }}</p>
-                                <!-- Botón Info -->
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#infoModal{{ $producto->id }}">
-                                    <i class="bi bi-info-circle"></i>
-                                </button>
-                                <!-- Modal de Información del Producto -->
-                                <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
-                                                    {{ $producto->nombrepro }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body text-center">
-                                                <!-- Imagen del producto -->
-                                                <img src="{{ asset($producto->foto) }}"
-                                                    alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
-                                                    style="max-width: 100%; height: auto;">
-
-                                                <!-- Descripción del producto -->
-                                                <p class="text-muted">{{ $producto->descripcionpro }}</p>
-
-                                                <!-- Precio -->
-                                                <h5 class="text-primary">Precio:
-                                                    ${{ number_format($producto->preciopro, 2) }}</h5>
-
-                                                <!-- Estrellas (Valoración) -->
-                                                <div class="mb-3">
-                                                    @for ($i = 1; $i <= 5; $i++)
-                                                        <i
-                                                            class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
-                                                    @endfor
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Botón Info -->
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#infoModal{{ $producto->id }}">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <!-- Modal de Información del Producto -->
+                                    <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                        {{ $producto->nombrepro }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cerrar</button>
+                                                <div class="modal-body text-center">
+                                                    <!-- Imagen del producto -->
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 100%; height: auto;">
+
+                                                    <!-- Descripción del producto -->
+                                                    <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                    <!-- Precio -->
+                                                    <h5 class="text-primary">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                    <!-- Estrellas (Valoración) -->
+                                                    <div class="mb-3">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Hacer Pedido para otros -->
+                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                        {{-- {{ route('pedido', $producto->id) }} --}}
+                                        @csrf
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                            Pedir
+                                        </button>
+                                    </form>
                                 </div>
-                                <!-- Botón Añadir al Carrito -->
-                                <form action="#" method="POST"> {{-- {{ route('cart.add', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
-                                </form>
-                                <!-- Hacer Pedido para otros -->
-                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
-                                    {{-- {{ route('pedido', $producto->id) }} --}}
-                                    @csrf
-                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#confirmCompraModal{{ $producto->id }}">
-                                        Pedir
-                                    </button>
-                                </form>
                             </div>
                             <!-- Modal de Confirmación de Pedido -->
                             <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
@@ -773,8 +768,9 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body text-center">
-                                            <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
-                                                class="img-fluid rounded mb-3" style="max-width: 100px;">
+                                            <img src="{{ asset('public/' . $producto->foto) }}"
+                                                alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                style="max-width: 100px;">
                                             <h5>{{ $producto->nombrepro }}</h5>
                                             <p class="text-muted">Precio:
                                                 ${{ number_format($producto->preciopro, 2) }}</p>

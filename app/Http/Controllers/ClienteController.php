@@ -179,17 +179,32 @@ class ClienteController extends Controller
                 'last_name' => ucwords($request->last_name),
                 'pais' => ucwords($request->pais)
             ]);
-            // Crear el cliente en la base de datos
-            Cliente::create([
-                'nombrecli' => $request->first_name . ' ' . $request->last_name, // Combina nombres y apellidos
-                'email' => $request->email,
-                'password' => $request->password, // El atributo `password` ya aplica bcrypt automáticamente
-                'telefonocli' => $request->telefonocli ?? null, // Campo opcional (si quieres manejarlo)
-                'pais' => $request->pais,
-                'saldo' => 0, // Por defecto, saldo inicial en 0
-            ]);
-            // Redirigir con mensaje de éxito
-            return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
+            // 🔹 Buscar si el cliente ya existe por número de teléfono
+            $cliente = Cliente::where('telefonocli', $request->telefonocli)->first();
+
+            if ($cliente) {
+                // 🔹 Si el cliente existe, actualizar su información
+                $cliente->update([
+                    'nombrecli' => $request->first_name . ' ' . $request->last_name,
+                    'email' => $request->email,
+                    'password' => $request->password, // Ya está encriptada
+                    'pais' => $request->pais,
+                ]);
+
+                return redirect()->route('cliente.login')->with('success', '¡Tu cuenta ha sido registrada exitosamente!');
+            } else {
+                // 🔹 Si el cliente NO existe, crear un nuevo registro
+                Cliente::create([
+                    'nombrecli' => $request->first_name . ' ' . $request->last_name,
+                    'email' => $request->email,
+                    'password' => $request->password, // Ya está encriptada
+                    'telefonocli' => $request->telefonocli,
+                    'pais' => $request->pais,
+                    'saldo' => 0, // Saldo inicial en 0
+                ]);
+    
+                return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Si hay errores de validación, redirigir con los errores y datos antiguos
             return redirect()->back()

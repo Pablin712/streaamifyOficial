@@ -38,7 +38,7 @@
                 <div class="masthead-device-mockup">
                     <div class="text-center">
                         <!-- Aquí va la imagen promocional -->
-                        <img {{-- src="{{ asset('images/tik tok miniatura.png') }}" --}} src="{{ asset('images/cuadrado/combos/33.png') }}"
+                        <img src="{{ asset('images/cuadrado/combos/33.png') }}"
                             alt="Promoción de Streaming" class="rounded shadow-lg"
                             style="width: 80%; max-width: 600px; height: auto; object-fit: cover;" />
                     </div>

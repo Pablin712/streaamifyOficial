@@ -179,7 +179,8 @@
                         <option value="+58">🇻🇪 +58</option>
                     </select>
                     <!-- Input para número de teléfono -->
-                    <input type="text" class="form-control" name="telefonocli" id="phone" placeholder="Teléfono">
+                    <input type="text" class="form-control" name="telefonocli" id="phone"
+                        placeholder="Teléfono">
                 </div>
             </div>
             <!-- Input oculto para almacenar el país -->
@@ -282,21 +283,39 @@
 
             // Formatear número mientras el usuario escribe
             phoneInput.addEventListener("input", function() {
-                let number = phoneInput.value.replace(/\D/g, ""); // Eliminar caracteres no numéricos
-                if (number.length >= 8) {
-                    phoneInput.value = formatPhoneNumber(number);
+                let selectedCode = countryCodeSelect.value; // Obtener código seleccionado
+                let rawNumber = phoneInput.value.replace(/\D/g, ""); // Solo números
+
+                if (selectedCode === "+593") { // Validación especial para Ecuador
+                    if (rawNumber.startsWith("0")) {
+                        rawNumber = rawNumber.substring(1); // Eliminar "0" inicial
+                    }
+                    if (rawNumber.length > 9) {
+                        rawNumber = rawNumber.substring(0, 9); // Solo 9 dígitos permitidos
+                    }
                 }
+                phoneInput.value = formatPhoneNumber(rawNumber, selectedCode);
             });
 
-            function formatPhoneNumber(number) {
-                if (number.length === 10) {
-                    return `${number.slice(0, 2)} ${number.slice(2, 5)} ${number.slice(5, 8)} ${number.slice(8, 10)}`;
-                } else if (number.length === 9) {
-                    return `${number.slice(0, 1)} ${number.slice(1, 4)} ${number.slice(4, 7)} ${number.slice(7, 9)}`;
-                } else if (number.length === 8) {
+            function formatPhoneNumber(number, countryCode) {
+                number = number.replace(/\D/g, ""); // Eliminar caracteres no numéricos
+
+                if (countryCode === "+593") { // Ecuador
+                    if (number.startsWith("0")) {
+                        number = number.substring(1); // Eliminar el "0" inicial si lo tiene
+                    }
+                    if (number.length > 9) {
+                        number = number.substring(0, 9); // Asegurar que solo tenga 9 dígitos
+                    }
+                    return `${number.slice(0, 2)} ${number.slice(2, 5)} ${number.slice(5, 9)}`;
+                } else if (number.length === 10) { // Números de 10 dígitos (Ej: México, Argentina)
+                    return `${number.slice(0, 2)} ${number.slice(2, 6)} ${number.slice(6, 10)}`;
+                } else if (number.length === 9) { // Números de 9 dígitos (Ej: Colombia, Chile)
+                    return `${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)}`;
+                } else if (number.length === 8) { // Números de 8 dígitos (Ej: Bolivia, El Salvador)
                     return `${number.slice(0, 4)} ${number.slice(4, 8)}`;
                 }
-                return number;
+                return number; // Si no coincide con ningún formato, se deja igual
             }
 
             // Antes de enviar el formulario, asegurarse de que el campo país tenga un valor
@@ -308,4 +327,5 @@
         });
     </script>
 </body>
+
 </html>

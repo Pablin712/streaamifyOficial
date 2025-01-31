@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             BancosSeeder::class,
             EstadoRecargaSeeder::class,
             //VentaSeeder::class,
-            DailyStatisticSeeder::class,
+            //DailyStatisticSeeder::class,
         ]);
     }
 }

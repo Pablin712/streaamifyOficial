@@ -15,7 +15,8 @@
     <!-- Custom CSS -->
     <style>
         body {
-            background: #E4B100; /* linear-gradient(135deg, #E4B100, #274698); */
+            background: #E4B100;
+            /* linear-gradient(135deg, #E4B100, #274698); */
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -94,7 +95,12 @@
             @csrf
             <img src="{{ asset('images/Icono.png') }}" alt="Logo">
             <h1>Inicia Sesión</h1>
-
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert" id="successMessage">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <!-- Validation Errors -->
             @if ($errors->any())
                 <div class="alert alert-danger">
@@ -105,7 +111,6 @@
                     </ul>
                 </div>
             @endif
-
             <div class="form-floating mb-3">
                 <input type="text" class="form-control" id="floatingInput" name="email" placeholder="Usuario">
                 <label for="floatingInput">Usuario</label>
@@ -120,7 +125,7 @@
 
             <div class="extra-links mt-3">
                 <a href="{{ route('cliente.recover') }}">¿Olvidaste tu contraseña?</a> <br>
-                <a href="{{ route('cliente.register')}}">¿No tienes cuenta? Regístrate</a>
+                <a href="{{ route('cliente.register') }}">¿No tienes cuenta? Regístrate</a>
             </div>
         </form>
     </div>
