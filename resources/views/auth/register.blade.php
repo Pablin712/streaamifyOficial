@@ -16,7 +16,7 @@
     <link
         href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
         rel="stylesheet">
-
+    <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
     <!-- Custom styles for this template-->
     <link href="{{ asset('css/sb-admin-2.min.css') }}" rel="stylesheet">
 
@@ -24,6 +24,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 
+    <!-- CSS de Intl-Tel-Input -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/css/intlTelInput.min.css">
     <!-- Custom CSS -->
     <style>
         body {
@@ -150,11 +153,37 @@
                 </div>
             </div>
             <div class="mb-3">
-                <div class="form-floating">
+                <div class="input-group">
+                    <!-- Select para código de país -->
+                    <select id="countryCode" class="form-select" style="max-width: 120px;">
+                        <option value="+593" data-country="Ecuador">🇪🇨 +593</option>
+                        <option value="+54" data-country="Argentina">🇦🇷 +54</option>
+                        <option value="+591" data-country="Bolivia">🇧🇴 +591</option>
+                        <option value="+55" data-country="Brasil">🇧🇷 +55</option>
+                        <option value="+56" data-country="Chile">🇨🇱 +56</option>
+                        <option value="+57" data-country="Colombia">🇨🇴 +57</option>
+                        <option value="+506" data-country="Costa Rica">🇨🇷 +506</option>
+                        <option value="+53" data-country="Cuba">🇨🇺 +53</option>
+                        <option value="+34" data-country="España">🇪🇸 +34</option>
+                        <option value="+503" data-country="El Salvador">🇸🇻 +503</option>
+                        <option value="+502" data-country="Guatemala">🇬🇹 +502</option>
+                        <option value="+504" data-country="Honduras">🇭🇳 +504</option>
+                        <option value="+52" data-country="México">🇲🇽 +52</option>
+                        <option value="+505" data-country="Nicaragua">🇳🇮 +505</option>
+                        <option value="+507" data-country="Panamá">🇵🇦 +507</option>
+                        <option value="+595" data-country="Paraguay">🇵🇾 +595</option>
+                        <option value="+51" data-country="Perú">🇵🇪 +51</option>
+                        <option value="+1" data-country="República Dominicana">🇩🇴 +1</option>
+                        <option value="+598" data-country="Uruguay">🇺🇾 +598</option>
+                        <option value="+1" data-country="USA">🇺🇸 +1</option>
+                        <option value="+58">🇻🇪 +58</option>
+                    </select>
+                    <!-- Input para número de teléfono -->
                     <input type="text" class="form-control" name="telefonocli" id="phone" placeholder="Teléfono">
-                    <label for="phone">Teléfono</label>
                 </div>
             </div>
+            <!-- Input oculto para almacenar el país -->
+            <input type="hidden" name="pais" id="pais">
             <div class="row mb-3">
                 <div class="col-md-6">
                     <div class="form-floating">
@@ -165,8 +194,8 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-floating">
-                        <input type="password" class="form-control" name="password_confirmation" id="confirmPassword"
-                            placeholder="Repetir Contraseña" required>
+                        <input type="password" class="form-control" name="password_confirmation"
+                            id="confirmPassword" placeholder="Repetir Contraseña" required>
                         <label for="confirmPassword">Repetir Contraseña</label>
                     </div>
                 </div>
@@ -182,6 +211,101 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-oENmA6qH0YKe1HK8zSbOvIZSmO2Mwkl1H2eDhSWpXXpg4YY2Et3OWSJE6yLyERq2" crossorigin="anonymous">
     </script>
-</body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            function validateTwoWords(input) {
+                return input.value.trim().split(/\s+/).length >= 2;
+            }
 
+            function validatePassword(password) {
+                const minLength = password.length >= 6;
+                const hasNumber = /[0-9]/.test(password);
+                const hasSpecialChar = /[@$!%*?&]/.test(password);
+                return minLength && hasNumber && hasSpecialChar;
+            }
+
+            document.getElementById("firstName").addEventListener("input", function() {
+                if (!validateTwoWords(this)) {
+                    this.setCustomValidity("Debe ingresar al menos dos nombres.");
+                } else {
+                    this.setCustomValidity("");
+                }
+            });
+
+            document.getElementById("lastName").addEventListener("input", function() {
+                if (!validateTwoWords(this)) {
+                    this.setCustomValidity("Debe ingresar al menos dos apellidos.");
+                } else {
+                    this.setCustomValidity("");
+                }
+            });
+
+            document.getElementById("password").addEventListener("input", function() {
+                if (!validatePassword(this.value)) {
+                    this.setCustomValidity(
+                        "La contraseña debe tener al menos 6 caracteres, un número y un símbolo especial (@$!%*?&)."
+                    );
+                } else {
+                    this.setCustomValidity("");
+                }
+            });
+
+            document.getElementById("password_confirmation").addEventListener("input", function() {
+                let password = document.getElementById("password").value;
+                if (this.value !== password) {
+                    this.setCustomValidity("Las contraseñas no coinciden.");
+                } else {
+                    this.setCustomValidity("");
+                }
+            });
+        });
+    </script>
+    <!-- JS de Intl-Tel-Input -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/intlTelInput.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const phoneInput = document.querySelector("#phone");
+            const countryCodeSelect = document.querySelector("#countryCode");
+            const countryInput = document.querySelector("#pais");
+
+            // Función para actualizar el campo oculto con el país seleccionado
+            function updateCountry() {
+                let selectedOption = countryCodeSelect.options[countryCodeSelect.selectedIndex];
+                countryInput.value = selectedOption.getAttribute("data-country");
+            }
+
+            // Evento para actualizar el país cuando se cambia el código de país
+            countryCodeSelect.addEventListener("change", updateCountry);
+
+            // Establecer país inicial según la selección por defecto
+            updateCountry();
+
+            // Formatear número mientras el usuario escribe
+            phoneInput.addEventListener("input", function() {
+                let number = phoneInput.value.replace(/\D/g, ""); // Eliminar caracteres no numéricos
+                if (number.length >= 8) {
+                    phoneInput.value = formatPhoneNumber(number);
+                }
+            });
+
+            function formatPhoneNumber(number) {
+                if (number.length === 10) {
+                    return `${number.slice(0, 2)} ${number.slice(2, 5)} ${number.slice(5, 8)} ${number.slice(8, 10)}`;
+                } else if (number.length === 9) {
+                    return `${number.slice(0, 1)} ${number.slice(1, 4)} ${number.slice(4, 7)} ${number.slice(7, 9)}`;
+                } else if (number.length === 8) {
+                    return `${number.slice(0, 4)} ${number.slice(4, 8)}`;
+                }
+                return number;
+            }
+
+            // Antes de enviar el formulario, asegurarse de que el campo país tenga un valor
+            document.querySelector("form").addEventListener("submit", function() {
+                updateCountry(); // Asegurar que el país esté actualizado
+                let fullPhoneNumber = countryCodeSelect.value + " " + phoneInput.value;
+                phoneInput.value = fullPhoneNumber; // Guardar en formato "+593 96 177 8319"
+            });
+        });
+    </script>
+</body>
 </html>

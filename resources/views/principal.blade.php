@@ -1,5 +1,12 @@
 @extends('layouts.cliente')
-@section('title','Streamify HQ')
+@section('title', 'Streamify HQ')
+@section('menu')
+    <li class="nav-item"><a class="nav-link me-lg-3" href="#features">Fortalezas</a></li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="#combos">Combos</a>
+    </li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+    </li>
+@endsection
 @section('header')
     <div class="container px-5">
         <div class="row gx-5 align-items-center">
@@ -13,15 +20,6 @@
                         quieras.</p>
                     <!-- Botón WhatsApp -->
                     <div class="mt-4">
-                        {{--  
-                    <a href="https://wa.me/593961412826" target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
-                        <span class="d-flex align-items-center">
-                            <!-- Icono de WhatsApp -->
-                            <i class="bi bi-whatsapp me-2"></i>
-                            <span class="small">Contáctanos por WhatsApp</span>
-                        </span>
-                    </a>
-                    --}}
                         <a href="https://wa.me/593961412826?text=Hola%20quiero%20más%20información%20sobre%20el%20servicio%20de"
                             target="_blank" class="btn btn-whatsapp rounded-pill px-3 mb-2 mb-lg-0">
                             <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">

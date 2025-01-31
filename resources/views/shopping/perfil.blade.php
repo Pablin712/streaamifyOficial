@@ -1,7 +1,12 @@
 @extends('layouts.cliente')
-
 @section('title', 'Mi Perfil')
-
+@section('menu')
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+    </li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+    </li>
+@endsection
 @section('header')
     <div class="container text-center my-4">
         <h1 class="fw-bold">Mi Perfil</h1>

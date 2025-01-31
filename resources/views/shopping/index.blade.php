@@ -61,6 +61,13 @@
         }
     </style>
 @endsection
+@section('menu')
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+    </li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="#">Catálogo</a>
+    </li>
+@endsection
 @section('header')
     <!-- Mensaje de inicio de sesión exitoso -->
     @if (session('success'))
@@ -160,7 +167,7 @@
                         <h5 class="mt-3">{{ session('pedido_registrado')['nombre'] }}</h5>
                         <p class="text-muted">Precio estimado:
                             ${{ number_format(session('pedido_registrado')['precio'], 2) }}</p>
-                        <p>Tu pedido ha sido registrado con éxito. Nos pondremos en contacto contigo pronto. 
+                        <p>Tu pedido ha sido registrado con éxito. Nos pondremos en contacto contigo pronto.
                             Puedes revisar tu perfil de registro de pedidos y compras para estar al tanto.</p>
                         <p>Estado actual del pedido: <b>Pendiente</b></p>
                     </div>
@@ -186,7 +193,8 @@
                     <div class="col mb-5">
                         <div class="card h-100">
                             <!-- Imagen del producto -->
-                            <img class="card-img-top" src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}" />
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
+                                alt="{{ $producto->nombrepro }}" />
 
                             <!-- Detalles del producto -->
                             <div class="card-body p-4 text-center">
@@ -626,7 +634,8 @@
                                     </button>
                                 </form>
                                 <!-- Hacer Pedido para otros -->
-                                <form action="{{ route('comprar', $producto->id) }}" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
+                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                    {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
                                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                                         data-bs-target="#confirmCompraModal{{ $producto->id }}">
@@ -743,7 +752,8 @@
                                     </button>
                                 </form>
                                 <!-- Hacer Pedido para otros -->
-                                <form action="{{ route('comprar', $producto->id) }}" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
+                                <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                    {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
                                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                                         data-bs-target="#confirmCompraModal{{ $producto->id }}">

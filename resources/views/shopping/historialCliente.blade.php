@@ -1,4 +1,11 @@
 @extends('layouts.cliente')
+@section('menu')
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+    </li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+    </li>
+@endsection
 @section('title', 'Historial de Cliente')
 @section('header')
     <div class="container text-center my-4">
@@ -14,11 +21,11 @@
     <div class="container px-5 my-5">
         <ul class="nav nav-tabs" id="historialTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="suscripciones-tab" data-bs-toggle="tab" data-bs-target="#suscripciones" type="button"
-                    role="tab" aria-controls="suscripciones" aria-selected="true">
+                <button class="nav-link" id="suscripciones-tab" data-bs-toggle="tab" data-bs-target="#suscripciones"
+                    type="button" role="tab" aria-controls="suscripciones" aria-selected="true">
                     📺 Mis Suscripciones
                 </button>
-            </li>            
+            </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="ventas-tab" data-bs-toggle="tab" data-bs-target="#ventas" type="button"
                     role="tab" aria-controls="ventas" aria-selected="false">🛒 Historial de Compras</button>
@@ -197,9 +204,9 @@
                         @foreach ($usuarios_activos as $usuario)
                             <tr>
                                 <td>{{ $usuario->idven }}</td>
-                                <td>{{ $usuario->cuenta->valor->servicio->nombreser}}</td>
+                                <td>{{ $usuario->cuenta->valor->servicio->nombreser }}</td>
                                 <td>{{ $usuario->cuenta->usuariocue }}</td>
-                                <td>{{ $usuario->cuenta->contrasenacue}}</td>
+                                <td>{{ $usuario->cuenta->contrasenacue }}</td>
                                 <td>{{ $usuario->perfil }}</td>
                                 <td>{{ \Carbon\Carbon::parse($usuario->fecha_vencimiento)->format('d/m/Y') }}</td>
                             </tr>

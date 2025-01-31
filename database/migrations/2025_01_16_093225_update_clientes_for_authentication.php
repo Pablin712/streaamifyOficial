@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clientes', function (Blueprint $table) {
+            $table->string('pais',30)->default('Ecuador')->after('telefonocli');
             $table->string('email')->unique()->nullable()->after('nombrecli'); // Campo email único pero inicialmente nullable
             $table->string('password')->nullable()->after('email'); // Campo password inicialmente nullable
             $table->decimal('saldo', 15, 2)->default(0)->after('telefonocli'); // Campo saldo inicialmente nullable

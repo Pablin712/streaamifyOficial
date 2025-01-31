@@ -22,8 +22,11 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Teléfono</th>
+                <th>Correo</th>
                 <th>Usuarios</th>
                 <th>Facturado este mes</th>
+                <th>Saldo</th>
+                <th>Autenticado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -33,8 +36,17 @@
                     <td>{{ $cliente->idcli }}</td>
                     <td>{{ $cliente->nombrecli }}</td>
                     <td>{{ $cliente->telefonocli }}</td>
+                    <td>{{ $cliente->email ?? 'Ninguno' }}</td>
                     <td>{{ $cliente->usuarios }}</td>
                     <td>${{ $cliente->facturado }}</td>
+                    <td>${{ $cliente->saldo}}</td>
+                    <td>
+                        @if($cliente->email && $cliente->password)
+                            <span class="badge bg-success">Sí</span>
+                        @else
+                            <span class="badge bg-danger">No</span>
+                        @endif
+                    </td>                    
                     <td>
                         <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning  "><i
                                 class="fas fa-edit"></i></a>

@@ -1,7 +1,12 @@
 @extends('layouts.cliente')
-
 @section('title', 'Recargar Saldo')
-
+@section('menu')
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+    </li>
+    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+    </li>
+@endsection
 @section('header')
 <div class="container px-5">
     <div class="row gx-5 align-items-center">
