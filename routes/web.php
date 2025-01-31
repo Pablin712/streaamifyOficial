@@ -73,6 +73,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     Route::controller(ClienteController::class)->group(function(){
         Route::get('/perfil', 'perfil')->name('cliente.perfil');
         Route::put('/perfil/update', 'actualizarPerfil')->name('cliente.perfil.update');
+        Route::put('/cambiar-contrasena', 'cambiarContrasena')->name('cliente.cambiar.contrasena');
     });
 });
 /*

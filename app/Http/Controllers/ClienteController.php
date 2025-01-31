@@ -9,7 +9,7 @@ use App\Models\ViewClientesUsuarios;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Hash;
 class ClienteController extends Controller
 {
     public function index()
@@ -202,7 +202,7 @@ class ClienteController extends Controller
                     'pais' => $request->pais,
                     'saldo' => 0, // Saldo inicial en 0
                 ]);
-    
+
                 return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -247,6 +247,37 @@ class ClienteController extends Controller
 
         return back()->with('success', 'Perfil actualizado correctamente.');
     }
+    public function cambiarContrasena(Request $request)
+    {
+        // Validar los datos
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => [
+                'required',
+                'confirmed',
+                'min:6',
+                'regex:/[0-9]/', // Al menos un número
+                'regex:/[@$!%*?&]/' // Al menos un símbolo especial
+            ],
+        ], [
+            'new_password.regex' => 'La nueva contraseña debe contener al menos un número y un símbolo especial (@$!%*?&).',
+            'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',
+            'new_password.confirmed' => 'Las contraseñas no coinciden.',
+        ]);
+        $idCliente = Auth::guard('cliente')->user()->idcli;
+        // Buscar el cliente en la base de datos
+        $cliente = Cliente::findOrFail($idCliente);
+        // Verificar que la contraseña actual es correcta
+        if (!Hash::check($request->current_password, $cliente->password)) {
+            return redirect()->back()->with('error', 'La contraseña actual es incorrecta.');
+        }
+        // Actualizar la contraseña
+        $cliente->update([
+            'password' => $request->new_password,
+        ]);
+        return redirect()->back()->with('success', '¡Contraseña actualizada exitosamente!');
+    }
+
     private function authorizeRole(array $roles)
     {
         $userRole = Auth::user()->idrol;
