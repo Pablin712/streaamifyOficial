@@ -77,11 +77,11 @@
                                     <label for="respuesta" class="form-label">Respuesta:</label>
                                     <textarea name="respuesta" id="respuesta" class="form-control" rows="3" required>{{ $pedido->respuesta }}</textarea>
 
-                                    <label for="id_estado" class="form-label mt-3">Estado:</label>
-                                    <select name="id_estado" class="form-select" required>
+                                    <label for="idestado" class="form-label mt-3">Estado:</label>
+                                    <select name="idestado" class="form-select" required>
                                         @foreach ($estados as $estado)
-                                            <option value="{{ $estado->id }}" 
-                                                {{ $pedido->id_estado == $estado->id ? 'selected' : '' }}>
+                                            <option value="{{ $estado->idestado }}" 
+                                                {{ $pedido->idestado == $estado->idestado ? 'selected' : '' }}>
                                                 {{ ucfirst($estado->nombre) }}
                                             </option>
                                         @endforeach

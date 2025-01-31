@@ -59,7 +59,7 @@ Route::controller(LoginClienteController::class)->group(function () {
 Route::post('/register', [ClienteController::class, 'register'])->name('cliente.register');
 
 //rutas protegidas del cliente
-Route::middleware([AuthCliente::class])->group(function () {
+Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargar-saldo', 'recargarSaldo')->name('recargar.index');
         Route::post('/recargar-saldo', 'procesarRecarga')->name('recargar.saldo');
@@ -69,6 +69,10 @@ Route::middleware([AuthCliente::class])->group(function () {
     });
     Route::controller(ShopController::class)->group(function(){
         Route::post('/comprar/{id}', 'comprar')->name('comprar');
+    });
+    Route::controller(ClienteController::class)->group(function(){
+        Route::get('/perfil', 'perfil')->name('cliente.perfil');
+        Route::put('/perfil/update', 'actualizarPerfil')->name('cliente.perfil.update');
     });
 });
 /*

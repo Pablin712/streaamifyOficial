@@ -8,7 +8,7 @@ use App\Models\ViewClientesUsuarios;
 
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Validator;
 class ClienteController extends Controller
 {
     public function index()
@@ -184,6 +184,40 @@ class ClienteController extends Controller
                 ->withInput()
                 ->with('error', 'Por favor, corrige los errores en el formulario.');
         }
+    }
+    public function perfil()
+    {
+        $cliente = Auth::guard('cliente')->user();
+        return view('shopping.perfil', compact('cliente'));
+    }
+    public function actualizarPerfil(Request $request)
+    {
+        $idCliente = Auth::guard('cliente')->user()->idcli;
+        // Buscar el cliente en la base de datos
+        $cliente = Cliente::findOrFail($idCliente);
+        // Validaciones
+        $validator = Validator::make($request->all(), [
+            'nombrecli' => ['required', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ]+(?: [A-Za-zÁÉÍÓÚáéíóúñÑ]+){3,}$/'],
+            'telefonocli' => ['required', 'digits:10'],
+            'email' => ['required', 'email', 'unique:clientes,email,' . $cliente->idcli . ',idcli'],
+        ], [
+            'nombrecli.regex' => 'Debe ingresar sus dos nombres y apellidos correctamente.',
+            'telefonocli.digits' => 'Ingrese un número de teléfono válido de 10 dígitos.',
+            'email.unique' => 'El correo electrónico ya está en uso.',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        // Actualizar datos del cliente
+        $cliente->update([
+            'nombrecli' => $request->nombrecli,
+            'telefonocli' => $request->telefonocli,
+            'email' => $request->email,
+        ]);
+
+        return back()->with('success', 'Perfil actualizado correctamente.');
     }
     private function authorizeRole(array $roles)
     {

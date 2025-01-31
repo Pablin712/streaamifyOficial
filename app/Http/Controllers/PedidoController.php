@@ -18,7 +18,7 @@ class PedidoController extends Controller
     {
         $pedido = Pedido::findOrFail($id);
 
-        $pedido->id_estado = $request->id_estado;
+        $pedido->idestado = $request->idestado;
         $pedido->respuesta = $request->respuesta;
         $pedido->save();
 

@@ -20,13 +20,13 @@ class ViewUsuarioActivo extends Model
     // Si la vista tiene una relación, por ejemplo con un modelo "Cuenta"
     public function cuenta()
     {
-        return $this->belongsTo(Cuenta::class, 'IDCUE', 'idcue');
+        return $this->belongsTo(Cuenta::class, 'idcue', 'idcue');
     }
 
     // Otra relación, si es necesario, con el modelo "Cliente"
     public function cliente()
     {
-        return $this->belongsTo(Cliente::class, 'IDCLI', 'idcli');
+        return $this->belongsTo(Cliente::class, 'idcli', 'idcli');
     }
     
     public function detalle_venta()

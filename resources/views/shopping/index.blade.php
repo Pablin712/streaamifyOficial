@@ -170,7 +170,6 @@
                 </div>
             </div>
         </div>
-
         <script>
             function cerrarPedidoModal() {
                 document.getElementById('pedidoRegistradoModal').classList.remove('show');
@@ -525,7 +524,7 @@
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
-                                                    Confirmar Compra</h5>
+                                                    Confirmar Pedido</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                     aria-label="Close"></button>
                                             </div>
@@ -627,10 +626,44 @@
                                     </button>
                                 </form>
                                 <!-- Hacer Pedido para otros -->
-                                <form action="#" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
+                                <form action="{{ route('comprar', $producto->id) }}" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
-                                    <button type="submit" class="btn btn-warning btn-sm">Pedir</button>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                        Pedir
+                                    </button>
                                 </form>
+                            </div>
+                            <!-- Modal de Confirmación de Pedido -->
+                            <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
+                                aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
+                                                Confirmar Pedido</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
+                                                class="img-fluid rounded mb-3" style="max-width: 100px;">
+                                            <h5>{{ $producto->nombrepro }}</h5>
+                                            <p class="text-muted">Precio:
+                                                ${{ number_format($producto->preciopro, 2) }}</p>
+                                            <p>¿Deseas confirmar la compra?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary">Confirmar
+                                                    Pedido</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -710,10 +743,44 @@
                                     </button>
                                 </form>
                                 <!-- Hacer Pedido para otros -->
-                                <form action="#" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
+                                <form action="{{ route('comprar', $producto->id) }}" method="POST"> {{-- {{ route('pedido', $producto->id) }} --}}
                                     @csrf
-                                    <button type="submit" class="btn btn-warning btn-sm">Pedir</button>
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                        Pedir
+                                    </button>
                                 </form>
+                            </div>
+                            <!-- Modal de Confirmación de Pedido -->
+                            <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
+                                aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
+                                                Confirmar Pedido</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="{{ asset($producto->foto) }}" alt="{{ $producto->nombrepro }}"
+                                                class="img-fluid rounded mb-3" style="max-width: 100px;">
+                                            <h5>{{ $producto->nombrepro }}</h5>
+                                            <p class="text-muted">Precio:
+                                                ${{ number_format($producto->preciopro, 2) }}</p>
+                                            <p>¿Deseas confirmar la compra?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary">Confirmar
+                                                    Pedido</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
