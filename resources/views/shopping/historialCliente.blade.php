@@ -16,6 +16,39 @@
             Mantente al tanto del estado de tus transacciones y accede a los detalles de cada servicio adquirido.
         </p>
     </div>
+    @if (session('renovacion_exitosa'))
+        <div class="modal fade show d-block" id="renovacionExitosaModal" tabindex="-1"
+            aria-labelledby="renovacionExitosaLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="renovacionExitosaLabel">¡Renovación Exitosa!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                            onclick="cerrarRenovacionModal()"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="bi bi-arrow-repeat text-primary" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Tu suscripción a <b>{{ session('renovacion_exitosa')['nombre'] }}</b> ha sido
+                            renovada</h5>
+                        <p class="text-muted">Nueva fecha de vencimiento:
+                            <b>{{ session('renovacion_exitosa')['fecha_vencimiento'] }}</b>
+                        </p>
+                        <p>¡Sigue disfrutando de tu contenido sin interrupciones!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="cerrarRenovacionModal()">Aceptar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function cerrarRenovacionModal() {
+                document.getElementById('renovacionExitosaModal').classList.remove('show');
+                document.getElementById('renovacionExitosaModal').classList.add('d-none');
+            }
+        </script>
+    @endif
 @endsection
 @section('sections')
     <div class="container px-5 my-5">
@@ -194,6 +227,7 @@
                             <th>🔒 Contraseña</th>
                             <th>👤 Perfil</th>
                             <th>📅 Fecha de Vencimiento</th>
+                            <th>🔄 Acción</th> <!-- Nueva columna para el botón de renovar -->
                         </tr>
                     </thead>
                     <tbody>
@@ -205,15 +239,83 @@
                                 <td>{{ $usuario->cuenta->contrasenacue }}</td>
                                 <td>{{ $usuario->perfil }}</td>
                                 <td>{{ \Carbon\Carbon::parse($usuario->fecha_vencimiento)->format('d/m/Y') }}</td>
+                                <td>
+                                    <!-- Botón que abre el modal correspondiente -->
+                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#renovarModal{{ $usuario->idven }}">
+                                        🔄 Renovar
+                                    </button>
+                                </td>
                             </tr>
+                            <!-- Modal de Confirmación de Renovación -->
+                            <div class="modal fade" id="renovarModal{{ $usuario->idven }}" tabindex="-1"
+                                aria-labelledby="renovarModalLabel{{ $usuario->idven }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="renovarModalLabel{{ $usuario->idven }}">
+                                                Confirmar Renovación
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <p>Selecciona las suscripciones que deseas renovar:</p>
+
+                                            <!-- Listado de suscripciones activas -->
+                                            <ul class="list-group">
+                                                @foreach ($usuario->venta->detalles_venta as $detalle)
+                                                    <li class="list-group-item">
+                                                        <input type="checkbox" name="detalles[]"
+                                                            value="{{ $detalle->iddet }}" checked>
+                                                        <strong>{{ $detalle->perfil->cuenta->valor->servicio->nombreser }}</strong>
+                                                        <br>
+                                                        <small>Cuenta: {{ $detalle->perfil->cuenta->usuariocue }}</small>
+                                                        <br>
+                                                        <small>Perfil: #{{ $detalle->perfil->numeroper }}</small>
+                                                        <br>
+                                                        <small>Fecha de Vencimiento:
+                                                            <strong>{{ \Carbon\Carbon::parse($detalle->fechavendet)->addMonth()->format('d/m/Y') }}</strong>
+                                                        </small>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cancelar</button>
+
+                                            <form action="{{ route('cliente.renovar', $usuario->idven) }}"
+                                                method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary">Confirmar
+                                                    Renovación</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-@endsection
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var renovarModal = document.getElementById("renovarModal");
+            renovarModal.addEventListener("show.bs.modal", function(event) {
+                var button = event.relatedTarget;
+                var id = button.getAttribute("data-id");
+
+                var form = document.getElementById("renovarForm");
+                form.setAttribute("formaction", "{{ route('cliente.renovar', '') }}" + id);
+            });
+        });
+    </script>
+@endsection
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {

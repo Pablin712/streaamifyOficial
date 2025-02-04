@@ -133,6 +133,11 @@ class EmpleadoController extends Controller
         } else {
             unset($data['passwordemp']); // No actualizar si no se envía
         }
+        //Email opcional
+        if ($request->filled('email')) {
+        } else {
+            unset($data['email']); // No actualizar si no se envía
+        }
 
         // Subir la foto si existe
         if ($request->hasFile('foto_url')) {

@@ -79,26 +79,6 @@ class VentaController extends Controller
             'idemp' => 'required|exists:empleados,idemp',
             'detalles_venta' => 'required|json',
         ]);
-
-        /* Verificar si ya existe un registro de ventas para el día de hoy
-        $ventaDiaria = DB::table('ventas_diarias')->where('fecha', Carbon::today()->toDateString())->first();
-        if (!$ventaDiaria) {
-            // Si no existe, creamos un nuevo registro para hoy con el contador inicializado
-            DB::table('ventas_diarias')->insert([
-                'fecha' => Carbon::today()->toDateString(),
-                'numero_venta' => 2,  // Iniciamos el contador en 1
-            ]);
-            $numeroVenta = 1;
-        } else {
-            // Si ya existe un registro, incrementamos el contador
-            $numeroVenta = $ventaDiaria->numero_venta;
-            DB::table('ventas_diarias')
-                ->where('fecha', Carbon::today()->toDateString())
-                ->update(['numero_venta' => $numeroVenta + 1]);
-        }
-        // Generar el ID de venta
-        $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . Carbon::now()->format('dmy');
-        */
         // Decodificar los detalles de venta desde el JSON
         $detalles = json_decode($request->detalles_venta, true);
 
@@ -182,27 +162,6 @@ class VentaController extends Controller
 
         DetalleVenta::where('idven', $idvenPasado)->update(['activodet' => false]);
 
-
-        // Verificar si ya existe un registro de ventas para el día de hoy
-        $ventaDiaria = DB::table('ventas_diarias')->where('fecha', Carbon::today()->toDateString())->first();
-        if (!$ventaDiaria) {
-            // Si no existe, creamos un nuevo registro para hoy con el contador inicializado
-            DB::table('ventas_diarias')->insert([
-                'fecha' => Carbon::today()->toDateString(),
-                'numero_venta' => 1,  // Iniciamos el contador en 1
-            ]);
-            $numeroVenta = 1;
-        } else {
-            // Si ya existe un registro, incrementamos el contador
-            $numeroVenta = $ventaDiaria->numero_venta + 1;
-            DB::table('ventas_diarias')
-                ->where('fecha', Carbon::today()->toDateString())
-                ->update(['numero_venta' => $numeroVenta + 1]);
-        }
-        // Generar el ID de venta
-        $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . Carbon::now()->format('dmy');
-
-
         // Decodificar los detalles de venta desde el JSON
         $detalles = json_decode($request->detalles_venta, true);
 
@@ -211,7 +170,6 @@ class VentaController extends Controller
         $fecha = Carbon::today()->toDateString();
         // Crear la nueva venta
         $ventaNueva = Venta::create([
-            'idven' => $idVenta,
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
             'fechaven' => $fecha,
@@ -249,13 +207,6 @@ class VentaController extends Controller
                 'fechavendet' => $detalle['fecha_vencimiento'],
                 'montodet' => $detalle['monto'],
                 'activodet' => true,
-            ]);
-
-            Historial::create([
-                'accion' => 'Se añadio a la renovacion el siguiente item con ID: ' . $detalle2->iddet,
-                'descripcion' =>  $detalle2->descripciondet, // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-                'fecha' => now(),
             ]);
         }
 

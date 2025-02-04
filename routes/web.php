@@ -66,9 +66,11 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     });
     Route::controller(HistorialClientesController::class)->group(function () {
         Route::get('/historial-cliente', 'index')->name('historial.cliente');
+        Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
     });
     Route::controller(ShopController::class)->group(function(){
         Route::post('/comprar/{id}', 'comprar')->name('comprar');
+        Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
     });
     Route::controller(ClienteController::class)->group(function(){
         Route::get('/perfil', 'perfil')->name('cliente.perfil');

@@ -28,7 +28,11 @@ class ViewUsuarioActivo extends Model
     {
         return $this->belongsTo(Cliente::class, 'idcli', 'idcli');
     }
-    
+    // Otra relación, si es necesario, con el modelo "Venta"
+    public function venta()
+    {
+        return $this->belongsTo(Venta::class, 'idven', 'idven');
+    }
     public function detalle_venta()
     {
         return $this->belongsTo(Cliente::class, 'iddet', 'iddet');

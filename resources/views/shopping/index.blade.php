@@ -147,10 +147,35 @@
         </script>
     @endif
     @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <strong>Error:</strong> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="modal fade show d-block" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="errorModalLabel">¡Error!</h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"
+                            onclick="cerrarErrorModal()"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Ocurrió un problema</h5>
+                        <p class="text-muted">{{ session('error') }}</p>
+                        <p>No te preocupes, no se te descontó saldo, puedes verificar más tarde si ya hay stock, 
+                            o contacta con soporte para que agreguen más cuentas.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarErrorModal()">Cerrar</button>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <script>
+            function cerrarErrorModal() {
+                document.getElementById('errorModal').classList.remove('show');
+                document.getElementById('errorModal').classList.add('d-none');
+            }
+        </script>
     @endif
     @if (session('pedido_registrado'))
         <div class="modal fade show d-block" id="pedidoRegistradoModal" tabindex="-1"

@@ -50,10 +50,45 @@
                         <!-- Teléfono -->
                         <div class="col-md-6 mb-3">
                             <label for="telefonocli" class="form-label"><strong>📞 Teléfono:</strong></label>
-                            <input type="tel" class="form-control" id="telefonocli" name="telefonocli"
-                                value="{{ $cliente->telefonocli }}" required pattern="^[0-9]{10}$"
-                                title="Ingrese un número de teléfono válido de 10 dígitos.">
+                            <div class="input-group">
+                                <!-- Select para código de país -->
+                                <select id="countryCode" class="form-select" style="max-width: 120px;">
+                                    <option value="+593" data-country="Ecuador"
+                                        {{ Str::startsWith($cliente->telefonocli, '+593') ? 'selected' : '' }}>🇪🇨 +593
+                                    </option>
+                                    <option value="+54" data-country="Argentina"
+                                        {{ Str::startsWith($cliente->telefonocli, '+54') ? 'selected' : '' }}>🇦🇷 +54
+                                    </option>
+                                    <option value="+591" data-country="Bolivia"
+                                        {{ Str::startsWith($cliente->telefonocli, '+591') ? 'selected' : '' }}>🇧🇴 +591
+                                    </option>
+                                    <option value="+55" data-country="Brasil"
+                                        {{ Str::startsWith($cliente->telefonocli, '+55') ? 'selected' : '' }}>🇧🇷 +55
+                                    </option>
+                                    <option value="+56" data-country="Chile"
+                                        {{ Str::startsWith($cliente->telefonocli, '+56') ? 'selected' : '' }}>🇨🇱 +56
+                                    </option>
+                                    <option value="+57" data-country="Colombia"
+                                        {{ Str::startsWith($cliente->telefonocli, '+57') ? 'selected' : '' }}>🇨🇴 +57
+                                    </option>
+                                    <option value="+52" data-country="México"
+                                        {{ Str::startsWith($cliente->telefonocli, '+52') ? 'selected' : '' }}>🇲🇽 +52
+                                    </option>
+                                    <option value="+1" data-country="USA"
+                                        {{ Str::startsWith($cliente->telefonocli, '+1') ? 'selected' : '' }}>🇺🇸 +1
+                                    </option>
+                                    <option value="+58" data-country="Venezuela"
+                                        {{ Str::startsWith($cliente->telefonocli, '+58') ? 'selected' : '' }}>🇻🇪 +58
+                                    </option>
+                                </select>
+                                <!-- Input para el número -->
+                                <input type="text" class="form-control" id="phone" name="telefonocli"
+                                    value="{{ preg_replace('/^\+\d+\s/', '', $cliente->telefonocli) }}"
+                                    placeholder="Teléfono">
+                            </div>
                         </div>
+                        <!-- Input oculto para almacenar el país -->
+                        <input type="hidden" name="pais" id="pais">
 
                         <!-- Correo Electrónico -->
                         <div class="col-md-6 mb-3">
@@ -136,4 +171,69 @@
             </div>
         </div>
     </div>
+@endsection
+@section('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const phoneInput = document.querySelector("#phone");
+            const countryCodeSelect = document.querySelector("#countryCode");
+            const countryInput = document.querySelector("#pais");
+
+            // Función para actualizar el país seleccionado
+            function updateCountry() {
+                let selectedOption = countryCodeSelect.options[countryCodeSelect.selectedIndex];
+                countryInput.value = selectedOption.getAttribute("data-country");
+            }
+
+            // Evento al cambiar el código de país
+            countryCodeSelect.addEventListener("change", updateCountry);
+
+            // Establecer país inicial
+            updateCountry();
+
+            // Formatear número mientras el usuario escribe
+            phoneInput.addEventListener("input", function() {
+                let selectedCode = countryCodeSelect.value;
+                let rawNumber = phoneInput.value.replace(/\D/g, ""); // Eliminar caracteres no numéricos
+
+                if (selectedCode === "+593") { // Ecuador
+                    if (rawNumber.startsWith("0")) {
+                        rawNumber = rawNumber.substring(1);
+                    }
+                    if (rawNumber.length > 9) {
+                        rawNumber = rawNumber.substring(0, 9);
+                    }
+                }
+                phoneInput.value = formatPhoneNumber(rawNumber, selectedCode);
+            });
+
+            function formatPhoneNumber(number, countryCode) {
+                number = number.replace(/\D/g, "");
+
+                if (countryCode === "+593") { // Ecuador
+                    if (number.startsWith("0")) {
+                        number = number.substring(1);
+                    }
+                    if (number.length > 9) {
+                        number = number.substring(0, 9);
+                    }
+                    return `${number.slice(0, 2)} ${number.slice(2, 5)} ${number.slice(5, 9)}`;
+                } else if (number.length === 10) { // México, Argentina
+                    return `${number.slice(0, 2)} ${number.slice(2, 6)} ${number.slice(6, 10)}`;
+                } else if (number.length === 9) { // Colombia, Chile
+                    return `${number.slice(0, 3)} ${number.slice(3, 6)} ${number.slice(6, 9)}`;
+                } else if (number.length === 8) { // Bolivia, El Salvador
+                    return `${number.slice(0, 4)} ${number.slice(4, 8)}`;
+                }
+                return number;
+            }
+
+            // Antes de enviar el formulario, asegurarse de que el país esté actualizado
+            document.querySelector("form").addEventListener("submit", function() {
+                updateCountry();
+                let fullPhoneNumber = countryCodeSelect.value + " " + phoneInput.value;
+                phoneInput.value = fullPhoneNumber;
+            });
+        });
+    </script>
 @endsection

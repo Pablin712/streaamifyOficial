@@ -35,4 +35,8 @@ class Venta extends Model
     {
         return $this->hasMany(DetalleVenta::class, 'idven', 'idven');
     }
+    public function usuarios()
+    {
+        return $this->hasMany(ViewUsuarioActivo::class, 'idven', 'idven');
+    }
 }

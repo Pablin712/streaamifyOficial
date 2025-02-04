@@ -9,8 +9,7 @@ use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
 use App\Models\ViewUsuarioActivo;
-use App\Models\DetalleVenta;
-
+use App\Models\Producto;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\Historial;
@@ -40,8 +39,8 @@ class CuentaController extends Controller
         }
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)
-            ->where('fecha_vencimiento', '>', now()) // Solo usuarios con fecha_vencimiento mayor a hoy
-            ->count();
+                ->where('fecha_vencimiento', '>', now()) // Solo usuarios con fecha_vencimiento mayor a hoy
+                ->count();
             $cuenta->usuarios_activos = $usuarios;
         }
 
@@ -82,6 +81,8 @@ class CuentaController extends Controller
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
+        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
+        $this->actualizarEstadoProductos($cuenta->valor->idser);
         // Comprobar si los datos de costo están presentes
         // Si hay campos de costo, validarlos y crear el costo
         if ($request->filled('descripcioncos') || $request->filled('montocos')) {
@@ -122,6 +123,8 @@ class CuentaController extends Controller
             'fecha' => now(),
         ]);
 
+        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
+        $this->actualizarEstadoProductos($cuenta->valor->idser);
         // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
     }
@@ -198,6 +201,8 @@ class CuentaController extends Controller
 
         $cuenta->update($request->all());
 
+        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
+        $this->actualizarEstadoProductos($cuenta->valor->idser);
         if (!empty($request->descripcioncos) && !empty($request->montocos)) {
             // Validar datos de costo si los campos están presentes
             $validatedCosto = $request->validate([
@@ -234,6 +239,8 @@ class CuentaController extends Controller
         ]);
         $cuenta->update(['activocue' => false]);
 
+        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
+        $this->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
     }
     private function authorizeRole(array $roles)
@@ -244,5 +251,33 @@ class CuentaController extends Controller
             // Redirigir a la vista anterior con una alerta
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
         }
+    }
+    private function actualizarEstadoProductos($idser)
+    {
+        // Buscar productos individuales (tipo_producto_id = 1) con el servicio específico
+        $productos = Producto::where('tipo_producto_id', 1)
+            ->whereHas('detalles', function ($query) use ($idser) {
+                $query->where('idser', $idser);
+            })->get();
+
+        foreach ($productos as $producto) {
+            // Verificar si hay cuentas disponibles para el servicio del producto
+            $cuentaDisponible = $this->buscarCuentaDisponible($idser);
+
+            // Si hay cuenta disponible, activar el producto; si no, desactivarlo
+            $producto->update(['activo' => $cuentaDisponible ? true : false]);
+        }
+    }
+    private function buscarCuentaDisponible($idser)
+    {
+        return Cuenta::whereHas('valor', function ($query) use ($idser) {
+            $query->where('idser', $idser);
+        })
+            ->where('caidacue', false)
+            ->where('activocue', true)
+            ->whereHas('valor', function ($query) {
+                $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
+            })
+            ->first();
     }
 }

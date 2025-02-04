@@ -46,7 +46,7 @@
         <!-- Campo para la contraseña de la cuenta -->
         <div class="form-group mb-3">
             <label for="contrasenacue">Contraseña</label>
-            <input type="password" name="contrasenacue" id="contrasenacue" class="form-control" required>
+            <input type="text" name="contrasenacue" id="contrasenacue" class="form-control" required>
         </div>
 
         <!-- Fecha de vencimiento de la cuenta -->
