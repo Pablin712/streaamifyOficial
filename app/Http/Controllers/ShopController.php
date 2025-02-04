@@ -221,55 +221,61 @@ class ShopController extends Controller
         }
     }
 
-    public function renovar($id)
+    public function renovar(Request $request, $id)
     {
         $idCliente = Auth::guard('cliente')->user()->idcli;
-        // Buscar el cliente en la base de datos
         $usuario = Cliente::findOrFail($idCliente);
         $venta = Venta::findOrFail($id);
-        // Buscar el producto basado en los detalles de la venta
-        $producto = $this->buscarProducto($venta);
 
-        // Si no se encuentra el producto, redirigir con error
+        // Perfiles seleccionados por el usuario para renovar
+        $detallesSeleccionados = $request->input('detalles', []);
+        if (empty($detallesSeleccionados)) {
+            return redirect()->back()->with('error', 'No has seleccionado ningún perfil para renovar.');
+        }
+
+        // Buscar el producto basado en los detalles seleccionados
+        $producto = $this->buscarProductoPorDetalles($detallesSeleccionados);
+
         if (!$producto) {
             return redirect()->back()->with('error', 'No hay cuenta disponible para renovar.');
         }
 
-        if ($producto->categoria_id == 1) { //productos de entrega inmediata
-            // Usar lógica renew() de VentaController
-            return $this->storeRenew($idCliente, $venta, $producto);
+        if ($producto->categoria_id == 1) { // Si es un producto de entrega inmediata
+            return $this->storeRenew($idCliente, $venta, $producto, $detallesSeleccionados);
         } else {
-            //usar logica de clase interna metodo comprar: else para pedidos
             // Registrar el pedido sin descontar saldo
             Pedido::create([
                 'idcli' => $usuario->idcli,
                 'producto_id' => $producto->id,
-                //'idestado' => 1,
                 'fechapedido' => now(),
                 'respuesta' => 'Sin responder. Renovación Pendiente',
             ]);
-            // Mensaje de sesión para mostrar en la vista
+
             session()->flash('pedido_registrado', [
                 'nombre' => $producto->nombrepro,
                 'precio' => $producto->preciopro
             ]);
-            return redirect()->route('shop');
+
+            return redirect()->back();
         }
     }
 
-    private function buscarProducto($venta)
+    private function buscarProductoPorDetalles($detallesSeleccionados)
     {
-        // Obtener los idser (servicios) de los detalles de la venta
-        $idserVenta = $venta->detalles_venta->map(function ($detalle) {
-            return $detalle->perfil->cuenta->valor->servicio->idser;
-        })->unique();
+        // Obtener los idser (servicios) de los detalles seleccionados
+        $idserVenta = DetalleVenta::whereIn('iddet', $detallesSeleccionados)
+            ->get()
+            ->map(function ($detalle) {
+                return $detalle->perfil->cuenta->valor->servicio->idser;
+            })
+            ->unique();
 
-        // Buscar productos cuyos detalles coincidan con los idser de la venta
+        // Buscar productos cuyos detalles coincidan con los servicios seleccionados
         $productos = Producto::whereHas('detalles', function ($query) use ($idserVenta) {
             $query->whereIn('idser', $idserVenta);
         })->get();
 
-        // Filtrar productos donde TODOS los idser de sus detalles coincidan con los de la venta
+        // Filtrar productos donde TODOS los idser de sus detalles coincidan con los seleccionados
         foreach ($productos as $producto) {
             $idserProducto = $producto->detalles->pluck('idser')->unique();
             if ($idserProducto->sort()->values()->toArray() === $idserVenta->sort()->values()->toArray()) {
@@ -277,12 +283,12 @@ class ShopController extends Controller
             }
         }
 
-        return null; // No se encontró un producto con coincidencia exacta
+        return null;
     }
 
-    private function storeRenew($idCliente, $ventaPasada, $producto)
+    private function storeRenew($idCliente, $ventaPasada, $producto, $detallesSeleccionados)
     {
-        $detallesVenta = DetalleVenta::where('idven', $ventaPasada->idven)->get();
+        $detallesVenta = DetalleVenta::whereIn('iddet', $detallesSeleccionados)->get();
 
         if ($detallesVenta->isEmpty()) {
             return redirect()->back()->with('error', 'No hay detalles de venta disponibles.');
@@ -294,13 +300,13 @@ class ShopController extends Controller
         // Crear la nueva venta
         $ventaNueva = Venta::create([
             'idcli' => $idCliente,
-            'idemp' => Empleado::where('nombreemp', 'Laravel')->value('idemp'), // Se debe asignar un empleado válido
+            'idemp' => Empleado::where('nombreemp', 'Laravel')->value('idemp'),
             'fechaven' => $fecha,
             'totalpagoven' => $total_venta,
         ]);
 
-        // Desactivar la venta anterior
-        DetalleVenta::where('idven', $ventaPasada->idven)->update(['activodet' => false]);
+        // Desactivar los detalles anteriores solo para los seleccionados
+        DetalleVenta::whereIn('iddet', $detallesSeleccionados)->update(['activodet' => false]);
 
         foreach ($detallesVenta as $detalle) {
             DetalleVenta::create([
@@ -320,7 +326,8 @@ class ShopController extends Controller
             'realizado_por' => 'Laravel | ' . request()->ip(),
             'fecha' => now(),
         ]);
-        $usuario = Cliente::where('idcli',$idCliente)->firstOrFail();;
+
+        $usuario = Cliente::where('idcli', $idCliente)->firstOrFail();
         // Descontar saldo al usuario
         $usuario->saldo -= $producto->preciopro;
         $usuario->save();

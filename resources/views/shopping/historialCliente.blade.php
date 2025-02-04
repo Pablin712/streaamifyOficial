@@ -49,6 +49,37 @@
             }
         </script>
     @endif
+    @if (session('error'))
+        <div class="modal fade show d-block" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="errorModalLabel">¡Error!</h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"
+                            onclick="cerrarErrorModal()"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3">Ocurrió un problema</h5>
+                        <p class="text-muted">{{ session('error') }}</p>
+                        <p>No te preocupes, no se te descontó saldo, puedes verificar más tarde si ya hay stock,
+                            o contacta con soporte para que agreguen más cuentas.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="cerrarErrorModal()">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function cerrarErrorModal() {
+                document.getElementById('errorModal').classList.remove('show');
+                document.getElementById('errorModal').classList.add('d-none');
+            }
+        </script>
+    @endif
 @endsection
 @section('sections')
     <div class="container px-5 my-5">
@@ -259,40 +290,41 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                 aria-label="Close"></button>
                                         </div>
-                                        <div class="modal-body text-center">
-                                            <p>Selecciona las suscripciones que deseas renovar:</p>
-
-                                            <!-- Listado de suscripciones activas -->
-                                            <ul class="list-group">
-                                                @foreach ($usuario->venta->detalles_venta as $detalle)
-                                                    <li class="list-group-item">
-                                                        <input type="checkbox" name="detalles[]"
-                                                            value="{{ $detalle->iddet }}" checked>
-                                                        <strong>{{ $detalle->perfil->cuenta->valor->servicio->nombreser }}</strong>
-                                                        <br>
-                                                        <small>Cuenta: {{ $detalle->perfil->cuenta->usuariocue }}</small>
-                                                        <br>
-                                                        <small>Perfil: #{{ $detalle->perfil->numeroper }}</small>
-                                                        <br>
-                                                        <small>Fecha de Vencimiento:
-                                                            <strong>{{ \Carbon\Carbon::parse($detalle->fechavendet)->addMonth()->format('d/m/Y') }}</strong>
-                                                        </small>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
-                                        </div>
-
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Cancelar</button>
-
-                                            <form action="{{ route('cliente.renovar', $usuario->idven) }}"
-                                                method="POST">
-                                                @csrf
+                                        <form action="{{ route('cliente.renovar', $usuario->idven) }}" method="POST">
+                                            @csrf
+                                            <div class="modal-body">
+                                                <h5>Selecciona los perfiles a renovar</h5>
+                                                <ul class="list-group">
+                                                    <!-- Listar los perfiles disponibles -->
+                                                    @foreach ($usuario->venta->detalles_venta as $detalle)
+                                                        <li
+                                                            class="list-group-item d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <input class="form-check-input me-2" type="checkbox"
+                                                                    name="detalles[]" value="{{ $detalle->iddet }}"
+                                                                    id="detalle-{{ $detalle->iddet }}">
+                                                                <label class="form-check-label"
+                                                                    for="detalle-{{ $detalle->iddet }}">
+                                                                    <strong>{{ $detalle->perfil->cuenta->valor->servicio->nombreser }}</strong><br>
+                                                                    Cuenta:
+                                                                    <strong>{{ $detalle->perfil->cuenta->usuariocue }}</strong><br>
+                                                                    Perfil:
+                                                                    <strong>{{ $detalle->perfil->numeroper }}</strong><br>
+                                                                    Fecha de Vencimiento:
+                                                                    <strong>{{ \Carbon\Carbon::parse($detalle->fechavendet)->addMonth()->format('d/m/Y') }}</strong>
+                                                                </label>
+                                                            </div>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancelar</button>
                                                 <button type="submit" class="btn btn-primary">Confirmar
                                                     Renovación</button>
-                                            </form>
-                                        </div>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
