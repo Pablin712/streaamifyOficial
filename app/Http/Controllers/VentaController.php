@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\facturaMail;
 use Illuminate\Support\Facades\DB;
 use App\Models\DetalleVenta;
 use App\Models\Venta;
@@ -13,6 +14,7 @@ use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -415,7 +417,16 @@ class VentaController extends Controller
         // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('ventas')->with('success', 'Estado de la cuenta del cliente actualizado correctamente.');
     }
-
+    public function sendInvoice($id)
+    {
+        $venta = Venta::findOrFail($id);
+        $cliente = $venta->cliente;
+    
+        // Lógica para generar y enviar la factura por correo
+        Mail::to($cliente->email)->send(new facturaMail($venta));
+    
+        return redirect()->route('ventas')->with('success', 'Factura enviada correctamente.');
+    }
     /**
      * Remove the specified resource from storage.
      */

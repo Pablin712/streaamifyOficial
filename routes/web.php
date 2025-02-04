@@ -210,6 +210,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/ventas/renew/{idcli}/{idven}', 'renew')->name('ventas.renew');
         Route::put('/ventas/{id}', 'update')->name('ventas.update');
         Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
+        Route::post('/ventas/{id}/sendInvoice', 'sendInvoice')->name('ventas.sendInvoice');
+
     });
 
     Route::controller(UsuarioController::class)->group(function () {

@@ -155,6 +155,14 @@
                             {{--  --}}
                             <i class="fas fa-sync-alt"></i>
                         </a>
+                        @if (!empty($venta->cliente->email))
+                        <!-- Botón para vista previa de factura -->
+                        <button class="btn btn-info" data-bs-toggle="modal"
+                            data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
+                            <i class="fas fa-file-invoice"></i>
+                        </button>
+                        @endif
+                      
                         <!-- Eliminar venta -->
                         @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor')
                             <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST"
@@ -167,11 +175,34 @@
                                 </button>
                             </form>
                         @endif
+                         <!-- Modal de vista previa de factura -->
+     <div class="modal fade" id="previewInvoiceModal{{ $venta->idven }}" tabindex="-1"
+        aria-labelledby="previewInvoiceLabel{{ $venta->idven }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="previewInvoiceLabel{{ $venta->idven }}">Vista Previa de la Factura</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Aquí se incluye el contenido de la factura -->
+                    @include('mail-format.factura', ['venta' => $venta, 'cliente' => $venta->cliente])
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <form action="{{ route('ventas.sendInvoice', $venta->idven) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">Enviar por Correo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
+    
 @endsection
 
 @section('scripts')
