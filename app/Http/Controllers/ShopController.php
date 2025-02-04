@@ -16,6 +16,8 @@ use App\Models\ViewUsuarioActivo;
 use App\Models\Historial;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\facturaMail;
 use Carbon\Carbon;
 
 class ShopController extends Controller
@@ -198,6 +200,10 @@ class ShopController extends Controller
                 ]);
 
                 DB::commit();
+
+                // Lógica para generar y enviar la factura por correo
+                Mail::to($venta->cliente->email)->send(new facturaMail($venta));
+
                 return redirect()->route('shop');
             } catch (\Exception $e) {
                 DB::rollBack();
