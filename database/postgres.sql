@@ -25,37 +25,26 @@ UPDATE
 OR DELETE ON DETALLES_VENTA FOR EACH ROW
 EXECUTE FUNCTION actualizar_total_venta ();
 
---TRIGGER QUE SE UNE DESPUES DE LA SECUENCIA Y FUNCION DE GENERARIDVENTA()
+-- Crear una secuencia para la parte numérica de 9 dígitos (inicia en 1 y se incrementa automáticamente)
+CREATE SEQUENCE secuencia_factura START 1;
+
+-- Trigger modificado para generar el IDVEN según el formato del SRI
 CREATE OR REPLACE FUNCTION generar_idventa()
 RETURNS TRIGGER AS $$
 DECLARE
-    numero_venta TEXT;
-    max_numero_venta INTEGER;
+    establecimiento TEXT := '001';   -- Número de establecimiento (ej: 001)
+    facturero TEXT := '001';         -- Número de facturero (ej: 001)
+    secuencia BIGINT;                -- Número secuencial de 9 dígitos
 BEGIN
-    -- Verificar el número máximo de ventas del día actual en la tabla ventas_diarias
-    SELECT COALESCE(MAX(vd.numero_venta), 0)
-    INTO max_numero_venta
-    FROM ventas_diarias vd
-    WHERE vd.fecha = CURRENT_DATE;
-
-    -- Incrementar el número de venta del día actual
-    max_numero_venta := max_numero_venta + 1;
-
-    -- Si ya existe un registro para la fecha actual, actualizamos el número de venta
-    IF EXISTS (SELECT 1 FROM ventas_diarias WHERE fecha = CURRENT_DATE) THEN
-        UPDATE ventas_diarias
-        SET numero_venta = max_numero_venta
-        WHERE fecha = CURRENT_DATE;
-    ELSE
-        -- Si no existe, insertamos un nuevo registro
-        INSERT INTO ventas_diarias (fecha, numero_venta)
-        VALUES (CURRENT_DATE, max_numero_venta);
-    END IF;
-
-    -- Generar el número de venta en el formato deseado
-    numero_venta := LPAD(max_numero_venta::TEXT, 3, '0');
-    NEW.IDVEN := 'FAC' || numero_venta || TO_CHAR(CURRENT_DATE, 'DDMMYYYY');
-
+    -- Obtener el siguiente valor de la secuencia
+    secuencia := nextval('secuencia_factura');
+    
+    -- Formatear el IDVEN: establecimiento + facturero + secuencia de 9 dígitos
+    NEW.IDVEN := 
+        establecimiento || '-' || 
+        facturero || '-' || 
+        LPAD(secuencia::TEXT, 9, '0'); -- Rellena con ceros a la izquierda
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
