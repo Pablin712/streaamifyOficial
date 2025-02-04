@@ -61,7 +61,7 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli . ' y su nombre es ' . $cliente->nombrecli,
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
             'fecha' => now(),
         ]);
 
@@ -119,7 +119,7 @@ class ClienteController extends Controller
         ]);
 
         $cliente = Cliente::findOrFail($idcli);
-
+        dd($request->all());
         Historial::create([
             'accion' => 'Se actualizo datos de el cliente con ID: ' . $idcli,
             'descripcion' =>  'Datos antiguos: ' . json_encode($cliente), // Campo opcional
@@ -249,6 +249,7 @@ class ClienteController extends Controller
     }
     public function cambiarContrasena(Request $request)
     {
+
         // Validar los datos
         $request->validate([
             'current_password' => 'required',
@@ -267,7 +268,8 @@ class ClienteController extends Controller
         $idCliente = Auth::guard('cliente')->user()->idcli;
         // Buscar el cliente en la base de datos
         $cliente = Cliente::findOrFail($idCliente);
-        // Verificar que la contraseña actual es correcta
+        // Verificar que la contraseña actual es correcta 
+        
         if (!Hash::check($request->current_password, $cliente->password)) {
             return redirect()->back()->with('error', 'La contraseña actual es incorrecta.');
         }
@@ -275,6 +277,7 @@ class ClienteController extends Controller
         $cliente->update([
             'password' => $request->new_password,
         ]);
+       
         return redirect()->back()->with('success', '¡Contraseña actualizada exitosamente!');
     }
 

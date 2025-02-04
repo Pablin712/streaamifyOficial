@@ -33,6 +33,17 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <strong>Error:</strong>
+                        <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
                 <form action="{{ route('cliente.perfil.update') }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -121,8 +132,8 @@
 
                         <!-- Confirmar nueva contraseña -->
                         <div class="mb-3">
-                            <label for="confirm_password" class="form-label">Repetir Nueva Contraseña</label>
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                            <label for="new_password_confirmation" class="form-label">Repetir Nueva Contraseña</label>
+                            <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation"
                                 required>
                         </div>
 
