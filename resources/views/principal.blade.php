@@ -6,6 +6,11 @@
     </li>
     <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
     </li>
+    {{-- <li class="nav-item"><a class="nav-link me-lg-3" href="#registro">Registro</a></li>
+<li class="nav-item"><a class="nav-link me-lg-3" href="#servicios">Servicios</a></li>
+<li class="nav-item"><a class="nav-link me-lg-3" href="#redes">Redes Sociales</a></li>
+<li class="nav-item"><a class="nav-link me-lg-3" href="#testimonios">Testimonios</a></li>
+<li class="nav-item"><a class="nav-link me-lg-3" href="#faq">FAQ</a></li> --}}
 @endsection
 @section('header')
     <div class="container px-5">
@@ -38,8 +43,8 @@
                 <div class="masthead-device-mockup">
                     <div class="text-center">
                         <!-- Aquí va la imagen promocional -->
-                        <img src="{{ asset('images/cuadrado/combos/33.png') }}"
-                            alt="Promoción de Streaming" class="rounded shadow-lg"
+                        <img src="{{ asset('images/cuadrado/combos/33.png') }}" alt="Promoción de Streaming"
+                            class="rounded shadow-lg"
                             style="width: 80%; max-width: 600px; height: auto; object-fit: cover;" />
                     </div>
                 </div>
@@ -120,4 +125,126 @@
             </div>
         </div>
     </section>
+
+    <!-- 📝 Únete a Streamify -->
+<section id="registro" class="py-5 bg-primary text-white">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6">
+                <h2 class="fw-bold">¡Forma parte de Streamify!</h2>
+                <p class="lead">Regístrate gratis y accede a suscripciones premium, recargas y más.</p>
+                <a href="{{ route('cliente.register') }}" class="btn btn-light btn-lg">Registrarse Ahora</a>
+            </div>
+            <div class="col-lg-6 d-flex justify-content-center">
+                <img src="{{ asset('images/banner/register.png') }}" class="rounded shadow-lg img-fluid" alt="Regístrate en Streamify">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 💳 Servicios Adicionales -->
+<section id="servicios" class="py-5 bg-light">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6 d-flex justify-content-center">
+                <img src="{{ asset('images/banner/servicios.png') }}" class="rounded shadow-lg img-fluid" alt="Servicios Streamify">
+            </div>
+            <div class="col-lg-6">
+                <h2 class="fw-bold">Más que Streaming: Servicios Adicionales</h2>
+                <p class="text-muted">Ofrecemos recargas de saldo y pagos de servicios básicos como luz, agua e internet.</p>
+                <ul>
+                    <li><i class="bi bi-cash-stack text-success"></i> Recargas de Saldo</li>
+                    <li><i class="bi bi-lightbulb-fill text-success"></i> Pago de Luz y Agua</li>
+                    <li><i class="bi bi-wifi text-success"></i> Pago de Internet</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 📱 Redes Sociales -->
+<section id="redes" class="py-5">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6">
+                <h2 class="fw-bold">Síguenos en Redes Sociales</h2>
+                <p class="text-muted">Mantente informado sobre promociones y novedades.</p>
+                <div class="d-flex flex-column gap-3">
+                    <a href="https://facebook.com" class="btn btn-primary"><i class="bi bi-facebook"></i> Facebook</a>
+                    <a href="https://instagram.com" class="btn btn-danger"><i class="bi bi-instagram"></i> Instagram</a>
+                    <a href="https://tiktok.com" class="btn btn-dark"><i class="bi bi-tiktok"></i> TikTok</a>
+                    <a href="https://t.me" class="btn btn-info"><i class="bi bi-telegram"></i> Telegram</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-flex justify-content-center">
+                <img src="{{ asset('images/banner/redes.png') }}" class="rounded shadow-lg img-fluid" alt="Síguenos en redes">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ⭐ Testimonios de Clientes -->
+<section id="testimonios" class="py-5 bg-light">
+    <div class="container px-5">
+        <h2 class="text-center fw-bold">Lo que dicen nuestros clientes</h2>
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6 d-flex justify-content-center">
+                <img src="{{ asset('images/banner/testimonios.png') }}" class="rounded shadow-lg img-fluid" alt="Clientes Felices">
+            </div>
+            <div class="col-lg-6">
+                <div class="testimonial-box shadow-sm p-4 rounded mb-3">
+                    <i class="bi bi-person-circle display-4 mb-3"></i>
+                    <p class="fst-italic">"Streamify me ha facilitado el acceso a mis plataformas favoritas. ¡100% recomendado!"</p>
+                    <h5 class="fw-bold">Carlos M.</h5>
+                </div>
+                <div class="testimonial-box shadow-sm p-4 rounded">
+                    <i class="bi bi-person-circle display-4 mb-3"></i>
+                    <p class="fst-italic">"Puedo pagar mi internet sin salir de casa. ¡Muy conveniente!"</p>
+                    <h5 class="fw-bold">Luis G.</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ❓ Preguntas Frecuentes -->
+<section id="faq" class="py-5">
+    <div class="container px-5">
+        <div class="row gx-5 align-items-center">
+            <div class="col-lg-6">
+                <h2 class="fw-bold">Preguntas Frecuentes</h2>
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq1">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqContent1">
+                                ¿Cómo funciona Streamify?
+                            </button>
+                        </h2>
+                        <div id="faqContent1" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                Streamify te ofrece acceso a suscripciones premium a precios accesibles. Solo recarga saldo, elige tu suscripción y disfruta.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="faq2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqContent2">
+                                ¿Cómo puedo pagar?
+                            </button>
+                        </h2>
+                        <div id="faqContent2" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                Puedes pagar mediante transferencias bancarias o saldo recargado en tu cuenta de Streamify.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-flex justify-content-center">
+                <img src="{{ asset('images/banner/faq.png') }}" class="rounded shadow-lg img-fluid" alt="Preguntas Frecuentes">
+            </div>
+        </div>
+    </div>
+</section>
+
 @endsection

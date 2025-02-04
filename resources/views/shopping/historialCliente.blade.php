@@ -88,10 +88,6 @@
                                                 @foreach ($venta->detalles_venta as $detalle)
                                                     <li class="list-group-item">
                                                         <strong>{{ $detalle->perfil->cuenta->valor->servicio->nombreser }}</strong><br>
-                                                        <strong>Usuario:</strong>
-                                                        {{ $detalle->perfil->cuenta->usuariocue }}<br>
-                                                        <strong>PIN Perfil #{{ $detalle->perfil->numeroper }}:</strong>
-                                                        {{ $detalle->perfil->pinper }}<br>
                                                         <strong>Fecha de Vencimiento:</strong>
                                                         {{ $detalle->fechavendet->format('d/m/Y') }}<br>
                                                         <strong>Monto:</strong> ${{ number_format($detalle->montodet, 2) }}

@@ -3,6 +3,7 @@
 @section('title', 'Cuentas')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla a morado */
         .table-dark {
@@ -24,6 +25,7 @@
             background-color: #6a006a !important;
             /* Color morado más oscuro en hover */
         }
+
         .btn-xs {
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem;
@@ -211,8 +213,17 @@
                         <tr>
                             <td>{{ $perfil->numeroper }}</td>
                             <td>{{ $perfil->pinper }}</td>
-                            <td class="usuarios-activos">{{ $perfil->usuarios_activos }}</td>
-                            <!-- AQUI TIENES QUE AGREGAR EL CALCULO PARA VER LOS USUARIOS ACTIVOS -->
+                            <td class="usuarios-activos">
+                                <span
+                                    class="
+                                {{ $perfil->usuarios_activos == 0
+                                    ? 'badge bg-danger'
+                                    : ($perfil->usuarios_activos == 1
+                                        ? 'badge bg-success'
+                                        : 'badge bg-dark') }}">
+                                    {{ $perfil->usuarios_activos }}
+                                </span>
+                            </td>
                             <td>
                                 <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#editProfileModal" data-id="{{ $perfil->idper }}"
@@ -353,5 +364,5 @@
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 @endsection
