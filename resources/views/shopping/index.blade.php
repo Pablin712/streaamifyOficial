@@ -8,6 +8,9 @@
             text-decoration: none;
             margin-right: 15px;
         }
+        .toast {
+            min-width: 250px;
+        }
 
         .section-link:hover {
             text-decoration: underline;
@@ -287,13 +290,9 @@
                                     </div>
 
                                     <!-- Botón Añadir al Carrito -->
-                                    <form action="{{ route('cart.add', $producto->id) }}" method="POST">
-                                        {{--  --}}
-                                        @csrf
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-success btn-sm" onclick="addToCart({{$producto->id }})">
+                                    <i class="bi bi-cart-plus"></i>
+                                    </button>
 
                                     <!-- Comprar para Entrega Inmediata -->
                                     <form action="{{ route('comprar', $producto->id) }}" method="POST">
@@ -417,14 +416,10 @@
                                         </div>
                                     </div>
 
-                                    <!-- Botón Añadir al Carrito -->
-                                    <form action="{{ route('cart.add', $producto->id) }}" method="POST">
-                                        {{--  --}}
-                                        @csrf
-                                        <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="bi bi-cart-plus"></i>
-                                        </button>
-                                    </form>
+                                    {{-- Botón Añadir al Carrito --}}
+<button type="button" class="btn btn-success btn-sm" onclick="addToCart({{ $producto->id }})">
+    <i class="bi bi-cart-plus"></i>
+</button>
                                     <!-- Hacer Pedido para otros -->
                                     <form action="{{ route('comprar', $producto->id) }}" method="POST">
                                         {{-- {{ route('pedido', $producto->id) }} --}}
@@ -847,7 +842,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir Comprando</button>
-                    {{-- <a href="{{ route('cart.checkout') }}" class="btn btn-primary">Finalizar Compra</a> --}}
+                    <a href="{{ route('cart.checkout') }}" class="btn btn-primary">Finalizar Compra</a> 
                 </div>
             </div>
         </div>
@@ -862,55 +857,87 @@
 
         // Añadir producto al carrito
         function addToCart(productId) {
-            fetch(`/cart/add/${productId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    cart = data.cart;
-                    localStorage.setItem('cart', JSON.stringify(cart)); // Guardar en localStorage
-                    updateCartUI();
-                })
-                .catch(error => console.error('Error:', error));
+
+    console.log('Añadiendo producto ID:', productId); // Verificar en consola
+    fetch(`/cart/add/${productId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            cart = data.cart;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartUI();
+            showToast('success', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Error al añadir al carrito');
+    });
+}
 
-        // Actualizar la interfaz del carrito
-        function updateCartUI() {
-            const cartItems = document.getElementById('cart-items');
-            const cartCount = document.getElementById('cart-count');
-            cartItems.innerHTML = '';
+// Función para mostrar notificaciones
+function showToast(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bootstrapToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+    bootstrapToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
 
-            let totalItems = 0;
+function updateCartUI() {
+    const cartItems = document.getElementById('cart-items');
+    const cartCount = document.getElementById('cart-count');
+    cartItems.innerHTML = '';
 
-            if (Object.keys(cart).length === 0) {
-                cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
-                if (cartCount) {
-                    cartCount.textContent = '0';
-                }
-                return;
-            }
+    let totalItems = 0;
 
-            Object.values(cart).forEach(item => {
-                totalItems += item.cantidad;
-                let listItem = document.createElement('li');
-                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-                listItem.innerHTML = `
-            <img src="${item.foto}" alt="${item.nombre}" style="width: 50px;">
-            <span>${item.nombre} (x${item.cantidad})</span>
-            <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
-            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑</button>
+    if (!cart || Object.keys(cart).length === 0) {
+        cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
+        cartCount.textContent = '0';
+        return;
+    }
+
+    Object.values(cart).forEach(item => {
+        totalItems += item.cantidad;
+        const listItem = document.createElement('li');
+        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+        listItem.innerHTML = `
+            <img src="/public/${item.foto}" alt="${item.nombre}" style="width: 50px; height: 50px; object-fit: cover;">
+            <div class="ms-2">
+                <h6 class="mb-0">${item.nombre}</h6>
+                <small>Cantidad: ${item.cantidad}</small>
+            </div>
+            <div>
+                <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
+                <button class="btn btn-danger btn-sm ms-2" onclick="removeFromCart(${item.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
         `;
-                cartItems.appendChild(listItem);
-            });
+        cartItems.appendChild(listItem);
+    });
 
-            if (cartCount) {
-                cartCount.textContent = totalItems;
-            }
-        }
+    cartCount.textContent = totalItems;
+}
 
         // Eliminar un producto del carrito
         function removeFromCart(productId) {
