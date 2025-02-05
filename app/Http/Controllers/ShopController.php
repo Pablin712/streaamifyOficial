@@ -75,7 +75,19 @@ class ShopController extends Controller
         }
 
         Session::put('cart', $cart);
-        return redirect()->route('shop')->with('success', 'Producto añadido al carrito');
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'cart' => $cart,
+                'message' => 'Producto añadido al carrito'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto añadido al carrito',
+            'cart' => $cart
+        ]);
     }
 
     // Ver el carrito
@@ -109,12 +121,108 @@ class ShopController extends Controller
     public function checkout()
     {
         $cart = Session::get('cart', []);
-
         if (empty($cart)) {
             return redirect()->route('shop')->with('error', 'Tu carrito está vacío.');
         }
+        foreach ($cart as $item) {
+            $producto = Producto::findOrFail($item['id']);
+            $cantidad = $item['cantidad'];
+            for($i = 0; $i < $cantidad; $i++) {
+                foreach ($producto->detalles as $detalle) {
+                    if (!$this->buscarCuentaDisponible($detalle->idser)) {
+                        // ❌ No hay cuentas disponibles: Desactivar el producto
+                        $producto->update(['activo' => false]);
+                        return back()->with('error', 'No hay cuentas disponibles para este servicio.');
+                    }
+                }
+            }
+        }
 
-        return view('cliente.checkout', compact('cart'));
+        $idCliente = Auth::guard('cliente')->user()->idcli;
+        // Buscar el cliente en la base de datos
+        $usuario = Cliente::findOrFail($idCliente);
+        // Verificar saldo
+        if ($usuario->saldo < $producto->preciopro) {
+            return back()->with('error', 'Saldo insuficiente para realizar la compra.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Crear venta
+            $venta = new Venta();
+            $venta->idemp = 1;
+            $venta->idcli = $usuario->idcli;
+            $venta->fechaven = now();
+            $venta->save();
+            $mensajesServicios = []; // Inicialización correcta
+            $preciofinal = 0;
+            foreach ($cart as $item) {
+                $producto = Producto::findOrFail($item['id']);
+                $cantidad = $item['cantidad'];
+                for($i = 0; $i < $cantidad; $i++) {
+                    // Procesar cada detalle del producto
+                    foreach ($producto->detalles as $detalle) {
+                        // Buscar cuenta disponible
+                        $cuenta = $this->buscarCuentaDisponible($detalle->idser);
+
+                        if (!$cuenta) {
+                            $producto->update(['activo' => false]);
+                            throw new \Exception("No hay cuentas disponibles para el servicio.");
+                        }
+
+                        // Buscar perfil disponible
+                        $perfil = $this->buscarPerfilDisponible($cuenta);
+
+                        if (!$perfil) {
+                            throw new \Exception("No hay perfiles disponibles en la cuenta seleccionada.");
+                        }
+
+                        // Registrar detalle de venta
+                        $detalleVenta = new DetalleVenta();
+                        $detalleVenta->idven = $venta->idven;
+                        $detalleVenta->idper = $perfil->idper;
+                        $detalleVenta->fechavendet = now()->addMonths($detalle->meses)->subDay();
+                        $detalleVenta->descripciondet = "Vendido en automático";
+                        $detalleVenta->montodet = $producto->preciopro / count($producto->detalles);
+                        $detalleVenta->activodet = true;
+                        $detalleVenta->save();
+                        $preciofinal += $detalleVenta->montodet;
+                        // Enviar mensaje de entrega
+                        // Generar mensaje de servicio adquirido
+                        $mensaje = "**" . $perfil->cuenta->valor->servicio->nombreser . "**\n" .
+                            "Usuario: " . $perfil->cuenta->usuariocue . "\n" .
+                            "Clave: " . $perfil->cuenta->contrasenacue . "\n" .
+                            "PIN perfil {$perfil->numeroper}: " . $perfil->pinper;
+
+                        $mensajesServicios[] = $mensaje;
+                    }
+                }
+            }
+
+            // Descontar saldo al usuario
+            $usuario->saldo -= $preciofinal;
+            $usuario->save();
+
+            // Verificar si la cuenta se llenó
+            $this->verificarCuentaLlena($cuenta, $producto);
+            //dd($cuenta);
+            // Guardar mensaje de éxito en sesión
+            session()->flash('compra_exitosa', [
+                'nombre' => 'Productos Comprados',
+                'precio' => $preciofinal,
+                'servicios' => $mensajesServicios // Aquí guardamos los servicios adquiridos
+            ]);
+
+            DB::commit();
+
+            // Lógica para generar y enviar la factura por correo
+            Mail::to($venta->cliente->email)->send(new facturaMail($venta));
+
+            return redirect()->route('shop');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     //probando comprar v1
