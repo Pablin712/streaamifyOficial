@@ -160,8 +160,8 @@
                         <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
                         <h5 class="mt-3">Ocurrió un problema</h5>
                         <p class="text-muted">{{ session('error') }}</p>
-                        <p>No te preocupes, no se te descontó saldo, puedes verificar más tarde si ya hay stock, 
-                            o contacta con soporte para que agreguen más cuentas.</p>
+                        <p>No te preocupes, no se te descontó saldo, intenta nuevamente, revisa 
+                            que tengas suficiente saldo y el producto esté en stock.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="cerrarErrorModal()">Cerrar</button>

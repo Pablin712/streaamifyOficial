@@ -154,7 +154,7 @@ class ClienteController extends Controller
             $request->validate(
                 [
                     'first_name' => ['required', 'regex:/^\S+\s+\S+$/'],
-                    'last_name' => ['required', 'regex:/^\S+\s+\S+$/'],
+                    'last_name' => ['required', 'regex:/^\S+(?:\s+\S+)*$/'],
                     'email' => 'required|email|unique:clientes,email', // Email único
                     'telefonocli' => 'required',
                     'pais' => 'required',
@@ -168,7 +168,7 @@ class ClienteController extends Controller
                 ],
                 [
                     'first_name.regex' => 'Debe ingresar al menos dos nombres.',
-                    'last_name.regex' => 'Debe ingresar al menos dos apellidos.',
+                    'last_name.regex' => 'Debe ingresar al menos un apellido.',
                     'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
                     'password.regex' => 'La contraseña debe contener al menos un número y un símbolo especial (@$!%*?&).',
                     'password.confirmed' => 'Las contraseñas no coinciden.',

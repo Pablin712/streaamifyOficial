@@ -21,6 +21,7 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,400;1,400&amp;display=swap"
         rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="{{ asset('css/styles2.css') }}" rel="stylesheet" />
     @yield('styles')
@@ -45,7 +46,7 @@
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
         <div class="container px-5">
-            <a class="navbar-brand fw-bold" href="{{route('principal')}}">Streamify HQ</a>
+            <a class="navbar-brand fw-bold" href="{{ route('principal') }}">Streamify HQ</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive"
                 aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                 Menu
@@ -80,10 +81,14 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu"
                                 style="background-color: #FFFFFF; border-color: #E4B100;">
-                                <li><a class="dropdown-item text-dark fw-semibold" href="{{route('cliente.perfil')}}">Perfil</a></li>
-                                <li><a class="dropdown-item text-dark fw-semibold" href="{{route('recargar.index')}}">Recargar saldo</a></li>
-                                <li><a class="dropdown-item text-dark fw-semibold" href="{{route('historial.cliente')}}">Actividad</a></li>
-                                <li><a class="dropdown-item text-danger fw-semibold" onclick="document.getElementById('logout-form').submit();">
+                                <li><a class="dropdown-item text-dark fw-semibold"
+                                        href="{{ route('cliente.perfil') }}">Perfil</a></li>
+                                <li><a class="dropdown-item text-dark fw-semibold"
+                                        href="{{ route('recargar.index') }}">Recargar saldo</a></li>
+                                <li><a class="dropdown-item text-dark fw-semibold"
+                                        href="{{ route('historial.cliente') }}">Actividad</a></li>
+                                <li><a class="dropdown-item text-danger fw-semibold"
+                                        onclick="document.getElementById('logout-form').submit();">
                                         Cerrar sesión
                                     </a>
                                 </li>
@@ -126,6 +131,9 @@
                     rel="noopener noreferrer"><i class="bi bi-instagram"></i></a>
                 <a href="https://www.tiktok.com/@lv_pablin" class="text-white" target="_blank"
                     rel="noopener noreferrer"><i class="bi bi-tiktok"></i></a>
+                <a href="https://t.me/Streamifyhq" class="text-white" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-telegram"></i>
+                </a>
             </div>
         </div>
     </footer>

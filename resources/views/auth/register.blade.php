@@ -218,6 +218,10 @@
                 return input.value.trim().split(/\s+/).length >= 2;
             }
 
+            function validateLastName(value) {
+                return /^\S+(?:\s+\S+)*$/.test(value.trim());
+            }
+
             function validatePassword(password) {
                 const minLength = password.length >= 6;
                 const hasNumber = /[0-9]/.test(password);
@@ -234,8 +238,8 @@
             });
 
             document.getElementById("lastName").addEventListener("input", function() {
-                if (!validateTwoWords(this)) {
-                    this.setCustomValidity("Debe ingresar al menos dos apellidos.");
+                if (!validateLastName(this)) {
+                    this.setCustomValidity("Debe ingresar al menos un apellido.");
                 } else {
                     this.setCustomValidity("");
                 }
