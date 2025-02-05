@@ -12,6 +12,33 @@ DROP FUNCTION IF EXISTS calcular_total_pagado_mes;
 DROP VIEW IF EXISTS view_usuarios_activos;
 DROP VIEW IF EXISTS view_clientes_usuarios;
 
+CREATE TABLE secuencia_factura (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+DELIMITER $$
+
+CREATE TRIGGER trg_generar_idventa
+BEFORE INSERT ON ventas
+FOR EACH ROW
+BEGIN
+    DECLARE secuencia BIGINT;
+    DECLARE establecimiento VARCHAR(3) DEFAULT '001';  -- Número de establecimiento
+    DECLARE facturero VARCHAR(3) DEFAULT '001';        -- Número de facturero
+
+    -- Insertar un nuevo registro en la tabla secuencia_factura y obtener el ID generado
+    INSERT INTO secuencia_factura () VALUES ();
+    SET secuencia = LAST_INSERT_ID();
+
+    -- Generar el ID de venta con el formato: establecimiento-facturero-secuencia de 9 dígitos
+    SET NEW.idven = CONCAT(establecimiento, '-', facturero, '-', LPAD(secuencia, 9, '0'));
+
+END$$
+
+DELIMITER ;
+
 
 DELIMITER $$
 
