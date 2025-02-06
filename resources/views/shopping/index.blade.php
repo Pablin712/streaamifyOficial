@@ -918,20 +918,17 @@ function updateCartUI() {
 
     Object.values(cart).forEach(item => {
         totalItems += item.cantidad;
-        const listItem = document.createElement('li');
+
+        // Construir la URL de la imagen correctamente
+        let imageUrl = "{{ asset('public/') }}" + "/" + item.foto;
+
+        let listItem = document.createElement('li');
         listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
         listItem.innerHTML = `
-            <img src="/public/${item.foto}" alt="${item.nombre}" style="width: 50px; height: 50px; object-fit: cover;">
-            <div class="ms-2">
-                <h6 class="mb-0">${item.nombre}</h6>
-                <small>Cantidad: ${item.cantidad}</small>
-            </div>
-            <div>
-                <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
-                <button class="btn btn-danger btn-sm ms-2" onclick="removeFromCart(${item.id})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
+            <img src="${imageUrl}" alt="${item.nombre}" style="width: 50px;">
+            <span>${item.nombre} (x${item.cantidad})</span>
+            <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
+            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑</button>
         `;
         cartItems.appendChild(listItem);
     });

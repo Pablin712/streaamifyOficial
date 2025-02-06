@@ -154,6 +154,9 @@ class ShopController extends Controller
             $venta->idcli = $usuario->idcli;
             $venta->fechaven = now();
             $venta->save();
+            // 🔹 Obtener el ID generado por el trigger
+            $venta->idven = DB::selectOne("SELECT idven FROM ventas WHERE idcli = ? ORDER BY fechaven DESC LIMIT 1", [$venta->idcli])->idven;
+            
             $mensajesServicios = []; // Inicialización correcta
             $preciofinal = 0;
             foreach ($cart as $item) {
@@ -240,10 +243,10 @@ class ShopController extends Controller
 
         // Si el producto es de tipo inmediata (id=1)
         if ($producto->tipo_producto_id == 1) {
-            // 📌 Verificar disponibilidad antes de la transacción
+            // Verificar disponibilidad antes de la transacción
             foreach ($producto->detalles as $detalle) {
                 if (!$this->buscarCuentaDisponible($detalle->idser)) {
-                    // ❌ No hay cuentas disponibles: Desactivar el producto
+                    // No hay cuentas disponibles: Desactivar el producto
                     $producto->update(['activo' => false]);
                     return back()->with('error', 'No hay cuentas disponibles para este servicio.');
                 }
@@ -251,11 +254,20 @@ class ShopController extends Controller
             DB::beginTransaction();
             try {
                 // Crear venta
+                $fecha = now();
                 $venta = new Venta();
                 $venta->idemp = Empleado::where('nombreemp', 'Laravel')->value('idemp');
                 $venta->idcli = $usuario->idcli;
-                $venta->fechaven = now();
-                $venta->save();
+                $venta->fechaven = $fecha;
+                $venta->save(); // Laravel asigna automáticamente el idven
+                // Obtener el ID generado por el trigger
+                $venta->idven = DB::selectOne("SELECT idven FROM ventas WHERE idcli = ? ORDER BY fechaven DESC LIMIT 1", [$venta->idcli])->idven;
+                // Verificar si el ID de la venta es válido
+                if (!$venta->idven) {
+                    throw new \Exception("Error al crear la venta, ID de venta no encontrado.");
+                }
+                
+
                 // Procesar cada detalle del producto
                 foreach ($producto->detalles as $detalle) {
                     // Buscar cuenta disponible
@@ -418,6 +430,8 @@ class ShopController extends Controller
             'fechaven' => $fecha,
             'totalpagoven' => $total_venta,
         ]);
+        // 🔹 Obtener el ID generado por el trigger
+        $ventaNueva->idven = DB::selectOne("SELECT idven FROM ventas WHERE idcli = ? ORDER BY fechaven DESC LIMIT 1", [$ventaNueva->idcli])->idven;
 
         // Desactivar los detalles anteriores solo para los seleccionados
         DetalleVenta::whereIn('iddet', $detallesSeleccionados)->update(['activodet' => false]);
