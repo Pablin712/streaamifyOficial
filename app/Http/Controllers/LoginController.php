@@ -6,15 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Historial;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class LoginController extends Controller
 {
-    /**
-     * Muestra la vista de login.
-     */
+    // Mostrar el formulario de login (web)
     public function showLoginForm()
     {
-        // Redirigir si el usuario ya está autenticado
         if (Auth::check()) {
             return redirect()->route('dashboard')->with('info', 'Ya estás autenticado.');
         }
@@ -22,69 +21,79 @@ class LoginController extends Controller
         return view('auth.login'); // Vista de login
     }
 
-    /**
-     * Procesa la solicitud de inicio de sesión.
-     */
+    // Iniciar sesión (web)
     public function login(Request $request)
     {
-        // Validar los datos de entrada
         $request->validate([
             'usuarioemp' => 'required|string',
             'passwordemp' => 'required|min:3',
         ]);
 
-        // Buscar al usuario por usuarioemp
         $empleado = \App\Models\Empleado::where('usuarioemp', $request->usuarioemp)->first();
 
-        if (!$empleado) {
+        if (!$empleado || !Hash::check($request->passwordemp, $empleado->passwordemp)) {
             Historial::create([
                 'accion' => 'Intento fallido de ingreso',
-                'descripcion' =>  'Fallo en el ingreso de usuario', // Campo opcional
-                'realizado_por' => $ipAddress = $request->ip(), // Almacena el nombre del usuario e IP
-                'fecha' => now(),
-            ]);
-            // Retorna un mensaje de error si el usuario no existe
-            return back()->withErrors([
-                'usuarioemp' => 'El usuario no existe.',
-            ])->withInput($request->except('passwordemp'));
-        }
-
-        // Verificar la contraseña
-        if (!Hash::check($request->passwordemp, $empleado->passwordemp)) {
-            
-            Historial::create([
-                'accion' => 'Intento fallido de ingreso',
-                'descripcion' =>  'Fallo en el ingreso de contraseña', // Campo opcional
-                'realizado_por' => $ipAddress = $request->ip(), // Almacena el nombre del usuario e IP
+                'descripcion' => 'Fallo en el ingreso de usuario o contraseña',
+                'realizado_por' => $request->ip(),
                 'fecha' => now(),
             ]);
 
             return back()->withErrors([
-                'passwordemp' => 'La contraseña es incorrecta.',
+                'usuarioemp' => 'Usuario o contraseña incorrectos.',
             ])->withInput($request->except('passwordemp'));
         }
 
-        // Autenticar al usuario manualmente
         Auth::login($empleado);
 
         Historial::create([
             'accion' => 'Ingreso de ' . $empleado->usuarioemp,
-            'descripcion' =>  'Autenticación e ingreso al sistema', // Campo opcional
-            'realizado_por' => $empleado->nombreemp. ' | '.$ipAddress = $request->ip(), // Almacena el nombre del usuario e IP
+            'descripcion' => 'Autenticación e ingreso al sistema',
+            'realizado_por' => $empleado->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);
-        // Redirigir al dashboard o ruta protegida
+
         return redirect()->route('inicio')->with('success', 'Inicio de sesión exitoso.');
     }
 
-    /**
-     * Cierra la sesión del usuario.
-     */
+    // Iniciar sesión (API) con JWT
+    public function loginApi(Request $request)
+    {
+        $request->validate([
+            'usuarioemp' => 'required|string',
+            'passwordemp' => 'required|min:3',
+        ]);
+
+        $empleado = \App\Models\Empleado::where('usuarioemp', $request->usuarioemp)->first();
+
+        if (!$empleado || !Hash::check($request->passwordemp, $empleado->passwordemp)) {
+            return response()->json(['error' => 'Usuario o contraseña incorrectos.'], 401);
+        }
+
+        try {
+            $token = JWTAuth::fromUser($empleado);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'No se pudo crear el token.'], 500);
+        }
+
+        return response()->json(['token' => $token]);
+    }
+
+    // Cerrar sesión (web)
     public function logout()
     {
         Auth::logout();
-
-        // Redirigir al login con un mensaje
         return redirect()->route('login')->with('success', 'Sesión cerrada correctamente.');
+    }
+
+    // Cerrar sesión (API)
+    public function logoutApi(Request $request)
+    {
+        try {
+            JWTAuth::parseToken()->invalidate();
+            return response()->json(['message' => 'Sesión cerrada correctamente.']);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'No se pudo cerrar la sesión.'], 500);
+        }
     }
 }

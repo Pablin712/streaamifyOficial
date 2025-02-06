@@ -140,7 +140,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Factura: ' . $venta->idven,
             'descripcion' =>  "Detalles: $descripcionDetalles",
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         // Puedes calcular el total de la venta aquí y actualizarlo
@@ -186,7 +186,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se renovo la venta con ID: ' . $idvenPasado,
             'descripcion' =>  'Nueva venta creada con ID' . $ventaNueva->idven, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -239,7 +239,7 @@ class VentaController extends Controller
             Historial::create([
                 'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
                 'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
             // Retornar el cliente recién creado como respuesta
@@ -391,7 +391,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se actualizacion de datos de la venta con ID: ' . $venta->idven,
             'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -410,7 +410,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se cambio el estado del Item con ID: ' . $iddet,
             'descripcion' =>  'Estado cambiado a' . $detalle->activodet, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -421,10 +421,10 @@ class VentaController extends Controller
     {
         $venta = Venta::findOrFail($id);
         $cliente = $venta->cliente;
-    
+
         // Lógica para generar y enviar la factura por correo
         Mail::to($cliente->email)->send(new facturaMail($venta));
-    
+
         return redirect()->route('ventas')->with('success', 'Factura enviada correctamente.');
     }
     /**
@@ -437,7 +437,7 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Se eliminaron los datos de la venta con ID: ' . $idven,
             'descripcion' =>  'Datos Eliminados: ' . json_encode($venta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
 
@@ -446,6 +446,24 @@ class VentaController extends Controller
 
         return redirect()->route('ventas')->with('success', 'Venta eliminada con éxito.');
     }
+    public function indexApi(Request $request)
+    {
+        // Obtener todas las ventas con los detalles de cada una
+        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven', 'desc')->get();
+
+        // Calcular los ingresos y ventas del día
+        $hoy = Carbon::today(); // Fecha del inicio del día
+        $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
+        $ventas_dia = Venta::whereDate('fechaven', $hoy)->count();
+
+        // Retornar las ventas y los ingresos como una respuesta JSON
+        return response()->json([
+            'ventas' => $ventas,
+            'ingresos_dia' => $ingresos_dia,
+            'ventas_dia' => $ventas_dia,
+        ]);
+    }
+
     private function authorizeRole(array $roles)
     {
         $userRole = Auth::user()->idrol;

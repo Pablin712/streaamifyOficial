@@ -10,6 +10,7 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+
 class ClienteController extends Controller
 {
     public function index()
@@ -269,7 +270,7 @@ class ClienteController extends Controller
         // Buscar el cliente en la base de datos
         $cliente = Cliente::findOrFail($idCliente);
         // Verificar que la contraseña actual es correcta 
-        
+
         if (!Hash::check($request->current_password, $cliente->password)) {
             return redirect()->back()->with('error', 'La contraseña actual es incorrecta.');
         }
@@ -277,8 +278,32 @@ class ClienteController extends Controller
         $cliente->update([
             'password' => $request->new_password,
         ]);
-       
+
         return redirect()->back()->with('success', '¡Contraseña actualizada exitosamente!');
+    }
+
+    public function indexApi(Request $request)
+    {
+        // Aseguramos que el usuario tenga los permisos adecuados para acceder a esta información
+        $this->authorizeRole(['administrador', 'vendedor', 'tecnico']);
+
+        // Obtener todos los clientes
+        $clientes = Cliente::all();
+
+        // Agregar información adicional a cada cliente
+        foreach ($clientes as $cliente) {
+            $usuarios = ViewClientesUsuarios::where('idcli', $cliente->idcli)->first();
+            if ($usuarios) {
+                $cliente->usuarios = $usuarios->usuarios; // Asignar el número de usuarios
+                $cliente->facturado = $usuarios->facturado; // Asignar el total facturado
+            } else {
+                $cliente->usuarios = 0; // Si no tiene registros, asignar 0
+                $cliente->facturado = 0; // Si no tiene registros, asignar 0
+            }
+        }
+
+        // Retornar los datos de clientes como respuesta JSON
+        return response()->json(['clientes' => $clientes]);
     }
 
     private function authorizeRole(array $roles)

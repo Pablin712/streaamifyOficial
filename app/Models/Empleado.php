@@ -4,8 +4,9 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Empleado extends Authenticatable
+class Empleado extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
@@ -45,5 +46,14 @@ class Empleado extends Authenticatable
     public function ventas()
     {
         return $this->hasMany(Venta::class, 'idemp', 'idemp');
+    }
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }
