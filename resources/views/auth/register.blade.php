@@ -186,10 +186,13 @@
             <!-- Input oculto para almacenar el país -->
             <input type="hidden" name="pais" id="pais">
             <div class="row mb-3">
+                <small class="text-muted d-block mb-1">
+                    La contraseña debe tener al menos un número y un símbolo.
+                </small>
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="password" class="form-control" name="password" id="password"
-                            placeholder="Agrega número y simbolo" required>
+                            placeholder="Agrega número y símbolo" required>
                         <label for="password">Contraseña</label>
                     </div>
                 </div>
@@ -200,7 +203,7 @@
                         <label for="confirmPassword">Repetir Contraseña</label>
                     </div>
                 </div>
-            </div>
+            </div>            
             <button type="submit" class="btn btn-primary w-100">Registrar Cuenta</button>
         </form>
         <div class="extra-links">

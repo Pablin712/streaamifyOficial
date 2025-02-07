@@ -9,7 +9,8 @@ use App\Models\Venta;
 use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Models\Cuenta;
-use App\Models\Perfil;
+use App\Models\Recarga;
+use App\Models\Pedido;
 use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
@@ -27,12 +28,6 @@ class VentaController extends Controller
     {
 
         $this->authorizeRole(['administrador', 'vendedor']);
-        // Obtener todas las ventas con los detalles de cada una
-        //$ventas = Venta::with(['detalles_venta' => function($query) {
-        //    $query->where('activodet', true);
-        //}])->whereHas('detalles_venta', function($query) {
-        //    $query->where('activodet', true);
-        //})->orderBy('fechaven')->get();
 
         $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven', 'desc')->get();
 
@@ -40,8 +35,15 @@ class VentaController extends Controller
         $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
         $ventas_dia = Venta::whereDate('fechaven', $hoy)->count();
 
+        $autenticados = Cliente::whereNotNull('email')
+            ->whereNotNull('password')
+            ->count();
+
+        $recargasPendientes = Recarga::where('idestado', 1)->count();
+        $pedidosPendientes = Pedido::where('idestado', 1)->count();
         // Pasar las ventas y los detalles de venta a la vista
-        return view('sales.ventas.index', compact('ventas', 'ingresos_dia', 'ventas_dia'));
+        return view('sales.ventas.index', compact('ventas', 'ingresos_dia', 'ventas_dia', 
+            'autenticados', 'recargasPendientes', 'pedidosPendientes'));
     }
 
     /**

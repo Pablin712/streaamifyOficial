@@ -29,7 +29,10 @@ class ClienteController extends Controller
                 $cliente->facturado = 0; // Si no tiene registros, asignar 0
             }
         }
-        return view('sales.clientes.index', compact('clientes'));
+        $autenticados = Cliente::whereNotNull('email')
+            ->whereNotNull('password')
+            ->count();
+        return view('sales.clientes.index', compact('clientes', 'autenticados'));
     }
     // Crear un nuevo proveedor
     public function create()

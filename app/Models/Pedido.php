@@ -9,7 +9,7 @@ class Pedido extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['idcli', 'producto_id', 'estado', 'fechapedido', 'respuesta'];
+    protected $fillable = ['idcli', 'producto_id', 'idestado', 'fechapedido', 'respuesta'];
     public $timestamps = false;
     protected $casts = [
         'fechapedido' => 'datetime', // Convierte automáticamente en objeto Carbon

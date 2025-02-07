@@ -11,6 +11,24 @@
     @endif
     <h3>Información de clientes</h3>
     <p>Muestra la tabla de clientes, el número de usuarios que posee y lo facturado en el mes actual.</p>
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Clientes Autenticados</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $autenticados }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-id-card fa-2x text-gray-300"></i> 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('tablename', 'Clientes')
 @section('table1')
