@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Banco;
 use App\Models\Recarga;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 class RecargaController extends Controller
 {
     public function index()
@@ -19,31 +19,46 @@ class RecargaController extends Controller
 
     public function updateEstado(Request $request, $idrec)
     {
-        $recarga = Recarga::findOrFail($idrec);
-        // Mapeo de texto a IDs
-        $estadoMap = [
-            'aprobado' => 3,
-            'rechazado' => 2,
-        ];
-        // Validar que el estado sea "aprobado" o "rechazado"
-        $request->validate([
-            'idestado' => 'required|in:aprobado,rechazado',
-        ]);
-        // Obtener el ID del estado
-        $estadoId = $estadoMap[$request->idestado];
-        // Actualizar el estado
-        $recarga->update([
-            'idestado' => $estadoId,
-        ]);
-        // Si el estado es "aprobado", actualizar el saldo del cliente
-        if ($request->idestado === 'aprobado') {
-            $cliente = $recarga->cliente; // Usar la relación con Cliente
-            if ($cliente) { // Validar que exista el cliente relacionado
-                $cliente->saldo += $recarga->valor; // Sumar el valor de la recarga al saldo
-                $cliente->save(); // Guardar el nuevo saldo
+        try {
+            DB::beginTransaction(); // Iniciar transacción
+            $recarga = Recarga::where('idrec', $idrec)
+                ->where('idestado', 1) // Solo procesar si sigue pendiente
+                ->lockForUpdate() // Bloquea la fila hasta que termine la transacción
+                ->first();
+            if (!$recarga) {
+                return redirect()->route('empleado.recargas.index')
+                    ->withErrors(['error' => 'La recarga ya fue procesada por otro usuario.']);
             }
+            // Mapeo de texto a IDs
+            $estadoMap = [
+                'aprobado' => 3,
+                'rechazado' => 2,
+            ];
+            // Validar que el estado sea "aprobado" o "rechazado"
+            $request->validate([
+                'idestado' => 'required|in:aprobado,rechazado',
+            ]);
+            // Obtener el ID del estado
+            $estadoId = $estadoMap[$request->idestado];
+            // Actualizar el estado
+            $recarga->update([
+                'idestado' => $estadoId,
+            ]);
+            // Si el estado es "aprobado", actualizar el saldo del cliente
+            if ($request->idestado === 'aprobado') {
+                $cliente = $recarga->cliente; // Usar la relación con Cliente
+                if ($cliente) { // Validar que exista el cliente relacionado
+                    $cliente->saldo += $recarga->valor; // Sumar el valor de la recarga al saldo
+                    $cliente->save(); // Guardar el nuevo saldo
+                }
+            }
+            DB::commit(); // Confirmar cambios
+            return redirect()->route('empleado.recargas.index')->with('success', 'Estado de la recarga actualizado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack(); // Revertir cambios si hay un error
+            return redirect()->route('empleado.recargas.index')
+                ->withErrors(['error' => 'Error al actualizar la recarga: ' . $e->getMessage()]);
         }
-        return redirect()->route('empleado.recargas.index')->with('success', 'Estado de la recarga actualizado exitosamente.');
     }
 
     public function recargarSaldo()

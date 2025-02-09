@@ -29,7 +29,7 @@ class VentaController extends Controller
 
         $this->authorizeRole(['administrador', 'vendedor']);
 
-        $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven', 'desc')->get();
+        $ventas = Venta::with(['detalles_venta'])->orderBy('created_at', 'desc')->get();
 
         $hoy = Carbon::today(); // Fecha del inicio del día
         $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');

@@ -10,6 +10,16 @@
             {{ session('error') }}
         </div>
     @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     Aquí puedes agregar una nueva cuenta para llenar el stock de cuentas disponibles para los servicios.
     Asegúrate de ingresar todos los campos correctamente.
     En esta vista, se agrega una cuenta a la tabla cuentas.

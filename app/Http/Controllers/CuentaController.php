@@ -59,54 +59,58 @@ class CuentaController extends Controller
     // Guardar una nueva cuenta
     public function store(Request $request)
     {
-        $request->merge([
-            'idcue' => strtoupper($request->idcue)
-        ]);
-        // Validar datos de la cuenta
-        $validated = $request->validate([
-            'idcue' => 'required|string|max:20|unique:cuentas,idcue',
-            'idval' => 'required|exists:valores,idval',
-            'fechavencue' => 'required|date',
-            'usuariocue' => 'required|string|max:50|unique:cuentas,idcue',
-            'contrasenacue' => 'required|string|max:50',
-            'caidacue' => 'required|boolean',
-        ]);
-
-        // Crear la cuenta (otra alternativa)
-        $cuenta = Cuenta::create($validated);
-
-        Historial::create([
-            'accion' => 'Se creo la cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' =>  'Datos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
-            'fecha' => now(),
-        ]);
-        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
-        $this->actualizarEstadoProductos($cuenta->valor->idser);
-        // Comprobar si los datos de costo están presentes
-        // Si hay campos de costo, validarlos y crear el costo
-        if ($request->filled('descripcioncos') || $request->filled('montocos')) {
-            $validatedCosto = $request->validate([
-                'descripcioncos' => 'required|string|max:50',
-                'montocos' => 'required|numeric|min:0',
+        try {
+            $request->merge([
+                'idcue' => strtoupper($request->idcue)
+            ]);
+            // Validar datos de la cuenta
+            $validated = $request->validate([
+                'idcue' => 'required|string|max:20|unique:cuentas,idcue',
+                'idval' => 'required|exists:valores,idval',
+                'fechavencue' => 'required|date',
+                'usuariocue' => 'required|string|max:50|unique:cuentas,idcue',
+                'contrasenacue' => 'required|string|max:50',
+                'caidacue' => 'required|boolean',
             ]);
 
-            // Crear el costo asociado a la cuenta
-            $costo = Costo::create([
-                'idcue' => $request->idcue, // Asociar el costo a la cuenta recién creada
-                'fechacos' => now(),
-                'montocos' => $validatedCosto['montocos'],
-                'descripcioncos' => $validatedCosto['descripcioncos'],
-            ]);
+            // Crear la cuenta (otra alternativa)
+            $cuenta = Cuenta::create($validated);
 
             Historial::create([
-                'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
-                'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
+                'accion' => 'Se creo la cuenta con ID: ' . $cuenta->idcue,
+                'descripcion' =>  'Datos: ' . json_encode($cuenta), // Campo opcional
                 'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
+            // Actualizar estado de productos relacionados con el servicio de la cuenta creada
+            $this->actualizarEstadoProductos($cuenta->valor->idser);
+            // Comprobar si los datos de costo están presentes
+            // Si hay campos de costo, validarlos y crear el costo
+            if ($request->filled('descripcioncos') || $request->filled('montocos')) {
+                $validatedCosto = $request->validate([
+                    'descripcioncos' => 'required|string|max:50',
+                    'montocos' => 'required|numeric|min:0',
+                ]);
+
+                // Crear el costo asociado a la cuenta
+                $costo = Costo::create([
+                    'idcue' => $request->idcue, // Asociar el costo a la cuenta recién creada
+                    'fechacos' => now(),
+                    'montocos' => $validatedCosto['montocos'],
+                    'descripcioncos' => $validatedCosto['descripcioncos'],
+                ]);
+
+                Historial::create([
+                    'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
+                    'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
+                    'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
+                    'fecha' => now(),
+                ]);
+            }
+            return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()]);
         }
-        return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
     }
     // CuentaController.php
     public function status($idcue)
@@ -179,46 +183,50 @@ class CuentaController extends Controller
     // Actualizar una cuenta existente
     public function update(Request $request, $idcue)
     {
-        $request->validate([
-            'idval' => 'required|exists:valores,idval',
-            'fechavencue' => 'required|date',
-            'usuariocue' => 'required|string|max:50',
-            'contrasenacue' => 'required|string|max:50',
-            'caidacue' => 'required|boolean|min:1'
-        ]);
-        $request->merge([
-            'idcue' => strtoupper($request->idcue)
-        ]);
-
-        $cuenta = Cuenta::findOrFail($idcue);
-
-        Historial::create([
-            'accion' => 'Se actualizo la cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
-        ]);
-
-        $cuenta->update($request->all());
-
-        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
-        $this->actualizarEstadoProductos($cuenta->valor->idser);
-        if (!empty($request->descripcioncos) && !empty($request->montocos)) {
-            // Validar datos de costo si los campos están presentes
-            $validatedCosto = $request->validate([
-                'descripcioncos' => 'string|max:50',
-                'montocos' => 'numeric|min:0',
+        try {
+            $request->validate([
+                'idval' => 'required|exists:valores,idval',
+                'fechavencue' => 'required|date',
+                'usuariocue' => 'required|string|max:50',
+                'contrasenacue' => 'required|string|max:50',
+                'caidacue' => 'required|boolean|min:1'
+            ]);
+            $request->merge([
+                'idcue' => strtoupper($request->idcue)
             ]);
 
-            // Crear el costo asociado a la cuenta solo si los datos de costo están presentes
-            Costo::create([
-                'idcue' => $cuenta->idcue,
-                'descripcioncos' => $request->descripcioncos,
-                'montocos' => $request->montocos,
-                'fechacos' => now(),  // O la fecha que desees
+            $cuenta = Cuenta::findOrFail($idcue);
+
+            Historial::create([
+                'accion' => 'Se actualizo la cuenta con ID: ' . $cuenta->idcue,
+                'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
+                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
+                'fecha' => now(),
             ]);
+
+            $cuenta->update($request->all());
+
+            // Actualizar estado de productos relacionados con el servicio de la cuenta creada
+            $this->actualizarEstadoProductos($cuenta->valor->idser);
+            if (!empty($request->descripcioncos) && !empty($request->montocos)) {
+                // Validar datos de costo si los campos están presentes
+                $validatedCosto = $request->validate([
+                    'descripcioncos' => 'string|max:50',
+                    'montocos' => 'numeric|min:0',
+                ]);
+
+                // Crear el costo asociado a la cuenta solo si los datos de costo están presentes
+                Costo::create([
+                    'idcue' => $cuenta->idcue,
+                    'descripcioncos' => $request->descripcioncos,
+                    'montocos' => $request->montocos,
+                    'fechacos' => now(),  // O la fecha que desees
+                ]);
+            }
+            return redirect()->route('cuentas')->with('success', 'Cuenta actualizada con éxito.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()]);
         }
-        return redirect()->route('cuentas')->with('success', 'Cuenta actualizada con éxito.');
     }
 
     // Eliminar una cuenta
@@ -237,8 +245,13 @@ class CuentaController extends Controller
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
-        $cuenta->update(['activocue' => false]);
 
+        // Obtener el nuevo ID con secuencia
+        $nuevoId = $this->generarNuevoId($cuenta->idcue);
+        $cuenta->update([
+            'activocue' => false,
+            'idcue' => $nuevoId
+        ]);
         // Actualizar estado de productos relacionados con el servicio de la cuenta creada
         $this->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
@@ -279,5 +292,28 @@ class CuentaController extends Controller
                 $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
             })
             ->first();
+    }
+    private function generarNuevoId($idcue)
+    {
+        // Buscar el último número de secuencia usado
+        $baseId = preg_replace('/_borrada\d*$/', '', $idcue); // Remueve _borradaX si ya existe
+        $contador = 1;
+
+        // Buscar el último idcue que coincida con el patrón
+        $ultimoId = Cuenta::where('idcue', 'LIKE', "{$baseId}_borrada%")
+            ->orderByRaw("LENGTH(idcue) DESC") // Ordena por longitud para evitar desorden (_borrada10 antes de _borrada2)
+            ->orderBy('idcue', 'DESC') // Ordena numéricamente
+            ->pluck('idcue')
+            ->first();
+
+        // Si hay un último ID con secuencia, extraer el número
+        if ($ultimoId) {
+            preg_match('/_borrada(\d+)$/', $ultimoId, $matches);
+            if (!empty($matches[1])) {
+                $contador = (int) $matches[1] + 1; // Incrementar la secuencia
+            }
+        }
+
+        return "{$baseId}_borrada{$contador}";
     }
 }
