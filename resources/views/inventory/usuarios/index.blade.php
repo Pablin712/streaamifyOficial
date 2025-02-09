@@ -23,8 +23,9 @@
             <tr>
                 <th>Cliente</th>
                 <th>ID Cuenta</th>
+                <th>Usuario Cuenta</th>
                 <th>Perfil</th>
-                <th>Fecha de vencimiento</th>
+                <th>Vencimiento</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -39,6 +40,7 @@
                 <tr>
                     <td>{{ $usuario->nombre_cliente }}</td>
                     <td>{{ $usuario->idcue }}</td>
+                    <td>{{ $usuario->cuenta->usuariocue}}</td>
                     <td>{{ $usuario->perfil }}</td>
                     <td>{{ $usuario->fecha_vencimiento }}</td>
                     <td>

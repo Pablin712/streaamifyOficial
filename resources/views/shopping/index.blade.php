@@ -8,6 +8,7 @@
             text-decoration: none;
             margin-right: 15px;
         }
+
         .toast {
             min-width: 250px;
         }
@@ -163,7 +164,7 @@
                         <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
                         <h5 class="mt-3">Ocurrió un problema</h5>
                         <p class="text-muted">{{ session('error') }}</p>
-                        <p>No te preocupes, no se te descontó saldo, intenta nuevamente, revisa 
+                        <p>No te preocupes, no se te descontó saldo, intenta nuevamente, revisa
                             que tengas suficiente saldo y el producto esté en stock.</p>
                     </div>
                     <div class="modal-footer">
@@ -290,8 +291,9 @@
                                     </div>
 
                                     <!-- Botón Añadir al Carrito -->
-                                    <button type="button" class="btn btn-success btn-sm" onclick="addToCart({{$producto->id }})">
-                                    <i class="bi bi-cart-plus"></i>
+                                    <button type="button" class="btn btn-success btn-sm"
+                                        onclick="addToCart({{ $producto->id }})">
+                                        <i class="bi bi-cart-plus"></i>
                                     </button>
 
                                     <!-- Comprar para Entrega Inmediata -->
@@ -417,9 +419,10 @@
                                     </div>
 
                                     {{-- Botón Añadir al Carrito --}}
-<button type="button" class="btn btn-success btn-sm" onclick="addToCart({{ $producto->id }})">
-    <i class="bi bi-cart-plus"></i>
-</button>
+                                    <button type="button" class="btn btn-success btn-sm"
+                                        onclick="addToCart({{ $producto->id }})">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </button>
                                     <!-- Hacer Pedido para otros -->
                                     <form action="{{ route('comprar', $producto->id) }}" method="POST">
                                         {{-- {{ route('pedido', $producto->id) }} --}}
@@ -842,7 +845,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Seguir Comprando</button>
-                    <a href="{{ route('cart.checkout') }}" class="btn btn-primary">Finalizar Compra</a> 
+                    <a href="{{ route('cart.checkout') }}" class="btn btn-primary">Finalizar Compra</a>
                 </div>
             </div>
         </div>
@@ -858,83 +861,86 @@
         // Añadir producto al carrito
         function addToCart(productId) {
 
-    console.log('Añadiendo producto ID:', productId); // Verificar en consola
-    fetch(`/cart/add/${productId}`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            console.log('Añadiendo producto ID:', productId); // Verificar en consola
+            fetch(`/cart/add/${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        cart = data.cart;
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        updateCartUI();
+                        showToast('success', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'Error al añadir al carrito');
+                });
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            cart = data.cart;
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartUI();
-            showToast('success', data.message);
+
+        // Función para mostrar notificaciones
+        function showToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            const bootstrapToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 3000
+            });
+            bootstrapToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('error', 'Error al añadir al carrito');
-    });
-}
 
-// Función para mostrar notificaciones
-function showToast(type, message) {
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
-    toast.style.zIndex = '9999';
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    
-    const bootstrapToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
-    bootstrapToast.show();
-    
-    toast.addEventListener('hidden.bs.toast', () => {
-        toast.remove();
-    });
-}
+        function updateCartUI() {
+            const cartItems = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            cartItems.innerHTML = '';
 
-function updateCartUI() {
-    const cartItems = document.getElementById('cart-items');
-    const cartCount = document.getElementById('cart-count');
-    cartItems.innerHTML = '';
+            let totalItems = 0;
 
-    let totalItems = 0;
+            if (!cart || Object.keys(cart).length === 0) {
+                cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
+                cartCount.textContent = '0';
+                return;
+            }
 
-    if (!cart || Object.keys(cart).length === 0) {
-        cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
-        cartCount.textContent = '0';
-        return;
-    }
+            Object.values(cart).forEach(item => {
+                totalItems += item.cantidad;
 
-    Object.values(cart).forEach(item => {
-        totalItems += item.cantidad;
+                // Construir la URL de la imagen correctamente
+                let imageUrl = "{{ asset('public/') }}" + "/" + item.foto;
 
-        // Construir la URL de la imagen correctamente
-        let imageUrl = "{{ asset('public/') }}" + "/" + item.foto;
-
-        let listItem = document.createElement('li');
-        listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-        listItem.innerHTML = `
+                let listItem = document.createElement('li');
+                listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                listItem.innerHTML = `
             <img src="${imageUrl}" alt="${item.nombre}" style="width: 50px;">
             <span>${item.nombre} (x${item.cantidad})</span>
             <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
             <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑</button>
         `;
-        cartItems.appendChild(listItem);
-    });
+                cartItems.appendChild(listItem);
+            });
 
-    cartCount.textContent = totalItems;
-}
+            cartCount.textContent = totalItems;
+        }
 
         // Eliminar un producto del carrito
         function removeFromCart(productId) {

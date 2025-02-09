@@ -136,13 +136,13 @@ class ContabilidadController extends Controller
 
 
 
-        $cuentas_magis = Cuenta::where('idcue', 'like', 'MAGIS%')->where('activocue', true)->count();
-        $usuarios_magis = ViewUsuarioActivo::where('idcue', 'like', 'MAGIS%')->count();
+        $cuentas_magis = Cuenta::where('idcue', 'like', 'FLUJO%')->where('activocue', true)->count();
+        $usuarios_magis = ViewUsuarioActivo::where('idcue', 'like', 'FLUJO%')->count();
         $ingresos_magis = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
                 ->whereYear('fechaven', $year);
         })
-            ->where('idper', 'like', 'MAGIS%')
+            ->where('idper', 'like', 'FLUJO%')
             ->sum('montodet');
         $costos_magis = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->where('idcue', 'like', 'MAGIS%')->sum('montocos');
 
@@ -187,7 +187,7 @@ class ContabilidadController extends Controller
             ->where('idcue', 'not like', 'DISNEY%')
             ->where('idcue', 'not like', 'PRIME%')
             ->where('idcue', 'not like', 'MAX%')
-            ->where('idcue', 'not like', 'MAGIS%')
+            ->where('idcue', 'not like', 'FLUJO%')
             ->where('idcue', 'not like', 'CRUNCHY%')
             ->where('idcue', 'not like', 'PARAMOUNT%')
             ->where('idcue', 'not like', 'SPOTIFY%')
@@ -196,7 +196,7 @@ class ContabilidadController extends Controller
             ->where('idcue', 'not like', 'DISNEY%')
             ->where('idcue', 'not like', 'PRIME%')
             ->where('idcue', 'not like', 'MAX%')
-            ->where('idcue', 'not like', 'MAGIS%')
+            ->where('idcue', 'not like', 'FLUJO%')
             ->where('idcue', 'not like', 'CRUNCHY%')
             ->where('idcue', 'not like', 'PARAMOUNT%')
             ->where('idcue', 'not like', 'SPOTIFY%')
@@ -209,7 +209,7 @@ class ContabilidadController extends Controller
             ->where('idper', 'not like', 'DISNEY%')
             ->where('idper', 'not like', 'PRIME%')
             ->where('idper', 'not like', 'MAX%')
-            ->where('idper', 'not like', 'MAGIS%')
+            ->where('idper', 'not like', 'FLUJO%')
             ->where('idper', 'not like', 'CRUNCHY%')
             ->where('idper', 'not like', 'PARAMOUNT%')
             ->where('idper', 'not like', 'SPOTIFY%')
@@ -220,7 +220,7 @@ class ContabilidadController extends Controller
             ->where('idcue', 'not like', 'DISNEY%')
             ->where('idcue', 'not like', 'PRIME%')
             ->where('idcue', 'not like', 'MAX%')
-            ->where('idcue', 'not like', 'MAGIS%')
+            ->where('idcue', 'not like', 'FLUJO%')
             ->where('idcue', 'not like', 'CRUNCHY%')
             ->where('idcue', 'not like', 'PARAMOUNT%')
             ->where('idcue', 'not like', 'SPOTIFY%')

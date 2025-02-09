@@ -55,8 +55,8 @@
                     <td>{{ $cliente->nombrecli }}</td>
                     <td>{{ $cliente->telefonocli }}</td>
                     <td>{{ $cliente->email ?? 'Ninguno' }}</td>
-                    <td>{{ $cliente->usuarios }}</td>
-                    <td>${{ $cliente->facturado }}</td>
+                    <td>{{ $cliente->viewClienteUsuario->usuarios ?? 0 }}</td>
+                    <td>${{ $cliente->viewClienteUsuario->facturado ?? 0 }}</td>
                     <td>${{ $cliente->saldo}}</td>
                     <td>
                         @if($cliente->email && $cliente->password)

@@ -41,9 +41,10 @@ class VentaController extends Controller
 
         $recargasPendientes = Recarga::where('idestado', 1)->count();
         $pedidosPendientes = Pedido::where('idestado', 1)->count();
+        $ventasLaravel = Venta::whereDate('fechaven', $hoy)->where('idemp', 10)->count();
         // Pasar las ventas y los detalles de venta a la vista
         return view('sales.ventas.index', compact('ventas', 'ingresos_dia', 'ventas_dia', 
-            'autenticados', 'recargasPendientes', 'pedidosPendientes'));
+            'autenticados', 'recargasPendientes', 'pedidosPendientes', 'ventasLaravel'));
     }
 
     /**

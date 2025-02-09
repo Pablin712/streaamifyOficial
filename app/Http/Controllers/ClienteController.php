@@ -18,17 +18,8 @@ class ClienteController extends Controller
 
         $this->authorizeRole(['administrador', 'vendedor', 'tecnico']);
 
-        $clientes = Cliente::all();
-        foreach ($clientes as $cliente) {
-            $usuarios = ViewClientesUsuarios::where('idcli', $cliente->idcli)->first();
-            if ($usuarios) {
-                $cliente->usuarios = $usuarios->usuarios; // Asignar el número de usuarios
-                $cliente->facturado = $usuarios->facturado; // Asignar el total facturado
-            } else {
-                $cliente->usuarios = 0; // Si no tiene registros, asignar 0
-                $cliente->facturado = 0; // Si no tiene registros, asignar 0
-            }
-        }
+        $clientes = Cliente::with('viewClienteUsuario')->orderBy('created_at', 'desc')->get();
+        
         $autenticados = Cliente::whereNotNull('email')
             ->whereNotNull('password')
             ->count();

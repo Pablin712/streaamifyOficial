@@ -142,6 +142,22 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Ventas Automatizadas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $ventasLaravel }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-robot fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Recargas pendientes</div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $recargasPendientes }}</div>
                         </div>
@@ -185,6 +201,7 @@
                 <th>Cliente</th>
                 <th>Empleado</th>
                 <th>Fecha de Venta</th>
+                <th>Total</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -195,6 +212,7 @@
                     <td>{{ $venta->cliente->nombrecli }}</td>
                     <td>{{ $venta->empleado->nombreemp }}</td>
                     <td>{{ $venta->fechaven->format('Y/m/d') }}</td>
+                    <td>{{ $venta->totalpagoven}}</td>
                     <td>
                         <!-- Botón para editar venta -->
                         <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i

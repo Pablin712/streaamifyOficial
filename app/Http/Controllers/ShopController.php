@@ -185,7 +185,7 @@ class ShopController extends Controller
                         $detalleVenta->idven = $venta->idven;
                         $detalleVenta->idper = $perfil->idper;
                         $detalleVenta->fechavendet = now()->addMonths($detalle->meses)->subDay();
-                        $detalleVenta->descripciondet = "Vendido en automático";
+                        $detalleVenta->descripciondet = "🤖 Venta automatizada";
                         $detalleVenta->montodet = $producto->preciopro / count($producto->detalles);
                         $detalleVenta->activodet = true;
                         $detalleVenta->save();
@@ -290,7 +290,7 @@ class ShopController extends Controller
                     $detalleVenta->idven = $venta->idven;
                     $detalleVenta->idper = $perfil->idper;
                     $detalleVenta->fechavendet = now()->addMonths($detalle->meses)->subDay();
-                    $detalleVenta->descripciondet = "Vendido en automático";
+                    $detalleVenta->descripciondet = "🤖 Venta automatizada";
                     $detalleVenta->montodet = $producto->preciopro / count($producto->detalles);
                     $detalleVenta->activodet = true;
                     $detalleVenta->save();
@@ -352,6 +352,7 @@ class ShopController extends Controller
         $idCliente = Auth::guard('cliente')->user()->idcli;
         $usuario = Cliente::findOrFail($idCliente);
         $venta = Venta::findOrFail($id);
+        
 
         // Perfiles seleccionados por el usuario para renovar
         $detallesSeleccionados = $request->input('detalles', []);
@@ -361,6 +362,10 @@ class ShopController extends Controller
 
         // Buscar el producto basado en los detalles seleccionados
         $producto = $this->buscarProductoPorDetalles($detallesSeleccionados);
+        // Verificar saldo
+        if ($usuario->saldo < $producto->preciopro) {
+            return back()->with('error', 'Saldo insuficiente para realizar la compra.');
+        }
 
         if (!$producto) {
             return redirect()->back()->with('error', 'No hay cuenta disponible para renovar.');
@@ -440,7 +445,7 @@ class ShopController extends Controller
             DetalleVenta::create([
                 'idven' => $ventaNueva->idven,
                 'idper' => $detalle->idper,
-                'descripciondet' => $detalle->descripciondet,
+                'descripciondet' => '🤖 Renovación automatizada',
                 'fechavendet' => Carbon::parse($detalle->fechavendet)->addMonth(),
                 'montodet' => $detalle->montodet,
                 'activodet' => true,
@@ -459,6 +464,9 @@ class ShopController extends Controller
         // Descontar saldo al usuario
         $usuario->saldo -= $producto->preciopro;
         $usuario->save();
+
+        // Lógica para generar y enviar la factura por correo
+        Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
 
         return redirect()->back()->with('renovacion_exitosa', [
             'nombre' => $ventaNueva->detalles_venta->first()->perfil->cuenta->valor->servicio->nombreser,

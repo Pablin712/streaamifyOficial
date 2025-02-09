@@ -17,7 +17,7 @@
         <div class="form-group mb-3">
             <label for="telefonocli">Teléfono</label>
             <input type="text" name="telefonocli" id="telefonocli" class="form-control"
-                value="{{ $cliente->telefonocli }}" maxlength="15" required>
+                value="{{ $cliente->telefonocli }}" maxlength="20" required>
         </div>
         <button type="submit" class="btn btn-warning">Actualizar</button>
     </form>

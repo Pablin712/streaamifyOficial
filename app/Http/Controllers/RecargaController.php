@@ -12,7 +12,7 @@ class RecargaController extends Controller
     public function index()
     {
         // Obtener las recargas con relaciones (cliente, estado y banco)
-        $recargas = Recarga::with(['cliente', 'estado', 'banco'])->get();
+        $recargas = Recarga::with(['cliente', 'estado', 'banco'])->orderBy('created_at', 'desc')->get();
 
         return view('sales.recargas.index', compact('recargas'));
     }

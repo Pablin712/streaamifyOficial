@@ -268,7 +268,15 @@
                                 <td>{{ $usuario->cuenta->valor->servicio->nombreser }}</td>
                                 <td>{{ $usuario->cuenta->usuariocue }}</td>
                                 <td>{{ $usuario->cuenta->contrasenacue }}</td>
-                                <td>{{ $usuario->perfil }}</td>
+                                @php
+                                    // Construir el ID del perfil
+                                    $idper = $usuario->cuenta->idcue . '.' . $usuario->perfil;
+
+                                    // Buscar el pin del perfil
+                                    $perfil = \App\Models\Perfil::where('idper', $idper)->first();
+                                    $pinper = $perfil ? $perfil->pinper : 'N/A';
+                                @endphp
+                                <td>{{ $usuario->perfil }}: {{ $pinper }}</td>
                                 <td>{{ \Carbon\Carbon::parse($usuario->fecha_vencimiento)->format('d/m/Y') }}</td>
                                 <td>
                                     <!-- Botón que abre el modal correspondiente -->
