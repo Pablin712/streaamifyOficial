@@ -289,7 +289,6 @@
             </div>
         </div>
     </div>
-    <!-- Aquí puedes agregar un área oculta donde se almacenará el mensaje para copiarlo -->
 @endsection
 @section('scripts')
     <script>
@@ -303,19 +302,22 @@
     </script>
     {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
-        $('#editProfileModal').on('shown.bs.modal', function(event) {
-            var button = $(event.relatedTarget); // El botón que activó el modal
-            var perfilId = button.data('id'); // Obtener el ID del perfil
-            var pinper = button.data('pin'); // Obtener el PIN del perfil
+        document.addEventListener('DOMContentLoaded', function() {
+            $('#editProfileModal').on('show.bs.modal', function(event) {
+                var button = $(event.relatedTarget); // El botón que activó el modal
+                var perfilId = button.data('id'); // Obtener el ID del perfil
+                var pinper = button.data('pin'); // Obtener el PIN del perfil
 
-            var modal = $(this);
-            modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
-            modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
-            // Actualizar la URL del formulario para apuntar al perfil correcto
-            var formAction = "{{ route('perfil.update', ':id') }}".replace(':id', perfilId);
-            modal.find('#editProfileForm').attr('action', formAction); // Asignar la URL correcta al formulario
+                var modal = $(this);
+                modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
+                modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
+
+                // Actualizar la URL del formulario para apuntar al perfil correcto
+                var formAction = "{{ url('admin/perfil') }}/" + perfilId;
+                modal.find('#editProfileForm').attr('action', formAction); // Asignar la URL correcta al formulario
+            });
         });
-    </script>
+</script>
 
     {{-- script para sumar los usuarios activos de la tabla perfiles --}}
     <script>
