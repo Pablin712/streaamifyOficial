@@ -3,7 +3,12 @@
 @section('title', 'Crear Mantenimiento')
 
 @section('h1', 'Crear Mantenimiento')
-
+@section('breadcrumb')
+    <a href="{{ route('mantenimientos') }}">Mantenimientos</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Mantenimiento
+@endsection
 @section('introduccion')
     @if (session('error'))
         <div class="alert alert-danger">

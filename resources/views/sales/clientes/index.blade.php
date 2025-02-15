@@ -3,6 +3,9 @@
     Clientes
 @endsection
 @section('h1', 'Clientes')
+@section('breadcrumb')
+    Clientes
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

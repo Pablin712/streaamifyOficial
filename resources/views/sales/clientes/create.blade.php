@@ -2,6 +2,12 @@
 
 @section('title', 'Registrar Cliente')
 @section('h1', 'Registrar nuevo Cliente')
+@section('breadcrumb')
+    <a href="{{ route('clientes') }}">Clientes</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Cliente
+@endsection
 @section('introduccion')
     Aquí puedes registrar un nuevo cliente. Por favor, llena todos los campos requeridos y asegúrate de que la información
     sea correcta.

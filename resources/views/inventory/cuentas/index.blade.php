@@ -35,6 +35,9 @@
     </style>
 @endsection
 @section('h1', 'Cuentas')
+@section('breadcrumb')
+    Cuentas
+@endsection
 @section('descripcion')
     @if (session('error'))
         <div class="alert alert-danger">

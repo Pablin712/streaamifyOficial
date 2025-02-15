@@ -3,6 +3,12 @@
 @section('title', 'Editar Venta')
 
 @section('h1', 'Editar Venta')
+@section('breadcrumb')
+    <a href="{{ route('ventas') }}">Ventas</a>
+@endsection
+@section('breadcrumb2')
+    Editar Venta
+@endsection
 @section('introduccion')
     @if (session('success'))
         <div class="alert alert-success">

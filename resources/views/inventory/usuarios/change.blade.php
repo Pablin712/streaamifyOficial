@@ -1,9 +1,17 @@
 @extends('layouts.static')
 
-@section('title', 'Cambiar Usuario')
+@section('title', 'Actualizar Usuario')
 
-@section('h1', 'Cambiar Usuario')
-
+@section('h1', 'Actualizar Usuario')
+@section('breadcrumb')
+    <a href="{{ route('cuentas') }}">Cuentas</a>
+@endsection
+@section('breadcrumb2')
+    <a href="{{ route('usuarios') }}">Usuarios Activos</a>
+@endsection
+@section('breadcrumb3')
+    <li class="breadcrumb-item active">Actualizar Usuario</li>
+@endsection
 @section('introduccion')
     Actualiza los datos de este usuario. Por favor, revisa cuidadosamente todos los campos antes de guardar los cambios.
 @endsection

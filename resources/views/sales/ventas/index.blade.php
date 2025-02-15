@@ -22,6 +22,9 @@
 @endsection
 
 @section('h1', 'Ventas')
+@section('breadcrumb')
+    Ventas
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

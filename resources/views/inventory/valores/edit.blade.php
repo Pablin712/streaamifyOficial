@@ -1,8 +1,13 @@
 @extends('layouts.static')
 @section('title', 'Editar Valor')
 
-@section('h1', 'Editar Valor de servicio')
-
+@section('h1', 'Editar Valor de Servicio')
+@section('breadcrumb')
+    <a href="{{ route('valores') }}">Valores</a>
+@endsection
+@section('breadcrumb2')
+    Editar Valor de Servicio
+@endsection
 @section('introduccion')
     Actualiza este valor de servicio con los nuevos datos. Por favor, revisa cuidadosamente los campos antes de guardar los cambios.
 @endsection

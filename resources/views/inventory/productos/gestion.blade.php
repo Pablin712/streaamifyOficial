@@ -3,6 +3,12 @@
 @section('title', 'Categorías y Tipos de producto')
 
 @section('h1', 'Gestión de Categorías y Tipos de producto')
+@section('breadcrumb')
+    <a href="{{ route('productos.index') }}">Productos</a>
+@endsection
+@section('breadcrumb2')
+    Gestión de Productos
+@endsection
 @section('styles')
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
 @endsection

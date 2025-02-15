@@ -5,6 +5,9 @@
 @section('h1')
     Historial
 @endsection
+@section('breadcrumb')
+    Historial
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

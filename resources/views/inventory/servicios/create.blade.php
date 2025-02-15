@@ -5,7 +5,12 @@
 @section('h1')
     Crear Servicio
 @endsection
-
+@section('breadcrumb')
+    <a href="{{ route('servicios') }}">Servicios</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Servicio
+@endsection
 @section('introduccion')
     Aquí puedes crear un nuevo servicio. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
 @endsection

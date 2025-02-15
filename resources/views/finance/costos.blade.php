@@ -3,6 +3,9 @@
 @section('title', 'Costos')
 
 @section('h1', 'Costos')
+@section('breadcrumb')
+    Costos
+@endsection
 @section('styles')
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
 @endsection

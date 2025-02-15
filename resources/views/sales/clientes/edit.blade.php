@@ -2,6 +2,12 @@
 
 @section('title', 'Editar Cliente')
 @section('h1', 'Editar Cliente')
+@section('breadcrumb')
+    <a href="{{ route('clientes') }}">Clientes</a>
+@endsection
+@section('breadcrumb2')
+    Editar Cliente
+@endsection
 @section('introduccion')
     Actualiza este cliente con los nuevos datos. Por favor, revisa cuidadosamente los campos antes de guardar los cambios.
 @endsection

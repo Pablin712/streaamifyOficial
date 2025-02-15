@@ -5,6 +5,12 @@
 @section('h1')
     Usuarios
 @endsection
+@section('breadcrumb')
+    <a href="{{ route('cuentas') }}">Cuentas</a>
+@endsection
+@section('breadcrumb2')
+    Usuarios Activos
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

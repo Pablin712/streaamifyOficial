@@ -3,7 +3,12 @@
 @section('title', 'Editar Servicio')
 
 @section('h1', 'Editar Servicio')
-
+@section('breadcrumb')
+    <a href="{{ route('servicios') }}">Servicios</a>
+@endsection
+@section('breadcrumb2')
+    Editar Servicio
+@endsection
 @section('introduccion')
     Actualiza este servicio con los nuevos datos. Por favor, revisa cuidadosamente los campos antes de guardar los cambios.
 @endsection

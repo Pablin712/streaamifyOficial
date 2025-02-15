@@ -23,6 +23,12 @@
     </style>
 @endsection
 @section('h1', 'Crear Producto')
+@section('breadcrumb')
+    <a href="{{ route('productos.index') }}">Productos</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Producto
+@endsection
 @section('introduccion')
     @if (session('success'))
         <div class="alert alert-success">

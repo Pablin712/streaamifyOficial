@@ -3,7 +3,12 @@
 @section('title', 'Crear Cuenta')
 
 @section('h1', 'Crear Cuenta')
-
+@section('breadcrumb')
+    <a href="{{ route('cuentas') }}">Cuentas</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Cuenta
+@endsection
 @section('introduccion')
     @if (session('error'))
         <div class="alert alert-danger">

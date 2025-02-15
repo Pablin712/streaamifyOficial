@@ -2,7 +2,12 @@
 
 @section('title', 'Editar Mantenimiento')
 @section('h1', 'Editar Mantenimiento')
-
+@section('breadcrumb')
+    <a href="{{ route('mantenimientos') }}">Mantenimientos</a>
+@endsection
+@section('breadcrumb2')
+    Editar Mantenimiento
+@endsection
 @section('introduccion')
     Actualiza este mantenimiento con los nuevos datos. Por favor, revisa cuidadosamente los campos antes de guardar los cambios.
 @endsection

@@ -1,6 +1,12 @@
 @extends('layouts.static')
 
 @section('h1', 'Empleados')
+@section('breadcrumb')
+    <a href="{{ route('empleados') }}">Empleados</a>
+@endsection
+@section('breadcrumb2')
+    Editar Empleado
+@endsection
 @section('content')
     @if ($errors->any())
         <div class="alert alert-danger">

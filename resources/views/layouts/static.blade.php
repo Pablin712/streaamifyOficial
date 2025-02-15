@@ -4,7 +4,9 @@
         <h1 class="mt-4">@yield('h1')</h1>
         <ol class="breadcrumb mb-4">
             <li class="breadcrumb-item"><a href="{{ route('inicio') }}">Inicio</a></li>
-            <li class="breadcrumb-item active">@yield('h1')</li>
+            <li class="breadcrumb-item active">@yield('breadcrumb')</li>
+            <li class="breadcrumb-item active">@yield('breadcrumb2')</li>
+            @yield('breadcrumb3')
         </ol>
         <div class="card mb-4">
             <div class="card-body">

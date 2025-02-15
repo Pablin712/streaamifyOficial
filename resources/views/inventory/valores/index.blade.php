@@ -5,6 +5,9 @@
 @section('h1')
     Valores de servicios
 @endsection
+@section('breadcrumb')
+    Valores
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

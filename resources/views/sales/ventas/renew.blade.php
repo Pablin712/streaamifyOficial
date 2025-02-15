@@ -1,6 +1,12 @@
 @extends('layouts.static')
 @section('title', 'Renovar Venta')
 @section('h1', 'Renovar Venta')
+@section('breadcrumb')
+    <a href="{{ route('ventas') }}">Ventas</a>
+@endsection
+@section('breadcrumb2')
+    Renovar Venta
+@endsection
 @section('content')
     <div class="container">
         <h2>Renovar Venta</h2>

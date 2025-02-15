@@ -2,6 +2,12 @@
 
 @section('title', 'Editar Proveedor')
 @section('h1','Editar Proveedor')
+@section('breadcrumb')
+    <a href="{{ route('proveedores') }}">Proveedores</a>
+@endsection
+@section('breadcrumb2')
+    Editar Proveedor
+@endsection
 @section('introduccion')
     Actualiza este proveedor con los nuevos datos. Por favor, revisa cuidadosamente los campos antes de guardar los cambios.
 @endsection

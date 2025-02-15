@@ -5,7 +5,9 @@
 @endsection
 
 @section('h1', 'Solicitudes de Recarga')
-
+@section('breadcrumb')
+    Recargas
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

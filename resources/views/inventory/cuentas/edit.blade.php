@@ -3,7 +3,12 @@
 @section('title', 'Editar Cuenta')
 
 @section('h1', 'Editar Cuenta de suscripción')
-
+@section('breadcrumb')
+    <a href="{{ route('cuentas') }}">Cuentas</a>
+@endsection
+@section('breadcrumb2')
+    Editar Cuenta
+@endsection
 @section('introduccion')
     @if (session('error'))
         <div class="alert alert-danger">

@@ -2,6 +2,12 @@
 
 @section('title', 'Crear Valor')
 @section('h1','Crear Valor')
+@section('breadcrumb')
+    <a href="{{ route('valores') }}">Valores</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Valor de Servicio
+@endsection
 @section('introduccion')
     Aquí puedes guardar un nuevo valor de servicio. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
 @endsection

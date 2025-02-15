@@ -1,5 +1,8 @@
 @extends('layouts.static')
 @section('title', 'Tareas')
+@section('breadcrumb')
+    Tareas
+@endsection
 @section('introduccion')
     <p>Realiza todas las tareas esenciales del negocio en tu jornada laboral. Cuando termines tu trabajo, 
         antes de irte agrega tareas para que la persona de turno pueda completar lo que falta, o lo siguiente 

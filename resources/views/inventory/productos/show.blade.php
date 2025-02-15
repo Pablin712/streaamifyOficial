@@ -3,6 +3,12 @@
 @section('title', 'Detalles del Producto')
 
 @section('h1', 'Detalles del Producto')
+@section('breadcrumb')
+    <a href="{{ route('productos.index') }}">Productos</a>
+@endsection
+@section('breadcrumb2')
+    Ver Producto / {{$producto->codigopro}}
+@endsection
 @section('introduccion')
     @if (session('success'))
         <div class="alert alert-success">

@@ -2,6 +2,12 @@
 
 @section('title', 'Guardar Proveedor')
 @section('h1','Guardar nuevo Proveedor')
+@section('breadcrumb')
+    <a href="{{ route('proveedores') }}">Proveedores</a>
+@endsection
+@section('breadcrumb2')
+    Registrar Proveedor
+@endsection
 @section('introduccion')
     Aquí puedes guardar un nuevo proveedor. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
 @endsection

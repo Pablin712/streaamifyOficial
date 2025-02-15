@@ -5,7 +5,9 @@
 @endsection
 
 @section('h1', 'Mantenimientos')
-
+@section('breadcrumb')
+    Mantenimientos
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

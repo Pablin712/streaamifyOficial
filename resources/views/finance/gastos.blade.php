@@ -5,7 +5,9 @@
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
 @endsection
 @section('h1', 'Gastos')
-
+@section('breadcrumb')
+    Gastos
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

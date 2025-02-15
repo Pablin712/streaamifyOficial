@@ -3,6 +3,9 @@
     Proveedores
 @endsection
 @section('h1', 'Proveedores')
+@section('breadcrumb')
+    Proveedores
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">

@@ -20,8 +20,10 @@
         }
     </style>
 @endsection
-
 @section('h1', 'Productos')
+@section('breadcrumb')
+    Productos
+@endsection
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">
