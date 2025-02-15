@@ -112,8 +112,8 @@
                 </div>
             @endif
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="floatingInput" name="email" placeholder="Usuario">
-                <label for="floatingInput">Usuario</label>
+                <input type="text" class="form-control" id="floatingInput" name="email" placeholder="Correo">
+                <label for="floatingInput">Correo</label>
             </div>
             <div class="form-floating mb-3">
                 <input type="password" class="form-control" id="floatingPassword" name="password"

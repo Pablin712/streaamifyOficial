@@ -18,6 +18,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\MantenimientoController;
+use App\Http\Controllers\TareaController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\EmailController;
 use App\Http\Middleware\AuthCliente;
@@ -105,6 +106,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
     Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
 
+    Route::resource('tareas', TareaController::class);
+    Route::patch('/tareas/{id}/completar', [TareaController::class, 'completar'])->name('tareas.completar');
     //Route::middleware(['auth:administrador,contador'])->group(function () {
     Route::controller(ContabilidadController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');

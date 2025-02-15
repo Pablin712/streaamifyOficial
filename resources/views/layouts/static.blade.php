@@ -15,7 +15,8 @@
             </div>
         </div>
         <div>@yield('content')</div>
-        <div class="card mb-4">
+        <br>
+        <div class="card mt-auto mb-4">
             <div class="card-body">@yield('pie')</div>
         </div>
     </div>

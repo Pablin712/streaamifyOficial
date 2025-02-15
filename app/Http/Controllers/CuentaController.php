@@ -248,6 +248,20 @@ class CuentaController extends Controller
 
         // Obtener el nuevo ID con secuencia
         $nuevoId = $this->generarNuevoId($cuenta->idcue);
+
+        // Obtener perfiles asociados a la cuenta
+        $perfiles = Perfil::where('idcue', $cuenta->idcue)->get();
+
+        foreach ($perfiles as $perfil) {
+            // Generar un nuevo ID de perfil con "_borradaX"
+            $nuevoIdPer = $this->generarNuevoIdPerfil($perfil->idper);
+
+            // Actualizar el ID del perfil
+            $perfil->update([
+                'idper' => $nuevoIdPer
+            ]);
+        }
+
         $cuenta->update([
             'activocue' => false,
             'idcue' => $nuevoId
@@ -311,6 +325,26 @@ class CuentaController extends Controller
             preg_match('/_borrada(\d+)$/', $ultimoId, $matches);
             if (!empty($matches[1])) {
                 $contador = (int) $matches[1] + 1; // Incrementar la secuencia
+            }
+        }
+
+        return "{$baseId}_borrada{$contador}";
+    }
+    private function generarNuevoIdPerfil($idper)
+    {
+        $baseId = preg_replace('/_borrada\d*$/', '', $idper);
+        $contador = 1;
+
+        $ultimoId = Perfil::where('idper', 'LIKE', "{$baseId}_borrada%")
+            ->orderByRaw("LENGTH(idper) DESC")
+            ->orderBy('idper', 'DESC')
+            ->pluck('idper')
+            ->first();
+
+        if ($ultimoId) {
+            preg_match('/_borrada(\d+)$/', $ultimoId, $matches);
+            if (!empty($matches[1])) {
+                $contador = (int) $matches[1] + 1;
             }
         }
 

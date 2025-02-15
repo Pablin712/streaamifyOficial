@@ -72,6 +72,10 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-home"></i></div>
                             Inicio
                         </a>
+                        <a class="nav-link" href="{{ route('tareas.index') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tasks"></i></div>
+                            Tareas
+                        </a>
                         @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador')
                         <a class="nav-link" href="{{ route('dashboard') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>

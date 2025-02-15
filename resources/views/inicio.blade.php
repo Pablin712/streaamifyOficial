@@ -155,7 +155,7 @@
 
 
 <h3>Mapa de erp</h3>
-<img src="{{asset('images/BASE2.png')}}" alt="imagen de mapa">
+<img src="{{asset('images/models.png')}}" alt="imagen de mapa" class="d-block mx-auto">
 
 @endsection
 

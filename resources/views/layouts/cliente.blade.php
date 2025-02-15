@@ -122,7 +122,7 @@
     <!-- Mashead header-->
     <footer id="pie" class="bg-dark text-white text-center py-4">
         <div class="container">
-            <p class="mb-2">© 2024 Streamify. Todos los derechos reservados.</p>
+            <p class="mb-2">© <span id="currentYear"></span> Streamify. Todos los derechos reservados.</p>
             <p class="small">Diseñado por Pablo Jiménez</p>
             <div>
                 <a href="https://www.facebook.com/share/1Cco5izY9Y/?mibextid=wwXIfr" class="text-white me-3"
@@ -147,6 +147,14 @@
     <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
     <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
     <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const yearSpan = document.getElementById("currentYear");
+            if (yearSpan) {
+                yearSpan.textContent = new Date().getFullYear();
+            }
+        });
+    </script>    
     @yield('scripts')
 </body>
 
