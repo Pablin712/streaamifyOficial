@@ -230,8 +230,10 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/empleados/create', 'create')->name('empleados.create');
         Route::post('/empleados/createstore', 'store')->name('empleados.store');
         Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
+        Route::get('/empleados/{id}/roles', 'editRoles')->name('empleados.editRoles');
         Route::put('/empleados/{id}', 'update')->name('empleados.update');
         Route::put('/empleados/{id}/update-rol', 'updateRol')->name('empleados.updateRol');
+        Route::put('/empleados/{id}/update-roles', 'updateRoles')->name('empleados.updateRoles');
         Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
     });
 

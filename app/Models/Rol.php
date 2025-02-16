@@ -8,7 +8,7 @@ class Rol extends Model
 {
     use HasFactory;
 
-    protected $table = 'roles';
+    protected $table = 'rolesAntes';
 
     protected $primaryKey = 'idrol';
 

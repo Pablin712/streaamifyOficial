@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Crear tabla roles
-        Schema::create('roles', function (Blueprint $table) {
+        Schema::create('rolesAntes', function (Blueprint $table) {
             $table->string('idrol', 20)->primary(); // Clave primaria
             $table->string('detallerol', 50);
             $table->timestamps(); // Opcional, elimina si no necesitas las columnas created_at y updated_at
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->timestamps(); // Incluye columnas created_at y updated_at
         
             // Llave foránea a roles.idrol
-            $table->foreign('idrol')->references('idrol')->on('roles')->onDelete('cascade');
+            $table->foreign('idrol')->references('idrol')->on('rolesAntes')->onDelete('cascade');
         });
     }
 

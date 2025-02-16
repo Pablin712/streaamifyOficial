@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\Empleado;
 class EmpleadoSeeder extends Seeder
 {
     /**
@@ -13,14 +13,14 @@ class EmpleadoSeeder extends Seeder
      */
     public function run(): void
     {
+        Empleado::create([
+            'nombreemp' => 'Pablo Jiménez',
+            'telefonoemp' => '0961778319',
+            'usuarioemp' => 'pablinmind',
+            'passwordemp' => 'pablin712',
+            'idrol' => 'administrador'
+        ])->assignRole('Admin');
         DB::table('empleados')->insert([
-            [
-                'nombreemp' => 'Pablo Jiménez',
-                'telefonoemp' => '0961778319',
-                'usuarioemp' => 'pablinmind',
-                'passwordemp' => bcrypt('pablin712'),
-                'idrol' => 'administrador'
-            ],
             [
                 'nombreemp' => 'Mateo Jiménez',
                 'telefonoemp' => '0961702129',

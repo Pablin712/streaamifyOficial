@@ -36,54 +36,22 @@
                         <p class="card-text">
                             <strong>Teléfono:</strong> {{ $empleado->telefonoemp }}<br>
                             <strong>Usuario:</strong> {{ $empleado->usuarioemp }}<br>
-                            <strong>Rol:</strong> {{ $empleado->idrol }}<br>
+                            <strong>Correo:</strong> {{ $empleado->email }}<br>
                             <strong>Ventas este mes:</strong> {{ $empleado->ventas_mes_actual }}<br>
                             <strong>Total de Ventas:</strong> {{ $empleado->ventas_count }}<br>
-                            <strong>Correo:</strong> {{ $empleado->email }}<br>
+                            <strong>Rol:</strong> 
+                            @if($empleado->roles->isNotEmpty())
+                                {{ implode(', ', $empleado->roles->pluck('name')->toArray()) }}
+                            @else
+                                Sin rol asignado
+                            @endif
                         </p>
 
-                        @if (Auth::user()->idrol == 'administrador')
-                            <button class="btn btn-warning" data-bs-toggle="modal"
-                                data-bs-target="#editModal{{ $empleado->idemp }}">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
+                        @if (Auth::user()->hasRole('Admin'))
+                            <a href="{{ route('empleados.editRoles', $empleado->idemp) }}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Editar Roles
+                            </a>
                         @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal de Edición -->
-            <div class="modal fade" id="editModal{{ $empleado->idemp }}" tabindex="-1"
-                aria-labelledby="editModalLabel{{ $empleado->idemp }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editModalLabel{{ $empleado->idemp }}">Editar Empleado</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                        </div>
-                        <form action="{{ route('empleados.updateRol', $empleado->idemp) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="idrol" class="form-label">Rol</label>
-                                    <select name="idrol" id="idrol" class="form-select" required>
-                                        @foreach ($roles as $rol)
-                                            <option value="{{ $rol->idrol }}"
-                                                {{ $empleado->idrol === $rol->idrol ? 'selected' : '' }}>
-                                                {{ ucfirst($rol->idrol) }}: 
-                                                {{ ucfirst($rol->detallerol) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>

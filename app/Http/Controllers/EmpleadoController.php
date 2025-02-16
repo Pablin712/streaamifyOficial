@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Empleado;
-use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Role;
 use App\Models\Historial;
 use Carbon\Carbon;
 use App\Models\Rol;
+
 class EmpleadoController extends Controller
 {
     /**
@@ -30,8 +31,8 @@ class EmpleadoController extends Controller
                 }
             ])
             ->get();
-        $roles = Rol::all(); 
-        return view('employee.index', compact('empleados','roles'));
+        $roles = Role::all();
+        return view('employee.index', compact('empleados', 'roles'));
     }
 
     /**
@@ -103,6 +104,13 @@ class EmpleadoController extends Controller
         } else {
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
         }
+    }
+
+    public function editRoles(string $id)
+    {
+        $roles = Role::all();
+        $empleado = Empleado::findOrFail($id);
+        return view('employee.roles', compact('roles', 'empleado'));
     }
 
     /**
@@ -191,6 +199,14 @@ class EmpleadoController extends Controller
             'fecha' => now(),
         ]);
         return redirect()->back()->with('success', 'Rol actualizado correctamente.');
+    }
+
+    public function updateRoles(Request $request, $id)
+    {
+        $empleado = Empleado::findOrFail($id); // O usa tu modelo de Empleado
+        $empleado->syncRoles($request->input('roles', [])); // Asigna roles
+
+        return redirect()->route('empleados')->with('success', 'Roles actualizados correctamente.');
     }
 
     /**

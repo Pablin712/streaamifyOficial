@@ -12,7 +12,7 @@ class RolSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('roles')->insert([
+        DB::table('rolesAntes')->insert([
             ['idrol' => 'administrador', 'detallerol' => 'Administrador del sistema'],
             ['idrol' => 'bodeguero', 'detallerol' => 'Encargado de bodega'],
             ['idrol' => 'contador', 'detallerol' => 'Encargado de contabilidad'],

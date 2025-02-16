@@ -2,6 +2,9 @@
 @section('title')
     Dashboard
 @endsection
+@section('breadcrumb')
+    Dashboard
+@endsection
 @section('styles')
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link

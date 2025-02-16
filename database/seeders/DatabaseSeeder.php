@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             ProveedorSeeder::class,
             ValorSeeder::class,
             RolSeeder::class,
+            RoleSeeder::class,
             EmpleadoSeeder::class,
             TipoGastoSeeder::class,
             GastoSeeder::class,
