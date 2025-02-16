@@ -54,7 +54,7 @@ class ClienteController extends Controller
         $cliente = Cliente::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli . ' y su nombre es ' . $cliente->nombrecli,
+            'accion' => 'Creación de cliente',
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
             'fecha' => now(),
@@ -87,7 +87,7 @@ class ClienteController extends Controller
         $cliente = Cliente::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli . ' y su nombre es ' . $cliente->nombrecli,
+            'accion' => 'Creación de cliente desde vista Ventas',
             'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -116,7 +116,7 @@ class ClienteController extends Controller
         $cliente = Cliente::findOrFail($idcli);
         dd($request->all());
         Historial::create([
-            'accion' => 'Se actualizo datos de el cliente con ID: ' . $idcli,
+            'accion' => 'Actualización de cliente',
             'descripcion' =>  'Datos antiguos: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -133,7 +133,7 @@ class ClienteController extends Controller
         $cliente = Cliente::findOrFail($idcli);
 
         Historial::create([
-            'accion' => 'Se eliminó el cliente con ID: ' . $idcli . ' y su nombre es ' . $cliente->nombrecli,
+            'accion' => 'Eliminación de cliente',
             'descripcion' => 'Datos borrados: ' . json_encode($cliente), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -185,17 +185,29 @@ class ClienteController extends Controller
                     'password' => $request->password, // Ya está encriptada
                     'pais' => $request->pais,
                 ]);
+                Historial::create([
+                    'accion' => 'Registro de cliente con correo',
+                    'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
+                    'realizado_por' => 'laravel' . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+                    'fecha' => now(),
+                ]);
 
                 return redirect()->route('cliente.login')->with('success', '¡Tu cuenta ha sido registrada exitosamente!');
             } else {
                 // 🔹 Si el cliente NO existe, crear un nuevo registro
-                Cliente::create([
+                $cliente = Cliente::create([
                     'nombrecli' => $request->first_name . ' ' . $request->last_name,
                     'email' => $request->email,
                     'password' => $request->password, // Ya está encriptada
                     'telefonocli' => $request->telefonocli,
                     'pais' => $request->pais,
                     'saldo' => 0, // Saldo inicial en 0
+                ]);
+                Historial::create([
+                    'accion' => 'Creación de cliente automático',
+                    'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
+                    'realizado_por' => 'laravel' . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+                    'fecha' => now(),
                 ]);
 
                 return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');

@@ -30,8 +30,8 @@ class TipoGastoController extends Controller
         ]);
 
         Historial::create([
-            'accion' => 'Se creo un tipo de gasto con ID: ' . $tipogasto->idtip,
-            'descripcion' => null, // Campo opcional
+            'accion' => 'Creación de Tipo de gasto',
+            'descripcion' => 'Datos del tipo de gasto: '.json_encode($tipogasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -61,7 +61,7 @@ class TipoGastoController extends Controller
         $tipoGasto = TipoGasto::findOrFail($idtip);
 
         Historial::create([
-            'accion' => 'Se actualizo el tipo de gasto con ID: ' . $idtip,
+            'accion' => 'Actualización de Tipo de gasto',
             'descripcion' =>  'Datos antiguos: ' . json_encode($tipoGasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -81,7 +81,7 @@ class TipoGastoController extends Controller
         $tipoGasto = TipoGasto::findOrFail($id);
 
         Historial::create([
-            'accion' => 'Se eliminaron los datos de el tipo de gasto con ID: ' . $id,
+            'accion' => 'Eliminación de Tipo de gasto',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($tipoGasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

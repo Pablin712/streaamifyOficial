@@ -55,7 +55,7 @@
                                             aria-label="Cerrar"></button>
                                     </div>
                                     <div class="modal-body text-center">
-                                        <img src="{{ asset('storage/' . $recarga->foto) }}" alt="Comprobante"
+                                        <img src="{{ asset('public/storage/' . $recarga->foto) }}" alt="Comprobante"
                                             class="img-fluid">
                                     </div>
                                     <div class="modal-footer">

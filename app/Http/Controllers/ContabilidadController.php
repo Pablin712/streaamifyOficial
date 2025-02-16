@@ -24,8 +24,8 @@ class ContabilidadController extends Controller
     public function index(Request $request)
     {
         Historial::create([
-            'accion' => 'Ingreso al Modulo de contabilidad ',
-            'descripcion' =>  null, // Campo opcional
+            'accion' => 'Revisión de contabilidad',
+            'descripcion' =>  'Vista dashboard accedida', // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);

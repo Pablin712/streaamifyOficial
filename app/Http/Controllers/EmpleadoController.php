@@ -71,8 +71,13 @@ class EmpleadoController extends Controller
             $data['foto_url'] = 'fotos/' . $filename; // Ruta para guardar
         }
 
-        Empleado::create($data);
-
+        $empleado = Empleado::create($data);
+        Historial::create([
+            'accion' => 'Creación de empleado',
+            'descripcion' =>  'Datos: ' . json_encode($empleado), // Campo opcional
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'fecha' => now(),
+        ]);
         return redirect()->route('empleados')->with('success', 'Empleado creado exitosamente.');
     }
 
@@ -151,6 +156,12 @@ class EmpleadoController extends Controller
             $file->move($destinationPath, $filename); // Mover el archivo
             $data['foto_url'] = 'fotos/' . $filename; // Ruta para guardar
         }
+        Historial::create([
+            'accion' => 'Actualización de empleado',
+            'descripcion' =>  'Datos antigüos: ' . json_encode($empleado), // Campo opcional
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'fecha' => now(),
+        ]);
 
         $empleado->update($data);
 
@@ -170,6 +181,12 @@ class EmpleadoController extends Controller
         if ($empleado->idrol === 'administrador') {
             return redirect()->route('empleados')->withErrors(['error' => 'No puedes eliminar a un administrador.']);
         }
+        Historial::create([
+            'accion' => 'Eliminación de empleado',
+            'descripcion' =>  'Datos: ' . json_encode($empleado), // Campo opcional
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel'), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'fecha' => now(),
+        ]);
 
         $empleado->delete();
 

@@ -45,7 +45,7 @@ class GastoController extends Controller
             'descripciongas' => $request->descripciongas,
         ]);
         Historial::create([
-            'accion' => 'Se creo el gasto con ID: ' . $gasto->idgas,
+            'accion' => 'Creación de Gasto',
             'descripcion' =>  'Datos: ' . json_encode($gasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -79,7 +79,7 @@ class GastoController extends Controller
         $gasto = Gasto::findOrFail($idgas);
 
         Historial::create([
-            'accion' => 'Se actualizo el cliente con ID: ' . $idgas,
+            'accion' => 'Actualización de Gasto',
             'descripcion' =>  'Datos antiguos: ' . json_encode($gasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -99,7 +99,7 @@ class GastoController extends Controller
     {
         $gasto = Gasto::findOrFail($id);
         Historial::create([
-            'accion' => 'Se eliminaron los datos de el gasto con ID: ' . $gasto->idgas,
+            'accion' => 'Eliminación de Gasto',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($gasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

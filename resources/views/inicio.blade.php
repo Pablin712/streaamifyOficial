@@ -47,7 +47,7 @@
                             <i class="fas fa-wallet fa-3x text-warning mb-2"></i>
                             <h6 class="card-title mb-2">Contabilidad</h6>
                             <a href="{{ route('dashboard') }}" class="btn btn-sm btn-warning">
-                                <i class="fas fa-chart-line"></i> Gestionar Contabilidad
+                                <i class="fas fa-chart-line"></i> Ver Contabilidad
                             </a>
                         </div>
                     </div>

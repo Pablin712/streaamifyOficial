@@ -56,7 +56,7 @@ class PerfilController extends Controller
         $perfil = Perfil::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el perfil con ID: ' . $perfil->idper,
+            'accion' => 'Creación de Perfil',
             'descripcion' =>  'Datos: ' . json_encode($perfil), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -84,8 +84,8 @@ class PerfilController extends Controller
         ]);
 
         Historial::create([
-            'accion' => 'Se actualizo el perfil con ID: ' . $id,
-            'descripcion' =>  'Datos antiguos: ' . json_encode($perfil), // Campo opcional
+            'accion' => 'Actualización de Perfil',
+            'descripcion' =>  'Datos antigüos: ' . json_encode($perfil), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -108,7 +108,7 @@ class PerfilController extends Controller
         $perfil = Perfil::findOrFail($id);
 
         Historial::create([
-            'accion' => 'Se eliminaron los datos de el perfil con ID: ' . $id,
+            'accion' => 'Eliminación de Perfil',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($perfil), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

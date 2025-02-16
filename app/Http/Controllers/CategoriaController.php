@@ -39,7 +39,7 @@ class CategoriaController extends Controller
         $categoria = Categoria::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo la categoria con ID: ' . $categoria->id,
+            'accion' => 'Creación de categoria',
             'descripcion' =>  'Datos: ' . json_encode($categoria), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -73,8 +73,14 @@ class CategoriaController extends Controller
             'descripcion' => 'nullable|string',
         ]);
         $categoria = Categoria::findOrFail($id);
+        
+        Historial::create([
+            'accion' => 'Actualización de categoria',
+            'descripcion' =>  'Datos antigüos: ' . json_encode($categoria), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $categoria->update($request->all());
-
         return redirect()->route('gestion.index')->with('success', 'Categoría actualizada exitosamente.');
     }
 
@@ -84,6 +90,12 @@ class CategoriaController extends Controller
     public function destroy(string $id)
     {
         $categoria = Categoria::findOrFail($id);
+        Historial::create([
+            'accion' => 'Eliminación de categoria',
+            'descripcion' =>  'Datos antigüos: ' . json_encode($categoria), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp, // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $categoria->delete();
 
         return redirect()->route('gestion.index')->with('success', 'Categoría eliminada exitosamente.');

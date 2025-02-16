@@ -198,7 +198,7 @@ class CuentaController extends Controller
             $cuenta = Cuenta::findOrFail($idcue);
 
             Historial::create([
-                'accion' => 'Se actualizo la cuenta con ID: ' . $cuenta->idcue,
+                'accion' => 'Actualización de Cuenta',
                 'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
                 'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),

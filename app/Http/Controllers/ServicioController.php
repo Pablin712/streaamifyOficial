@@ -45,8 +45,8 @@ class ServicioController extends Controller
         $servicio = Servicio::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el servicio con ID: ' . $servicio->idser,
-            'descripcion' =>  null, // Campo opcional
+            'accion' => 'Creación de Servicio',
+            'descripcion' =>  'Datos del servicio: '. json_encode($servicio), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -82,8 +82,8 @@ class ServicioController extends Controller
         $servicio = Servicio::findOrFail($idser);
 
         Historial::create([
-            'accion' => 'Se actualizo el cliente con ID: ' . $idser,
-            'descripcion' =>  'Datos antiguos: ' . json_encode($servicio), // Campo opcional
+            'accion' => 'Actualización de Servicio',
+            'descripcion' =>  'Datos antigüos: ' . json_encode($servicio), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -100,7 +100,7 @@ class ServicioController extends Controller
         $servicio = Servicio::findOrFail($idser);
 
         Historial::create([
-            'accion' => 'Se eliminaron los datos de el cliente con ID: ' . $idser,
+            'accion' => 'Eliminación de Servicio',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($servicio), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

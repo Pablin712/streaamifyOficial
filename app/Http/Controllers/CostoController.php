@@ -41,7 +41,7 @@ class CostoController extends Controller
         $costo = Costo::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
+            'accion' => 'Creación de Costo',
             'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -62,7 +62,7 @@ class CostoController extends Controller
         $costo = Costo::findOrFail($idcos);
 
         Historial::create([
-            'accion' => 'Se actualizo el costo con ID: ' . $costo->idcli,
+            'accion' => 'Actualización de Costo',
             'descripcion' =>  'Datos antiguos : ' . json_encode($costo), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(),  // Almacena el nombre del usuario
             'fecha' => now(),
@@ -84,7 +84,7 @@ class CostoController extends Controller
         $idcue = $costo->idcue; // Para volver a la cuenta seleccionada
 
         Historial::create([
-            'accion' => 'Se eliminaron datos de el costo con ID: ' . $costo->idcos,
+            'accion' => 'Eliminación de Costo',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($costo), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

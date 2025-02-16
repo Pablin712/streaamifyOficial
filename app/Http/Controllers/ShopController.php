@@ -248,6 +248,12 @@ class ShopController extends Controller
                 if (!$this->buscarCuentaDisponible($detalle->idser)) {
                     // No hay cuentas disponibles: Desactivar el producto
                     $producto->update(['activo' => false]);
+                    Historial::create([
+                        'accion' => 'Sin-Stock',
+                        'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
+                        'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                        'fecha' => now(),
+                    ]);
                     return back()->with('error', 'No hay cuentas disponibles para este servicio.');
                 }
             }
@@ -275,6 +281,12 @@ class ShopController extends Controller
 
                     if (!$cuenta) {
                         $producto->update(['activo' => false]);
+                        Historial::create([
+                            'accion' => 'Sin-Stock',
+                            'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
+                            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                            'fecha' => now(),
+                        ]);
                         throw new \Exception("No hay cuentas disponibles para el servicio.");
                     }
 
@@ -304,6 +316,12 @@ class ShopController extends Controller
 
                     $mensajesServicios[] = $mensaje;
                 }
+                Historial::create([
+                    'accion' => 'Compra-Automática',
+                    'descripcion' =>  'Cliente realizó una compra en el Eccomerce: ' . json_encode($venta), // Campo opcional
+                    'realizado_por' => 'Laravel | '. request()->ip(), // Almacena el nombre del usuario
+                    'fecha' => now(),
+                ]);
 
                 // Descontar saldo al usuario
                 $usuario->saldo -= $producto->preciopro;
@@ -337,6 +355,12 @@ class ShopController extends Controller
                 //'idestado' => 1,
                 'fechapedido' => now(),
                 'respuesta' => 'Sin responder',
+            ]);
+            Historial::create([
+                'accion' => 'Pedido Realizado',
+                'descripcion' =>  'Se ha realizado un pedido para el producto: ' . json_encode($producto), // Campo opcional
+                'realizado_por' => 'Nombre: '.$usuario->nombrecli.' Correo: '.$usuario->email.' | '. request()->ip(), // Almacena el nombre del usuario
+                'fecha' => now(),
             ]);
             // Mensaje de sesión para mostrar en la vista
             session()->flash('pedido_registrado', [
@@ -381,7 +405,12 @@ class ShopController extends Controller
                 'fechapedido' => now(),
                 'respuesta' => 'Sin responder. Renovación Pendiente',
             ]);
-
+            Historial::create([
+                'accion' => 'Pedido Realizado',
+                'descripcion' =>  'Se ha realizado un pedido para el producto: ' . json_encode($producto), // Campo opcional
+                'realizado_por' => 'Nombre: '.$usuario->nombrecli.' Correo: '.$usuario->email.' | '. request()->ip(), // Almacena el nombre del usuario
+                'fecha' => now(),
+            ]);
             session()->flash('pedido_registrado', [
                 'nombre' => $producto->nombrepro,
                 'precio' => $producto->preciopro
@@ -454,8 +483,8 @@ class ShopController extends Controller
 
         // Registrar en historial
         Historial::create([
-            'accion' => 'Se renovó la venta con ID: ' . $ventaPasada->idven,
-            'descripcion' => 'Nueva venta creada con ID ' . $ventaNueva->idven,
+            'accion' => 'Renovación-Automática ' . $ventaPasada->idven,
+            'descripcion' => 'Nueva venta creada: ' . json_encode($ventaNueva),
             'realizado_por' => 'Laravel | ' . request()->ip(),
             'fecha' => now(),
         ]);

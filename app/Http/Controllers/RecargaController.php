@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Banco;
 use App\Models\Recarga;
+use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 class RecargaController extends Controller
@@ -50,6 +51,12 @@ class RecargaController extends Controller
                 if ($cliente) { // Validar que exista el cliente relacionado
                     $cliente->saldo += $recarga->valor; // Sumar el valor de la recarga al saldo
                     $cliente->save(); // Guardar el nuevo saldo
+                    Historial::create([
+                        'accion' => 'Recarga-Procesada',
+                        'descripcion' =>  'Datos aprobados: ' . json_encode($recarga).' Saldo de cliente: '.$cliente->saldo, // Campo opcional
+                        'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                        'fecha' => now(),
+                    ]);
                 }
             }
             DB::commit(); // Confirmar cambios
@@ -89,7 +96,7 @@ class RecargaController extends Controller
         // Mover el archivo a la carpeta destino
         $file->move($destinationPath, $filename);
 
-        Recarga::create([
+        $recarga = Recarga::create([
             'idcli' => Auth::guard('cliente')->user()->idcli,
             'idban' => $request->idban,
             'numcomprobante' => $request->numcomprobante,
@@ -97,7 +104,12 @@ class RecargaController extends Controller
             'foto' => 'comprobantes/' . $filename,
             'idestado' => 1, // Estado inicial, por ejemplo "Pendiente"
         ]);
-
+        Historial::create([
+            'accion' => 'Recarga-Pendiente',
+            'descripcion' =>  'Solicitud de la recarga: ' . json_encode($recarga), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         return redirect()->route('recargar.index')->with('success', '¡Recarga enviada con éxito, por favor tener paciencia!');
     }
 }

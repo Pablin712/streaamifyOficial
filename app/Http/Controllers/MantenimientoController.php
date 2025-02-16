@@ -54,7 +54,7 @@ class MantenimientoController extends Controller
         ]);
 
         Historial::create([
-            'accion' => 'Se creo la orden de mantenimiento con ID: ' . $mantenimiento,
+            'accion' => 'Creación de Mantenimiento',
             'descripcion' =>  'Datos: ' . json_encode($mantenimiento), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -101,7 +101,7 @@ class MantenimientoController extends Controller
         $mantenimiento = Mantenimiento::findOrFail($id);
 
         Historial::create([
-            'accion' => 'Se actualizo la orden de mantenimiento con ID: ' . $id,
+            'accion' => 'Actualización de Mantenimiento',
             'descripcion' =>  'Datos antiguos: ' . json_encode($mantenimiento), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -130,7 +130,7 @@ class MantenimientoController extends Controller
         $mantenimiento = Mantenimiento::findOrFail($id);
 
         Historial::create([
-            'accion' => 'Se eliminaron los datos de el cliente con ID: ' . $id,
+            'accion' => 'Eliminación de Mantenimiento',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($mantenimiento), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

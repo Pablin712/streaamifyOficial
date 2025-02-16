@@ -61,8 +61,8 @@ class UsuarioController extends Controller
         $detalle->idper = $request->idcue.'.'.$request->perfil;
         $detalle->fechavendet = $request->fecha_vencimiento;
         Historial::create([
-            'accion' => 'Se actualizo un usuario con ID: ' . $iddet,
-            'descripcion' =>  'Datos antiguos: ' . json_encode($detalle), // Campo opcional
+            'accion' => 'Actualización de Usuario',
+            'descripcion' => 'Cliente: '.$detalle->venta->cliente->nombrecli. 'Datos antigüos: ' . json_encode($detalle), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -83,8 +83,8 @@ class UsuarioController extends Controller
         $detalle->save();
 
         Historial::create([
-            'accion' => 'Se cambio el estado del usuario con ID: ' . $iddet,
-            'descripcion' =>  'Dato cambiado a: ' . $detalle->activodet, // Campo opcional
+            'accion' => 'Cuenta-Quitada',
+            'descripcion' =>  'Cliente: '.$detalle->venta->cliente->nombrecli. 'Usuario que se quitó: ' . json_encode($detalle), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);

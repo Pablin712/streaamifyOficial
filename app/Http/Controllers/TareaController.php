@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Tarea;
-
+use App\Models\Historial;
+use Illuminate\Support\Facades\Auth;
 class TareaController extends Controller
 {
     public function index()
@@ -39,8 +40,13 @@ class TareaController extends Controller
             'fechalimit' => 'nullable|date'
         ]);
 
-        Tarea::create($request->all());
-
+        $tarea = Tarea::create($request->all());
+        Historial::create([
+            'accion' => 'Creación de Tarea',
+            'descripcion' =>  'Datos de la tarea: '. json_encode($tarea), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         return redirect()->route('tareas.index')->with('success', 'Tarea agregada correctamente.');
     }
 
@@ -53,6 +59,12 @@ class TareaController extends Controller
     public function update(Request $request, $id)
     {
         $tarea = Tarea::findOrFail($id);
+        Historial::create([
+            'accion' => 'Actualización de Tarea',
+            'descripcion' =>  'Datos de la tarea antigüa: '. json_encode($tarea), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $tarea->update($request->all());
 
         return redirect()->route('tareas.index')->with('success', 'Tarea actualizada.');
@@ -61,8 +73,14 @@ class TareaController extends Controller
     public function completar($id)
     {
         $tarea = Tarea::findOrFail($id);
+        Historial::create([
+            'accion' => 'Tarea Completada',
+            'descripcion' =>  'Datos de la tarea: '. json_encode($tarea), // Campo opcional
+            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'fecha' => now(),
+        ]);
         $tarea->update(['completada' => !$tarea->completada]);
 
-        return redirect()->route('tareas.index')->with('success', 'Tarea actualizada.');
+        return redirect()->route('tareas.index')->with('success', 'Tarea completada.');
     }
 }

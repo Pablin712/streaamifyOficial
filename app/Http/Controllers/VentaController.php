@@ -141,8 +141,8 @@ class VentaController extends Controller
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
 
         Historial::create([
-            'accion' => 'Factura: ' . $venta->idven,
-            'descripcion' =>  "Detalles: $descripcionDetalles",
+            'accion' => 'Venta-Realizada Factura: ' . $venta->idven,
+            'descripcion' =>  'Datos: ' . json_encode($venta). 'Detalles: '. $descripcionDetalles,
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -187,8 +187,8 @@ class VentaController extends Controller
             ->value('idven');
 
         Historial::create([
-            'accion' => 'Se renovo la venta con ID: ' . $idvenPasado,
-            'descripcion' =>  'Nueva venta creada con ID' . $ventaNueva->idven, // Campo opcional
+            'accion' => 'Renovación-Venta ' . $idvenPasado,
+            'descripcion' =>  'Nueva venta creada: ' . json_encode($ventaNueva), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -240,7 +240,7 @@ class VentaController extends Controller
             $cliente = Cliente::create($request->all());
 
             Historial::create([
-                'accion' => 'Se creo el cliente con ID: ' . $cliente->idcli,
+                'accion' => 'Creación de Cliente en Ventas',
                 'descripcion' =>  'Datos: ' . json_encode($cliente), // Campo opcional
                 'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
@@ -392,8 +392,8 @@ class VentaController extends Controller
         $venta->save();
 
         Historial::create([
-            'accion' => 'Se actualizacion de datos de la venta con ID: ' . $venta->idven,
-            'descripcion' =>  null, // Campo opcional
+            'accion' => 'Actualización de venta ' . $venta->idven,
+            'descripcion' =>  'Datos: '.json_encode($venta), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
@@ -411,7 +411,7 @@ class VentaController extends Controller
         $detalle->save();
 
         Historial::create([
-            'accion' => 'Se cambio el estado del Item con ID: ' . $iddet,
+            'accion' => 'Estado de usuario actualizado' . $iddet,
             'descripcion' =>  'Estado cambiado a' . $detalle->activodet, // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -438,7 +438,7 @@ class VentaController extends Controller
         $venta = Venta::findOrFail($idven);
 
         Historial::create([
-            'accion' => 'Se eliminaron los datos de la venta con ID: ' . $idven,
+            'accion' => 'Eliminación de Venta',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($venta), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

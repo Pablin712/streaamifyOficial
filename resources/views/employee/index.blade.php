@@ -44,13 +44,16 @@
                         </p>
                         <a href="{{ route('empleados.edit', $empleado->idemp) }}" class="btn btn-warning"><i
                                 class="fas fa-edit"></i> Editar</a>
-                        <form action="{{ route('empleados.destroy', $empleado->idemp) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')"><i
-                                    class="fas fa-trash"></i> Eliminar</button>
-                        </form>
+                        @if (Auth::user()->idrol == 'Administrador' && !($empleado->idrol == 'Vendedor' && $empleado->ventas_count > 0))
+                            <form action="{{ route('empleados.destroy', $empleado->idemp) }}" method="POST"
+                                style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

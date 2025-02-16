@@ -46,13 +46,11 @@ class ValorController extends Controller
         $valor = Valor::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creo el valor con ID: ' . $valor->idval,
-            'descripcion' =>  null, // Campo opcional
+            'accion' => 'Creación de Valor',
+            'descripcion' =>  'Datos: ' . json_encode($valor), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
-
-
         return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
     }
 
@@ -81,7 +79,7 @@ class ValorController extends Controller
         $valor = Valor::findOrFail($idval);
 
         Historial::create([
-            'accion' => 'Se actualizo el valor con ID: ' . $idval,
+            'accion' => 'Actualización de Valor',
             'descripcion' =>  'Datos antiguos: ' . json_encode($valor), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -99,7 +97,7 @@ class ValorController extends Controller
         $valor = Valor::findOrFail($idval);
 
         Historial::create([
-            'accion' => 'Se eliminaron los datos de el valor con ID: ' . $idval,
+            'accion' => 'Eliminación de Valor',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($valor), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),

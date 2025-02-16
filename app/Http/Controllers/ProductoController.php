@@ -94,7 +94,7 @@ class ProductoController extends Controller
         }
 
         Historial::create([
-            'accion' => 'Se creó el producto con ID: ' . $producto->id,
+            'accion' => 'Creación de Producto',
             'descripcion' => 'Datos: ' . json_encode($producto),
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
@@ -178,7 +178,7 @@ class ProductoController extends Controller
         }
 
         Historial::create([
-            'accion' => 'Se actualizó el producto con ID: ' . $producto->id,
+            'accion' => 'Actualización de Producto',
             'descripcion' => 'Datos: ' . json_encode($producto),
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
@@ -193,16 +193,14 @@ class ProductoController extends Controller
     public function destroy(string $id)
     {
         $producto = Producto::findOrFail($id);
-        $producto->detalles()->delete(); // Eliminar detalles relacionados
-        $producto->delete();
-
         Historial::create([
-            'accion' => 'Se eliminó el producto con ID: ' . $producto->id,
+            'accion' => 'Eliminación de Producto',
             'descripcion' => 'Datos eliminados: ' . json_encode($producto),
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
-
+        $producto->detalles()->delete(); // Eliminar detalles relacionados
+        $producto->delete();
         return redirect()->route('productos.index')->with('success', 'Producto eliminado exitosamente.');
     }
 }

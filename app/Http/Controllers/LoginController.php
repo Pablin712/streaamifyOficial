@@ -33,8 +33,8 @@ class LoginController extends Controller
 
         if (!$empleado || !Hash::check($request->passwordemp, $empleado->passwordemp)) {
             Historial::create([
-                'accion' => 'Intento fallido de ingreso',
-                'descripcion' => 'Fallo en el ingreso de usuario o contraseña',
+                'accion' => 'Fallo-Login-Empleado',
+                'descripcion' => 'Fallo en el ingreso de usuario o contraseña del empleado',
                 'realizado_por' => $request->ip(),
                 'fecha' => now(),
             ]);
@@ -47,8 +47,8 @@ class LoginController extends Controller
         Auth::login($empleado);
 
         Historial::create([
-            'accion' => 'Ingreso de ' . $empleado->usuarioemp,
-            'descripcion' => 'Autenticación e ingreso al sistema',
+            'accion' => 'Login-Empleado',
+            'descripcion' => 'Autenticación de empleado con usuario: '.$empleado->usuarioemp,
             'realizado_por' => $empleado->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);

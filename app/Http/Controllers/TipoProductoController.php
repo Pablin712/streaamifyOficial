@@ -40,7 +40,7 @@ class TipoProductoController extends Controller
         $tipoProducto = TipoProducto::create($request->all());
 
         Historial::create([
-            'accion' => 'Se creó el tipo de producto con ID: ' . $tipoProducto->id,
+            'accion' => 'Creación de Tipo de producto',
             'descripcion' => 'Datos: ' . json_encode($tipoProducto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
@@ -80,7 +80,7 @@ class TipoProductoController extends Controller
         $tipoProducto->update($request->all());
 
         Historial::create([
-            'accion' => 'Se actualizó el tipo de producto con ID: ' . $tipoProducto->id,
+            'accion' => 'Actualización de Tipo de producto',
             'descripcion' => 'Datos: ' . json_encode($tipoProducto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
@@ -98,7 +98,7 @@ class TipoProductoController extends Controller
         $tipoProducto->delete();
 
         Historial::create([
-            'accion' => 'Se eliminó el tipo de producto con ID: ' . $tipoProducto->id,
+            'accion' => 'Eliminación de Tipo de producto',
             'descripcion' => 'Datos eliminados: ' . json_encode($tipoProducto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
