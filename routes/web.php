@@ -231,6 +231,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/empleados/createstore', 'store')->name('empleados.store');
         Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
         Route::put('/empleados/{id}', 'update')->name('empleados.update');
+        Route::put('/empleados/{id}/update-rol', 'updateRol')->name('empleados.updateRol');
         Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
     });
 

@@ -58,15 +58,15 @@
             <img src="{{ asset('images/TARJETA.png') }}" alt="Tarjeta">
         </div>
         <div class="container">
-            <h2>Factura Electrónica</h2>
+            <h2>Recibo de Pago</h2>
             <p><strong>Fecha de Emisión:</strong> {{ $venta->fechaven->format('Y/m/d') }}</p>
-            <p><strong>Factura No:</strong> {{ $venta->idven }}</p>
+            <p><strong>Recibo No:</strong> {{ $venta->idven }}</p>
 
             <h3>Datos del Cliente</h3>
             <p><strong>Razon Social/ Nombre:</strong> {{ $venta->cliente->nombrecli }}</p>
             <p><strong>Facturado a:</strong> {{ $venta->cliente->email }}</p>
 
-            <h3>Detalle de la Factura</h3>
+            <h3>Detalle del Recibo</h3>
             <table>
                 <thead>
                     <tr>

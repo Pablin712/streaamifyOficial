@@ -8,7 +8,7 @@ use App\Models\Empleado;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Historial;
 use Carbon\Carbon;
-
+use App\Models\Rol;
 class EmpleadoController extends Controller
 {
     /**
@@ -30,7 +30,8 @@ class EmpleadoController extends Controller
                 }
             ])
             ->get();
-        return view('employee.index', compact('empleados'));
+        $roles = Rol::all(); 
+        return view('employee.index', compact('empleados','roles'));
     }
 
     /**
@@ -168,6 +169,29 @@ class EmpleadoController extends Controller
         return redirect()->route('empleados')->with('success', 'Empleado actualizado exitosamente.');
     }
 
+    public function updateRol(Request $request, $id)
+    {
+        $empleado = Empleado::findOrFail($id);
+        $user = Auth::user();
+        // Validación
+        $request->validate([
+            'idrol' => 'required|exists:roles,idrol', // Asegura que el rol exista en la BD
+        ]);
+        // Si el empleado es administrador, solo `idemp = 1` puede modificarlo
+        if ($empleado->idrol === 'administrador' && $user->idemp != 1) {
+            return redirect()->back()->with('error', 'No tienes permiso para cambiar el rol de un administrador.');
+        }
+        // Actualiza el rol
+        $empleado->idrol = $request->idrol;
+        $empleado->save();
+        Historial::create([
+            'accion' => 'Cambio de Rol de empleado',
+            'descripcion' =>  'Empleado: ' . json_encode($empleado), // Campo opcional
+            'realizado_por' => $user->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'fecha' => now(),
+        ]);
+        return redirect()->back()->with('success', 'Rol actualizado correctamente.');
+    }
 
     /**
      * Remove the specified resource from storage.

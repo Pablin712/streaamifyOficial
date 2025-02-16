@@ -1,11 +1,8 @@
 @extends('layouts.static')
 
-@section('h1', 'Empleados')
+@section('h1', 'Perfil')
 @section('breadcrumb')
-    <a href="{{ route('empleados') }}">Empleados</a>
-@endsection
-@section('breadcrumb2')
-    Editar Empleado
+    Perfil
 @endsection
 @section('content')
     @if ($errors->any())
@@ -18,60 +15,59 @@
         </div>
     @endif
     <div class="container">
-        <h1>Actualizar Datos</h1>
-        <form action="{{ route('empleados.update', $empleado->idemp) }}" method="POST" enctype="multipart/form-data">
+        <h1>Actualizar Datos Personales</h1>
+        <form action="{{ route('empleados.update', Auth::user()->idemp) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+
+            <div class="mb-3 text-center">
+                <label for="foto_url" class="form-label d-block">Foto de Perfil</label>
+                <input type="file" name="foto_url" id="foto_url" class="form-control">
+                @if (Auth::user()->foto_url)
+                    <div class="mt-2">
+                        <img src="{{ asset('public/storage/' . Auth::user()->foto_url) }}" 
+                            alt="Foto de {{ Auth::user()->nombreemp }}" 
+                            class="img-fluid rounded-circle"
+                            style="width: 120px; height: 120px; object-fit: cover;">
+                    </div>
+                @endif
+            </div>
+
             <div class="mb-3">
                 <label for="nombreemp" class="form-label">Nombre</label>
-                <input type="text" name="nombreemp" id="nombreemp" class="form-control" value="{{ $empleado->nombreemp }}"
-                    required>
+                <input type="text" name="nombreemp" id="nombreemp" class="form-control" 
+                    value="{{ Auth::user()->nombreemp }}" required>
             </div>
+
             <div class="mb-3">
                 <label for="telefonoemp" class="form-label">Teléfono</label>
-                <input type="text" name="telefonoemp" id="telefonoemp" class="form-control"
-                    value="{{ $empleado->telefonoemp }}" required>
+                <input type="text" name="telefonoemp" id="telefonoemp" class="form-control" 
+                    value="{{ Auth::user()->telefonoemp }}" required>
             </div>
+
             <div class="mb-3">
                 <label for="usuarioemp" class="form-label">Usuario</label>
-                <input type="text" name="usuarioemp" id="usuarioemp" class="form-control"
-                    value="{{ $empleado->usuarioemp }}" required>
+                <input type="text" name="usuarioemp" id="usuarioemp" class="form-control" 
+                    value="{{ Auth::user()->usuarioemp }}" required>
             </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" name="email" id="email" class="form-control" 
+                    value="{{ Auth::user()->email }}" required>
+            </div>
+
             <div class="mb-3">
                 <label for="passwordemp" class="form-label">Nueva Contraseña (opcional)</label>
                 <input type="password" name="passwordemp" id="passwordemp" class="form-control">
             </div>
+
             <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" name="email" id="email" class="form-control">
+                <label class="form-label">Rol</label>
+                <input type="text" class="form-control" value="{{ Auth::user()->idrol }}" readonly>
+                <input type="hidden" name="idrol" value="{{ Auth::user()->idrol }}">
             </div>
-            @if (Auth::user()->idrol == 'administrador')
-                <div class="mb-3">
-                    <label for="idrol" class="form-label">Rol</label>
-                    <select name="idrol" id="idrol" class="form-select" required>
-                        <option value="vendedor" {{ $empleado->idrol === 'vendedor' ? 'selected' : '' }}>vendedor</option>
-                        <option value="bodeguero" {{ $empleado->idrol === 'bodeguero' ? 'selected' : '' }}>bodeguero
-                        </option>
-                        <option value="contador" {{ $empleado->idrol === 'contador' ? 'selected' : '' }}>Contador</option>
-                        <option value="tecnico" {{ $empleado->idrol === 'tecnico' ? 'selected' : '' }}>Tecnico</option>
-                        <option value="administrador" {{ $empleado->idrol === 'administrador' ? 'selected' : '' }}>
-                            Administrador</option>
-                    </select>
-                </div>
-            @else
-                <!-- Campo oculto para mantener el rol actual -->
-                <input type="hidden" name="idrol" value="{{ $empleado->idrol }}">
-            @endif
-            <div class="mb-3">
-                <label for="foto_url" class="form-label">Foto (opcional)</label>
-                <input type="file" name="foto_url" id="foto_url" class="form-control">
-                @if ($empleado->foto_url)
-                    <div class="mt-2">
-                        <img src="{{ $empleado->foto_url }}" alt="Foto de {{ $empleado->nombreemp }}"
-                            class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
-                    </div>
-                @endif
-            </div>
+
             <button type="submit" class="btn btn-primary">Actualizar</button>
         </form>
     </div>

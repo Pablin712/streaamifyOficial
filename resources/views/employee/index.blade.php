@@ -1,11 +1,9 @@
 @extends('layouts.table')
-@section('title')
-    Empleados
-@endsection
+
+@section('title', 'Empleados')
 @section('h1', 'Empleados')
-@section('breadcrumb')
-    Empleados
-@endsection
+@section('breadcrumb', 'Empleados')
+
 @section('descripcion')
     @if (session('success'))
         <div class="alert alert-success">
@@ -23,6 +21,7 @@
     @endif
     <h3>Información de Empleados</h3>
 @endsection
+
 @section('table1')
     <a href="{{ route('empleados.create') }}" class="btn btn-primary mb-3">Crear Empleado</a>
     <div class="row">
@@ -42,18 +41,49 @@
                             <strong>Total de Ventas:</strong> {{ $empleado->ventas_count }}<br>
                             <strong>Correo:</strong> {{ $empleado->email }}<br>
                         </p>
-                        <a href="{{ route('empleados.edit', $empleado->idemp) }}" class="btn btn-warning"><i
-                                class="fas fa-edit"></i> Editar</a>
-                        @if (Auth::user()->idrol == 'Administrador' && !($empleado->idrol == 'Vendedor' && $empleado->ventas_count > 0))
-                            <form action="{{ route('empleados.destroy', $empleado->idemp) }}" method="POST"
-                                style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
-                                    <i class="fas fa-trash"></i> Eliminar
-                                </button>
-                            </form>
+
+                        @if (Auth::user()->idrol == 'administrador')
+                            <button class="btn btn-warning" data-bs-toggle="modal"
+                                data-bs-target="#editModal{{ $empleado->idemp }}">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
                         @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Edición -->
+            <div class="modal fade" id="editModal{{ $empleado->idemp }}" tabindex="-1"
+                aria-labelledby="editModalLabel{{ $empleado->idemp }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel{{ $empleado->idemp }}">Editar Empleado</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <form action="{{ route('empleados.updateRol', $empleado->idemp) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="idrol" class="form-label">Rol</label>
+                                    <select name="idrol" id="idrol" class="form-select" required>
+                                        @foreach ($roles as $rol)
+                                            <option value="{{ $rol->idrol }}"
+                                                {{ $empleado->idrol === $rol->idrol ? 'selected' : '' }}>
+                                                {{ ucfirst($rol->idrol) }}: 
+                                                {{ ucfirst($rol->detallerol) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
