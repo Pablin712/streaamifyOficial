@@ -18,7 +18,9 @@
 @endsection
 @section('tablename', 'Servicios')
 @section('btncrear')
-    <a href="{{ route('servicios.create') }}" class="btn btn-primary">Crear Servicio</a>
+    @can('servicios.create')
+        <a href="{{ route('servicios.create') }}" class="btn btn-primary">Crear Servicio</a>
+    @endcan
 @endsection
 @section('table1')
     <table id="datatablesSimple" class="table table-striped table-bordered">
@@ -31,7 +33,9 @@
                 <th>PVP combo</th>
                 <th>Reventa 1 pant</th>
                 <th>Reventa 1 cuent</th>
-                <th>Acciones</th>
+                @canany(['servicios.edit', 'servicios.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -44,17 +48,23 @@
                     <td>${{ number_format($servicio->comboser, 2) }}</td>
                     <td>${{ number_format($servicio->reventaser, 2) }}</td>
                     <td>${{ number_format($servicio->revcompser, 2) }}</td>
-                    <td>
-                        <a href="{{ route('servicios.edit', $servicio->idser) }}" class="btn btn-warning  "><i
-                                class="fas fa-edit"></i></a>
-                        <form action="{{ route('servicios.destroy', $servicio->idser) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Eliminar este servicio?')"><i class="fas fa-trash"></i></button>
-                        </form>
-                    </td>
+                    @canany(['servicios.edit', 'servicios.destroy'])
+                        <td>
+                            @can('servicios.edit')
+                                <a href="{{ route('servicios.edit', $servicio->idser) }}" class="btn btn-warning  "><i
+                                        class="fas fa-edit"></i></a>
+                            @endcan
+                            @can('servicios.destroy')
+                                <form action="{{ route('servicios.destroy', $servicio->idser) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-circle"
+                                        onclick="return confirm('¿Eliminar este servicio?')"><i class="fas fa-trash"></i></button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @empty
                 <tr>

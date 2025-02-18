@@ -10,16 +10,15 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class GastoController extends Controller
 {
-    //public function __construct()
-    //{
-    //    $this->middleware('auth'); // Solo usuarios autenticados pueden acceder
-    //}
-
+    public function __construct() {
+        $this->middleware('can:gastos')->only('index');
+        $this->middleware('can:gastos.store')->only('store');
+        $this->middleware('can:gastos.update')->only('update');
+        $this->middleware('can:gastos.destroy')->only('destroy');
+    }
     // Mostrar todos los gastos
     public function index()
     {
-        
-        $this->authorizeRole(['administrador', 'contador']);
         // Obtener todos los gastos con el tipo de gasto relacionado
         $gastos = Gasto::with('tipoGasto')->orderBy('fechagas', 'desc')->get();
         // Obtener todos los tipos de gasto para el formulario
@@ -107,14 +106,5 @@ class GastoController extends Controller
         $gasto->delete();
 
         return redirect()->route('gastos')->with('success', 'Gasto eliminado con éxito');
-    }
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

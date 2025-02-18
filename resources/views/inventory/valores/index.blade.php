@@ -17,9 +17,15 @@
     <p>Revisa el inventario y crea nuevos posibles contratos para luego agregarlas a stock.</p>
 @endsection
 @section('btncrear')
-    <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
-    <a href="{{ route('servicios.create') }}" class="btn btn-primary mb-3">Nuevo Servicio</a>
-    <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Nuevo Proveedor</a>
+    @can('valores.create')
+        <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
+    @endcan
+    @can('servicios.create')
+        <a href="{{ route('servicios.create') }}" class="btn btn-primary mb-3">Nuevo Servicio</a>
+    @endcan
+    @can('proveedores.create')
+        <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Nuevo Proveedor</a>
+    @endcan
 @endsection
 @section('tablename', 'Valores')
 @section('table1')
@@ -33,7 +39,9 @@
                 <th>Pantallas Min</th>
                 <th>Pantallas Max</th>
                 <th>Meses</th>
-                <th>Acciones</th>
+                @canany(['valores.edit', 'valores.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -46,16 +54,23 @@
                     <td>{{ $valor->pantminval }}</td>
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>
-                    <td>
-                        <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning  "><i
-                                class="fas fa-edit"></i></a>
-                        <form action="{{ route('valores.destroy', $valor->idval) }}" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
-                        </form>
-                    </td>
+                    @canany(['valores.edit', 'valores.destroy'])
+                        <td>
+                            @can('valores.edit')
+                                <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning  "><i
+                                        class="fas fa-edit"></i></a>
+                            @endcan
+                            @can('valores.destroy')
+                                <form action="{{ route('valores.destroy', $valor->idval) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-circle"
+                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>

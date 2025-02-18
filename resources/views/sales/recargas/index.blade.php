@@ -76,23 +76,25 @@
                             {{ ucfirst($recarga->estado->nombre) }}
                         </span>
                         @if ($recarga->estado->nombre === 'Pendiente')
-                            <form action="{{ route('empleado.recargas.updateEstado', $recarga->idrec) }}" method="POST"
-                                style="display: inline;">
-                                @csrf
-                                <input type="hidden" name="idestado" id="idestado">
+                            @can('empleado.recargas.updateEstado')
+                                <form action="{{ route('empleado.recargas.updateEstado', $recarga->idrec) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    <input type="hidden" name="idestado" id="idestado">
 
-                                <!-- Botón Aprobar -->
-                                <button type="submit" class="btn btn-success btn-sm"
-                                    onclick="return confirmarAccion('¿Estás seguro de que quieres aprobar esta recarga?', 'aprobado');">
-                                    Aprobar
-                                </button>
+                                    <!-- Botón Aprobar -->
+                                    <button type="submit" class="btn btn-success btn-sm"
+                                        onclick="return confirmarAccion('¿Estás seguro de que quieres aprobar esta recarga?', 'aprobado');">
+                                        Aprobar
+                                    </button>
 
-                                <!-- Botón Rechazar -->
-                                <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirmarAccion('¿Estás seguro de que quieres rechazar esta recarga?', 'rechazado');">
-                                    Rechazar
-                                </button>
-                            </form>
+                                    <!-- Botón Rechazar -->
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirmarAccion('¿Estás seguro de que quieres rechazar esta recarga?', 'rechazado');">
+                                        Rechazar
+                                    </button>
+                                </form>
+                            @endcan
                         @endif
                     </td>
                 </tr>

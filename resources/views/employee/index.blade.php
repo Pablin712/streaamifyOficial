@@ -39,19 +39,18 @@
                             <strong>Correo:</strong> {{ $empleado->email }}<br>
                             <strong>Ventas este mes:</strong> {{ $empleado->ventas_mes_actual }}<br>
                             <strong>Total de Ventas:</strong> {{ $empleado->ventas_count }}<br>
-                            <strong>Rol:</strong> 
-                            @if($empleado->roles->isNotEmpty())
+                            <strong>Rol:</strong>
+                            @if ($empleado->roles->isNotEmpty())
                                 {{ implode(', ', $empleado->roles->pluck('name')->toArray()) }}
                             @else
                                 Sin rol asignado
                             @endif
                         </p>
-
-                        @if (Auth::user()->hasRole('Admin'))
+                        @can('empleados.updateRol')
                             <a href="{{ route('empleados.editRoles', $empleado->idemp) }}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Editar Roles
                             </a>
-                        @endif
+                        @endcan
                     </div>
                 </div>
             </div>

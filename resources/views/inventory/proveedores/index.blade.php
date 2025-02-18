@@ -17,14 +17,18 @@
 @section('tablename', 'Proveedores')
 @section('table1')
     <h1>Proveedores</h1>
-    <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Crear Proveedor</a>
+    @can('proveedores.create')
+        <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Crear Proveedor</a>
+    @endcan
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Teléfono</th>
-                <th>Acciones</th>
+                @canany(['proveedores.edit', 'proveedores.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -33,17 +37,23 @@
                     <td>{{ $proveedor->idpro }}</td>
                     <td>{{ $proveedor->nombrepro }}</td>
                     <td>{{ $proveedor->telefonopro }}</td>
-                    <td>
-                        <a href="{{ route('proveedores.edit', $proveedor->idpro) }}" class="btn btn-warning  "><i
-                                class="fas fa-edit"></i></a>
-                        <form action="{{ route('proveedores.destroy', $proveedor->idpro) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-circle"
-                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
-                        </form>
-                    </td>
+                    @canany(['proveedores.edit', 'proveedores.destroy'])
+                        <td>
+                            @can('proveedores.edit')
+                                <a href="{{ route('proveedores.edit', $proveedor->idpro) }}" class="btn btn-warning  "><i
+                                        class="fas fa-edit"></i></a>
+                            @endcan
+                            @can('proveedores.destroy')
+                                <form action="{{ route('proveedores.destroy', $proveedor->idpro) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-circle"
+                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>

@@ -10,18 +10,20 @@ use Illuminate\Support\Facades\Auth;
 
 class ValorController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:valores')->only('index');
+        $this->middleware('can:valores.store')->only('create', 'store');
+        $this->middleware('can:valores.update')->only('edit', 'update');
+        $this->middleware('can:valores.destroy')->only('destroy');
+    }
     public function index()
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'vendedor', 'contador']);
-
         $valores = Valor::with(['proveedor', 'servicio'])->get();
         return view('inventory.valores.index', compact('valores'));
     }
 
     public function create()
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $proveedores = Proveedor::all();
         $servicios = Servicio::all();
         return view('inventory.valores.create', compact('servicios', 'proveedores'));
@@ -29,8 +31,6 @@ class ValorController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $request->validate([
             'idval' => 'required|string|max:20|unique:valores,idval',
             'idser' => 'required|exists:servicios,idser',
@@ -56,8 +56,6 @@ class ValorController extends Controller
 
     public function edit($idval)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $valor = Valor::with(['proveedor', 'servicio'])->findOrFail($idval);
         $proveedores = Proveedor::all();
         $servicios = Servicio::all();
@@ -66,8 +64,6 @@ class ValorController extends Controller
 
     public function update(Request $request, $idval)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $request->validate([
             'idser' => 'required|exists:servicios,idser',
             'idpro' => 'required|exists:proveedores,idpro',
@@ -92,8 +88,6 @@ class ValorController extends Controller
 
     public function destroy($idval)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $valor = Valor::findOrFail($idval);
 
         Historial::create([
@@ -106,15 +100,5 @@ class ValorController extends Controller
         $valor->delete();
 
         return redirect()->route('valores')->with('success', 'Valor eliminado con éxito.');
-    }
-
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

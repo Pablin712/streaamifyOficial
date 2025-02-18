@@ -13,11 +13,15 @@ use Illuminate\Support\Facades\Hash;
 
 class ClienteController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:clientes')->only('index');
+        $this->middleware('can:clientes.store')->only('create', 'store');
+        $this->middleware('can:clientes.storeInVenta')->only('storeInVenta');
+        $this->middleware('can:clientes.update')->only('edit', 'update');
+        $this->middleware('can:clientes.destroy')->only('destroy');
+    }
     public function index()
     {
-
-        $this->authorizeRole(['administrador', 'vendedor', 'tecnico']);
-
         $clientes = Cliente::with('viewClienteUsuario')->orderBy('created_at', 'desc')->get();
         
         $autenticados = Cliente::whereNotNull('email')
@@ -28,10 +32,8 @@ class ClienteController extends Controller
     // Crear un nuevo proveedor
     public function create()
     {
-        $this->authorizeRole(['administrador', 'vendedor', 'tecnico']);
         return view('sales.clientes.create');
     }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -62,7 +64,6 @@ class ClienteController extends Controller
 
         return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
-
     public function storeInVenta(Request $request)
     {
         // Validar los datos
@@ -95,14 +96,12 @@ class ClienteController extends Controller
 
         return redirect()->route('ventas.create')->with('success', 'Cliente creado correctamente.')->with('cliente', $cliente);;
     }
-
     // Editar un cliente existente
     public function edit($idcli)
     {
         $cliente = Cliente::findOrFail($idcli);
         return view('sales.clientes.edit', compact('cliente'));
     }
-
     public function update(Request $request, $idcli)
     {
         $request->validate([
@@ -126,7 +125,6 @@ class ClienteController extends Controller
 
         return redirect()->route('clientes')->with('success', 'Cliente actualizado con éxito.');
     }
-
     // Eliminar un cliente
     public function destroy($idcli)
     {
@@ -287,12 +285,8 @@ class ClienteController extends Controller
 
         return redirect()->back()->with('success', '¡Contraseña actualizada exitosamente!');
     }
-
     public function indexApi(Request $request)
     {
-        // Aseguramos que el usuario tenga los permisos adecuados para acceder a esta información
-        $this->authorizeRole(['administrador', 'vendedor', 'tecnico']);
-
         // Obtener todos los clientes
         $clientes = Cliente::all();
 
@@ -310,15 +304,5 @@ class ClienteController extends Controller
 
         // Retornar los datos de clientes como respuesta JSON
         return response()->json(['clientes' => $clientes]);
-    }
-
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

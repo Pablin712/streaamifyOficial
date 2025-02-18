@@ -21,7 +21,9 @@
 @endsection
 @section('tablename', 'Usuarios')
 @section('btncrear')
-    <a href="{{ route('ventas.create') }}" class="btn btn-primary">Nueva Venta</a>
+    @can('ventas.create')
+        <a href="{{ route('ventas.create') }}" class="btn btn-primary">Nueva Venta</a>
+    @endcan
 @endsection
 @section('table1')
     <table id="datatablesSimple" class="table table-striped table-bordered">
@@ -33,7 +35,9 @@
                 <th>Perfil</th>
                 <th>Vencimiento</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                @canany(['usuarios.change', 'ventas.renew', 'usuarios.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -46,7 +50,7 @@
                 <tr>
                     <td>{{ $usuario->nombre_cliente }}</td>
                     <td>{{ $usuario->idcue }}</td>
-                    <td>{{ $usuario->cuenta->usuariocue}}</td>
+                    <td>{{ $usuario->cuenta->usuariocue }}</td>
                     <td>{{ $usuario->perfil }}</td>
                     <td>{{ $usuario->fecha_vencimiento }}</td>
                     <td>
@@ -58,24 +62,32 @@
                             <span class="badge bg-success">Activo</span>
                         @endif
                     </td>
-                    <td>
-                        <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning  "><i
-                                class="fas fa-exchange-alt"></i></a>
-                        @if ($diasRestantes <= 3)
-                        <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}" 
-                               class="btn btn-success">
-                            <i class="fas fa-sync-alt"></i>
-                            </a>
-                            <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
-                                style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-circle"
-                                    onclick="return confirm('¿Eliminar este usuario?')"><i
-                                        class="fas fa-trash"></i></button>
-                            </form>
-                        @endif
-                    </td>
+                    @canany(['usuarios.change', 'ventas.renew', 'usuarios.destroy'])
+                        <td>
+                            @can('usuarios.change')
+                                <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning  "><i
+                                        class="fas fa-exchange-alt"></i></a>
+                            @endcan
+                            @if ($diasRestantes <= 3)
+                                @can('ventas.renew')
+                                    <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
+                                        class="btn btn-success">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </a>
+                                @endcan
+                                @can('usuarios.destroy')
+                                    <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
+                                        style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-circle"
+                                            onclick="return confirm('¿Eliminar este usuario?')"><i
+                                                class="fas fa-trash"></i></button>
+                                    </form>
+                                @endcan
+                            @endif
+                        </td>
+                    @endcanany
                 </tr>
             @empty
                 <tr>

@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 class RecargaController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:empleado.recargas.index')->only('index');
+        $this->middleware('can:empleado.recargas.updateEstado')->only('updateEstado');
+    }
     public function index()
     {
         // Obtener las recargas con relaciones (cliente, estado y banco)

@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:productos')->only('index');
+        $this->middleware('can:productos.store')->only('create', 'store');
+        $this->middleware('can:productos.show')->only('show');
+        $this->middleware('can:productos.update')->only('edit', 'update');
+        $this->middleware('can:productos.destroy')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */

@@ -18,14 +18,17 @@
             {{ session('success') }}
         </div>
     @endif
-    <p>Administra las categorías y los tipos de producto en esta sección. Puedes crear, editar o eliminar registros fácilmente.</p>
+    <p>Administra las categorías y los tipos de producto en esta sección. Puedes crear, editar o eliminar registros
+        fácilmente.</p>
 @endsection
 
 @section('btncrear')
-    <!-- Botón para abrir el modal de crear categoría -->
-    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#crearCategoriaModal">
-        Crear Categoría
-    </button>
+    @can('categorias.store')
+        <!-- Botón para abrir el modal de crear categoría -->
+        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#crearCategoriaModal">
+            Crear Categoría
+        </button>
+    @endcan
 @endsection
 
 @section('tablename', 'Categorías')
@@ -36,7 +39,9 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
-                <th>Acciones</th>
+                @canany(['categorias.update', 'categorias.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -45,24 +50,29 @@
                     <td>{{ $categoria->id }}</td>
                     <td>{{ $categoria->nombre }}</td>
                     <td>{{ $categoria->descripcion }}</td>
-                    <td>
-                        <!-- Botón para editar categoría -->
-                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                            data-bs-target="#editarCategoriaModal" data-id="{{ $categoria->id }}"
-                            data-nombre="{{ $categoria->nombre }}"
-                            data-descripcion="{{ $categoria->descripcion }}">
-                            Editar
-                        </button>
-                        <!-- Formulario para eliminar categoría -->
-                        <form action="{{ route('categorias.destroy', $categoria->id) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
+                    @canany(['categorias.update', 'categorias.destroy'])
+                        <td>
+                            @can('categorias.update')
+                                <!-- Botón para editar categoría -->
+                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
+                                    data-bs-target="#editarCategoriaModal" data-id="{{ $categoria->id }}"
+                                    data-nombre="{{ $categoria->nombre }}" data-descripcion="{{ $categoria->descripcion }}">
+                                    Editar
+                                </button>
+                            @endcan
+                            @can('categorias.destroy')
+                                <!-- Formulario para eliminar categoría -->
+                                <form action="{{ route('categorias.destroy', $categoria->id) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>
@@ -71,9 +81,11 @@
 <!-- Tabla de Tipos de Producto -->
 @section('table2')
     <h3>Tipos de Producto</h3>
-    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#crearTipoProductoModal">
-        Crear Tipo de Producto
-    </button>
+    @can('tipos_producto.store')
+        <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#crearTipoProductoModal">
+            Crear Tipo de Producto
+        </button>
+    @endcan
 
     <table id="datatablesSimple2" class="table table-striped table-bordered">
         <thead>
@@ -81,7 +93,9 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
-                <th>Acciones</th>
+                @canany(['tipos_producto.update', 'tipos_producto.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -90,22 +104,27 @@
                     <td>{{ $tipoProducto->id }}</td>
                     <td>{{ $tipoProducto->nombre }}</td>
                     <td>{{ $tipoProducto->descripcion }}</td>
-                    <td>
-                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                            data-bs-target="#editarTipoProductoModal" data-id="{{ $tipoProducto->id }}"
-                            data-nombre="{{ $tipoProducto->nombre }}"
-                            data-descripcion="{{ $tipoProducto->descripcion }}">
-                            Editar
-                        </button>
-
-                        <form action="{{ route('tipos_producto.destroy', $tipoProducto->id) }}" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
+                    @canany(['tipos_producto.update', 'tipos_producto.destroy'])
+                        <td>
+                            @can('tipos_producto.update')
+                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
+                                    data-bs-target="#editarTipoProductoModal" data-id="{{ $tipoProducto->id }}"
+                                    data-nombre="{{ $tipoProducto->nombre }}" data-descripcion="{{ $tipoProducto->descripcion }}">
+                                    Editar
+                                </button>
+                            @endcan
+                            @can('tipos_producto.destroy')
+                                <form action="{{ route('tipos_producto.destroy', $tipoProducto->id) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>
@@ -174,7 +193,8 @@
     </div>
 </div>
 <!-- Modal para Crear Tipo de Producto -->
-<div class="modal fade" id="crearTipoProductoModal" tabindex="-1" aria-labelledby="crearTipoProductoModalLabel" aria-hidden="true">
+<div class="modal fade" id="crearTipoProductoModal" tabindex="-1" aria-labelledby="crearTipoProductoModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <form action="{{ route('tipos_producto.store') }}" method="POST" class="modal-content">
             @csrf
@@ -201,7 +221,8 @@
 </div>
 
 <!-- Modal para Editar Tipo de Producto -->
-<div class="modal fade" id="editarTipoProductoModal" tabindex="-1" aria-labelledby="editarTipoProductoModalLabel" aria-hidden="true">
+<div class="modal fade" id="editarTipoProductoModal" tabindex="-1" aria-labelledby="editarTipoProductoModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog">
         <form id="editTipoProductoForm" method="POST" class="modal-content">
             @csrf

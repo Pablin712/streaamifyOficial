@@ -8,6 +8,12 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class CategoriaController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:gestion')->only('index');
+        $this->middleware('can:categorias.store')->only('store');
+        $this->middleware('can:categorias.update')->only('update');
+        $this->middleware('can:categorias.destroy')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */

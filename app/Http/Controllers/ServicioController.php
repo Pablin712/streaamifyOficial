@@ -8,25 +8,25 @@ use Illuminate\Support\Facades\Auth;
 
 class ServicioController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:servicios')->only('index');
+        $this->middleware('can:servicios.store')->only('create', 'store');
+        $this->middleware('can:servicios.update')->only('edit', 'update');
+        $this->middleware('can:servicios.destroy')->only('destroy');
+    }
     public function index()
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'vendedor', 'contador']);
-
         $servicios = Servicio::all();
         return view('inventory.servicios.index', compact('servicios'));
     }
 
     public function create()
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         return view('inventory.servicios.create');
     }
 
     public function store(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $request->validate([
             'idser' => 'required|string|max:10|unique:servicios,idser',
             'nombreser' => 'required|string|max:20',
@@ -56,16 +56,12 @@ class ServicioController extends Controller
 
     public function edit($idser)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $servicio = Servicio::findOrFail($idser);
         return view('inventory.servicios.edit', compact('servicio'));
     }
 
     public function update(Request $request, $idser)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $request->validate([
             'nombreser' => 'required|string|max:20',
             'completoser' => 'nullable|numeric',
@@ -95,8 +91,6 @@ class ServicioController extends Controller
 
     public function destroy($idser)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         $servicio = Servicio::findOrFail($idser);
 
         Historial::create([
@@ -109,15 +103,5 @@ class ServicioController extends Controller
         $servicio->delete();
 
         return redirect()->route('servicios')->with('success', 'Servicio eliminado con éxito.');
-    }
-
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

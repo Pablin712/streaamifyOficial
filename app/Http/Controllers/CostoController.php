@@ -11,10 +11,14 @@ use Illuminate\Support\Facades\Auth;
 
 class CostoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:costos')->only('index');
+        $this->middleware('can:costos.store')->only('store');
+        $this->middleware('can:costos.update')->only('update');
+        $this->middleware('can:costos.destroy')->only('destroy');
+    }
     public function index(Request $request)
     {
-        
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico','contador']);
         // Obtener todas las cuentas para el selector
         $cuentas = Cuenta::all();
 
@@ -93,14 +97,5 @@ class CostoController extends Controller
         $costo->delete();
 
         return redirect()->route('costos', ['idcue' => $idcue])->with('success', 'Costo eliminado correctamente.');
-    }
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

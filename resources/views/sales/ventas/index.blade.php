@@ -181,7 +181,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $pedidosPendientes }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-truck fa-2x text-gray-300"></i> 
+                            <i class="fas fa-truck fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -205,7 +205,9 @@
                 <th>Empleado</th>
                 <th>Fecha de Venta</th>
                 <th>Total</th>
-                <th>Acciones</th>
+                @canany(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -215,65 +217,78 @@
                     <td>{{ $venta->cliente->nombrecli }}</td>
                     <td>{{ $venta->empleado->nombreemp }}</td>
                     <td>{{ $venta->fechaven->format('Y/m/d') }}</td>
-                    <td>{{ $venta->totalpagoven}}</td>
-                    <td>
-                        <!-- Botón para editar venta -->
-                        <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
-                                class="fas fa-edit"></i></a>
+                    <td>{{ $venta->totalpagoven }}</td>
+                    @canany(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy'])
+                        <td>
+                            @can('ventas.edit')
+                                <!-- Botón para editar venta -->
+                                <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
+                                        class="fas fa-edit"></i></a>
+                            @endcan
+                            @can('ventas.renew')
+                                <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}"
+                                    class="btn btn-success">
+                                    {{--  --}}
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            @endcan
+                            @if (!empty($venta->cliente->email))
+                                @can('ventas.sendInvoice')
+                                    <!-- Botón para vista previa de factura -->
+                                    <button class="btn btn-info" data-bs-toggle="modal"
+                                        data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </button>
+                                @endcan
+                            @endif
 
-                        <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}"
-                            class="btn btn-success">
-                            {{--  --}}
-                            <i class="fas fa-sync-alt"></i>
-                        </a>
-                        @if (!empty($venta->cliente->email))
-                        <!-- Botón para vista previa de factura -->
-                        <button class="btn btn-info" data-bs-toggle="modal"
-                            data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
-                            <i class="fas fa-file-invoice"></i>
-                        </button>
-                        @endif
-                      
-                        <!-- Eliminar venta -->
-                        @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor')
-                            <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST"
-                                style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-circle"
-                                    onclick="return confirm('¿Estás seguro?')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
-                        @endif
-                         <!-- Modal de vista previa de factura -->
-     <div class="modal fade" id="previewInvoiceModal{{ $venta->idven }}" tabindex="-1"
-        aria-labelledby="previewInvoiceLabel{{ $venta->idven }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="previewInvoiceLabel{{ $venta->idven }}">Vista Previa de la Factura</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Aquí se incluye el contenido de la factura -->
-                    @include('mail-format.factura', ['venta' => $venta, 'cliente' => $venta->cliente])
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <form action="{{ route('ventas.sendInvoice', $venta->idven) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-primary">Enviar por Correo</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-                    </td>
+                            <!-- Eliminar venta -->
+                            @can('ventas.destroy')
+                                <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-circle"
+                                        onclick="return confirm('¿Estás seguro?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endcan
+                            <!-- Modal de vista previa de factura -->
+                            <div class="modal fade" id="previewInvoiceModal{{ $venta->idven }}" tabindex="-1"
+                                aria-labelledby="previewInvoiceLabel{{ $venta->idven }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="previewInvoiceLabel{{ $venta->idven }}">Vista Previa
+                                                de la Factura</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <!-- Aquí se incluye el contenido de la factura -->
+                                            @include('mail-format.factura', [
+                                                'venta' => $venta,
+                                                'cliente' => $venta->cliente,
+                                            ])
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cerrar</button>
+                                            <form action="{{ route('ventas.sendInvoice', $venta->idven) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary">Enviar por Correo</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>
     </table>
-    
+
 @endsection
 
 @section('scripts')

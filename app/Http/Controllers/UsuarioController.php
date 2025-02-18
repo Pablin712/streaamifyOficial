@@ -11,6 +11,12 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class UsuarioController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:usuarios')->only('index');
+        $this->middleware('can:usuarios.change')->only('change');
+        $this->middleware('can:usuarios.update')->only('update');
+        $this->middleware('can:usuarios.destroy')->only('destroy');
+    }
     public function index()
     {
         $usuarios = ViewUsuarioActivo::orderBy('fecha_vencimiento')->orderBy('nombre_cliente')->get();

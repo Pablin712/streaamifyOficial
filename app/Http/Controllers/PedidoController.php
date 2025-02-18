@@ -10,6 +10,10 @@ use App\Models\Producto;
 use App\Models\Historial;
 class PedidoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:empleado.pedidos.index')->only('index');
+        $this->middleware('can:empleado.pedidos.update')->only('update');
+    }
     public function index()
     {
         $pedidos = Pedido::with(['cliente', 'producto', 'estado'])->orderBy('fechapedido', 'desc')->get();

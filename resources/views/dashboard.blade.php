@@ -29,80 +29,81 @@
         </div>
     @endif
     <h1>{{ Auth::user()->nombreemp }}</h1>
-    <form method="POST" action="{{ route('dashboard.store') }}">
-        @csrf
-        <!-- Otras entradas del formulario -->
-        <input type="hidden" name="ventas" value="{{ $ventas }}">
-        <input type="hidden" name="ingresos_mes" value="{{ $ingresos_mes }}">
-        <input type="hidden" name="ingresos_ano" value="{{ $ingresos_ano }}">
-        <input type="hidden" name="clientes_activos" value="{{ $clientes_activos }}">
-        <input type="hidden" name="usuarios_activos" value="{{ $total_usuarios_activos }}">
-        <input type="hidden" name="cuentas_caidas" value="{{ $cuentas_caidas }}">
-        <input type="hidden" name="usuarios_acobrar" value="{{ $usuarios_acobrar }}">
-        <input type="hidden" name="num_cuentas" value="{{ $num_cuentas }}">
-        <input type="hidden" name="costos_mes" value="{{ $costos_mes }}">
-        <input type="hidden" name="gastos_mes" value="{{ $gastos_mes }}">
-        <input type="hidden" name="promedio_pagos_mes" value="{{ $promedio_pagos_mes }}">
-        <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
-        <input type="hidden" name="ventas_mes" value="{{ $ventas_mes }}">
+    @can('dashboard.store')
+        <form method="POST" action="{{ route('dashboard.store') }}">
+            @csrf
+            <!-- Otras entradas del formulario -->
+            <input type="hidden" name="ventas" value="{{ $ventas }}">
+            <input type="hidden" name="ingresos_mes" value="{{ $ingresos_mes }}">
+            <input type="hidden" name="ingresos_ano" value="{{ $ingresos_ano }}">
+            <input type="hidden" name="clientes_activos" value="{{ $clientes_activos }}">
+            <input type="hidden" name="usuarios_activos" value="{{ $total_usuarios_activos }}">
+            <input type="hidden" name="cuentas_caidas" value="{{ $cuentas_caidas }}">
+            <input type="hidden" name="usuarios_acobrar" value="{{ $usuarios_acobrar }}">
+            <input type="hidden" name="num_cuentas" value="{{ $num_cuentas }}">
+            <input type="hidden" name="costos_mes" value="{{ $costos_mes }}">
+            <input type="hidden" name="gastos_mes" value="{{ $gastos_mes }}">
+            <input type="hidden" name="promedio_pagos_mes" value="{{ $promedio_pagos_mes }}">
+            <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
+            <input type="hidden" name="ventas_mes" value="{{ $ventas_mes }}">
 
-        <!-- Variables para guardar estadísticas del día -->
-        <input type="hidden" name="activeUsers" value="{{ $activeUsers }}">
-        <input type="hidden" name="dailyRevenue" value="{{ $dailyRevenue }}">
-        <input type="hidden" name="dailyCost" value="{{ $dailyCost }}">
-        <input type="hidden" name="dailyBill" value="{{ $dailyBill }}">
-        <input type="hidden" name="dailySales" value="{{ $dailySales }}">
-        <input type="hidden" name="newCustomers" value="{{ $newCustomers }}">
+            <!-- Variables para guardar estadísticas del día -->
+            <input type="hidden" name="activeUsers" value="{{ $activeUsers }}">
+            <input type="hidden" name="dailyRevenue" value="{{ $dailyRevenue }}">
+            <input type="hidden" name="dailyCost" value="{{ $dailyCost }}">
+            <input type="hidden" name="dailyBill" value="{{ $dailyBill }}">
+            <input type="hidden" name="dailySales" value="{{ $dailySales }}">
+            <input type="hidden" name="newCustomers" value="{{ $newCustomers }}">
 
-        <!-- Variables de servicios específicos -->
-        <input type="hidden" name="cuentas_netflix" value="{{ $cuentas_netflix }}">
-        <input type="hidden" name="usuarios_netflix" value="{{ $usuarios_netflix }}">
-        <input type="hidden" name="ingresos_netflix" value="{{ $ingresos_netflix }}">
-        <input type="hidden" name="costos_netflix" value="{{ $costos_netflix }}">
+            <!-- Variables de servicios específicos -->
+            <input type="hidden" name="cuentas_netflix" value="{{ $cuentas_netflix }}">
+            <input type="hidden" name="usuarios_netflix" value="{{ $usuarios_netflix }}">
+            <input type="hidden" name="ingresos_netflix" value="{{ $ingresos_netflix }}">
+            <input type="hidden" name="costos_netflix" value="{{ $costos_netflix }}">
 
-        <input type="hidden" name="cuentas_disney" value="{{ $cuentas_disney }}">
-        <input type="hidden" name="usuarios_disney" value="{{ $usuarios_disney }}">
-        <input type="hidden" name="ingresos_disney" value="{{ $ingresos_disney }}">
-        <input type="hidden" name="costos_disney" value="{{ $costos_disney }}">
+            <input type="hidden" name="cuentas_disney" value="{{ $cuentas_disney }}">
+            <input type="hidden" name="usuarios_disney" value="{{ $usuarios_disney }}">
+            <input type="hidden" name="ingresos_disney" value="{{ $ingresos_disney }}">
+            <input type="hidden" name="costos_disney" value="{{ $costos_disney }}">
 
-        <input type="hidden" name="cuentas_prime" value="{{ $cuentas_prime }}">
-        <input type="hidden" name="usuarios_prime" value="{{ $usuarios_prime }}">
-        <input type="hidden" name="ingresos_prime" value="{{ $ingresos_prime }}">
-        <input type="hidden" name="costos_prime" value="{{ $costos_prime }}">
+            <input type="hidden" name="cuentas_prime" value="{{ $cuentas_prime }}">
+            <input type="hidden" name="usuarios_prime" value="{{ $usuarios_prime }}">
+            <input type="hidden" name="ingresos_prime" value="{{ $ingresos_prime }}">
+            <input type="hidden" name="costos_prime" value="{{ $costos_prime }}">
 
-        <input type="hidden" name="cuentas_max" value="{{ $cuentas_max }}">
-        <input type="hidden" name="usuarios_max" value="{{ $usuarios_max }}">
-        <input type="hidden" name="ingresos_max" value="{{ $ingresos_max }}">
-        <input type="hidden" name="costos_max" value="{{ $costos_max }}">
+            <input type="hidden" name="cuentas_max" value="{{ $cuentas_max }}">
+            <input type="hidden" name="usuarios_max" value="{{ $usuarios_max }}">
+            <input type="hidden" name="ingresos_max" value="{{ $ingresos_max }}">
+            <input type="hidden" name="costos_max" value="{{ $costos_max }}">
 
-        <input type="hidden" name="cuentas_magis" value="{{ $cuentas_magis }}">
-        <input type="hidden" name="usuarios_magis" value="{{ $usuarios_magis }}">
-        <input type="hidden" name="ingresos_magis" value="{{ $ingresos_magis }}">
-        <input type="hidden" name="costos_magis" value="{{ $costos_magis }}">
+            <input type="hidden" name="cuentas_magis" value="{{ $cuentas_magis }}">
+            <input type="hidden" name="usuarios_magis" value="{{ $usuarios_magis }}">
+            <input type="hidden" name="ingresos_magis" value="{{ $ingresos_magis }}">
+            <input type="hidden" name="costos_magis" value="{{ $costos_magis }}">
 
-        <input type="hidden" name="cuentas_crunchy" value="{{ $cuentas_crunchy }}">
-        <input type="hidden" name="usuarios_crunchy" value="{{ $usuarios_crunchy }}">
-        <input type="hidden" name="ingresos_crunchy" value="{{ $ingresos_crunchy }}">
-        <input type="hidden" name="costos_crunchy" value="{{ $costos_crunchy }}">
+            <input type="hidden" name="cuentas_crunchy" value="{{ $cuentas_crunchy }}">
+            <input type="hidden" name="usuarios_crunchy" value="{{ $usuarios_crunchy }}">
+            <input type="hidden" name="ingresos_crunchy" value="{{ $ingresos_crunchy }}">
+            <input type="hidden" name="costos_crunchy" value="{{ $costos_crunchy }}">
 
-        <input type="hidden" name="cuentas_paramount" value="{{ $cuentas_paramount }}">
-        <input type="hidden" name="usuarios_paramount" value="{{ $usuarios_paramount }}">
-        <input type="hidden" name="ingresos_paramount" value="{{ $ingresos_paramount }}">
-        <input type="hidden" name="costos_paramount" value="{{ $costos_paramount }}">
+            <input type="hidden" name="cuentas_paramount" value="{{ $cuentas_paramount }}">
+            <input type="hidden" name="usuarios_paramount" value="{{ $usuarios_paramount }}">
+            <input type="hidden" name="ingresos_paramount" value="{{ $ingresos_paramount }}">
+            <input type="hidden" name="costos_paramount" value="{{ $costos_paramount }}">
 
-        <input type="hidden" name="cuentas_spotify" value="{{ $cuentas_spotify }}">
-        <input type="hidden" name="usuarios_spotify" value="{{ $usuarios_spotify }}">
-        <input type="hidden" name="ingresos_spotify" value="{{ $ingresos_spotify }}">
-        <input type="hidden" name="costos_spotify" value="{{ $costos_spotify }}">
+            <input type="hidden" name="cuentas_spotify" value="{{ $cuentas_spotify }}">
+            <input type="hidden" name="usuarios_spotify" value="{{ $usuarios_spotify }}">
+            <input type="hidden" name="ingresos_spotify" value="{{ $ingresos_spotify }}">
+            <input type="hidden" name="costos_spotify" value="{{ $costos_spotify }}">
 
-        <input type="hidden" name="cuentas_otros" value="{{ $cuentas_otros }}">
-        <input type="hidden" name="usuarios_otros" value="{{ $usuarios_otros }}">
-        <input type="hidden" name="ingresos_otros" value="{{ $ingresos_otros }}">
-        <input type="hidden" name="costos_otros" value="{{ $costos_otros }}">
-        <!-- Agrega los demás campos como ocultos si es necesario -->
-        <button type="submit" class="btn btn-primary mb-3">Guardar reporte de mes</button>
-    </form>
-
+            <input type="hidden" name="cuentas_otros" value="{{ $cuentas_otros }}">
+            <input type="hidden" name="usuarios_otros" value="{{ $usuarios_otros }}">
+            <input type="hidden" name="ingresos_otros" value="{{ $ingresos_otros }}">
+            <input type="hidden" name="costos_otros" value="{{ $costos_otros }}">
+            <!-- Agrega los demás campos como ocultos si es necesario -->
+            <button type="submit" class="btn btn-primary mb-3">Guardar reporte de mes</button>
+        </form>
+    @endcan
 @endsection
 @section('content')
     <!-- Content Wrapper -->
@@ -856,12 +857,12 @@
         </div>
         <div class="col-lg-6"> {{-- class="card mb-4" --}}
             <div class="card mb-4">
-            <div class="card-header">
-                <i class="fas fa-chart-area me-1"></i>
-                Progreso en los últimos 6 meses
-            </div>
-            <div class="card-body"><canvas id="myAreaChart" width="100%" height="50"></canvas></div>
-            <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+                <div class="card-header">
+                    <i class="fas fa-chart-area me-1"></i>
+                    Progreso en los últimos 6 meses
+                </div>
+                <div class="card-body"><canvas id="myAreaChart" width="100%" height="50"></canvas></div>
+                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
             </div>
         </div>
     </div>

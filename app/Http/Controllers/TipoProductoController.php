@@ -9,6 +9,11 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class TipoProductoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:tipos_producto.store')->only('store');
+        $this->middleware('can:tipos_producto.update')->only('update');
+        $this->middleware('can:tipos_producto.destroy')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */

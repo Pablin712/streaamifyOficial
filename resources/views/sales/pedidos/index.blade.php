@@ -30,7 +30,9 @@
                 <th>Fecha del Pedido</th>
                 <th>Estado</th>
                 <th>Respuesta</th>
-                <th>Acciones</th>
+                @can('empleado.pedidos.update')
+                    <th>Acciones</th>
+                @endcan
             </tr>
         </thead>
         <tbody>
@@ -39,10 +41,11 @@
                     <td>{{ $pedido->id }}</td>
                     <td>{{ $pedido->cliente->nombrecli }}</td>
                     <td>{{ $pedido->producto->nombrepro }}</td>
-                    <td>{{ $pedido->producto->descripcionpro}}</td>
+                    <td>{{ $pedido->producto->descripcionpro }}</td>
                     <td>{{ $pedido->fechapedido->format('d/m/Y H:i') }}</td>
                     <td>
-                        <span class="badge 
+                        <span
+                            class="badge 
                             @if ($pedido->estado->nombre === 'Pendiente') bg-warning 
                             @elseif ($pedido->estado->nombre === 'Rechazado') bg-danger 
                             @elseif ($pedido->estado->nombre === 'Aprobado') bg-success @endif">
@@ -50,16 +53,18 @@
                         </span>
                     </td>
                     <td>{{ $pedido->respuesta ?? 'Sin respuesta' }}</td>
-                    <td>
-                        @if ($pedido->estado->nombre === 'Pendiente')
-                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modalActualizarPedido-{{ $pedido->id }}">
-                                Responder
-                            </button>
-                        @else
-                            <span class="text-muted">Sin acciones</span>
-                        @endif
-                    </td>
+                    @can('empleado.pedidos.update')
+                        <td>
+                            @if ($pedido->estado->nombre === 'Pendiente')
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalActualizarPedido-{{ $pedido->id }}">
+                                    Responder
+                                </button>
+                            @else
+                                <span class="text-muted">Sin acciones</span>
+                            @endif
+                        </td>
+                    @endcan
                 </tr>
 
                 <!-- Modal para actualizar el pedido -->
@@ -71,7 +76,8 @@
                                 <h5 class="modal-title" id="modalActualizarPedidoLabel-{{ $pedido->id }}">
                                     Actualizar Pedido #{{ $pedido->id }}
                                 </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
                             </div>
                             <form action="{{ route('empleado.pedidos.update', $pedido->id) }}" method="POST">
                                 @csrf
@@ -82,7 +88,7 @@
                                     <label for="idestado" class="form-label mt-3">Estado:</label>
                                     <select name="idestado" class="form-select" required>
                                         @foreach ($estados as $estado)
-                                            <option value="{{ $estado->idestado }}" 
+                                            <option value="{{ $estado->idestado }}"
                                                 {{ $pedido->idestado == $estado->idestado ? 'selected' : '' }}>
                                                 {{ ucfirst($estado->nombre) }}
                                             </option>
@@ -91,7 +97,8 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancelar</button>
                                 </div>
                             </form>
                         </div>

@@ -31,17 +31,16 @@
                     @foreach ($roles as $rol)
                         <div class="col-md-4">
                             <div class="form-check">
-                                <input type="checkbox" name="roles[]" value="{{ $rol->name }}" 
-                                    id="role_{{ $rol->id }}" 
-                                    class="form-check-input"
+                                <input type="checkbox" name="roles[]" value="{{ $rol->name }}"
+                                    id="role_{{ $rol->id }}" class="form-check-input"
                                     {{ $empleado->hasRole($rol->name) ? 'checked' : '' }}>
-                                <label for="role_{{ $rol->id }}" class="form-check-label">{{ ucfirst($rol->name) }}</label>
+                                <label for="role_{{ $rol->id }}"
+                                    class="form-check-label">{{ ucfirst($rol->name) }}</label>
                             </div>
                         </div>
                     @endforeach
                 </div>
             </div>
-
             <button type="submit" class="btn btn-primary">Actualizar Roles</button>
         </form>
     </div>

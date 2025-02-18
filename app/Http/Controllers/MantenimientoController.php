@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Auth;
 
 class MantenimientoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:mantenimientos')->only('index');
+        $this->middleware('can:mantenimientos.store')->only('create', 'store');
+        $this->middleware('can:mantenimientos.update')->only('edit', 'update');
+        $this->middleware('can:mantenimientos.destroy')->only('destroy');
+    }
     public function index()
     {
         // Obtener todos los mantenimientos

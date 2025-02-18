@@ -10,10 +10,11 @@ use App\Models\Historial;
 
 class PerfilController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:perfil.update')->only('update');
+    }
     public function index(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
-
         $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
         $perfiles = collect();
         $idcueSeleccionado = $request->idcue;
@@ -38,14 +39,10 @@ class PerfilController extends Controller
 
     public function create()
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-        // Lógica para crear un perfil si aplica
     }
 
     public function store(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         // Validar y guardar el perfil
         $request->validate([
             'idcue' => 'required|exists:cuentas,idcue',
@@ -68,16 +65,12 @@ class PerfilController extends Controller
 
     public function edit(string $id)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
-
         $perfil = Perfil::findOrFail($id);
         return view('inventory.cuentas.index', compact('perfil'));
     }
 
     public function update(Request $request, string $id)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico']);
-
         $perfil = Perfil::findOrFail($id);
         $request->validate([
             'pinper' => 'required|string|max:6',
@@ -99,8 +92,6 @@ class PerfilController extends Controller
 
     public function destroy(string $id)
     {
-        $this->authorizeRole(['administrador', 'bodeguero']);
-
         if (Auth::user()->idrol === 'tecnico') {
             abort(403, 'Acción no autorizada para técnicos.');
         }
@@ -117,14 +108,5 @@ class PerfilController extends Controller
         $perfil->delete();
 
         return redirect()->route('cuentas')->with('success', 'Perfil eliminado con éxito.');
-    }
-
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            abort(403, 'Acción no autorizada.');
-        }
     }
 }

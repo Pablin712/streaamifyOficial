@@ -21,14 +21,21 @@ use Illuminate\Support\Facades\Auth;
 
 class VentaController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:ventas')->only('index');
+        $this->middleware('can:ventas.store')->only('create', 'store');
+        $this->middleware('can:ventas.storeRenew')->only('storeRenew');
+        $this->middleware('can:ventas.storeCliente')->only('storeCliente');
+        $this->middleware('can:ventas.status')->only('status');
+        $this->middleware('can:ventas.sendInvoice')->only('sendInvoice');
+        $this->middleware('can:ventas.update')->only('edit', 'update');
+        $this->middleware('can:ventas.destroy')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-
-        $this->authorizeRole(['administrador', 'vendedor']);
-
         $ventas = Venta::with(['detalles_venta'])->orderBy('created_at', 'desc')->get();
 
         $hoy = Carbon::today(); // Fecha del inicio del día
@@ -52,8 +59,6 @@ class VentaController extends Controller
      */
     public function create()
     {
-
-        $this->authorizeRole(['administrador', 'vendedor']);
         $clientes = Cliente::all(); // Obtener lista de clientes
         $empleados = Empleado::all(); //Obtener lista de empleados
         // Obtener las cuentas con sus perfiles
@@ -265,8 +270,6 @@ class VentaController extends Controller
      */
     public function edit($idven)
     {
-
-        $this->authorizeRole(['administrador', 'vendedor']);
         $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
         $empleados = Empleado::all();
 
@@ -341,12 +344,10 @@ class VentaController extends Controller
 
         // Obtener la venta existente
         $venta = Venta::findOrFail($idven);
-
         // Comprobamos que el cliente no cambie, ya que no es editable
         if ($venta->idcli != $request->idcli) {
             return redirect()->route('ventas.edit', $idven)->with('error', 'El cliente no puede modificarse.');
         }
-
         // Actualizamos la venta (sin modificar el cliente)
         //$venta->idemp = $request->idemp;
         //$venta->fechaven = Carbon::now();  // Actualizamos la fecha si es necesario
@@ -465,15 +466,5 @@ class VentaController extends Controller
             'ingresos_dia' => $ingresos_dia,
             'ventas_dia' => $ventas_dia,
         ]);
-    }
-
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

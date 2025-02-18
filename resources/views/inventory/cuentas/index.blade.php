@@ -65,8 +65,12 @@
 @endsection
 
 @section('btncrear')
-    <a href="{{ route('cuentas.create') }}" class="btn btn-primary mb-3">Crear Cuenta</a>
-    <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
+    @can('cuentas.create')
+        <a href="{{ route('cuentas.create') }}" class="btn btn-primary mb-3">Crear Cuenta</a>
+    @endcan
+    @can('valores.create')
+        <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
+    @endcan
 @endsection
 
 @section('tablename', 'Cuentas')
@@ -82,7 +86,9 @@
                 <th>Vence</th>
                 <th>Clientes</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                @canany(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -92,24 +98,6 @@
                     $fechaVencimiento = \Carbon\Carbon::parse($cuenta->fechavencue);
                     $hoy = \Carbon\Carbon::today();
                     $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
-
-                    // Determinar la clase CSS para la fila
-                    /*
-                    if ($cuenta->caidacue) {
-                        // Cuenta dañada (morado)
-                        $estadoClase = 'table-dark'; // Clase personalizada para morado
-                    } elseif ($diasRestantes < 0) {
-                        // Cuenta vencida (rojo)
-                        $estadoClase = 'table-danger';
-                    } elseif ($diasRestantes <= 5) {
-                        // Cuenta por vencer (amarillo)
-                        $estadoClase = 'table-warning';
-                    } else {
-                        // Cuenta activa (verde)
-                        $estadoClase = 'table-success';
-                    }
-                    */
-
                 @endphp
                 <tr> {{-- class="{{ $estadoClase }}" --}}
                     <td>{{ $cuenta->idcue }}</td>
@@ -129,14 +117,6 @@
                             <span class="badge bg-success">{{ $users }}</span>
                         @endif
                     </td>
-                    {{-- <td>
-                        @php
-                            $pantmaxval = $cuenta->valor->pantmaxval;
-                            $usuarios_activos = $cuenta->usuarios_activos;
-                            $resta = $pantmaxval - $usuarios_activos;
-                        @endphp
-                        {{ $resta }}
-                    </td> --}}
                     <td>
                         @if ($cuenta->caidacue)
                             <span class="badge bg-dark">Dañada</span>
@@ -147,39 +127,49 @@
                         @else
                             <span class="badge bg-success">Activa</span>
                         @endif
-                        <!-- Botón para cambiar estado -->
-                        <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
-                            style="display:inline;">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="btn btn-dark btn-sm">
-                                @if ($cuenta->caidacue)
-                                    <i class="fas fa-toggle-on fa-xs"></i>
-                                @else
-                                    <i class="fas fa-toggle-off fa-xs"></i>
-                                @endif
-                            </button>
-                        </form>
+                        @can('cuentas.status')
+                            <!-- Botón para cambiar estado -->
+                            <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
+                                style="display:inline;">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn btn-dark btn-sm">
+                                    @if ($cuenta->caidacue)
+                                        <i class="fas fa-toggle-on fa-xs"></i>
+                                    @else
+                                        <i class="fas fa-toggle-off fa-xs"></i>
+                                    @endif
+                                </button>
+                            </form>
+                        @endcan
                     </td>
-                    <td>
-                        <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs"><i
-                                class="fas fa-edit"></i></a>
-                        <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
-                        @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                            <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success btn-xs">
-                                {{--  --}}
-                                <i class="fas fa-sync-alt"></i>
-                            </a>
-                        @endif
-                        <form action="{{ route('cuentas.destroy', $cuenta->idcue) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-xs"
-                                onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
+                    @canany(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy'])
+                        <td>
+                            @can('cuentas.edit')
+                                <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs"><i
+                                        class="fas fa-edit"></i></a>
+                            @endcan
+                            <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
+                            @if ($diasRestantes <= 5 || $diasRestantes < 0)
+                                @can('cuentas.renew')
+                                    <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success btn-xs">
+                                        {{--  --}}
+                                        <i class="fas fa-sync-alt"></i>
+                                    </a>
+                                @endcan
+                            @endif
+                            @can('cuentas.destroy')
+                                <form action="{{ route('cuentas.destroy', $cuenta->idcue) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-xs"
+                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>
@@ -223,7 +213,9 @@
                         <th>Número de Perfil</th>
                         <th>PIN del Perfil</th>
                         <th>Usuarios Activos</th>
-                        <th>Acciones</th>
+                        @canany(['cuentas.mensaje', 'perfil.update'])
+                            <th>Acciones</th>
+                        @endcanany
                     </tr>
                 </thead>
                 <tbody id="Perfil">
@@ -242,18 +234,24 @@
                                     {{ $perfil->usuarios_activos }}
                                 </span>
                             </td>
-                            <td>
-                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#editProfileModal" data-id="{{ $perfil->idper }}"
-                                    data-pin="{{ $perfil->pinper }}">
-                                    <i class="fas fa-edit">Editar</i>
-                                </button>
-                                <!-- Botón para obtener o copiar el mensaje del perfil -->
-                                <button class="btn btn-success btn-sm"
-                                    onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </td>
+                            @canany(['cuentas.mensaje', 'perfil.update'])
+                                <td>
+                                    @can('perfil.update')
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#editProfileModal" data-id="{{ $perfil->idper }}"
+                                            data-pin="{{ $perfil->pinper }}">
+                                            <i class="fas fa-edit">Editar</i>
+                                        </button>
+                                    @endcan
+                                    @can('cuentas.mensaje')
+                                        <!-- Botón para obtener o copiar el mensaje del perfil -->
+                                        <button class="btn btn-success btn-sm"
+                                            onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    @endcan
+                                </td>
+                            @endcanany
                         </tr>
                     @endforeach
                 </tbody>
@@ -317,10 +315,11 @@
 
                 // Actualizar la URL del formulario para apuntar al perfil correcto
                 var formAction = "{{ url('admin/perfil') }}/" + perfilId;
-                modal.find('#editProfileForm').attr('action', formAction); // Asignar la URL correcta al formulario
+                modal.find('#editProfileForm').attr('action',
+                    formAction); // Asignar la URL correcta al formulario
             });
         });
-</script>
+    </script>
 
     {{-- script para sumar los usuarios activos de la tabla perfiles --}}
     <script>

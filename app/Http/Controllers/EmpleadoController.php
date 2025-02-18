@@ -12,13 +12,17 @@ use App\Models\Rol;
 
 class EmpleadoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:empleados')->only('index');
+        $this->middleware('can:empleados.store')->only('create', 'store');
+        $this->middleware('can:empleados.update')->only('edit', 'update');
+        $this->middleware('can:empleados.destroy')->only('destroy');
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-
-        $this->authorizeRole(['administrador']);
         //$empleados = Empleado::all(); // Recuperar todos los empleados
         $empleados = Empleado::with(['ventas' => function ($query) {
             $query->select('idemp'); // Solo seleccionamos idemp para optimizar
@@ -40,7 +44,6 @@ class EmpleadoController extends Controller
      */
     public function create()
     {
-        $this->authorizeRole(['administrador']);
         return view('employee.create');
     }
 
@@ -231,14 +234,5 @@ class EmpleadoController extends Controller
         $empleado->delete();
 
         return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente.');
-    }
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Auth;
 
 class ContabilidadController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:dashboard')->only('index');
+        $this->middleware('can:dashboard.store')->only('store');
+    }
     public function index(Request $request)
     {
         Historial::create([
@@ -29,8 +33,6 @@ class ContabilidadController extends Controller
             'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
-
-        $this->authorizeRole(['administrador', 'contador']);
         // Obtener todas las ventas con los detalles de cada una
         $ventas = Venta::with(['detalles_venta'])->orderBy('fechaven')->get();
         $month = Carbon::now()->month;
@@ -430,15 +432,6 @@ class ContabilidadController extends Controller
         );
 
         return redirect()->route('dashboard')->with('success', 'Reporte guardado con éxito.');
-    }
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
     /*
     public function calcular_ingresos_mes($ventas){ //para evitar varias consultas y reducir costos

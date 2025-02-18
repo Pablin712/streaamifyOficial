@@ -95,16 +95,13 @@ Route::get('/admin/recover', function () {
     return view('auth.recover');
 })->name('recover');
 
-
 Route::post('/cliente/recover', [EmailController::class, 'sendRecoverClienteEmail'])->name('recoverCliente.email');
 Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->name('recover.email');
 
-
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
-
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
-    Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
+    Route::get('/historial', [HistorialController::class, 'show'])->middleware('can:historial')->name('historial');
 
     Route::resource('tareas', TareaController::class);
     Route::patch('/tareas/{id}/completar', [TareaController::class, 'completar'])->name('tareas.completar');
@@ -135,7 +132,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('/tipos/{id}', 'destroy')->name('tipos.destroy');
     });
     // });
-
 
     //Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
     Route::controller(ServicioController::class)->group(function () {
@@ -176,8 +172,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::put('/clientes/{id}', 'update')->name('clientes.update');
         Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');
     });
-
-
 
     Route::controller(CuentaController::class)->group(function () {
         Route::get('/cuentas', 'index')->name('cuentas');

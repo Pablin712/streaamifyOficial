@@ -5,7 +5,8 @@
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla */
         .table-dark {
-            background-color: #4CAF50 !important; /* Verde personalizado */
+            background-color: #4CAF50 !important;
+            /* Verde personalizado */
             color: white !important;
         }
 
@@ -35,7 +36,9 @@
 @endsection
 
 @section('btncrear')
-    <a href="{{ route('productos.create') }}" class="btn btn-primary mb-3">Crear Producto</a>
+    @can('productos.create')
+        <a href="{{ route('productos.create') }}" class="btn btn-primary mb-3">Crear Producto</a>
+    @endcan
 @endsection
 
 @section('tablename', 'Productos')
@@ -51,7 +54,9 @@
                 <th>Categoría</th>
                 <th>Tipo</th>
                 <th>Activo</th>
-                <th>Acciones</th>
+                @canany(['productos.edit', 'productos.show', 'productos.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -70,25 +75,32 @@
                             <span class="badge bg-danger">Inactivo</span>
                         @endif
                     </td>
-                    <td>
-                        <!-- Botón para ver detalles del producto -->
-                        <a href="{{ route('productos.show', $producto->id) }}" class="btn btn-info">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <!-- Botón para editar producto -->
-                        <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <!-- Eliminar producto -->
-                        <form action="{{ route('productos.destroy', $producto->id) }}" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger"
-                                onclick="return confirm('¿Estás seguro de eliminar este producto?')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
-                    </td>
+                    @canany(['productos.edit', 'productos.show', 'productos.destroy'])
+                        <td>
+                            @can('productos.show')
+                                <a href="{{ route('productos.show', $producto->id) }}" class="btn btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            @endcan
+                            @can('productos.edit')
+                                <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endcan
+                            @can('productos.destroy')
+                                <!-- Eliminar producto -->
+                                <form action="{{ route('productos.destroy', $producto->id) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('¿Estás seguro de eliminar este producto?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>

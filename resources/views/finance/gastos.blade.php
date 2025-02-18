@@ -20,9 +20,11 @@
 
 @section('btncrear')
     <!-- Botón para abrir el modal de creación de gasto -->
-    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#seleccionarTipoGastoModal">
-        Crear Gasto
-    </button>
+    @can('gastos.store')
+        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#seleccionarTipoGastoModal">
+            Crear Gasto
+        </button>
+    @endcan
 @endsection
 @section('tablename', 'Gastos')
 @section('table1')
@@ -34,7 +36,9 @@
                 <th>Fecha</th>
                 <th>Descripción</th>
                 <th>Monto</th>
-                <th>Acciones</th>
+                @canany(['gastos.update', 'gastos.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -45,24 +49,30 @@
                     <td>{{ $gasto->fechagas }}</td>
                     <td>{{ $gasto->descripciongas }}</td>
                     <td>${{ number_format($gasto->montogas, 2) }}</td>
-                    <td>
-                        <!-- Editar gasto (abre el modal con los datos del gasto) -->
-                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                            data-bs-target="#editarGastoModal" data-id="{{ $gasto->idgas }}"
-                            data-idtip="{{ $gasto->idtip }}" data-descripciongas="{{ $gasto->descripciongas }}"
-                            data-montogas="{{ $gasto->montogas }}" data-fechagas="{{ $gasto->fechagas }}">
+                    @canany(['gastos.update', 'gastos.destroy'])
+                        <td>
+                            @can('gastos.update')
+                                <!-- Editar gasto (abre el modal con los datos del gasto) -->
+                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
+                                    data-bs-target="#editarGastoModal" data-id="{{ $gasto->idgas }}"
+                                    data-idtip="{{ $gasto->idtip }}" data-descripciongas="{{ $gasto->descripciongas }}"
+                                    data-montogas="{{ $gasto->montogas }}" data-fechagas="{{ $gasto->fechagas }}">
 
-                            Editar
-                        </button>
-                        <!-- Eliminar gasto -->
-                        <form action="{{ route('gastos.destroy', $gasto->idgas) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')"><i
-                                    class="fas fa-trash"></i></button>
-                        </form>
-                    </td>
+                                    Editar
+                                </button>
+                            @endcan
+                            <!-- Eliminar gasto -->
+                            @can('gastos.destroy')
+                                <form action="{{ route('gastos.destroy', $gasto->idgas) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')"><i
+                                            class="fas fa-trash"></i></button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>
@@ -74,11 +84,14 @@
             <h3>Gestión de Tipos de Gastos</h3>
             <h4>Realizado por Pablo Jiménez</h4>
             <p>Aquí puedes ver todos los tipos de gastos, describe el tipo de gasto en el modal.</p>
-            <div class="form-group mb-3">
-                <!-- Botón para abrir el modal -->
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#crearTipoGastoModal">Crear Tipo de
-                    Gasto</button>
-            </div>
+            @can('tipos.store')
+                <div class="form-group mb-3">
+                    <!-- Botón para abrir el modal -->
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#crearTipoGastoModal">
+                        Crear Tipo de Gasto
+                    </button>
+                </div>
+            @endcan
         </div>
     </div>
     <div id="tabla-tipogasto" class="card mb-4">
@@ -95,7 +108,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Detalle</th>
-                        <th>Acciones</th>
+                        @canany(['tipos.update', 'tipos.destroy'])
+                            <th>Acciones</th>
+                        @endcanany
                     </tr>
                 </thead>
                 <tbody>
@@ -103,25 +118,30 @@
                         <tr>
                             <td>{{ $tipoGasto->idtip }}</td>
                             <td>{{ $tipoGasto->detalletip }}</td>
-                            <td>
-                                <!-- Editar Tipo de Gasto -->
-                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                                    data-bs-target="#editarTipoGastoModal" data-idtip="{{ $tipoGasto->idtip }}"
-                                    data-detalletip="{{ $tipoGasto->detalletip }}">
-                                    Editar
-                                </button>
-
-                                <!-- Eliminar Tipo de Gasto -->
-                                <form action="{{ route('tipos.destroy', $tipoGasto->idtip) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger"
-                                        onclick="return confirm('¿Estás seguro?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
+                            @canany(['tipos.update', 'tipos.destroy'])
+                                <td>
+                                    @can('tipos.update')
+                                        <!-- Editar Tipo de Gasto -->
+                                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
+                                            data-bs-target="#editarTipoGastoModal" data-idtip="{{ $tipoGasto->idtip }}"
+                                            data-detalletip="{{ $tipoGasto->detalletip }}">
+                                            Editar
+                                        </button>
+                                    @endcan
+                                    @can('tipos.destroy')
+                                        <!-- Eliminar Tipo de Gasto -->
+                                        <form action="{{ route('tipos.destroy', $tipoGasto->idtip) }}" method="POST"
+                                            style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger"
+                                                onclick="return confirm('¿Estás seguro?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endcan
+                                </td>
+                            @endcanany
                         </tr>
                     @endforeach
                 </tbody>

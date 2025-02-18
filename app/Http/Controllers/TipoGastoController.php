@@ -8,43 +8,38 @@ use Illuminate\Support\Facades\Auth;
 
 class TipoGastoController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:tipos')->only('index');
+        $this->middleware('can:tipos.store')->only('store');
+        $this->middleware('can:tipos.update')->only('update', 'edit');
+        $this->middleware('can:tipos.destroy')->only('destroy');
+    }
     public function index()
     {
-        $this->authorizeRole(['administrador', 'contador']);
-
         $tipoGastos = TipoGasto::all();
-
         return view('finance.gastos', compact('tipoGastos'));
     }
 
     public function store(Request $request)
     {
-        $this->authorizeRole(['administrador', 'contador']);
-
         $request->validate([
             'detalletip' => 'required|string|max:50',
         ]);
-
         $tipogasto = TipoGasto::create([
             'detalletip' => $request->detalletip,
         ]);
-
         Historial::create([
             'accion' => 'Creación de Tipo de gasto',
             'descripcion' => 'Datos del tipo de gasto: '.json_encode($tipogasto), // Campo opcional
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
-
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto creado con éxito');
     }
 
     public function edit($id)
     {
-        $this->authorizeRole(['administrador', 'contador']);
-
         $tipoGasto = TipoGasto::findOrFail($id);
-
         return response()->json([
             'tipoGastos' => $tipoGasto
         ]);
@@ -52,7 +47,6 @@ class TipoGastoController extends Controller
 
     public function update(Request $request, $idtip)
     {
-        $this->authorizeRole(['administrador', 'contador']);
 
         $request->validate([
             'detalletip' => 'required|string|max:50',
@@ -76,7 +70,6 @@ class TipoGastoController extends Controller
 
     public function destroy($id)
     {
-        $this->authorizeRole(['administrador', 'contador']);
 
         $tipoGasto = TipoGasto::findOrFail($id);
 
@@ -90,15 +83,5 @@ class TipoGastoController extends Controller
         $tipoGasto->delete();
 
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto eliminado con éxito');
-    }
-
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
 }

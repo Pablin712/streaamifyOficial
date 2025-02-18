@@ -8,16 +8,11 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class TareaController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:tareas.destroy')->only('destroy');
+    }
     public function index()
     {
-        //Mysql
-        /*
-        $tareas = Tarea::orderByRaw("FIELD(prioridad, 'alta', 'media', 'baja')")
-            ->orderBy('completada')
-            ->orderBy('created_at', 'desc')
-            ->get();
-        */
-        //postgrsql
         $tareas = Tarea::orderByRaw("
                 CASE 
                     WHEN prioridad = 'alta' THEN 1

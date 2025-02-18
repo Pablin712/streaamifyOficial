@@ -35,7 +35,9 @@
                 <th>Fecha</th>
                 <th>Descripción</th>
                 <th>Monto</th>
-                <th>Acciones</th>
+                @canany(['costos.update', 'costos.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -46,23 +48,29 @@
                     <td>{{ $costo->fechacos }}</td>
                     <td>{{ $costo->descripcioncos }}</td>
                     <td>${{ number_format($costo->montocos, 2) }}</td>
-                    <td>
-                        <!-- Editar costo (abre el modal con los datos del costo) -->
-                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                            data-bs-target="#editarCostoModal" data-id="{{ $costo->idcos }}"
-                            data-idcue="{{ $costo->idcue }}" data-descripcioncos="{{ $costo->descripcioncos }}"
-                            data-montocos="{{ $costo->montocos }}" data-fechacos="{{ $costo->fechacos }}">
-                            Editar
-                        </button>
-                        <!-- Eliminar costo -->
-                        <form action="{{ route('costos.destroy', $costo->idcos) }}" method="POST"
-                            style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger " onclick="return confirm('¿Estás seguro?')"><i
-                                    class="fas fa-trash"></i></button>
-                        </form>
-                    </td>
+                    @canany(['costos.update', 'costos.destroy'])
+                        <td>
+                            @can('costos.update')
+                                <!-- Editar costo (abre el modal con los datos del costo) -->
+                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
+                                    data-bs-target="#editarCostoModal" data-id="{{ $costo->idcos }}"
+                                    data-idcue="{{ $costo->idcue }}" data-descripcioncos="{{ $costo->descripcioncos }}"
+                                    data-montocos="{{ $costo->montocos }}" data-fechacos="{{ $costo->fechacos }}">
+                                    Editar
+                                </button>
+                            @endcan
+                            @can('costos.destroy')
+                                <!-- Eliminar costo -->
+                                <form action="{{ route('costos.destroy', $costo->idcos) }}" method="POST"
+                                    style="display: inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger " onclick="return confirm('¿Estás seguro?')"><i
+                                            class="fas fa-trash"></i></button>
+                                </form>
+                            @endcan
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>

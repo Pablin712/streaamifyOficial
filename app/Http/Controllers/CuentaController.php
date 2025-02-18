@@ -16,15 +16,21 @@ use App\Models\Historial;
 
 class CuentaController extends Controller
 {
+    public function __construct() {
+        $this->middleware('can:cuentas')->only('index');
+        $this->middleware('can:cuentas.store')->only('create', 'store');
+        $this->middleware('can:cuentas.update')->only('edit', 'update');
+        $this->middleware('can:cuentas.status')->only('status');
+        $this->middleware('can:cuentas.renew')->only('renew');
+        $this->middleware('can:cuentas.mensaje')->only('mensaje');
+        $this->middleware('can:cuentas.destroy')->only('destroy');
+    }
     public function index(Request $request)
     {
-        $this->authorizeRole(['administrador', 'bodeguero', 'tecnico', 'vendedor', 'contador']);
         $cuentas = Cuenta::with(['valor'])->where('activocue', true)->orderBy('fechavencue')->get(); // Cargar valor asociado
         // Inicializar una colección vacía para los perfiles
         $perfiles = collect();
-
         $idcueSeleccionado = $request->idcue;
-
         //$usuariosActivos = ViewUsuarioActivo::where('IDCUE', $idcueSeleccionado)->get(); //por si acaso
 
         if ($idcueSeleccionado) {
@@ -51,7 +57,6 @@ class CuentaController extends Controller
     // Mostrar formulario para crear una nueva cuenta contratada
     public function create()
     {
-
         $valores = Valor::all(); // Obtener lista de valores
         return view('inventory.cuentas.create', compact('valores'));
     }
@@ -269,15 +274,6 @@ class CuentaController extends Controller
         // Actualizar estado de productos relacionados con el servicio de la cuenta creada
         $this->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
-    }
-    private function authorizeRole(array $roles)
-    {
-        $userRole = Auth::user()->idrol;
-
-        if (!in_array($userRole, $roles)) {
-            // Redirigir a la vista anterior con una alerta
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
     }
     private function actualizarEstadoProductos($idser)
     {

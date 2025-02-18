@@ -25,7 +25,7 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $autenticados }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-id-card fa-2x text-gray-300"></i> 
+                            <i class="fas fa-id-card fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -36,7 +36,9 @@
 @section('tablename', 'Clientes')
 @section('table1')
     <h1>Clientes</h1>
-    <a href="{{ route('clientes.create') }}" class="btn btn-primary mb-3">Crear Cliente</a>
+    @can('clientes.create')
+        <a href="{{ route('clientes.create') }}" class="btn btn-primary mb-3">Crear Cliente</a>
+    @endcan
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>
             <tr>
@@ -48,7 +50,9 @@
                 <th>Facturado este mes</th>
                 <th>Saldo</th>
                 <th>Autenticado</th>
-                <th>Acciones</th>
+                @canany(['clientes.edit', 'clientes.destroy'])
+                    <th>Acciones</th>
+                @endcanany
             </tr>
         </thead>
         <tbody>
@@ -60,28 +64,33 @@
                     <td>{{ $cliente->email ?? 'Ninguno' }}</td>
                     <td>{{ $cliente->viewClienteUsuario->usuarios ?? 0 }}</td>
                     <td>${{ $cliente->viewClienteUsuario->facturado ?? 0 }}</td>
-                    <td>${{ $cliente->saldo}}</td>
+                    <td>${{ $cliente->saldo }}</td>
                     <td>
-                        @if($cliente->email && $cliente->password)
+                        @if ($cliente->email && $cliente->password)
                             <span class="badge bg-success">Sí</span>
                         @else
                             <span class="badge bg-danger">No</span>
                         @endif
-                    </td>                    
-                    <td>
-                        <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning  "><i
-                                class="fas fa-edit"></i></a>
-                        @if ($cliente->usuarios == 0)
-                            <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
-                                style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-circle"
-                                    onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
-                            </form>
-                        @endif
-
                     </td>
+                    @canany(['clientes.edit', 'clientes.destroy'])
+                        <td>
+                            @can('clientes.edit')
+                                <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning  "><i
+                                        class="fas fa-edit"></i></a>
+                            @endcan
+                            @if ($cliente->usuarios == 0)
+                                @can('clientes.destroy')
+                                    <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
+                                        style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-circle"
+                                            onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                @endcan
+                            @endif
+                        </td>
+                    @endcanany
                 </tr>
             @endforeach
         </tbody>

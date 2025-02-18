@@ -21,7 +21,7 @@
 <body class="sb-nav-fixed">
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
         <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" href="{{ route('inicio')}}">Streamify HQ</a>
+        <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>
         <!-- Sidebar Toggle-->
         <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i
                 class="fas fa-bars"></i></button>
@@ -36,15 +36,18 @@
         </form> -->
         <!-- Navbar-->
         <ul class="navbar-nav ms-auto me-3 me-lg-4">
-        @auth
+            @auth
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user fa-fw"></i> {{ Auth::user()->nombreemp }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp)}}">Ajustes</a></li>
-                        <li><a class="dropdown-item" href="{{ route('historial') }}">Actividad</a></li>
+                        <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">Ajustes</a>
+                        </li>
+                        @can('historial')
+                            <li><a class="dropdown-item" href="{{ route('historial') }}">Actividad</a></li>
+                        @endcan
                         <li>
                             <hr class="dropdown-divider" />
                         </li>
@@ -76,122 +79,141 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-tasks"></i></div>
                             Tareas
                         </a>
-                        @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador')
-                        <a class="nav-link" href="{{ route('dashboard') }}">
-                            <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                            Dashboard
-                        </a>
-                        @endif
+                        @can('dashboard')
+                            <a class="nav-link" href="{{ route('dashboard') }}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
+                                Dashboard
+                            </a>
+                        @endcan
                         <div class="sb-sidenav-menu-heading">Negocio</div>
                         <!-- Finance collapsible -->
-                        @if(Auth::user()->idrol == 'administrador')
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#collapseAdministration" aria-expanded="false" aria-controls="collapseAdministration">
-                            <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                            Administracion
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseAdministration" aria-labelledby="headingAdministration"
-                            data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
-                                <a class="nav-link" href="{{ route('empleado.recargas.index') }}">Recargas</a>
-                            </nav>
-                        </div>
-                        @endif
-                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador'
-                        || Auth::user()->idrol == 'bodeguero')
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                            <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                            Finanza
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
-                            data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                
-                                <a class="nav-link" href="{{ route('costos') }}">Costos</a>
-                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'contador')
-                                <a class="nav-link" href="{{ route('gastos') }}">Gastos</a>
-                                @endif
-                                <!--<a class="nav-link" href="reports.html">Reports</a>-->
-                            </nav>
-                        </div>
-                        @endif {{-- finance collapsible end --}}
+                        @canany(['empleados'])
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                data-bs-target="#collapseAdministration" aria-expanded="false"
+                                aria-controls="collapseAdministration">
+                                <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
+                                Administracion
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseAdministration" aria-labelledby="headingAdministration"
+                                data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    @can('empleados')
+                                        <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
+                                    @endcan
+                                </nav>
+                            </div>
+                        @endcanany
+                        @canany(['empleado.recargas.index', 'costos', 'gastos'])
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
+                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
+                                Finanza
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
+                                data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    @can('empleado.recargas.index')
+                                        <a class="nav-link" href="{{ route('empleado.recargas.index') }}">Recargas</a>
+                                    @endcan
+                                    @can('costos')
+                                        <a class="nav-link" href="{{ route('costos') }}">Costos</a>
+                                    @endcan
+                                    @can('gastos')
+                                        <a class="nav-link" href="{{ route('gastos') }}">Gastos</a>
+                                    @endcan
+                                </nav>
+                            </div>
+                        @endcanany {{-- finance collapsible end --}}
                         {{-- Aquí empieza el colapsable Sales --}}
-                        @if(Auth::user()->idrol != 'contador')
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
-                            <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
-                            Comercio
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
-                            data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
-                                    || Auth::user()->idrol == 'tecnico')
-                                    <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
-                                    <a class="nav-link" href="{{ route('empleado.pedidos.index') }}">Pedidos</a>
-                                    <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
-                                @endif
-                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
-                                    || Auth::user()->idrol == 'bodeguero')
-                                    <a class="nav-link" href="{{ route('gestion.index') }}">Gestión de Productos</a>
-                                    <a class="nav-link" href="{{ route('productos.index') }}">Productos</a>
-                                @endif
-                            </nav>
-                        </div>
-                        @endif
+                        @canany(['ventas', 'empleados.pedidos.index', 'clientes', 'gestion.index', 'productos.index'])
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                                <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
+                                Comercio
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
+                                data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    @can('ventas')
+                                        <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
+                                    @endcan
+                                    @can('empleado.pedidos.index')
+                                        <a class="nav-link" href="{{ route('empleado.pedidos.index') }}">Pedidos</a>
+                                    @endcan
+                                    @can('clientes')
+                                        <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
+                                    @endcan
+                                    @can('gestion')
+                                        <a class="nav-link" href="{{ route('gestion.index') }}">
+                                            Gestión de Productos</a>
+                                    @endcan
+                                    @can('productos.index')
+                                        <a class="nav-link" href="{{ route('productos.index') }}">Productos</a>
+                                    @endcan
+                                </nav>
+                            </div>
+                        @endcanany
                         {{-- Aquí termina el colapsable Sales --}}
-                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'vendedor'
-                        || Auth::user()->idrol == 'tecnico' || Auth::user()->idrol == 'bodeguero')
                         <div class="sb-sidenav-menu-heading">Stock</div>
-                        <!-- Accounts collapsible -->
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#collapseAccounts" aria-expanded="false"
-                            aria-controls="collapseAccounts">
-                            <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
-                            Cuentas
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
-                            data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
-                                <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
-                                @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'tecnico')
-                                <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>
-                                @endif
-                            </nav>
-                        </div>
-                        @endif
+                        @canany(['cuentas', 'usuarios', 'mantenimientos'])
+                            <!-- Accounts collapsible -->
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                data-bs-target="#collapseAccounts" aria-expanded="false"
+                                aria-controls="collapseAccounts">
+                                <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
+                                Cuentas
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
+                                data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    @can('cuentas')
+                                        <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
+                                    @endcan
+                                    @can('usuarios')
+                                        <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
+                                    @endcan
+                                    @can('mantenimientos')
+                                        <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>
+                                    @endcan
+                                </nav>
+                            </div>
+                        @endcanany
 
-                        @if(Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'bodeguero'
-                        || Auth::user()->idrol == 'contador' || Auth::user()->idrol == 'vendedor')
-                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                            data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
-                            <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                            Inventario
-                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                        </a>
-                        <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
-                            data-bs-parent="#sidenavAccordion">
-                            <nav class="sb-sidenav-menu-nested nav">
-                                <a class="nav-link" href="{{ route('servicios') }}">Servicios</a>
-                                @if (Auth::user()->idrol == 'administrador' || Auth::user()->idrol == 'bodeguero')
-                                <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
-                                @endif
-                                <a class="nav-link" href="{{ route('valores') }}">Valores</a>
-                            </nav>
-                        </div>
-                        @endif
+                        @canany(['servicios', 'proveedores', 'valores'])
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
+                                <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
+                                Inventario
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
+                                data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    @can('servicios')
+                                        <a class="nav-link" href="{{ route('servicios') }}">Servicios</a>
+                                    @endcan
+                                    @can('proveedores')
+                                        <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
+                                    @endcan
+                                    @can('valores')
+                                        <a class="nav-link" href="{{ route('valores') }}">Valores</a>
+                                    @endcan
+                                </nav>
+                            </div>
+                        @endcanany
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">
                     <div class="small">Iniciado como:</div>
-                    {{ Auth::user()->idrol ?? 'Guest' }}
+                    @if (Auth::user()->roles->isNotEmpty())
+                        {{ implode(', ', Auth::user()->roles->pluck('name')->toArray()) }}
+                    @else
+                        Sin rol asignado
+                    @endif
                 </div>
             </nav>
         </div>
