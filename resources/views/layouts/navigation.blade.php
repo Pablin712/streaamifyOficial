@@ -87,7 +87,7 @@
                         @endcan
                         <div class="sb-sidenav-menu-heading">Negocio</div>
                         <!-- Finance collapsible -->
-                        @canany(['empleados'])
+                        @canany(['empleados', 'roles.index'])
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                                 data-bs-target="#collapseAdministration" aria-expanded="false"
                                 aria-controls="collapseAdministration">
@@ -100,6 +100,9 @@
                                 <nav class="sb-sidenav-menu-nested nav">
                                     @can('empleados')
                                         <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
+                                    @endcan
+                                    @can('roles.index')
+                                        <a class="nav-link" href="{{ route('roles.index') }}">Roles</a>
                                     @endcan
                                 </nav>
                             </div>

@@ -313,3 +313,20 @@ MODIFY COLUMN idtip INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
 ALTER TABLE clientes 
 CHANGE idcli idcli INT NOT NULL AUTO_INCREMENT,
 ADD PRIMARY KEY (idcli);
+
+
+-- Roles y permisos
+-- Insertar permisos en la tabla permissions
+INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('roles.index', 'web', NOW(), NOW()),
+('roles.store', 'web', NOW(), NOW()),
+('roles.update', 'web', NOW(), NOW()),
+('roles.destroy', 'web', NOW(), NOW());
+
+-- Obtener el ID del rol de administrador
+SET @admin_role_id = (SELECT id FROM roles WHERE name = 'Admin');
+
+-- Asignar permisos al rol de administrador en la tabla role_has_permissions
+INSERT INTO role_has_permissions (permission_id, role_id)
+SELECT p.id, @admin_role_id FROM permissions p WHERE p.name IN 
+('roles.index', 'roles.store', 'roles.update', 'roles.destroy');

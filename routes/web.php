@@ -30,6 +30,7 @@ use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\HistorialClientesController;
 use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\RoleController;
 
 //cliente
 Route::get('/register', function () {
@@ -252,6 +253,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
     });
     Route::resource('productos', ProductoController::class);
+    Route::resource('roles', RoleController::class);
 
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargas', 'index')->name('empleado.recargas.index');

@@ -205,3 +205,25 @@ SELECT
     ) AS facturado
 FROM view_usuarios_activos u
 GROUP BY u.IDCLI, u.nombre_cliente;
+
+
+
+-- Roles y permisos
+-- Insertar permisos en la tabla permissions
+INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('roles.index', 'web', NOW(), NOW()),
+('roles.store', 'web', NOW(), NOW()),
+('roles.update', 'web', NOW(), NOW()),
+('roles.destroy', 'web', NOW(), NOW());
+
+-- Obtener el ID del rol de administrador
+DO $$ 
+DECLARE admin_role_id INT;
+BEGIN
+    SELECT id INTO admin_role_id FROM roles WHERE name = 'Admin';
+
+    -- Asignar permisos al rol de administrador en la tabla role_has_permissions
+    INSERT INTO role_has_permissions (permission_id, role_id)
+    SELECT p.id, admin_role_id FROM permissions p WHERE p.name IN 
+    ('roles.index', 'roles.store', 'roles.update', 'roles.destroy');
+END $$;
