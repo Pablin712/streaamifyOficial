@@ -102,7 +102,7 @@ Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->nam
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
-    Route::get('/historial', [HistorialController::class, 'show'])->middleware('can:historial')->name('historial');
+    Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
 
     Route::resource('tareas', TareaController::class);
     Route::patch('/tareas/{id}/completar', [TareaController::class, 'completar'])->name('tareas.completar');
@@ -132,8 +132,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::put('/tipos/{id}', 'update')->name('tipos.update');
         Route::delete('/tipos/{id}', 'destroy')->name('tipos.destroy');
     });
-    // });
-
     //Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios');
     Route::controller(ServicioController::class)->group(function () {
         Route::get('/servicios', 'index')->name('servicios');
@@ -152,8 +150,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::put('/valores/{id}', 'update')->name('valores.update');
         Route::delete('/valores/{id}', 'destroy')->name('valores.destroy');
     });
-
-
 
     Route::controller(ProveedorController::class)->group(function () {
         Route::get('/proveedores', 'index')->name('proveedores');
@@ -189,13 +185,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(PerfilController::class)->group(function () {
         Route::get('/perfil', 'index')->name('perfil');
         Route::put('/perfil/{id}', 'update')->name('perfil.update');
-        //Route::get('/perfil/create', 'create')->name('perfil.create');
         Route::post('/perfil/createstore', 'store')->name('perfil.store');
         Route::get('/perfil/{id}/edit', 'edit')->name('perfil.edit');
-        //Route::delete('/perfil/{id}', 'destroy')->name('perfil.destroy');
-
     });
-
 
     Route::controller(VentaController::class)->group(function () {
         Route::get('/ventas', 'index')->name('ventas');
@@ -209,7 +201,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::put('/ventas/{id}', 'update')->name('ventas.update');
         Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
         Route::post('/ventas/{id}/sendInvoice', 'sendInvoice')->name('ventas.sendInvoice');
-
     });
 
     Route::controller(UsuarioController::class)->group(function () {

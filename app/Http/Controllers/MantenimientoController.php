@@ -6,144 +6,116 @@ use Illuminate\Http\Request;
 use App\Models\Mantenimiento;
 use App\Models\Cuenta;
 use App\Models\Historial;
-
 use Illuminate\Support\Facades\Auth;
 
 class MantenimientoController extends Controller
 {
+    /*
+    // Constructor original con middlewares, mantenido comentado para referencia:
     public function __construct() {
         $this->middleware('can:mantenimientos')->only('index');
         $this->middleware('can:mantenimientos.store')->only('create', 'store');
         $this->middleware('can:mantenimientos.update')->only('edit', 'update');
         $this->middleware('can:mantenimientos.destroy')->only('destroy');
     }
+    */
+
     public function index()
     {
-        // Obtener todos los mantenimientos
+        if (!Auth::user()->hasPermissionTo('mantenimientos')) {
+            abort(403, 'No tienes permiso para ver los mantenimientos.');
+        }
         $mantenimientos = Mantenimiento::orderBy('fechaman', 'asc')->get();
-
-        // Retornar la vista con los mantenimientos
         return view('inventory.mantenimientos.index', compact('mantenimientos'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
+        if (!Auth::user()->hasPermissionTo('mantenimientos.store')) {
+            abort(403, 'No tienes permiso para crear mantenimientos.');
+        }
         $cuentas = Cuenta::all();
-        // Retornar la vista de crear mantenimiento con las cuentas
         return view('inventory.mantenimientos.create', compact('cuentas'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        // Validación de los datos
+        if (!Auth::user()->hasPermissionTo('mantenimientos.store')) {
+            abort(403, 'No tienes permiso para crear mantenimientos.');
+        }
         $request->validate([
-            'idcue' => 'required|exists:cuentas,idcue',  // Aseguramos que idcue exista en la tabla cuentas
-            'fechaman' => 'required|date',               // Fecha de mantenimiento válida
-            'descripcionman' => 'required|string|max:255', // Descripción obligatoria
+            'idcue' => 'required|exists:cuentas,idcue',
+            'fechaman' => 'required|date',
+            'descripcionman' => 'required|string|max:255',
         ]);
-        // Crear el nuevo mantenimiento
+
         $mantenimiento = Mantenimiento::create([
-            'idcue' => $request->idcue,                  // Asignamos el idcue del formulario
-            'fechaman' => $request->fechaman,            // Asignamos la fecha de mantenimiento
-            'descripcionman' => $request->descripcionman, // Asignamos la descripción del mantenimiento
-        ]);
-
-        Historial::create([
-            'accion' => 'Creación de Mantenimiento',
-            'descripcion' =>  'Datos: ' . json_encode($mantenimiento), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
-        ]);
-        // Redirigir al índice de mantenimientos con mensaje de éxito
-        return redirect()->route('mantenimientos')->with('success', 'Mantenimiento creado exitosamente.');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Mantenimiento  $mantenimiento
-     * @return \Illuminate\Http\Response
-     */
-
-    public function edit($id)
-    {
-        // Obtener el mantenimiento a editar
-        $mantenimiento = Mantenimiento::findOrFail($id);
-
-        // Obtener todas las cuentas disponibles
-
-        // Retornar la vista con el mantenimiento y las cuentas
-        return view('inventory.mantenimientos.edit', compact('mantenimiento'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Mantenimiento  $mantenimiento
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        // Validar los datos recibidos
-        $request->validate([
-            //'idcue' => 'required|exists:cuentas,idcue',  // idcue debe ser válido
-            'fechaman' => 'required|date',               // Fecha de mantenimiento válida
-            'descripcionman' => 'required|string|max:255', // Descripción válida
-        ]);
-
-        // Obtener el mantenimiento a editar
-        $mantenimiento = Mantenimiento::findOrFail($id);
-
-        Historial::create([
-            'accion' => 'Actualización de Mantenimiento',
-            'descripcion' =>  'Datos antiguos: ' . json_encode($mantenimiento), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
-        ]);
-        // Actualizar los datos
-        $mantenimiento->update([
-            //'idcue' => $request->idcue,
+            'idcue' => $request->idcue,
             'fechaman' => $request->fechaman,
             'descripcionman' => $request->descripcionman,
         ]);
 
-        // Redirigir con mensaje de éxito
+        Historial::create([
+            'accion' => 'Creación de Mantenimiento',
+            'descripcion' => 'Datos: ' . json_encode($mantenimiento),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
+            'fecha' => now(),
+        ]);
+
+        return redirect()->route('mantenimientos')->with('success', 'Mantenimiento creado exitosamente.');
+    }
+
+    public function edit($id)
+    {
+        if (!Auth::user()->hasPermissionTo('mantenimientos.update')) {
+            abort(403, 'No tienes permiso para editar mantenimientos.');
+        }
+        $mantenimiento = Mantenimiento::findOrFail($id);
+        return view('inventory.mantenimientos.edit', compact('mantenimiento'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        if (!Auth::user()->hasPermissionTo('mantenimientos.update')) {
+            abort(403, 'No tienes permiso para actualizar mantenimientos.');
+        }
+        $request->validate([
+            'fechaman' => 'required|date',
+            'descripcionman' => 'required|string|max:255',
+        ]);
+
+        $mantenimiento = Mantenimiento::findOrFail($id);
+
+        Historial::create([
+            'accion' => 'Actualización de Mantenimiento',
+            'descripcion' => 'Datos antiguos: ' . json_encode($mantenimiento),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
+            'fecha' => now(),
+        ]);
+
+        $mantenimiento->update([
+            'fechaman' => $request->fechaman,
+            'descripcionman' => $request->descripcionman,
+        ]);
+
         return redirect()->route('mantenimientos')->with('success', 'Mantenimiento actualizado exitosamente.');
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Mantenimiento  $mantenimiento
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
-        // Buscar el mantenimiento por su ID
+        if (!Auth::user()->hasPermissionTo('mantenimientos.destroy')) {
+            abort(403, 'No tienes permiso para eliminar mantenimientos.');
+        }
         $mantenimiento = Mantenimiento::findOrFail($id);
 
         Historial::create([
             'accion' => 'Eliminación de Mantenimiento',
-            'descripcion' =>  'Datos Eliminados: ' . json_encode($mantenimiento), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos Eliminados: ' . json_encode($mantenimiento),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
-        // Eliminar el mantenimiento
+
         $mantenimiento->delete();
-        // Redirigir al índice de mantenimientos con un mensaje de éxito
         return redirect()->route('mantenimientos')->with('success', 'Mantenimiento eliminado exitosamente.');
     }
 }

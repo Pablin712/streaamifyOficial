@@ -21,12 +21,17 @@ use Illuminate\Support\Facades\Auth;
 
 class ContabilidadController extends Controller
 {
+    /*
     public function __construct() {
         $this->middleware('can:dashboard')->only('index');
         $this->middleware('can:dashboard.store')->only('store');
     }
+        */
     public function index(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('dashboard')) {
+            abort(403, 'No tienes permiso para ver esta página.');
+        }
         Historial::create([
             'accion' => 'Revisión de contabilidad',
             'descripcion' =>  'Vista dashboard accedida', // Campo opcional
@@ -368,6 +373,9 @@ class ContabilidadController extends Controller
     }
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('dashboard.store')) {
+            abort(403, 'No tienes permiso para ver esta página.');
+        }
         // Acceder a las variables enviadas
         $ventas = $request->input('ventas');
         $ingresos_mes = $request->input('ingresos_mes');

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Servicio;
@@ -8,25 +9,41 @@ use Illuminate\Support\Facades\Auth;
 
 class ServicioController extends Controller
 {
+    /*
+    // Método __construct original con middlewares, mantenido comentado para referencia:
     public function __construct() {
         $this->middleware('can:servicios')->only('index');
         $this->middleware('can:servicios.store')->only('create', 'store');
         $this->middleware('can:servicios.update')->only('edit', 'update');
         $this->middleware('can:servicios.destroy')->only('destroy');
     }
+    */
+
     public function index()
     {
+        if (!Auth::user()->hasPermissionTo('servicios')) {
+            abort(403, 'No tienes permiso para ver los servicios.');
+        }
+
         $servicios = Servicio::all();
         return view('inventory.servicios.index', compact('servicios'));
     }
 
     public function create()
     {
+        if (!Auth::user()->hasPermissionTo('servicios.store')) {
+            abort(403, 'No tienes permiso para crear servicios.');
+        }
+
         return view('inventory.servicios.create');
     }
 
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('servicios.store')) {
+            abort(403, 'No tienes permiso para crear servicios.');
+        }
+
         $request->validate([
             'idser' => 'required|string|max:10|unique:servicios,idser',
             'nombreser' => 'required|string|max:20',
@@ -46,8 +63,8 @@ class ServicioController extends Controller
 
         Historial::create([
             'accion' => 'Creación de Servicio',
-            'descripcion' =>  'Datos del servicio: '. json_encode($servicio), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos del servicio: ' . json_encode($servicio),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
 
@@ -56,12 +73,20 @@ class ServicioController extends Controller
 
     public function edit($idser)
     {
+        if (!Auth::user()->hasPermissionTo('servicios.update')) {
+            abort(403, 'No tienes permiso para editar servicios.');
+        }
+
         $servicio = Servicio::findOrFail($idser);
         return view('inventory.servicios.edit', compact('servicio'));
     }
 
     public function update(Request $request, $idser)
     {
+        if (!Auth::user()->hasPermissionTo('servicios.update')) {
+            abort(403, 'No tienes permiso para actualizar servicios.');
+        }
+
         $request->validate([
             'nombreser' => 'required|string|max:20',
             'completoser' => 'nullable|numeric',
@@ -79,8 +104,8 @@ class ServicioController extends Controller
 
         Historial::create([
             'accion' => 'Actualización de Servicio',
-            'descripcion' =>  'Datos antigüos: ' . json_encode($servicio), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos antiguos: ' . json_encode($servicio),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
 
@@ -91,12 +116,16 @@ class ServicioController extends Controller
 
     public function destroy($idser)
     {
+        if (!Auth::user()->hasPermissionTo('servicios.destroy')) {
+            abort(403, 'No tienes permiso para eliminar servicios.');
+        }
+
         $servicio = Servicio::findOrFail($idser);
 
         Historial::create([
             'accion' => 'Eliminación de Servicio',
-            'descripcion' =>  'Datos Eliminados: ' . json_encode($servicio), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos Eliminados: ' . json_encode($servicio),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
 

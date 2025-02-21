@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Cuenta;
 use App\Models\Valor;
 use App\Models\Servicio;
@@ -10,12 +9,14 @@ use App\Models\Perfil;
 use App\Models\Costo;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
-use Illuminate\Support\Facades\Auth;
-
 use App\Models\Historial;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CuentaController extends Controller
 {
+    /*
+    // Constructor original con middlewares, mantenido comentado para referencia:
     public function __construct() {
         $this->middleware('can:cuentas')->only('index');
         $this->middleware('can:cuentas.store')->only('create', 'store');
@@ -25,16 +26,21 @@ class CuentaController extends Controller
         $this->middleware('can:cuentas.mensaje')->only('mensaje');
         $this->middleware('can:cuentas.destroy')->only('destroy');
     }
+    */
+
     public function index(Request $request)
     {
-        $cuentas = Cuenta::with(['valor'])->where('activocue', true)->orderBy('fechavencue')->get(); // Cargar valor asociado
-        // Inicializar una colección vacía para los perfiles
+        if (!Auth::user()->hasPermissionTo('cuentas')) {
+            abort(403, 'No tienes permiso para ver las cuentas.');
+        }
+        $cuentas = Cuenta::with(['valor'])
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
         $perfiles = collect();
         $idcueSeleccionado = $request->idcue;
-        //$usuariosActivos = ViewUsuarioActivo::where('IDCUE', $idcueSeleccionado)->get(); //por si acaso
 
         if ($idcueSeleccionado) {
-            //$usuarioscuenta = Cuenta::where('idcue',$idcueSeleccionado)->get();
             $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
             foreach ($perfiles as $perfil) {
                 $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
@@ -45,30 +51,31 @@ class CuentaController extends Controller
         }
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)
-                ->where('fecha_vencimiento', '>', now()) // Solo usuarios con fecha_vencimiento mayor a hoy
+                ->where('fecha_vencimiento', '>', now())
                 ->count();
             $cuenta->usuarios_activos = $usuarios;
         }
-
-        // Pasar las cuentas y los perfiles a la vista
         return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado'));
     }
 
-    // Mostrar formulario para crear una nueva cuenta contratada
     public function create()
     {
-        $valores = Valor::all(); // Obtener lista de valores
+        if (!Auth::user()->hasPermissionTo('cuentas.store')) {
+            abort(403, 'No tienes permiso para crear cuentas.');
+        }
+        $valores = Valor::all();
         return view('inventory.cuentas.create', compact('valores'));
     }
 
-    // Guardar una nueva cuenta
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('cuentas.store')) {
+            abort(403, 'No tienes permiso para crear cuentas.');
+        }
         try {
             $request->merge([
                 'idcue' => strtoupper($request->idcue)
             ]);
-            // Validar datos de la cuenta
             $validated = $request->validate([
                 'idcue' => 'required|string|max:20|unique:cuentas,idcue',
                 'idval' => 'required|exists:valores,idval',
@@ -78,37 +85,35 @@ class CuentaController extends Controller
                 'caidacue' => 'required|boolean',
             ]);
 
-            // Crear la cuenta (otra alternativa)
             $cuenta = Cuenta::create($validated);
 
             Historial::create([
-                'accion' => 'Se creo la cuenta con ID: ' . $cuenta->idcue,
-                'descripcion' =>  'Datos: ' . json_encode($cuenta), // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
+                'accion' => 'Se creó la cuenta con ID: ' . $cuenta->idcue,
+                'descripcion' => 'Datos: ' . json_encode($cuenta),
+                'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
                 'fecha' => now(),
             ]);
+
             // Actualizar estado de productos relacionados con el servicio de la cuenta creada
             $this->actualizarEstadoProductos($cuenta->valor->idser);
-            // Comprobar si los datos de costo están presentes
-            // Si hay campos de costo, validarlos y crear el costo
+
             if ($request->filled('descripcioncos') || $request->filled('montocos')) {
                 $validatedCosto = $request->validate([
                     'descripcioncos' => 'required|string|max:50',
                     'montocos' => 'required|numeric|min:0',
                 ]);
 
-                // Crear el costo asociado a la cuenta
                 $costo = Costo::create([
-                    'idcue' => $request->idcue, // Asociar el costo a la cuenta recién creada
+                    'idcue' => $request->idcue,
                     'fechacos' => now(),
                     'montocos' => $validatedCosto['montocos'],
                     'descripcioncos' => $validatedCosto['descripcioncos'],
                 ]);
 
                 Historial::create([
-                    'accion' => 'Se creo el costo con ID: ' . $costo->idcos,
-                    'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
-                    'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),  // Almacena el nombre del usuario
+                    'accion' => 'Se creó el costo con ID: ' . $costo->idcos,
+                    'descripcion' => 'Datos: ' . json_encode($costo),
+                    'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
                     'fecha' => now(),
                 ]);
             }
@@ -117,61 +122,56 @@ class CuentaController extends Controller
             return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()]);
         }
     }
-    // CuentaController.php
+
     public function status($idcue)
     {
+        if (!Auth::user()->hasPermissionTo('cuentas.status')) {
+            abort(403, 'No tienes permiso para actualizar el estado de la cuenta.');
+        }
         $cuenta = Cuenta::findOrFail($idcue);
-        // Cambiar el estado de caidacue (de true a false o de false a true)
-        $cuenta->caidacue = !$cuenta->caidacue; // Invertir el valor (true -> false o false -> true)
-        // Guardar el cambio en la base de datos
+        $cuenta->caidacue = !$cuenta->caidacue;
         $cuenta->save();
+
         Historial::create([
-            'accion' => 'Se actualizo el estado de cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' =>  'estado cambiado a ' . $cuenta->caidacue,
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),  // Almacena el nombre del usuario
+            'accion' => 'Se actualizó el estado de cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' => 'Estado cambiado a ' . $cuenta->caidacue,
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
 
-        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
         $this->actualizarEstadoProductos($cuenta->valor->idser);
-        // Redirigir al usuario con un mensaje de éxito
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
     }
+
     public function mensaje($perfilId)
     {
-        // Obtener el perfil seleccionado
+        if (!Auth::user()->hasPermissionTo('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para solicitar datos de perfil.');
+        }
         $perfil = Perfil::find($perfilId);
-
-        // Obtener la cuenta asociada al perfil
         $cuenta = Cuenta::where('idcue', $perfil->idcue)->first();
-
-        // Obtener el valor asociado a la cuenta
         $valor = Valor::find($cuenta->idval);
-
-        // Obtener el servicio asociado al valor
         $servicio = Servicio::find($valor->idser);
 
-        // Construir el mensaje
         $mensaje = "<strong>{$servicio->nombre}</strong>\n";
         $mensaje .= "Usuario: {$cuenta->usuariocue}\n";
         $mensaje .= "Clave: {$cuenta->contrasenacue}\n";
-        $mensaje .= "PIN de perfil {$perfil->numeroper}: ";
-        $mensaje .= "{$perfil->pinper}\n";
+        $mensaje .= "PIN de perfil {$perfil->numeroper}: {$perfil->pinper}\n";
 
         Historial::create([
-            'accion' => 'Se solicito los datos de perfil' . $perfil->numeroper . ' de la cuenta: ' . $cuenta->idcue,
-            'descripcion' =>  null, // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
+            'accion' => 'Se solicitó los datos de perfil ' . $perfil->numeroper . ' de la cuenta: ' . $cuenta->idcue,
+            'descripcion' => null,
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
-        // Devolver el mensaje al frontend
         return response()->json(['mensaje' => $mensaje]);
     }
 
-    // Mostrar formulario para editar una cuenta
     public function edit($idcue)
     {
-        // Buscar la cuenta con la relacion valores
+        if (!Auth::user()->hasPermissionTo('cuentas.update')) {
+            abort(403, 'No tienes permiso para editar cuentas.');
+        }
         $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
         $valores = Valor::all();
         return view('inventory.cuentas.edit', compact('cuenta', 'valores'));
@@ -179,15 +179,19 @@ class CuentaController extends Controller
 
     public function renew($idcue)
     {
-        // Buscar la cuenta con la relacion valores
+        if (!Auth::user()->hasPermissionTo('cuentas.renew')) {
+            abort(403, 'No tienes permiso para renovar cuentas.');
+        }
         $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
         $valor = $cuenta->idval;
         return view('inventory.cuentas.renew', compact('cuenta', 'valor'));
     }
 
-    // Actualizar una cuenta existente
     public function update(Request $request, $idcue)
     {
+        if (!Auth::user()->hasPermissionTo('cuentas.update')) {
+            abort(403, 'No tienes permiso para actualizar cuentas.');
+        }
         try {
             $request->validate([
                 'idval' => 'required|exists:valores,idval',
@@ -199,33 +203,27 @@ class CuentaController extends Controller
             $request->merge([
                 'idcue' => strtoupper($request->idcue)
             ]);
-
             $cuenta = Cuenta::findOrFail($idcue);
 
             Historial::create([
                 'accion' => 'Actualización de Cuenta',
-                'descripcion' =>  'Datos antiguos: ' . json_encode($cuenta), // Campo opcional
-                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
+                'descripcion' => 'Datos antiguos: ' . json_encode($cuenta),
+                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
                 'fecha' => now(),
             ]);
 
             $cuenta->update($request->all());
-
-            // Actualizar estado de productos relacionados con el servicio de la cuenta creada
             $this->actualizarEstadoProductos($cuenta->valor->idser);
             if (!empty($request->descripcioncos) && !empty($request->montocos)) {
-                // Validar datos de costo si los campos están presentes
                 $validatedCosto = $request->validate([
                     'descripcioncos' => 'string|max:50',
                     'montocos' => 'numeric|min:0',
                 ]);
-
-                // Crear el costo asociado a la cuenta solo si los datos de costo están presentes
                 Costo::create([
                     'idcue' => $cuenta->idcue,
                     'descripcioncos' => $request->descripcioncos,
                     'montocos' => $request->montocos,
-                    'fechacos' => now(),  // O la fecha que desees
+                    'fechacos' => now(),
                 ]);
             }
             return redirect()->route('cuentas')->with('success', 'Cuenta actualizada con éxito.');
@@ -234,11 +232,12 @@ class CuentaController extends Controller
         }
     }
 
-    // Eliminar una cuenta
     public function destroy($idcue)
     {
+        if (!Auth::user()->hasPermissionTo('cuentas.destroy')) {
+            abort(403, 'No tienes permiso para eliminar cuentas.');
+        }
         $cuenta = Cuenta::findOrFail($idcue);
-        // Verificar si los perfiles están registrados en detalles_venta
         $cuentaInUsuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->exists();
 
         if ($cuentaInUsuariosActivos) {
@@ -246,22 +245,16 @@ class CuentaController extends Controller
         }
         Historial::create([
             'accion' => 'Se desactivó la cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' =>  'Datos inactivos: ' . json_encode($cuenta), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos inactivos: ' . json_encode($cuenta),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
 
-        // Obtener el nuevo ID con secuencia
         $nuevoId = $this->generarNuevoId($cuenta->idcue);
-
-        // Obtener perfiles asociados a la cuenta
         $perfiles = Perfil::where('idcue', $cuenta->idcue)->get();
 
         foreach ($perfiles as $perfil) {
-            // Generar un nuevo ID de perfil con "_borradaX"
             $nuevoIdPer = $this->generarNuevoIdPerfil($perfil->idper);
-
-            // Actualizar el ID del perfil
             $perfil->update([
                 'idper' => $nuevoIdPer
             ]);
@@ -271,26 +264,23 @@ class CuentaController extends Controller
             'activocue' => false,
             'idcue' => $nuevoId
         ]);
-        // Actualizar estado de productos relacionados con el servicio de la cuenta creada
         $this->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
     }
+
     private function actualizarEstadoProductos($idser)
     {
-        // Buscar productos individuales (tipo_producto_id = 1) con el servicio específico
         $productos = Producto::where('tipo_producto_id', 1)
             ->whereHas('detalles', function ($query) use ($idser) {
                 $query->where('idser', $idser);
             })->get();
 
         foreach ($productos as $producto) {
-            // Verificar si hay cuentas disponibles para el servicio del producto
             $cuentaDisponible = $this->buscarCuentaDisponible($idser);
-
-            // Si hay cuenta disponible, activar el producto; si no, desactivarlo
             $producto->update(['activo' => $cuentaDisponible ? true : false]);
         }
     }
+
     private function buscarCuentaDisponible($idser)
     {
         return Cuenta::whereHas('valor', function ($query) use ($idser) {
@@ -303,29 +293,28 @@ class CuentaController extends Controller
             })
             ->first();
     }
+
     private function generarNuevoId($idcue)
     {
-        // Buscar el último número de secuencia usado
-        $baseId = preg_replace('/_borrada\d*$/', '', $idcue); // Remueve _borradaX si ya existe
+        $baseId = preg_replace('/_borrada\d*$/', '', $idcue);
         $contador = 1;
 
-        // Buscar el último idcue que coincida con el patrón
         $ultimoId = Cuenta::where('idcue', 'LIKE', "{$baseId}_borrada%")
-            ->orderByRaw("LENGTH(idcue) DESC") // Ordena por longitud para evitar desorden (_borrada10 antes de _borrada2)
-            ->orderBy('idcue', 'DESC') // Ordena numéricamente
+            ->orderByRaw("LENGTH(idcue) DESC")
+            ->orderBy('idcue', 'DESC')
             ->pluck('idcue')
             ->first();
 
-        // Si hay un último ID con secuencia, extraer el número
         if ($ultimoId) {
             preg_match('/_borrada(\d+)$/', $ultimoId, $matches);
             if (!empty($matches[1])) {
-                $contador = (int) $matches[1] + 1; // Incrementar la secuencia
+                $contador = (int) $matches[1] + 1;
             }
         }
 
         return "{$baseId}_borrada{$contador}";
     }
+
     private function generarNuevoIdPerfil($idper)
     {
         $baseId = preg_replace('/_borrada\d*$/', '', $idper);

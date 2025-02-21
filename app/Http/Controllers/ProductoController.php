@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductoController extends Controller
 {
+    /*
+    // Constructor original con middlewares, mantenido comentado para referencia:
     public function __construct() {
         $this->middleware('can:productos')->only('index');
         $this->middleware('can:productos.store')->only('create', 'store');
@@ -20,11 +22,13 @@ class ProductoController extends Controller
         $this->middleware('can:productos.update')->only('edit', 'update');
         $this->middleware('can:productos.destroy')->only('destroy');
     }
-    /**
-     * Display a listing of the resource.
-     */
+    */
+
     public function index()
     {
+        if (!Auth::user()->hasPermissionTo('productos.index')) {
+            abort(403, 'No tienes permiso para ver los productos.');
+        }
         $productos = Producto::with(['categoria', 'tipoProducto', 'detalles'])->get();
         $categorias = Categoria::all();
         $tiposProducto = TipoProducto::all();
@@ -32,22 +36,22 @@ class ProductoController extends Controller
         return view('inventory.productos.index', compact('productos', 'categorias', 'tiposProducto', 'servicios'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
+        if (!Auth::user()->hasPermissionTo('productos.store')) {
+            abort(403, 'No tienes permiso para crear productos.');
+        }
         $categorias = Categoria::all();
         $tipos_producto = TipoProducto::all();
         $servicios = Servicio::all();
         return view('inventory.productos.create', compact('categorias', 'tipos_producto', 'servicios'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('productos.store')) {
+            abort(403, 'No tienes permiso para crear productos.');
+        }
         $request->validate([
             'codigopro' => 'required|string|max:50|unique:productos,codigopro',
             'nombrepro' => 'required|string|max:255',
@@ -61,37 +65,34 @@ class ProductoController extends Controller
             'detalles_producto' => 'required|json',
         ]);
 
-        // Subir foto si existe
         $data = $request->all();
+
         // Subir la foto si existe
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
-            $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos
-            $file->move($destinationPath, $filename); // Mover el archivo
-            $data['foto'] = 'storage/fotos/' . $filename; // Ruta para guardar
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('storage/fotos');
+            $file->move($destinationPath, $filename);
+            $data['foto'] = 'storage/fotos/' . $filename;
         }
 
-        // Crear producto
         $producto = Producto::create([
             'codigopro' => $request->codigopro,
             'nombrepro' => $request->nombrepro,
             'preciopro' => $request->preciopro,
             'estrellaspro' => $request->estrellaspro,
             'descripcionpro' => $request->descripcionpro,
-            'foto' => $data['foto'],
+            'foto' => $data['foto'] ?? null,
             'tipo_producto_id' => $request->tipo_producto_id,
             'categoria_id' => $request->categoria_id,
             'activo' => $request->activo,
         ]);
+
         // Procesar los detalles
         $detalles = json_decode($request->detalles_producto, true);
-
-        // Validar si el JSON se decodificó correctamente
         if (json_last_error() !== JSON_ERROR_NONE) {
             return redirect()->back()->withErrors(['detalles_producto' => 'El formato de los detalles del producto es inválido.']);
         }
-
         foreach ($detalles as $detalle) {
             $producto->detalles()->create([
                 'idser' => $detalle['idser'],
@@ -110,20 +111,20 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto creado exitosamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('productos.show')) {
+            abort(403, 'No tienes permiso para ver el producto.');
+        }
         $producto = Producto::with(['categoria', 'tipoProducto', 'detalles'])->findOrFail($id);
         return view('inventory.productos.show', compact('producto'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('productos.update')) {
+            abort(403, 'No tienes permiso para editar productos.');
+        }
         $producto = Producto::with('detalles')->findOrFail($id);
         $categorias = Categoria::all();
         $tipos_producto = TipoProducto::all();
@@ -131,11 +132,11 @@ class ProductoController extends Controller
         return view('inventory.productos.edit', compact('producto', 'categorias', 'tipos_producto', 'servicios'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
+        if (!Auth::user()->hasPermissionTo('productos.update')) {
+            abort(403, 'No tienes permiso para actualizar productos.');
+        }
         $request->validate([
             'codigopro' => 'required|string|max:50|unique:productos,codigopro,' . $id,
             'nombrepro' => 'required|string|max:255',
@@ -146,36 +147,32 @@ class ProductoController extends Controller
             'tipo_producto_id' => 'required|exists:tipos_producto,id',
             'categoria_id' => 'required|exists:categorias,id',
             'activo' => 'required|boolean',
-            'detalles' => 'nullable|array', // Validar array de detalles
-            'detalles.*.idser' => 'required_with:detalles|integer',
-            'detalles.*.descripcion' => 'nullable|string',
-            'detalles.*.meses' => 'nullable|integer',
+            'detalles_producto' => 'required|json',
         ]);
 
         $producto = Producto::findOrFail($id);
-        // Subir foto si existe
         $data = $request->all();
-        // Subir la foto si existe
+
+        // Subir foto si existe
         if ($request->hasFile('foto')) {
-            // Eliminar la foto anterior si existe
-            if (!empty($producto->foto) && file_exists(public_path('storage/' . $producto->foto))) {
-                unlink(public_path('storage/' . $producto->foto)); // Eliminar el archivo antiguo
+            if (!empty($producto->foto) && file_exists(public_path($producto->foto))) {
+                unlink(public_path($producto->foto));
             }
             $file = $request->file('foto');
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
-            $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos
-            $file->move($destinationPath, $filename); // Mover el archivo
-            $data['foto'] = 'storage/fotos/' . $filename; // Ruta para guardar
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('storage/fotos');
+            $file->move($destinationPath, $filename);
+            $data['foto'] = 'storage/fotos/' . $filename;
         }
 
-        $producto->update($request->except('foto', 'detalles'));
+        $producto->update($request->except('foto', 'detalles_producto'));
 
-        // Procesar los detalles del producto
         $detalles = json_decode($request->detalles_producto, true);
-
-        // Eliminar los detalles existentes y volver a crearlos
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return redirect()->back()->withErrors(['detalles_producto' => 'El formato de los detalles del producto es inválido.']);
+        }
+        // Eliminar detalles existentes y recrearlos
         $producto->detalles()->delete();
-
         foreach ($detalles as $detalle) {
             $producto->detalles()->create([
                 'idser' => $detalle['idser'],
@@ -194,11 +191,11 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('productos.destroy')) {
+            abort(403, 'No tienes permiso para eliminar productos.');
+        }
         $producto = Producto::findOrFail($id);
         Historial::create([
             'accion' => 'Eliminación de Producto',
@@ -206,7 +203,7 @@ class ProductoController extends Controller
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
-        $producto->detalles()->delete(); // Eliminar detalles relacionados
+        $producto->detalles()->delete();
         $producto->delete();
         return redirect()->route('productos.index')->with('success', 'Producto eliminado exitosamente.');
     }

@@ -10,9 +10,11 @@ use App\Models\Historial;
 
 class PerfilController extends Controller
 {
+    /*
     public function __construct() {
         $this->middleware('can:perfil.update')->only('update');
     }
+    */
     public function index(Request $request)
     {
         $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
@@ -71,6 +73,9 @@ class PerfilController extends Controller
 
     public function update(Request $request, string $id)
     {
+        if (!Auth::user()->hasPermissionTo('perfil.update')) {
+            abort(403, 'No tienes permiso para actualizar cuentas.');
+        }
         $perfil = Perfil::findOrFail($id);
         $request->validate([
             'pinper' => 'required|string|max:6',

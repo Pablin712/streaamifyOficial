@@ -8,9 +8,11 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class TareaController extends Controller
 {
+    /*
     public function __construct() {
         $this->middleware('can:tareas.destroy')->only('destroy');
     }
+    */
     public function index()
     {
         $tareas = Tarea::orderByRaw("
@@ -47,6 +49,9 @@ class TareaController extends Controller
 
     public function destroy($id)
     {
+        if (!Auth::user()->hasPermissionTo('tareas.destroy')) {
+            abort(403, 'No tienes permiso para ver esta página.');
+        }
         Tarea::findOrFail($id)->delete();
         return redirect()->route('tareas.index')->with('success', 'Tarea eliminada.');
     }

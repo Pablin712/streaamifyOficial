@@ -9,11 +9,13 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 class TipoProductoController extends Controller
 {
+    /*
     public function __construct() {
         $this->middleware('can:tipos_producto.store')->only('store');
         $this->middleware('can:tipos_producto.update')->only('update');
         $this->middleware('can:tipos_producto.destroy')->only('destroy');
     }
+    */
     /**
      * Display a listing of the resource.
      */
@@ -25,18 +27,13 @@ class TipoProductoController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('tipos_producto.store')) {
+            abort(403, 'No tienes permiso para crear tipos de producto.');
+        }
         $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -64,18 +61,13 @@ class TipoProductoController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
+        if (!Auth::user()->hasPermissionTo('tipos_producto.update')) {
+            abort(403, 'No tienes permiso para crear tipos de producto.');
+        }
         $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -99,6 +91,9 @@ class TipoProductoController extends Controller
      */
     public function destroy(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('tipos_producto.destroy')) {
+            abort(403, 'No tienes permiso para crear tipos de producto.');
+        }
         $tipoProducto = TipoProducto::findOrFail($id);
         $tipoProducto->delete();
 

@@ -4,59 +4,65 @@ namespace App\Http\Controllers;
 
 use App\Models\Costo;
 use App\Models\Cuenta;
-use Illuminate\Http\Request;
-
 use App\Models\Historial;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CostoController extends Controller
 {
-    public function __construct() {
-        $this->middleware('can:costos')->only('index');
-        $this->middleware('can:costos.store')->only('store');
-        $this->middleware('can:costos.update')->only('update');
-        $this->middleware('can:costos.destroy')->only('destroy');
-    }
+    // Eliminamos el __construct() que usaba middleware para probar los métodos de forma manual
+
     public function index(Request $request)
     {
+        // Verificar permiso para ver costos (ajusta el nombre del permiso según corresponda)
+        if (!Auth::user()->hasPermissionTo('costos')) {
+            abort(403, 'No tienes permiso para ver los costos.');
+        }
+        
         // Obtener todas las cuentas para el selector
         $cuentas = Cuenta::all();
 
-        // Filtrar costos por cuenta seleccionada
-        $idcueSeleccionado = $request->idcue; // ID de la cuenta seleccionada
-        //$costos = $idcueSeleccionado
-        //  ? Costo::where('idcue', $idcueSeleccionado)->get()
-        // : collect(); // Colección vacía si no se selecciona ninguna cuenta
+        // Puedes filtrar por cuenta si lo deseas, aquí se listan todos ordenados
+        $idcueSeleccionado = $request->idcue;
         $costos = Costo::orderBy('fechacos', 'desc')->get();
+
         return view('finance.costos', compact('cuentas', 'costos', 'idcueSeleccionado'));
     }
 
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('costos.store')) {
+            abort(403, 'No tienes permiso para crear costos.');
+        }
+
         // Validar los datos
         $request->validate([
-            'idcue' => 'required|exists:cuentas,idcue', // Debe ser una cuenta válida
+            'idcue' => 'required|exists:cuentas,idcue',
             'descripcioncos' => 'required|string|max:50',
             'montocos' => 'required|numeric|min:0',
             'fechacos' => 'nullable|date'
         ]);
 
-        // Crear un nuevo costo
+        // Crear el costo
         $costo = Costo::create($request->all());
 
         Historial::create([
             'accion' => 'Creación de Costo',
-            'descripcion' =>  'Datos: ' . json_encode($costo), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos: ' . json_encode($costo),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);
 
-
-        return redirect()->route('costos', ['idcue' => $request->idcue])->with('success', 'Costo creado correctamente.');
+        return redirect()->route('costos', ['idcue' => $request->idcue])
+                         ->with('success', 'Costo creado correctamente.');
     }
 
     public function update(Request $request, $idcos)
     {
+        if (!Auth::user()->hasPermissionTo('costos.update')) {
+            abort(403, 'No tienes permiso para actualizar costos.');
+        }
+
         $request->validate([
             'descripcioncos' => 'required|string|max:50',
             'montocos' => 'required|numeric',
@@ -67,8 +73,8 @@ class CostoController extends Controller
 
         Historial::create([
             'accion' => 'Actualización de Costo',
-            'descripcion' =>  'Datos antiguos : ' . json_encode($costo), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. $request->ip(),  // Almacena el nombre del usuario
+            'descripcion' => 'Datos antiguos: ' . json_encode($costo),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);
 
@@ -83,19 +89,23 @@ class CostoController extends Controller
 
     public function destroy($idcos)
     {
-        // Eliminar el costo
+        if (!Auth::user()->hasPermissionTo('costos.destroy')) {
+            abort(403, 'No tienes permiso para eliminar costos.');
+        }
+
         $costo = Costo::findOrFail($idcos);
-        $idcue = $costo->idcue; // Para volver a la cuenta seleccionada
+        $idcue = $costo->idcue; // Para regresar a la cuenta seleccionada
 
         Historial::create([
             'accion' => 'Eliminación de Costo',
-            'descripcion' =>  'Datos Eliminados: ' . json_encode($costo), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'descripcion' => 'Datos Eliminados: ' . json_encode($costo),
+            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
 
         $costo->delete();
 
-        return redirect()->route('costos', ['idcue' => $idcue])->with('success', 'Costo eliminado correctamente.');
+        return redirect()->route('costos', ['idcue' => $idcue])
+                         ->with('success', 'Costo eliminado correctamente.');
     }
 }

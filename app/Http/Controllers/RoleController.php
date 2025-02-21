@@ -5,21 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Auth;
 
 class RoleController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('can:roles.index')->only('index');
-        $this->middleware('can:roles.store')->only('create', 'store');
-        $this->middleware('can:roles.update')->only('edit', 'update');
-        $this->middleware('can:roles.destroy')->only('destroy');
-    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        // Verifica manualmente el permiso para ver roles
+        if (!Auth::user()->hasPermissionTo('roles.index')) {
+            abort(403, 'No tienes permiso para ver esta página.');
+        }
         $roles = Role::all();
         return view('roles.index', compact('roles'));
     }
@@ -29,6 +27,9 @@ class RoleController extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->hasPermissionTo('roles.store')) {
+            abort(403, 'No tienes permiso para crear roles.');
+        }
         $permissions = Permission::all();
         return view('roles.create', compact('permissions'));
     }
@@ -38,10 +39,14 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('roles.store')) {
+            abort(403, 'No tienes permiso para crear roles.');
+        }
         $request->validate([
             'name' => 'required',
         ]);
-        $role = Role::create($request->all());
+
+        $role = Role::create($request->only('name'));
         $role->permissions()->sync($request->permissions);
 
         return redirect()->route('roles.edit', $role)->with('success', 'El rol se creó correctamente');
@@ -52,7 +57,7 @@ class RoleController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // Puedes agregar verificación de permisos si lo requieres.
     }
 
     /**
@@ -60,6 +65,9 @@ class RoleController extends Controller
      */
     public function edit(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('roles.update')) {
+            abort(403, 'No tienes permiso para editar roles.');
+        }
         $rol = Role::findOrFail($id);
         $permissions = Permission::all();
         return view('roles.edit', compact('permissions', 'rol'));
@@ -70,11 +78,15 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if (!Auth::user()->hasPermissionTo('roles.update')) {
+            abort(403, 'No tienes permiso para actualizar roles.');
+        }
         $request->validate([
             'name' => 'required',
         ]);
+
         $role = Role::findOrFail($id);
-        $role->update($request->all());
+        $role->update($request->only('name'));
         $role->permissions()->sync($request->permissions);
 
         return redirect()->route('roles.edit', $role)->with('success', 'El rol se actualizó correctamente');
@@ -85,6 +97,9 @@ class RoleController extends Controller
      */
     public function destroy(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('roles.destroy')) {
+            abort(403, 'No tienes permiso para eliminar roles.');
+        }
         $role = Role::findOrFail($id);
         $role->delete();
         return redirect()->route('roles.index')->with('success', 'El rol se eliminó correctamente');

@@ -3,31 +3,39 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Empleado;
 use Spatie\Permission\Models\Role;
 use App\Models\Historial;
 use Carbon\Carbon;
-use App\Models\Rol;
+use App\Models\Rol; // Verifica si lo necesitas o se utiliza en el código
+use Illuminate\Support\Facades\Auth;
 
 class EmpleadoController extends Controller
 {
+    /*
+    // Constructor original con middlewares, mantenido comentado para referencia:
     public function __construct() {
         $this->middleware('can:empleados')->only('index');
         $this->middleware('can:empleados.store')->only('create', 'store');
         $this->middleware('can:empleados.update')->only('edit', 'update');
         $this->middleware('can:empleados.destroy')->only('destroy');
     }
+    */
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //$empleados = Empleado::all(); // Recuperar todos los empleados
+        if (!Auth::user()->hasPermissionTo('empleados')) {
+            abort(403, 'No tienes permiso para ver los empleados.');
+        }
+
+        // Recuperar empleados junto con la cantidad de ventas y ventas del mes actual
         $empleados = Empleado::with(['ventas' => function ($query) {
-            $query->select('idemp'); // Solo seleccionamos idemp para optimizar
+            $query->select('idemp');
         }])
-            ->withCount('ventas') // Total de ventas por empleado
+            ->withCount('ventas')
             ->withCount([
                 'ventas as ventas_mes_actual' => function ($query) {
                     $query->whereMonth('fechaven', Carbon::now()->month)
@@ -44,6 +52,9 @@ class EmpleadoController extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->hasPermissionTo('empleados.store')) {
+            abort(403, 'No tienes permiso para crear empleados.');
+        }
         return view('employee.create');
     }
 
@@ -52,11 +63,15 @@ class EmpleadoController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermissionTo('empleados.store')) {
+            abort(403, 'No tienes permiso para crear empleados.');
+        }
+
         $request->validate([
             'nombreemp' => 'required|string|max:255',
             'telefonoemp' => 'required|string|max:15',
-            'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp', // Validar que el usuario sea único
-            'passwordemp' => 'required|string|min:4', // Validar longitud y confirmación
+            'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp',
+            'passwordemp' => 'required|string|min:4',
             'idrol' => 'required|string',
             'foto_url' => 'nullable|image|max:2048',
             'email' => 'nullable|email|max:255',
@@ -64,28 +79,29 @@ class EmpleadoController extends Controller
 
         $data = $request->all();
 
-        // Encriptar la contraseña
-        //$data['passwordemp'] = bcrypt($request->passwordemp);
+        // Aquí puedes encriptar la contraseña si es necesario
+        // $data['passwordemp'] = bcrypt($request->passwordemp);
 
         // Subir la foto si existe
         if ($request->hasFile('foto_url')) {
             $file = $request->file('foto_url');
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
-            $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos
-            $file->move($destinationPath, $filename); // Mover el archivo
-            $data['foto_url'] = 'fotos/' . $filename; // Ruta para guardar
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('storage/fotos');
+            $file->move($destinationPath, $filename);
+            $data['foto_url'] = 'fotos/' . $filename;
         }
 
         $empleado = Empleado::create($data);
+
         Historial::create([
             'accion' => 'Creación de empleado',
-            'descripcion' =>  'Datos: ' . json_encode($empleado), // Campo opcional
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'descripcion' => 'Datos: ' . json_encode($empleado),
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);
+
         return redirect()->route('empleados')->with('success', 'Empleado creado exitosamente.');
     }
-
 
     /**
      * Display the specified resource.
@@ -101,16 +117,20 @@ class EmpleadoController extends Controller
      */
     public function edit(string $id)
     {
-        $empleado = Empleado::findOrFail($id);
-        if (Auth::user()->idemp == $id || Auth::user()->idemp == 1) {
-            return view('employee.edit', compact('empleado'));
-        } else {
+        // Solo se permite editar si el usuario es el mismo o es el superadministrador (idemp = 1)
+        if (!Auth::user()->hasPermissionTo('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
         }
+        $empleado = Empleado::findOrFail($id);
+        return view('employee.edit', compact('empleado'));
     }
 
     public function editRoles(string $id)
     {
+        // Verifica si el usuario tiene permiso para actualizar roles de empleados
+        if (!Auth::user()->hasPermissionTo('empleados.update')) {
+            abort(403, 'No tienes permiso para editar roles.');
+        }
         $roles = Role::all();
         $empleado = Empleado::findOrFail($id);
         return view('employee.roles', compact('roles', 'empleado'));
@@ -131,47 +151,43 @@ class EmpleadoController extends Controller
             'email' => 'nullable|email|max:255',
         ];
 
-        // Si el usuario es administrador, validar el campo `idrol`
+        // Si el usuario es administrador, se valida el campo idrol
         if (Auth::user()->idrol === 'administrador') {
             $rules['idrol'] = 'required|string';
         }
 
-        // Validar los datos
         $request->validate($rules);
-
         $data = $request->all();
 
-        // Si el usuario NO es administrador, conservar el rol actual
+        // Si el usuario NO es administrador, mantener el rol actual
         if (Auth::user()->idrol !== 'administrador') {
-            $data['idrol'] = $empleado->idrol; // Mantener el rol actual
+            $data['idrol'] = $empleado->idrol;
         }
-        // Contraseña opcional
-        if ($request->filled('passwordemp')) {
-        } else {
-            unset($data['passwordemp']); // No actualizar si no se envía
+        // Si no se envía contraseña, no actualizarla
+        if (!$request->filled('passwordemp')) {
+            unset($data['passwordemp']);
         }
-        //Email opcional
-        if ($request->filled('email')) {
-        } else {
-            unset($data['email']); // No actualizar si no se envía
+        // Si no se envía email, no actualizarlo
+        if (!$request->filled('email')) {
+            unset($data['email']);
         }
 
-        // Subir la foto si existe
+        // Subir foto si existe
         if ($request->hasFile('foto_url')) {
-            // Eliminar la foto anterior si existe
             if (!empty($empleado->foto_url) && file_exists(public_path('storage/' . $empleado->foto_url))) {
-                unlink(public_path('storage/' . $empleado->foto_url)); // Eliminar el archivo antiguo
+                unlink(public_path('storage/' . $empleado->foto_url));
             }
             $file = $request->file('foto_url');
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension(); // Generar un nombre único
-            $destinationPath = public_path('storage/fotos'); // Carpeta en public/storage/fotos
-            $file->move($destinationPath, $filename); // Mover el archivo
-            $data['foto_url'] = 'fotos/' . $filename; // Ruta para guardar
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $destinationPath = public_path('storage/fotos');
+            $file->move($destinationPath, $filename);
+            $data['foto_url'] = 'fotos/' . $filename;
         }
+
         Historial::create([
             'accion' => 'Actualización de empleado',
-            'descripcion' =>  'Datos antigüos: ' . json_encode($empleado), // Campo opcional
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'descripcion' => 'Datos antiguos: ' . json_encode($empleado),
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);
 
@@ -184,21 +200,18 @@ class EmpleadoController extends Controller
     {
         $empleado = Empleado::findOrFail($id);
         $user = Auth::user();
-        // Validación
         $request->validate([
-            'idrol' => 'required|exists:roles,idrol', // Asegura que el rol exista en la BD
+            'idrol' => 'required|exists:roles,idrol',
         ]);
-        // Si el empleado es administrador, solo `idemp = 1` puede modificarlo
         if ($empleado->idrol === 'administrador' && $user->idemp != 1) {
             return redirect()->back()->with('error', 'No tienes permiso para cambiar el rol de un administrador.');
         }
-        // Actualiza el rol
         $empleado->idrol = $request->idrol;
         $empleado->save();
         Historial::create([
             'accion' => 'Cambio de Rol de empleado',
-            'descripcion' =>  'Empleado: ' . json_encode($empleado), // Campo opcional
-            'realizado_por' => $user->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'descripcion' => 'Empleado: ' . json_encode($empleado),
+            'realizado_por' => $user->nombreemp . ' | ' . $request->ip(),
             'fecha' => now(),
         ]);
         return redirect()->back()->with('success', 'Rol actualizado correctamente.');
@@ -206,9 +219,8 @@ class EmpleadoController extends Controller
 
     public function updateRoles(Request $request, $id)
     {
-        $empleado = Empleado::findOrFail($id); // O usa tu modelo de Empleado
-        $empleado->syncRoles($request->input('roles', [])); // Asigna roles
-
+        $empleado = Empleado::findOrFail($id);
+        $empleado->syncRoles($request->input('roles', []));
         return redirect()->route('empleados')->with('success', 'Roles actualizados correctamente.');
     }
 
@@ -217,22 +229,21 @@ class EmpleadoController extends Controller
      */
     public function destroy(string $id)
     {
+        if (!Auth::user()->hasPermissionTo('empleados.destroy')) {
+            abort(403, 'No tienes permiso para eliminar empleados.');
+        }
         $empleado = Empleado::findOrFail($id);
-
-        // Opcional: Validar restricciones si es necesario
-        // Por ejemplo, no permitir eliminar administradores (puedes ajustar esta lógica según tus necesidades)
+        // Validar que no se elimine un administrador
         if ($empleado->idrol === 'administrador') {
             return redirect()->route('empleados')->withErrors(['error' => 'No puedes eliminar a un administrador.']);
         }
         Historial::create([
             'accion' => 'Eliminación de empleado',
-            'descripcion' =>  'Datos: ' . json_encode($empleado), // Campo opcional
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel'), // Almacena el nombre del usuario o 'laravel' si no hay nombreemp 
+            'descripcion' => 'Datos: ' . json_encode($empleado),
+            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel'),
             'fecha' => now(),
         ]);
-
         $empleado->delete();
-
         return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente.');
     }
 }

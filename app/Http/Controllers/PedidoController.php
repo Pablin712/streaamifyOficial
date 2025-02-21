@@ -10,12 +10,17 @@ use App\Models\Producto;
 use App\Models\Historial;
 class PedidoController extends Controller
 {
+    /*
     public function __construct() {
         $this->middleware('can:empleado.pedidos.index')->only('index');
         $this->middleware('can:empleado.pedidos.update')->only('update');
     }
+    */
     public function index()
     {
+        if (!Auth::user()->hasPermissionTo('empleado.pedidos.index')) {
+            abort(403, 'No tienes permiso para ver los pedidos.');
+        }
         $pedidos = Pedido::with(['cliente', 'producto', 'estado'])->orderBy('fechapedido', 'desc')->get();
         $estados = EstadoRecarga::all();
 
@@ -23,6 +28,9 @@ class PedidoController extends Controller
     }
     public function update(Request $request, $id)
     {
+        if (!Auth::user()->hasPermissionTo('empleado.pedidos.update')) {
+            abort(403, 'No tienes permiso para aceptar los pedidos.');
+        }
         $pedido = Pedido::findOrFail($id);
         $cliente = Cliente::findOrFail($pedido->idcli); // Buscar cliente asociado al pedido
         $producto = Producto::findOrFail($pedido->producto_id); // Buscar producto del pedido
