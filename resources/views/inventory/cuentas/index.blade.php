@@ -7,25 +7,17 @@
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla a morado */
         .table-dark {
-            background-color: #800080 !important;
-            /* Color morado */
+            background-color: #800080 !important; /* Color morado */
             color: white !important;
-            /* Texto blanco para contraste */
         }
-
         /* Personalizando el badge bg-dark a morado */
         .badge.bg-dark {
-            background-color: #800080 !important;
-            /* Color morado */
+            background-color: #800080 !important; /* Color morado */
             color: white !important;
-            /* Texto blanco para el badge */
         }
-
         .badge.bg-dark:hover {
             background-color: #6a006a !important;
-            /* Color morado más oscuro en hover */
         }
-
         .btn-xs {
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem;
@@ -65,12 +57,12 @@
 @endsection
 
 @section('btncrear')
-    @can('cuentas.create')
+    @if (Auth::user()->hasPermissionTo('cuentas.create'))
         <a href="{{ route('cuentas.create') }}" class="btn btn-primary mb-3">Crear Cuenta</a>
-    @endcan
-    @can('valores.create')
+    @endif
+    @if (Auth::user()->hasPermissionTo('valores.create'))
         <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
-    @endcan
+    @endif
 @endsection
 
 @section('tablename', 'Cuentas')
@@ -86,9 +78,9 @@
                 <th>Vence</th>
                 <th>Clientes</th>
                 <th>Estado</th>
-                @canany(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy'])
+                @if (Auth::user()->hasAnyPermission(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -99,7 +91,7 @@
                     $hoy = \Carbon\Carbon::today();
                     $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                 @endphp
-                <tr> {{-- class="{{ $estadoClase }}" --}}
+                <tr>
                     <td>{{ $cuenta->idcue }}</td>
                     <td>{{ $cuenta->valor->idser }}-{{ $cuenta->valor->proveedor->nombrepro }}</td>
                     <td>{{ $cuenta->usuariocue }}</td>
@@ -127,7 +119,7 @@
                         @else
                             <span class="badge bg-success">Activa</span>
                         @endif
-                        @can('cuentas.status')
+                        @if (Auth::user()->hasPermissionTo('cuentas.status'))
                             <!-- Botón para cambiar estado -->
                             <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
                                 style="display:inline;">
@@ -141,35 +133,36 @@
                                     @endif
                                 </button>
                             </form>
-                        @endcan
+                        @endif
                     </td>
-                    @canany(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
                         <td>
-                            @can('cuentas.edit')
-                                <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs"><i
-                                        class="fas fa-edit"></i></a>
-                            @endcan
+                            @if (Auth::user()->hasPermissionTo('cuentas.edit'))
+                                <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
                             <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
                             @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                                @can('cuentas.renew')
+                                @if (Auth::user()->hasPermissionTo('cuentas.renew'))
                                     <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success btn-xs">
-                                        {{--  --}}
                                         <i class="fas fa-sync-alt"></i>
                                     </a>
-                                @endcan
+                                @endif
                             @endif
-                            @can('cuentas.destroy')
+                            @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
                                 <form action="{{ route('cuentas.destroy', $cuenta->idcue) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-xs"
-                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i>
+                                        onclick="return confirm('¿Estás seguro?')">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>
@@ -181,7 +174,6 @@
             Busca los perfiles de una cuenta específica.
             <div class="form-group mb-3">
                 <label for="idcue">Seleccionar Cuenta</label>
-
                 <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
                     <select name="idcue" id="idcue" class="form-control" onchange="this.form.submit()">
                         <option value="">-- Selecciona una Cuenta --</option>
@@ -197,25 +189,21 @@
         </div>
     </div>
 
-
     <div id="tabla-perfiles" class="card mb-4">
         <div class="card-header">
             <i class="fas fa-table me-1"></i>
             Perfiles de {{ $idcueSeleccionado }}
         </div>
         <div class="card-body">
-            {{-- aqui empieza la tabla, se modifica, en cualquier tabla
-        se debe poner con style id="datatablesSimple"
-        example: <table id="datatablesSimple"> --}}
             <table id="datatablesSimple" class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Número de Perfil</th>
                         <th>PIN del Perfil</th>
                         <th>Usuarios Activos</th>
-                        @canany(['cuentas.mensaje', 'perfil.update'])
+                        @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
                             <th>Acciones</th>
-                        @endcanany
+                        @endif
                     </tr>
                 </thead>
                 <tbody id="Perfil">
@@ -224,41 +212,34 @@
                             <td>{{ $perfil->numeroper }}</td>
                             <td>{{ $perfil->pinper }}</td>
                             <td class="usuarios-activos">
-                                <span
-                                    class="
-                                {{ $perfil->usuarios_activos == 0
-                                    ? 'badge bg-danger'
-                                    : ($perfil->usuarios_activos == 1
-                                        ? 'badge bg-success'
-                                        : 'badge bg-dark') }}">
+                                <span class="{{ $perfil->usuarios_activos == 0 ? 'badge bg-danger' : ($perfil->usuarios_activos == 1 ? 'badge bg-success' : 'badge bg-dark') }}">
                                     {{ $perfil->usuarios_activos }}
                                 </span>
                             </td>
-                            @canany(['cuentas.mensaje', 'perfil.update'])
+                            @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
                                 <td>
-                                    @can('perfil.update')
+                                    @if (Auth::user()->hasPermissionTo('perfil.update'))
                                         <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
                                             data-bs-target="#editProfileModal" data-id="{{ $perfil->idper }}"
                                             data-pin="{{ $perfil->pinper }}">
                                             <i class="fas fa-edit">Editar</i>
                                         </button>
-                                    @endcan
-                                    @can('cuentas.mensaje')
-                                        <!-- Botón para obtener o copiar el mensaje del perfil -->
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
                                         <button class="btn btn-success btn-sm"
                                             onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                    @endcan
+                                    @endif
                                 </td>
-                            @endcanany
+                            @endif
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
                         <td colspan="2" class="text-end"><strong>Total de Usuarios activos:</strong></td>
-                        <td id="totalUsuariosActivos"><strong>0</strong></td> <!-- Aquí se mostrará la suma -->
+                        <td id="totalUsuariosActivos"><strong>0</strong></td>
                     </tr>
                 </tfoot>
             </table>
@@ -301,69 +282,43 @@
             }
         });
     </script>
-    {{-- este script es para el modal de editar perfil que aun no funciona --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             $('#editProfileModal').on('show.bs.modal', function(event) {
-                var button = $(event.relatedTarget); // El botón que activó el modal
-                var perfilId = button.data('id'); // Obtener el ID del perfil
-                var pinper = button.data('pin'); // Obtener el PIN del perfil
-
+                var button = $(event.relatedTarget);
+                var perfilId = button.data('id');
+                var pinper = button.data('pin');
                 var modal = $(this);
-                modal.find('#perfilId').val(perfilId); // Asignar el ID al campo oculto
-                modal.find('#pinper').val(pinper); // Asignar el PIN al campo de texto
-
-                // Actualizar la URL del formulario para apuntar al perfil correcto
+                modal.find('#perfilId').val(perfilId);
+                modal.find('#pinper').val(pinper);
                 var formAction = "{{ url('admin/perfil') }}/" + perfilId;
-                modal.find('#editProfileForm').attr('action',
-                    formAction); // Asignar la URL correcta al formulario
+                modal.find('#editProfileForm').attr('action', formAction);
             });
         });
     </script>
-
-    {{-- script para sumar los usuarios activos de la tabla perfiles --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Sumar los valores de la columna "Usuarios Activos"
             var totalUsuarios = 0;
-
-            // Obtener todos los valores de la columna "Usuarios Activos"
             var usuariosActivos = document.querySelectorAll('.usuarios-activos');
-
-            // Recorrer todos los valores y sumarlos
             usuariosActivos.forEach(function(item) {
                 totalUsuarios += parseInt(item.textContent) || 0;
             });
-
-            // Mostrar el total en el pie de la tabla
             document.getElementById('totalUsuariosActivos').textContent = totalUsuarios;
         });
     </script>
-    {{-- script para copiar un mensaje al portapapeles --}}
     <script>
         function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
-            // 1. Limpiar el `idcue` para que solo contenga letras
-            var servicio = idcue.replace(/[^a-zA-Z]/g, ''); // Eliminar todo lo que no sea letra
-
-            // 2. Crear el mensaje con saltos de línea explícitos
-            var message = servicio + "\n"; // Usar el `idcue` limpio y un salto de línea extra
-            message += "Usuario: " + usuariocue + "\n"; // Usar el `usuariocue`
-            message += "Clave: " + contrasenacue + "\n"; // Usar el `contrasenacue`
-            message += "PIN de perfil Nro " + numeroper + ": " + pinper; // Usar el `numeroper`
-
-            // 3. Crear un área de texto temporal para copiar el mensaje
+            var servicio = idcue.replace(/[^a-zA-Z]/g, '');
+            var message = servicio + "\n";
+            message += "Usuario: " + usuariocue + "\n";
+            message += "Clave: " + contrasenacue + "\n";
+            message += "PIN de perfil Nro " + numeroper + ": " + pinper;
             var tempTextArea = document.createElement("textarea");
-            tempTextArea.value = message; // Establecer el valor como el mensaje completo
+            tempTextArea.value = message;
             document.body.appendChild(tempTextArea);
-
-            // 4. Seleccionar y copiar el texto al portapapeles
             tempTextArea.select();
             document.execCommand("copy");
-
-            // 5. Eliminar el área de texto temporal
             document.body.removeChild(tempTextArea);
-
-            // 6. Avisar al usuario que el mensaje se ha copiado
             alert("El mensaje se ha copiado al portapapeles.");
         }
     </script>
@@ -373,11 +328,10 @@
         </script>
     @endif
     <script>
-        // Inicializa Select2 en el select con el id 'idcue'
         $(document).ready(function() {
             $('#idcue').select2({
                 placeholder: "Selecciona una Cuenta",
-                allowClear: true // Permite borrar la selección
+                allowClear: true
             });
         });
     </script>

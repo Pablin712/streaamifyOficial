@@ -76,7 +76,7 @@
                             {{ ucfirst($recarga->estado->nombre) }}
                         </span>
                         @if ($recarga->estado->nombre === 'Pendiente')
-                            @can('empleado.recargas.updateEstado')
+                            @if (Auth::user()->hasPermissionTo('empleado.recargas.updateEstado'))
                                 <form action="{{ route('empleado.recargas.updateEstado', $recarga->idrec) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
@@ -94,7 +94,7 @@
                                         Rechazar
                                     </button>
                                 </form>
-                            @endcan
+                            @endif
                         @endif
                     </td>
                 </tr>

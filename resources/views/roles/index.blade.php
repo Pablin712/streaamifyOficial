@@ -25,9 +25,9 @@
 @section('tablename', 'Permisos')
 
 @section('btncrear')
-    @can('roles.store')
+    @if (Auth::user()->hasPermissionTo('roles.store'))
         <a href="{{ route('roles.create') }}" class="btn btn-primary">Nuevo Rol</a>
-    @endcan
+    @endif
 @endsection
 
 @section('table1')
@@ -36,9 +36,9 @@
             <tr>
                 <th>ID</th>
                 <th>Rol</th>
-                @canany(['roles.update', 'roles.destroy'])
+                @if (Auth::user()->hasAnyPermission(['roles.update', 'roles.destroy']))
                     <th colspan="2">Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -46,21 +46,25 @@
                 <tr>
                     <td>{{ $rol->id }}</td>
                     <td>{{ $rol->name }}</td>
-                    @canany(['roles.update', 'roles.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['roles.update', 'roles.destroy']))
                         <td>
-                            @can('roles.update')
-                                <a href="{{ route('roles.edit', $rol->id) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                            @endcan
-                            @can('roles.destroy')
+                            @if (Auth::user()->hasPermissionTo('roles.update'))
+                                <a href="{{ route('roles.edit', $rol->id) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('roles.destroy'))
                                 <form action="{{ route('roles.destroy', $rol->id) }}" method="POST" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-circle"
-                                        onclick="return confirm('¿Eliminar este rol?')"><i class="fas fa-trash"></i></button>
+                                        onclick="return confirm('¿Eliminar este rol?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @empty
                 <tr>

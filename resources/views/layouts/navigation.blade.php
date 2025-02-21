@@ -23,17 +23,9 @@
         <!-- Navbar Brand-->
         <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>
         <!-- Sidebar Toggle-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i
-                class="fas fa-bars"></i></button>
-        <!-- Navbar SSearch
-        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
-            <div class="input-group">
-                <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..."
-                    aria-describedby="btnNavbarSearch" />
-                <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i
-                        class="fas fa-search"></i></button>
-            </div>
-        </form> -->
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
+            <i class="fas fa-bars"></i>
+        </button>
         <!-- Navbar-->
         <ul class="navbar-nav ms-auto me-3 me-lg-4">
             @auth
@@ -43,17 +35,23 @@
                         <i class="fas fa-user fa-fw"></i> {{ Auth::user()->nombreemp }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">Ajustes</a>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
+                                Ajustes
+                            </a>
                         </li>
-                        @can('historial')
-                            <li><a class="dropdown-item" href="{{ route('historial') }}">Actividad</a></li>
-                        @endcan
+                        {{-- Reemplazamos @can('historial') --}}
+                        @if (Auth::user()->hasPermissionTo('historial'))
+                            <li>
+                                <a class="dropdown-item" href="{{ route('historial') }}">Actividad</a>
+                            </li>
+                        @endif
                         <li>
                             <hr class="dropdown-divider" />
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ route('logout') }}"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                 Logout
                             </a>
                         </li>
@@ -79,15 +77,16 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-tasks"></i></div>
                             Tareas
                         </a>
-                        @can('dashboard')
+                        {{-- Reemplazamos @can('dashboard') --}}
+                        @if (Auth::user()->hasPermissionTo('dashboard'))
                             <a class="nav-link" href="{{ route('dashboard') }}">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
                                 Dashboard
                             </a>
-                        @endcan
+                        @endif
                         <div class="sb-sidenav-menu-heading">Negocio</div>
-                        <!-- Finance collapsible -->
-                        @canany(['empleados', 'roles.index'])
+                        {{-- Reemplazamos @canany(['empleados', 'roles.index']) --}}
+                        @if (Auth::user()->hasAnyPermission(['empleados', 'roles.index']))
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                                 data-bs-target="#collapseAdministration" aria-expanded="false"
                                 aria-controls="collapseAdministration">
@@ -98,16 +97,17 @@
                             <div class="collapse" id="collapseAdministration" aria-labelledby="headingAdministration"
                                 data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    @can('empleados')
+                                    @if (Auth::user()->hasPermissionTo('empleados'))
                                         <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
-                                    @endcan
-                                    @can('roles.index')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('roles.index'))
                                         <a class="nav-link" href="{{ route('roles.index') }}">Roles</a>
-                                    @endcan
+                                    @endif
                                 </nav>
                             </div>
-                        @endcanany
-                        @canany(['empleado.recargas.index', 'costos', 'gastos'])
+                        @endif
+                        {{-- Reemplazamos @canany(['empleado.recargas.index', 'costos', 'gastos']) --}}
+                        @if (Auth::user()->hasAnyPermission(['empleado.recargas.index', 'costos', 'gastos']))
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                                 data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
                                 <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
@@ -117,20 +117,20 @@
                             <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
                                 data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    @can('empleado.recargas.index')
+                                    @if (Auth::user()->hasPermissionTo('empleado.recargas.index'))
                                         <a class="nav-link" href="{{ route('empleado.recargas.index') }}">Recargas</a>
-                                    @endcan
-                                    @can('costos')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('costos'))
                                         <a class="nav-link" href="{{ route('costos') }}">Costos</a>
-                                    @endcan
-                                    @can('gastos')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('gastos'))
                                         <a class="nav-link" href="{{ route('gastos') }}">Gastos</a>
-                                    @endcan
+                                    @endif
                                 </nav>
                             </div>
-                        @endcanany {{-- finance collapsible end --}}
-                        {{-- Aquí empieza el colapsable Sales --}}
-                        @canany(['ventas', 'empleados.pedidos.index', 'clientes', 'gestion.index', 'productos.index'])
+                        @endif
+                        {{-- Reemplazamos @canany(['ventas', 'empleados.pedidos.index', 'clientes', 'gestion.index', 'productos.index']) --}}
+                        @if (Auth::user()->hasAnyPermission(['ventas', 'empleados.pedidos.index', 'clientes', 'gestion.index', 'productos.index']))
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                                 data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                                 <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
@@ -140,28 +140,27 @@
                             <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
                                 data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    @can('ventas')
+                                    @if (Auth::user()->hasPermissionTo('ventas'))
                                         <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
-                                    @endcan
-                                    @can('empleado.pedidos.index')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('empleado.pedidos.index'))
                                         <a class="nav-link" href="{{ route('empleado.pedidos.index') }}">Pedidos</a>
-                                    @endcan
-                                    @can('clientes')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('clientes'))
                                         <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
-                                    @endcan
-                                    @can('gestion')
-                                        <a class="nav-link" href="{{ route('gestion.index') }}">
-                                            Gestión de Productos</a>
-                                    @endcan
-                                    @can('productos.index')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('gestion'))
+                                        <a class="nav-link" href="{{ route('gestion.index') }}">Gestión de Productos</a>
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('productos.index'))
                                         <a class="nav-link" href="{{ route('productos.index') }}">Productos</a>
-                                    @endcan
+                                    @endif
                                 </nav>
                             </div>
-                        @endcanany
-                        {{-- Aquí termina el colapsable Sales --}}
+                        @endif
                         <div class="sb-sidenav-menu-heading">Stock</div>
-                        @canany(['cuentas', 'usuarios', 'mantenimientos'])
+                        {{-- Reemplazamos @canany(['cuentas', 'usuarios', 'mantenimientos']) --}}
+                        @if (Auth::user()->hasAnyPermission(['cuentas', 'usuarios', 'mantenimientos']))
                             <!-- Accounts collapsible -->
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                                 data-bs-target="#collapseAccounts" aria-expanded="false"
@@ -173,20 +172,21 @@
                             <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
                                 data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    @can('cuentas')
+                                    @if (Auth::user()->hasPermissionTo('cuentas'))
                                         <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
-                                    @endcan
-                                    @can('usuarios')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('usuarios'))
                                         <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
-                                    @endcan
-                                    @can('mantenimientos')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('mantenimientos'))
                                         <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>
-                                    @endcan
+                                    @endif
                                 </nav>
                             </div>
-                        @endcanany
+                        @endif
 
-                        @canany(['servicios', 'proveedores', 'valores'])
+                        {{-- Reemplazamos @canany(['servicios', 'proveedores', 'valores']) --}}
+                        @if (Auth::user()->hasAnyPermission(['servicios', 'proveedores', 'valores']))
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                                 data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
                                 <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
@@ -196,18 +196,18 @@
                             <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
                                 data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
-                                    @can('servicios')
+                                    @if (Auth::user()->hasPermissionTo('servicios'))
                                         <a class="nav-link" href="{{ route('servicios') }}">Servicios</a>
-                                    @endcan
-                                    @can('proveedores')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('proveedores'))
                                         <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
-                                    @endcan
-                                    @can('valores')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('valores'))
                                         <a class="nav-link" href="{{ route('valores') }}">Valores</a>
-                                    @endcan
+                                    @endif
                                 </nav>
                             </div>
-                        @endcanany
+                        @endif
                     </div>
                 </div>
                 <div class="sb-sidenav-footer">
@@ -244,18 +244,14 @@
     </script>
     <script src="{{ asset('js/scripts.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <!-- <script src="{{ asset('assets/demo/chart-area-demo.js') }}"></script>
-    <script src="{{ asset('assets/demo/chart-bar-demo.js') }}"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
         crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Espera a que los datos estén disponibles (ajusta el tiempo si es necesario)
             setTimeout(function() {
                 const dataTableElement = document.querySelector('#datatablesSimple');
                 if (dataTableElement) {
@@ -275,10 +271,9 @@
                         console.warn('La tabla sigue sin filas después del tiempo de espera.');
                     }
                 }
-            }, 500); // Ajusta el tiempo de espera si es necesario
+            }, 500);
         });
     </script>
-    <!-- Agregar el JavaScript de Select2 -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @yield('scripts')

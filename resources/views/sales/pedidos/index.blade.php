@@ -1,5 +1,4 @@
 @extends('layouts.table')
-
 @section('title')
     Gestión de Pedidos
 @endsection
@@ -30,9 +29,9 @@
                 <th>Fecha del Pedido</th>
                 <th>Estado</th>
                 <th>Respuesta</th>
-                @can('empleado.pedidos.update')
+                @if (Auth::user()->hasPermissionTo('empleado.pedidos.update'))
                     <th>Acciones</th>
-                @endcan
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -44,16 +43,16 @@
                     <td>{{ $pedido->producto->descripcionpro }}</td>
                     <td>{{ $pedido->fechapedido->format('d/m/Y H:i') }}</td>
                     <td>
-                        <span
-                            class="badge 
+                        <span class="badge 
                             @if ($pedido->estado->nombre === 'Pendiente') bg-warning 
                             @elseif ($pedido->estado->nombre === 'Rechazado') bg-danger 
-                            @elseif ($pedido->estado->nombre === 'Aprobado') bg-success @endif">
+                            @elseif ($pedido->estado->nombre === 'Aprobado') bg-success 
+                            @endif">
                             {{ ucfirst($pedido->estado->nombre) }}
                         </span>
                     </td>
                     <td>{{ $pedido->respuesta ?? 'Sin respuesta' }}</td>
-                    @can('empleado.pedidos.update')
+                    @if (Auth::user()->hasPermissionTo('empleado.pedidos.update'))
                         <td>
                             @if ($pedido->estado->nombre === 'Pendiente')
                                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
@@ -64,7 +63,7 @@
                                 <span class="text-muted">Sin acciones</span>
                             @endif
                         </td>
-                    @endcan
+                    @endif
                 </tr>
 
                 <!-- Modal para actualizar el pedido -->

@@ -35,9 +35,9 @@
                 <th>Fecha</th>
                 <th>Descripción</th>
                 <th>Monto</th>
-                @canany(['costos.update', 'costos.destroy'])
+                @if (Auth::user()->hasAnyPermission(['costos.update', 'costos.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -48,9 +48,9 @@
                     <td>{{ $costo->fechacos }}</td>
                     <td>{{ $costo->descripcioncos }}</td>
                     <td>${{ number_format($costo->montocos, 2) }}</td>
-                    @canany(['costos.update', 'costos.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['costos.update', 'costos.destroy']))
                         <td>
-                            @can('costos.update')
+                            @if (Auth::user()->hasPermissionTo('costos.update'))
                                 <!-- Editar costo (abre el modal con los datos del costo) -->
                                 <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
                                     data-bs-target="#editarCostoModal" data-id="{{ $costo->idcos }}"
@@ -58,19 +58,19 @@
                                     data-montocos="{{ $costo->montocos }}" data-fechacos="{{ $costo->fechacos }}">
                                     Editar
                                 </button>
-                            @endcan
-                            @can('costos.destroy')
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('costos.destroy'))
                                 <!-- Eliminar costo -->
                                 <form action="{{ route('costos.destroy', $costo->idcos) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger " onclick="return confirm('¿Estás seguro?')"><i
-                                            class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>

@@ -191,7 +191,9 @@
 @endsection
 
 @section('btncrear')
-    <a href="{{ route('ventas.create') }}" class="btn btn-primary mb-3">Crear Venta</a>
+    @if (Auth::user()->hasPermissionTo('ventas.create'))
+        <a href="{{ route('ventas.create') }}" class="btn btn-primary mb-3">Crear Venta</a>
+    @endif
 @endsection
 
 @section('tablename', 'Ventas')
@@ -205,9 +207,9 @@
                 <th>Empleado</th>
                 <th>Fecha de Venta</th>
                 <th>Total</th>
-                @canany(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy'])
+                @if (Auth::user()->hasAnyPermission(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -218,32 +220,26 @@
                     <td>{{ $venta->empleado->nombreemp }}</td>
                     <td>{{ $venta->fechaven->format('Y/m/d') }}</td>
                     <td>{{ $venta->totalpagoven }}</td>
-                    @canany(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy']))
                         <td>
-                            @can('ventas.edit')
-                                <!-- Botón para editar venta -->
-                                <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning"><i
-                                        class="fas fa-edit"></i></a>
-                            @endcan
-                            @can('ventas.renew')
+                            @if (Auth::user()->hasPermissionTo('ventas.edit'))
+                                <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                 <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}"
                                     class="btn btn-success">
-                                    {{--  --}}
                                     <i class="fas fa-sync-alt"></i>
                                 </a>
-                            @endcan
-                            @if (!empty($venta->cliente->email))
-                                @can('ventas.sendInvoice')
-                                    <!-- Botón para vista previa de factura -->
-                                    <button class="btn btn-info" data-bs-toggle="modal"
-                                        data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
-                                        <i class="fas fa-file-invoice"></i>
-                                    </button>
-                                @endcan
                             @endif
-
-                            <!-- Eliminar venta -->
-                            @can('ventas.destroy')
+                            @if (!empty($venta->cliente->email) && Auth::user()->hasPermissionTo('ventas.sendInvoice'))
+                                <button class="btn btn-info" data-bs-toggle="modal"
+                                    data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
+                                    <i class="fas fa-file-invoice"></i>
+                                </button>
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('ventas.destroy'))
                                 <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
@@ -253,20 +249,20 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            @endcan
+                            @endif
                             <!-- Modal de vista previa de factura -->
                             <div class="modal fade" id="previewInvoiceModal{{ $venta->idven }}" tabindex="-1"
                                 aria-labelledby="previewInvoiceLabel{{ $venta->idven }}" aria-hidden="true">
                                 <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="previewInvoiceLabel{{ $venta->idven }}">Vista Previa
-                                                de la Factura</h5>
+                                            <h5 class="modal-title" id="previewInvoiceLabel{{ $venta->idven }}">
+                                                Vista Previa de la Factura
+                                            </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <!-- Aquí se incluye el contenido de la factura -->
                                             @include('mail-format.factura', [
                                                 'venta' => $venta,
                                                 'cliente' => $venta->cliente,
@@ -282,29 +278,20 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>
     </table>
-
 @endsection
 
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Script para mostrar los detalles de la venta en un modal
-            $('#viewDetailModal').on('show.bs.modal', function(event) {
-                var button = $(event.relatedTarget);
-                var detalleId = button.data('id');
-                var descripcion = button.data('descripcion');
-
-                var modal = $(this);
-                modal.find('#detailDescripcion').text(descripcion);
-                modal.find('#detailCosto').text("Costo: " +
-                    detalleId); // Ajusta esto según la información que necesites
-            });
+            // Inicializa DataTables
+            $('#datatablesSimple').DataTable();
         });
     </script>
     <script>
@@ -312,7 +299,7 @@
         $(document).ready(function() {
             $('#idven').select2({
                 placeholder: "Selecciona una Venta",
-                allowClear: true // Permite borrar la selección
+                allowClear: true
             });
         });
     </script>

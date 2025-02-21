@@ -20,11 +20,11 @@
 
 @section('btncrear')
     <!-- Botón para abrir el modal de creación de gasto -->
-    @can('gastos.store')
+    @if (Auth::user()->hasPermissionTo('gastos.store'))
         <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#seleccionarTipoGastoModal">
             Crear Gasto
         </button>
-    @endcan
+    @endif
 @endsection
 @section('tablename', 'Gastos')
 @section('table1')
@@ -36,9 +36,9 @@
                 <th>Fecha</th>
                 <th>Descripción</th>
                 <th>Monto</th>
-                @canany(['gastos.update', 'gastos.destroy'])
+                @if (Auth::user()->hasAnyPermission(['gastos.update', 'gastos.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -49,49 +49,49 @@
                     <td>{{ $gasto->fechagas }}</td>
                     <td>{{ $gasto->descripciongas }}</td>
                     <td>${{ number_format($gasto->montogas, 2) }}</td>
-                    @canany(['gastos.update', 'gastos.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['gastos.update', 'gastos.destroy']))
                         <td>
-                            @can('gastos.update')
+                            @if (Auth::user()->hasPermissionTo('gastos.update'))
                                 <!-- Editar gasto (abre el modal con los datos del gasto) -->
                                 <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
                                     data-bs-target="#editarGastoModal" data-id="{{ $gasto->idgas }}"
                                     data-idtip="{{ $gasto->idtip }}" data-descripciongas="{{ $gasto->descripciongas }}"
                                     data-montogas="{{ $gasto->montogas }}" data-fechagas="{{ $gasto->fechagas }}">
-
                                     Editar
                                 </button>
-                            @endcan
-                            <!-- Eliminar gasto -->
-                            @can('gastos.destroy')
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('gastos.destroy'))
+                                <!-- Eliminar gasto -->
                                 <form action="{{ route('gastos.destroy', $gasto->idgas) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')"><i
-                                            class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>
     </table>
 @endsection
+
 @section('table2')
     <div class="card mb-4">
         <div class="card-body">
             <h3>Gestión de Tipos de Gastos</h3>
             <h4>Realizado por Pablo Jiménez</h4>
             <p>Aquí puedes ver todos los tipos de gastos, describe el tipo de gasto en el modal.</p>
-            @can('tipos.store')
+            @if (Auth::user()->hasPermissionTo('tipos.store'))
                 <div class="form-group mb-3">
                     <!-- Botón para abrir el modal -->
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#crearTipoGastoModal">
                         Crear Tipo de Gasto
                     </button>
                 </div>
-            @endcan
+            @endif
         </div>
     </div>
     <div id="tabla-tipogasto" class="card mb-4">
@@ -100,17 +100,14 @@
             Tipos de gasto
         </div>
         <div class="card-body">
-            {{-- aqui empieza la tabla, se modifica, en cualquier tabla
-        se debe poner con style id="datatablesSimple"
-        example: <table id="datatablesSimple"> --}}
             <table id="datatablesSimple" class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Detalle</th>
-                        @canany(['tipos.update', 'tipos.destroy'])
+                        @if (Auth::user()->hasAnyPermission(['tipos.update', 'tipos.destroy']))
                             <th>Acciones</th>
-                        @endcanany
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -118,17 +115,17 @@
                         <tr>
                             <td>{{ $tipoGasto->idtip }}</td>
                             <td>{{ $tipoGasto->detalletip }}</td>
-                            @canany(['tipos.update', 'tipos.destroy'])
+                            @if (Auth::user()->hasAnyPermission(['tipos.update', 'tipos.destroy']))
                                 <td>
-                                    @can('tipos.update')
+                                    @if (Auth::user()->hasPermissionTo('tipos.update'))
                                         <!-- Editar Tipo de Gasto -->
                                         <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
                                             data-bs-target="#editarTipoGastoModal" data-idtip="{{ $tipoGasto->idtip }}"
                                             data-detalletip="{{ $tipoGasto->detalletip }}">
                                             Editar
                                         </button>
-                                    @endcan
-                                    @can('tipos.destroy')
+                                    @endif
+                                    @if (Auth::user()->hasPermissionTo('tipos.destroy'))
                                         <!-- Eliminar Tipo de Gasto -->
                                         <form action="{{ route('tipos.destroy', $tipoGasto->idtip) }}" method="POST"
                                             style="display: inline;">
@@ -139,9 +136,9 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
-                                    @endcan
+                                    @endif
                                 </td>
-                            @endcanany
+                            @endif
                         </tr>
                     @endforeach
                 </tbody>
@@ -149,6 +146,7 @@
         </div>
     </div>
 @endsection
+
 <!-- Modal para crear un nuevo gasto -->
 <div class="modal fade" id="seleccionarTipoGastoModal" tabindex="-1" aria-labelledby="seleccionarTipoGastoModalLabel"
     aria-hidden="true">
@@ -180,8 +178,7 @@
                     </div>
                     <div class="form-group mb-3">
                         <label for="montogas">Monto</label>
-                        <input type="number" name="montogas" id="montogas" class="form-control" step="0.01"
-                            required>
+                        <input type="number" name="montogas" id="montogas" class="form-control" step="0.01" required>
                     </div>
                     <div class="form-group mb-3">
                         <label for="fechagas">Fecha</label>
@@ -210,7 +207,7 @@
             <div class="modal-body">
                 <form action="#" method="POST" id="editarGastoForm">
                     @csrf
-                    @method('PUT') <!-- Asegúrate de incluir esto para el método PUT -->
+                    @method('PUT')
                     <!-- Selector de Tipo de Gasto -->
                     <div class="form-group mb-3">
                         <label for="idtip">Seleccionar Tipo de Gasto</label>
@@ -226,13 +223,11 @@
                     <!-- Campos de Gasto -->
                     <div class="form-group mb-3">
                         <label for="descripciongas">Descripción</label>
-                        <input type="text" name="descripciongas" id="edit_descripciongas" class="form-control"
-                            required>
+                        <input type="text" name="descripciongas" id="edit_descripciongas" class="form-control" required>
                     </div>
                     <div class="form-group mb-3">
                         <label for="montogas">Monto</label>
-                        <input type="number" name="montogas" id="edit_montogas" class="form-control"
-                            step="0.01" required>
+                        <input type="number" name="montogas" id="edit_montogas" class="form-control" step="0.01" required>
                     </div>
                     <div class="form-group mb-3">
                         <label for="fechagas">Fecha</label>
@@ -247,7 +242,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Modal para crear un nuevo Tipo de Gasto -->
 <div class="modal fade" id="crearTipoGastoModal" tabindex="-1" aria-labelledby="crearTipoGastoModalLabel"
@@ -266,7 +260,6 @@
                         <label for="detalletip">Detalle del Tipo de Gasto</label>
                         <input type="text" name="detalletip" id="detalletip" class="form-control" required>
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar</button>
@@ -276,6 +269,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal para Editar Tipo de Gasto -->
 <div class="modal fade" id="editarTipoGastoModal" tabindex="-1" aria-labelledby="editarTipoGastoModalLabel"
     aria-hidden="true">
@@ -288,14 +282,12 @@
             <div class="modal-body">
                 <form action="#" method="POST" id="editarTipoGastoForm">
                     @csrf
-                    @method('PUT') <!-- Asegúrate de incluir esto para el método PUT -->
-
+                    @method('PUT')
                     <!-- Campo para el detalle del tipo de gasto -->
                     <div class="form-group mb-3">
                         <label for="edit-detalletip">Detalle del Tipo de Gasto</label>
                         <input type="text" name="detalletip" id="edit-detalletip" class="form-control" required>
                     </div>
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
@@ -306,46 +298,31 @@
     </div>
 </div>
 
-
-
-
-
-
-{{-- 
-
-scripts
-
---}}
+{{-- Scripts --}}
 @section('scripts')
     <script>
         $(document).ready(function() {
-            // Función para rellenar el formulario del modal al abrirlo
+            // Función para rellenar el formulario del modal al abrirlo (Editar Gasto)
             $('#editarGastoModal').on('show.bs.modal', function(event) {
-                // Obtén el elemento que activó el modal (el SVG en este caso)
                 var button = $(event.relatedTarget);
-
-                // Extraer los datos del atributo data-*
                 var idgas = button.data('id');
                 var idtip = button.data('idtip');
                 var descripciongas = button.data('descripciongas');
                 var montogas = button.data('montogas');
                 var fechagas = button.data('fechagas');
 
-                // Imprime en la consola para depuración
                 console.log('ID Gasto:', idgas);
                 console.log('ID Tipo:', idtip);
                 console.log('Descripción:', descripciongas);
                 console.log('Monto:', montogas);
                 console.log('Fecha:', fechagas);
 
-                // Obtener el modal y rellenar los campos
                 var modal = $(this);
                 modal.find('#edit_idtip').val(idtip);
                 modal.find('#edit_descripciongas').val(descripciongas);
                 modal.find('#edit_montogas').val(montogas);
                 modal.find('#edit_fechagas').val(fechagas);
 
-                // Cambiar la acción del formulario para enviar al endpoint correcto
                 var formAction = "{{ route('gastos.update', '') }}/" + idgas;
                 modal.find('#editarGastoForm').attr('action', formAction);
             });
@@ -355,28 +332,19 @@ scripts
         $(document).ready(function() {
             // Función para rellenar el formulario del modal al abrirlo (Editar Tipo de Gasto)
             $('#editarTipoGastoModal').on('show.bs.modal', function(event) {
-                // Obtén el elemento que activó el modal (el botón de editar tipo de gasto)
                 var button = $(event.relatedTarget);
-
-                // Extraer los datos del atributo data-*
                 var idtip = button.data('idtip');
                 var detalletip = button.data('detalletip');
 
-                // Imprime en la consola para depuración
                 console.log('ID Tipo de Gasto:', idtip);
                 console.log('Detalle Tipo de Gasto:', detalletip);
 
-                // Obtener el modal y rellenar los campos
                 var modal = $(this);
                 modal.find('#edit-detalletip').val(detalletip);
 
-                // Cambiar la acción del formulario para enviar al endpoint correcto
                 var formAction = "{{ route('tipos.update', '') }}/" + idtip;
                 modal.find('#editarTipoGastoForm').attr('action', formAction);
             });
         });
     </script>
-
-
-
 @endsection

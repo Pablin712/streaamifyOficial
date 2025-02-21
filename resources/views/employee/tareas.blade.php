@@ -75,7 +75,7 @@
                             </button>
                         </form>
                         <!-- Botón eliminar -->
-                        @can('tareas.destroy')
+                        @if (Auth::user()->hasPermissionTo('tareas.destroy'))
                             <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
@@ -83,7 +83,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
-                        @endcan
+                        @endif
                     </div>
                 </div>
             @endforeach

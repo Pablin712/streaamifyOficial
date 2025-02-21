@@ -17,15 +17,15 @@
     <p>Revisa el inventario y crea nuevos posibles contratos para luego agregarlas a stock.</p>
 @endsection
 @section('btncrear')
-    @can('valores.create')
+    @if (Auth::user()->hasPermissionTo('valores.create'))
         <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
-    @endcan
-    @can('servicios.create')
+    @endif
+    @if (Auth::user()->hasPermissionTo('servicios.create'))
         <a href="{{ route('servicios.create') }}" class="btn btn-primary mb-3">Nuevo Servicio</a>
-    @endcan
-    @can('proveedores.create')
+    @endif
+    @if (Auth::user()->hasPermissionTo('proveedores.create'))
         <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Nuevo Proveedor</a>
-    @endcan
+    @endif
 @endsection
 @section('tablename', 'Valores')
 @section('table1')
@@ -39,9 +39,9 @@
                 <th>Pantallas Min</th>
                 <th>Pantallas Max</th>
                 <th>Meses</th>
-                @canany(['valores.edit', 'valores.destroy'])
+                @if (Auth::user()->hasAnyPermission(['valores.edit', 'valores.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -49,28 +49,31 @@
                 <tr>
                     <td>{{ $valor->idval }}</td>
                     <td>{{ $valor->idser }}</td>
-                    <td>{{ $valor->proveedor->nombrepro }}</td> <!-- Mostrar el nombre del proveedor -->
+                    <td>{{ $valor->proveedor->nombrepro }}</td>
                     <td>${{ number_format($valor->costoval, 2) }}</td>
                     <td>{{ $valor->pantminval }}</td>
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>
-                    @canany(['valores.edit', 'valores.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['valores.edit', 'valores.destroy']))
                         <td>
-                            @can('valores.edit')
-                                <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning  "><i
-                                        class="fas fa-edit"></i></a>
-                            @endcan
-                            @can('valores.destroy')
+                            @if (Auth::user()->hasPermissionTo('valores.edit'))
+                                <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('valores.destroy'))
                                 <form action="{{ route('valores.destroy', $valor->idval) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-circle"
-                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                        onclick="return confirm('¿Estás seguro?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>

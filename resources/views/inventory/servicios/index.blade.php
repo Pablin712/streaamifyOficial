@@ -18,9 +18,9 @@
 @endsection
 @section('tablename', 'Servicios')
 @section('btncrear')
-    @can('servicios.create')
+    @if (Auth::user()->hasPermissionTo('servicios.create'))
         <a href="{{ route('servicios.create') }}" class="btn btn-primary">Crear Servicio</a>
-    @endcan
+    @endif
 @endsection
 @section('table1')
     <table id="datatablesSimple" class="table table-striped table-bordered">
@@ -33,9 +33,9 @@
                 <th>PVP combo</th>
                 <th>Reventa 1 pant</th>
                 <th>Reventa 1 cuent</th>
-                @canany(['servicios.edit', 'servicios.destroy'])
+                @if (Auth::user()->hasAnyPermission(['servicios.edit', 'servicios.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -48,29 +48,40 @@
                     <td>${{ number_format($servicio->comboser, 2) }}</td>
                     <td>${{ number_format($servicio->reventaser, 2) }}</td>
                     <td>${{ number_format($servicio->revcompser, 2) }}</td>
-                    @canany(['servicios.edit', 'servicios.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['servicios.edit', 'servicios.destroy']))
                         <td>
-                            @can('servicios.edit')
-                                <a href="{{ route('servicios.edit', $servicio->idser) }}" class="btn btn-warning  "><i
-                                        class="fas fa-edit"></i></a>
-                            @endcan
-                            @can('servicios.destroy')
+                            @if (Auth::user()->hasPermissionTo('servicios.edit'))
+                                <a href="{{ route('servicios.edit', $servicio->idser) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('servicios.destroy'))
                                 <form action="{{ route('servicios.destroy', $servicio->idser) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-circle"
-                                        onclick="return confirm('¿Eliminar este servicio?')"><i class="fas fa-trash"></i></button>
+                                        onclick="return confirm('¿Eliminar este servicio?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center">No hay servicios disponibles.</td>
+                    <td colspan="8" class="text-center">No hay servicios disponibles.</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
+@endsection
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializa DataTables
+            $('#datatablesSimple').DataTable();
+        });
+    </script>
 @endsection

@@ -23,12 +23,12 @@
 @endsection
 
 @section('btncrear')
-    @can('categorias.store')
+    @if (Auth::user()->hasPermissionTo('categorias.store'))
         <!-- Botón para abrir el modal de crear categoría -->
         <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#crearCategoriaModal">
             Crear Categoría
         </button>
-    @endcan
+    @endif
 @endsection
 
 @section('tablename', 'Categorías')
@@ -39,9 +39,9 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
-                @canany(['categorias.update', 'categorias.destroy'])
+                @if (Auth::user()->hasAnyPermission(['categorias.update', 'categorias.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -50,29 +50,30 @@
                     <td>{{ $categoria->id }}</td>
                     <td>{{ $categoria->nombre }}</td>
                     <td>{{ $categoria->descripcion }}</td>
-                    @canany(['categorias.update', 'categorias.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['categorias.update', 'categorias.destroy']))
                         <td>
-                            @can('categorias.update')
+                            @if (Auth::user()->hasPermissionTo('categorias.update'))
                                 <!-- Botón para editar categoría -->
                                 <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
                                     data-bs-target="#editarCategoriaModal" data-id="{{ $categoria->id }}"
                                     data-nombre="{{ $categoria->nombre }}" data-descripcion="{{ $categoria->descripcion }}">
                                     Editar
                                 </button>
-                            @endcan
-                            @can('categorias.destroy')
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('categorias.destroy'))
                                 <!-- Formulario para eliminar categoría -->
                                 <form action="{{ route('categorias.destroy', $categoria->id) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('¿Estás seguro?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>
@@ -81,11 +82,11 @@
 <!-- Tabla de Tipos de Producto -->
 @section('table2')
     <h3>Tipos de Producto</h3>
-    @can('tipos_producto.store')
+    @if (Auth::user()->hasPermissionTo('tipos_producto.store'))
         <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#crearTipoProductoModal">
             Crear Tipo de Producto
         </button>
-    @endcan
+    @endif
 
     <table id="datatablesSimple2" class="table table-striped table-bordered">
         <thead>
@@ -93,9 +94,9 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
-                @canany(['tipos_producto.update', 'tipos_producto.destroy'])
+                @if (Auth::user()->hasAnyPermission(['tipos_producto.update', 'tipos_producto.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -104,27 +105,29 @@
                     <td>{{ $tipoProducto->id }}</td>
                     <td>{{ $tipoProducto->nombre }}</td>
                     <td>{{ $tipoProducto->descripcion }}</td>
-                    @canany(['tipos_producto.update', 'tipos_producto.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['tipos_producto.update', 'tipos_producto.destroy']))
                         <td>
-                            @can('tipos_producto.update')
+                            @if (Auth::user()->hasPermissionTo('tipos_producto.update'))
                                 <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
                                     data-bs-target="#editarTipoProductoModal" data-id="{{ $tipoProducto->id }}"
-                                    data-nombre="{{ $tipoProducto->nombre }}" data-descripcion="{{ $tipoProducto->descripcion }}">
+                                    data-nombre="{{ $tipoProducto->nombre }}"
+                                    data-descripcion="{{ $tipoProducto->descripcion }}">
                                     Editar
                                 </button>
-                            @endcan
-                            @can('tipos_producto.destroy')
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('tipos_producto.destroy'))
                                 <form action="{{ route('tipos_producto.destroy', $tipoProducto->id) }}" method="POST"
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro?')">
+                                    <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('¿Estás seguro?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>

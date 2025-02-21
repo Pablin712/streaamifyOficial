@@ -46,11 +46,11 @@
                                 Sin rol asignado
                             @endif
                         </p>
-                        @can('empleados.updateRol')
+                        @if (Auth::user()->hasPermissionTo('empleados.updateRol'))
                             <a href="{{ route('empleados.editRoles', $empleado->idemp) }}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Editar Roles
                             </a>
-                        @endcan
+                        @endif
                     </div>
                 </div>
             </div>

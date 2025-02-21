@@ -5,8 +5,7 @@
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla */
         .table-dark {
-            background-color: #4CAF50 !important;
-            /* Verde personalizado */
+            background-color: #4CAF50 !important; /* Verde personalizado */
             color: white !important;
         }
 
@@ -36,9 +35,9 @@
 @endsection
 
 @section('btncrear')
-    @can('productos.create')
+    @if (Auth::user()->hasPermissionTo('productos.create'))
         <a href="{{ route('productos.create') }}" class="btn btn-primary mb-3">Crear Producto</a>
-    @endcan
+    @endif
 @endsection
 
 @section('tablename', 'Productos')
@@ -54,9 +53,9 @@
                 <th>Categoría</th>
                 <th>Tipo</th>
                 <th>Activo</th>
-                @canany(['productos.edit', 'productos.show', 'productos.destroy'])
+                @if (Auth::user()->hasAnyPermission(['productos.edit', 'productos.show', 'productos.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -75,19 +74,19 @@
                             <span class="badge bg-danger">Inactivo</span>
                         @endif
                     </td>
-                    @canany(['productos.edit', 'productos.show', 'productos.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['productos.edit', 'productos.show', 'productos.destroy']))
                         <td>
-                            @can('productos.show')
+                            @if (Auth::user()->hasPermissionTo('productos.show'))
                                 <a href="{{ route('productos.show', $producto->id) }}" class="btn btn-info">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                            @endcan
-                            @can('productos.edit')
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('productos.edit'))
                                 <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                            @endcan
-                            @can('productos.destroy')
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('productos.destroy'))
                                 <!-- Eliminar producto -->
                                 <form action="{{ route('productos.destroy', $producto->id) }}" method="POST"
                                     style="display: inline;">
@@ -98,9 +97,9 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>
@@ -112,7 +111,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Inicializa DataTables
             $('#datatablesSimple').DataTable();
-
             // Script adicional si deseas agregar eventos específicos
         });
     </script>

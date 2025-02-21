@@ -34,11 +34,13 @@
     </div>
 @endsection
 @section('tablename', 'Clientes')
+@section('btncrear')
+    @if (Auth::user()->hasPermissionTo('clientes.create'))
+        <a href="{{ route('clientes.create') }}" class="btn btn-primary mb-3">Crear Cliente</a>
+    @endif
+@endsection
 @section('table1')
     <h1>Clientes</h1>
-    @can('clientes.create')
-        <a href="{{ route('clientes.create') }}" class="btn btn-primary mb-3">Crear Cliente</a>
-    @endcan
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>
             <tr>
@@ -50,9 +52,9 @@
                 <th>Facturado este mes</th>
                 <th>Saldo</th>
                 <th>Autenticado</th>
-                @canany(['clientes.edit', 'clientes.destroy'])
+                @if (Auth::user()->hasAnyPermission(['clientes.edit', 'clientes.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -72,25 +74,28 @@
                             <span class="badge bg-danger">No</span>
                         @endif
                     </td>
-                    @canany(['clientes.edit', 'clientes.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['clientes.edit', 'clientes.destroy']))
                         <td>
-                            @can('clientes.edit')
-                                <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning  "><i
-                                        class="fas fa-edit"></i></a>
-                            @endcan
+                            @if (Auth::user()->hasPermissionTo('clientes.edit'))
+                                <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
                             @if ($cliente->usuarios == 0)
-                                @can('clientes.destroy')
+                                @if (Auth::user()->hasPermissionTo('clientes.destroy'))
                                     <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
                                         style="display: inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-circle"
-                                            onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                            onclick="return confirm('¿Estás seguro?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </form>
-                                @endcan
+                                @endif
                             @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>

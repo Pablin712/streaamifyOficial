@@ -17,18 +17,18 @@
 @section('tablename', 'Proveedores')
 @section('table1')
     <h1>Proveedores</h1>
-    @can('proveedores.create')
+    @if (Auth::user()->hasPermissionTo('proveedores.create'))
         <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Crear Proveedor</a>
-    @endcan
+    @endif
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Teléfono</th>
-                @canany(['proveedores.edit', 'proveedores.destroy'])
+                @if (Auth::user()->hasAnyPermission(['proveedores.edit', 'proveedores.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -37,23 +37,24 @@
                     <td>{{ $proveedor->idpro }}</td>
                     <td>{{ $proveedor->nombrepro }}</td>
                     <td>{{ $proveedor->telefonopro }}</td>
-                    @canany(['proveedores.edit', 'proveedores.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['proveedores.edit', 'proveedores.destroy']))
                         <td>
-                            @can('proveedores.edit')
-                                <a href="{{ route('proveedores.edit', $proveedor->idpro) }}" class="btn btn-warning  "><i
-                                        class="fas fa-edit"></i></a>
-                            @endcan
-                            @can('proveedores.destroy')
-                                <form action="{{ route('proveedores.destroy', $proveedor->idpro) }}" method="POST"
-                                    style="display: inline;">
+                            @if (Auth::user()->hasPermissionTo('proveedores.edit'))
+                                <a href="{{ route('proveedores.edit', $proveedor->idpro) }}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
+                            @if (Auth::user()->hasPermissionTo('proveedores.destroy'))
+                                <form action="{{ route('proveedores.destroy', $proveedor->idpro) }}" method="POST" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-circle"
-                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
+                                    <button type="submit" class="btn btn-danger btn-circle" onclick="return confirm('¿Estás seguro?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
-                            @endcan
+                            @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @endforeach
         </tbody>

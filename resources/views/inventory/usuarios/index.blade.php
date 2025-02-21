@@ -21,9 +21,9 @@
 @endsection
 @section('tablename', 'Usuarios')
 @section('btncrear')
-    @can('ventas.create')
+    @if (Auth::user()->hasPermissionTo('ventas.create'))
         <a href="{{ route('ventas.create') }}" class="btn btn-primary">Nueva Venta</a>
-    @endcan
+    @endif
 @endsection
 @section('table1')
     <table id="datatablesSimple" class="table table-striped table-bordered">
@@ -35,9 +35,9 @@
                 <th>Perfil</th>
                 <th>Vencimiento</th>
                 <th>Estado</th>
-                @canany(['usuarios.change', 'ventas.renew', 'usuarios.destroy'])
+                @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
                     <th>Acciones</th>
-                @endcanany
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -62,32 +62,34 @@
                             <span class="badge bg-success">Activo</span>
                         @endif
                     </td>
-                    @canany(['usuarios.change', 'ventas.renew', 'usuarios.destroy'])
+                    @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
                         <td>
-                            @can('usuarios.change')
-                                <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning  "><i
-                                        class="fas fa-exchange-alt"></i></a>
-                            @endcan
+                            @if (Auth::user()->hasPermissionTo('usuarios.change'))
+                                <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </a>
+                            @endif
                             @if ($diasRestantes <= 3)
-                                @can('ventas.renew')
+                                @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                     <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
                                         class="btn btn-success">
                                         <i class="fas fa-sync-alt"></i>
                                     </a>
-                                @endcan
-                                @can('usuarios.destroy')
+                                @endif
+                                @if (Auth::user()->hasPermissionTo('usuarios.destroy'))
                                     <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
                                         style="display: inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-circle"
-                                            onclick="return confirm('¿Eliminar este usuario?')"><i
-                                                class="fas fa-trash"></i></button>
+                                            onclick="return confirm('¿Eliminar este usuario?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </form>
-                                @endcan
+                                @endif
                             @endif
                         </td>
-                    @endcanany
+                    @endif
                 </tr>
             @empty
                 <tr>
