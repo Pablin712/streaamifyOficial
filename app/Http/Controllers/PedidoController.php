@@ -8,6 +8,7 @@ use App\Models\EstadoRecarga;
 use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Historial;
+use Illuminate\Support\Facades\Auth;
 class PedidoController extends Controller
 {
     /*

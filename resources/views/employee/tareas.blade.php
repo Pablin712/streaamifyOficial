@@ -51,42 +51,81 @@
             </div>
         </div>
 
-        <!-- Lista de tareas -->
-        <div class="list-group">
+        <!-- Lista de tareas sin completar -->
+        <div class="list-group mb-4">
+            <h4>Tareas Pendientes</h4>
             @foreach ($tareas as $tarea)
-                <div
-                    class="list-group-item d-flex justify-content-between align-items-center {{ $tarea->completada ? 'bg-light text-decoration-line-through' : '' }}">
-                    <div>
-                        <span
-                            class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
-                            {{ ucfirst($tarea->prioridad) }}
-                        </span>
-                        {{ $tarea->nombretarea }}
-                        <small class="text-muted d-block">{{ $tarea->descripcion }}</small>
-                    </div>
-                    <div>
-                        <!-- Botón completar -->
-                        <form action="{{ route('tareas.completar', $tarea->id) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit"
-                                class="btn btn-sm btn-{{ $tarea->completada ? 'secondary' : 'success' }}">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        </form>
-                        <!-- Botón eliminar -->
-                        @if (Auth::user()->hasPermissionTo('tareas.destroy'))
-                            <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST" class="d-inline">
+                @if (!$tarea->completada)
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
+                                {{ ucfirst($tarea->prioridad) }}
+                            </span>
+                            {{ $tarea->nombretarea }}
+                            <small class="text-muted d-block">{{ $tarea->descripcion }}</small>
+                        </div>
+                        <div>
+                            <!-- Botón completar -->
+                            <form action="{{ route('tareas.completar', $tarea->id) }}" method="POST" class="d-inline">
                                 @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                @method('PATCH')
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i>
                                 </button>
                             </form>
-                        @endif
+                            <!-- Botón eliminar -->
+                            @if (Auth::user()->hasPermissionTo('tareas.destroy'))
+                                <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
-                </div>
+                @endif
             @endforeach
         </div>
+
+        <!-- Desplegable para tareas completadas -->
+        <div class="mb-4">
+            <h4>
+                <a class="text-decoration-none" data-bs-toggle="collapse" href="#completedTasks" role="button" aria-expanded="false" aria-controls="completedTasks">
+                    Ver Tareas Completadas
+                </a>
+            </h4>
+            <div class="collapse" id="completedTasks">
+                <div class="list-group">
+                    @foreach ($tareas as $tarea)
+                        @if ($tarea->completada)
+                            <div class="list-group-item d-flex justify-content-between align-items-center bg-light text-decoration-line-through">
+                                <div>
+                                    <span class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
+                                        {{ ucfirst($tarea->prioridad) }}
+                                    </span>
+                                    {{ $tarea->nombretarea }}
+                                    <small class="text-muted d-block">{{ $tarea->descripcion }}</small>
+                                </div>
+                                <div>
+                                    <!-- Botón eliminar -->
+                                    @if (Auth::user()->hasPermissionTo('tareas.destroy'))
+                                        <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
     </div>
 @endsection

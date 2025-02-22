@@ -3,24 +3,49 @@
 @section('title', 'Ventas')
 @section('styles')
     <style>
-        /* Personalizando el fondo oscuro de las filas de la tabla a morado */
-        .table-dark {
-            background-color: #800080 !important;
-            color: white !important;
+        /* Estilos para la tabla SOLO en esta vista */
+        #datatablesSimple {
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: white;
         }
 
-        /* Personalizando el badge bg-dark a morado */
-        .badge.bg-dark {
-            background-color: #800080 !important;
+        /* Encabezado con azul */
+        #datatablesSimple thead th {
+            background-color: #007bff !important;
             color: white !important;
+            text-align: center;
+            padding: 12px;
         }
 
-        .badge.bg-dark:hover {
-            background-color: #6a006a !important;
+        /* Filas impares con fondo gris claro */
+        #datatablesSimple tbody tr:nth-child(odd) {
+            background-color: #f8f9fa !important;
+        }
+
+        /* Filas pares con fondo blanco */
+        #datatablesSimple tbody tr:nth-child(even) {
+            background-color: white !important;
+        }
+
+        /* Hover en filas con azul suave */
+        #datatablesSimple tbody tr:hover {
+            background-color: #cce5ff !important;
+        }
+
+        /* Bordes más suaves */
+        #datatablesSimple td,
+        #datatablesSimple th {
+            border: 1px solid #dee2e6 !important;
+        }
+
+        /* Alineación y padding de celdas */
+        #datatablesSimple td {
+            text-align: center;
+            padding: 10px;
         }
     </style>
 @endsection
-
 @section('h1', 'Ventas')
 @section('breadcrumb')
     Ventas
@@ -202,13 +227,13 @@
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>ID Venta</th>
-                <th>Cliente</th>
-                <th>Empleado</th>
-                <th>Fecha de Venta</th>
-                <th>Total</th>
+                <th style="background-color: #007bff; color: white;">ID Recibo</th>
+                <th style="background-color: #007bff; color: white;">Cliente</th>
+                <th style="background-color: #007bff; color: white;">Empleado</th>
+                <th style="background-color: #007bff; color: white;">Fecha</th>
+                <th style="background-color: #007bff; color: white;">Total</th>
                 @if (Auth::user()->hasAnyPermission(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy']))
-                    <th>Acciones</th>
+                    <th style="background-color: #007bff; color: white;">Acciones</th>
                 @endif
             </tr>
         </thead>
@@ -222,19 +247,81 @@
                     <td>{{ $venta->totalpagoven }}</td>
                     @if (Auth::user()->hasAnyPermission(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy']))
                         <td>
+                            <!-- Botón para abrir el modal de detalles -->
+                            <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#ventaDetalleModal{{ $venta->idven }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <!-- Modal de Detalles de Venta -->
+                            <div class="modal fade" id="ventaDetalleModal{{ $venta->idven }}" tabindex="-1"
+                                aria-labelledby="ventaDetalleLabel{{ $venta->idven }}" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="ventaDetalleLabel{{ $venta->idven }}">
+                                                Detalles de la Venta #{{ $venta->idven }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Cerrar"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Cliente:</strong> {{ $venta->cliente->nombrecli }}</p>
+                                            <p><strong>Fecha de Venta:</strong> {{ $venta->fechaven->format('Y/m/d') }}</p>
+                                            <p><strong>Total Pagado:</strong> ${{ number_format($venta->totalpagoven, 2) }}
+                                            </p>
+
+                                            <h5>Productos Comprados:</h5>
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Cuenta</th>
+                                                        <th>Perfil</th>
+                                                        <th>Descripción</th>
+                                                        <th>Fecha de Vencimiento</th>
+                                                        <th>Monto</th>
+                                                        <th>Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($venta->detalles_venta as $detalle)
+                                                        <tr>
+                                                            <td>{{ $detalle->perfil->idcue ?? 'N/A' }}</td>
+                                                            <td>{{ $detalle->perfil->numeroper }}</td>
+                                                            <td>{{ $detalle->descripciondet }}</td>
+                                                            <td>{{ $detalle->fechavendet->format('Y-m-d') }}</td>
+                                                            <td>${{ number_format($detalle->montodet, 2) }}</td>
+                                                            <td>
+                                                                @if ($detalle->activodet)
+                                                                    <span class="badge bg-success">Activa</span>
+                                                                @else
+                                                                    <span class="badge bg-danger">Inactiva</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             @if (Auth::user()->hasPermissionTo('ventas.edit'))
-                                <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning">
+                                <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             @endif
                             @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                 <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}"
-                                    class="btn btn-success">
+                                    class="btn btn-success btn-sm">
                                     <i class="fas fa-sync-alt"></i>
                                 </a>
                             @endif
                             @if (!empty($venta->cliente->email) && Auth::user()->hasPermissionTo('ventas.sendInvoice'))
-                                <button class="btn btn-info" data-bs-toggle="modal"
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
                                     <i class="fas fa-file-invoice"></i>
                                 </button>
@@ -244,7 +331,7 @@
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-circle"
+                                    <button type="submit" class="btn btn-danger btn-circle btn-sm"
                                         onclick="return confirm('¿Estás seguro?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -271,7 +358,8 @@
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary"
                                                 data-bs-dismiss="modal">Cerrar</button>
-                                            <form action="{{ route('ventas.sendInvoice', $venta->idven) }}" method="POST">
+                                            <form action="{{ route('ventas.sendInvoice', $venta->idven) }}"
+                                                method="POST">
                                                 @csrf
                                                 <button type="submit" class="btn btn-primary">Enviar por Correo</button>
                                             </form>

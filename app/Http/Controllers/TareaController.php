@@ -15,14 +15,14 @@ class TareaController extends Controller
     */
     public function index()
     {
-        $tareas = Tarea::orderByRaw("
+        $tareas = Tarea::orderBy('completada')
+            ->orderByRaw("
                 CASE 
                     WHEN prioridad = 'alta' THEN 1
                     WHEN prioridad = 'media' THEN 2
                     WHEN prioridad = 'baja' THEN 3
                 END
             ")
-            ->orderBy('completada')
             ->orderBy('created_at', 'desc')
             ->get();
         return view('employee.tareas', compact('tareas'));

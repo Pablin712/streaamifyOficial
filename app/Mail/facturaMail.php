@@ -31,7 +31,7 @@ class facturaMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Factura:' . $this->venta->idven,
+            subject: 'Recibo: ' . $this->venta->idven,
             from: new Address('no-reply@streamify.com', 'Sistema Streamify'),
         );
     }
