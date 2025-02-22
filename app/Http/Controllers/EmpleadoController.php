@@ -72,7 +72,6 @@ class EmpleadoController extends Controller
             'telefonoemp' => 'required|string|max:15',
             'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp',
             'passwordemp' => 'required|string|min:4',
-            'idrol' => 'required|string',
             'foto_url' => 'nullable|image|max:2048',
             'email' => 'nullable|email|max:255',
         ]);
@@ -117,10 +116,6 @@ class EmpleadoController extends Controller
      */
     public function edit(string $id)
     {
-        // Solo se permite editar si el usuario es el mismo o es el superadministrador (idemp = 1)
-        if (!Auth::user()->hasPermissionTo('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
-        }
         $empleado = Empleado::findOrFail($id);
         return view('employee.edit', compact('empleado'));
     }
@@ -141,6 +136,9 @@ class EmpleadoController extends Controller
      */
     public function update(Request $request, $idemp)
     {
+        if (!Auth::user()->hasPermissionTo('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+        }
         $empleado = Empleado::findOrFail($idemp);
         $rules = [
             'nombreemp' => 'required|string|max:255',
@@ -151,18 +149,8 @@ class EmpleadoController extends Controller
             'email' => 'nullable|email|max:255',
         ];
 
-        // Si el usuario es administrador, se valida el campo idrol
-        if (Auth::user()->idrol === 'administrador') {
-            $rules['idrol'] = 'required|string';
-        }
-
         $request->validate($rules);
         $data = $request->all();
-
-        // Si el usuario NO es administrador, mantener el rol actual
-        if (Auth::user()->idrol !== 'administrador') {
-            $data['idrol'] = $empleado->idrol;
-        }
         // Si no se envía contraseña, no actualizarla
         if (!$request->filled('passwordemp')) {
             unset($data['passwordemp']);
@@ -193,28 +181,7 @@ class EmpleadoController extends Controller
 
         $empleado->update($data);
 
-        return redirect()->route('empleados')->with('success', 'Empleado actualizado exitosamente.');
-    }
-
-    public function updateRol(Request $request, $id)
-    {
-        $empleado = Empleado::findOrFail($id);
-        $user = Auth::user();
-        $request->validate([
-            'idrol' => 'required|exists:roles,idrol',
-        ]);
-        if ($empleado->idrol === 'administrador' && $user->idemp != 1) {
-            return redirect()->back()->with('error', 'No tienes permiso para cambiar el rol de un administrador.');
-        }
-        $empleado->idrol = $request->idrol;
-        $empleado->save();
-        Historial::create([
-            'accion' => 'Cambio de Rol de empleado',
-            'descripcion' => 'Empleado: ' . json_encode($empleado),
-            'realizado_por' => $user->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
-        ]);
-        return redirect()->back()->with('success', 'Rol actualizado correctamente.');
+        return redirect()->route('empleados.edit')->with('success', 'Empleado actualizado exitosamente.');
     }
 
     public function updateRoles(Request $request, $id)
@@ -233,10 +200,6 @@ class EmpleadoController extends Controller
             abort(403, 'No tienes permiso para eliminar empleados.');
         }
         $empleado = Empleado::findOrFail($id);
-        // Validar que no se elimine un administrador
-        if ($empleado->idrol === 'administrador') {
-            return redirect()->route('empleados')->withErrors(['error' => 'No puedes eliminar a un administrador.']);
-        }
         Historial::create([
             'accion' => 'Eliminación de empleado',
             'descripcion' => 'Datos: ' . json_encode($empleado),

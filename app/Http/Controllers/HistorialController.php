@@ -16,4 +16,19 @@ class HistorialController extends Controller
         $historial = Historial::orderBy('fecha', 'desc')->get();
         return view('historial.index', compact('historial'));
     }
+    public function clear(Request $request)
+    {
+        if (!Auth::user()->hasPermissionTo('historial.clear')) {
+            abort(403, 'No tienes permiso para ver esta página.');
+        }
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        // Borrar registros en el rango de fechas (suponiendo que 'fecha' es del tipo date o datetime)
+        Historial::whereBetween('fecha', [$request->start_date, $request->end_date])->delete();
+
+        return redirect()->route('historial')->with('success', 'Historial borrado exitosamente.');
+    }
 }

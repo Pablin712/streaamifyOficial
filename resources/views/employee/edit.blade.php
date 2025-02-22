@@ -62,12 +62,6 @@
                 <input type="password" name="passwordemp" id="passwordemp" class="form-control">
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Rol</label>
-                <input type="text" class="form-control" value="{{ Auth::user()->idrol }}" readonly>
-                <input type="hidden" name="idrol" value="{{ Auth::user()->idrol }}">
-            </div>
-
             <button type="submit" class="btn btn-primary">Actualizar</button>
         </form>
     </div>

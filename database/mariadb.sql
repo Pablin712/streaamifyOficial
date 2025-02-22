@@ -323,6 +323,10 @@ INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
 ('roles.update', 'web', NOW(), NOW()),
 ('roles.destroy', 'web', NOW(), NOW());
 
+INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('historial.clear', 'web', NOW(), NOW());
+INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('tareas.index', 'web', NOW(), NOW());
 -- Obtener el ID del rol de administrador
 SET @admin_role_id = (SELECT id FROM roles WHERE name = 'Admin');
 

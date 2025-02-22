@@ -43,16 +43,6 @@
                 <input type="email" name="email" id="email" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label for="idrol" class="form-label">Rol</label>
-                <select name="idrol" id="idrol" class="form-select" required>
-                    <option value="vendedor" {{  old('idrol') === 'vendedor' ? 'selected' : '' }}>Vendedor</option>
-                    <option value="bodeguero" {{  old('idrol') === 'bodeguero' ? 'selected' : '' }}>bodeguero</option>
-                    <option value="contador" {{ old('idrol') === 'contador' ? 'selected' : '' }}>Contador</option>
-                    <option value="tecnico" {{  old('idrol') ==='tecnico' ? 'selected' : '' }}>Tecnico</option>
-                    <option value="administrador" {{ old('idrol') === 'administrador' ? 'selected' : '' }}>Administrador</option>
-                </select>
-            </div>
-            <div class="mb-3">
                 <label for="foto_url" class="form-label">Foto (opcional)</label>
                 <input type="file" name="foto_url" id="foto_url" class="form-control">
             </div>

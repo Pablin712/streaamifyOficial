@@ -23,7 +23,9 @@
 @endsection
 
 @section('table1')
-    <a href="{{ route('empleados.create') }}" class="btn btn-primary mb-3">Crear Empleado</a>
+    @if (Auth::user()->hasPermissionTo('empleados.store'))
+        <a href="{{ route('empleados.create') }}" class="btn btn-primary mb-3">Crear Empleado</a>
+    @endif
     <div class="row">
         @foreach ($empleados as $empleado)
             <div class="col-md-4">

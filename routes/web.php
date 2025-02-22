@@ -103,6 +103,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
     Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
+    Route::post('/historial/clear', [HistorialController::class, 'clear'])->name('historial.clear');
 
     Route::resource('tareas', TareaController::class);
     Route::patch('/tareas/{id}/completar', [TareaController::class, 'completar'])->name('tareas.completar');
@@ -218,7 +219,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
         Route::get('/empleados/{id}/roles', 'editRoles')->name('empleados.editRoles');
         Route::put('/empleados/{id}', 'update')->name('empleados.update');
-        Route::put('/empleados/{id}/update-rol', 'updateRol')->name('empleados.updateRol');
         Route::put('/empleados/{id}/update-roles', 'updateRoles')->name('empleados.updateRoles');
         Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
     });

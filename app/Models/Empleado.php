@@ -29,7 +29,6 @@ class Empleado extends Authenticatable implements JWTSubject
         'telefonoemp',   // Teléfono del empleado
         'usuarioemp',    // Usuario del empleado
         'passwordemp',   // Contraseña hasheada
-        'idrol', 
         'foto_url',
         'email'      // Agregar esta columna para permitir asignación masiva
     ];

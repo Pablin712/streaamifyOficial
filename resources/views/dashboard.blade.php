@@ -29,7 +29,7 @@
         </div>
     @endif
     <h1>{{ Auth::user()->nombreemp }}</h1>
-    @can('dashboard.store')
+    @if (Auth::user()->hasPermissionTo('dashboard.store'))
         <form method="POST" action="{{ route('dashboard.store') }}">
             @csrf
             <!-- Otras entradas del formulario -->
@@ -103,7 +103,7 @@
             <!-- Agrega los demás campos como ocultos si es necesario -->
             <button type="submit" class="btn btn-primary mb-3">Guardar reporte de mes</button>
         </form>
-    @endcan
+    @endif
 @endsection
 @section('content')
     <!-- Content Wrapper -->

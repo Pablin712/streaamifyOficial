@@ -54,12 +54,48 @@
                             'color' => 'dark',
                             'title' => 'Productos',
                             'route' => 'productos.index',
+                        ],
+                        [
+                            'icon' => 'fa-user',
+                            'color' => 'primary',
+                            'title' => 'Clientes',
+                            'route' => 'clientes',
+                        ],
+                        [
+                            'icon' => 'fa-server',
+                            'color' => 'info',
+                            'title' => 'Servicios',
+                            'route' => 'servicios',
+                        ],
+                        [
+                            'icon' => 'fa-dollar-sign',
+                            'color' => 'success',
+                            'title' => 'Recargas',
+                            'route' => 'empleado.recargas.index',
+                        ],
+                        [
+                            'icon' => 'fa-truck',
+                            'color' => 'warning',
+                            'title' => 'Pedidos',
+                            'route' => 'empleado.pedidos.index',
+                        ],
+                        [
+                            'icon' => 'fa-building',
+                            'color' => 'dark',
+                            'title' => 'Cuentas',
+                            'route' => 'cuentas',
+                        ],
+                        [
+                            'icon' => 'fa-history',
+                            'color' => 'secondary',
+                            'title' => 'Historial',
+                            'route' => 'historial',
                         ]
                     ];
                 @endphp
 
                 @foreach ($acciones as $accion)
-                    @can($accion['route'])
+                    @if (Auth::user()->hasPermissionTo($accion['route']))
                         <div class="col-md-3 mb-3">
                             <div class="card shadow-sm">
                                 <div class="card-body p-3">
@@ -71,7 +107,7 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    @endif
                 @endforeach
             </div>
         </div>
@@ -126,7 +162,7 @@
                 @endphp
 
                 @foreach ($acciones_registro as $accion)
-                    @can($accion['route'])
+                    @if (Auth::user()->hasPermissionTo($accion['route']))
                         <div class="col-md-3 mb-3">
                             <div class="card shadow-sm text-center">
                                 <div class="card-body p-3">
@@ -138,13 +174,13 @@
                                 </div>
                             </div>
                         </div>
-                    @endcan
+                    @endif
                 @endforeach
             </div>
         </div>
-
+        {{--
         <h3>Mapa de ERP</h3>
-        <img src="{{ asset('images/models.png') }}" alt="imagen de mapa" class="d-block mx-auto">
+        <img src="{{ asset('images/models.png') }}" alt="imagen de mapa" class="d-block mx-auto"> --}}
     </div>
 @endsection
 
