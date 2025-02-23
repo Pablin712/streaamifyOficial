@@ -119,7 +119,7 @@ class RecargaController extends Controller
         Historial::create([
             'accion' => 'Recarga-Pendiente',
             'descripcion' =>  'Solicitud de la recarga: ' . json_encode($recarga), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::guard('cliente')->user()->nombrecli.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
         return redirect()->route('recargar.index')->with('success', '¡Recarga enviada con éxito, por favor tener paciencia!');

@@ -39,16 +39,33 @@
     </style>
 @endsection
 @section('menu')
-    <li class="nav-item"><a class="nav-link me-lg-3" href="#features">Fortalezas</a></li>
-    <li class="nav-item"><a class="nav-link me-lg-3" href="#combos">Combos</a>
+    <!-- Menú Desplegable principal-->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Acerca de
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="#registro">Registro</a></li>
+            <li><a class="dropdown-item" href="#features">Fortalezas</a></li>
+            <li><a class="dropdown-item" href="#combos">Promociones</a></li>
+            <li><a class="dropdown-item" href="#servicios">Otros Servicios</a></li>
+            <li><a class="dropdown-item" href="#redes">Redes Sociales</a></li>
+            <li><a class="dropdown-item" href="#faq">Preguntas Frecuentes</a></li>
+        </ul>
     </li>
-    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+    <!-- Menú Desplegable catálogo-->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Catálogo
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{{ route('shop') }}#inmediata-individual">Entrega Inmediata - Individual</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#combos">Entrega Inmediata - Combos</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#pedidos">Pedidos</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#personalizadas">Personalizadas</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#completos">Cuentas completas</a></li>
+        </ul>
     </li>
-    {{-- <li class="nav-item"><a class="nav-link me-lg-3" href="#registro">Registro</a></li>
-<li class="nav-item"><a class="nav-link me-lg-3" href="#servicios">Servicios</a></li>
-<li class="nav-item"><a class="nav-link me-lg-3" href="#redes">Redes Sociales</a></li>
-<li class="nav-item"><a class="nav-link me-lg-3" href="#testimonios">Testimonios</a></li>
-<li class="nav-item"><a class="nav-link me-lg-3" href="#faq">FAQ</a></li> --}}
 @endsection
 @section('header')
     <div class="container px-5">

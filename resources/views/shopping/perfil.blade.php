@@ -1,10 +1,32 @@
 @extends('layouts.cliente')
 @section('title', 'Mi Perfil')
 @section('menu')
-    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
-    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+    <!-- Menú Desplegable principal-->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Acerca de
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{{ route('principal') }}#registro">Registro</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#features">Fortalezas</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#combos">Promociones</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#servicios">Otros Servicios</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
+        </ul>
     </li>
-    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('shop') }}#catalog">Catálogo</a>
+    <!-- Menú Desplegable catálogo-->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Catálogo
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{{ route('shop') }}#inmediata-individual">Entrega Inmediata - Individual</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#combos">Entrega Inmediata - Combos</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#pedidos">Pedidos</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#personalizadas">Personalizadas</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#completos">Cuentas completas</a></li>
+        </ul>
     </li>
 @endsection
 @section('header')

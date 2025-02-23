@@ -40,6 +40,9 @@ Route::get('/register', function () {
 Route::get('/', function () {
     return view('principal');
 })->name('principal');
+Route::get('/tutorial', function () {
+    return view('shopping.tutorial');
+})->name('tutorial');
 
 Route::controller(ShopController::class)->group(function () {
     Route::get('/shop', 'index')->name('shop');

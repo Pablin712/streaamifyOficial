@@ -251,7 +251,7 @@ class ShopController extends Controller
                     Historial::create([
                         'accion' => 'Sin-Stock',
                         'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
-                        'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                        'realizado_por' => $usuario->nombrecli.' | '. request()->ip(), // Almacena el nombre del usuario
                         'fecha' => now(),
                     ]);
                     return back()->with('error', 'No hay cuentas disponibles para este servicio.');
@@ -284,7 +284,7 @@ class ShopController extends Controller
                         Historial::create([
                             'accion' => 'Sin-Stock',
                             'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
-                            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                            'realizado_por' => $usuario->nombrecli.' | '. request()->ip(), // Almacena el nombre del usuario
                             'fecha' => now(),
                         ]);
                         throw new \Exception("No hay cuentas disponibles para el servicio.");

@@ -24,8 +24,8 @@ class RoleSeeder extends Seeder
         $gerente = Role::create(['name' => 'Gerente']);
         $visitante = Role::create(['name' => 'Visitante']);
 
-        $empleado = Empleado::find(1);
-        $empleado->assignRole('Admin');
+        //$empleado = Empleado::where('usuarioemp', 'pablinmind')->first();
+        //$empleado->assignRole('Admin');
 
         Permission::create(['name' => 'historial'])->syncRoles([$admin, $gerente, $visitante, $trabajador]);
         Permission::create(['name' => 'tareas.destroy'])->syncRoles([$admin, $gerente, $tecnico]);
@@ -145,5 +145,8 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'roles.store'])->syncRoles([$admin]);
         Permission::create(['name' => 'roles.update'])->syncRoles([$admin]);
         Permission::create(['name' => 'roles.destroy'])->syncRoles([$admin]);
+
+        Permission::create(['name' => 'historial.clear'])->syncRoles([$admin]);
+        Permission::create(['name' => 'tareas.index'])->syncRoles([$admin]);
     }
 }

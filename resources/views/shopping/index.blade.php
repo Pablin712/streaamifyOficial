@@ -66,10 +66,32 @@
     </style>
 @endsection
 @section('menu')
-    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#features">Fortalezas</a></li>
-    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('principal') }}#combos">Combos</a>
+    <!-- Menú Desplegable principal-->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Acerca de
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{{ route('principal') }}#registro">Registro</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#features">Fortalezas</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#combos">Promociones</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#servicios">Otros Servicios</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
+            <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
+        </ul>
     </li>
-    <li class="nav-item"><a class="nav-link me-lg-3" href="#">Catálogo</a>
+    <!-- Menú Desplegable catálogo-->
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Catálogo
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="#inmediata-individual">Entrega Inmediata - Individual</a></li>
+            <li><a class="dropdown-item" href="#combos">Entrega Inmediata - Combos</a></li>
+            <li><a class="dropdown-item" href="#pedidos">Pedidos</a></li>
+            <li><a class="dropdown-item" href="#personalizadas">Personalizadas</a></li>
+            <li><a class="dropdown-item" href="#completos">Cuentas completas</a></li>
+        </ul>
     </li>
 @endsection
 @section('header')
@@ -87,15 +109,6 @@
                     <h1 class="display-1 lh-1 mb-3">Descubre Nuestro Catálogo Exclusivo</h1>
                     <p class="lead fw-normal text-muted mb-5">Explora una selección exclusiva de productos diseñados para
                         mejorar tu experiencia de streaming.</p>
-
-                    <!-- Links para navegación -->
-                    <div>
-                        <a class="section-link" href="#inmediata-individual">Entrega Inmediata - Individual</a>
-                        <a class="section-link" href="#combos">Combos</a>
-                        <a class="section-link" href="#pedidos">Pedidos</a>
-                        <a class="section-link" href="#personalizadas">Personalizadas</a>
-                        <a class="section-link" href="#completos">Completos</a>
-                    </div>
                 </div>
             </div>
             <div class="col-lg-6 d-flex align-items-center justify-content-center">

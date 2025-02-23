@@ -56,6 +56,7 @@
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ms-auto me-4 my-3 my-lg-0">
                     @yield('menu')
+                    <li class="nav-item"><a class="nav-link me-lg-3" href="{{ route('tutorial') }}">Tutorial</a>
                 </ul>
                 <a href="https://wa.me/593961412826" target="_blank" class="me-3">
                     <button class="btn btn-success rounded-pill px-3 mb-2 mb-lg-0">
@@ -154,7 +155,7 @@
                 yearSpan.textContent = new Date().getFullYear();
             }
         });
-    </script>    
+    </script>
     @yield('scripts')
 </body>
 
