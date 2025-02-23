@@ -7,17 +7,22 @@
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla a morado */
         .table-dark {
-            background-color: #800080 !important; /* Color morado */
+            background-color: #800080 !important;
+            /* Color morado */
             color: white !important;
         }
+
         /* Personalizando el badge bg-dark a morado */
         .badge.bg-dark {
-            background-color: #800080 !important; /* Color morado */
+            background-color: #800080 !important;
+            /* Color morado */
             color: white !important;
         }
+
         .badge.bg-dark:hover {
             background-color: #6a006a !important;
         }
+
         .btn-xs {
             padding: 0.25rem 0.5rem;
             font-size: 0.75rem;
@@ -54,8 +59,54 @@
     <p>Revisa las cuentas activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario
         asociadas a los servicios de streaming pertenecientes a Streamify HQ.
     </p>
-@endsection
+    <div class="row">
+        @php
+            $serviciosConfig = [
+                'NETFLIX' => ['color' => 'danger', 'icon' => 'logo_netflix.png'],
+                'DISNEYP' => ['color' => 'primary', 'icon' => 'espn.jpg'],
+                'DISNEYS' => ['color' => 'primary', 'icon' => 'disneyP.jpg'],
+                'MAX' => ['color' => 'info', 'icon' => 'max.jpg'],
+                'PRIME' => ['color' => 'success', 'icon' => 'fa-amazon'],
+                'PARAMOUNT' => ['color' => 'primary', 'icon' => 'paramount.jpg'],
+                'CRUNCHY' => ['color' => 'warning', 'icon' => 'crunchy.jpg'],
+                'SPOTIFY' => ['color' => 'success', 'icon' => 'fa-spotify'],
+                'MAGIS' => ['color' => 'dark', 'icon' => 'magis.jpg'],
+            ];
+        @endphp
 
+        @foreach ($espacios_por_servicio as $servicio => $espacios)
+            @if (isset($serviciosConfig[$servicio]))
+                @php
+                    $color = $serviciosConfig[$servicio]['color'];
+                    $icono = $serviciosConfig[$servicio]['icon'];
+                @endphp
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-{{ $color }} shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-{{ $color }} text-uppercase mb-1">
+                                        {{ ucfirst($servicio) }}
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ $espacios }} puestos
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    @if (Str::startsWith($icono, 'fa-'))
+                                        <i class="fab {{ $icono }} fa-2x text-gray-300"></i>
+                                    @else
+                                        <img src="{{ asset('images/' . $icono) }}" width="40" height="40">
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endforeach
+    </div>
+@endsection
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('cuentas.create'))
         <a href="{{ route('cuentas.create') }}" class="btn btn-primary mb-3">Crear Cuenta</a>
@@ -212,7 +263,8 @@
                             <td>{{ $perfil->numeroper }}</td>
                             <td>{{ $perfil->pinper }}</td>
                             <td class="usuarios-activos">
-                                <span class="{{ $perfil->usuarios_activos == 0 ? 'badge bg-danger' : ($perfil->usuarios_activos == 1 ? 'badge bg-success' : 'badge bg-dark') }}">
+                                <span
+                                    class="{{ $perfil->usuarios_activos == 0 ? 'badge bg-danger' : ($perfil->usuarios_activos == 1 ? 'badge bg-success' : 'badge bg-dark') }}">
                                     {{ $perfil->usuarios_activos }}
                                 </span>
                             </td>

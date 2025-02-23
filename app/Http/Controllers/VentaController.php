@@ -65,7 +65,7 @@ class VentaController extends Controller
         }
         $clientes = Cliente::all();
         $empleados = Empleado::all();
-        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
 
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
@@ -234,7 +234,7 @@ class VentaController extends Controller
         }
         $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
         $empleados = Empleado::all();
-        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
 
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
@@ -256,7 +256,7 @@ class VentaController extends Controller
         }
         $venta = Venta::with(['detalles_venta', 'cliente'])->findOrFail($idven);
         $empleados = Empleado::all();
-        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
 
         if ($venta->idcli != $idcli) {
             abort(404, 'Cliente no coincide con la venta.');

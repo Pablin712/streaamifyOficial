@@ -55,7 +55,35 @@ class CuentaController extends Controller
                 ->count();
             $cuenta->usuarios_activos = $usuarios;
         }
-        return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado'));
+
+        $espacios_por_servicio = $this->calcularEspaciosPorServicio();
+
+        return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado', 'espacios_por_servicio'));
+    }
+    private function calcularEspaciosPorServicio(){
+        $servicios = ['NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'];
+        $espacios_por_servicio = [];
+
+        foreach ($servicios as $servicio) {
+            // Obtener todas las cuentas activas que pertenezcan a este servicio
+            $cuentas = Cuenta::with(['valor.servicio']) // Cargamos servicio a través de valor
+                ->whereHas('valor.servicio', function ($query) use ($servicio) {
+                    $query->where('idser', $servicio); // Filtrar por nombre del servicio
+                })
+                ->where('activocue', true)
+                ->orderBy('fechavencue')
+                ->get();
+            $espacios = 0;
+            foreach ($cuentas as $cuenta) {
+                $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->where('fecha_vencimiento', '>', now())->count();
+                $pantmaxval = $cuenta->valor->pantmaxval ?? 0; // Verificamos que el valor no sea nulo
+                $resta = $pantmaxval - $usuarios;
+                $espacios += max($resta, 0); // Evitamos valores negativos
+            }
+            // Guardar el total de espacios disponibles para este servicio
+            $espacios_por_servicio[$servicio] = $espacios;
+        }
+        return $espacios_por_servicio;
     }
 
     public function create()
