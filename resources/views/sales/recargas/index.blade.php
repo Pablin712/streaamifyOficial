@@ -56,7 +56,7 @@
                                     </div>
                                     <div class="modal-body text-center">
                                         <img src="{{ asset('public/storage/' . $recarga->foto) }}" alt="Comprobante"
-                                            class="img-fluid">
+                                            class="img-fluid" style="max-width: 500px; height: auto;">
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary"

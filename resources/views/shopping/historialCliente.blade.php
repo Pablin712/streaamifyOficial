@@ -1,11 +1,12 @@
 @extends('layouts.cliente')
 @section('menu')
-    <!-- Menú Desplegable principal-->
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <!-- Menú Desplegable Acerca de -->
+    <div class="dropdown me-lg-3">
+        <button class="btn btn-light border rounded-pill dropdown-toggle fw-bold" type="button" id="dropdownAcerca"
+            data-bs-toggle="dropdown" aria-expanded="false">
             Acerca de
-        </a>
-        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+        </button>
+        <ul class="dropdown-menu shadow" aria-labelledby="dropdownAcerca">
             <li><a class="dropdown-item" href="{{ route('principal') }}#registro">Registro</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#features">Fortalezas</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#combos">Promociones</a></li>
@@ -13,20 +14,23 @@
             <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
         </ul>
-    </li>
-    <!-- Menú Desplegable catálogo-->
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle me-lg-3" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    </div>
+
+    <!-- Menú Desplegable Catálogo -->
+    <div class="dropdown me-lg-3">
+        <button class="btn btn-light border rounded-pill dropdown-toggle fw-bold" type="button" id="dropdownCatalogo"
+            data-bs-toggle="dropdown" aria-expanded="false">
             Catálogo
-        </a>
-        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="{{ route('shop') }}#inmediata-individual">Entrega Inmediata - Individual</a></li>
+        </button>
+        <ul class="dropdown-menu shadow" aria-labelledby="dropdownCatalogo">
+            <li><a class="dropdown-item" href="{{ route('shop') }}#inmediata-individual">Entrega Inmediata - Individual</a>
+            </li>
             <li><a class="dropdown-item" href="{{ route('shop') }}#combos">Entrega Inmediata - Combos</a></li>
             <li><a class="dropdown-item" href="{{ route('shop') }}#pedidos">Pedidos</a></li>
             <li><a class="dropdown-item" href="{{ route('shop') }}#personalizadas">Personalizadas</a></li>
             <li><a class="dropdown-item" href="{{ route('shop') }}#completos">Cuentas completas</a></li>
         </ul>
-    </li>
+    </div>
 @endsection
 @section('title', 'Historial de Cliente')
 @section('header')
@@ -113,8 +117,9 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="ventas-tab" data-bs-toggle="tab" data-bs-target="#ventas" type="button"
-                    role="tab" aria-controls="ventas" aria-selected="false">🛒 Historial de Compras</button>
+                <button class="nav-link active" id="ventas-tab" data-bs-toggle="tab" data-bs-target="#ventas"
+                    type="button" role="tab" aria-controls="ventas" aria-selected="false">🛒 Historial de
+                    Compras</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="pedidos-tab" data-bs-toggle="tab" data-bs-target="#pedidos" type="button"
@@ -123,8 +128,9 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="recargas-tab" data-bs-toggle="tab" data-bs-target="#recargas" type="button"
-                    role="tab" aria-controls="recargas" aria-selected="false">💰 Historial de Recargas</button>
+                <button class="nav-link" id="recargas-tab" data-bs-toggle="tab" data-bs-target="#recargas"
+                    type="button" role="tab" aria-controls="recargas" aria-selected="false">💰 Historial de
+                    Recargas</button>
             </li>
         </ul>
         <div class="tab-content" id="historialTabsContent">
@@ -288,8 +294,28 @@
                             <tr>
                                 <td>{{ $usuario->idven }}</td>
                                 <td>{{ $usuario->cuenta->valor->servicio->nombreser }}</td>
-                                <td>{{ $usuario->cuenta->usuariocue }}</td>
-                                <td>{{ $usuario->cuenta->contrasenacue }}</td>
+                                <td>
+                                    @if ($usuario->cuenta->valor->idser === 'SPOTIFY')
+                                        @if ($usuario->perfil == 1)
+                                            {{ $usuario->cuenta->usuariocue }}
+                                        @else
+                                            <em>Acceso restringido</em>
+                                        @endif
+                                    @else
+                                        {{ $usuario->cuenta->usuariocue }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($usuario->cuenta->valor->idser === 'SPOTIFY')
+                                        @if ($usuario->perfil == 1)
+                                            {{ $usuario->cuenta->contrasenacue }}
+                                        @else
+                                            <em>Acceso restringido</em>
+                                        @endif
+                                    @else
+                                        {{ $usuario->cuenta->contrasenacue }}
+                                    @endif
+                                </td>
                                 @php
                                     // Construir el ID del perfil
                                     $idper = $usuario->cuenta->idcue . '.' . $usuario->perfil;

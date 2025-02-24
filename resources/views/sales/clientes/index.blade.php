@@ -40,7 +40,6 @@
     @endif
 @endsection
 @section('table1')
-    <h1>Clientes</h1>
     <table id="datatablesSimple" class="table table-striped table-bordered">
         <thead>
             <tr>
