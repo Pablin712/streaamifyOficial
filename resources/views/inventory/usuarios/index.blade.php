@@ -65,14 +65,14 @@
                     @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning">
+                                <a href="{{ route('usuarios.change', $usuario->iddet) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-exchange-alt"></i>
                                 </a>
                             @endif
                             @if ($diasRestantes <= 3)
                                 @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                     <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
-                                        class="btn btn-success">
+                                        class="btn btn-success btn-sm">
                                         <i class="fas fa-sync-alt"></i>
                                     </a>
                                 @endif
@@ -81,7 +81,7 @@
                                         style="display: inline;">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-circle"
+                                        <button type="submit" class="btn btn-danger btn-circle btn-sm"
                                             onclick="return confirm('¿Eliminar este usuario?')">
                                             <i class="fas fa-trash"></i>
                                         </button>
