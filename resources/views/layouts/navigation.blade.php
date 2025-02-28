@@ -7,235 +7,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>@yield('title')</title>
+    <title>@yield('title', 'Streamify')</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
-    <!-- Agregar el CSS de Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     @yield('styles')
 </head>
 
 <body class="sb-nav-fixed">
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-        <!-- Navbar Brand-->
-        <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>
-        <!-- Sidebar Toggle-->
-        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
-            <i class="fas fa-bars"></i>
-        </button>
-        <!-- Navbar-->
-        <ul class="navbar-nav ms-auto me-3 me-lg-4">
-            @auth
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user fa-fw"></i> {{ Auth::user()->nombreemp }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <li>
-                            <a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
-                                Ajustes
-                            </a>
-                        </li>
-                        {{-- Reemplazamos @can('historial') --}}
-                        @if (Auth::user()->hasPermissionTo('historial'))
-                            <li>
-                                <a class="dropdown-item" href="{{ route('historial') }}">Actividad</a>
-                            </li>
-                        @endif
-                        <li>
-                            <hr class="dropdown-divider" />
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                Logout
-                            </a>
-                        </li>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
-                    </ul>
-                </li>
-            @endauth
-        </ul>
-    </nav>
-    <div id="layoutSidenav">
-        <div id="layoutSidenav_nav">
-            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-                <div class="sb-sidenav-menu">
-                    <div class="nav">
-                        <div class="sb-sidenav-menu-heading">Principal</div>
-                        <a class="nav-link" href="{{ route('inicio') }}">
-                            <div class="sb-nav-link-icon"><i class="fas fa-home"></i></div>
-                            Inicio
-                        </a>
-                        <a class="nav-link" href="{{ route('tareas.index') }}">
-                            <div class="sb-nav-link-icon"><i class="fas fa-tasks"></i></div>
-                            Tareas
-                        </a>
-                        {{-- Reemplazamos @can('dashboard') --}}
-                        @if (Auth::user()->hasPermissionTo('dashboard'))
-                            <a class="nav-link" href="{{ route('dashboard') }}">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-line"></i></div>
-                                Dashboard
-                            </a>
-                        @endif
-                        <div class="sb-sidenav-menu-heading">Negocio</div>
-                        {{-- Reemplazamos @canany(['empleados', 'roles.index']) --}}
-                        @if (Auth::user()->hasAnyPermission(['empleados', 'roles.index']))
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                                data-bs-target="#collapseAdministration" aria-expanded="false"
-                                aria-controls="collapseAdministration">
-                                <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                                Administracion
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseAdministration" aria-labelledby="headingAdministration"
-                                data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if (Auth::user()->hasPermissionTo('empleados'))
-                                        <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('roles.index'))
-                                        <a class="nav-link" href="{{ route('roles.index') }}">Roles</a>
-                                    @endif
-                                </nav>
-                            </div>
-                        @endif
-                        {{-- Reemplazamos @canany(['empleado.recargas.index', 'costos', 'gastos']) --}}
-                        @if (Auth::user()->hasAnyPermission(['empleado.recargas.index', 'costos', 'gastos']))
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                                data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
-                                <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
-                                Finanza
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseFinance" aria-labelledby="headingFinance"
-                                data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if (Auth::user()->hasPermissionTo('empleado.recargas.index'))
-                                        <a class="nav-link" href="{{ route('empleado.recargas.index') }}">Recargas</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('costos'))
-                                        <a class="nav-link" href="{{ route('costos') }}">Costos</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('gastos'))
-                                        <a class="nav-link" href="{{ route('gastos') }}">Gastos</a>
-                                    @endif
-                                </nav>
-                            </div>
-                        @endif
-                        {{-- Reemplazamos @canany(['ventas', 'empleados.pedidos.index', 'clientes', 'gestion.index', 'productos.index']) --}}
-                        @if (Auth::user()->hasAnyPermission(['ventas', 'empleados.pedidos.index', 'clientes', 'gestion.index', 'productos.index']))
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                                data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
-                                <div class="sb-nav-link-icon"><i class="fas fa-shopping-cart"></i></div>
-                                Comercio
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne"
-                                data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if (Auth::user()->hasPermissionTo('ventas'))
-                                        <a class="nav-link" href="{{ route('ventas') }}">Ventas</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('empleado.pedidos.index'))
-                                        <a class="nav-link" href="{{ route('empleado.pedidos.index') }}">Pedidos</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('clientes'))
-                                        <a class="nav-link" href="{{ route('clientes') }}">Clientes</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('gestion'))
-                                        <a class="nav-link" href="{{ route('gestion.index') }}">Gestión de Productos</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('productos.index'))
-                                        <a class="nav-link" href="{{ route('productos.index') }}">Productos</a>
-                                    @endif
-                                </nav>
-                            </div>
-                        @endif
-                        <div class="sb-sidenav-menu-heading">Stock</div>
-                        {{-- Reemplazamos @canany(['cuentas', 'usuarios', 'mantenimientos']) --}}
-                        @if (Auth::user()->hasAnyPermission(['cuentas', 'usuarios', 'mantenimientos']))
-                            <!-- Accounts collapsible -->
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                                data-bs-target="#collapseAccounts" aria-expanded="false"
-                                aria-controls="collapseAccounts">
-                                <div class="sb-nav-link-icon"><i class="fas fa-user"></i></div>
-                                Cuentas
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseAccounts" aria-labelledby="headingAccounts"
-                                data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if (Auth::user()->hasPermissionTo('cuentas'))
-                                        <a class="nav-link" href="{{ route('cuentas') }}">Cuentas y Perfiles</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('usuarios'))
-                                        <a class="nav-link" href="{{ route('usuarios') }}">Usuarios Activos</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('mantenimientos'))
-                                        <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>
-                                    @endif
-                                </nav>
-                            </div>
-                        @endif
+    @include('partials.navbar')
 
-                        {{-- Reemplazamos @canany(['servicios', 'proveedores', 'valores']) --}}
-                        @if (Auth::user()->hasAnyPermission(['servicios', 'proveedores', 'valores']))
-                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
-                                data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
-                                <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                                Inventario
-                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-                            </a>
-                            <div class="collapse" id="collapseStock" aria-labelledby="headingStock"
-                                data-bs-parent="#sidenavAccordion">
-                                <nav class="sb-sidenav-menu-nested nav">
-                                    @if (Auth::user()->hasPermissionTo('servicios'))
-                                        <a class="nav-link" href="{{ route('servicios') }}">Servicios</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('proveedores'))
-                                        <a class="nav-link" href="{{ route('proveedores') }}">Proveedores</a>
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('valores'))
-                                        <a class="nav-link" href="{{ route('valores') }}">Valores</a>
-                                    @endif
-                                </nav>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-                <div class="sb-sidenav-footer">
-                    <div class="small">Iniciado como:</div>
-                    @if (Auth::user()->roles->isNotEmpty())
-                        {{ implode(', ', Auth::user()->roles->pluck('name')->toArray()) }}
-                    @else
-                        Sin rol asignado
-                    @endif
-                </div>
-            </nav>
-        </div>
+    <div id="layoutSidenav">
+        @include('partials.sidebar')
+
         <div id="layoutSidenav_content">
             <main>
                 @yield('main')
             </main>
-            <footer class="py-4 bg-light mt-auto">
-                <div class="container-fluid px-4">
-                    <div class="d-flex align-items-center justify-content-between small">
-                        <div class="text-muted">Copyright &copy; Streamify 2024</div>
-                        <div>
-                            <a href="#">Politicas de Privacidad</a>
-                            &middot;
-                            <a href="#">Terminos &amp; Condiciones</a>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            @include('partials.footer')
         </div>
     </div>
 
@@ -247,35 +41,9 @@
     <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
         crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const dataTableElement = document.querySelector('#datatablesSimple');
-                if (dataTableElement) {
-                    const rows = dataTableElement.querySelectorAll('tbody tr');
-                    if (rows.length > 0) {
-                        new simpleDatatables.DataTable(dataTableElement, {
-                            searchable: true,
-                            perPageSelect: [5, 10, 20],
-                            labels: {
-                                placeholder: "Buscar...",
-                                perPage: "Registros por página",
-                                noRows: "No se encontraron registros.",
-                                info: "Mostrando {start} a {end} de {rows} registros",
-                            },
-                        });
-                    } else {
-                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
-                    }
-                }
-            }, 500);
-        });
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{{ asset('js/sidebar.js') }}"></script>
+    <script src="{{ asset('js/navbar.js') }}"></script>
     @yield('scripts')
 </body>
 
