@@ -125,7 +125,118 @@
 .orange-navbar .nav-link:hover {
     color: #f8f9fa !important;
 }
+.purple-navbar {
+    background-color: #6f42c1 !important;
+    border-bottom: 2px solid #563d7c;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    padding: 10px 20px;
+}
 
+/* Enlaces */
+.purple-navbar .nav-link {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+.purple-navbar .nav-link:hover {
+    color: #d1c4e9 !important; /* Un tono claro de púrpura */
+}
+
+.purple-navbar #sidebarToggle:hover {
+    color: #d1c4e9 !important;
+}
+
+/* Dropdown */
+.purple-navbar .dropdown-menu {
+    background: #f3e5f5; /* Fondo morado claro */
+}
+
+.purple-navbar .dropdown-item:hover {
+    background: #d1c4e9 !important;
+}
+
+/* Logo */
+.purple-navbar .navbar-brand {
+    color: #fff !important;
+}
+.yellow-navbar {
+    background-color: #f4c20d !important;
+    border-bottom: 2px solid #d1a80a;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    padding: 10px 20px;
+}
+
+/* Enlaces */
+.yellow-navbar .nav-link {
+    color: #222 !important;
+    font-weight: 500;
+}
+
+.yellow-navbar .nav-link:hover {
+    color: #010101 !important;
+}
+
+/* Botón del sidebar */
+.yellow-navbar #sidebarToggle {
+    color: #222 !important;
+}
+
+.yellow-navbar #sidebarToggle:hover {
+    color: #010101 !important;
+}
+
+/* Dropdown */
+.yellow-navbar .dropdown-menu {
+    background: #fff9c4; /* Fondo amarillo claro */
+}
+
+.yellow-navbar .dropdown-item:hover {
+    background: #ffeb3b !important;
+}
+
+/* Logo */
+.yellow-navbar .navbar-brand {
+    color: #222 !important;
+}
+.green-navbar {
+    background-color: #198754 !important;
+    border-bottom: 2px solid #145c41;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    padding: 10px 20px;
+}
+
+/* Enlaces */
+.green-navbar .nav-link {
+    color: #fff !important;
+    font-weight: 500;
+}
+
+.green-navbar .nav-link:hover {
+    color: #c8e6c9 !important; /* Un verde claro */
+}
+
+/* Botón del sidebar */
+.green-navbar #sidebarToggle {
+    color: #fff !important;
+}
+
+.green-navbar #sidebarToggle:hover {
+    color: #c8e6c9 !important;
+}
+
+/* Dropdown */
+.green-navbar .dropdown-menu {
+    background: #e8f5e9; /* Verde claro */
+}
+
+.green-navbar .dropdown-item:hover {
+    background: #c8e6c9 !important;
+}
+
+/* Logo */
+.green-navbar .navbar-brand {
+    color: #fff !important;
+}
 /* Botón del sidebar */
 #sidebarToggle {
     color: #fff !important;
@@ -150,7 +261,6 @@
     font-size: 1.2rem;
     transition: color 0.3s ease-in-out;
 }
-
 /* Si el navbar es oscuro, usa blanco */
 .dark-navbar .navbar-brand,
 .blue-navbar .navbar-brand,
@@ -166,4 +276,50 @@
 /* Efecto hover para el logo */
 .navbar-brand:hover {
     color: #f8f9fa !important;
+}
+
+
+.inverted-green-navbar {
+    background-color: #e8f5e9 !important; /* Verde claro */
+    border-bottom: 2px solid #c8e6c9;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
+    padding: 10px 20px;
+}
+
+/* Enlaces */
+.inverted-green-navbar .nav-link {
+    color: #198754 !important; /* Verde oscuro */
+    font-weight: 500;
+}
+
+.inverted-green-navbar .nav-link:hover {
+    color: #145c41 !important; /* Verde aún más oscuro */
+}
+
+/* Botón del sidebar */
+.inverted-green-navbar #sidebarToggle {
+    color: #198754 !important;
+}
+
+.inverted-green-navbar #sidebarToggle:hover {
+    color: #145c41 !important;
+}
+
+/* Dropdown */
+.inverted-green-navbar .dropdown-menu {
+    background: #dff5e1; /* Un verde más claro */
+}
+
+.inverted-green-navbar .dropdown-item {
+    color: #198754 !important;
+}
+
+.inverted-green-navbar .dropdown-item:hover {
+    background: #c8e6c9 !important;
+    color: #145c41 !important;
+}
+
+/* Logo */
+.inverted-green-navbar .navbar-brand {
+    color: #198754 !important;
 }

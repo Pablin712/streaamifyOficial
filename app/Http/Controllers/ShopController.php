@@ -386,16 +386,15 @@ class ShopController extends Controller
 
         // Buscar el producto basado en los detalles seleccionados
         $producto = $this->buscarProductoPorDetalles($detallesSeleccionados);
+        if (!$producto) {
+            return redirect()->back()->with('error', 'No hay cuenta disponible para renovar.');
+        }
         // Verificar saldo
         if ($usuario->saldo < $producto->preciopro) {
             return back()->with('error', 'Saldo insuficiente para realizar la compra.');
         }
 
-        if (!$producto) {
-            return redirect()->back()->with('error', 'No hay cuenta disponible para renovar.');
-        }
-
-        if ($producto->categoria_id == 1) { // Si es un producto de entrega inmediata
+        if ($producto->tipo_producto_id == 1) { // Si es un producto de entrega inmediata
             return $this->storeRenew($idCliente, $venta, $producto, $detallesSeleccionados);
         } else {
             // Registrar el pedido sin descontar saldo

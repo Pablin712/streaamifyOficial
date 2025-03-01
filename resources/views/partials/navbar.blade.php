@@ -1,4 +1,4 @@
-<nav class="sb-topnav navbar navbar-expand-lg navbar-light white-navbar">
+<nav class="sb-topnav navbar navbar-expand-lg navbar-light inverted-green-navbar">
     <div class="container-fluid">
         <!-- Logo / Nombre de la app -->
         <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>

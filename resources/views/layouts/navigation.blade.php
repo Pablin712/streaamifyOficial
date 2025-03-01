@@ -17,6 +17,34 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     @yield('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const dataTableElement = document.querySelector('#datatablesSimple');
+                if (dataTableElement) {
+                    const rows = dataTableElement.querySelectorAll('tbody tr');
+                    if (rows.length > 0) {
+                        new simpleDatatables.DataTable(dataTableElement, {
+                            searchable: true,
+                            perPageSelect: [5, 10, 20],
+                            labels: {
+                                placeholder: "Buscar...",
+                                perPage: "Registros por página",
+                                noRows: "No se encontraron registros.",
+                                info: "Mostrando {start} a {end} de {rows} registros",
+                            },
+                        });
+                    } else {
+                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
+                    }
+                }
+            }, 500);
+        });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body class="sb-nav-fixed">
