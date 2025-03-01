@@ -231,3 +231,5 @@ BEGIN
     SELECT p.id, admin_role_id FROM permissions p WHERE p.name IN 
     ('roles.index', 'roles.store', 'roles.update', 'roles.destroy');
 END $$;
+ALTER TABLE model_has_roles 
+ALTER COLUMN model_type SET DEFAULT 'App\\Models\\Empleado';

@@ -325,69 +325,16 @@
     </div>
 @endsection
 @section('scripts')
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            if (window.location.href.includes('#tabla-perfiles')) {
-                document.getElementById('tabla-perfiles').scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#editProfileModal').on('show.bs.modal', function(event) {
-                var button = $(event.relatedTarget);
-                var perfilId = button.data('id');
-                var pinper = button.data('pin');
-                var modal = $(this);
-                modal.find('#perfilId').val(perfilId);
-                modal.find('#pinper').val(pinper);
-                var formAction = "{{ url('admin/perfil') }}/" + perfilId;
-                modal.find('#editProfileForm').attr('action', formAction);
-            });
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var totalUsuarios = 0;
-            var usuariosActivos = document.querySelectorAll('.usuarios-activos');
-            usuariosActivos.forEach(function(item) {
-                totalUsuarios += parseInt(item.textContent) || 0;
-            });
-            document.getElementById('totalUsuariosActivos').textContent = totalUsuarios;
-        });
-    </script>
-    <script>
-        function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
-            var servicio = idcue.replace(/[^a-zA-Z]/g, '');
-            var message = servicio + "\n";
-            message += "Usuario: " + usuariocue + "\n";
-            message += "Clave: " + contrasenacue + "\n";
-            message += "PIN de perfil Nro " + numeroper + ": " + pinper;
-            var tempTextArea = document.createElement("textarea");
-            tempTextArea.value = message;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempTextArea);
-            alert("El mensaje se ha copiado al portapapeles.");
-        }
-    </script>
     @if (session('focus'))
         <script>
             document.getElementById("{{ session('focus') }}").focus();
         </script>
     @endif
-    <script>
-        $(document).ready(function() {
-            $('#idcue').select2({
-                placeholder: "Selecciona una Cuenta",
-                allowClear: true
-            });
-        });
-    </script>
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <!-- Select2 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <!-- Tu archivo de JavaScript -->
+    <script src="{{ asset('js/cuentas.js') }}"></script>
 @endsection
