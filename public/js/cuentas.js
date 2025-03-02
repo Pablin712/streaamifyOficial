@@ -6,15 +6,17 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 document.addEventListener('DOMContentLoaded', function() {
-    $('#editProfileModal').on('show.bs.modal', function(event) {
-        var button = $(event.relatedTarget);
-        var perfilId = button.data('id');
-        var pinper = button.data('pin');
-        var modal = $(this);
-        modal.find('#perfilId').val(perfilId);
-        modal.find('#pinper').val(pinper);
-        var formAction = "{{ url('admin/perfil') }}/" + perfilId;
-        modal.find('#editProfileForm').attr('action', formAction);
+    var editProfileModal = document.getElementById('editProfileModal');
+    editProfileModal.addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+        var actionUrl = button.getAttribute('data-action');
+        var perfilId = button.getAttribute('data-id');
+        var pinper = button.getAttribute('data-pin');
+
+        var modalForm = editProfileModal.querySelector('#editProfileForm');
+        modalForm.setAttribute('action', actionUrl);
+        modalForm.querySelector('#perfilId').value = perfilId;
+        modalForm.querySelector('#pinper').value = pinper;
     });
 });
 document.addEventListener('DOMContentLoaded', function() {

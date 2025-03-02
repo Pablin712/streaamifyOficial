@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     @yield('styles')
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body class="sb-nav-fixed">

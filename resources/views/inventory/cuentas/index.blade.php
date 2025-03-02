@@ -36,12 +36,6 @@
     Cuentas
 @endsection
 @section('descripcion')
-    @if (session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-
     @if ($errors->any())
         <div class="alert alert-danger">
             <ul>
@@ -271,11 +265,14 @@
                             @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
                                 <td>
                                     @if (Auth::user()->hasPermissionTo('perfil.update'))
-                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#editProfileModal" data-id="{{ $perfil->idper }}"
-                                            data-pin="{{ $perfil->pinper }}">
-                                            <i class="fas fa-edit">Editar</i>
-                                        </button>
+                                    <button type="button" class="btn btn-warning btn-sm" 
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editProfileModal"
+                                    data-action="{{ route('perfil.update', $perfil->idper) }}"
+                                    data-id="{{ $perfil->idper }}"
+                                    data-pin="{{ $perfil->pinper }}">
+                                    <i class="fas fa-edit">Editar</i>
+                                </button>                                
                                     @endif
                                     @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
                                         <button class="btn btn-success btn-sm"
@@ -297,7 +294,6 @@
             </table>
         </div>
     </div>
-    <!-- Modal para editar el PIN del perfil -->
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -306,7 +302,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="editProfileForm" method="POST" action="">
+                    <form id="editProfileForm" method="POST">
                         @csrf
                         @method('PUT')
                         <input type="hidden" id="perfilId" name="idper">
@@ -322,7 +318,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>    
 @endsection
 @section('scripts')
     @if (session('focus'))
@@ -336,5 +332,5 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <!-- Tu archivo de JavaScript -->
-    <script src="{{ asset('js/cuentas.js') }}"></script>
+    <script src="{{ asset('js/cuentas.js') }}?v={{ time() }}"></script>
 @endsection

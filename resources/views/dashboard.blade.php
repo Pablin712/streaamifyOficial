@@ -436,7 +436,7 @@
                         <td>{{ $costos_disney }}</td>
                         <td>{{ $ingresos_disney - $costos_disney }}</td>
                         <td>
-                            @if ($costos_netflix != 0)
+                            @if ($costos_disney != 0)
                                 {{ number_format($ingresos_disney / $costos_disney, 2) }}
                             @else
                                 0

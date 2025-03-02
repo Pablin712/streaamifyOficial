@@ -1,7 +1,10 @@
 @extends('layouts.static')
 
 @section('title', 'Crear Venta')
-
+@section('styles')
+    <!-- CSS de Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+@endsection
 @section('h1', 'Crear Venta')
 @section('breadcrumb')
     <a href="{{ route('ventas') }}">Ventas</a>
@@ -173,7 +176,8 @@
         </div>
     </div>
     <!-- Modal para editar detalle -->
-    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -202,7 +206,8 @@
                         <!-- Select Perfil -->
                         <div class="mb-3">
                             <label for="editarSelectPerfil" class="form-label">Perfil</label>
-                            <input type="number" class="form-control" id="editarSelectPerfil" min="1" max="7" required>
+                            <input type="number" class="form-control" id="editarSelectPerfil" min="1"
+                                max="7" required>
                         </div>
 
                         <!-- Fecha de Vencimiento -->
@@ -214,7 +219,8 @@
                         <!-- Monto -->
                         <div class="mb-3">
                             <label for="editarMonto" class="form-label">Monto</label>
-                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0" required>
+                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0"
+                                required>
                         </div>
 
                         <!-- Descripción -->
@@ -238,6 +244,11 @@
 @endsection
 
 @section('scripts')
+    <!-- jQuery (necesario para Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- JS de Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <script>
         // Inicializa Select2 en el select con el id 'idcli'
         $(document).ready(function() {
@@ -389,7 +400,7 @@
                 let descripcion = row.cells[2].innerText; // La tercera celda es la Descripción
                 let fechaVencimiento = row.cells[3].innerText; // La cuarta celda es la Fecha de Vencimiento
                 let monto = parseFloat(row.cells[4].innerText.replace('$', '')
-            .trim()); // La quinta celda es el Monto
+                    .trim()); // La quinta celda es el Monto
 
                 // Asegurarse de que los campos no estén vacíos (esto es opcional, según tu caso)
                 if (cuenta && perfil && descripcion && fechaVencimiento && monto) {

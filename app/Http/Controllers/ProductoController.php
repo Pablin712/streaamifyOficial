@@ -163,6 +163,7 @@ class ProductoController extends Controller
             $destinationPath = public_path('storage/fotos');
             $file->move($destinationPath, $filename);
             $data['foto'] = 'storage/fotos/' . $filename;
+            $producto->foto = $data['foto'];
         }
 
         $producto->update($request->except('foto', 'detalles_producto'));
