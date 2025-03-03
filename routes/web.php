@@ -114,6 +114,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(ContabilidadController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
         Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
+        Route::get('/dashboard/filter', 'filterData')->name('dashboard.filter');
+
     });
 
     Route::controller(CostoController::class)->group(function () {

@@ -29,81 +29,6 @@
         </div>
     @endif
     <h1>{{ Auth::user()->nombreemp }}</h1>
-    @if (Auth::user()->hasPermissionTo('dashboard.store'))
-        <form method="POST" action="{{ route('dashboard.store') }}">
-            @csrf
-            <!-- Otras entradas del formulario -->
-            <input type="hidden" name="ventas" value="{{ $ventas }}">
-            <input type="hidden" name="ingresos_mes" value="{{ $ingresos_mes }}">
-            <input type="hidden" name="ingresos_ano" value="{{ $ingresos_ano }}">
-            <input type="hidden" name="clientes_activos" value="{{ $clientes_activos }}">
-            <input type="hidden" name="usuarios_activos" value="{{ $total_usuarios_activos }}">
-            <input type="hidden" name="cuentas_caidas" value="{{ $cuentas_caidas }}">
-            <input type="hidden" name="usuarios_acobrar" value="{{ $usuarios_acobrar }}">
-            <input type="hidden" name="num_cuentas" value="{{ $num_cuentas }}">
-            <input type="hidden" name="costos_mes" value="{{ $costos_mes }}">
-            <input type="hidden" name="gastos_mes" value="{{ $gastos_mes }}">
-            <input type="hidden" name="promedio_pagos_mes" value="{{ $promedio_pagos_mes }}">
-            <input type="hidden" name="cliente_mas_facturado" value="{{ $cliente_mas_facturado }}">
-            <input type="hidden" name="ventas_mes" value="{{ $ventas_mes }}">
-
-            <!-- Variables para guardar estadísticas del día -->
-            <input type="hidden" name="activeUsers" value="{{ $activeUsers }}">
-            <input type="hidden" name="dailyRevenue" value="{{ $dailyRevenue }}">
-            <input type="hidden" name="dailyCost" value="{{ $dailyCost }}">
-            <input type="hidden" name="dailyBill" value="{{ $dailyBill }}">
-            <input type="hidden" name="dailySales" value="{{ $dailySales }}">
-            <input type="hidden" name="newCustomers" value="{{ $newCustomers }}">
-
-            <!-- Variables de servicios específicos -->
-            <input type="hidden" name="cuentas_netflix" value="{{ $cuentas_netflix }}">
-            <input type="hidden" name="usuarios_netflix" value="{{ $usuarios_netflix }}">
-            <input type="hidden" name="ingresos_netflix" value="{{ $ingresos_netflix }}">
-            <input type="hidden" name="costos_netflix" value="{{ $costos_netflix }}">
-
-            <input type="hidden" name="cuentas_disney" value="{{ $cuentas_disney }}">
-            <input type="hidden" name="usuarios_disney" value="{{ $usuarios_disney }}">
-            <input type="hidden" name="ingresos_disney" value="{{ $ingresos_disney }}">
-            <input type="hidden" name="costos_disney" value="{{ $costos_disney }}">
-
-            <input type="hidden" name="cuentas_prime" value="{{ $cuentas_prime }}">
-            <input type="hidden" name="usuarios_prime" value="{{ $usuarios_prime }}">
-            <input type="hidden" name="ingresos_prime" value="{{ $ingresos_prime }}">
-            <input type="hidden" name="costos_prime" value="{{ $costos_prime }}">
-
-            <input type="hidden" name="cuentas_max" value="{{ $cuentas_max }}">
-            <input type="hidden" name="usuarios_max" value="{{ $usuarios_max }}">
-            <input type="hidden" name="ingresos_max" value="{{ $ingresos_max }}">
-            <input type="hidden" name="costos_max" value="{{ $costos_max }}">
-
-            <input type="hidden" name="cuentas_magis" value="{{ $cuentas_magis }}">
-            <input type="hidden" name="usuarios_magis" value="{{ $usuarios_magis }}">
-            <input type="hidden" name="ingresos_magis" value="{{ $ingresos_magis }}">
-            <input type="hidden" name="costos_magis" value="{{ $costos_magis }}">
-
-            <input type="hidden" name="cuentas_crunchy" value="{{ $cuentas_crunchy }}">
-            <input type="hidden" name="usuarios_crunchy" value="{{ $usuarios_crunchy }}">
-            <input type="hidden" name="ingresos_crunchy" value="{{ $ingresos_crunchy }}">
-            <input type="hidden" name="costos_crunchy" value="{{ $costos_crunchy }}">
-
-            <input type="hidden" name="cuentas_paramount" value="{{ $cuentas_paramount }}">
-            <input type="hidden" name="usuarios_paramount" value="{{ $usuarios_paramount }}">
-            <input type="hidden" name="ingresos_paramount" value="{{ $ingresos_paramount }}">
-            <input type="hidden" name="costos_paramount" value="{{ $costos_paramount }}">
-
-            <input type="hidden" name="cuentas_spotify" value="{{ $cuentas_spotify }}">
-            <input type="hidden" name="usuarios_spotify" value="{{ $usuarios_spotify }}">
-            <input type="hidden" name="ingresos_spotify" value="{{ $ingresos_spotify }}">
-            <input type="hidden" name="costos_spotify" value="{{ $costos_spotify }}">
-
-            <input type="hidden" name="cuentas_otros" value="{{ $cuentas_otros }}">
-            <input type="hidden" name="usuarios_otros" value="{{ $usuarios_otros }}">
-            <input type="hidden" name="ingresos_otros" value="{{ $ingresos_otros }}">
-            <input type="hidden" name="costos_otros" value="{{ $costos_otros }}">
-            <!-- Agrega los demás campos como ocultos si es necesario -->
-            <button type="submit" class="btn btn-primary mb-3">Guardar reporte de mes</button>
-        </form>
-    @endif
 @endsection
 @section('content')
     <!-- Content Wrapper -->
@@ -349,11 +274,6 @@
         </div>
         <!-- End of Main Content -->
     </div>
-    <!-- End of Content Wrapper -->
-    {{--  <h3>Mapa de erp</h3>
-    <img src="{{ asset('images/BASE2.png') }}" alt="imagen de mapa">
-    --}}
-
     {{-- tabla de resultados del mes --}}
     <div id="resultados" class="card mb-4">
         <div class="card-header">
@@ -814,7 +734,6 @@
             </table>
         </div>
     </div>
-
     <div class="card mb-4">
         <div class="card-body">
             <h5>Resumen financiero:</h5>
@@ -844,27 +763,24 @@
             <p class="mt-3">Visualiza los gráficos de resultados del mes actual.</p>
         </div>
     </div>
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-area me-1"></i>
-                    Progreso en los últimos 20 días
-                </div>
-                <div class="card-body"><canvas id="myAreaChartDays" width="100%" height="50"></canvas></div>
-                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>
+                <i class="fas fa-chart-area me-1"></i>
+                Progreso en los últimos 6 meses
+            </span>
+            <div>
+                <button class="btn btn-sm btn-primary filter-btn" data-interval="1d">1D</button>
+                <button class="btn btn-sm btn-primary filter-btn" data-interval="1w">1W</button>
+                <button class="btn btn-sm btn-primary filter-btn" data-interval="1m">1M</button>
+                <button class="btn btn-sm btn-primary filter-btn" data-interval="3m">3M</button>
+                <button class="btn btn-sm btn-primary filter-btn" data-interval="1y">1Y</button>
             </div>
         </div>
-        <div class="col-lg-6"> {{-- class="card mb-4" --}}
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-area me-1"></i>
-                    Progreso en los últimos 6 meses
-                </div>
-                <div class="card-body"><canvas id="myAreaChart" width="100%" height="50"></canvas></div>
-                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
-            </div>
+        <div class="card-body">
+            <canvas id="myAreaChart" width="100%" height="30"></canvas>
         </div>
+        <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
     </div>
     <div class="row">
         <div class="col-lg-6">
@@ -897,157 +813,135 @@
 @section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        var ctx = document.getElementById('myAreaChart').getContext('2d');
+        document.addEventListener("DOMContentLoaded", function() {
+            var ctx = document.getElementById("myAreaChart").getContext("2d");
+            var myAreaChart;
 
-
-        var mesesHistorial = @json($meses_historial).reverse(); // Etiquetas de los meses, invertidas
-        var ingresosHistorial = @json($ingresos_historial).reverse(); // Ingresos invertidos
-        var costosHistorial = @json($costos_historial).reverse(); // Costos invertidos
-        var gastosHistorial = @json($gastos_historial).reverse();
-        var gananciasHistorial = @json($ganancias_historial).reverse();
-
-        var myAreaChart = new Chart(ctx, {
-            type: 'line', // Tipo de gráfico: línea (pero con área rellena)
-            data: {
-                labels: mesesHistorial, // Etiquetas del eje X, que son los meses pasados desde el controlador
-                datasets: [{
-                        label: 'Ingresos', // Nombre de la primera serie (Ingresos)
-                        data: ingresosHistorial, // Los datos de la serie de ingresos
-                        fill: true, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(78, 115, 223, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(78, 115, 223, 1)', // Color de la línea
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Costos', // Nombre de la segunda serie (Costos)
-                        data: costosHistorial, // Los datos de la serie de costos
-                        fill: true, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(255, 159, 64, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(255, 159, 64, 1)', // Color de la línea
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Gastos', // Nombre de la tercera serie (Ganancias)
-                        data: gastosHistorial, // Los datos de la serie de ganancias
-                        fill: true, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(255, 99, 132, 1)', // Color de la línea
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Balance', // Nombre de la tercera serie (Ganancias)
-                        data: gananciasHistorial, // Los datos de la serie de ganancias
-                        fill: true, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(28, 200, 138, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(28, 200, 138, 1)', // Color de la línea
-                        borderWidth: 1,
-                        hidden: false // Ocultar por defecto
-                    }
-                ]
-            },
-            options: {
-                responsive: true, // Hacer el gráfico responsivo
-                scales: {
-                    x: {
-                        beginAtZero: true // Comenzar el eje X desde 0
-                    },
-                    y: {
-                        beginAtZero: true // Comenzar el eje Y desde 0
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: true, // Mostrar la leyenda
-                        position: 'top' // Posición de la leyenda
-                    },
-                    tooltip: {
-                        enabled: true // Habilitar los tooltips
-                    }
+            function initChart(labels, ingresos, costos, gastos, ganancias, ventasChart, newCustomers, users) {
+                if (myAreaChart) {
+                    myAreaChart.destroy(); // Destruir el gráfico si ya existe
                 }
-            }
-        });
-    </script>
-    <script>
-        var ctxDays = document.getElementById('myAreaChartDays').getContext('2d');
 
-        var diasHistorial = @json($dateHistory).reverse();
-        var usuariosHistorial = @json($activeUsersHistory).reverse(); // Etiquetas de los meses, invertidas
-        var ingresosHistorial = @json($dailyRevenueHistory).reverse(); // Ingresos invertidos
-        var costosHistorial = @json($dailyCostHistory).reverse(); // Costos invertidos
-        var gastosHistorial = @json($dailyBillHistory).reverse();
-        var ventasHistorial = @json($dailySalesHistory).reverse();
-
-        var myAreaChartDays = new Chart(ctxDays, {
-            type: 'line', // Tipo de gráfico: línea (pero con área rellena)
-            data: {
-                labels: diasHistorial, // Etiquetas del eje X, que son los meses pasados desde el controlador
-                datasets: [{
-                        label: 'Usuarios', // Nombre de la primera serie (Ingresos)
-                        data: usuariosHistorial, // Los datos de la serie de ingresos
-                        fill: false, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(78, 115, 223, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(78, 115, 223, 1)', // Color de la línea
-                        borderWidth: 1,
-                        hidden: false // Ocultar por defecto
+                myAreaChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                                label: "Ingresos",
+                                data: ingresos,
+                                fill: true,
+                                backgroundColor: "rgba(78, 115, 223, 0.2)",
+                                borderColor: "rgba(78, 115, 223, 1)",
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "Costos",
+                                data: costos,
+                                fill: true,
+                                backgroundColor: "rgba(255, 159, 64, 0.2)", // 🟠 Naranja estándar
+                                borderColor: "rgba(255, 159, 64, 1)",
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "Gastos",
+                                data: gastos,
+                                fill: true,
+                                backgroundColor: "rgba(220, 53, 69, 0.2)", // 🔴 Rojo translúcido
+                                borderColor: "rgba(220, 53, 69, 1)", // 🔴 Rojo fuerte
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "Ganancias",
+                                data: ganancias,
+                                fill: true,
+                                backgroundColor: "rgba(28, 200, 138, 0.2)",
+                                borderColor: "rgba(28, 200, 138, 1)",
+                                borderWidth: 2,
+                            },
+                            {
+                                label: "Ventas",
+                                data: ventasChart,
+                                fill: false,
+                                backgroundColor: "rgba(255, 205, 86, 0.2)", // 🟡 Amarillo translúcido
+                                borderColor: "rgba(255, 205, 86, 1)", // 🟡 Amarillo fuerte
+                                borderWidth: 2,
+                                hidden: false
+                            },
+                            {
+                                label: "Clientes New",
+                                data: newCustomers,
+                                fill: false,
+                                backgroundColor: "rgba(255, 20, 147, 0.2)", // 🌸 Rosa más vibrante
+                                borderColor: "rgba(255, 20, 147, 1)", // 🌸 Rosa fuerte
+                                borderWidth: 2,
+                                hidden: false
+                            },
+                            {
+                                label: "Suscripciones",
+                                data: users,
+                                fill: false,
+                                backgroundColor: "rgba(153, 102, 255, 0.2)", // 🟣 Morado translúcido
+                                borderColor: "rgba(153, 102, 255, 1)", // 🟣 Morado fuerte
+                                borderWidth: 2,
+                                hidden: true
+                            },
+                        ],
                     },
-                    {
-                        label: 'Ingresos', // Nombre de la primera serie (Ingresos)
-                        data: ingresosHistorial, // Los datos de la serie de ingresos
-                        fill: false, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(78, 115, 223, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(78, 115, 223, 1)', // Color de la línea
-                        borderWidth: 1,
-                        hidden: true // Ocultar por defecto
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            },
+                            y: {
+                                beginAtZero: true
+                            },
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: "top"
+                            },
+                            tooltip: {
+                                enabled: true
+                            },
+                        },
                     },
-                    {
-                        label: 'Costos', // Nombre de la segunda serie (Costos)
-                        data: costosHistorial, // Los datos de la serie de costos
-                        fill: false, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(255, 159, 64, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(255, 159, 64, 1)', // Color de la línea
-                        borderWidth: 1,
-                        hidden: true // Ocultar por defecto
-                    },
-                    {
-                        label: 'Gastos', // Nombre de la tercera serie (Ganancias)
-                        data: gastosHistorial, // Los datos de la serie de ganancias
-                        fill: false, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(255, 99, 132, 1)', // Color de la línea
-                        borderWidth: 1,
-                        hidden: true // Ocultar por defecto
-                    },
-                    {
-                        label: 'Ventas', // Nombre de la tercera serie (Ganancias)
-                        data: ventasHistorial, // Los datos de la serie de ganancias
-                        fill: true, // Rellenar el área debajo de la línea
-                        backgroundColor: 'rgba(28, 200, 138, 0.2)', // Color del área (con transparencia)
-                        borderColor: 'rgba(28, 200, 138, 1)', // Color de la línea
-                        borderWidth: 1,
-                        hidden: true // Ocultar por defecto
-                    }
-                ]
-            },
-            options: {
-                responsive: true, // Hacer el gráfico responsivo
-                scales: {
-                    x: {
-                        beginAtZero: true // Comenzar el eje X desde 0
-                    },
-                    y: {
-                        beginAtZero: true // Comenzar el eje Y desde 0
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: true, // Mostrar la leyenda
-                        position: 'top' // Posición de la leyenda
-                    },
-                    tooltip: {
-                        enabled: true // Habilitar los tooltips
-                    }
-                }
+                });
             }
+
+            function loadChartData(interval) {
+                fetch("{{ route('dashboard.filter') }}?range=" + interval)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        initChart(
+                            data.labels,
+                            Object.values(data.ingresos),
+                            Object.values(data.costos),
+                            Object.values(data.gastos),
+                            Object.values(data.ganancias),
+                            Object.values(data.ventasChart),
+                            Object.values(data.newCustomers),
+                            Object.values(data.users)
+                        );
+                    })
+                    .catch((error) => console.error("Error al cargar datos:", error));
+            }
+
+            document.querySelectorAll(".filter-btn").forEach((button) => {
+                button.addEventListener("click", function() {
+                    document.querySelectorAll(".filter-btn").forEach((btn) =>
+                        btn.classList.remove("btn-primary")
+                    );
+                    this.classList.add("btn-primary");
+
+                    var interval = this.getAttribute("data-interval");
+                    loadChartData(interval);
+                });
+            });
+
+            // Cargar datos iniciales
+            loadChartData("1m");
         });
     </script>
     <script>
@@ -1144,7 +1038,6 @@
             }
         });
     </script>
-
     <script>
         var ctx = document.getElementById('myPieChart').getContext('2d');
         var myPieChart = new Chart(ctx, {
@@ -1180,5 +1073,4 @@
             }
         });
     </script>
-
 @endsection
