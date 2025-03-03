@@ -652,9 +652,10 @@ class DashboardService
 
     private function getUsersMonth(int $month, int $year): float
     {
-        return DailyStatistic::whereMonth('date', $month)
-            ->whereYear('date', $year)
-            ->sum('active_users');
+        $dato = DailyStatistic::whereMonth('date', $month)
+        ->whereYear('date', $year)
+        ->max('active_users');
+        return (float) $dato;
     }
     private function getUsersDay(string $date): float
     {
@@ -662,8 +663,8 @@ class DashboardService
     }
     public function getUsersBetweenDates(string $date1, string $date2): float
     {
-        return DailyStatistic::whereBetween('created_at', [$date1, $date2])
-            ->sum('active_users');
+        return (float) DailyStatistic::whereBetween('created_at', [$date1, $date2])
+            ->max('active_users');
     }
     public function getUsersChartData(string $interval): array
     {
@@ -705,7 +706,7 @@ class DashboardService
             case '1y': // Últimos 5 años (año a año)
                 for ($i = 5; $i >= 0; $i--) {
                     $year = $today->copy()->subYears($i)->year;
-                    $data[$year] = DailyStatistic::whereYear('date', $year)->sum('active_users');
+                    $data[$year] = DailyStatistic::whereYear('date', $year)->max('active_users');
                 }
                 break;
 

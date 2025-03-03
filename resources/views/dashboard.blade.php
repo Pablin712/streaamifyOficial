@@ -736,29 +736,29 @@
     </div>
     <div class="card mb-4">
         <div class="card-body">
-            <h3>Resumen financiero</h5>
+            <h3>📊 Resumen financiero</h5>
                 <div class="row mb-2">
-                    <div class="col-4"><strong>Concepto</strong></div>
-                    <div class="col-4 text-end"><strong>Monto</strong></div>
-                    <div class="col-4 text-end"><strong>Porcentaje</strong></div>
+                    <div class="col-4"><strong>📌 Concepto</strong></div>
+                    <div class="col-4 text-end"><strong>💰 Monto</strong></div>
+                    <div class="col-4 text-end"><strong>📈 Porcentaje</strong></div>
                 </div>
                 <div class="row mb-2">
-                    <div class="col-4"><strong>Ingresos:</strong></div>
+                    <div class="col-4"><strong>💵 Ingresos:</strong></div>
                     <div class="col-4 text-end">{{ number_format($ingresos_mes, 2) }}</div>
                     <div class="col-4 text-end"><strong>100%</strong></div>
                 </div>
                 <div class="row mb-2">
-                    <div class="col-4"><strong>Costos:</strong></div>
+                    <div class="col-4"><strong>🏭 Costos:</strong></div>
                     <div class="col-4 text-end">{{ number_format($costos_mes, 2) }}</div>
                     <div class="col-4 text-end">{{ number_format($costos_pct, 2) }}%</div>
                 </div>
                 <div class="row mb-2">
-                    <div class="col-4"><strong>Gastos:</strong></div>
+                    <div class="col-4"><strong>💸 Gastos:</strong></div>
                     <div class="col-4 text-end">{{ number_format($gastos_mes, 2) }}</div>
                     <div class="col-4 text-end">{{ number_format($gastos_pct, 2) }}%</div>
                 </div>
                 <div class="row mb-2">
-                    <div class="col-4"><strong>Balance:</strong></div>
+                    <div class="col-4"><strong>📉 Balance:</strong></div>
                     <div class="col-4 text-end">
                         <strong>
                             <span class="{{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
@@ -775,11 +775,11 @@
                     </div>
                 </div>
                 <hr> <!-- Línea de separación -->
-                <h4 class="mt-3">Resumen de Gastos</h6>
+                <h4 class="mt-3">📌 Resumen de Gastos</h6>
                 <div class="row fw-bold">
-                    <div class="col-4">Concepto</div>
-                    <div class="col-4 text-end">Monto</div>
-                    <div class="col-4 text-end">Porcentaje</div>
+                    <div class="col-4">📍 Concepto</div>
+                    <div class="col-4 text-end">💲 Monto</div>
+                    <div class="col-4 text-end">📊 Porcentaje</div>
                 </div>
                 @foreach ($gastos as $gasto)
                     <div class="row mb-2">

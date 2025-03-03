@@ -133,6 +133,7 @@ DELIMITER ;
 
 -- Crear el trigger asociado
 -- Crear la función insertar_perfiles
+DROP TRIGGER IF EXISTS insertar_perfiles;
 DELIMITER $$
 
 CREATE TRIGGER insertar_perfiles
@@ -210,6 +211,10 @@ BEGIN
     ELSEIF NEW.idcue LIKE 'IND%' THEN
         INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
         (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, 'aparte');
+    -- Insertar perfiles para IND
+    ELSEIF NEW.idcue LIKE 'COM%' THEN
+        INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
+        (CONCAT(NEW.idcue, '.1'), NEW.idcue, 1, 'Cmplta');
     ELSE
         -- Insertar 3 perfiles predeterminados si no corresponde a ningún tipo conocido
         INSERT INTO perfiles (idper, idcue, numeroper, pinper) VALUES
