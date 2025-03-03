@@ -320,12 +320,14 @@
                                     <i class="fas fa-sync-alt"></i>
                                 </a>
                             @endif
+                            {{--  
                             @if (!empty($venta->cliente->email) && Auth::user()->hasPermissionTo('ventas.sendInvoice'))
                                 <button class="btn btn-info btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#previewInvoiceModal{{ $venta->idven }}">
                                     <i class="fas fa-file-invoice"></i>
                                 </button>
                             @endif
+                            --}}
                             @if (Auth::user()->hasPermissionTo('ventas.destroy'))
                                 <form action="{{ route('ventas.destroy', $venta->idven) }}" method="POST"
                                     style="display: inline;">
@@ -338,7 +340,7 @@
                                 </form>
                             @endif
                             <!-- Modal de vista previa de factura -->
-                            <div class="modal fade" id="previewInvoiceModal{{ $venta->idven }}" tabindex="-1"
+                            {{-- <div class="modal fade" id="previewInvoiceModal{{ $venta->idven }}" tabindex="-1"
                                 aria-labelledby="previewInvoiceLabel{{ $venta->idven }}" aria-hidden="true">
                                 <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
@@ -366,7 +368,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                         </td>
                     @endif
                 </tr>

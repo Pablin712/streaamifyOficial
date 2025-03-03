@@ -736,38 +736,66 @@
     </div>
     <div class="card mb-4">
         <div class="card-body">
-            <h5>Resumen financiero:</h5>
-            <div class="row mb-2">
-                <div class="col-6"><strong>Ingresos:</strong></div>
-                <div class="col-6 text-end">{{ number_format($ingresos_mes, 2) }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-6"><strong>Costos:</strong></div>
-                <div class="col-6 text-end">{{ number_format($costos_mes, 2) }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-6"><strong>Gastos:</strong></div>
-                <div class="col-6 text-end">{{ number_format($gastos_mes, 2) }}</div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-6"><strong>Balance:</strong></div>
-                <div class="col-6 text-end">
-                    <strong>
-                        <span
-                            class="{{ $ingresos_mes - $costos_mes - $gastos_mes >= 0 ? 'text-success' : 'text-danger' }}">
-                            {{ number_format($ingresos_mes - $costos_mes - $gastos_mes, 2) }}
-                        </span>
-                    </strong>
+            <h3>Resumen financiero</h5>
+                <div class="row mb-2">
+                    <div class="col-4"><strong>Concepto</strong></div>
+                    <div class="col-4 text-end"><strong>Monto</strong></div>
+                    <div class="col-4 text-end"><strong>Porcentaje</strong></div>
                 </div>
-            </div>
-            <p class="mt-3">Visualiza los gráficos de resultados del mes actual.</p>
+                <div class="row mb-2">
+                    <div class="col-4"><strong>Ingresos:</strong></div>
+                    <div class="col-4 text-end">{{ number_format($ingresos_mes, 2) }}</div>
+                    <div class="col-4 text-end"><strong>100%</strong></div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-4"><strong>Costos:</strong></div>
+                    <div class="col-4 text-end">{{ number_format($costos_mes, 2) }}</div>
+                    <div class="col-4 text-end">{{ number_format($costos_pct, 2) }}%</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-4"><strong>Gastos:</strong></div>
+                    <div class="col-4 text-end">{{ number_format($gastos_mes, 2) }}</div>
+                    <div class="col-4 text-end">{{ number_format($gastos_pct, 2) }}%</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-4"><strong>Balance:</strong></div>
+                    <div class="col-4 text-end">
+                        <strong>
+                            <span class="{{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ number_format($balance, 2) }}
+                            </span>
+                        </strong>
+                    </div>
+                    <div class="col-4 text-end">
+                        <strong>
+                            <span class="{{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ number_format($balance_pct, 2) }}%
+                            </span>
+                        </strong>
+                    </div>
+                </div>
+                <hr> <!-- Línea de separación -->
+                <h4 class="mt-3">Resumen de Gastos</h6>
+                <div class="row fw-bold">
+                    <div class="col-4">Concepto</div>
+                    <div class="col-4 text-end">Monto</div>
+                    <div class="col-4 text-end">Porcentaje</div>
+                </div>
+                @foreach ($gastos as $gasto)
+                    <div class="row mb-2">
+                        <div class="col-4">{{ $gasto['concepto'] }}</div>
+                        <div class="col-4 text-end">{{ number_format($gasto['total'], 2) }}</div>
+                        <div class="col-4 text-end">{{ $gasto['porcentaje'] }}%</div>
+                    </div>
+                @endforeach
+                <p class="mt-3">Visualiza los gráficos de resultados del mes actual.</p>
         </div>
     </div>
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <span>
                 <i class="fas fa-chart-area me-1"></i>
-                Progreso en los últimos 6 meses
+                Progreso de Streamify
             </span>
             <div>
                 <button class="btn btn-sm btn-primary filter-btn" data-interval="1d">1D</button>
@@ -857,6 +885,7 @@
                                 backgroundColor: "rgba(28, 200, 138, 0.2)",
                                 borderColor: "rgba(28, 200, 138, 1)",
                                 borderWidth: 2,
+                                hidden: true
                             },
                             {
                                 label: "Ventas",
@@ -865,7 +894,7 @@
                                 backgroundColor: "rgba(255, 205, 86, 0.2)", // 🟡 Amarillo translúcido
                                 borderColor: "rgba(255, 205, 86, 1)", // 🟡 Amarillo fuerte
                                 borderWidth: 2,
-                                hidden: false
+                                hidden: true
                             },
                             {
                                 label: "Clientes New",
@@ -874,7 +903,7 @@
                                 backgroundColor: "rgba(255, 20, 147, 0.2)", // 🌸 Rosa más vibrante
                                 borderColor: "rgba(255, 20, 147, 1)", // 🌸 Rosa fuerte
                                 borderWidth: 2,
-                                hidden: false
+                                hidden: true
                             },
                             {
                                 label: "Suscripciones",
@@ -941,7 +970,7 @@
             });
 
             // Cargar datos iniciales
-            loadChartData("1m");
+            loadChartData("1d");
         });
     </script>
     <script>

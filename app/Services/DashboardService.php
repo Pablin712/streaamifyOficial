@@ -41,13 +41,27 @@ class DashboardService
             $resta = $pantmaxval - $usuarios_activos;
             $espacios += $resta;
         }
+
+        $ingresos_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->sum('totalpagoven');
+        $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
+        $gastos_mes = Gasto::whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas');
+        $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1; // Evita división por cero
+        $costos_pct = ($costos_mes / $ingresos) * 100;
+        $gastos_pct = ($gastos_mes / $ingresos) * 100;
+        $balance = $ingresos_mes - $costos_mes - $gastos_mes;
+        $balance_pct = ($balance / $ingresos) * 100;
         return [
             'ventas' => Venta::with('detalles_venta')->orderBy('fechaven')->get(),
             'total_usuarios_activos' => ViewUsuarioActivo::count(),
-            'ingresos_mes' => Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->sum('totalpagoven'),
+            'ingresos_mes' => $ingresos_mes,
             'ingresos_ano' => Venta::whereYear('fechaven', $year)->sum('totalpagoven'),
-            'costos_mes' => Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos'),
-            'gastos_mes' => Gasto::whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas'),
+            'ingresos' => $ingresos,
+            'costos_mes' => $costos_mes,
+            'costos_pct' => $costos_pct,
+            'gastos_mes' => $gastos_mes,
+            'gastos_pct' => $gastos_pct,
+            'balance' => $balance,
+            'balance_pct' => $balance_pct,
             'clientes_activos' => ViewClientesUsuarios::count(),
             'cuentas_caidas' => Cuenta::where('caidacue', true)->count(),
             'num_cuentas' => Cuenta::where('activocue', true)->count(),
@@ -357,7 +371,7 @@ class DashboardService
             case '1y': // Últimos 5 años (año a año)
                 for ($i = 5; $i >= 0; $i--) {
                     $year = $today->copy()->subYears($i)->year;
-                    $data[$year] = Venta::whereYear('fechaven', $year)->sum('totalpagoven');
+                    $data[$year] = Costo::whereYear('fechacos', $year)->sum('montocos');
                 }
                 break;
 
@@ -439,7 +453,7 @@ class DashboardService
             case '1y': // Últimos 5 años (año a año)
                 for ($i = 5; $i >= 0; $i--) {
                     $year = $today->copy()->subYears($i)->year;
-                    $data[$year] = Venta::whereYear('fechaven', $year)->sum('totalpagoven');
+                    $data[$year] = Gasto::whereYear('fechagas', $year)->sum('montogas');
                 }
                 break;
 
@@ -725,5 +739,28 @@ class DashboardService
                 'new_customers' => $newCustomers,
             ]
         );
+    }
+    public function getGastos($ingresos_mes)
+    {
+        // Evitar división por cero
+        $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1;
+        $mes = Carbon::now();
+        // Obtener todos los tipos de gastos con sus montos sumados
+        $gastos = Gasto::selectRaw('idtip, SUM(montogas) as total')
+            ->whereMonth('fechagas', $mes)
+            ->groupBy('idtip')
+            ->with('tipoGasto') // Relación para obtener el nombre del tipo de gasto
+            ->havingRaw('SUM(montogas) > 0') // Corrección: repetir SUM() en HAVING
+            ->orderByDesc('total') // Ordenar de mayor a menor
+            ->get();
+        // Formatear la respuesta
+        $gastosData = $gastos->map(function ($gasto) use ($ingresos) {
+            return [
+                'concepto' => $gasto->tipoGasto->detalletip ?? 'Desconocido', // Nombre del tipo de gasto
+                'porcentaje' => round(($gasto->total / $ingresos) * 100, 2),  // % sobre ingresos
+                'total' => $gasto->total, // Total gastado
+            ];
+        });
+        return $gastosData->toArray();
     }
 }

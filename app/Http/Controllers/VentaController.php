@@ -54,8 +54,15 @@ class VentaController extends Controller
         $pedidosPendientes = Pedido::where('idestado', 1)->count();
         $ventasLaravel = Venta::whereDate('fechaven', $hoy)->where('idemp', 10)->count();
 
-        return view('sales.ventas.index', compact('ventas', 'ingresos_dia', 'ventas_dia', 
-            'autenticados', 'recargasPendientes', 'pedidosPendientes', 'ventasLaravel'));
+        return view('sales.ventas.index', compact(
+            'ventas',
+            'ingresos_dia',
+            'ventas_dia',
+            'autenticados',
+            'recargasPendientes',
+            'pedidosPendientes',
+            'ventasLaravel'
+        ));
     }
 
     public function create()
@@ -129,7 +136,10 @@ class VentaController extends Controller
             $descripcionDetalles .= "Cuenta: {$idcue}, Perfil: {$numeroper}, Monto: {$detalleRec->montodet}; ";
         }
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
-
+        // Lógica para generar y enviar la factura por correo
+        if ($venta->cliente->email) {
+            Mail::to($venta->cliente->email)->send(new facturaMail($venta));
+        }
         Historial::create([
             'accion' => 'Venta-Realizada Factura: ' . $venta->idven,
             'descripcion' => 'Datos: ' . json_encode($venta) . ' Detalles: ' . $descripcionDetalles,
@@ -137,7 +147,7 @@ class VentaController extends Controller
             'fecha' => now(),
         ]);
 
-        return redirect()->route('ventas')->with('success', 'Venta registrada correctamente');
+        return redirect()->route('ventas.create')->with('success', 'Venta registrada correctamente');
     }
 
     public function storeRenew(Request $request)
@@ -168,6 +178,9 @@ class VentaController extends Controller
             ->where('fechaven', $fecha)
             ->orderBy('idven', 'desc')
             ->value('idven');
+        if ($ventaNueva->cliente->email) {
+            Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
+        }
 
         Historial::create([
             'accion' => 'Renovación-Venta ' . $idvenPasado,
@@ -190,7 +203,7 @@ class VentaController extends Controller
             ]);
         }
 
-        return redirect()->route('ventas')->with('success', 'Venta registrada correctamente');
+        return redirect()->route('usuarios')->with('success', 'Venta renovada correctamente');
     }
 
     public function storeCliente(Request $request)
