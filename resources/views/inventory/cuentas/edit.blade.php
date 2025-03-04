@@ -61,7 +61,7 @@
         <!-- Campo para la contraseña -->
         <div class="form-group mb-3">
             <label for="contrasenacue">Contraseña</label>
-            <input type="password" name="contrasenacue" id="contrasenacue" class="form-control"
+            <input type="text" name="contrasenacue" id="contrasenacue" class="form-control"
                 value="{{ $cuenta->contrasenacue }}" required>
         </div>
 

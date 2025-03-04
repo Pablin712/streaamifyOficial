@@ -688,7 +688,8 @@
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
-                                                Confirmar Pedido</h5>
+                                                Confirmar Pedido
+                                            </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                 aria-label="Close"></button>
                                         </div>
@@ -697,17 +698,33 @@
                                                 alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                 style="max-width: 100px;">
                                             <h5>{{ $producto->nombrepro }}</h5>
-                                            <p class="text-muted">Precio:
-                                                ${{ number_format($producto->preciopro, 2) }}</p>
-                                            <p>¿Deseas confirmar la compra?</p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <p class="text-muted">Precio: ${{ number_format($producto->preciopro, 2) }}
+                                            </p>
+                                            <p>Por favor, ingresa los datos de la cuenta a la que deseas la suscripción.</p>
+
                                             <form action="{{ route('comprar', $producto->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="btn btn-primary">Confirmar
-                                                    Pedido</button>
+                                                <div class="mb-3">
+                                                    <label for="email_{{ $producto->id }}" class="form-label">Correo
+                                                        electrónico</label>
+                                                    <input type="email" class="form-control" name="email"
+                                                        id="email_{{ $producto->id }}"
+                                                        placeholder="Ejemplo: usuario@email.com" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="password_{{ $producto->id }}"
+                                                        class="form-label">Contraseña</label>
+                                                    <input type="text" class="form-control" name="password"
+                                                        id="password_{{ $producto->id }}"
+                                                        placeholder="Ingresa tu contraseña" required>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Confirmar
+                                                        Pedido</button>
+                                                </div>
                                             </form>
                                         </div>
                                     </div>
@@ -932,6 +949,7 @@
             cartItems.innerHTML = '';
 
             let totalItems = 0;
+            let subtotal = 0;
 
             if (!cart || Object.keys(cart).length === 0) {
                 cartItems.innerHTML = '<li class="list-group-item text-center text-muted">El carrito está vacío</li>';
@@ -941,8 +959,8 @@
 
             Object.values(cart).forEach(item => {
                 totalItems += item.cantidad;
+                subtotal += item.precio * item.cantidad;
 
-                // Construir la URL de la imagen correctamente
                 let imageUrl = "{{ asset('public/') }}" + "/" + item.foto;
 
                 let listItem = document.createElement('li');
@@ -956,6 +974,40 @@
                 cartItems.appendChild(listItem);
             });
 
+            // Calcular descuento según la cantidad de productos
+            let descuento = 0;
+            if (totalItems === 2) descuento = 0.50;
+            else if (totalItems === 3) descuento = 0.90;
+            else if (totalItems === 4) descuento = 1.30;
+            else if (totalItems >= 5) descuento = 1.80;
+
+            let total = subtotal - descuento;
+
+            // Mostrar total y descuento si aplica
+            let resumenHTML = `
+        <li class="list-group-item d-flex justify-content-between">
+            <strong>Subtotal:</strong>
+            <span>$${subtotal.toFixed(2)}</span>
+        </li>
+    `;
+
+            if (descuento > 0) {
+                resumenHTML += `
+            <li class="list-group-item d-flex justify-content-between text-danger">
+                <strong>Descuento:</strong>
+                <span>-$${descuento.toFixed(2)}</span>
+            </li>
+        `;
+            }
+
+            resumenHTML += `
+        <li class="list-group-item d-flex justify-content-between text-success">
+            <strong>Total a pagar:</strong>
+            <span>$${total.toFixed(2)}</span>
+        </li>
+    `;
+
+            cartItems.innerHTML += resumenHTML;
             cartCount.textContent = totalItems;
         }
 

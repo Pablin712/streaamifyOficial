@@ -44,7 +44,7 @@
         <!-- Campo para la contraseña de la cuenta -->
         <div class="form-group mb-3">
             <label for="contrasenacue">Contraseña</label>
-            <input type="password" name="contrasenacue" id="contrasenacue" class="form-control" value="{{ old('contrasenacue', $cuenta->contrasenacue) }}" required>
+            <input type="text" name="contrasenacue" id="contrasenacue" class="form-control" value="{{ old('contrasenacue', $cuenta->contrasenacue) }}" required>
             <small>Salta este apartado si no deseas cambiar la contraseña</small>
         </div>
 

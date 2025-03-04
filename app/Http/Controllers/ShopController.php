@@ -127,7 +127,7 @@ class ShopController extends Controller
         foreach ($cart as $item) {
             $producto = Producto::findOrFail($item['id']);
             $cantidad = $item['cantidad'];
-            for($i = 0; $i < $cantidad; $i++) {
+            for ($i = 0; $i < $cantidad; $i++) {
                 foreach ($producto->detalles as $detalle) {
                     if (!$this->buscarCuentaDisponible($detalle->idser)) {
                         // ❌ No hay cuentas disponibles: Desactivar el producto
@@ -156,13 +156,13 @@ class ShopController extends Controller
             $venta->save();
             // 🔹 Obtener el ID generado por el trigger
             $venta->idven = DB::selectOne("SELECT idven FROM ventas WHERE idcli = ? ORDER BY fechaven DESC LIMIT 1", [$venta->idcli])->idven;
-            
+
             $mensajesServicios = []; // Inicialización correcta
             $preciofinal = 0;
             foreach ($cart as $item) {
                 $producto = Producto::findOrFail($item['id']);
                 $cantidad = $item['cantidad'];
-                for($i = 0; $i < $cantidad; $i++) {
+                for ($i = 0; $i < $cantidad; $i++) {
                     // Procesar cada detalle del producto
                     foreach ($producto->detalles as $detalle) {
                         // Buscar cuenta disponible
@@ -251,7 +251,7 @@ class ShopController extends Controller
                     Historial::create([
                         'accion' => 'Sin-Stock',
                         'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
-                        'realizado_por' => $usuario->nombrecli.' | '. request()->ip(), // Almacena el nombre del usuario
+                        'realizado_por' => $usuario->nombrecli . ' | ' . request()->ip(), // Almacena el nombre del usuario
                         'fecha' => now(),
                     ]);
                     return back()->with('error', 'No hay cuentas disponibles para este servicio.');
@@ -272,7 +272,7 @@ class ShopController extends Controller
                 if (!$venta->idven) {
                     throw new \Exception("Error al crear la venta, ID de venta no encontrado.");
                 }
-                
+
 
                 // Procesar cada detalle del producto
                 foreach ($producto->detalles as $detalle) {
@@ -284,7 +284,7 @@ class ShopController extends Controller
                         Historial::create([
                             'accion' => 'Sin-Stock',
                             'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
-                            'realizado_por' => $usuario->nombrecli.' | '. request()->ip(), // Almacena el nombre del usuario
+                            'realizado_por' => $usuario->nombrecli . ' | ' . request()->ip(), // Almacena el nombre del usuario
                             'fecha' => now(),
                         ]);
                         throw new \Exception("No hay cuentas disponibles para el servicio.");
@@ -319,7 +319,7 @@ class ShopController extends Controller
                 Historial::create([
                     'accion' => 'Compra-Automática',
                     'descripcion' =>  'Cliente realizó una compra en el Eccomerce: ' . json_encode($venta), // Campo opcional
-                    'realizado_por' => 'Laravel | '. request()->ip(), // Almacena el nombre del usuario
+                    'realizado_por' => 'Laravel | ' . request()->ip(), // Almacena el nombre del usuario
                     'fecha' => now(),
                 ]);
 
@@ -348,20 +348,44 @@ class ShopController extends Controller
                 return back()->with('error', $e->getMessage());
             }
         } else {
-            // Registrar el pedido sin descontar saldo
-            Pedido::create([
-                'idcli' => $usuario->idcli,
-                'producto_id' => $producto->id,
-                //'idestado' => 1,
-                'fechapedido' => now(),
-                'respuesta' => 'Sin responder',
-            ]);
-            Historial::create([
-                'accion' => 'Pedido Realizado',
-                'descripcion' =>  'Se ha realizado un pedido para el producto: ' . json_encode($producto), // Campo opcional
-                'realizado_por' => 'Nombre: '.$usuario->nombrecli.' Correo: '.$usuario->email.' | '. request()->ip(), // Almacena el nombre del usuario
-                'fecha' => now(),
-            ]);
+            // Verificamos si el producto es de tipo "Personalizado"
+            if ($producto->tipo_producto_id == 3) {
+                $request->validate([
+                    'email' => 'required|email',
+                    'password' => 'required|min:6',
+                ]);
+
+                // Guardamos el pedido incluyendo el correo y la contraseña en 'respuesta'
+                Pedido::create([
+                    'idcli' => $usuario->idcli,
+                    'producto_id' => $producto->id,
+                    'fechapedido' => now(),
+                    'respuesta' => 'Quiero en mi cuenta con los datos-> Correo: ' . $request->email . ' | Contraseña: ' . $request->password,
+                ]);
+
+                // Guardamos en el historial
+                Historial::create([
+                    'accion' => 'Pedido Realizado (Personalizado)',
+                    'descripcion' => 'Pedido personalizado para el producto: ' . json_encode($producto),
+                    'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' | Correo: ' . $usuario->email . ' | ' . request()->ip(),
+                    'fecha' => now(),
+                ]);
+            } else {
+                // Pedido normal (sin credenciales)
+                Pedido::create([
+                    'idcli' => $usuario->idcli,
+                    'producto_id' => $producto->id,
+                    'fechapedido' => now(),
+                    'respuesta' => 'Sin responder',
+                ]);
+
+                Historial::create([
+                    'accion' => 'Pedido Realizado',
+                    'descripcion' => 'Se ha realizado un pedido para el producto: ' . json_encode($producto),
+                    'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' | Correo: ' . $usuario->email . ' | ' . request()->ip(),
+                    'fecha' => now(),
+                ]);
+            }
             // Mensaje de sesión para mostrar en la vista
             session()->flash('pedido_registrado', [
                 'nombre' => $producto->nombrepro,
@@ -376,7 +400,7 @@ class ShopController extends Controller
         $idCliente = Auth::guard('cliente')->user()->idcli;
         $usuario = Cliente::findOrFail($idCliente);
         $venta = Venta::findOrFail($id);
-        
+
 
         // Perfiles seleccionados por el usuario para renovar
         $detallesSeleccionados = $request->input('detalles', []);
@@ -407,7 +431,7 @@ class ShopController extends Controller
             Historial::create([
                 'accion' => 'Pedido Realizado',
                 'descripcion' =>  'Se ha realizado un pedido para el producto: ' . json_encode($producto), // Campo opcional
-                'realizado_por' => 'Nombre: '.$usuario->nombrecli.' Correo: '.$usuario->email.' | '. request()->ip(), // Almacena el nombre del usuario
+                'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' Correo: ' . $usuario->email . ' | ' . request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
             session()->flash('pedido_registrado', [

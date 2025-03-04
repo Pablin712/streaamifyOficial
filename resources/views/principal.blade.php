@@ -112,22 +112,6 @@
     </div>
 @endsection
 @section('sections')
-    <!-- 📝 Únete a Streamify -->
-    <section id="registro" class="py-5 bg-streamify-blue">
-        <div class="container px-5">
-            <div class="row gx-5 align-items-center">
-                <div class="col-lg-6">
-                    <h2 class="fw-bold">¡Forma parte de Streamify!</h2>
-                    <p class="lead">Regístrate gratis y accede a suscripciones premium, recargas y más.</p>
-                    <a href="{{ route('cliente.register') }}" class="btn btn-light btn-lg">Registrarse Ahora</a>
-                </div>
-                <div class="col-lg-6 d-flex justify-content-center">
-                    <img src="{{ asset('images/shopweb.png') }}" class="rounded shadow-lg img-fluid"
-                        alt="Regístrate en Streamify">
-                </div>
-            </div>
-        </div>
-    </section>
     {{-- destrezas fortalezas --}}
     <section id="features" class="py-5 bg-light"> {{-- style="background-color: #E4B100;" --}}
         <div class="container">
@@ -165,10 +149,61 @@
                         <p class="text-muted">Configura tus suscripciones fácilmente sin complicaciones.</p>
                     </div>
                 </div>
+                <!-- Página Web -->
+                <div class="col-md-3 mb-4">
+                    <div class="feature-box shadow-sm p-4 rounded">
+                        <i class="bi bi-globe text-success display-4 mb-3"></i>
+                        <h5 class="fw-bold">Plataforma Online</h5>
+                        <p class="text-muted">Con esta página web moderna podrás gestionar tus compras rápidamente.
+                        </p>
+                    </div>
+                </div>
+                <!-- Clientes Satisfechos -->
+                <div class="col-md-3 mb-4">
+                    <div class="feature-box shadow-sm p-4 rounded">
+                        <i class="bi bi-people-fill text-success display-4 mb-3"></i>
+                        <h5 class="fw-bold">+200 clientes activos</h5>
+                        <p class="text-muted">Cientos de clientes confían en nuestros servicios y recomiendan Streamify.</p>
+                    </div>
+                </div>
+                <!-- Ventas Automatizadas -->
+                <div class="col-md-3 mb-4">
+                    <div class="feature-box shadow-sm p-4 rounded">
+                        <i class="bi bi-cart-check-fill text-success display-4 mb-3"></i>
+                        <h5 class="fw-bold">Ventas Automatizadas</h5>
+                        <p class="text-muted">Nuestro sistema 🤖 de eCommerce procesa compras rápido y
+                            eficiente.
+                        </p>
+                    </div>
+                </div>
+                <!-- Servicios Adicionales -->
+                <div class="col-md-3 mb-4">
+                    <div class="feature-box shadow-sm p-4 rounded">
+                        <i class="bi bi-gift-fill text-success display-4 mb-3"></i>
+                        <h5 class="fw-bold">Servicios Adicionales</h5>
+                        <p class="text-muted">Otros servicios como pago de tarjetas,
+                            instituciones y recargas móviles.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-
+    <!-- 📝 Únete a Streamify -->
+    <section id="registro" class="py-5 bg-streamify-blue">
+        <div class="container px-5">
+            <div class="row gx-5 align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="fw-bold">¡Forma parte de Streamify!</h2>
+                    <p class="lead">Regístrate gratis y accede a suscripciones premium, recargas y más.</p>
+                    <a href="{{ route('cliente.register') }}" class="btn btn-light btn-lg">Registrarse Ahora</a>
+                </div>
+                <div class="col-lg-6 d-flex justify-content-center">
+                    <img src="{{ asset('images/shopweb.png') }}" class="rounded shadow-lg img-fluid"
+                        alt="Regístrate en Streamify">
+                </div>
+            </div>
+        </div>
+    </section>
     <!-- Sección de combos -->
     <section id="combos" class="py-5 bg-light">
         <div class="container">
@@ -232,12 +267,16 @@
                     <h2 class="fw-bold">Síguenos en Redes Sociales</h2>
                     <p class="text-muted">Mantente informado sobre promociones y novedades.</p>
                     <div class="d-flex flex-column gap-3">
-                        <a href="https://www.facebook.com/share/1Cco5izY9Y/?mibextid=wwXIfr" class="btn btn-primary"><i class="bi bi-facebook"></i>
+                        <a href="https://www.facebook.com/share/1Cco5izY9Y/?mibextid=wwXIfr" class="btn btn-primary"><i
+                                class="bi bi-facebook"></i>
                             Facebook</a>
-                        <a href="https://www.instagram.com/stribarra" class="btn btn-danger"><i class="bi bi-instagram"></i>
+                        <a href="https://www.instagram.com/stribarra" class="btn btn-danger"><i
+                                class="bi bi-instagram"></i>
                             Instagram</a>
-                        <a href="https://www.tiktok.com/@lv_pablin" class="btn btn-dark"><i class="bi bi-tiktok"></i> TikTok</a>
-                        <a href="https://t.me/Streamifyhq" class="btn btn-info"><i class="bi bi-telegram"></i> Telegram</a>
+                        <a href="https://www.tiktok.com/@lv_pablin" class="btn btn-dark"><i class="bi bi-tiktok"></i>
+                            TikTok</a>
+                        <a href="https://t.me/Streamifyhq" class="btn btn-info"><i class="bi bi-telegram"></i>
+                            Telegram</a>
                     </div>
                 </div>
                 <div class="col-lg-6 d-flex justify-content-center">
@@ -318,7 +357,7 @@
                             </h2>
                             <div id="faqContent3" class="accordion-collapse collapse">
                                 <div class="accordion-body">
-                                    Totalmente, esta aplicación web está diseñado con estudio de ingeniería de software, 
+                                    Totalmente, esta aplicación web está diseñado con estudio de ingeniería de software,
                                     siguiendo protocolos seguros y probados.
                                 </div>
                             </div>
@@ -333,7 +372,7 @@
                             <div id="faqContent4" class="accordion-collapse collapse">
                                 <div class="accordion-body">
                                     Por supuesto, se te recompensa por los días perdidos, se te asiste a cualquier política
-                                    de cada plataforma streaming, solo sigue las reglas que son sencillas, y cálmate, la 
+                                    de cada plataforma streaming, solo sigue las reglas que son sencillas, y cálmate, la
                                     amabilidad será tu mayor amigo.
                                 </div>
                             </div>
