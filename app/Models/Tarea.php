@@ -15,4 +15,8 @@ class Tarea extends Model
         'completada',
         'fechalimit'
     ];
+    protected $casts = [
+        'completada' => 'boolean',
+        'fechalimit' => 'datetime',
+    ];
 }

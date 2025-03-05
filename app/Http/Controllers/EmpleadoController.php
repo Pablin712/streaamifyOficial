@@ -134,16 +134,16 @@ class EmpleadoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $idemp)
+    public function update(Request $request, $id)
     {
         if (!Auth::user()->hasPermissionTo('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
         }
-        $empleado = Empleado::findOrFail($idemp);
+        $empleado = Empleado::findOrFail($id);
         $rules = [
             'nombreemp' => 'required|string|max:255',
             'telefonoemp' => 'required|string|max:15',
-            'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp,' . $idemp . ',idemp',
+            'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp,' . $id . ',idemp',
             'passwordemp' => 'nullable|string|min:4',
             'foto_url' => 'nullable|image|max:2048',
             'email' => 'nullable|email|max:255',
@@ -181,7 +181,8 @@ class EmpleadoController extends Controller
 
         $empleado->update($data);
 
-        return redirect()->route('empleados.edit')->with('success', 'Empleado actualizado exitosamente.');
+        return redirect()->route('empleados.edit', ['id' => $empleado->idemp])
+            ->with('success', 'Perfil actualizado exitosamente.');
     }
 
     public function updateRoles(Request $request, $id)

@@ -8,7 +8,7 @@ use App\Models\DetalleVenta;
 use App\Models\Venta;
 use App\Models\Cliente;
 use App\Models\Cuenta;
-use App\Models\Empleado;
+use App\Services\CuentaService;
 use App\Models\Costo;
 use App\Models\Gasto;
 use App\Models\ViewClientesUsuarios;
@@ -16,6 +16,12 @@ use App\Models\ViewUsuarioActivo;
 
 class DashboardService
 {
+    protected $cuentaService;
+
+    public function __construct(CuentaService $cuentaService)
+    {
+        $this->cuentaService = $cuentaService;
+    }
     public function obtenerDatosDashboard()
     {
         $month = Carbon::now()->month;
@@ -23,24 +29,8 @@ class DashboardService
 
         $usuarios = ViewUsuarioActivo::all();
         $cuentas = Cuenta::with(['valor'])->where('activocue', true)->orderBy('fechavencue')->get();
-        $usuarios_acobrar = 0;
-        foreach ($usuarios as $usuario) {
-            $fechaVencimiento = \Carbon\Carbon::parse($usuario->fecha_vencimiento);
-            $hoy = \Carbon\Carbon::today();
-            $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
-            if ($diasRestantes <= 3) {
-                $usuarios_acobrar += 1;
-            }
-        }
-        $espacios = 0;
-        foreach ($cuentas as $cuenta) {
-            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
-            $cuenta->usuarios_activos = $usuarios;
-            $pantmaxval = $cuenta->valor->pantmaxval;
-            $usuarios_activos = $cuenta->usuarios_activos;
-            $resta = $pantmaxval - $usuarios_activos;
-            $espacios += $resta;
-        }
+        $usuarios_acobrar = $this->cuentaService->contarUsuariosACobrar($usuarios);
+        $espacios = $this->cuentaService->calcularEspaciosTotales();
 
         $ingresos_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->sum('totalpagoven');
         $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
@@ -63,8 +53,8 @@ class DashboardService
             'balance' => $balance,
             'balance_pct' => $balance_pct,
             'clientes_activos' => ViewClientesUsuarios::count(),
-            'cuentas_caidas' => Cuenta::where('caidacue', true)->count(),
-            'num_cuentas' => Cuenta::where('activocue', true)->count(),
+            'cuentas_caidas' => $this->cuentaService->contarCuentasCaidas($cuentas),
+            'num_cuentas' => $this->cuentaService->contarCuentasActivas($cuentas),
             'ventas_mes' => Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->count(),
             'ventas_ano' => Venta::whereYear('fechaven', $year)->count(),
             'usuarios_acobrar' => $usuarios_acobrar,

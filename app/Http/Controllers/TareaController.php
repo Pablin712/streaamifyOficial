@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Tarea;
 use App\Models\Historial;
+use App\Models\Cuenta;
+use App\Models\ViewUsuarioActivo;
+use App\Services\TareaService;
 use Illuminate\Support\Facades\Auth;
 class TareaController extends Controller
 {
@@ -13,8 +16,21 @@ class TareaController extends Controller
         $this->middleware('can:tareas.destroy')->only('destroy');
     }
     */
+    protected $tareaService;
+
+    public function __construct(TareaService $tareaService)
+    {
+        $this->tareaService = $tareaService;
+    }
     public function index()
     {
+        $usuarios = ViewUsuarioActivo::all();
+        $cuentas = Cuenta::with(['valor'])->where('activocue', true)->get();
+        $this->tareaService->crearOActualizarTareaQuitarUsuarios($usuarios);
+        $this->tareaService->crearOActualizarTareaCobrarUsuarios($usuarios);
+        $this->tareaService->crearOActualizarTareaRenovarOEliminarCuentas($cuentas);
+        $this->tareaService->crearOActualizarTareaArreglarCuentasCaidas($cuentas);
+        $this->tareaService->crearOActualizarTareaAjustarEspaciosClientes($cuentas);
         $tareas = Tarea::orderBy('completada')
             ->orderByRaw("
                 CASE 

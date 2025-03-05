@@ -10,9 +10,6 @@ class Cuenta extends Model
     protected $table = 'cuentas'; //encargado de administrar la tabla ...
 
     protected $primaryKey = 'idcue'; // Nombre de la clave primaria
-    protected $casts = [
-        'fechavencue' => 'datetime',
-    ];
     //public $incrementing = false; // Si no es incremental, establece esto en false
     protected $keyType = 'string'; // Si es de tipo string, define esto como 'string'
     public $timestamps = true;

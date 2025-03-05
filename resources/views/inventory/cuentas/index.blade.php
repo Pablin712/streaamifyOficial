@@ -141,7 +141,7 @@
                     <td>{{ $cuenta->valor->idser }}-{{ $cuenta->valor->proveedor->nombrepro }}</td>
                     <td>{{ $cuenta->usuariocue }}</td>
                     <td>{{ $cuenta->contrasenacue }}</td>
-                    <td>{{ $cuenta->fechavencue->format('Y/m/d') }}</td>
+                    <td>{{ $cuenta->fechavencue }}</td>
                     <td>
                         @php
                             $users = $cuenta->usuarios_activos;

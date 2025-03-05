@@ -34,7 +34,10 @@ class MantenimientoController extends Controller
         if (!Auth::user()->hasPermissionTo('mantenimientos.store')) {
             abort(403, 'No tienes permiso para crear mantenimientos.');
         }
-        $cuentas = Cuenta::all();
+        $cuentas = Cuenta::with(['valor'])
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
         return view('inventory.mantenimientos.create', compact('cuentas'));
     }
 

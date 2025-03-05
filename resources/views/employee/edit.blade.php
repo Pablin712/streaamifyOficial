@@ -14,19 +14,24 @@
             </ul>
         </div>
     @endif
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
     <div class="container">
         <h1>Actualizar Datos Personales</h1>
-        <form action="{{ route('empleados.update', Auth::user()->idemp) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('empleados.update', $empleado->idemp) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
             <div class="mb-3 text-center">
                 <label for="foto_url" class="form-label d-block">Foto de Perfil</label>
                 <input type="file" name="foto_url" id="foto_url" class="form-control">
-                @if (Auth::user()->foto_url)
+                @if ($empleado->foto_url)
                     <div class="mt-2">
-                        <img src="{{ asset('public/storage/' . Auth::user()->foto_url) }}" 
-                            alt="Foto de {{ Auth::user()->nombreemp }}" 
+                        <img src="{{ asset('public/storage/' . $empleado->foto_url) }}" 
+                            alt="Foto de {{ $empleado->nombreemp }}" 
                             class="img-fluid rounded-circle"
                             style="width: 120px; height: 120px; object-fit: cover;">
                     </div>
@@ -36,25 +41,25 @@
             <div class="mb-3">
                 <label for="nombreemp" class="form-label">Nombre</label>
                 <input type="text" name="nombreemp" id="nombreemp" class="form-control" 
-                    value="{{ Auth::user()->nombreemp }}" required>
+                    value="{{ $empleado->nombreemp }}" required>
             </div>
 
             <div class="mb-3">
                 <label for="telefonoemp" class="form-label">Teléfono</label>
                 <input type="text" name="telefonoemp" id="telefonoemp" class="form-control" 
-                    value="{{ Auth::user()->telefonoemp }}" required>
+                    value="{{ $empleado->telefonoemp }}" required>
             </div>
 
             <div class="mb-3">
                 <label for="usuarioemp" class="form-label">Usuario</label>
                 <input type="text" name="usuarioemp" id="usuarioemp" class="form-control" 
-                    value="{{ Auth::user()->usuarioemp }}" required>
+                    value="{{ $empleado->usuarioemp }}" required>
             </div>
 
             <div class="mb-3">
                 <label for="email" class="form-label">Email</label>
                 <input type="email" name="email" id="email" class="form-control" 
-                    value="{{ Auth::user()->email }}" required>
+                    value="{{ $empleado->email }}" required>
             </div>
 
             <div class="mb-3">

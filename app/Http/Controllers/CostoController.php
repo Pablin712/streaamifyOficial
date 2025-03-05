@@ -18,9 +18,12 @@ class CostoController extends Controller
         if (!Auth::user()->hasPermissionTo('costos')) {
             abort(403, 'No tienes permiso para ver los costos.');
         }
-        
+
         // Obtener todas las cuentas para el selector
-        $cuentas = Cuenta::all();
+        $cuentas = Cuenta::with(['valor'])
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
 
         // Puedes filtrar por cuenta si lo deseas, aquí se listan todos ordenados
         $idcueSeleccionado = $request->idcue;
@@ -54,7 +57,7 @@ class CostoController extends Controller
         ]);
 
         return redirect()->route('costos', ['idcue' => $request->idcue])
-                         ->with('success', 'Costo creado correctamente.');
+            ->with('success', 'Costo creado correctamente.');
     }
 
     public function update(Request $request, $idcos)
@@ -106,6 +109,6 @@ class CostoController extends Controller
         $costo->delete();
 
         return redirect()->route('costos', ['idcue' => $idcue])
-                         ->with('success', 'Costo eliminado correctamente.');
+            ->with('success', 'Costo eliminado correctamente.');
     }
 }

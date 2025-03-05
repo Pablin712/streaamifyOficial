@@ -10,6 +10,7 @@ use App\Models\Costo;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use App\Models\Historial;
+use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,7 +28,12 @@ class CuentaController extends Controller
         $this->middleware('can:cuentas.destroy')->only('destroy');
     }
     */
+    protected $cuentaService;
 
+    public function __construct(CuentaService $cuentaService)
+    {
+        $this->cuentaService = $cuentaService;
+    }
     public function index(Request $request)
     {
         if (!Auth::user()->hasPermissionTo('cuentas')) {
@@ -49,41 +55,11 @@ class CuentaController extends Controller
                 $perfil->usuarios_activos = $usuariosActivos;
             }
         }
-        foreach ($cuentas as $cuenta) {
-            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)
-                ->where('fecha_vencimiento', '>', now())
-                ->count();
-            $cuenta->usuarios_activos = $usuarios;
-        }
+        $this->cuentaService->asignarUsuarios($cuentas);
 
-        $espacios_por_servicio = $this->calcularEspaciosPorServicio();
+        $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
 
         return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado', 'espacios_por_servicio'));
-    }
-    private function calcularEspaciosPorServicio(){
-        $servicios = ['NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'];
-        $espacios_por_servicio = [];
-
-        foreach ($servicios as $servicio) {
-            // Obtener todas las cuentas activas que pertenezcan a este servicio
-            $cuentas = Cuenta::with(['valor.servicio']) // Cargamos servicio a través de valor
-                ->whereHas('valor.servicio', function ($query) use ($servicio) {
-                    $query->where('idser', $servicio); // Filtrar por nombre del servicio
-                })
-                ->where('activocue', true)
-                ->orderBy('fechavencue')
-                ->get();
-            $espacios = 0;
-            foreach ($cuentas as $cuenta) {
-                $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->where('fecha_vencimiento', '>', now())->count();
-                $pantmaxval = $cuenta->valor->pantmaxval ?? 0; // Verificamos que el valor no sea nulo
-                $resta = $pantmaxval - $usuarios;
-                $espacios += max($resta, 0); // Evitamos valores negativos
-            }
-            // Guardar el total de espacios disponibles para este servicio
-            $espacios_por_servicio[$servicio] = $espacios;
-        }
-        return $espacios_por_servicio;
     }
 
     public function create()
@@ -123,7 +99,7 @@ class CuentaController extends Controller
             ]);
 
             // Actualizar estado de productos relacionados con el servicio de la cuenta creada
-            $this->actualizarEstadoProductos($cuenta->valor->idser);
+            $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
 
             if ($request->filled('descripcioncos') || $request->filled('montocos')) {
                 $validatedCosto = $request->validate([
@@ -167,7 +143,7 @@ class CuentaController extends Controller
             'fecha' => now(),
         ]);
 
-        $this->actualizarEstadoProductos($cuenta->valor->idser);
+        $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
     }
 
@@ -241,7 +217,7 @@ class CuentaController extends Controller
             ]);
 
             $cuenta->update($request->all());
-            $this->actualizarEstadoProductos($cuenta->valor->idser);
+            $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
             if (!empty($request->descripcioncos) && !empty($request->montocos)) {
                 $validatedCosto = $request->validate([
                     'descripcioncos' => 'string|max:50',
@@ -278,11 +254,11 @@ class CuentaController extends Controller
             'fecha' => now(),
         ]);
 
-        $nuevoId = $this->generarNuevoId($cuenta->idcue);
+        $nuevoId = $this->cuentaService->generarNuevoId($cuenta->idcue);
         $perfiles = Perfil::where('idcue', $cuenta->idcue)->get();
 
         foreach ($perfiles as $perfil) {
-            $nuevoIdPer = $this->generarNuevoIdPerfil($perfil->idper);
+            $nuevoIdPer = $this->cuentaService->generarNuevoIdPerfil($perfil->idper);
             $perfil->update([
                 'idper' => $nuevoIdPer
             ]);
@@ -292,75 +268,7 @@ class CuentaController extends Controller
             'activocue' => false,
             'idcue' => $nuevoId
         ]);
-        $this->actualizarEstadoProductos($cuenta->valor->idser);
+        $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
-    }
-
-    private function actualizarEstadoProductos($idser)
-    {
-        $productos = Producto::where('tipo_producto_id', 1)
-            ->whereHas('detalles', function ($query) use ($idser) {
-                $query->where('idser', $idser);
-            })->get();
-
-        foreach ($productos as $producto) {
-            $cuentaDisponible = $this->buscarCuentaDisponible($idser);
-            $producto->update(['activo' => $cuentaDisponible ? true : false]);
-        }
-    }
-
-    private function buscarCuentaDisponible($idser)
-    {
-        return Cuenta::whereHas('valor', function ($query) use ($idser) {
-            $query->where('idser', $idser);
-        })
-            ->where('caidacue', false)
-            ->where('activocue', true)
-            ->whereHas('valor', function ($query) {
-                $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
-            })
-            ->first();
-    }
-
-    private function generarNuevoId($idcue)
-    {
-        $baseId = preg_replace('/_borrada\d*$/', '', $idcue);
-        $contador = 1;
-
-        $ultimoId = Cuenta::where('idcue', 'LIKE', "{$baseId}_borrada%")
-            ->orderByRaw("LENGTH(idcue) DESC")
-            ->orderBy('idcue', 'DESC')
-            ->pluck('idcue')
-            ->first();
-
-        if ($ultimoId) {
-            preg_match('/_borrada(\d+)$/', $ultimoId, $matches);
-            if (!empty($matches[1])) {
-                $contador = (int) $matches[1] + 1;
-            }
-        }
-
-        return "{$baseId}_borrada{$contador}";
-    }
-
-    private function generarNuevoIdPerfil($idper)
-    {
-        $baseId = preg_replace('/_borrada\d*$/', '', $idper);
-        $contador = 1;
-
-        $ultimoId = Perfil::where('idper', 'LIKE', "{$baseId}_borrada%")
-            ->orderByRaw("LENGTH(idper) DESC")
-            ->orderBy('idper', 'DESC')
-            ->pluck('idper')
-            ->first();
-
-        if ($ultimoId) {
-            preg_match('/_borrada(\d+)$/', $ultimoId, $matches);
-            if (!empty($matches[1])) {
-                $contador = (int) $matches[1] + 1;
-            }
-        }
-
-        return "{$baseId}_borrada{$contador}";
     }
 }
