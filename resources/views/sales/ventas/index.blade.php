@@ -252,63 +252,6 @@
                                 data-bs-target="#ventaDetalleModal{{ $venta->idven }}">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <!-- Modal de Detalles de Venta -->
-                            <div class="modal fade" id="ventaDetalleModal{{ $venta->idven }}" tabindex="-1"
-                                aria-labelledby="ventaDetalleLabel{{ $venta->idven }}" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="ventaDetalleLabel{{ $venta->idven }}">
-                                                Detalles de la Venta #{{ $venta->idven }}
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                aria-label="Cerrar"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p><strong>Cliente:</strong> {{ $venta->cliente->nombrecli }}</p>
-                                            <p><strong>Fecha de Venta:</strong> {{ $venta->fechaven->format('Y/m/d') }}</p>
-                                            <p><strong>Total Pagado:</strong> ${{ number_format($venta->totalpagoven, 2) }}
-                                            </p>
-
-                                            <h5>Productos Comprados:</h5>
-                                            <table class="table table-bordered">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Cuenta</th>
-                                                        <th>Perfil</th>
-                                                        <th>Descripción</th>
-                                                        <th>Fecha de Vencimiento</th>
-                                                        <th>Monto</th>
-                                                        <th>Estado</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($venta->detalles_venta as $detalle)
-                                                        <tr>
-                                                            <td>{{ $detalle->perfil->idcue ?? 'N/A' }}</td>
-                                                            <td>{{ $detalle->perfil->numeroper }}</td>
-                                                            <td>{{ $detalle->descripciondet }}</td>
-                                                            <td>{{ $detalle->fechavendet->format('Y-m-d') }}</td>
-                                                            <td>${{ number_format($detalle->montodet, 2) }}</td>
-                                                            <td>
-                                                                @if ($detalle->activodet)
-                                                                    <span class="badge bg-success">Activa</span>
-                                                                @else
-                                                                    <span class="badge bg-danger">Inactiva</span>
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Cerrar</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                             @if (Auth::user()->hasPermissionTo('ventas.edit'))
                                 <a href="{{ route('ventas.edit', $venta->idven) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i>
@@ -375,6 +318,66 @@
             @endforeach
         </tbody>
     </table>
+    <!-- 🔹 Sección de Modales fuera del foreach -->
+    @foreach ($ventas as $venta)
+        <div class="modal fade" id="ventaDetalleModal{{ $venta->idven }}" tabindex="-1"
+            aria-labelledby="ventaDetalleLabel{{ $venta->idven }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="ventaDetalleLabel{{ $venta->idven }}">
+                            Detalles de la Venta #{{ $venta->idven }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Cliente:</strong> {{ $venta->cliente->nombrecli }}</p>
+                        <p><strong>Fecha de Venta:</strong> {{ $venta->fechaven->format('Y/m/d') }}</p>
+                        <p><strong>Total Pagado:</strong> ${{ number_format($venta->totalpagoven, 2) }}</p>
+                    
+                        <h5>Productos Comprados:</h5>
+                        
+                        <!-- 🔹 Hacer la tabla desplazable en móviles -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Cuenta</th>
+                                        <th>Perfil</th>
+                                        <th>Descripción</th>
+                                        <th>Fecha de Vencimiento</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($venta->detalles_venta as $detalle)
+                                        <tr>
+                                            <td>{{ $detalle->perfil->idcue ?? 'N/A' }}</td>
+                                            <td>{{ $detalle->perfil->numeroper }}</td>
+                                            <td>{{ $detalle->descripciondet }}</td>
+                                            <td>{{ $detalle->fechavendet->format('Y-m-d') }}</td>
+                                            <td>${{ number_format($detalle->montodet, 2) }}</td>
+                                            <td>
+                                                @if ($detalle->activodet)
+                                                    <span class="badge bg-success">Activa</span>
+                                                @else
+                                                    <span class="badge bg-danger">Inactiva</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div> <!-- 🔹 Fin de la tabla responsive -->
+                    </div>                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
 @endsection
 
 @section('scripts')
@@ -382,15 +385,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Inicializa DataTables
             $('#datatablesSimple').DataTable();
-        });
-    </script>
-    <script>
-        // Inicializa Select2 en el select con el id 'idven'
-        $(document).ready(function() {
-            $('#idven').select2({
-                placeholder: "Selecciona una Venta",
-                allowClear: true
-            });
         });
     </script>
 @endsection

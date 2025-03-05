@@ -976,10 +976,10 @@
 
             // Calcular descuento según la cantidad de productos
             let descuento = 0;
-            if (totalItems === 2) descuento = 0.50;
-            else if (totalItems === 3) descuento = 0.90;
-            else if (totalItems === 4) descuento = 1.30;
-            else if (totalItems >= 5) descuento = 1.80;
+            if (totalItems === 2) descuento = 0.75;
+            else if (totalItems === 3) descuento = 1.40;
+            else if (totalItems === 4) descuento = 2.00;
+            else if (totalItems >= 5) descuento = 2.50;
 
             let total = subtotal - descuento;
 

@@ -4,18 +4,12 @@
         <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>
 
         <!-- Botón para colapsar el sidebar -->
-        <button class="btn btn-outline-primary me-2" id="sidebarToggle">
+        <button class="btn btn-outline-primary me-auto order-2" id="sidebarToggle">
             <i class="fas fa-bars"></i>
         </button>
-
-        <!-- Botón para colapsar en móviles -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
         <!-- Contenido del navbar -->
-        <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
-            <ul class="navbar-nav ms-auto me-3 me-lg-4">
+        <div class="navbar-collapse justify-content-end order-3 main-header-right" id="navbarContent">
+            <ul class="navbar-nav me-3 me-lg-4">
                 @auth
                     <!-- Menú de usuario -->
                     <li class="nav-item dropdown">

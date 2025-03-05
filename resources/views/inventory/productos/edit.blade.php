@@ -147,7 +147,7 @@
                     <form id="formDetalle">
                         <div class="mb-3">
                             <label for="idser" class="form-label">ID Servicio</label>
-                            <select class="form-select" id="selectServicio" required>
+                            <select class="form-select" id="idser" required>
                                 <option value="">Seleccione un Servicio</option>
                                 @foreach ($servicios as $servicio)
                                     <option value="{{ $servicio->idser }}">

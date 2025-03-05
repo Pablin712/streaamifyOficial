@@ -39,32 +39,12 @@
                     <td>{{ $recarga->cliente->nombrecli }}</td>
                     <td>{{ $recarga->banco->nombreban }}</td>
                     <td>
+                        <!-- Botón para abrir el modal único -->
                         <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#modalComprobante-{{ $recarga->idrec }}">
+                            data-bs-target="#modalComprobante" data-id="{{ $recarga->idrec }}"
+                            data-img="{{ asset('public/storage/' . $recarga->foto) }}">
                             Ver Comprobante
                         </button>
-                        <!-- Modal -->
-                        <div class="modal fade" id="modalComprobante-{{ $recarga->idrec }}" tabindex="-1"
-                            aria-labelledby="modalComprobanteLabel-{{ $recarga->idrec }}" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="modalComprobanteLabel-{{ $recarga->idrec }}">Comprobante
-                                            de Recarga</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                            aria-label="Cerrar"></button>
-                                    </div>
-                                    <div class="modal-body text-center">
-                                        <img src="{{ asset('public/storage/' . $recarga->foto) }}" alt="Comprobante"
-                                            class="img-fluid" style="max-width: 500px; height: auto;">
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Cerrar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </td>
                     <td>${{ number_format($recarga->valor, 2) }}</td>
                     <td>
@@ -101,6 +81,24 @@
             @endforeach
         </tbody>
     </table>
+    <!-- Modal Único -->
+    <div class="modal fade" id="modalComprobante" tabindex="-1" aria-labelledby="modalComprobanteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalComprobanteLabel">Comprobante de Recarga</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="comprobanteImg" src="" alt="Comprobante" class="img-fluid"
+                        style="max-width: 300px; height: auto;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
     <script>
@@ -113,5 +111,18 @@
             }
             return false; // Cancela el envío del formulario
         }
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var modalComprobante = document.getElementById('modalComprobante');
+
+            modalComprobante.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget; // Botón que activó el modal
+                var imageUrl = button.getAttribute('data-img'); // Obtener URL de la imagen
+
+                var imgElement = document.getElementById('comprobanteImg');
+                imgElement.src = imageUrl; // Actualizar la imagen en el modal
+            });
+        });
     </script>
 @endsection

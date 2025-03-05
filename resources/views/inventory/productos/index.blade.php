@@ -79,89 +79,13 @@
                         <td>
                             @if (Auth::user()->hasPermissionTo('productos.show'))
                                 <!-- Botón para abrir el modal -->
-                                <button class="btn btn-info" data-bs-toggle="modal"
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#modalProducto{{ $producto->id }}">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <!-- MODAL INDIVIDUAL PARA CADA PRODUCTO -->
-                                <div class="modal fade" id="modalProducto{{ $producto->id }}" tabindex="-1"
-                                    aria-labelledby="modalProductoLabel{{ $producto->id }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-primary text-white">
-                                                <h5 class="modal-title" id="modalProductoLabel{{ $producto->id }}">Detalles
-                                                    del Producto</h5>
-                                                <button type="button" class="btn-close text-white" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="row">
-                                                    <!-- Información del Producto -->
-                                                    <div class="col-md-8">
-                                                        <h4 class="text-primary">{{ $producto->nombrepro }}</h4>
-                                                        <p><strong>Código:</strong> {{ $producto->codigopro }}</p>
-                                                        <p><strong>Precio:</strong>
-                                                            ${{ number_format($producto->preciopro, 2) }}</p>
-                                                        <p><strong>Descripción:</strong> {{ $producto->descripcionpro }}
-                                                        </p>
-                                                        <p><strong>Categoría:</strong> {{ $producto->categoria->nombre }}
-                                                        </p>
-                                                        <p><strong>Tipo de Producto:</strong>
-                                                            {{ $producto->tipoProducto->nombre }}</p>
-                                                        <p><strong>Estado:</strong>
-                                                            @if ($producto->activo)
-                                                                <span class="badge bg-success">Activo</span>
-                                                            @else
-                                                                <span class="badge bg-danger">Inactivo</span>
-                                                            @endif
-                                                        </p>
-                                                    </div>
-                                                    <!-- Imagen del Producto -->
-                                                    <div class="col-md-4 text-center">
-                                                        @if ($producto->foto)
-                                                            <img src="{{ asset('public/' . $producto->foto) }}"
-                                                                alt="Foto del Producto" class="img-fluid rounded shadow">
-                                                        @else
-                                                            <p class="text-muted">Sin imagen disponible</p>
-                                                        @endif
-                                                    </div>
-                                                </div>
-
-                                                <!-- Tabla de Detalles del Producto -->
-                                                <div class="mt-4">
-                                                    <h5>Detalles del Producto</h5>
-                                                    <table class="table table-hover table-bordered text-center">
-                                                        <thead class="table-primary">
-                                                            <tr>
-                                                                <th>ID Servicio</th>
-                                                                <th>Descripción</th>
-                                                                <th>Meses</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach ($producto->detalles as $detalle)
-                                                                <tr>
-                                                                    <td>{{ $detalle->idser }}</td>
-                                                                    <td>{{ $detalle->descripcion }}</td>
-                                                                    <td>{{ $detalle->meses }}</td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                    <i class="fas fa-times"></i> Cerrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- FIN MODAL -->
                             @endif
                             @if (Auth::user()->hasPermissionTo('productos.edit'))
-                                <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning">
+                                <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             @endif
@@ -171,7 +95,7 @@
                                     style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger"
+                                    <button type="submit" class="btn btn-danger btn-sm"
                                         onclick="return confirm('¿Estás seguro de eliminar este producto?')">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -183,6 +107,82 @@
             @endforeach
         </tbody>
     </table>
+    <!-- 🔹 Sección de Modales fuera del foreach -->
+    @foreach ($productos as $producto)
+        <div class="modal fade" id="modalProducto{{ $producto->id }}" tabindex="-1"
+            aria-labelledby="modalProductoLabel{{ $producto->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="modalProductoLabel{{ $producto->id }}">
+                            Detalles del Producto
+                        </h5>
+                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Información del Producto -->
+                            <div class="col-md-8">
+                                <h4 class="text-primary">{{ $producto->nombrepro }}</h4>
+                                <p><strong>Código:</strong> {{ $producto->codigopro }}</p>
+                                <p><strong>Precio:</strong> ${{ number_format($producto->preciopro, 2) }}</p>
+                                <p><strong>Descripción:</strong> {{ $producto->descripcionpro }}</p>
+                                <p><strong>Categoría:</strong> {{ $producto->categoria->nombre }}</p>
+                                <p><strong>Tipo de Producto:</strong> {{ $producto->tipoProducto->nombre }}</p>
+                                <p><strong>Estado:</strong>
+                                    @if ($producto->activo)
+                                        <span class="badge bg-success">Activo</span>
+                                    @else
+                                        <span class="badge bg-danger">Inactivo</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <!-- Imagen del Producto -->
+                            <div class="col-md-4 text-center">
+                                @if ($producto->foto)
+                                    <img src="{{ asset('public/' . $producto->foto) }}" alt="Foto del Producto"
+                                        class="img-fluid rounded shadow">
+                                @else
+                                    <p class="text-muted">Sin imagen disponible</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- 🔹 Hacer la tabla de detalles desplazable en móviles -->
+                        <div class="mt-4">
+                            <h5>Detalles del Producto</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered text-center">
+                                    <thead class="table-primary">
+                                        <tr>
+                                            <th>ID Servicio</th>
+                                            <th>Descripción</th>
+                                            <th>Meses</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($producto->detalles as $detalle)
+                                            <tr>
+                                                <td>{{ $detalle->idser }}</td>
+                                                <td>{{ $detalle->descripcion }}</td>
+                                                <td>{{ $detalle->meses }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div> <!-- Fin tabla responsive -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
 @endsection
 
 @section('scripts')
