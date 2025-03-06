@@ -31,6 +31,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\HistorialClientesController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\RoleController;
+use Illuminate\Support\Facades\Auth;
 
 //cliente
 Route::get('/register', function () {
@@ -73,11 +74,11 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::get('/historial-cliente', 'index')->name('historial.cliente');
         Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
     });
-    Route::controller(ShopController::class)->group(function(){
+    Route::controller(ShopController::class)->group(function () {
         Route::post('/comprar/{id}', 'comprar')->name('comprar');
         Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
     });
-    Route::controller(ClienteController::class)->group(function(){
+    Route::controller(ClienteController::class)->group(function () {
         Route::get('/perfil', 'perfil')->name('cliente.perfil');
         Route::put('/perfil/update', 'actualizarPerfil')->name('cliente.perfil.update');
         Route::put('/cambiar-contrasena', 'cambiarContrasena')->name('cliente.cambiar.contrasena');
@@ -115,7 +116,6 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
         Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
         Route::get('/dashboard/filter', 'filterData')->name('dashboard.filter');
-
     });
 
     Route::controller(CostoController::class)->group(function () {
@@ -259,4 +259,11 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/empleado/pedidos', 'index')->name('empleado.pedidos.index');
         Route::post('/empleado/pedidos/{id}', 'update')->name('empleado.pedidos.update');
     });
+
+    Route::post('/notificaciones/marcar-como-leidas', function () {
+        if (Auth::check()) {
+            Auth::user()->unreadNotifications->markAsRead();
+        }
+        return response()->json(['success' => true]);
+    })->name('notificaciones.leer');
 });

@@ -29,6 +29,7 @@
                 <th>Banco</th>
                 <th>Comprobante</th>
                 <th>Valor</th>
+                <th>Fecha</th>
                 <th>Estado</th>
             </tr>
         </thead>
@@ -39,14 +40,17 @@
                     <td>{{ $recarga->cliente->nombrecli }}</td>
                     <td>{{ $recarga->banco->nombreban }}</td>
                     <td>
-                        <!-- Botón para abrir el modal único -->
-                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#modalComprobante" data-id="{{ $recarga->idrec }}"
-                            data-img="{{ asset('public/storage/' . $recarga->foto) }}">
-                            Ver Comprobante
-                        </button>
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span class="me-2 badge bg-secondary">{{ $recarga->numcomprobante }}</span>
+                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalComprobante" data-id="{{ $recarga->idrec }}"
+                                data-img="{{ asset('public/storage/' . $recarga->foto) }}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </td>
                     <td>${{ number_format($recarga->valor, 2) }}</td>
+                    <td>{{$recarga->created_at}}</td>
                     <td>
                         <span
                             class="badge 

@@ -193,8 +193,11 @@ class CuentaService
     public function obtenerCuentasPorVencer($cuentas)
     {
         return $cuentas->filter(function ($cuenta) {
-            $fechaVencimiento = Carbon::parse($cuenta->fechavencue);
-            return $fechaVencimiento->isPast() || $fechaVencimiento->diffInDays(now()) <= 3;
+            $fechaVencimiento = Carbon::parse($cuenta->fechavencue)->startOfDay(); // Asegurar que la fecha es sin hora
+            $hoy = now()->startOfDay();
+            $tresDiasDespues = $hoy->copy()->addDays(3);
+
+            return $fechaVencimiento->lessThanOrEqualTo($tresDiasDespues);
         });
     }
 }

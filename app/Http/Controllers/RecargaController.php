@@ -6,8 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\Banco;
 use App\Models\Recarga;
 use App\Models\Historial;
+use App\Models\Empleado;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NotificacionNueva;
+use Livewire\Livewire;
+
 class RecargaController extends Controller
 {
     /*
@@ -65,8 +70,8 @@ class RecargaController extends Controller
                     $cliente->save(); // Guardar el nuevo saldo
                     Historial::create([
                         'accion' => 'Recarga-Procesada',
-                        'descripcion' =>  'Datos aprobados: ' . json_encode($recarga).' Saldo de cliente: '.$cliente->saldo, // Campo opcional
-                        'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
+                        'descripcion' =>  'Datos aprobados: ' . json_encode($recarga) . ' Saldo de cliente: ' . $cliente->saldo, // Campo opcional
+                        'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
                         'fecha' => now(),
                     ]);
                 }
@@ -119,9 +124,16 @@ class RecargaController extends Controller
         Historial::create([
             'accion' => 'Recarga-Pendiente',
             'descripcion' =>  'Solicitud de la recarga: ' . json_encode($recarga), // Campo opcional
-            'realizado_por' => Auth::guard('cliente')->user()->nombrecli.' | '. request()->ip(), // Almacena el nombre del usuario
+            'realizado_por' => Auth::guard('cliente')->user()->nombrecli . ' | ' . request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
+        // 🔔 Notificar a los empleados
+        $empleados = Empleado::all(); // Obtener empleados con el rol adecuado
+        Notification::send($empleados, new NotificacionNueva($recarga));
+
+        // ✅ Corrección: Esto sí funciona
+        event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
+
         return redirect()->route('recargar.index')->with('success', '¡Recarga enviada con éxito, por favor tener paciencia!');
     }
 }

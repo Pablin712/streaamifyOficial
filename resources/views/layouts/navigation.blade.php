@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     @yield('styles')
+    @livewireStyles
 </head>
 
 <body class="sb-nav-fixed">
@@ -70,6 +71,25 @@
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     @yield('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#marcarLeidas").click(function() {
+                $.ajax({
+                    url: "{{ route('notificaciones.leer') }}",
+                    type: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $("#contadorNotificaciones").remove(); // Ocultar contador
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
