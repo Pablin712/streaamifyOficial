@@ -127,11 +127,11 @@ class CuentaService
     }
     public function contarCuentasCaidas($cuentas)
     {
-        return $cuentas->filter(fn($cuenta) => $cuenta->caidacue === true)->count();
+        return $cuentas->filter(fn($cuenta) => $cuenta->caidacue == true)->count();
     }
     public function obtenerCuentasCaidas($cuentas)
     {
-        return $cuentas->filter(fn($cuenta) => $cuenta->caidacue === true);
+        return $cuentas->filter(fn($cuenta) => $cuenta->caidacue == true);
     }
     public function contarUsuariosACobrar($usuarios)
     {
