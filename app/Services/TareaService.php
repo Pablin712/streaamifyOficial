@@ -11,7 +11,10 @@ use App\Models\Perfil;
 use App\Models\Costo;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
+use App\Notifications\TareasPendientes;
 use App\Services\CuentaService;
+use Illuminate\Support\Facades\Notification;
+use App\Models\Empleado;
 
 class TareaService
 {
@@ -146,5 +149,20 @@ class TareaService
                 'fechalimit' => Carbon::today()->setHour(23)->setMinute(59)
             ]
         );
+    }
+    public function notificarEmpleadoTareas($tarea)
+    {
+        // Buscar empleados cuyo nombre contenga el texto de la tarea
+        $empleados = Empleado::where('nombreemp', 'LIKE', "%{$tarea->nombretarea}%")->get();
+
+        // Si no hay empleados coincidentes, seleccionar a todos los empleados
+        if ($empleados->isEmpty()) {
+            $empleados = Empleado::all();
+        }
+        // Enviar la notificación a cada empleado individualmente con su nombre
+        foreach ($empleados as $empleado) {
+            Notification::send($empleado, new TareasPendientes($empleado));
+        }
+        event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
     }
 }

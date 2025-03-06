@@ -60,6 +60,7 @@ class TareaController extends Controller
             'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
             'fecha' => now(),
         ]);
+        $this->tareaService->notificarEmpleadoTareas($tarea);
         return redirect()->route('tareas.index')->with('success', 'Tarea agregada correctamente.');
     }
 

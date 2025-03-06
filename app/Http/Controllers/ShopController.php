@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\facturaMail;
 use Carbon\Carbon;
+use App\Notifications\PedidosPendientes;
+use App\Notifications\ComprasRealizadas;
+use Illuminate\Support\Facades\Notification;
 
 class ShopController extends Controller
 {
@@ -220,6 +223,10 @@ class ShopController extends Controller
 
             // Lógica para generar y enviar la factura por correo
             Mail::to($venta->cliente->email)->send(new facturaMail($venta));
+            //Notificar a empleado
+            $empleados = Empleado::all();
+            Notification::send($empleados, new ComprasRealizadas($venta));
+            event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
 
             return redirect()->route('shop');
         } catch (\Exception $e) {
@@ -341,6 +348,9 @@ class ShopController extends Controller
 
                 // Lógica para generar y enviar la factura por correo
                 Mail::to($venta->cliente->email)->send(new facturaMail($venta));
+                $empleados = Empleado::all();
+                Notification::send($empleados, new ComprasRealizadas($venta));
+                event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
 
                 return redirect()->route('shop');
             } catch (\Exception $e) {
@@ -356,7 +366,7 @@ class ShopController extends Controller
                 ]);
 
                 // Guardamos el pedido incluyendo el correo y la contraseña en 'respuesta'
-                Pedido::create([
+                $pedido = Pedido::create([
                     'idcli' => $usuario->idcli,
                     'producto_id' => $producto->id,
                     'fechapedido' => now(),
@@ -372,7 +382,7 @@ class ShopController extends Controller
                 ]);
             } else {
                 // Pedido normal (sin credenciales)
-                Pedido::create([
+                $pedido = Pedido::create([
                     'idcli' => $usuario->idcli,
                     'producto_id' => $producto->id,
                     'fechapedido' => now(),
@@ -386,6 +396,10 @@ class ShopController extends Controller
                     'fecha' => now(),
                 ]);
             }
+            //Notificar a empleado
+            $empleados = Empleado::all();
+            Notification::send($empleados, new PedidosPendientes($pedido));
+            event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
             // Mensaje de sesión para mostrar en la vista
             session()->flash('pedido_registrado', [
                 'nombre' => $producto->nombrepro,
@@ -422,7 +436,7 @@ class ShopController extends Controller
             return $this->storeRenew($idCliente, $venta, $producto, $detallesSeleccionados);
         } else {
             // Registrar el pedido sin descontar saldo
-            Pedido::create([
+            $pedido = Pedido::create([
                 'idcli' => $usuario->idcli,
                 'producto_id' => $producto->id,
                 'fechapedido' => now(),
@@ -430,10 +444,14 @@ class ShopController extends Controller
             ]);
             Historial::create([
                 'accion' => 'Pedido Realizado',
-                'descripcion' =>  'Se ha realizado un pedido para el producto: ' . json_encode($producto), // Campo opcional
+                'descripcion' =>  'Se ha realizado un pedido de renovación para el producto: ' . json_encode($producto), // Campo opcional
                 'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' Correo: ' . $usuario->email . ' | ' . request()->ip(), // Almacena el nombre del usuario
                 'fecha' => now(),
             ]);
+            //Notificar a empleado
+            $empleados = Empleado::all();
+            Notification::send($empleados, new PedidosPendientes($pedido));
+            event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
             session()->flash('pedido_registrado', [
                 'nombre' => $producto->nombrepro,
                 'precio' => $producto->preciopro
@@ -519,6 +537,9 @@ class ShopController extends Controller
 
         // Lógica para generar y enviar la factura por correo
         Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
+        $empleados = Empleado::all();
+        Notification::send($empleados, new ComprasRealizadas($ventaNueva));
+        event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
 
         return redirect()->back()->with('renovacion_exitosa', [
             'nombre' => $ventaNueva->detalles_venta->first()->perfil->cuenta->valor->servicio->nombreser,
@@ -558,17 +579,6 @@ class ShopController extends Controller
         }
         return $perfil; // Retorna el perfil encontrado o null si no hay ninguno disponible
     }
-
-    private function enviarMensajeEntrega($perfil)
-    {
-        $mensaje = "**" . $perfil->cuenta->valor->servicio->nombre . "**\n" .
-            "Usuario: " . $perfil->cuenta->usuariocue . "\n" .
-            "Clave: " . $perfil->cuenta->contrasenacue . "\n" .
-            "PIN perfil #{$perfil->numeroper}: " . $perfil->pinper;
-
-        session()->flash('mensaje_entrega', $mensaje);
-    }
-
     private function verificarCuentaLlena($cuenta, $producto)
     {
         $usuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
