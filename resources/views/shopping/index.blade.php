@@ -28,8 +28,9 @@
         .cart-float {
             position: fixed;
             bottom: 20px;
+            top: 100px;
             /* Distancia del borde inferior */
-            right: 20px;
+            right: 30px;
             /* Distancia del borde derecho */
             z-index: 1000;
             /* Asegúrate de que esté sobre otros elementos */
