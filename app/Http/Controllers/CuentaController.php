@@ -54,6 +54,7 @@ class CuentaController extends Controller
         $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
 
         return view('inventory.cuentas.index', compact(
+            'cuentas',
             'cuentasDisponibles',
             'cuentasColapsadas',
             'cuentasSinOcupar',

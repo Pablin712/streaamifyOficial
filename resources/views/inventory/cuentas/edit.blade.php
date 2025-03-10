@@ -69,7 +69,7 @@
         <div class="form-group mb-3">
             <label for="fechavencue">Fecha de Vencimiento</label>
             <input type="date" name="fechavencue" id="fechavencue" class="form-control"
-                value="{{ $cuenta->fechavencue->format('Y-m-d') }}" required>
+                value="{{ $cuenta->fechavencue}}" required>
         </div>
 
         <!-- Campo para indicar si la cuenta está activa -->

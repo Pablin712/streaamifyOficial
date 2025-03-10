@@ -115,7 +115,11 @@
 @section('table1')
     <ul class="nav nav-tabs" id="cuentasTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="disponibles-tab" data-bs-toggle="tab" data-bs-target="#disponibles"
+            <button class="nav-link active" id="todas-tab" data-bs-toggle="tab" data-bs-target="#todas"
+                type="button" role="tab">Todas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="disponibles-tab" data-bs-toggle="tab" data-bs-target="#disponibles"
                 type="button" role="tab">Disponibles</button>
         </li>
         <li class="nav-item" role="presentation">
@@ -138,9 +142,13 @@
 
     <!-- Contenido de las pestañas -->
     <div class="tab-content mt-3" id="cuentasTabContent">
+        <!-- Pestaña de Cuentas -->
+        <div class="tab-pane fade show active" id="todas" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentas])
+        </div>
 
         <!-- Pestaña de Cuentas Disponibles -->
-        <div class="tab-pane fade show active" id="disponibles" role="tabpanel">
+        <div class="tab-pane fade" id="disponibles" role="tabpanel">
             @include('inventory.cuentas.tabla', ['cuentas' => $cuentasDisponibles])
         </div>
 

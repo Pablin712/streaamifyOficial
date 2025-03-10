@@ -51,7 +51,7 @@
         <!-- Fecha de vencimiento de la cuenta -->
         <div class="form-group mb-3">
             <label for="fechavencue">Fecha de Vencimiento</label>
-            <input type="date" name="fechavencue" id="fechavencue" class="form-control" value="{{ old('fechavencue', $cuenta->fechavencue->format('Y-m-d')) }}" required>
+            <input type="date" name="fechavencue" id="fechavencue" class="form-control" value="{{ old('fechavencue', $cuenta->fechavencue) }}" required>
         </div>
 
         <!-- Campo para indicar si la cuenta está activa -->
