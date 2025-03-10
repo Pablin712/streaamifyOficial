@@ -74,15 +74,15 @@
                     $color = $serviciosConfig[$servicio]['color'];
                     $icono = $serviciosConfig[$servicio]['icon'];
                 @endphp
-                <div class="col-xl-3 col-md-6 mb-4">
-                    <div class="card border-left-{{ $color }} shadow h-100 py-2">
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="card border-left-{{ $color }} shadow h-100 py-1 small">
                         <div class="card-body">
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-{{ $color }} text-uppercase mb-1">
                                         {{ ucfirst($servicio) }}
                                     </div>
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    <div class="h6 mb-0 font-weight-bold text-gray-800">
                                         {{ $espacios }} puestos
                                     </div>
                                 </div>
@@ -113,224 +113,84 @@
 @section('tablename', 'Cuentas')
 
 @section('table1')
-    <table id="datatablesSimple" class="table table-striped table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Servicio</th>
-                <th>Usuario</th>
-                <th>Clave</th>
-                <th>Vence</th>
-                <th>Clientes</th>
-                <th>Estado</th>
-                @if (Auth::user()->hasAnyPermission(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
-                    <th>Acciones</th>
-                @endif
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($cuentas as $cuenta)
-                @php
-                    // Convertir la fecha de vencimiento a Carbon
-                    $fechaVencimiento = \Carbon\Carbon::parse($cuenta->fechavencue);
-                    $hoy = \Carbon\Carbon::today();
-                    $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
-                @endphp
-                <tr>
-                    <td>{{ $cuenta->idcue }}</td>
-                    <td>{{ $cuenta->valor->idser }}-{{ $cuenta->valor->proveedor->nombrepro }}</td>
-                    <td>{{ $cuenta->usuariocue }}</td>
-                    <td>{{ $cuenta->contrasenacue }}</td>
-                    <td>{{ $cuenta->fechavencue }}</td>
-                    <td>
-                        @php
-                            $users = $cuenta->usuarios_activos;
-                        @endphp
-                        @if ($cuenta->valor->pantmaxval < $users)
-                            <span class="badge bg-dark">{{ $users }}</span>
-                        @elseif ($cuenta->valor->pantminval > $users)
-                            <span class="badge bg-danger">{{ $users }}</span>
-                        @else
-                            <span class="badge bg-success">{{ $users }}</span>
-                        @endif
-                    </td>
-                    <td>
-                        @if ($cuenta->caidacue)
-                            <span class="badge bg-dark">Dañada</span>
-                        @elseif ($diasRestantes <= 0)
-                            <span class="badge bg-danger">Vencida</span>
-                        @elseif ($diasRestantes <= 5)
-                            <span class="badge bg-warning">Ya vence</span>
-                        @else
-                            <span class="badge bg-success">Activa</span>
-                        @endif
-                        @if (Auth::user()->hasPermissionTo('cuentas.status'))
-                            <!-- Botón para cambiar estado -->
-                            <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
-                                style="display:inline;">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="btn btn-dark btn-sm">
-                                    @if ($cuenta->caidacue)
-                                        <i class="fas fa-toggle-on fa-xs"></i>
-                                    @else
-                                        <i class="fas fa-toggle-off fa-xs"></i>
-                                    @endif
-                                </button>
-                            </form>
-                        @endif
-                    </td>
-                    @if (Auth::user()->hasAnyPermission(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
-                        <td>
-                            @if (Auth::user()->hasPermissionTo('cuentas.edit'))
-                                <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            @endif
-                            <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
-                            @if ($diasRestantes <= 5 || $diasRestantes < 0)
-                                @if (Auth::user()->hasPermissionTo('cuentas.renew'))
-                                    <a href="{{ route('cuentas.renew', $cuenta->idcue) }}" class="btn btn-success btn-xs">
-                                        <i class="fas fa-sync-alt"></i>
-                                    </a>
-                                @endif
-                            @endif
-                            @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
-                                <form action="{{ route('cuentas.destroy', $cuenta->idcue) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-xs"
-                                        onclick="return confirm('¿Estás seguro?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            @endif
-                        </td>
-                    @endif
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-@endsection
-@section('table2')
-    <div class="card mb-4">
-        <div class="card-body">
-            Busca los perfiles de una cuenta específica.
-            <div class="form-group mb-3">
-                <label for="idcue">Seleccionar Cuenta</label>
-                <form method="GET" action="{{ route('cuentas') }}#tabla-perfiles">
-                    <select name="idcue" id="idcue" class="form-control" onchange="this.form.submit()">
-                        <option value="">-- Selecciona una Cuenta --</option>
-                        @foreach ($cuentas as $cuenta)
-                            <option value="{{ $cuenta->idcue }}"
-                                {{ request('idcue') == $cuenta->idcue ? 'selected' : '' }}>
-                                {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
-        </div>
-    </div>
+    <ul class="nav nav-tabs" id="cuentasTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="disponibles-tab" data-bs-toggle="tab" data-bs-target="#disponibles"
+                type="button" role="tab">Disponibles</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="colapsadas-tab" data-bs-toggle="tab" data-bs-target="#colapsadas" type="button"
+                role="tab">Colapsadas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="sinocupar-tab" data-bs-toggle="tab" data-bs-target="#sinocupar" type="button"
+                role="tab">Sin Ocupar</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="porvencer-tab" data-bs-toggle="tab" data-bs-target="#porvencer" type="button"
+                role="tab">Por Vencer</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="caidas-tab" data-bs-toggle="tab" data-bs-target="#caidas" type="button"
+                role="tab">Dañadas</button>
+        </li>
+    </ul>
 
-    <div id="tabla-perfiles" class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-table me-1"></i>
-            Perfiles de {{ $idcueSeleccionado }}
+    <!-- Contenido de las pestañas -->
+    <div class="tab-content mt-3" id="cuentasTabContent">
+
+        <!-- Pestaña de Cuentas Disponibles -->
+        <div class="tab-pane fade show active" id="disponibles" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasDisponibles])
         </div>
-        <div class="card-body">
-            <table id="datatablesSimple" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Número de Perfil</th>
-                        <th>PIN del Perfil</th>
-                        <th>Usuarios Activos</th>
-                        @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
-                            <th>Acciones</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody id="Perfil">
-                    @foreach ($perfiles as $perfil)
-                        <tr>
-                            <td>{{ $perfil->numeroper }}</td>
-                            <td>{{ $perfil->pinper }}</td>
-                            <td class="usuarios-activos">
-                                <span
-                                    class="{{ $perfil->usuarios_activos == 0 ? 'badge bg-danger' : ($perfil->usuarios_activos == 1 ? 'badge bg-success' : 'badge bg-dark') }}">
-                                    {{ $perfil->usuarios_activos }}
-                                </span>
-                            </td>
-                            @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
-                                <td>
-                                    @if (Auth::user()->hasPermissionTo('perfil.update'))
-                                    <button type="button" class="btn btn-warning btn-sm" 
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editProfileModal"
-                                    data-action="{{ route('perfil.update', $perfil->idper) }}"
-                                    data-id="{{ $perfil->idper }}"
-                                    data-pin="{{ $perfil->pinper }}">
-                                    <i class="fas fa-edit">Editar</i>
-                                </button>                                
-                                    @endif
-                                    @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
-                                        <button class="btn btn-success btn-sm"
-                                            onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    @endif
-                                </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="2" class="text-end"><strong>Total de Usuarios activos:</strong></td>
-                        <td id="totalUsuariosActivos"><strong>0</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
+
+        <!-- Pestaña de Cuentas Colapsadas -->
+        <div class="tab-pane fade" id="colapsadas" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasColapsadas])
         </div>
+
+        <!-- Pestaña de Cuentas Sin Ocupar -->
+        <div class="tab-pane fade" id="sinocupar" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasSinOcupar])
+        </div>
+
+        <!-- Pestaña de Cuentas Por Vencer -->
+        <div class="tab-pane fade" id="porvencer" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasPorVencer])
+        </div>
+
+        <!-- Pestaña de Cuentas Dañadas -->
+        <div class="tab-pane fade" id="caidas" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasCaidas])
+        </div>
+
     </div>
-    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editProfileModalLabel">Editar PIN del Perfil</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editProfileForm" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" id="perfilId" name="idper">
-                        <div class="form-group">
-                            <label for="pinper">Nuevo PIN</label>
-                            <input type="text" class="form-control" id="pinper" name="pinper" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="editProfileForm" class="btn btn-primary">Guardar cambios</button>
-                </div>
-            </div>
-        </div>
-    </div>    
 @endsection
 @section('scripts')
-    @if (session('focus'))
-        <script>
-            document.getElementById("{{ session('focus') }}").focus();
-        </script>
-    @endif
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <!-- Tu archivo de JavaScript -->
-    <script src="{{ asset('js/cuentas.js') }}?v={{ time() }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const tables = document.querySelectorAll(
+                '.datatable'); // Selecciona todas las tablas con la clase 'datatable'
+
+                tables.forEach((table) => {
+                    const rows = table.querySelectorAll('tbody tr');
+                    if (rows.length > 0) {
+                        new simpleDatatables.DataTable(table, {
+                            searchable: true,
+                            perPageSelect: [5, 10, 20],
+                            labels: {
+                                placeholder: "Buscar...",
+                                perPage: "Registros por página",
+                                noRows: "No se encontraron registros.",
+                                info: "Mostrando {start} a {end} de {rows} registros",
+                            },
+                        });
+                    } else {
+                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
+                    }
+                });
+            }, 500);
+        });
+    </script>
 @endsection

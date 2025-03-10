@@ -190,14 +190,38 @@ class CuentaService
             return $cuenta->valor->pantmaxval < $cuenta->usuarios_activos;
         });
     }
+    public function obtenerCuentasSinOcupar($cuentas)
+    {
+        return $cuentas->filter(function ($cuenta) {
+            return $cuenta->valor->pantminval > $cuenta->usuarios_activos;
+        });
+    }
     public function obtenerCuentasPorVencer($cuentas)
     {
         return $cuentas->filter(function ($cuenta) {
             $fechaVencimiento = Carbon::parse($cuenta->fechavencue)->startOfDay(); // Asegurar que la fecha es sin hora
             $hoy = now()->startOfDay();
-            $tresDiasDespues = $hoy->copy()->addDays(3);
+            $cincoDiasDespues = $hoy->copy()->addDays(5);
 
-            return $fechaVencimiento->lessThanOrEqualTo($tresDiasDespues);
+            return $fechaVencimiento->lessThanOrEqualTo($cincoDiasDespues);
         });
+    }
+    public function obtenerCuentasDisponibles($cuentas)
+    {
+        return $cuentas->filter(function ($cuenta) {
+            return !$cuenta->caidacue // No esté caída
+                && ($cuenta->valor->pantmaxval >= $cuenta->usuarios_activos); // No esté colapsada
+        });
+    }
+    public function calcularUsuariosPorPerfil($cuenta)
+    {
+        $perfiles = Perfil::where('idcue', $cuenta->idcue)->orderBy('numeroper')->get();
+        foreach ($perfiles as $perfil) {
+            $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
+                ->where('idcue', $cuenta->idcue)
+                ->count();
+            $perfil->usuarios_activos = $usuariosActivos;
+        }
+        return $perfiles;
     }
 }

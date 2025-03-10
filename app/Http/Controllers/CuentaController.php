@@ -43,23 +43,24 @@ class CuentaController extends Controller
             ->where('activocue', true)
             ->orderBy('fechavencue')
             ->get();
-        $perfiles = collect();
-        $idcueSeleccionado = $request->idcue;
-
-        if ($idcueSeleccionado) {
-            $perfiles = Perfil::where('idcue', $idcueSeleccionado)->get();
-            foreach ($perfiles as $perfil) {
-                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
-                    ->where('idcue', $idcueSeleccionado)
-                    ->count();
-                $perfil->usuarios_activos = $usuariosActivos;
-            }
-        }
-        $this->cuentaService->asignarUsuarios($cuentas);
+        //$this->cuentaService->asignarUsuarios($cuentas);
+        // Filtrar las cuentas en diferentes categorías
+        $cuentasColapsadas = $this->cuentaService->obtenerCuentasColapsadas($cuentas);
+        $cuentasDisponibles = $this->cuentaService->obtenerCuentasDisponibles($cuentas);
+        $cuentasSinOcupar = $this->cuentaService->obtenerCuentasSinOcupar($cuentas);
+        $cuentasPorVencer = $this->cuentaService->obtenerCuentasPorVencer($cuentas);
+        $cuentasCaidas = $this->cuentaService->obtenerCuentasCaidas($cuentas);
 
         $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
 
-        return view('inventory.cuentas.index', compact('cuentas', 'perfiles', 'idcueSeleccionado', 'espacios_por_servicio'));
+        return view('inventory.cuentas.index', compact(
+            'cuentasDisponibles',
+            'cuentasColapsadas',
+            'cuentasSinOcupar',
+            'cuentasPorVencer',
+            'cuentasCaidas',
+            'espacios_por_servicio'
+        ));
     }
 
     public function create()
@@ -70,7 +71,15 @@ class CuentaController extends Controller
         $valores = Valor::all();
         return view('inventory.cuentas.create', compact('valores'));
     }
-
+    public function show($idcue)
+    {
+        if (!Auth::user()->hasPermissionTo('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para ver una cuenta con sus perfiles.');
+        }
+        $cuenta = Cuenta::with(['valor', 'costos'])->findOrFail($idcue);
+        $perfiles = $this->cuentaService->calcularUsuariosPorPerfil($cuenta);
+        return view('inventory.cuentas.show', compact('cuenta', 'perfiles'));
+    }
     public function store(Request $request)
     {
         if (!Auth::user()->hasPermissionTo('cuentas.store')) {

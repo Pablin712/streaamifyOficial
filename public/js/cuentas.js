@@ -41,9 +41,3 @@ function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
     document.body.removeChild(tempTextArea);
     alert("El mensaje se ha copiado al portapapeles.");
 }
-$(document).ready(function() {
-    $('#idcue').select2({
-        placeholder: "Selecciona una Cuenta",
-        allowClear: true
-    });
-});

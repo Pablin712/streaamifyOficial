@@ -55,6 +55,10 @@
     <a href="{{ route('mantenimientos') }}" class="btn btn-secondary">Volver a Mantenimientos</a>
 @endsection
 @section('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
         // Inicializar Select2 en el select de cuentas
