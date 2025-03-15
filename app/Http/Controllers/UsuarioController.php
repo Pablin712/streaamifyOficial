@@ -37,7 +37,7 @@ class UsuarioController extends Controller
             abort(403, 'No tienes permiso para cambiar datos de usuarios.');
         }
         $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
-        $cuentas = Cuenta::with('perfiles')->orderBy('idcue')->get();
+        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
 
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();

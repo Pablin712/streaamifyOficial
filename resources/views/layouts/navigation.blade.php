@@ -70,6 +70,7 @@
         });
     </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     @yield('scripts')
     <script>
         $(document).ready(function() {
@@ -86,6 +87,12 @@
                         }
                     }
                 });
+            });
+        });
+        $(document).ready(function() {
+            $('.idcue').select2({
+                placeholder: "Selecciona una cuenta",
+                allowClear: true // Permite borrar la selección
             });
         });
     </script>

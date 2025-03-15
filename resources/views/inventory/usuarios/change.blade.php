@@ -39,7 +39,7 @@
         <!-- Campo para seleccionar una Cuenta -->
         <div class="form-group mb-3">
             <label for="idcue">Cuenta</label>
-            <select name="idcue" id="idcue" class="form-control" required>
+            <select name="idcue" id="idcuek" class=" idcue form-control" required>
                 @foreach ($cuentas as $cuenta)
                     <option value="{{ $cuenta->idcue }}" {{ $usuario->idcue == $cuenta->idcue ? 'selected' : '' }}>
                         {{ $cuenta->idcue }}: Oc: {{ $cuenta->usuarios_activos }} ::
