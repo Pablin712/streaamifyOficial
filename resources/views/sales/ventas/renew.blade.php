@@ -51,14 +51,12 @@
                                 <td>${{ number_format($detalle->montodet, 2) }}</td>
                                 <td>
                                     <button type="button" class="btn btn-warning btn-sm editarDetalleBtn"
-                                        data-cuenta="{{ $detalle->perfil->cuenta->idcue }}" 
+                                        data-cuenta="{{ $detalle->perfil->cuenta->idcue }}"
                                         data-perfil="{{ $detalle->perfil->numeroper }}"
                                         data-descripcion="Renovacion Cuenta"
                                         data-fechavencimiento="{{ $detalle->fechavendet_suma }}"
-                                        data-monto="{{ $detalle->montodet }}"
-                                        data-id="{{ $detalle->iddet }}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editarDetalleModal">
+                                        data-monto="{{ $detalle->montodet }}" data-id="{{ $detalle->iddet }}"
+                                        data-bs-toggle="modal" data-bs-target="#editarDetalleModal">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
@@ -342,6 +340,18 @@
 
             $('#detalles_venta').val(JSON.stringify(detalles));
             this.submit();
+        });
+
+        $(document).ready(function() {
+            // Inicializar Select2 en el modal cuando se abra
+            $("#agregarDetalleModal").on("shown.bs.modal", function() {
+                $("#selectCuenta").select2({
+                    dropdownParent: $(
+                    "#agregarDetalleModal"), // Esto es clave para que funcione dentro del modal
+                    placeholder: "Seleccione una cuenta",
+                    allowClear: true,
+                });
+            });
         });
     </script>
 @endsection
