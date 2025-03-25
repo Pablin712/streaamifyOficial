@@ -37,6 +37,7 @@
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('clientes.create'))
         <a href="{{ route('clientes.create') }}" class="btn btn-primary mb-3">Crear Cliente</a>
+        <a href="{{ route('clientes.export') }}" class="btn btn-primary mb-3">Exportar CSV</a>
     @endif
 @endsection
 @section('table1')

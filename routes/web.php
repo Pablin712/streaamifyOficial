@@ -173,6 +173,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/clientes/storeInVenta', 'storeInVenta')->name('clientes.storeInVenta');
         Route::get('/clientes/{id}/edit', 'edit')->name('clientes.edit');
         Route::put('/clientes/{id}', 'update')->name('clientes.update');
+        Route::get('/clientes/export', 'export')->name('clientes.export');
         Route::delete('/clientes/{id}', 'destroy')->name('clientes.destroy');
     });
 

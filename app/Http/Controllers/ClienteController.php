@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClienteController extends Controller
 {
@@ -134,6 +135,34 @@ class ClienteController extends Controller
         ]);
         $cliente->update($request->all());
         return redirect()->route('clientes')->with('success', 'Cliente actualizado con éxito.');
+    }
+
+    public function export()
+    {
+        $clientes = Cliente::all();
+
+        $response = new StreamedResponse(function () use ($clientes) {
+            $handle = fopen('php://output', 'w');
+            // Add CSV headers
+            fputcsv($handle, ['ID', 'Nombre', 'Teléfono', 'Correo']);
+
+            // Add client data
+            foreach ($clientes as $cliente) {
+                fputcsv($handle, [
+                    $cliente->idcli,
+                    $cliente->nombrecli,
+                    $cliente->telefonocli,
+                    $cliente->email ?? 'Ninguno',
+                ]);
+            }
+
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="clientes.csv"');
+
+        return $response;
     }
 
     // Eliminar un cliente
