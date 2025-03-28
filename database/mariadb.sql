@@ -339,3 +339,8 @@ SET @admin_role_id = (SELECT id FROM roles WHERE name = 'Admin');
 INSERT INTO role_has_permissions (permission_id, role_id)
 SELECT p.id, @admin_role_id FROM permissions p WHERE p.name IN 
 ('roles.index', 'roles.store', 'roles.update', 'roles.destroy');
+
+
+-- Modificaciones 28 de marzo 2025
+ALTER TABLE valores ADD COLUMN activoval TINYINT(1) DEFAULT 1;
+ALTER TABLE proveedores ADD COLUMN activopro TINYINT(1) DEFAULT 1;

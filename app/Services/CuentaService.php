@@ -105,6 +105,26 @@ class CuentaService
 
         return "{$baseId}_borrada{$contador}";
     }
+    public function generarNuevoIdValor($idval)
+    {
+        $baseId = preg_replace('/_era\d*$/', '', $idval);
+        $contador = 1;
+
+        $ultimoId = Valor::where('idval', 'LIKE', "{$baseId}_era%")
+            ->orderByRaw("LENGTH(idval) DESC")
+            ->orderBy('idval', 'DESC')
+            ->pluck('idval')
+            ->first();
+
+        if ($ultimoId) {
+            preg_match('/_era(\d+)$/', $ultimoId, $matches);
+            if (!empty($matches[1])) {
+                $contador = (int) $matches[1] + 1;
+            }
+        }
+
+        return "{$baseId}_era{$contador}";
+    }
     public function generarNuevoIdPerfil($idper)
     {
         $baseId = preg_replace('/_borrada\d*$/', '', $idper);

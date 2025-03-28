@@ -18,6 +18,7 @@ class Proveedor extends Model
     // Define los atributos que puedes asignar masivamente
     protected $fillable = [
         'nombrepro',
-        'telefonopro'
+        'telefonopro',
+        'activopro'
     ];
 }

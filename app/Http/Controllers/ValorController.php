@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Valor;
 use App\Models\Servicio;
 use App\Models\Proveedor;
+use App\Models\Cuenta;
 use App\Models\Historial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\CuentaService;
 
 class ValorController extends Controller
 {
@@ -20,13 +22,18 @@ class ValorController extends Controller
         $this->middleware('can:valores.destroy')->only('destroy');
     }
     */
+    protected $cuentaService;
 
+    public function __construct(CuentaService $cuentaService)
+    {
+        $this->cuentaService = $cuentaService;
+    }
     public function index()
     {
         if (!Auth::user()->hasPermissionTo('valores')) {
             abort(403, 'No tienes permiso para ver los valores.');
         }
-        $valores = Valor::with(['proveedor', 'servicio'])->get();
+        $valores = Valor::with(['proveedor', 'servicio'])->where('activoval', true)->get();
         return view('inventory.valores.index', compact('valores'));
     }
 
@@ -35,7 +42,7 @@ class ValorController extends Controller
         if (!Auth::user()->hasPermissionTo('valores.store')) {
             abort(403, 'No tienes permiso para crear valores.');
         }
-        $proveedores = Proveedor::all();
+        $proveedores = Proveedor::where('activopro', true)->get();
         $servicios = Servicio::all();
         return view('inventory.valores.create', compact('servicios', 'proveedores'));
     }
@@ -78,7 +85,7 @@ class ValorController extends Controller
             abort(403, 'No tienes permiso para editar valores.');
         }
         $valor = Valor::with(['proveedor', 'servicio'])->findOrFail($idval);
-        $proveedores = Proveedor::all();
+        $proveedores = Proveedor::where('activopro', true)->get();
         $servicios = Servicio::all();
         return view('inventory.valores.edit', compact('valor', 'proveedores', 'servicios'));
     }
@@ -114,21 +121,39 @@ class ValorController extends Controller
 
     public function destroy($idval)
     {
-        if (!Auth::user()->hasPermissionTo('valores.destroy')) {
-            abort(403, 'No tienes permiso para eliminar valores.');
+        try {
+            // Verificar permisos
+            if (!Auth::user()->hasPermissionTo('valores.destroy')) {
+                abort(403, 'No tienes permiso para eliminar valores.');
+            }
+
+            // Buscar el valor
+            $valor = Valor::findOrFail($idval);
+
+            $cuentasAsociadas = Valor::where('idval', $valor->idval)->where('activocue', true)->exists();
+            if ($cuentasAsociadas) {
+                return redirect()->route('proveedores')->with('error', 'No se puede eliminar porque tiene cuentas asociadas.');
+            }
+
+            // Generar nuevo ID para el valor
+            $nuevoIdVal = $this->cuentaService->generarNuevoIdValor($valor->idval);
+
+            // Registrar en historial
+            Historial::create([
+                'accion' => 'Se desactivó el valor con ID: ' . $valor->idval,
+                'descripcion' => 'Datos inactivos: ' . json_encode($valor),
+                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
+                'fecha' => now(),
+            ]);
+            // Desactivar el valor en lugar de eliminarlo
+            $valor->update([
+                'activoval' => false,
+                'idval' => $nuevoIdVal
+            ]);
+
+            return redirect()->route('valores')->with('success', 'Valor desactivado con éxito.');
+        } catch (\Exception $e) {
+            return redirect()->route('valores')->with('error', 'Error al desactivar el valor: ' . $e->getMessage());
         }
-
-        $valor = Valor::findOrFail($idval);
-
-        Historial::create([
-            'accion' => 'Eliminación de Valor',
-            'descripcion' => 'Datos Eliminados: ' . json_encode($valor),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
-        ]);
-
-        $valor->delete();
-
-        return redirect()->route('valores')->with('success', 'Valor eliminado con éxito.');
     }
 }

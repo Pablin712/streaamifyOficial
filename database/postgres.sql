@@ -233,3 +233,9 @@ BEGIN
 END $$;
 ALTER TABLE model_has_roles 
 ALTER COLUMN model_type SET DEFAULT 'App\\Models\\Empleado';
+
+
+-- 28 de marzo 2025
+ALTER TABLE valores ADD COLUMN activoval BOOLEAN DEFAULT TRUE;
+ALTER TABLE cuentas ALTER COLUMN idval TYPE VARCHAR(50);
+ALTER TABLE valores ALTER COLUMN idval TYPE VARCHAR(50);

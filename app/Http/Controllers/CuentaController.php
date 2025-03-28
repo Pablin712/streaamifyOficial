@@ -69,7 +69,7 @@ class CuentaController extends Controller
         if (!Auth::user()->hasPermissionTo('cuentas.store')) {
             abort(403, 'No tienes permiso para crear cuentas.');
         }
-        $valores = Valor::all();
+        $valores = Valor::where('activoval', true)->get();
         return view('inventory.cuentas.create', compact('valores'));
     }
     public function show($idcue)
@@ -187,7 +187,7 @@ class CuentaController extends Controller
             abort(403, 'No tienes permiso para editar cuentas.');
         }
         $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
-        $valores = Valor::all();
+        $valores = Valor::where('activoval', true)->get();
         return view('inventory.cuentas.edit', compact('cuenta', 'valores'));
     }
 

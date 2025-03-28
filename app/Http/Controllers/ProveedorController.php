@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Proveedor;
 use App\Models\Historial;
+use App\Models\Valor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Services\CuentaService;
 class ProveedorController extends Controller
 {
     /*
@@ -18,13 +19,12 @@ class ProveedorController extends Controller
         $this->middleware('can:proveedores.destroy')->only('destroy');
     }
     */
-
     public function index()
     {
         if (!Auth::user()->hasPermissionTo('proveedores')) {
             abort(403, 'No tienes permiso para ver los proveedores.');
         }
-        $proveedores = Proveedor::all();
+        $proveedores = Proveedor::where('activopro', true)->get();
         return view('inventory.proveedores.index', compact('proveedores'));
     }
 
@@ -106,17 +106,27 @@ class ProveedorController extends Controller
         if (!Auth::user()->hasPermissionTo('proveedores.destroy')) {
             abort(403, 'No tienes permiso para eliminar proveedores.');
         }
+
         $proveedor = Proveedor::findOrFail($idpro);
 
+        // Verificar si hay valores asociados
+        $valoresAsociados = Valor::where('idpro', $proveedor->idpro)->where('activoval', true)->exists();
+        if ($valoresAsociados) {
+            return redirect()->route('proveedores')->with('error', 'No se puede eliminar porque tiene valores asociados.');
+        }
+
+        // Registrar en historial
         Historial::create([
-            'accion' => 'Eliminación de Proveedor',
-            'descripcion' => 'Datos Eliminados: ' . json_encode($proveedor),
+            'accion' => 'Se desactivó el proveedor con ID: ' . $proveedor->idpro,
+            'descripcion' => 'Datos inactivos: ' . json_encode($proveedor),
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
+        // Desactivar el proveedor
+        $proveedor->update([
+            'activopro' => false,
+        ]);
 
-        $proveedor->delete();
-
-        return redirect()->route('proveedores')->with('success', 'Proveedor eliminado con éxito.');
+        return redirect()->route('proveedores')->with('success', 'Proveedor desactivado con éxito.');
     }
 }
