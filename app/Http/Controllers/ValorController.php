@@ -61,6 +61,7 @@ class ValorController extends Controller
             'pantminval' => 'required|integer|min:1',
             'pantmaxval' => 'required|integer|min:1',
             'mesesval' => 'required|integer|min:1',
+            'bot' => 'nullable|url|max:255',
         ]);
 
         $request->merge([
@@ -103,6 +104,7 @@ class ValorController extends Controller
             'pantminval' => 'required|integer|min:1',
             'pantmaxval' => 'required|integer|min:1',
             'mesesval' => 'required|integer|min:1',
+            'bot' => 'nullable|url|max:255',
         ]);
 
         $valor = Valor::findOrFail($idval);

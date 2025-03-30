@@ -39,6 +39,7 @@
                 <th>Pantallas Min</th>
                 <th>Pantallas Max</th>
                 <th>Meses</th>
+                <th>Bot de códigos</th>
                 @if (Auth::user()->hasAnyPermission(['valores.edit', 'valores.destroy']))
                     <th>Acciones</th>
                 @endif
@@ -54,6 +55,13 @@
                     <td>{{ $valor->pantminval }}</td>
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>
+                    <td>
+                        @if (!empty($valor->bot))
+                            <a href="{{ $valor->bot }}" target="_blank" class="text-primary">Ver Bot</a>
+                        @else
+                            <span class="text-danger">No disponible</span>
+                        @endif
+                    </td>
                     @if (Auth::user()->hasAnyPermission(['valores.edit', 'valores.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('valores.edit'))

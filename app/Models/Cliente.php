@@ -41,4 +41,8 @@ class Cliente extends Authenticatable
     {
         return $this->hasOne(ViewClientesUsuarios::class, 'idcli', 'idcli');
     }
+    public function usuarios()
+    {
+        return $this->hasMany(ViewUsuarioActivo::class, 'idcli', 'idcli');
+    }
 }

@@ -89,6 +89,8 @@
                                         href="{{ route('recargar.index') }}">Recargar saldo</a></li>
                                 <li><a class="dropdown-item text-dark fw-semibold"
                                         href="{{ route('historial.cliente') }}">Actividad</a></li>
+                                <li><a class="dropdown-item text-dark fw-semibold"
+                                        href="{{ route('codigo.index') }}">Códigos</a></li>
                                 <li><a class="dropdown-item text-danger fw-semibold"
                                         onclick="document.getElementById('logout-form').submit();">
                                         Cerrar sesión

@@ -50,6 +50,12 @@
             <label for="mesesval">Meses</label>
             <input type="number" name="mesesval" id="mesesval" class="form-control" required>
         </div>
+        <!-- Campo para Bot -->
+        <div class="form-group mb-3">
+            <label for="bot">Bot (URL)</label>
+            <input type="text" name="bot" id="bot" class="form-control"
+                placeholder="Ingresa la URL del bot (opcional)">
+        </div>
         <button type="submit" class="btn btn-success">Guardar</button>
     </form>
 @endsection

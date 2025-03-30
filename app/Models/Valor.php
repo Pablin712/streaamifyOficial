@@ -24,7 +24,8 @@ class Valor extends Model
         'pantminval',
         'pantmaxval',
         'mesesval',
-        'activoval'
+        'activoval',
+        'bot'
     ];
     public function servicio()
     {

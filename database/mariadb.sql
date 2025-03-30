@@ -344,3 +344,5 @@ SELECT p.id, @admin_role_id FROM permissions p WHERE p.name IN
 -- Modificaciones 28 de marzo 2025
 ALTER TABLE valores ADD COLUMN activoval TINYINT(1) DEFAULT 1;
 ALTER TABLE proveedores ADD COLUMN activopro TINYINT(1) DEFAULT 1;
+-- Modificaciones 29 de marzo 2025
+ALTER TABLE valores ADD COLUMN bot TEXT DEFAULT NULL;

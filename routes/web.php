@@ -23,6 +23,7 @@ use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\EmailController;
 use App\Http\Middleware\AuthCliente;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\CodigoController;
 use App\Http\Controllers\TipoProductoController;
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
@@ -82,6 +83,9 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::get('/perfil', 'perfil')->name('cliente.perfil');
         Route::put('/perfil/update', 'actualizarPerfil')->name('cliente.perfil.update');
         Route::put('/cambiar-contrasena', 'cambiarContrasena')->name('cliente.cambiar.contrasena');
+    });
+    Route::controller(CodigoController::class)->group(function(){
+        Route::get('/codigo', 'index')->name('codigo.index');
     });
 });
 /*
