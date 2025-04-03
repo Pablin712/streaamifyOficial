@@ -81,7 +81,7 @@
                                     <i class="fas fa-edit"></i>
                                 </a>
                             @endif
-                            @if ($cliente->usuarios == 0)
+                            @if ($cliente->usuarios->isEmpty())
                                 @if (Auth::user()->hasPermissionTo('clientes.destroy'))
                                     <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
                                         style="display: inline;">
