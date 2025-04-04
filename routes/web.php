@@ -255,6 +255,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
     });
     Route::resource('productos', ProductoController::class);
+    Route::get('catalogo/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::resource('roles', RoleController::class);
 
     Route::controller(RecargaController::class)->group(function () {

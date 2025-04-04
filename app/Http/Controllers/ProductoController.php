@@ -10,6 +10,7 @@ use App\Models\TipoProducto;
 use App\Models\DetalleProducto;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
+use PDF;
 
 class ProductoController extends Controller
 {
@@ -118,6 +119,42 @@ class ProductoController extends Controller
         }
         $producto = Producto::with(['categoria', 'tipoProducto', 'detalles'])->findOrFail($id);
         return view('inventory.productos.show', compact('producto'));
+    }
+
+    public function generarPDF()
+    {
+        // Obtener los productos en el orden específico
+        $productosInmediataIndividual = Producto::where('tipo_producto_id', 1) // Entrega Inmediata
+            ->where('categoria_id', 1) // Categoría Individual
+            ->get();
+
+        $productosCombos = Producto::where('categoria_id', 2) // Categoría Combo
+            ->where('tipo_producto_id', 1)
+            ->get();
+
+        $productosPedidos = Producto::where('tipo_producto_id', 2) // Pedido
+            ->where('activo', true)
+            ->get();
+
+        $productosPersonalizados = Producto::where('tipo_producto_id', 3) // Personalizado
+            ->where('activo', true)
+            ->get();
+
+        $productosCompletos = Producto::where('categoria_id', 3) // Categoría Completo
+            ->where('activo', true)
+            ->get();
+        
+        // Fusionar todas las colecciones en el orden deseado
+        $productosOrdenados = $productosInmediataIndividual
+            ->concat($productosCombos)
+            ->concat($productosPedidos)
+            ->concat($productosPersonalizados)
+            ->concat($productosCompletos);
+        // Generar el PDF usando una vista específica
+        $pdf = PDF::loadView('inventory.productos.pdf', compact('productosOrdenados'));
+
+        // Descargar el PDF con un nombre específico
+        return $pdf->download('Catalogo_Streamify.pdf');
     }
 
     public function edit(string $id)

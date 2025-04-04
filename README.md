@@ -8,43 +8,52 @@
 ## Instalación
 
 1. Clonar repositorio.
-   ```sh
-   git clone https://github.com/Pablin712/streaamifyOficial.git Streamify
-   cd Streamify
-   code .
-
+```sh
+git clone https://github.com/Pablin712/streaamifyOficial.git Streamify
+cd Streamify
+code .
+```
 2. Backend
-    ```sh
-    composer install
-    cp .env.example .env
-    php artisan key:generate
-    php artisan migrate --seed
-    php artisan storage:link
-    php artisan serve
-
+```sh
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve
+```
 3. Frontend
-    ```sh
-    npm install
-
+```sh
+npm install
+```
 ## A tomar en cuenta Para subir cambios
 1. Para crear una nueva rama.
-    ```sh
-    git branch (nombre de la rama)
-    git switch (nombre de la rama)
+```sh
+git branch (nombre de la rama)
+git switch (nombre de la rama)
+```
 2. Para subir los cambios a la rama main.
-    ```sh
-    git switch main
-    git pull origin main
-    git add . // git add (nombre del archivo)
-    git commit -m "Comentario"
-    git push origin main
+```sh
+git switch main
+git pull origin main
+git add . // git add (nombre del archivo)
+git commit -m "Comentario"
+git push origin main
+```
 3. Si da conflictos al realizar las migraciones ejecutar estos comandos.
-    ```sh
-    php artisan config:clear
-    php artisan migrate:fresh
-    php artisan db:seed
+```sh
+php artisan config:clear
+php artisan migrate:fresh
+php artisan db:seed
+```
 4. Si da conflictos en el merge solucionarlos en el editor.
 5. Si se desea realizar cambios, crear una nueva rama y realizar sus cambios. 
 6. Es necesario ejecutar el siguiente comando:
-    ```sh
-    php artisan storage:link
+```sh
+php artisan storage:link
+```
+7. Instalar dependencias para el pdf
+```sh
+composer require barryvdh/laravel-dompdf
+php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider"
+```

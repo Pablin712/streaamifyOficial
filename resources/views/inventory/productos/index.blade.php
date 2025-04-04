@@ -39,6 +39,7 @@
     @if (Auth::user()->hasPermissionTo('productos.create'))
         <a href="{{ route('productos.create') }}" class="btn btn-primary mb-3">Crear Producto</a>
     @endif
+    <a href="{{ route('productos.pdf') }}" class="btn btn-success mb-3">Descargar Catálogo PDF</a>
 @endsection
 
 @section('tablename', 'Productos')
