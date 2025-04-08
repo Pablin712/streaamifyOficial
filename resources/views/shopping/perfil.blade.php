@@ -140,6 +140,16 @@
                             <input type="text" class="form-control" value="${{ number_format($cliente->saldo, 2) }}"
                                 disabled>
                         </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>💰 Link de referido:</strong></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" 
+                                       value="{{ route('register', ['codigo_referidor' => $cliente->codigo_referidor]) }}" 
+                                       id="referralLink" readonly>
+                                <button class="btn btn-secondary" type="button" onclick="copyReferralLink()">Copiar</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="text-center mt-4">
@@ -272,5 +282,14 @@
                 phoneInput.value = fullPhoneNumber;
             });
         });
+    </script>
+    <script>
+        function copyReferralLink() {
+            const referralLink = document.getElementById('referralLink');
+            referralLink.select();
+            referralLink.setSelectionRange(0, 99999); // Para dispositivos móviles
+            document.execCommand('copy');
+            alert('¡Enlace copiado al portapapeles!');
+        }
     </script>
 @endsection

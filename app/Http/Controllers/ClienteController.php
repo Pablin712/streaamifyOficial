@@ -200,6 +200,7 @@ class ClienteController extends Controller
                         'regex:/[0-9]/',
                         'regex:/[@$!%*?&]/'
                     ],
+                    'codigo_referidor' => 'nullable|string|max:50|exists:clientes,codigo_referidor',
                 ],
                 [
                     'first_name.regex' => 'Debe ingresar al menos dos nombres.',
@@ -209,6 +210,14 @@ class ClienteController extends Controller
                     'password.confirmed' => 'Las contraseñas no coinciden.',
                 ]
             );
+            // Buscar el cliente que refirió (si se ingresó un código válido)
+            $referidoPor = null;
+            if ($request->filled('codigo_referidor')) {
+                $referidor = Cliente::where('codigo_referidor', $request->codigo_referidor)->first();
+                if ($referidor) {
+                    $referidoPor = $referidor->idcli;
+                }
+            }
             $request->merge([
                 'first_name' => ucwords($request->first_name),
                 'last_name' => ucwords($request->last_name),
@@ -216,11 +225,15 @@ class ClienteController extends Controller
             ]);
             $cliente = Cliente::where('telefonocli', $request->telefonocli)->first();
             if ($cliente) {
+                if ($cliente->email) {
+                    return redirect()->back()->with('error', 'Este número de teléfono ya está registrado.');
+                }
                 $cliente->update([
                     'nombrecli' => $request->first_name . ' ' . $request->last_name,
                     'email' => $request->email,
                     'password' => $request->password,
                     'pais' => $request->pais,
+                    'referido_por' => $referidoPor,
                 ]);
                 Historial::create([
                     'accion' => 'Registro de cliente con correo',
@@ -237,6 +250,7 @@ class ClienteController extends Controller
                     'telefonocli' => $request->telefonocli,
                     'pais' => $request->pais,
                     'saldo' => 0,
+                    'referido_por' => $referidoPor,
                 ]);
                 Historial::create([
                     'accion' => 'Creación de cliente automático',

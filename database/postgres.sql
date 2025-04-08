@@ -239,3 +239,47 @@ ALTER COLUMN model_type SET DEFAULT 'App\\Models\\Empleado';
 ALTER TABLE valores ADD COLUMN activoval BOOLEAN DEFAULT TRUE;
 ALTER TABLE cuentas ALTER COLUMN idval TYPE VARCHAR(50);
 ALTER TABLE valores ALTER COLUMN idval TYPE VARCHAR(50);
+
+-- 7 de abril 2025
+-- Asegurarte de que la columna existe
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS codigo_referidor VARCHAR(50);
+
+-- Actualizar los clientes que aún no tienen el código
+-- Generar el código en mayúsculas
+UPDATE clientes
+SET codigo_referidor = UPPER(INITCAP(SPLIT_PART(nombrecli, ' ', 1)) || '-' || LPAD(idcli::text, 3, '0'))
+WHERE codigo_referidor IS NULL;
+select * from clientes;
+
+--Trigger
+-- Primero, crea o reemplaza la función que genera el código
+CREATE OR REPLACE FUNCTION generar_codigo_referidor()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.codigo_referidor := UPPER(INITCAP(SPLIT_PART(NEW.nombrecli, ' ', 1)) || '-' || LPAD(NEW.idcli::text, 3, '0'));
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE or replace TRIGGER trg_codigo_referidor
+BEFORE INSERT OR UPDATE OF nombrecli ON clientes
+FOR EACH ROW
+EXECUTE FUNCTION generar_codigo_referidor();
+
+-- referido por
+ALTER TABLE clientes ADD COLUMN referido_por INTEGER;
+
+-- Si deseas que sea una clave foránea (opcional)
+ALTER TABLE clientes
+ADD CONSTRAINT fk_referido_por FOREIGN KEY (referido_por)
+REFERENCES clientes(idcli)
+ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE clientes ADD COLUMN ya_compro BOOLEAN DEFAULT FALSE;
+
+UPDATE clientes
+SET ya_compro = TRUE
+WHERE idcli IN (
+    SELECT DISTINCT idcli
+    FROM ventas
+);

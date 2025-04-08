@@ -203,7 +203,19 @@
                         <label for="confirmPassword">Repetir Contraseña</label>
                     </div>
                 </div>
-            </div>            
+            </div>
+            <div class="mb-3">
+                <div class="form-floating">
+                    <input type="text" 
+                           class="form-control" 
+                           name="codigo_referidor" 
+                           id="codigoReferidor" 
+                           placeholder="Código Referidor" 
+                           value="{{ request('codigo_referidor') }}" 
+                           {{ request('codigo_referidor') ? 'readonly' : '' }}>
+                    <label for="codigoReferidor">Código Referidor (opcional)</label>
+                </div>
+            </div>           
             <button type="submit" class="btn btn-primary w-100">Registrar Cuenta</button>
         </form>
         <div class="extra-links">

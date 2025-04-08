@@ -146,6 +146,28 @@ class VentaController extends Controller
             'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
             'fecha' => now(),
         ]);
+        // Verificar si el cliente ya compró
+        if (!$venta->cliente->ya_compro) {
+            $venta->cliente->ya_compro = true; // Marcar como que ya compró
+            $venta->cliente->save();
+
+            // Si tiene un referidor, darle $1 de saldo
+            if ($venta->cliente->referido_por) {
+                $referidor = Cliente::find($venta->cliente->referido_por);
+                if ($referidor) {
+                    $referidor->saldo += 1;
+                    $referidor->save();
+
+                    // Registrar en el historial
+                    Historial::create([
+                        'accion' => 'Bonificación por Referido',
+                        'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $usuario->nombrecli,
+                        'realizado_por' => 'Sistema | ' . request()->ip(),
+                        'fecha' => now(),
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('ventas.create')->with('success', 'Venta registrada correctamente');
     }

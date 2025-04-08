@@ -130,7 +130,13 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="recargas-tab" data-bs-toggle="tab" data-bs-target="#recargas"
                     type="button" role="tab" aria-controls="recargas" aria-selected="false">💰 Historial de
-                    Recargas</button>
+                    Recargas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="referidos-tab" data-bs-toggle="tab" data-bs-target="#referidos"
+                    type="button" role="tab" aria-controls="referidos" aria-selected="false">👥 Mis referidos
+                </button>
             </li>
         </ul>
         <div class="tab-content" id="historialTabsContent">
@@ -384,6 +390,46 @@
                                     </div>
                                 </div>
                             </div>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <!-- Mis Referidos -->
+            <div class="tab-pane fade" id="referidos" role="tabpanel" aria-labelledby="referidos-tab">
+                <h3 class="mt-4">Mis Referidos</h3>
+                <p class="text-muted">Aquí puedes ver todos tus referidos que invitaste a comprar Streamify.</p>
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>🧑‍🤝‍🧑 Referido</th> {{-- o 👤 si es individual --}}
+                            <th>📧 Correo</th> {{-- más representativo que 🔑 para email --}}
+                            <th>📅 Unión</th> {{-- o 🕓 si quieres representar hora también --}}
+                            <th>✅ Compró</th> {{-- check si ya compró --}}
+                            <th>💰 Ganancia</th> {{-- representa claramente beneficio monetario --}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($referidos as $usuario)
+                            <tr>
+                                <td>{{ $usuario->nombrecli }}</td>
+                                <td>{{ $usuario->email }}</td>
+                                <td>{{ $usuario->created_at }}</td>
+                                <td>
+                                    @if ($usuario->ya_compro)
+                                        <span class="badge bg-success">Sí</span>
+                                    @else
+                                        <span class="badge bg-danger">No</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($usuario->ya_compro)
+                                        <span class="badge bg-success">$1,00</span>
+                                    @else
+                                        <span class="badge bg-danger">$0,00</span>
+                                    @endif
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>

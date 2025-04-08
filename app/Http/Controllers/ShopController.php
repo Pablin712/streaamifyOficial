@@ -209,6 +209,29 @@ class ShopController extends Controller
             $usuario->saldo -= $preciofinal;
             $usuario->save();
 
+            // Verificar si el cliente ya compró
+            if (!$usuario->ya_compro) {
+                $usuario->ya_compro = true; // Marcar como que ya compró
+                $usuario->save();
+
+                // Si tiene un referidor, darle $1 de saldo
+                if ($usuario->referido_por) {
+                    $referidor = Cliente::find($usuario->referido_por);
+                    if ($referidor) {
+                        $referidor->saldo += 1;
+                        $referidor->save();
+
+                        // Registrar en el historial
+                        Historial::create([
+                            'accion' => 'Bonificación por Referido',
+                            'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $usuario->nombrecli,
+                            'realizado_por' => 'Sistema | ' . request()->ip(),
+                            'fecha' => now(),
+                        ]);
+                    }
+                }
+            }
+
             // Verificar si la cuenta se llenó
             $this->verificarCuentaLlena($cuenta, $producto);
             //dd($cuenta);
@@ -329,7 +352,28 @@ class ShopController extends Controller
                     'realizado_por' => 'Laravel | ' . request()->ip(), // Almacena el nombre del usuario
                     'fecha' => now(),
                 ]);
+                // Verificar si el cliente ya compró
+                if (!$usuario->ya_compro) {
+                    $usuario->ya_compro = true; // Marcar como que ya compró
+                    $usuario->save();
 
+                    // Si tiene un referidor, darle $1 de saldo
+                    if ($usuario->referido_por) {
+                        $referidor = Cliente::find($usuario->referido_por);
+                        if ($referidor) {
+                            $referidor->saldo += 1;
+                            $referidor->save();
+
+                            // Registrar en el historial
+                            Historial::create([
+                                'accion' => 'Bonificación por Referido',
+                                'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $usuario->nombrecli,
+                                'realizado_por' => 'Sistema | ' . request()->ip(),
+                                'fecha' => now(),
+                            ]);
+                        }
+                    }
+                }
                 // Descontar saldo al usuario
                 $usuario->saldo -= $producto->preciopro;
                 $usuario->save();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Pedido;
@@ -16,9 +17,10 @@ class HistorialClientesController extends Controller
         $pedidos = Pedido::where('idcli',$idcli)->orderBy('fechapedido', 'desc')->paginate(10);;
         $ventas = Venta::with(['detalles_venta'])->where('idcli', $idcli)->orderBy('fechaven', 'desc')->paginate(10);
         $usuarios_activos = ViewUsuarioActivo::where('idcli',$idcli)->orderBy('fecha_vencimiento', 'desc')->paginate(20);
+        $referidos = Cliente::where('referido_por', $idcli)->orderBy('created_at', 'desc')->paginate(10);
         // Obtener las recargas del cliente logueado
         $recargas = Recarga::where('idcli', $idcli)->with('estado')->orderBy('created_at', 'desc')->paginate(10); // 10 recargas por página
 
-        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos'));
+        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos'));
     }
 }

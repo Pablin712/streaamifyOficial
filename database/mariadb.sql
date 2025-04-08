@@ -346,3 +346,56 @@ ALTER TABLE valores ADD COLUMN activoval TINYINT(1) DEFAULT 1;
 ALTER TABLE proveedores ADD COLUMN activopro TINYINT(1) DEFAULT 1;
 -- Modificaciones 29 de marzo 2025
 ALTER TABLE valores ADD COLUMN bot TEXT DEFAULT NULL;
+
+-- Modificaciones 7 de abril 2025
+-- Asegurar que la columna exista
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS codigo_referidor VARCHAR(50);
+
+-- Generar el código en mayúsculas
+UPDATE clientes
+SET codigo_referidor = UPPER(CONCAT(SUBSTRING_INDEX(nombrecli, ' ', 1), '-', LPAD(idcli, 3, '0')))
+WHERE codigo_referidor IS NULL;
+
+--trigger
+-- Trigger para INSERT
+DELIMITER //
+CREATE TRIGGER trg_insert_codigo_referidor
+BEFORE INSERT ON clientes
+FOR EACH ROW
+BEGIN
+    SET NEW.codigo_referidor = UPPER(CONCAT(SUBSTRING_INDEX(NEW.nombrecli, ' ', 1), '-', LPAD(NEW.idcli, 3, '0')));
+END;
+//
+DELIMITER ;
+
+-- Trigger para UPDATE del nombre
+DELIMITER //
+CREATE TRIGGER trg_update_codigo_referidor
+BEFORE UPDATE ON clientes
+FOR EACH ROW
+BEGIN
+    IF NEW.nombrecli != OLD.nombrecli THEN
+        SET NEW.codigo_referidor = UPPER(CONCAT(SUBSTRING_INDEX(NEW.nombrecli, ' ', 1), '-', LPAD(NEW.idcli, 3, '0')));
+    END IF;
+END;
+//
+DELIMITER ;
+
+-- referido por
+ALTER TABLE clientes 
+ADD COLUMN referido_por BIGINT(20) NULL;
+
+-- Agregar la foreign key (opcional)
+ALTER TABLE clientes
+ADD CONSTRAINT fk_referido_por FOREIGN KEY (referido_por)
+REFERENCES clientes(idcli)
+ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE clientes ADD COLUMN ya_compro BOOLEAN DEFAULT FALSE;
+
+UPDATE clientes
+SET ya_compro = TRUE
+WHERE idcli IN (
+    SELECT DISTINCT idcli
+    FROM ventas
+);
