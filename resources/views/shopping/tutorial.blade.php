@@ -224,7 +224,8 @@
                         </p>
 
                         <!-- Carrusel de Imágenes -->
-                        <div id="compraCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-wrap="true">
+                        <div id="compraCarousel" class="carousel slide mb-3" data-bs-ride="carousel"
+                            data-bs-wrap="true">
                             <!-- Indicadores de Puntos -->
                             <div class="carousel-indicators">
                                 <button type="button" data-bs-target="#compraCarousel" data-bs-slide-to="0"
@@ -301,7 +302,7 @@
                         <div class="step-number">4</div>
                         <h4 class="fw-bold">Ver Mi Actividad</h4>
                         <p class="text-muted text-start">
-                            En tu perfil, selecciona Actividad en el menú desplegable. 
+                            En tu perfil, selecciona Actividad en el menú desplegable.
                             Accede a tu historial de cuentas activas, compras, pedidos y recargas.
                             Gestiona tus suscripciones y revisa el estado de tus transacciones con facilidad.
                         </p>
@@ -401,8 +402,25 @@
                         <div class="d-flex justify-content-center gap-3 mb-3">
                             <img src="{{ asset('images/renovar.png') }}" class="img-fluid rounded shadow" alt="Registro"
                                 style="width: 45%;">
-                            <img src="{{ asset('images/renovar2.png') }}" class="img-fluid rounded shadow" alt="Ingreso"
-                                style="width: 45%;">
+                            <img src="{{ asset('images/renovar2.png') }}" class="img-fluid rounded shadow"
+                                alt="Ingreso" style="width: 45%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 6: Pedir códigos de hogar -->
+            <div class="col-md-6 mb-4">
+                <div class="card step-card shadow-sm p-3">
+                    <div class="text-center">
+                        <div class="step-number">6</div>
+                        <h4 class="fw-bold">Pedir códigos de hogar</h4>
+                        <p class="text-muted">Cuando contratas Netflix o Disney, estos piden códigos de verificación,
+                            Streamify te ofrece un sitio donde podrás solicitar estos códigos sin necesidad de esperar
+                            respuesta del soporte humano.</p>
+                        <div class="d-flex justify-content-center gap-3 mb-3">
+                            <img src="{{ asset('images/paso6.jpg') }}" class="img-fluid rounded shadow" alt="Registro"
+                                style="width: 70%;">
                         </div>
                     </div>
                 </div>
