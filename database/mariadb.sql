@@ -399,3 +399,7 @@ WHERE idcli IN (
     SELECT DISTINCT idcli
     FROM ventas
 );
+
+-- Modificar la columna pinper a la tabla perfiles
+ALTER TABLE perfiles
+MODIFY COLUMN pinper VARCHAR(255) DEFAULT 'ninguno';

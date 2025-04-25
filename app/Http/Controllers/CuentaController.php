@@ -166,12 +166,21 @@ class CuentaController extends Controller
         $cuenta = Cuenta::where('idcue', $perfil->idcue)->first();
         $valor = Valor::find($cuenta->idval);
         $servicio = Servicio::find($valor->idser);
+        $bot = $valor->botval;
+        dd($bot);
 
-        $mensaje = "<strong>{$servicio->nombre}</strong>\n";
+        $mensaje = "*{$servicio->nombre}*\n";
         $mensaje .= "Usuario: {$cuenta->usuariocue}\n";
         $mensaje .= "Clave: {$cuenta->contrasenacue}\n";
         $mensaje .= "PIN de perfil {$perfil->numeroper}: {$perfil->pinper}\n";
 
+        // Agregar mensaje adicional si tiene un bot de códigos
+        if (!empty($bot)) {
+            $mensaje .= "\n\n*Nota importante:*\n";
+            $mensaje .= "Esta cuenta incluye un bot de códigos. Si en algún momento se te solicita un código de acceso, puedes obtenerlo ingresando al siguiente enlace:\n";
+            $mensaje .= "{$bot}\n";
+            $mensaje .= "Por favor, sigue las instrucciones del bot para obtener el código de acceso. ¡Gracias por tu confianza!";
+        }
         Historial::create([
             'accion' => 'Se solicitó los datos de perfil ' . $perfil->numeroper . ' de la cuenta: ' . $cuenta->idcue,
             'descripcion' => null,

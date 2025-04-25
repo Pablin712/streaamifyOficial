@@ -91,7 +91,7 @@
         </div>
 
         <!-- Formulario -->
-        <form action="{{ route('login') }}" method="POST">
+        <form action="{{ route('login.submit') }}" method="POST">
             @csrf
 
             <div class="form-floating mb-3">

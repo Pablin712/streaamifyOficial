@@ -91,7 +91,7 @@
 
 <body>
     <div class="form-container">
-        <form action="{{ route('cliente.login') }}" method="POST">
+        <form action="{{ route('cliente.login.submit') }}" method="POST">
             @csrf
             <img src="{{ asset('images/Icono.png') }}" alt="Logo">
             <h1>Inicia Sesión</h1>

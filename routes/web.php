@@ -57,7 +57,7 @@ Route::controller(ShopController::class)->group(function () {
 
 Route::controller(LoginClienteController::class)->group(function () {
     Route::get('/cliente/login', 'showLoginForm')->name('cliente.login');
-    Route::post('/cliente/login', 'login')->name('cliente.login');
+    Route::post('/cliente/login', 'login')->name('cliente.login.submit');
     Route::post('/cliente/logout', 'logout')->name('cliente.logout');
     Route::get('/cliente/recover', function () {
         return view('auth.recoverCliente');
@@ -98,7 +98,7 @@ Route::post('/pedido/{producto}', [CompraController::class, 'pedido'])->name('pe
 Route::get('/admin', HomeController::class);
 
 Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
-Route::post('/admin/login', [LoginController::class, 'login'])->name('login');                      // Procesa el formulario del login
+Route::post('/admin/login', [LoginController::class, 'login'])->name('login.submit');                      // Procesa el formulario del login
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('logout');    // Cierra la sesión
 Route::get('/admin/recover', function () {
     return view('auth.recover');

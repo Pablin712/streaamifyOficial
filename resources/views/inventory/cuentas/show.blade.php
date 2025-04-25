@@ -60,7 +60,7 @@
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
                                     <button class="btn btn-success btn-sm"
-                                        onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}')">
+                                        onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}', '{{ $perfil->cuenta->valor->bot }}')">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 @endif

@@ -27,12 +27,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('totalUsuariosActivos').textContent = totalUsuarios;
 });
-function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper) {
+function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot) {
     var servicio = idcue.replace(/[^a-zA-Z]/g, '');
-    var message = servicio + "\n";
+    var message = "*" + servicio + "*\n";
     message += "Usuario: " + usuariocue + "\n";
     message += "Clave: " + contrasenacue + "\n";
     message += "PIN de perfil Nro " + numeroper + ": " + pinper;
+    // Verificar si el bot no está vacío
+    if (bot && bot.trim() !== "") {
+        message += "\n\n*Nota importante:*\n";
+        message += "Te daré acceso al bot de códigos. Si en algún momento se te solicita un código de acceso (Hogar), puedes obtenerlo ingresando al siguiente enlace:\n";
+        message += bot + "\n";
+        message += "¡Gracias por tu confianza!";
+    }
     var tempTextArea = document.createElement("textarea");
     tempTextArea.value = message;
     document.body.appendChild(tempTextArea);

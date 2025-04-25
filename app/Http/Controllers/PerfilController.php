@@ -78,7 +78,7 @@ class PerfilController extends Controller
         }
         $perfil = Perfil::findOrFail($id);
         $request->validate([
-            'pinper' => 'required|string|max:6',
+            'pinper' => 'required|string|max:255',
         ]);
 
         Historial::create([

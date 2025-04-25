@@ -283,3 +283,7 @@ WHERE idcli IN (
     SELECT DISTINCT idcli
     FROM ventas
 );
+
+-- Modificar la columna pinper de perfiles para que tenga un tamaño máximo de 255 caracteres
+ALTER TABLE perfiles
+ALTER COLUMN pinper TYPE VARCHAR(255);
