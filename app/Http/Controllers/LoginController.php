@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Asistencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -51,6 +52,10 @@ class LoginController extends Controller
             'descripcion' => 'Autenticación de empleado con usuario: ' . $empleado->usuarioemp,
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
+        ]);
+        Asistencia::create([
+            'empleado_id' => Auth::user()->idemp,
+            'ruta_actual' => 'inicio',
         ]);
 
         return redirect()->route('inicio')->with('success', 'Inicio de sesión exitoso.');

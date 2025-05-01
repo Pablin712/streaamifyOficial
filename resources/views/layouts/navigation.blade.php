@@ -125,6 +125,20 @@
             timer = setTimeout(logout, 10.25 * 60 * 1000); // 30 minutos de inactividad
         }
     </script>
+    <script>
+        setInterval(() => {
+            fetch("{{ route('asistencias.ping') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ruta_actual: window.location.pathname
+                })
+            });
+        }, 300000); // 5 minutos = 300,000 ms
+    </script>    
 </body>
 
 </html>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AsistenciaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
@@ -108,6 +109,7 @@ Route::post('/cliente/recover', [EmailController::class, 'sendRecoverClienteEmai
 Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->name('recover.email');
 
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
+    Route::post('/asistencias/ping', [AsistenciaController::class, 'ping'])->name('asistencias.ping');
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
     Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
