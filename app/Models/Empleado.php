@@ -7,6 +7,7 @@ use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Permission\Models\Role;
+
 class Empleado extends Authenticatable implements JWTSubject
 {
     use Notifiable, HasRoles;
@@ -33,7 +34,7 @@ class Empleado extends Authenticatable implements JWTSubject
         'email'      // Agregar esta columna para permitir asignación masiva
     ];
 
-   
+
     protected $hidden = [
         'passwordemp', // Ocultar la contraseña en las respuestas JSON.
     ];
@@ -46,6 +47,11 @@ class Empleado extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Venta::class, 'idemp', 'idemp');
     }
+    public function asistencias()
+    {
+        return $this->hasMany(Asistencia::class, 'empleado_id', 'idemp');
+    }
+
     /**
      * Relación con la tabla de roles (Muchos a Muchos)
      */

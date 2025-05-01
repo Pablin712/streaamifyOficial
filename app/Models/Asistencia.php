@@ -14,7 +14,9 @@ class Asistencia extends Model
         'created_at',
     ];
 
-    protected $dates = ['created_at']; // Asegura que Laravel trate created_at como fecha
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];    
 
     public function empleado()
     {
