@@ -225,8 +225,8 @@ class ShopController extends Controller
                         Historial::create([
                             'accion' => 'Bonificación por Referido',
                             'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $usuario->nombrecli,
-                            'realizado_por' => 'Sistema | ' . request()->ip(),
-                            'fecha' => now(),
+                            'empleado_id' => Empleado::where('nombreemp', 'Laravel')->value('idemp'),
+                            'created_at' => now(),
                         ]);
                     }
                 }
@@ -278,12 +278,6 @@ class ShopController extends Controller
                 if (!$this->buscarCuentaDisponible($detalle->idser)) {
                     // No hay cuentas disponibles: Desactivar el producto
                     $producto->update(['activo' => false]);
-                    Historial::create([
-                        'accion' => 'Sin-Stock',
-                        'descripcion' =>  'Ya no hay cuentas disponibles para: ' . json_encode($producto), // Campo opcional
-                        'realizado_por' => $usuario->nombrecli . ' | ' . request()->ip(), // Almacena el nombre del usuario
-                        'fecha' => now(),
-                    ]);
                     return back()->with('error', 'No hay cuentas disponibles para este servicio.');
                 }
             }
@@ -349,8 +343,8 @@ class ShopController extends Controller
                 Historial::create([
                     'accion' => 'Compra-Automática',
                     'descripcion' =>  'Cliente realizó una compra en el Eccomerce: ' . json_encode($venta), // Campo opcional
-                    'realizado_por' => 'Laravel | ' . request()->ip(), // Almacena el nombre del usuario
-                    'fecha' => now(),
+                    'empleado_id' => Empleado::where('nombreemp', 'Laravel')->value('idemp'),
+                    'created_at' => now(),
                 ]);
                 // Verificar si el cliente ya compró
                 if (!$usuario->ya_compro) {
@@ -368,8 +362,8 @@ class ShopController extends Controller
                             Historial::create([
                                 'accion' => 'Bonificación por Referido',
                                 'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $usuario->nombrecli,
-                                'realizado_por' => 'Sistema | ' . request()->ip(),
-                                'fecha' => now(),
+                                'empleado_id' => Empleado::where('nombreemp', 'Laravel')->value('idemp'),
+                                'created_at' => now(),
                             ]);
                         }
                     }
@@ -416,14 +410,6 @@ class ShopController extends Controller
                     'fechapedido' => now(),
                     'respuesta' => 'Quiero en mi cuenta con los datos-> Correo: ' . $request->email . ' | Contraseña: ' . $request->password,
                 ]);
-
-                // Guardamos en el historial
-                Historial::create([
-                    'accion' => 'Pedido Realizado (Personalizado)',
-                    'descripcion' => 'Pedido personalizado para el producto: ' . json_encode($producto),
-                    'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' | Correo: ' . $usuario->email . ' | ' . request()->ip(),
-                    'fecha' => now(),
-                ]);
             } else {
                 // Pedido normal (sin credenciales)
                 $pedido = Pedido::create([
@@ -431,13 +417,6 @@ class ShopController extends Controller
                     'producto_id' => $producto->id,
                     'fechapedido' => now(),
                     'respuesta' => 'Sin responder',
-                ]);
-
-                Historial::create([
-                    'accion' => 'Pedido Realizado',
-                    'descripcion' => 'Se ha realizado un pedido para el producto: ' . json_encode($producto),
-                    'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' | Correo: ' . $usuario->email . ' | ' . request()->ip(),
-                    'fecha' => now(),
                 ]);
             }
             //Notificar a empleado
@@ -485,12 +464,6 @@ class ShopController extends Controller
                 'producto_id' => $producto->id,
                 'fechapedido' => now(),
                 'respuesta' => 'Sin responder. Renovación Pendiente',
-            ]);
-            Historial::create([
-                'accion' => 'Pedido Realizado',
-                'descripcion' =>  'Se ha realizado un pedido de renovación para el producto: ' . json_encode($producto), // Campo opcional
-                'realizado_por' => 'Nombre: ' . $usuario->nombrecli . ' Correo: ' . $usuario->email . ' | ' . request()->ip(), // Almacena el nombre del usuario
-                'fecha' => now(),
             ]);
             //Notificar a empleado
             $empleados = Empleado::all();
@@ -570,8 +543,8 @@ class ShopController extends Controller
         Historial::create([
             'accion' => 'Renovación-Automática ' . $ventaPasada->idven,
             'descripcion' => 'Nueva venta creada: ' . json_encode($ventaNueva),
-            'realizado_por' => 'Laravel | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Empleado::where('nombreemp', 'Laravel')->value('idemp'),
+            'created_at' => now(),
         ]);
 
         $usuario = Cliente::where('idcli', $idCliente)->firstOrFail();

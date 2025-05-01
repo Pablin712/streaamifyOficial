@@ -95,8 +95,8 @@ class EmpleadoController extends Controller
         Historial::create([
             'accion' => 'Creación de empleado',
             'descripcion' => 'Datos: ' . json_encode($empleado),
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('empleados')->with('success', 'Empleado creado exitosamente.');
@@ -175,8 +175,8 @@ class EmpleadoController extends Controller
         Historial::create([
             'accion' => 'Actualización de empleado',
             'descripcion' => 'Datos antiguos: ' . json_encode($empleado),
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $empleado->update($data);
@@ -204,8 +204,8 @@ class EmpleadoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de empleado',
             'descripcion' => 'Datos: ' . json_encode($empleado),
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel'),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $empleado->delete();
         return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente.');

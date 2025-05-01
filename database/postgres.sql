@@ -287,3 +287,17 @@ WHERE idcli IN (
 -- Modificar la columna pinper de perfiles para que tenga un tamaño máximo de 255 caracteres
 ALTER TABLE perfiles
 ALTER COLUMN pinper TYPE VARCHAR(255);
+
+-- 27 de abril 2025
+-- Eliminar las columnas 'fecha' y 'updated_at' de la tabla 'historial'
+ALTER TABLE historial DROP COLUMN IF EXISTS fecha;
+ALTER TABLE historial DROP COLUMN IF EXISTS updated_at;
+
+-- Eliminar todos los registros de la tabla 'historial'
+DELETE FROM historial;
+-- Renombrar la columna 'realizado_por' a 'empleado_id'
+ALTER TABLE historial RENAME COLUMN realizado_por TO empleado_id;
+-- Cambiar el tipo de datos de 'empleado_id' a BIGINT
+ALTER TABLE historial ALTER COLUMN empleado_id TYPE BIGINT USING empleado_id::BIGINT;
+-- Agregar la clave foránea para 'empleado_id' que referencia la tabla 'empleados'
+ALTER TABLE historial ADD CONSTRAINT fk_empleado_id FOREIGN KEY (empleado_id) REFERENCES empleados(idemp) ON DELETE SET NULL;

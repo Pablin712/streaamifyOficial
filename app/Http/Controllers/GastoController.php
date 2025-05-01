@@ -57,8 +57,8 @@ class GastoController extends Controller
         Historial::create([
             'accion' => 'Creación de Gasto',
             'descripcion' => 'Datos: ' . json_encode($gasto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('gastos')->with('success', 'Gasto creado con éxito');
@@ -100,8 +100,8 @@ class GastoController extends Controller
         Historial::create([
             'accion' => 'Actualización de Gasto',
             'descripcion' => 'Datos antiguos: ' . json_encode($gasto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $gasto->update([
@@ -125,8 +125,8 @@ class GastoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Gasto',
             'descripcion' => 'Datos Eliminados: ' . json_encode($gasto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $gasto->delete();

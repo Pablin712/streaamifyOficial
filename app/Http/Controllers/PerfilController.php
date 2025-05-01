@@ -57,8 +57,8 @@ class PerfilController extends Controller
         Historial::create([
             'accion' => 'Creación de Perfil',
             'descripcion' =>  'Datos: ' . json_encode($perfil), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
 
@@ -84,8 +84,8 @@ class PerfilController extends Controller
         Historial::create([
             'accion' => 'Actualización de Perfil',
             'descripcion' =>  'Datos antigüos: ' . json_encode($perfil), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $perfil->update([
@@ -106,8 +106,8 @@ class PerfilController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Perfil',
             'descripcion' =>  'Datos Eliminados: ' . json_encode($perfil), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $perfil->delete();

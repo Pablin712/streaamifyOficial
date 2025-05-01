@@ -51,8 +51,8 @@ class CategoriaController extends Controller
         Historial::create([
             'accion' => 'Creación de categoría',
             'descripcion' => 'Datos: ' . json_encode($categoria),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         return redirect()->route('gestion.index')->with('success', 'Categoría creada exitosamente.');
     }
@@ -87,8 +87,8 @@ class CategoriaController extends Controller
         Historial::create([
             'accion' => 'Actualización de categoría',
             'descripcion' => 'Datos antiguos: ' . json_encode($categoria),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $categoria->update($request->all());
         return redirect()->route('gestion.index')->with('success', 'Categoría actualizada exitosamente.');
@@ -103,8 +103,8 @@ class CategoriaController extends Controller
         Historial::create([
             'accion' => 'Eliminación de categoría',
             'descripcion' => 'Datos antiguos: ' . json_encode($categoria),
-            'realizado_por' => Auth::user()->nombreemp,
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $categoria->delete();
         return redirect()->route('gestion.index')->with('success', 'Categoría eliminada exitosamente.');

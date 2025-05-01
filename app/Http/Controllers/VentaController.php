@@ -143,8 +143,8 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Venta-Realizada Factura: ' . $venta->idven,
             'descripcion' => 'Datos: ' . json_encode($venta) . ' Detalles: ' . $descripcionDetalles,
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         // Verificar si el cliente ya compró
         if (!$venta->cliente->ya_compro) {
@@ -161,9 +161,9 @@ class VentaController extends Controller
                     // Registrar en el historial
                     Historial::create([
                         'accion' => 'Bonificación por Referido',
-                        'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $usuario->nombrecli,
-                        'realizado_por' => 'Sistema | ' . request()->ip(),
-                        'fecha' => now(),
+                        'descripcion' => 'Se otorgó $1 al cliente ' . $referidor->nombrecli . ' por referir al cliente ' . $venta->cliente->nombrecli,
+                        'empleado_id' => Empleado::where('nombreemp', 'Laravel')->value('idemp'), // ID del empleado que maneja el sistema
+                        'created_at' => now(),
                     ]);
                 }
             }
@@ -207,8 +207,8 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Renovación-Venta ' . $idvenPasado,
             'descripcion' => 'Nueva venta creada: ' . json_encode($ventaNueva),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         foreach ($detalles as $detalle) {
@@ -250,8 +250,8 @@ class VentaController extends Controller
             Historial::create([
                 'accion' => 'Creación de Cliente en Ventas',
                 'descripcion' => 'Datos: ' . json_encode($cliente),
-                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-                'fecha' => now(),
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
             ]);
             return redirect()->route('ventas.create')->with('success', 'Cliente creado con éxito.');
         }
@@ -368,8 +368,8 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Actualización de venta ' . $venta->idven,
             'descripcion' => 'Datos: ' . json_encode($venta),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('ventas')->with('success', 'Venta actualizada correctamente');
@@ -387,8 +387,8 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Estado de usuario actualizado ' . $iddet,
             'descripcion' => 'Estado cambiado a ' . $detalle->activodet,
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('ventas')->with('success', 'Estado de la cuenta del cliente actualizado correctamente.');
@@ -414,8 +414,8 @@ class VentaController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Venta',
             'descripcion' => 'Datos Eliminados: ' . json_encode($venta),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $venta->detalles_venta()->delete();
         $venta->delete();

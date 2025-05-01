@@ -68,8 +68,8 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Creación de cliente',
             'descripcion' => 'Datos: ' . json_encode($cliente),
-            'realizado_por' => (Auth::user()->nombreemp ?? 'laravel') . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
@@ -98,8 +98,8 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Creación de cliente desde vista Ventas',
             'descripcion' => 'Datos: ' . json_encode($cliente),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         return redirect()->route('ventas.create')->with('success', 'Cliente creado correctamente.')->with('cliente', $cliente);
     }
@@ -130,8 +130,8 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Actualización de cliente',
             'descripcion' => 'Datos antiguos: ' . json_encode($cliente),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $cliente->update($request->all());
         return redirect()->route('clientes')->with('success', 'Cliente actualizado con éxito.');
@@ -175,8 +175,8 @@ class ClienteController extends Controller
         Historial::create([
             'accion' => 'Eliminación de cliente',
             'descripcion' => 'Datos borrados: ' . json_encode($cliente),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $cliente->delete();
         return redirect()->route('clientes')->with('success', 'Cliente eliminado con éxito.');
@@ -235,12 +235,6 @@ class ClienteController extends Controller
                     'pais' => $request->pais,
                     'referido_por' => $referidoPor,
                 ]);
-                Historial::create([
-                    'accion' => 'Registro de cliente con correo',
-                    'descripcion' => 'Datos: ' . json_encode($cliente),
-                    'realizado_por' => 'laravel' . ' | ' . $request->ip(),
-                    'fecha' => now(),
-                ]);
                 return redirect()->route('cliente.login')->with('success', '¡Tu cuenta ha sido registrada exitosamente!');
             } else {
                 $cliente = Cliente::create([
@@ -251,12 +245,6 @@ class ClienteController extends Controller
                     'pais' => $request->pais,
                     'saldo' => 0,
                     'referido_por' => $referidoPor,
-                ]);
-                Historial::create([
-                    'accion' => 'Creación de cliente automático',
-                    'descripcion' => 'Datos: ' . json_encode($cliente),
-                    'realizado_por' => 'laravel' . ' | ' . $request->ip(),
-                    'fecha' => now(),
                 ]);
                 return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
             }

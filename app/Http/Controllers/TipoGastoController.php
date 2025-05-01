@@ -45,8 +45,8 @@ class TipoGastoController extends Controller
         Historial::create([
             'accion' => 'Creación de Tipo de gasto',
             'descripcion' => 'Datos del tipo de gasto: ' . json_encode($tipogasto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto creado con éxito');
@@ -78,8 +78,8 @@ class TipoGastoController extends Controller
         Historial::create([
             'accion' => 'Actualización de Tipo de gasto',
             'descripcion' => 'Datos antiguos: ' . json_encode($tipoGasto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $tipoGasto->update([
@@ -100,8 +100,8 @@ class TipoGastoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Tipo de gasto',
             'descripcion' => 'Datos Eliminados: ' . json_encode($tipoGasto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $tipoGasto->delete();

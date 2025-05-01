@@ -71,8 +71,8 @@ class RecargaController extends Controller
                     Historial::create([
                         'accion' => 'Recarga-Procesada',
                         'descripcion' =>  'Datos aprobados: ' . json_encode($recarga) . ' Saldo de cliente: ' . $cliente->saldo, // Campo opcional
-                        'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(), // Almacena el nombre del usuario
-                        'fecha' => now(),
+                        'empleado_id' => Auth::user()->idemp,
+                        'created_at' => now(),
                     ]);
                 }
             }
@@ -120,12 +120,6 @@ class RecargaController extends Controller
             'valor' => $request->valor,
             'foto' => 'comprobantes/' . $filename,
             'idestado' => 1, // Estado inicial, por ejemplo "Pendiente"
-        ]);
-        Historial::create([
-            'accion' => 'Recarga-Pendiente',
-            'descripcion' =>  'Solicitud de la recarga: ' . json_encode($recarga), // Campo opcional
-            'realizado_por' => Auth::guard('cliente')->user()->nombrecli . ' | ' . request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
         ]);
         // 🔔 Notificar a los empleados
         $empleados = Empleado::all(); // Obtener empleados con el rol adecuado

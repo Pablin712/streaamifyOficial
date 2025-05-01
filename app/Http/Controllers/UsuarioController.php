@@ -71,8 +71,8 @@ class UsuarioController extends Controller
         Historial::create([
             'accion' => 'Actualización de Usuario',
             'descripcion' => 'Cliente: ' . $detalle->venta->cliente->nombrecli . ' - Datos antiguos: ' . json_encode($detalle),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $detalle->save();
@@ -92,8 +92,8 @@ class UsuarioController extends Controller
         Historial::create([
             'accion' => 'Cuenta-Quitada',
             'descripcion' => 'Cliente: ' . $detalle->venta->cliente->nombrecli . ' - Usuario que se quitó: ' . json_encode($detalle),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('usuarios')->with('success', 'Usuario eliminado con éxito.');

@@ -57,8 +57,8 @@ class TareaController extends Controller
         Historial::create([
             'accion' => 'Creación de Tarea',
             'descripcion' =>  'Datos de la tarea: '. json_encode($tarea), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $this->tareaService->notificarEmpleadoTareas($tarea);
         return redirect()->route('tareas.index')->with('success', 'Tarea agregada correctamente.');
@@ -79,8 +79,8 @@ class TareaController extends Controller
         Historial::create([
             'accion' => 'Actualización de Tarea',
             'descripcion' =>  'Datos de la tarea antigüa: '. json_encode($tarea), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $tarea->update($request->all());
 
@@ -93,8 +93,8 @@ class TareaController extends Controller
         Historial::create([
             'accion' => 'Tarea Completada',
             'descripcion' =>  'Datos de la tarea: '. json_encode($tarea), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp.' | '. request()->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $tarea->update(['completada' => !$tarea->completada]);
 

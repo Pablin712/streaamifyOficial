@@ -44,8 +44,8 @@ class TipoProductoController extends Controller
         Historial::create([
             'accion' => 'Creación de Tipo de producto',
             'descripcion' => 'Datos: ' . json_encode($tipoProducto), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(), // Almacena el nombre del usuario
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('gestion.index')->with('success', 'Tipo de producto creado exitosamente.');
@@ -79,8 +79,8 @@ class TipoProductoController extends Controller
         Historial::create([
             'accion' => 'Actualización de Tipo de producto',
             'descripcion' => 'Datos: ' . json_encode($tipoProducto), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('gestion.index')->with('success', 'Tipo de producto actualizado exitosamente.');
@@ -100,8 +100,8 @@ class TipoProductoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Tipo de producto',
             'descripcion' => 'Datos eliminados: ' . json_encode($tipoProducto), // Campo opcional
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('gestion.index')->with('success', 'Tipo de producto eliminado exitosamente.');

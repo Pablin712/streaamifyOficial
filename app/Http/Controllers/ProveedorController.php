@@ -56,8 +56,8 @@ class ProveedorController extends Controller
         Historial::create([
             'accion' => 'Creación de Proveedor',
             'descripcion' => 'Se registró al proveedor con datos: ' . json_encode($proveedor),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('proveedores')->with('success', 'Proveedor creado con éxito.');
@@ -92,8 +92,8 @@ class ProveedorController extends Controller
         Historial::create([
             'accion' => 'Actualización de Proveedor',
             'descripcion' => 'Datos antiguos: ' . json_encode($proveedor),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $proveedor->update($request->all());
@@ -119,8 +119,8 @@ class ProveedorController extends Controller
         Historial::create([
             'accion' => 'Se desactivó el proveedor con ID: ' . $proveedor->idpro,
             'descripcion' => 'Datos inactivos: ' . json_encode($proveedor),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         // Desactivar el proveedor
         $proveedor->update([

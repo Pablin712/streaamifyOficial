@@ -14,7 +14,15 @@ class Historial extends Model
     protected $fillable = [
         'accion',
         'descripcion',
-        'realizado_por',
-        'fecha',
+        'empleado_id',
     ];
+
+    // Deshabilitar el manejo de updated_at
+    const UPDATED_AT = null;
+
+    // Relación con el modelo Empleado
+    public function empleado()
+    {
+        return $this->belongsTo(Empleado::class, 'empleado_id');
+    }
 }

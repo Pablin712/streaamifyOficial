@@ -33,6 +33,9 @@
             @include('partials.footer')
         </div>
     </div>
+    <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
 
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
@@ -95,6 +98,32 @@
                 allowClear: true // Permite borrar la selección
             });
         });
+    </script>
+    <script>
+        let timer;
+        let warningTimer;
+
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
+
+        function logout() {
+            // Envía el formulario de cierre de sesión
+            document.getElementById('logoutForm').submit();
+        }
+
+        function showWarning() {
+            alert("Tu sesión se cerrará automáticamente en 15 segundos debido a inactividad.");
+        }
+
+        function resetTimer() {
+            clearTimeout(timer);
+            clearTimeout(warningTimer);
+
+            // Mostrar advertencia 1 minuto antes del cierre
+            warningTimer = setTimeout(showWarning, 10 * 60 * 1000); // 29 minutos de inactividad
+            timer = setTimeout(logout, 10.25 * 60 * 1000); // 30 minutos de inactividad
+        }
     </script>
 </body>
 

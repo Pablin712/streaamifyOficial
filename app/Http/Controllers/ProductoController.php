@@ -105,8 +105,8 @@ class ProductoController extends Controller
         Historial::create([
             'accion' => 'Creación de Producto',
             'descripcion' => 'Datos: ' . json_encode($producto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('productos.index')->with('success', 'Producto creado exitosamente.');
@@ -222,8 +222,8 @@ class ProductoController extends Controller
         Historial::create([
             'accion' => 'Actualización de Producto',
             'descripcion' => 'Datos: ' . json_encode($producto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente.');
@@ -238,8 +238,8 @@ class ProductoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Producto',
             'descripcion' => 'Datos eliminados: ' . json_encode($producto),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         $producto->detalles()->delete();
         $producto->delete();

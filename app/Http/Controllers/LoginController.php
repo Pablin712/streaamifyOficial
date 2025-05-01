@@ -35,8 +35,8 @@ class LoginController extends Controller
             Historial::create([
                 'accion' => 'Fallo-Login-Empleado',
                 'descripcion' => 'Fallo en el ingreso de usuario o contraseña del empleado',
-                'realizado_por' => $request->ip(),
-                'fecha' => now(),
+                'empleado_id' => null,
+                'created_at' => now(),
             ]);
 
             return back()->withErrors([
@@ -48,9 +48,9 @@ class LoginController extends Controller
 
         Historial::create([
             'accion' => 'Login-Empleado',
-            'descripcion' => 'Autenticación de empleado con usuario: '.$empleado->usuarioemp,
-            'realizado_por' => $empleado->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'descripcion' => 'Autenticación de empleado con usuario: ' . $empleado->usuarioemp,
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('inicio')->with('success', 'Inicio de sesión exitoso.');
@@ -82,6 +82,13 @@ class LoginController extends Controller
     // Cerrar sesión (web)
     public function logout()
     {
+        $empleado = Auth::user();
+        Historial::create([
+            'accion' => 'Logout-Empleado',
+            'descripcion' => 'Desconexión de empleado con usuario: ' . $empleado->usuarioemp,
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
         Auth::logout();
         return redirect()->route('login')->with('success', 'Sesión cerrada correctamente.');
     }

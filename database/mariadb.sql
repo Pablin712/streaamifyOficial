@@ -403,3 +403,12 @@ WHERE idcli IN (
 -- Modificar la columna pinper a la tabla perfiles
 ALTER TABLE perfiles
 MODIFY COLUMN pinper VARCHAR(255) DEFAULT 'ninguno';
+
+-- Eliminar las columnas 'fecha' y 'updated_at' de la tabla 'historial'
+ALTER TABLE historial DROP COLUMN IF EXISTS fecha;
+ALTER TABLE historial DROP COLUMN IF EXISTS updated_at;
+-- Renombrar la columna 'realizado_por' a 'empleado_id'
+ALTER TABLE historial CHANGE realizado_por empleado_id BIGINT;
+
+-- Agregar la clave foránea para 'empleado_id' que referencia la tabla 'empleados'
+ALTER TABLE historial ADD CONSTRAINT fk_empleado_id FOREIGN KEY (empleado_id) REFERENCES empleados(idemp) ON DELETE SET NULL;

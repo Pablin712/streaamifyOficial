@@ -73,8 +73,8 @@ class ValorController extends Controller
         Historial::create([
             'accion' => 'Creación de Valor',
             'descripcion' => 'Datos: ' . json_encode($valor),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
@@ -112,8 +112,8 @@ class ValorController extends Controller
         Historial::create([
             'accion' => 'Actualización de Valor',
             'descripcion' => 'Datos antiguos: ' . json_encode($valor),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $valor->update($request->all());
@@ -132,7 +132,7 @@ class ValorController extends Controller
             // Buscar el valor
             $valor = Valor::findOrFail($idval);
 
-            $cuentasAsociadas = Valor::where('idval', $valor->idval)->where('activocue', true)->exists();
+            $cuentasAsociadas = Cuenta::where('idval', $valor->idval)->where('activocue', true)->exists();
             if ($cuentasAsociadas) {
                 return redirect()->route('proveedores')->with('error', 'No se puede eliminar porque tiene cuentas asociadas.');
             }
@@ -144,8 +144,8 @@ class ValorController extends Controller
             Historial::create([
                 'accion' => 'Se desactivó el valor con ID: ' . $valor->idval,
                 'descripcion' => 'Datos inactivos: ' . json_encode($valor),
-                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-                'fecha' => now(),
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
             ]);
             // Desactivar el valor en lugar de eliminarlo
             $valor->update([

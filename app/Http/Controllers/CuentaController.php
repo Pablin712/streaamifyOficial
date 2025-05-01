@@ -104,8 +104,8 @@ class CuentaController extends Controller
             Historial::create([
                 'accion' => 'Se creó la cuenta con ID: ' . $cuenta->idcue,
                 'descripcion' => 'Datos: ' . json_encode($cuenta),
-                'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-                'fecha' => now(),
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
             ]);
 
             // Actualizar estado de productos relacionados con el servicio de la cuenta creada
@@ -127,8 +127,8 @@ class CuentaController extends Controller
                 Historial::create([
                     'accion' => 'Se creó el costo con ID: ' . $costo->idcos,
                     'descripcion' => 'Datos: ' . json_encode($costo),
-                    'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-                    'fecha' => now(),
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
                 ]);
             }
             return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
@@ -149,8 +149,8 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se actualizó el estado de cuenta con ID: ' . $cuenta->idcue,
             'descripcion' => 'Estado cambiado a ' . $cuenta->caidacue,
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
@@ -184,8 +184,8 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se solicitó los datos de perfil ' . $perfil->numeroper . ' de la cuenta: ' . $cuenta->idcue,
             'descripcion' => null,
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
         return response()->json(['mensaje' => $mensaje]);
     }
@@ -231,8 +231,8 @@ class CuentaController extends Controller
             Historial::create([
                 'accion' => 'Actualización de Cuenta',
                 'descripcion' => 'Datos antiguos: ' . json_encode($cuenta),
-                'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-                'fecha' => now(),
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
             ]);
 
             $cuenta->update($request->all());
@@ -269,8 +269,8 @@ class CuentaController extends Controller
         Historial::create([
             'accion' => 'Se desactivó la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' => 'Datos inactivos: ' . json_encode($cuenta),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $nuevoId = $this->cuentaService->generarNuevoId($cuenta->idcue);

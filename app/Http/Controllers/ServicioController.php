@@ -64,8 +64,8 @@ class ServicioController extends Controller
         Historial::create([
             'accion' => 'Creación de Servicio',
             'descripcion' => 'Datos del servicio: ' . json_encode($servicio),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('servicios')->with('success', 'Servicio creado con éxito.');
@@ -105,8 +105,8 @@ class ServicioController extends Controller
         Historial::create([
             'accion' => 'Actualización de Servicio',
             'descripcion' => 'Datos antiguos: ' . json_encode($servicio),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $servicio->update($request->all());
@@ -125,8 +125,8 @@ class ServicioController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Servicio',
             'descripcion' => 'Datos Eliminados: ' . json_encode($servicio),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $servicio->delete();

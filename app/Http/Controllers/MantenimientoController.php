@@ -61,8 +61,8 @@ class MantenimientoController extends Controller
         Historial::create([
             'accion' => 'Creación de Mantenimiento',
             'descripcion' => 'Datos: ' . json_encode($mantenimiento),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('mantenimientos')->with('success', 'Mantenimiento creado exitosamente.');
@@ -92,8 +92,8 @@ class MantenimientoController extends Controller
         Historial::create([
             'accion' => 'Actualización de Mantenimiento',
             'descripcion' => 'Datos antiguos: ' . json_encode($mantenimiento),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $mantenimiento->update([
@@ -114,8 +114,8 @@ class MantenimientoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Mantenimiento',
             'descripcion' => 'Datos Eliminados: ' . json_encode($mantenimiento),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $mantenimiento->delete();

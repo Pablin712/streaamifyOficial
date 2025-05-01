@@ -41,19 +41,7 @@ class PedidoController extends Controller
             if ($cliente->saldo >= $producto->preciopro) {
                 $cliente->saldo -= $producto->preciopro;
                 $cliente->save();
-                Historial::create([
-                    'accion' => 'Pedido Aprobado',
-                    'descripcion' =>  'Pedido atentido de cliente. Datos: ' . json_encode($cliente), // Campo opcional
-                    'realizado_por' => $cliente->nombrecli.' | '. $request->ip(), // Almacena el nombre del usuario
-                    'fecha' => now(),
-                ]);
             } else {
-                Historial::create([
-                    'accion' => 'Pedido Fallido',
-                    'descripcion' =>  'Pedido fallido de cliente. Datos: ' . json_encode($cliente), // Campo opcional
-                    'realizado_por' => $cliente->nombrecli.' | '. $request->ip(), // Almacena el nombre del usuario
-                    'fecha' => now(),
-                ]);
                 return redirect()->route('empleado.pedidos.index')
                     ->with('error', 'El cliente no tiene suficiente saldo para procesar el pedido.');
             }

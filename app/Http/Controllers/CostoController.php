@@ -52,8 +52,8 @@ class CostoController extends Controller
         Historial::create([
             'accion' => 'Creación de Costo',
             'descripcion' => 'Datos: ' . json_encode($costo),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         return redirect()->route('costos', ['idcue' => $request->idcue])
@@ -77,8 +77,8 @@ class CostoController extends Controller
         Historial::create([
             'accion' => 'Actualización de Costo',
             'descripcion' => 'Datos antiguos: ' . json_encode($costo),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . $request->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $costo->update([
@@ -102,8 +102,8 @@ class CostoController extends Controller
         Historial::create([
             'accion' => 'Eliminación de Costo',
             'descripcion' => 'Datos Eliminados: ' . json_encode($costo),
-            'realizado_por' => Auth::user()->nombreemp . ' | ' . request()->ip(),
-            'fecha' => now(),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
         ]);
 
         $costo->delete();
