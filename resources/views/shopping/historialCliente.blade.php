@@ -29,6 +29,7 @@
             <li><a class="dropdown-item" href="{{ route('shop') }}#pedidos">Pedidos</a></li>
             <li><a class="dropdown-item" href="{{ route('shop') }}#personalizadas">Personalizadas</a></li>
             <li><a class="dropdown-item" href="{{ route('shop') }}#completos">Cuentas completas</a></li>
+            <li><a class="dropdown-item" href="{{ route('shop') }}#juegos">Juegos</a></li>
         </ul>
     </div>
 @endsection

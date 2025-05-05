@@ -15,6 +15,7 @@ use App\Models\Valor;
 use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
+use App\Models\Venta;
 use App\Models\ViewUsuarioActivo;
 
 class EmpleadoService
@@ -81,5 +82,104 @@ class EmpleadoService
             'lapsos' => $lapsos,
             'total_conexion' => $total_conexion
         ];
+    }
+    public function obtenerVentasPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Venta::where('idemp', $idemp)
+            ->whereDate('fechaven', $fecha)
+            ->get();
+    }
+    public function obtenerGestionRecargasPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where('accion', 'Recarga-Procesada')
+            ->whereDate('created_at', $fecha)
+            ->get();
+    }
+    public function obtenerGestionProductosPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where('accion', 'like', '%Producto%') // Buscar texto que contenga "Producto"
+            ->whereDate('created_at', $fecha)
+            ->get();
+    }
+    public function obtenerGestionServiciosPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where('accion', 'like', '%Servicio%') // Buscar texto que contenga "Servicio"
+            ->whereDate('created_at', $fecha)
+            ->get();
+    }
+    public function obtenerGestionCuentasPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where(function ($query) {
+                $query->where('accion', 'like', '%cuenta%')
+                    ->orWhere('accion', 'like', '%Cuenta%')
+                    ->orWhere('accion', 'like', '%perfil%');
+            }) // Buscar texto que contenga "Cuenta"
+            ->whereDate('created_at', $fecha)
+            ->get();
+    }
+    public function obtenerGestionVentasPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where('accion', 'like', '%Venta%') // Buscar texto que contenga "Venta"
+            ->whereDate('created_at', $fecha)
+            ->get();
+    }
+    public function obtenerGestionTareasPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where('accion', 'like', '%Tarea%') // Buscar texto que contenga "Tarea"
+            ->whereDate('created_at', $fecha)
+            ->get();
+    }
+    public function obtenerGestionCostosPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
+        }
+        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+        ->whereRaw('LOWER(accion) LIKE ?', ['%'.strtolower('Costo').'%']) // Buscar texto que contenga "Costo"
+            ->whereDate('created_at', $fecha)
+            ->get();
     }
 }

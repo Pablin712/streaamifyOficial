@@ -96,6 +96,7 @@
             <li><a class="dropdown-item" href="#pedidos">Pedidos</a></li>
             <li><a class="dropdown-item" href="#personalizadas">Personalizadas</a></li>
             <li><a class="dropdown-item" href="#completos">Cuentas completas</a></li>
+            <li><a class="dropdown-item" href="#juegos">Juegos</a></li>
         </ul>
     </div>
 @endsection
@@ -744,6 +745,121 @@
             <h2 class="text-center fw-bold mb-5">Completos</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosCompletos as $producto)
+                    <div class="col mb-5">
+                        <div class="card h-100">
+                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                                alt="{{ $producto->nombrepro }}" />
+                            <div class="card-body p-4 text-center">
+                                <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
+                                <div>
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <i
+                                            class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                    @endfor
+                                </div>
+                                <p class="text-muted">${{ number_format($producto->preciopro, 2) }}</p>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Botón Info -->
+                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#infoModal{{ $producto->id }}">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <!-- Modal de Información del Producto -->
+                                    <div class="modal fade" id="infoModal{{ $producto->id }}" tabindex="-1"
+                                        aria-labelledby="infoModalLabel{{ $producto->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="infoModalLabel{{ $producto->id }}">
+                                                        {{ $producto->nombrepro }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <!-- Imagen del producto -->
+                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                        alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                        style="max-width: 200px; height: auto;">
+
+                                                    <!-- Descripción del producto -->
+                                                    <p class="text-muted">{{ $producto->descripcionpro }}</p>
+
+                                                    <!-- Precio -->
+                                                    <h5 class="text-primary">Precio:
+                                                        ${{ number_format($producto->preciopro, 2) }}</h5>
+
+                                                    <!-- Estrellas (Valoración) -->
+                                                    <div class="mb-3">
+                                                        @for ($i = 1; $i <= 5; $i++)
+                                                            <i
+                                                                class="bi bi-star{{ $i <= $producto->estrellaspro ? ' star' : '-gray gray-star' }}"></i>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hacer Pedido para otros -->
+                                    <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                        {{-- {{ route('pedido', $producto->id) }} --}}
+                                        @csrf
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#confirmCompraModal{{ $producto->id }}">
+                                            Pedir
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <!-- Modal de Confirmación de Pedido -->
+                            <div class="modal fade" id="confirmCompraModal{{ $producto->id }}" tabindex="-1"
+                                aria-labelledby="confirmCompraLabel{{ $producto->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="confirmCompraLabel{{ $producto->id }}">
+                                                Confirmar Pedido</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body text-center">
+                                            <img src="{{ asset('public/' . $producto->foto) }}"
+                                                alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
+                                                style="max-width: 100px;">
+                                            <h5>{{ $producto->nombrepro }}</h5>
+                                            <p class="text-muted">Precio:
+                                                ${{ number_format($producto->preciopro, 2) }}</p>
+                                            <p>¿Deseas confirmar la compra?</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <form action="{{ route('comprar', $producto->id) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-primary">Confirmar
+                                                    Pedido</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Juegos -->
+    <section id="juegos" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center fw-bold mb-5">Juegos</h2>
+            <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
+                @foreach ($juegos as $producto)
                     <div class="col mb-5">
                         <div class="card h-100">
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"

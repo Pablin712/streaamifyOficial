@@ -36,6 +36,7 @@ class ShopController extends Controller
             ->get();
 
         $productosPedidos = Producto::where('tipo_producto_id', 2) // Pedido
+            ->where('categoria_id', '!=', [3, 4])
             ->where('activo', true)
             ->get();
 
@@ -44,6 +45,10 @@ class ShopController extends Controller
             ->get();
 
         $productosCompletos = Producto::where('categoria_id', 3) // Categoría Completo
+            ->where('activo', true)
+            ->get();
+
+        $juegos = Producto::where('categoria_id', 4) // Juegos
             ->where('activo', true)
             ->get();
 
@@ -56,6 +61,7 @@ class ShopController extends Controller
             'productosPedidos',
             'productosPersonalizados',
             'productosCompletos',
+            'juegos',
             'cart'
         ));
     }
