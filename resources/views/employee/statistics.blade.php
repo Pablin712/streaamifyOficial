@@ -28,8 +28,8 @@
                 <tbody>
                     @forelse ($info['lapsos'] as $lapso)
                         <tr>
-                            <td class="px-3 py-2 border">{{ $lapso['inicio']->format('H:i') }}</td>
-                            <td class="px-3 py-2 border">{{ $lapso['fin']->format('H:i') }}</td>
+                            <td class="px-3 py-2 border">{{ \Carbon\Carbon::parse($lapso['inicio'])->format('H:i') }}</td>
+                            <td class="px-3 py-2 border">{{ \Carbon\Carbon::parse($lapso['fin'])->format('H:i') }}</td>
                             <td class="px-3 py-2 border">{{ $lapso['tiempo_conexion'] }}</td>
                         </tr>
                     @empty

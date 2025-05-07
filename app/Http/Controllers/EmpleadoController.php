@@ -38,7 +38,7 @@ class EmpleadoController extends Controller
      */
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('empleados')) {
+        if (!Gate::allows('empleados')) {
             abort(403, 'No tienes permiso para ver los empleados.');
         }
 
@@ -105,7 +105,7 @@ class EmpleadoController extends Controller
      */
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('empleados.store')) {
+        if (!Gate::allows('empleados.store')) {
             abort(403, 'No tienes permiso para crear empleados.');
         }
         return view('employee.create');
@@ -116,7 +116,7 @@ class EmpleadoController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('empleados.store')) {
+        if (!Gate::allows('empleados.store')) {
             abort(403, 'No tienes permiso para crear empleados.');
         }
 
@@ -176,7 +176,7 @@ class EmpleadoController extends Controller
     public function editRoles(string $id)
     {
         // Verifica si el usuario tiene permiso para actualizar roles de empleados
-        if (!Auth::user()->hasPermissionTo('empleados.update')) {
+        if (!Gate::allows('empleados.update')) {
             abort(403, 'No tienes permiso para editar roles.');
         }
         $roles = Role::all();
@@ -189,7 +189,7 @@ class EmpleadoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->hasPermissionTo('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
+        if (!Gate::allows('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
         }
         $empleado = Empleado::findOrFail($id);
@@ -250,7 +250,7 @@ class EmpleadoController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('empleados.destroy')) {
+        if (!Gate::allows('empleados.destroy')) {
             abort(403, 'No tienes permiso para eliminar empleados.');
         }
         $empleado = Empleado::findOrFail($id);

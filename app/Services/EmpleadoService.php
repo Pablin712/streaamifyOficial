@@ -17,7 +17,7 @@ use App\Models\Perfil;
 use App\Models\Costo;
 use App\Models\Venta;
 use App\Models\ViewUsuarioActivo;
-
+use Illuminate\Support\Carbon;
 class EmpleadoService
 {
     public function obtenerAsistenciasPorDia(int $idemp, string $fecha)
@@ -49,8 +49,8 @@ class EmpleadoService
         $tiempo_conexion = 0;
 
         for ($i = 1; $i < count($asistencias); $i++) {
-            $anterior = $asistencias[$i - 1]->created_at;
-            $actual = $asistencias[$i]->created_at;
+            $anterior = Carbon::parse($asistencias[$i - 1]->created_at);
+            $actual = Carbon::parse($asistencias[$i]->created_at); // 👈 AQUI
 
             if ($actual->diffInMinutes($anterior) <= 5) {
                 $fin = $actual;

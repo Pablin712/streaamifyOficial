@@ -39,7 +39,7 @@
                             <strong>Teléfono:</strong> {{ $dato['empleado']->telefonoemp }}<br>
                             <strong>Usuario:</strong> {{ $dato['empleado']->usuarioemp }}<br>
                             <strong>Correo:</strong> {{ $dato['empleado']->email }}<br>
-                            <strong>Ventas este mes:</strong> {{ $dato['gestionVentasHoy'] }}<br>
+                            <strong>Ventas hoy:</strong> {{ $dato['gestionVentasHoy'] }}<br>
                             <strong>Total de Ventas:</strong> {{ $dato['empleado']->ventas_count }}<br>
                             <strong>Total de Conexión:</strong> {{ $dato['total'] }} minutos<br>
                             <strong>Gestión de Clientes:</strong> {{ $dato['gestionClientesHoy'] }}<br>

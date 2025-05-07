@@ -30,7 +30,7 @@ class AsistenciaController extends Controller
      */
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('empleados')) {
+        if (!Gate::allows('empleados')) {
             abort(403, 'No tienes permisos para ver los empleados.');
         }
         $hoy = Carbon::today()->format('Y-m-d');
@@ -93,6 +93,7 @@ class AsistenciaController extends Controller
         Asistencia::create([
             'empleado_id' => Auth::user()->idemp, // asumiendo que usas Auth con empleados
             'ruta_actual' => $request->input('ruta_actual'),
+            'created_at' => now(),
         ]);
 
         return response()->noContent();
