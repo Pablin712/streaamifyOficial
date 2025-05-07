@@ -27,29 +27,37 @@
         <a href="{{ route('empleados.create') }}" class="btn btn-primary mb-3">Crear Empleado</a>
     @endif
     <div class="row">
-        @foreach ($empleados as $empleado)
+        @foreach ($datos as $dato)
             <div class="col-md-4">
                 <div class="card mb-4">
                     <div class="card-body text-center">
-                        <img src="{{ $empleado->foto_url ? asset('public/storage/' . $empleado->foto_url) : 'https://via.placeholder.com/100/007bff/ffffff?text=Usuario' }}"
-                            alt="Foto de {{ $empleado->nombreemp }}" class="img-fluid rounded-circle mb-3"
+                        <img src="{{ $dato['empleado']->foto_url ? asset('public/storage/' . $dato['empleado']->foto_url) : 'https://via.placeholder.com/100/007bff/ffffff?text=Usuario' }}"
+                            alt="Foto de {{ $dato['empleado']->nombreemp }}" class="img-fluid rounded-circle mb-3"
                             style="width: 100px; height: 100px; object-fit: cover;">
-                        <h5 class="card-title">{{ $empleado->nombreemp }}</h5>
+                        <h5 class="card-title">{{ $dato['empleado']->nombreemp }}</h5>
                         <p class="card-text">
-                            <strong>Teléfono:</strong> {{ $empleado->telefonoemp }}<br>
-                            <strong>Usuario:</strong> {{ $empleado->usuarioemp }}<br>
-                            <strong>Correo:</strong> {{ $empleado->email }}<br>
-                            <strong>Ventas este mes:</strong> {{ $empleado->ventas_mes_actual }}<br>
-                            <strong>Total de Ventas:</strong> {{ $empleado->ventas_count }}<br>
+                            <strong>Teléfono:</strong> {{ $dato['empleado']->telefonoemp }}<br>
+                            <strong>Usuario:</strong> {{ $dato['empleado']->usuarioemp }}<br>
+                            <strong>Correo:</strong> {{ $dato['empleado']->email }}<br>
+                            <strong>Ventas este mes:</strong> {{ $dato['gestionVentasHoy'] }}<br>
+                            <strong>Total de Ventas:</strong> {{ $dato['empleado']->ventas_count }}<br>
+                            <strong>Total de Conexión:</strong> {{ $dato['total'] }} minutos<br>
+                            <strong>Gestión de Clientes:</strong> {{ $dato['gestionClientesHoy'] }}<br>
+                            <strong>Gestión de Cuentas:</strong> {{ $dato['gestionCuentasHoy'] }}<br>
+                            <strong>Gestión de Inventario:</strong> {{ $dato['gestionInventarioHoy'] }}<br>
+                            <strong>Gestión de Tareas:</strong> {{ $dato['gestionTareasHoy'] }}<br>
+                            <strong>Gestión de Recargas:</strong> {{ $dato['gestionRecargasHoy'] }}<br>
+                            <strong>Gestión de Productos:</strong> {{ $dato['gestionProductosHoy'] }}<br>
+                            <strong>Gestión de Costos:</strong> {{ $dato['gestionCostosHoy'] }}<br>
                             <strong>Rol:</strong>
-                            @if ($empleado->roles->isNotEmpty())
-                                {{ implode(', ', $empleado->roles->pluck('name')->toArray()) }}
+                            @if ($dato['empleado']->roles->isNotEmpty())
+                                {{ implode(', ', $dato['empleado']->roles->pluck('name')->toArray()) }}
                             @else
                                 Sin rol asignado
                             @endif
                         </p>
                         @if (Auth::user()->hasPermissionTo('empleados.updateRol'))
-                            <a href="{{ route('empleados.editRoles', $empleado->idemp) }}" class="btn btn-warning">
+                            <a href="{{ route('empleados.editRoles', $dato['empleado']->idemp) }}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> Editar Roles
                             </a>
                         @endif

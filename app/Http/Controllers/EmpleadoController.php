@@ -9,7 +9,8 @@ use App\Models\Historial;
 use Carbon\Carbon;
 use App\Models\Rol; // Verifica si lo necesitas o se utiliza en el código
 use Illuminate\Support\Facades\Auth;
-
+use App\Services\EmpleadoService;
+use Illuminate\Support\Facades\Gate;
 class EmpleadoController extends Controller
 {
     /*
@@ -21,7 +22,17 @@ class EmpleadoController extends Controller
         $this->middleware('can:empleados.destroy')->only('destroy');
     }
     */
-
+    protected $empleadoService;
+    /**
+     * Constructor de la clase AsistenciaController.
+     *
+     * @param EmpleadoService $empleadoService
+     */
+    // Constructor de la clase AsistenciaController.
+    public function __construct(EmpleadoService $empleadoService)
+    {
+        $this->empleadoService = $empleadoService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -32,19 +43,61 @@ class EmpleadoController extends Controller
         }
 
         // Recuperar empleados junto con la cantidad de ventas y ventas del mes actual
-        $empleados = Empleado::with(['ventas' => function ($query) {
-            $query->select('idemp');
-        }])
-            ->withCount('ventas')
+        $empleados = $this->obtenerEmpleadosConVentasYAsistencias();
+        $roles = Role::all();
+        $hoy = Carbon::today()->format('Y-m-d');
+        $datos = $empleados->map(function ($empleado) use ($hoy) {
+            return $this->procesarEmpleado($empleado, $hoy);
+        });
+        return view('employee.index', compact('datos', 'roles'));
+    }
+
+    protected function obtenerEmpleadosConVentasYAsistencias()
+    {
+        return Empleado::with([
+            'ventas' => function ($query) {
+                $query->select('idemp', 'fechaven', 'totalpagoven'); // Selecciona solo las columnas necesarias
+            },
+            'asistencias' => function ($query) {
+                $query->select('empleado_id', 'created_at'); // Selecciona solo las columnas necesarias
+            }
+        ])
+            ->withCount('ventas') // Total de ventas
             ->withCount([
                 'ventas as ventas_mes_actual' => function ($query) {
                     $query->whereMonth('fechaven', Carbon::now()->month)
                         ->whereYear('fechaven', Carbon::now()->year);
-                }
+                },
+            ])
+            ->withCount([
+                'ventas as ventas_hoy' => function ($query) {
+                    $query->whereDate('fechaven', Carbon::today());
+                },
+            ])
+            ->withCount([
+                'asistencias as asistencias_hoy' => function ($query) {
+                    $query->whereDate('created_at', Carbon::today());
+                },
             ])
             ->get();
-        $roles = Role::all();
-        return view('employee.index', compact('empleados', 'roles'));
+    }
+    protected function procesarEmpleado(Empleado $empleado, string $fecha)
+    {
+        $lapsos = $this->empleadoService->obtenerLapsosDeAsistenciasPorDia($empleado->idemp, $fecha);
+
+        return [
+            'empleado' => $empleado,
+            'lapsos' => $lapsos['lapsos'],
+            'total' => $lapsos['total_conexion'],
+            'gestionClientesHoy' => $this->empleadoService->contarGestionClientesPorDia($empleado->idemp, $fecha),
+            'gestionVentasHoy' => $this->empleadoService->contarVentasPorDia($empleado->idemp, $fecha),
+            'gestionCuentasHoy' => $this->empleadoService->contarGestionCuentasPorDia($empleado->idemp, $fecha),
+            'gestionInventarioHoy' => $this->empleadoService->contarGestionInventarioPorDia($empleado->idemp, $fecha),
+            'gestionTareasHoy' => $this->empleadoService->contarGestionTareasPorDia($empleado->idemp, $fecha),
+            'gestionRecargasHoy' => $this->empleadoService->contarGestionRecargasPorDia($empleado->idemp, $fecha),
+            'gestionProductosHoy' => $this->empleadoService->contarGestionProductosPorDia($empleado->idemp, $fecha),
+            'gestionCostosHoy' => $this->empleadoService->contarGestionCostosPorDia($empleado->idemp, $fecha),
+        ];
     }
 
     /**

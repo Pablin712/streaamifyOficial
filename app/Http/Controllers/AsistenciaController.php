@@ -8,42 +8,86 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Empleado;
 use App\Services\EmpleadoService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 class AsistenciaController extends Controller
 {
     protected $empleadoService;
+
     /**
      * Constructor de la clase AsistenciaController.
      *
      * @param EmpleadoService $empleadoService
      */
-    // Constructor de la clase AsistenciaController.
     public function __construct(EmpleadoService $empleadoService)
     {
         $this->empleadoService = $empleadoService;
     }
+
+    /**
+     * Muestra las estadísticas de los empleados para el día actual.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
-        $empleados = Empleado::with(['asistencias' => function ($query) {
-            $query->whereDate('created_at', Carbon::today());
-        }])->get();
-
-        $datos = [];
-
-        foreach ($empleados as $empleado) {
-            $lapsos = app()->call(
-                [$this->empleadoService, 'obtenerLapsosDeAsistenciasPorDia'],
-                ['idemp' => $empleado->idemp, 'fecha' => Carbon::today()->format('Y-m-d')]
-            );
-
-            $datos[] = [
-                'empleado' => $empleado,
-                'lapsos' => $lapsos['lapsos'],
-                'total' => $lapsos['total_conexion']
-            ];
+        if (!Auth::user()->hasPermissionTo('empleados')) {
+            abort(403, 'No tienes permisos para ver los empleados.');
         }
+        $hoy = Carbon::today()->format('Y-m-d');
+        $empleados = $this->obtenerEmpleadosConAsistencias($hoy);
 
-        return view('employee.statistics', compact('datos'));
+        $datos = $empleados->map(function ($empleado) use ($hoy) {
+            return $this->procesarEmpleado($empleado, $hoy);
+        });
+
+        return view('employee.statistics', compact('datos', 'empleados'));
     }
+
+    /**
+     * Obtiene los empleados con sus asistencias para la fecha especificada.
+     *
+     * @param string $fecha
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    protected function obtenerEmpleadosConAsistencias(string $fecha)
+    {
+        return Empleado::with(['asistencias' => function ($query) use ($fecha) {
+            $query->whereDate('created_at', $fecha);
+        }])->get();
+    }
+
+    /**
+     * Procesa los datos de un empleado para calcular estadísticas.
+     *
+     * @param \App\Models\Empleado $empleado
+     * @param string $fecha
+     * @return array
+     */
+    protected function procesarEmpleado(Empleado $empleado, string $fecha)
+    {
+        $lapsos = $this->empleadoService->obtenerLapsosDeAsistenciasPorDia($empleado->idemp, $fecha);
+
+        return [
+            'empleado' => $empleado,
+            'lapsos' => $lapsos['lapsos'],
+            'total' => $lapsos['total_conexion'],
+            'gestionClientesHoy' => $this->empleadoService->contarGestionClientesPorDia($empleado->idemp, $fecha),
+            'gestionVentasHoy' => $this->empleadoService->contarVentasPorDia($empleado->idemp, $fecha),
+            'gestionCuentasHoy' => $this->empleadoService->contarGestionCuentasPorDia($empleado->idemp, $fecha),
+            'gestionInventarioHoy' => $this->empleadoService->contarGestionInventarioPorDia($empleado->idemp, $fecha),
+            'gestionTareasHoy' => $this->empleadoService->contarGestionTareasPorDia($empleado->idemp, $fecha),
+            'gestionRecargasHoy' => $this->empleadoService->contarGestionRecargasPorDia($empleado->idemp, $fecha),
+            'gestionProductosHoy' => $this->empleadoService->contarGestionProductosPorDia($empleado->idemp, $fecha),
+            'gestionCostosHoy' => $this->empleadoService->contarGestionCostosPorDia($empleado->idemp, $fecha),
+        ];
+    }
+
+    /**
+     * Registra la asistencia del empleado.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function ping(Request $request)
     {
         Asistencia::create([

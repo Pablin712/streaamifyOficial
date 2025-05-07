@@ -36,6 +36,7 @@
                             <nav class="sb-sidenav-menu-nested nav">
                                 @if (Auth::user()->hasPermissionTo('empleados'))
                                     <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
+                                    <a class="nav-link" href="{{ route('asistencias.index') }}">Control</a>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('roles.index'))
                                     <a class="nav-link" href="{{ route('roles.index') }}">Roles</a>

@@ -110,10 +110,7 @@ Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->nam
 
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::post('/asistencias/ping', [AsistenciaController::class, 'ping'])->name('asistencias.ping');
-    Route::controller(AsistenciaController::class)->group(function () {
-        Route::get('/asistencias', 'index')->name('asistencias.index');
-        //Route::post('/asistencias/ping', 'ping')->name('asistencias.ping');
-    });
+    Route::get('/empleados/asistencias', [AsistenciaController::class,'index'])->name('asistencias.index');
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
     Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
