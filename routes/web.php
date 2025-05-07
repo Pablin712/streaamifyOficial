@@ -85,7 +85,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::put('/perfil/update', 'actualizarPerfil')->name('cliente.perfil.update');
         Route::put('/cambiar-contrasena', 'cambiarContrasena')->name('cliente.cambiar.contrasena');
     });
-    Route::controller(CodigoController::class)->group(function(){
+    Route::controller(CodigoController::class)->group(function () {
         Route::get('/codigo', 'index')->name('codigo.index');
     });
 });
@@ -110,7 +110,7 @@ Route::post('/admin/recover', [EmailController::class, 'sendRecoverEmail'])->nam
 
 Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::post('/asistencias/ping', [AsistenciaController::class, 'ping'])->name('asistencias.ping');
-    Route::get('/empleados/asistencias', [AsistenciaController::class,'index'])->name('asistencias.index');
+    Route::get('/empleados/asistencias', [AsistenciaController::class, 'index'])->name('asistencias.index');
     //rutas de navegación en negocio
     Route::get('/inicio', [InicioController::class, 'show'])->name('inicio');
     Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
@@ -260,6 +260,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::resource('productos', ProductoController::class);
     Route::get('catalogo/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::resource('roles', RoleController::class);
+    Route::post('/productos/updatePrecios', [ProductoController::class, 'updatePrecios'])->name('productos.updatePrecios');
 
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargas', 'index')->name('empleado.recargas.index');

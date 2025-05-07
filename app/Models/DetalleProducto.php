@@ -20,4 +20,8 @@ class DetalleProducto extends Model
     {
         return $this->belongsTo(Producto::class, 'producto_id', 'id');
     }
+    public function servicio()
+    {
+        return $this->belongsTo(Servicio::class, 'idser', 'idser');
+    }
 }

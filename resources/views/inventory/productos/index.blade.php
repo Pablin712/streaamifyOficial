@@ -31,8 +31,57 @@
             {{ session('success') }}
         </div>
     @endif
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     <h3>Gestiona los productos disponibles en tu inventario.</h3>
     <p>Aquí puedes gestionar tus productos, ver detalles asociados y mantener el catálogo actualizado.</p>
+
+    <form action="{{ route('productos.updatePrecios') }}" method="POST">
+        @csrf
+        <div class="row">
+            @foreach ($serviciosConfig as $key => $servicioInfo)
+                <div class="col-md-3 mb-3">
+                    <div class="card border-{{ $servicioInfo['color'] }} shadow-sm">
+                        <div class="card-body text-center">
+                            @if (Str::startsWith($servicioInfo['icon'], 'fa-'))
+                                <i class="fab {{ $servicioInfo['icon'] }} fa-2x text-gray-300"></i>
+                            @else
+                                <img src="{{ asset('images/' . $servicioInfo['icon']) }}" width="40" height="40" alt="{{ $servicioInfo['nombre'] }}">
+                            @endif
+                            <h6 class="card-title mt-2">{{ $servicioInfo['nombre'] }}</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="precio_{{ $key }}" class="form-label small">Precio ($)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" id="precio_{{ $key }}"
+                                        name="precios[{{ $key }}][precio]" value="{{ old('precios.' . $key . '.precioser', $servicioInfo['precioser'] ?? '') }}" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="combo_{{ $key }}" class="form-label small">Combo ($)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" id="combo_{{ $key }}"
+                                        name="precios[{{ $key }}][combo]" value="{{ old('precios.' . $key . '.comboser', $servicioInfo['comboser'] ?? '') }}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-sm">Guardar Precios</button>
+        </div>
+    </form>
 @endsection
 
 @section('btncrear')

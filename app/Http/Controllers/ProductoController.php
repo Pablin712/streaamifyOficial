@@ -11,6 +11,7 @@ use App\Models\DetalleProducto;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 use PDF;
+use Illuminate\Support\Facades\Gate;
 
 class ProductoController extends Controller
 {
@@ -27,19 +28,48 @@ class ProductoController extends Controller
 
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('productos.index')) {
+        if (!Gate::allows('productos.index')) {
             abort(403, 'No tienes permiso para ver los productos.');
         }
         $productos = Producto::with(['categoria', 'tipoProducto', 'detalles'])->get();
         $categorias = Categoria::all();
         $tiposProducto = TipoProducto::all();
+        // Obtener los datos de servicios y serviciosConfig
         $servicios = Servicio::all();
-        return view('inventory.productos.index', compact('productos', 'categorias', 'tiposProducto', 'servicios'));
+        $serviciosConfig = $this->obtenerServiciosConConfig($servicios);
+
+        return view('inventory.productos.index', compact('productos', 'categorias', 'tiposProducto', 'servicios', 'serviciosConfig'));
+    }
+
+    protected function obtenerServiciosConConfig($servicios)
+    {
+        // Configuración de los servicios importantes
+        $serviciosConfig = [
+            'NETFLIX' => ['color' => 'danger', 'icon' => 'logo_netflix.png', 'nombre' => 'Netflix'],
+            'DISNEYP' => ['color' => 'primary', 'icon' => 'espn.jpg', 'nombre' => 'Disney+ Premium'],
+            'DISNEYS' => ['color' => 'primary', 'icon' => 'disneyP.jpg', 'nombre' => 'Disney+ Standard'],
+            'MAX' => ['color' => 'info', 'icon' => 'max.jpg', 'nombre' => 'HBO Max'],
+            'PRIME' => ['color' => 'success', 'icon' => 'fa-amazon', 'nombre' => 'Amazon Prime'],
+            'PARAMOUNT' => ['color' => 'primary', 'icon' => 'paramount.jpg', 'nombre' => 'Paramount+'],
+            'CRUNCHY' => ['color' => 'warning', 'icon' => 'crunchy.jpg', 'nombre' => 'Crunchyroll'],
+            'SPOTIFY' => ['color' => 'success', 'icon' => 'fa-spotify', 'nombre' => 'Spotify'],
+            'MAGIS' => ['color' => 'dark', 'icon' => 'magis.jpg', 'nombre' => 'Magis TV'],
+        ];
+
+        // Combinar los datos de serviciosConfig con los datos de la base de datos
+        foreach ($servicios as $servicio) {
+            if (isset($serviciosConfig[$servicio->idser])) {
+                $serviciosConfig[$servicio->idser]['precioser'] = $servicio->precioser;
+                $serviciosConfig[$servicio->idser]['comboser'] = $servicio->comboser;
+            }
+        }
+
+        return $serviciosConfig;
     }
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('productos.store')) {
+        if (!Gate::allows('productos.store')) {
             abort(403, 'No tienes permiso para crear productos.');
         }
         $categorias = Categoria::all();
@@ -50,7 +80,7 @@ class ProductoController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('productos.store')) {
+        if (!Gate::allows('productos.store')) {
             abort(403, 'No tienes permiso para crear productos.');
         }
         $request->validate([
@@ -114,7 +144,7 @@ class ProductoController extends Controller
 
     public function show(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('productos.show')) {
+        if (!Gate::allows('productos.show')) {
             abort(403, 'No tienes permiso para ver el producto.');
         }
         $producto = Producto::with(['categoria', 'tipoProducto', 'detalles'])->findOrFail($id);
@@ -143,7 +173,7 @@ class ProductoController extends Controller
         $productosCompletos = Producto::where('categoria_id', 3) // Categoría Completo
             ->where('activo', true)
             ->get();
-        
+
         // Fusionar todas las colecciones en el orden deseado
         $productosOrdenados = $productosInmediataIndividual
             ->concat($productosCombos)
@@ -159,7 +189,7 @@ class ProductoController extends Controller
 
     public function edit(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('productos.update')) {
+        if (!Gate::allows('productos.update')) {
             abort(403, 'No tienes permiso para editar productos.');
         }
         $producto = Producto::with('detalles')->findOrFail($id);
@@ -171,7 +201,7 @@ class ProductoController extends Controller
 
     public function update(Request $request, string $id)
     {
-        if (!Auth::user()->hasPermissionTo('productos.update')) {
+        if (!Gate::allows('productos.update')) {
             abort(403, 'No tienes permiso para actualizar productos.');
         }
         $request->validate([
@@ -229,9 +259,81 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente.');
     }
 
+    public function updatePrecios(Request $request)
+    {
+        if (!Gate::allows('productos.update')) {
+            abort(403, 'No tienes permiso para actualizar productos.');
+        }
+        //validar los precios
+        $request->validate([
+            'precios' => 'required|array',
+            'precios.*.precio' => 'required|numeric|min:0.75',
+            'precios.*.combo' => 'required|numeric|min:0.5',
+        ]);
+        // redirectar a la ruta de productos.index si la validación falla
+        if ($request->fails()) {
+            return redirect()->route('productos.index')->withErrors($request->errors());
+        }
+        $precios = $request->input('precios');
+        // Actualizar los precios de los servicios
+        foreach ($precios as $idser => $precio) {
+
+            Servicio::where('idser', $idser)->update([
+                'precioser' => $precio['precio'],
+                'comboser' => $precio['combo'],
+            ]);
+        }
+
+        // Recalcular y actualizar los precios de los productos
+        $productos = Producto::with('detalles.servicio')->get();
+
+        foreach ($productos as $producto) {
+            $detalles = $producto->detalles;
+
+            // Si no hay detalles, pasar al siguiente producto
+            if ($detalles->isEmpty()) {
+                continue;
+            }
+
+            if ($detalles->count() === 1) {
+                // Un solo detalle
+                $servicio = $detalles->first()->servicio;
+                if ($servicio == null) {
+                    continue; // Si no hay servicio, pasar al siguiente detalle
+                }
+                $precio = $servicio->precioser;
+            } else {
+                // Múltiples detalles: suma de precios
+                $precio = $detalles->sum(function ($detalle) {
+                    return $detalle->servicio ? $detalle->servicio->precioser : 0;
+                });
+                // Si algún detalle no tiene un servicio válido, pasar al siguiente producto
+                if ($precio === 0) {
+                    continue;
+                }
+            }
+            // Verificar si es entero (decimales .00), y restar 0.01 si es así
+            if (fmod($precio, 1) == 0.0) {
+                $precio -= 0.01;
+            }
+            $producto->preciopro = round($precio, 2);
+            // Guardar el precio actualizado del producto
+            $producto->save();
+        }
+        // Crear un historial de actualización de precios
+        Historial::create([
+            'accion' => 'Actualización de Precios de Productos',
+            'descripcion' => 'Precios actualizados: ' . json_encode($precios),
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
+
+        return redirect()->route('productos.index')->with('success', 'Precios actualizados correctamente.');
+    }
+
     public function destroy(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('productos.destroy')) {
+        if (!Gate::allows('productos.destroy')) {
             abort(403, 'No tienes permiso para eliminar productos.');
         }
         $producto = Producto::findOrFail($id);
