@@ -274,7 +274,6 @@ class ProductoController extends Controller
         $precios = $request->input('precios');
         // Actualizar los precios de los servicios
         foreach ($precios as $idser => $precio) {
-
             Servicio::where('idser', $idser)->update([
                 'precioser' => $precio['precio'],
                 'comboser' => $precio['combo'],
@@ -293,6 +292,10 @@ class ProductoController extends Controller
             }
 
             if ($detalles->count() === 1) {
+                // Si producto no es categoria individual, pasar al siguiente producto
+                if ($producto->categoria_id != 1) {
+                    continue;
+                }
                 // Un solo detalle
                 $servicio = $detalles->first()->servicio;
                 if ($servicio == null) {
@@ -300,6 +303,7 @@ class ProductoController extends Controller
                 }
                 $precio = $servicio->precioser;
             } else {
+                
                 // Múltiples detalles: suma de precios
                 $precio = $detalles->sum(function ($detalle) {
                     return $detalle->servicio ? $detalle->servicio->precioser : 0;
