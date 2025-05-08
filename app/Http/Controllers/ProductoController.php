@@ -271,9 +271,6 @@ class ProductoController extends Controller
             'precios.*.combo' => 'required|numeric|min:0.5',
         ]);
         // redirectar a la ruta de productos.index si la validación falla
-        if ($request->fails()) {
-            return redirect()->route('productos.index')->withErrors($request->errors());
-        }
         $precios = $request->input('precios');
         // Actualizar los precios de los servicios
         foreach ($precios as $idser => $precio) {

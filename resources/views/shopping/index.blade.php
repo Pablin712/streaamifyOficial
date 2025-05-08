@@ -232,13 +232,27 @@
             }
         </script>
     @endif
+    <!-- Buscador -->
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form id="searchForm">
+                    <div class="input-group">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Buscar productos..."
+                            aria-label="Buscar productos" aria-describedby="searchButton">
+                        <button class="btn btn-primary" type="button" id="searchButton">Buscar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <!-- Sección Entrega Inmediata - Individual -->
     <section id="inmediata-individual" class="py-5 bg-light">
         <div class="container">
             <h2 class="text-center fw-bold mb-5">Entrega Inmediata - Individual</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosInmediataIndividual as $producto)
-                    <div class="col mb-5">
+                    <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <!-- Imagen del producto -->
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
@@ -372,7 +386,7 @@
             <h2 class="text-center fw-bold mb-5">Entrega Inmediata - Combos</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosCombos as $producto)
-                    <div class="col mb-5">
+                    <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
@@ -498,7 +512,7 @@
             <h2 class="text-center fw-bold mb-5">Pedidos</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosPedidos as $producto)
-                    <div class="col mb-5">
+                    <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
@@ -613,7 +627,7 @@
             <h2 class="text-center fw-bold mb-5">Personalizadas</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosPersonalizados as $producto)
-                    <div class="col mb-5">
+                    <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
@@ -745,7 +759,7 @@
             <h2 class="text-center fw-bold mb-5">Completos</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($productosCompletos as $producto)
-                    <div class="col mb-5">
+                    <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
@@ -860,7 +874,7 @@
             <h2 class="text-center fw-bold mb-5">Juegos</h2>
             <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-5">
                 @foreach ($juegos as $producto)
-                    <div class="col mb-5">
+                    <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
@@ -1155,5 +1169,41 @@
 
         // Llamar a updateCartUI cuando la página se cargue
         document.addEventListener('DOMContentLoaded', updateCartUI);
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const productosContainer = document.getElementById('productosContainer');
+            const productos = document.querySelectorAll('.producto-item');
+
+            // Filtrar productos al hacer clic en el botón de búsqueda
+            searchButton.addEventListener('click', function() {
+                const query = searchInput.value.toLowerCase().trim();
+
+                productos.forEach(producto => {
+                    const nombre = producto.getAttribute('data-nombre');
+                    if (nombre.includes(query)) {
+                        producto.style.display = 'block';
+                    } else {
+                        producto.style.display = 'none';
+                    }
+                });
+            });
+
+            // Filtrar productos al escribir en el input
+            searchInput.addEventListener('input', function() {
+                const query = searchInput.value.toLowerCase().trim();
+
+                productos.forEach(producto => {
+                    const nombre = producto.getAttribute('data-nombre');
+                    if (nombre.includes(query)) {
+                        producto.style.display = 'block';
+                    } else {
+                        producto.style.display = 'none';
+                    }
+                });
+            });
+        });
     </script>
 @endsection
