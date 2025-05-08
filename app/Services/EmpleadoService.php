@@ -18,6 +18,7 @@ use App\Models\Costo;
 use App\Models\Venta;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Support\Carbon;
+
 class EmpleadoService
 {
     public function obtenerAsistenciasPorDia(int $idemp, string $fecha)
@@ -348,5 +349,72 @@ class EmpleadoService
             }) // Buscar texto que contenga "Gasto"
             ->whereDate('created_at', $fecha)
             ->get();
+    }
+    public function contarGestionGastosPorDia(int $idemp, string $fecha)
+    {
+        // Validar el formato de la fecha
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+            throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
         }
+        // Contar todas las asistencias del empleado para el día, mes y año especificados
+        return Historial::where('empleado_id', $idemp)
+            ->where(function ($query) {
+                $query->where('accion', 'like', '%gasto%')
+                    ->orWhere('accion', 'like', '%Gasto%');
+            }) // Buscar texto que contenga "Gasto"
+            ->whereDate('created_at', $fecha)
+            ->count();
+    }
+    public function obtenerEstadisticasDelMes(int $idemp, string $nombreemp, int $mes, int $anio)
+    {
+        // Obtener todas las estadisticas del empleado para el mes y año especificados
+        // en un arreglo se guardan los datos de cada dia del mes
+        $estadisticas = [];
+        $estadisticas['nombre'] = $nombreemp;
+        for ($dia = 1; $dia <= 31; $dia++) {
+            $fecha = Carbon::createFromDate($anio, $mes, $dia)->format('Y-m-d');
+            if (Carbon::createFromDate($anio, $mes, $dia)->isValid()) {
+                $totalConexion = $this->obtenerLapsosDeAsistenciasPorDia($idemp, $fecha)['total_conexion'];
+
+                $estadisticas[$fecha] = [
+                    'asistencias' => $totalConexion,
+                    'ventas' => $this->contarVentasPorDia($idemp, $fecha),
+                    'recargas' => $this->contarGestionRecargasPorDia($idemp, $fecha),
+                    'productos' => $this->contarGestionProductosPorDia($idemp, $fecha),
+                    'inventario' => $this->contarGestionInventarioPorDia($idemp, $fecha),
+                    'cuentas' => $this->contarGestionCuentasPorDia($idemp, $fecha),
+                    'tareas' => $this->contarGestionTareasPorDia($idemp, $fecha),
+                    'costos' => $this->contarGestionCostosPorDia($idemp, $fecha),
+                    'clientes' => $this->contarGestionClientesPorDia($idemp, $fecha),
+                    'gastos' => $this->contarGestionGastosPorDia($idemp, $fecha),
+                ];
+            }
+        }
+        return $estadisticas;
+    }
+    public function obtenerEstadisticasDelDia(int $idemp, string $fecha)
+    {
+        // Obtener todas las estadisticas del empleado para el dia especificado
+        return [
+            'asistencias' => $this->obtenerAsistenciasPorDia($idemp, $fecha),
+            'ventas' => $this->obtenerVentasPorDia($idemp, $fecha),
+            'recargas' => $this->obtenerGestionRecargasPorDia($idemp, $fecha),
+            'productos' => $this->obtenerGestionProductosPorDia($idemp, $fecha),
+            'inventario' => $this->obtenerGestionInventarioPorDia($idemp, $fecha),
+            'cuentas' => $this->obtenerGestionCuentasPorDia($idemp, $fecha),
+            'ventas' => $this->obtenerGestionVentasPorDia($idemp, $fecha),
+            'tareas' => $this->obtenerGestionTareasPorDia($idemp, $fecha),
+            'costos' => $this->obtenerGestionCostosPorDia($idemp, $fecha),
+            'clientes' => $this->obtenerGestionClientesPorDia($idemp, $fecha),
+            'gastos' => $this->obtenerGestionGastosPorDia($idemp, $fecha),
+        ];
+    }
+    public function obtenerEstadisticasDeEmpleados($empleados, int $mes, int $anio)
+    {
+        $estadisticas = [];
+        foreach ($empleados as $empleado) {
+            $estadisticas[$empleado->idemp] = $this->obtenerEstadisticasDelMes($empleado->idemp, $empleado->nombreemp, $mes, $anio);
+        }
+        return $estadisticas;
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\Empleado;
 use App\Services\EmpleadoService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+
 class AsistenciaController extends Controller
 {
     protected $empleadoService;
@@ -33,55 +34,19 @@ class AsistenciaController extends Controller
         if (!Gate::allows('empleados')) {
             abort(403, 'No tienes permisos para ver los empleados.');
         }
-        $hoy = Carbon::today()->format('Y-m-d');
-        $empleados = $this->obtenerEmpleadosConAsistencias($hoy);
+        $mes = Carbon::today()->format('m');
+        $anio = Carbon::today()->format('Y');
+        $empleados = Empleado::orderBy('idemp', 'asc')->get();
 
-        $datos = $empleados->map(function ($empleado) use ($hoy) {
-            return $this->procesarEmpleado($empleado, $hoy);
+        $ordenPersonalizado = [2, 12]; // IDs prioritarios
+        $estadisticas = $this->empleadoService->obtenerEstadisticasDeEmpleados($empleados, $mes, $anio);
+        $estadisticasOrdenadas = collect($estadisticas)->sortBy(function ($_, $id) use ($ordenPersonalizado) {
+            $index = array_search($id, $ordenPersonalizado);
+            return $index === false ? 9999 + $id : $index; // los no encontrados se ordenan después
         });
-
-        return view('employee.statistics', compact('datos', 'empleados'));
+        // Guarda estadísticas de cada empleado
+        return view('employee.statistics', compact('estadisticasOrdenadas', 'empleados'));
     }
-
-    /**
-     * Obtiene los empleados con sus asistencias para la fecha especificada.
-     *
-     * @param string $fecha
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    protected function obtenerEmpleadosConAsistencias(string $fecha)
-    {
-        return Empleado::with(['asistencias' => function ($query) use ($fecha) {
-            $query->whereDate('created_at', $fecha);
-        }])->get();
-    }
-
-    /**
-     * Procesa los datos de un empleado para calcular estadísticas.
-     *
-     * @param \App\Models\Empleado $empleado
-     * @param string $fecha
-     * @return array
-     */
-    protected function procesarEmpleado(Empleado $empleado, string $fecha)
-    {
-        $lapsos = $this->empleadoService->obtenerLapsosDeAsistenciasPorDia($empleado->idemp, $fecha);
-
-        return [
-            'empleado' => $empleado,
-            'lapsos' => $lapsos['lapsos'],
-            'total' => $lapsos['total_conexion'],
-            'gestionClientesHoy' => $this->empleadoService->contarGestionClientesPorDia($empleado->idemp, $fecha),
-            'gestionVentasHoy' => $this->empleadoService->contarVentasPorDia($empleado->idemp, $fecha),
-            'gestionCuentasHoy' => $this->empleadoService->contarGestionCuentasPorDia($empleado->idemp, $fecha),
-            'gestionInventarioHoy' => $this->empleadoService->contarGestionInventarioPorDia($empleado->idemp, $fecha),
-            'gestionTareasHoy' => $this->empleadoService->contarGestionTareasPorDia($empleado->idemp, $fecha),
-            'gestionRecargasHoy' => $this->empleadoService->contarGestionRecargasPorDia($empleado->idemp, $fecha),
-            'gestionProductosHoy' => $this->empleadoService->contarGestionProductosPorDia($empleado->idemp, $fecha),
-            'gestionCostosHoy' => $this->empleadoService->contarGestionCostosPorDia($empleado->idemp, $fecha),
-        ];
-    }
-
     /**
      * Registra la asistencia del empleado.
      *
