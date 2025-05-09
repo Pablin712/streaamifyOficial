@@ -17,9 +17,9 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Services\DashboardService;
 use App\Models\Historial;
-
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
-
+use PDF;
 class ContabilidadController extends Controller
 {
     protected $dashboardService;
@@ -30,7 +30,7 @@ class ContabilidadController extends Controller
     }
     public function index(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('dashboard')) {
+        if (!Gate::allows('dashboard')) {
             abort(403, 'No tienes permiso para ver esta página.');
         }
         $month = Carbon::now()->month;
@@ -143,5 +143,102 @@ class ContabilidadController extends Controller
             'newCustomers' => array_values($newCustomers),
             'users' => array_values($users),
         ]);
+    }
+    public function generarPDF(){
+        if (!Gate::allows('dashboard')) {
+            abort(403, 'No tienes permiso para ver esta página.');
+        }
+        $month = Carbon::now()->month;
+        $year = Carbon::now()->year;
+        $today = Carbon::today();
+        $this->dashboardService->guardar($today);
+        extract($this->dashboardService->obtenerDatosDashboard());
+        $gastos = $this->dashboardService->getGastos($ingresos_mes);
+
+        extract($this->dashboardService->getNetflix($month, $year));
+        extract($this->dashboardService->getDisney($month, $year));
+        extract($this->dashboardService->getPrime($month, $year));
+        extract($this->dashboardService->getMax($month, $year));
+        extract($this->dashboardService->getMagis($month, $year));
+        extract($this->dashboardService->getCrunchyroll($month, $year));
+        extract($this->dashboardService->getParamount($month, $year));
+        extract($this->dashboardService->getSpotify($month, $year));
+        extract($this->dashboardService->getOtros($month, $year));
+        $mes = Carbon::now()->translatedFormat('F'); // Devuelve 'mayo' si está en español
+        $pdf = PDF::loadView('finance.resultPDF', compact(
+            'mes',
+            'year',
+
+            'ventas',
+            'ingresos_mes',
+            'ingresos_ano',
+            'clientes_activos',
+            'total_usuarios_activos',
+            'cuentas_caidas',
+            'usuarios_acobrar',
+            'num_cuentas',
+
+            'ingresos',
+            'costos_mes',
+            'costos_pct',
+            'gastos_mes',
+            'gastos_pct',
+            'balance',
+            'balance_pct',
+            'gastos',
+
+            'promedio_pagos_mes',
+            'cliente_mas_facturado',
+            'ventas_mes',
+            'ventas_ano',
+            'espacios',
+
+            'cuentas_netflix',
+            'usuarios_netflix',
+            'ingresos_netflix',
+            'costos_netflix',
+
+            'cuentas_disney',
+            'usuarios_disney',
+            'ingresos_disney',
+            'costos_disney',
+
+            'cuentas_prime', // Aquí es donde agregas las variables correspondientes
+            'usuarios_prime',
+            'ingresos_prime',
+            'costos_prime',
+
+            'cuentas_max',
+            'usuarios_max',
+            'ingresos_max',
+            'costos_max',
+
+            'cuentas_magis',
+            'usuarios_magis',
+            'ingresos_magis',
+            'costos_magis',
+
+            'cuentas_crunchy',
+            'usuarios_crunchy',
+            'ingresos_crunchy',
+            'costos_crunchy',
+
+            'cuentas_paramount',
+            'usuarios_paramount',
+            'ingresos_paramount',
+            'costos_paramount',
+
+            'cuentas_spotify',
+            'usuarios_spotify',
+            'ingresos_spotify',
+            'costos_spotify',
+
+            'cuentas_otros', // Agrega la variable para "otros"
+            'usuarios_otros',
+            'ingresos_otros',
+            'costos_otros'
+        ));
+        // formato de descarga: contabilidad-Mes-Año.pdf
+        return $pdf->download('contabilidad-'.$mes.'-'.$year.'.pdf');
     }
 }

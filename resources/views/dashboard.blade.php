@@ -29,25 +29,24 @@
         </div>
     @endif
     <h1>{{ Auth::user()->nombreemp }}</h1>
+    <div class="d-flex justify-content mb-3">
+        <a href="{{ route('dashboard.pdf') }}" class="btn btn-danger">
+            <i class="fas fa-file-pdf"></i> Descargar PDF
+        </a>
+    </div>
 @endsection
 @section('content')
     <!-- Content Wrapper -->
     <div id="content-wrapper" class="d-flex flex-column">
-
         <!-- Main Content -->
         <div id="content">
-
             <!-- Begin Page Content -->
             <div class="container-fluid">
-
                 <!-- Page Heading -->
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800">Resumen de Streamify HQ</h1>
                 </div>
-
-
                 <div class="row">
-
                     <!-- Earnings (Monthly) Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">
                         <div class="card border-left-primary shadow h-100 py-2">
@@ -193,7 +192,6 @@
                     </div>
                 </div>
                 <div class="row">
-
                     <!-- Clientes activos (Monthly) Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">
                         <div class="card border-left-primary shadow h-100 py-2">

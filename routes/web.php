@@ -123,6 +123,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
         Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
         Route::get('/dashboard/filter', 'filterData')->name('dashboard.filter');
+        Route::get('/dashboard/pdf', 'generarPDF')->name('dashboard.pdf');
     });
 
     Route::controller(CostoController::class)->group(function () {
