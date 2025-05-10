@@ -1,7 +1,7 @@
 @extends('layouts.static')
 
 @section('title', 'Crear Valor')
-@section('h1','Crear Valor')
+@section('h1', 'Crear Valor')
 @section('breadcrumb')
     <a href="{{ route('valores') }}">Valores</a>
 @endsection
@@ -9,18 +9,19 @@
     Registrar Valor de Servicio
 @endsection
 @section('introduccion')
-    Aquí puedes guardar un nuevo valor de servicio. Por favor, llena todos los campos requeridos y asegúrate de que la información sea correcta.
+    Aquí puedes guardar un nuevo valor de servicio. Por favor, llena todos los campos requeridos y asegúrate de que la
+    información sea correcta.
 @endsection
 @section('content')
     <form action="{{ route('valores.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3">
             <label for="idval">ID del Valor</label>
-            <input type="text" name="idval" id="idval" class="form-control" maxlength="20" required>
+            <input type="text" name="idval" id="idval" class="form-control select2" maxlength="20" required>
         </div>
         <div class="form-group mb-3">
             <label for="idser">ID del Servicio</label>
-            <select name="idser" id="idser" class="form-control" required>
+            <select name="idser" id="idser" class="form-control select2" required>
                 @foreach ($servicios as $servicio)
                     <option value="{{ $servicio->idser }}">{{ $servicio->nombreser }}</option>
                 @endforeach
@@ -62,4 +63,25 @@
 @section('pie')
     <p>¿No deseas guardar un valor de servicio? Vuelve a la página de listado:</p>
     <a href="{{ route('valores') }}" class="btn btn-secondary">Volver a Valores</a>
+@endsection
+@section('scripts')
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Inicializar Select2 para servicios
+            $('#idser').select2({
+                placeholder: "Selecciona un servicio",
+                allowClear: true,
+                width: '100%' // Asegura que el select se ajuste al contenedor
+            });
+
+            // Inicializar Select2 para proveedores
+            $('#idpro').select2({
+                placeholder: "Selecciona un proveedor",
+                allowClear: true,
+                width: '100%' // Asegura que el select se ajuste al contenedor
+            });
+        });
+    </script>
 @endsection

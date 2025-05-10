@@ -46,8 +46,6 @@
         crossorigin="anonymous"></script>
     <script src="{{ asset('js/sidebar.js') }}"></script>
     <script src="{{ asset('js/navbar.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {

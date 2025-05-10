@@ -189,11 +189,15 @@
         });
     </script>
     <script>
-        // Inicializa Select2 en el select con el id 'idcue'
         $(document).ready(function() {
-            $('#idcu').select2({
-                placeholder: "Selecciona una Cuenta",
-                allowClear: true // Permite borrar la selección
+            // Inicializar Select2 en el modal cuando se abra
+            $("#seleccionarCuentaModal").on("shown.bs.modal", function() {
+                $("#idcue").select2({
+                    dropdownParent: $(
+                    "#seleccionarCuentaModal"), // Esto es clave para que funcione dentro del modal
+                    placeholder: "Seleccione una cuenta",
+                    allowClear: true,
+                });
             });
         });
     </script>

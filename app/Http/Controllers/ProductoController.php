@@ -298,12 +298,16 @@ class ProductoController extends Controller
                 }
                 // Un solo detalle
                 $servicio = $detalles->first()->servicio;
+                $detalle = $detalles->first();
                 if ($servicio == null) {
                     continue; // Si no hay servicio, pasar al siguiente detalle
                 }
-                $precio = $servicio->precioser;
+                if($detalle->meses > 1) {
+                    $precio = $servicio->precioser * $detalle->meses - ($detalle->meses - 1) * 0.30;
+                } else {
+                    $precio = $servicio->precioser;
+                }
             } else {
-                
                 // Múltiples detalles: suma de precios
                 $precio = $detalles->sum(function ($detalle) {
                     return $detalle->servicio ? $detalle->servicio->precioser : 0;

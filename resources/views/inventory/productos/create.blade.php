@@ -131,9 +131,9 @@
 
             </div>
 
-            
-                <!-- Campo oculto para enviar los detalles del producto -->
-                <input type="hidden" name="detalles_producto" id="detalles_producto">
+
+            <!-- Campo oculto para enviar los detalles del producto -->
+            <input type="hidden" name="detalles_producto" id="detalles_producto">
             <button type="submit" class="btn btn-primary mt-4">Registrar Producto</button>
         </form>
     </div>
@@ -182,7 +182,8 @@
     </div>
 
     <!-- Modal para editar detalle del producto -->
-    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -215,7 +216,8 @@
                             <label for="editarMeses" class="form-label">Meses</label>
                             <input type="number" class="form-control" id="editarMeses" min="1" required>
                         </div>
-                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalle">Guardar Cambios</button>
+                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalle">Guardar
+                            Cambios</button>
                     </form>
                 </div>
             </div>
@@ -230,6 +232,17 @@
 
 @section('scripts')
     <script>
+        $(document).ready(function() {
+            // Inicializar Select2 en el modal cuando se abra
+            $("#agregarDetalleModal").on("shown.bs.modal", function() {
+                $("#idser").select2({
+                    dropdownParent: $(
+                    "#agregarDetalleModal"), // Esto es clave para que funcione dentro del modal
+                    placeholder: "Seleccione una cuenta",
+                    allowClear: true,
+                });
+            });
+        });
         // Agregar detalle a la tabla
         $('#guardarDetalleBtn').on('click', function() {
             // Obtener los valores del formulario de detalle

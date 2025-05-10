@@ -82,7 +82,16 @@ $(document).ready(function () {
         });
     });
 });
-
+$(document).ready(function () {
+    // Inicializar Select2 en el modal cuando se abra
+    $("#editarDetalleModal").on("shown.bs.modal", function () {
+        $("#editarSelectCuenta").select2({
+            dropdownParent: $("#editarDetalleModal"), // Esto es clave para que funcione dentro del modal
+            placeholder: "Seleccione una cuenta",
+            allowClear: true,
+        });
+    });
+});
 document
     .getElementById("form-venta")
     .addEventListener("submit", function (event) {
