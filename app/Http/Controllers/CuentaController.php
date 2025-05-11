@@ -13,21 +13,9 @@ use App\Models\Historial;
 use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Gate;
 class CuentaController extends Controller
 {
-    /*
-    // Constructor original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:cuentas')->only('index');
-        $this->middleware('can:cuentas.store')->only('create', 'store');
-        $this->middleware('can:cuentas.update')->only('edit', 'update');
-        $this->middleware('can:cuentas.status')->only('status');
-        $this->middleware('can:cuentas.renew')->only('renew');
-        $this->middleware('can:cuentas.mensaje')->only('mensaje');
-        $this->middleware('can:cuentas.destroy')->only('destroy');
-    }
-    */
     protected $cuentaService;
 
     public function __construct(CuentaService $cuentaService)
@@ -36,13 +24,10 @@ class CuentaController extends Controller
     }
     public function index(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas')) {
+        if (!Gate::allows('cuentas')) {
             abort(403, 'No tienes permiso para ver las cuentas.');
         }
-        $cuentas = Cuenta::with(['valor'])
-            ->where('activocue', true)
-            ->orderBy('fechavencue')
-            ->get();
+        $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
         //$this->cuentaService->asignarUsuarios($cuentas);
         // Filtrar las cuentas en diferentes categorías
         $cuentasColapsadas = $this->cuentaService->obtenerCuentasColapsadas($cuentas);
@@ -66,7 +51,7 @@ class CuentaController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.store')) {
+        if (!Gate::allows('cuentas.store')) {
             abort(403, 'No tienes permiso para crear cuentas.');
         }
         $valores = Valor::where('activoval', true)->get();
@@ -74,7 +59,7 @@ class CuentaController extends Controller
     }
     public function show($idcue)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.mensaje')) {
+        if (!Gate::allows('cuentas.mensaje')) {
             abort(403, 'No tienes permiso para ver una cuenta con sus perfiles.');
         }
         $cuenta = Cuenta::with(['valor', 'costos'])->findOrFail($idcue);
@@ -83,7 +68,7 @@ class CuentaController extends Controller
     }
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.store')) {
+        if (!Gate::allows('cuentas.store')) {
             abort(403, 'No tienes permiso para crear cuentas.');
         }
         try {
@@ -139,7 +124,7 @@ class CuentaController extends Controller
 
     public function status($idcue)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.status')) {
+        if (!Gate::allows('cuentas.status')) {
             abort(403, 'No tienes permiso para actualizar el estado de la cuenta.');
         }
         $cuenta = Cuenta::findOrFail($idcue);
@@ -159,7 +144,7 @@ class CuentaController extends Controller
 
     public function mensaje($perfilId)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.mensaje')) {
+        if (!Gate::allows('cuentas.mensaje')) {
             abort(403, 'No tienes permiso para solicitar datos de perfil.');
         }
         $perfil = Perfil::find($perfilId);
@@ -192,7 +177,7 @@ class CuentaController extends Controller
 
     public function edit($idcue)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.update')) {
+        if (!Gate::allows('cuentas.update')) {
             abort(403, 'No tienes permiso para editar cuentas.');
         }
         $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
@@ -202,7 +187,7 @@ class CuentaController extends Controller
 
     public function renew($idcue)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.renew')) {
+        if (!Gate::allows('cuentas.renew')) {
             abort(403, 'No tienes permiso para renovar cuentas.');
         }
         $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
@@ -212,7 +197,7 @@ class CuentaController extends Controller
 
     public function update(Request $request, $idcue)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.update')) {
+        if (!Gate::allows('cuentas.update')) {
             abort(403, 'No tienes permiso para actualizar cuentas.');
         }
         try {
@@ -257,7 +242,7 @@ class CuentaController extends Controller
 
     public function destroy($idcue)
     {
-        if (!Auth::user()->hasPermissionTo('cuentas.destroy')) {
+        if (!Gate::allows('cuentas.destroy')) {
             abort(403, 'No tienes permiso para eliminar cuentas.');
         }
         $cuenta = Cuenta::findOrFail($idcue);

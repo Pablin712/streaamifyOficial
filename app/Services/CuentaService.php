@@ -244,4 +244,57 @@ class CuentaService
         }
         return $perfiles;
     }
+    public function obtenerCuentasSegunPermiso($usuario)
+    {
+        // Si el usuario tiene permiso para ver todas las cuentas
+        if ($usuario->can('todas_las_cuentas')) {
+            return Cuenta::with(['valor.servicio'])
+                ->where('activocue', true)
+                ->orderBy('fechavencue')
+                ->get();
+        }
+        // Verificar si el usuario tiene al menos un permiso específico
+        $tienePermiso = $usuario->can('netflix') ||
+            $usuario->can('disney') ||
+            $usuario->can('max') ||
+            $usuario->can('spotify') ||
+            $usuario->can('prime') ||
+            $usuario->can('otras');
+
+        // Si no tiene ningún permiso, devolver una colección vacía
+        if (!$tienePermiso) {
+            return collect(); // Retorna una colección vacía
+        }
+        // Filtrar cuentas según permisos específicos
+        $query = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->whereHas('valor.servicio', function ($query) use ($usuario) {
+                $query->where(function ($query) use ($usuario) {
+                    if ($usuario->can('netflix')) {
+                        $query->orWhere('nombreser', 'like', '%Netflix%');
+                    }
+                    if ($usuario->can('disney')) {
+                        $query->orWhere('nombreser', 'like', '%Disney%');
+                    }
+                    if ($usuario->can('max')) {
+                        $query->orWhere('nombreser', 'like', '%Max%');
+                    }
+                    if ($usuario->can('spotify')) {
+                        $query->orWhere('nombreser', 'like', '%Spotify%');
+                    }
+                    if ($usuario->can('prime')) {
+                        $query->orWhere('nombreser', 'like', '%Prime%');
+                    }
+                    if ($usuario->can('otras')) {
+                        $query->orWhere('nombreser', 'not like', '%Netflix%')
+                            ->where('nombreser', 'not like', '%Disney%')
+                            ->where('nombreser', 'not like', '%Max%')
+                            ->where('nombreser', 'not like', '%Spotify%')
+                            ->where('nombreser', 'not like', '%Prime%');
+                    }
+                });
+            });
+
+        return $query->orderBy('fechavencue')->get();
+    }
 }

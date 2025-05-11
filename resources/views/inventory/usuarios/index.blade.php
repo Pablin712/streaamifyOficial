@@ -30,6 +30,7 @@
         <thead>
             <tr>
                 <th>Cliente</th>
+                <th>Teléfono</th>
                 <th>ID Cuenta</th>
                 <th>Usuario Cuenta</th>
                 <th>Perfil</th>
@@ -49,6 +50,7 @@
                 @endphp
                 <tr>
                     <td>{{ $usuario->nombre_cliente }}</td>
+                    <td>{{ $usuario->cliente->telefonocli }}</td>
                     <td>{{ $usuario->idcue }}</td>
                     <td>{{ $usuario->cuenta->usuariocue }}</td>
                     <td>{{ $usuario->perfil }}</td>

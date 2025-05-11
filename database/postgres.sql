@@ -301,3 +301,24 @@ ALTER TABLE historial RENAME COLUMN realizado_por TO empleado_id;
 ALTER TABLE historial ALTER COLUMN empleado_id TYPE BIGINT USING empleado_id::BIGINT;
 -- Agregar la clave foránea para 'empleado_id' que referencia la tabla 'empleados'
 ALTER TABLE historial ADD CONSTRAINT fk_empleado_id FOREIGN KEY (empleado_id) REFERENCES empleados(idemp) ON DELETE SET NULL;
+
+
+INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('todas_las_cuentas', 'web', NOW(), NOW()),
+('netflix', 'web', NOW(), NOW()),
+('disney', 'web', NOW(), NOW()),
+('max', 'web', NOW(), NOW()),
+('spotify', 'web', NOW(), NOW()),
+('otras', 'web', NOW(), NOW()),
+('prime', 'web', NOW(), NOW());
+
+DO $$ 
+DECLARE admin_role_id INT;
+BEGIN
+    SELECT id INTO admin_role_id FROM roles WHERE name = 'Admin';
+
+    -- Asignar permisos al rol de administrador en la tabla role_has_permissions
+    INSERT INTO role_has_permissions (permission_id, role_id)
+    SELECT p.id, admin_role_id FROM permissions p WHERE p.name IN 
+    ('todas_las_cuentas');
+END $$;
