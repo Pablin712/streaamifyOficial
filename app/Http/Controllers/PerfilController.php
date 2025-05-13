@@ -7,6 +7,7 @@ use App\Models\Cuenta;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Historial;
+use Illuminate\Support\Facades\Gate;
 
 class PerfilController extends Controller
 {
@@ -73,7 +74,7 @@ class PerfilController extends Controller
 
     public function update(Request $request, string $id)
     {
-        if (!Auth::user()->hasPermissionTo('perfil.update')) {
+        if (!Gate::allows('perfil.update')) {
             abort(403, 'No tienes permiso para actualizar cuentas.');
         }
         $perfil = Perfil::findOrFail($id);
