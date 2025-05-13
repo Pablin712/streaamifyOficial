@@ -8,6 +8,7 @@ use App\Models\Valor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\CuentaService;
+use Illuminate\Support\Facades\Gate;
 class ProveedorController extends Controller
 {
     /*
@@ -21,16 +22,26 @@ class ProveedorController extends Controller
     */
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('proveedores')) {
+        if (!Gate::allows('proveedores')) {
             abort(403, 'No tienes permiso para ver los proveedores.');
         }
         $proveedores = Proveedor::where('activopro', true)->get();
+        foreach ($proveedores as $proveedor) {
+            $proveedor->totalCuentas = $proveedor->cuentas()->count();
+            $proveedor->cuentasNetflix = $proveedor->contarCuentasPorServicio('NETFLIX');
+            $proveedor->cuentasDisneyP = $proveedor->contarCuentasPorServicio('DISNEYP');
+            $proveedor->cuentasDisneyS = $proveedor->contarCuentasPorServicio('DISNEYS');
+            $proveedor->cuentasMAX = $proveedor->contarCuentasPorServicio('MAX');
+            $proveedor->cuentasPrimeV = $proveedor->contarCuentasPorServicio('PRIME');
+            $proveedor->cuentasSpotify = $proveedor->contarCuentasPorServicio('SPOTIFY');
+            $proveedor->otrasCuentas = $proveedor->cuentas()->whereNotIn('idser', ['NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'SPOTIFY'])->count();
+        }
         return view('inventory.proveedores.index', compact('proveedores'));
     }
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('proveedores.store')) {
+        if (!Gate::allows('proveedores.store')) {
             abort(403, 'No tienes permiso para crear proveedores.');
         }
         return view('inventory.proveedores.create');
@@ -38,7 +49,7 @@ class ProveedorController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('proveedores.store')) {
+        if (!Gate::allows('proveedores.store')) {
             abort(403, 'No tienes permiso para crear proveedores.');
         }
 
@@ -65,7 +76,7 @@ class ProveedorController extends Controller
 
     public function edit($idpro)
     {
-        if (!Auth::user()->hasPermissionTo('proveedores.update')) {
+        if (!Gate::allows('proveedores.update')) {
             abort(403, 'No tienes permiso para editar proveedores.');
         }
         $proveedor = Proveedor::findOrFail($idpro);
@@ -74,7 +85,7 @@ class ProveedorController extends Controller
 
     public function update(Request $request, $idpro)
     {
-        if (!Auth::user()->hasPermissionTo('proveedores.update')) {
+        if (!Gate::allows('proveedores.update')) {
             abort(403, 'No tienes permiso para actualizar proveedores.');
         }
 
@@ -103,7 +114,7 @@ class ProveedorController extends Controller
 
     public function destroy($idpro)
     {
-        if (!Auth::user()->hasPermissionTo('proveedores.destroy')) {
+        if (!Gate::allows('proveedores.destroy')) {
             abort(403, 'No tienes permiso para eliminar proveedores.');
         }
 
