@@ -7,6 +7,8 @@ use App\Models\Categoria;
 use App\Models\TipoProducto;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+
 class TipoProductoController extends Controller
 {
     /*
@@ -31,7 +33,7 @@ class TipoProductoController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('tipos_producto.store')) {
+        if (!Gate::allows('tipos_producto.store')) {
             abort(403, 'No tienes permiso para crear tipos de producto.');
         }
         $request->validate([
@@ -65,7 +67,7 @@ class TipoProductoController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        if (!Auth::user()->hasPermissionTo('tipos_producto.update')) {
+        if (!Gate::allows('tipos_producto.update')) {
             abort(403, 'No tienes permiso para crear tipos de producto.');
         }
         $request->validate([
@@ -91,7 +93,7 @@ class TipoProductoController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('tipos_producto.destroy')) {
+        if (!Gate::allows('tipos_producto.destroy')) {
             abort(403, 'No tienes permiso para crear tipos de producto.');
         }
         $tipoProducto = TipoProducto::findOrFail($id);
