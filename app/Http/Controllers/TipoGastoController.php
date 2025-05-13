@@ -6,22 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\TipoGasto;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class TipoGastoController extends Controller
 {
-    /*
-    // Método __construct original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:tipos')->only('index');
-        $this->middleware('can:tipos.store')->only('store');
-        $this->middleware('can:tipos.update')->only('update', 'edit');
-        $this->middleware('can:tipos.destroy')->only('destroy');
-    }
-    */
-
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('tipos')) {
+        if (!Gate::allows('tipos')) {
             abort(403, 'No tienes permiso para ver los tipos de gasto.');
         }
         $tipoGastos = TipoGasto::all();
@@ -30,7 +21,7 @@ class TipoGastoController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('tipos.store')) {
+        if (!Gate::allows('tipos.store')) {
             abort(403, 'No tienes permiso para crear tipos de gasto.');
         }
 
@@ -54,7 +45,7 @@ class TipoGastoController extends Controller
 
     public function edit($id)
     {
-        if (!Auth::user()->hasPermissionTo('tipos.update')) {
+        if (!Gate::allows('tipos.update')) {
             abort(403, 'No tienes permiso para editar tipos de gasto.');
         }
         $tipoGasto = TipoGasto::findOrFail($id);
@@ -65,7 +56,7 @@ class TipoGastoController extends Controller
 
     public function update(Request $request, $idtip)
     {
-        if (!Auth::user()->hasPermissionTo('tipos.update')) {
+        if (!Gate::allows('tipos.update')) {
             abort(403, 'No tienes permiso para actualizar tipos de gasto.');
         }
 
@@ -91,7 +82,7 @@ class TipoGastoController extends Controller
 
     public function destroy($id)
     {
-        if (!Auth::user()->hasPermissionTo('tipos.destroy')) {
+        if (!Gate::allows('tipos.destroy')) {
             abort(403, 'No tienes permiso para eliminar tipos de gasto.');
         }
 
