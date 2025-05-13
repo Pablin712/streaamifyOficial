@@ -11,19 +11,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NotificacionNueva;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 
 class RecargaController extends Controller
 {
-    /*
-    public function __construct() {
-        $this->middleware('can:empleado.recargas.index')->only('index');
-        $this->middleware('can:empleado.recargas.updateEstado')->only('updateEstado');
-    }
-    */
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('empleado.recargas.index')) {
+        if (!Gate::allows('empleado.recargas.index')) {
             abort(403, 'No tienes permiso para ver las recargas.');
         }
         // Obtener las recargas con relaciones (cliente, estado y banco)
@@ -34,7 +29,7 @@ class RecargaController extends Controller
 
     public function updateEstado(Request $request, $idrec)
     {
-        if (!Auth::user()->hasPermissionTo('empleado.recargas.updateEstado')) {
+        if (!Gate::allows('empleado.recargas.updateEstado')) {
             abort(403, 'No tienes permiso para aprobar o rechazar las recargas.');
         }
         try {
