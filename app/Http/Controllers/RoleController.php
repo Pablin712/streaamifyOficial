@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class RoleController extends Controller
 {
@@ -15,7 +16,7 @@ class RoleController extends Controller
     public function index()
     {
         // Verifica manualmente el permiso para ver roles
-        if (!Auth::user()->hasPermissionTo('roles.index')) {
+        if (!Gate::allows('roles.index')) {
             abort(403, 'No tienes permiso para ver esta página.');
         }
         $roles = Role::all();
@@ -27,7 +28,7 @@ class RoleController extends Controller
      */
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('roles.store')) {
+        if (!Gate::allows('roles.store')) {
             abort(403, 'No tienes permiso para crear roles.');
         }
         $permissions = Permission::all();
@@ -39,7 +40,7 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('roles.store')) {
+        if (!Gate::allows('roles.store')) {
             abort(403, 'No tienes permiso para crear roles.');
         }
         $request->validate([
@@ -65,7 +66,7 @@ class RoleController extends Controller
      */
     public function edit(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('roles.update')) {
+        if (!Gate::allows('roles.update')) {
             abort(403, 'No tienes permiso para editar roles.');
         }
         $rol = Role::findOrFail($id);
@@ -78,7 +79,7 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        if (!Auth::user()->hasPermissionTo('roles.update')) {
+        if (!Gate::allows('roles.update')) {
             abort(403, 'No tienes permiso para actualizar roles.');
         }
         $request->validate([
@@ -97,7 +98,7 @@ class RoleController extends Controller
      */
     public function destroy(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('roles.destroy')) {
+        if (!Gate::allows('roles.destroy')) {
             abort(403, 'No tienes permiso para eliminar roles.');
         }
         $role = Role::findOrFail($id);
