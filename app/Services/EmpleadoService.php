@@ -41,13 +41,13 @@ class EmpleadoService
         if (count($asistencias) === 0) {
             return [
                 'lapsos' => [],
-                'total_conexion' => 0
+                'total_conexion' => 0,
+                'horas_conexion' => 0,
             ];
         }
 
-        $inicio = $asistencias[0]->created_at;
-        $fin = $asistencias[0]->created_at;
-        $tiempo_conexion = 0;
+        $inicio = Carbon::parse($asistencias[0]->created_at);
+        $fin = Carbon::parse($asistencias[0]->created_at);
 
         for ($i = 1; $i < count($asistencias); $i++) {
             $anterior = Carbon::parse($asistencias[$i - 1]->created_at);
@@ -55,33 +55,39 @@ class EmpleadoService
 
             if ($actual->diffInMinutes($anterior) <= 5) {
                 $fin = $actual;
-                $tiempo_conexion += 5;
             } else {
-                $lapsos[] = [
-                    'inicio' => $inicio,
-                    'fin' => $fin,
-                    'tiempo_conexion' => $tiempo_conexion,
-                ];
-                $total_conexion += $tiempo_conexion;
+                // Guardar lapso anterior
+                $duracion = $inicio->floatDiffInMinutes($fin);
+                if ($duracion > 0) {
+                    $lapsos[] = [
+                        'inicio' => $inicio,
+                        'fin' => $fin,
+                        'tiempo_conexion' => round($duracion, 2),
+                    ];
+                    $total_conexion += $duracion;
+                }
 
                 // Iniciar nuevo lapso
                 $inicio = $actual;
                 $fin = $actual;
-                $tiempo_conexion = 0;
             }
         }
 
-        // Agregar último lapso
-        $lapsos[] = [
-            'inicio' => $inicio,
-            'fin' => $fin,
-            'tiempo_conexion' => $tiempo_conexion,
-        ];
-        $total_conexion += $tiempo_conexion;
+        // Último lapso
+        $duracion = $inicio->floatDiffInMinutes($fin);
+        if ($duracion > 0) {
+            $lapsos[] = [
+                'inicio' => $inicio,
+                'fin' => $fin,
+                'tiempo_conexion' => round($duracion, 2),
+            ];
+            $total_conexion += $duracion;
+        }
 
         return [
             'lapsos' => $lapsos,
-            'total_conexion' => $total_conexion
+            'total_conexion' => round($total_conexion, 2),
+            'horas_conexion' => round($total_conexion / 60, 2),
         ];
     }
     public function obtenerVentasPorDia(int $idemp, string $fecha)
@@ -374,7 +380,7 @@ class EmpleadoService
         for ($dia = 1; $dia <= 31; $dia++) {
             $fecha = Carbon::createFromDate($anio, $mes, $dia)->format('Y-m-d');
             if (Carbon::createFromDate($anio, $mes, $dia)->isValid()) {
-                $totalConexion = $this->obtenerLapsosDeAsistenciasPorDia($idemp, $fecha)['total_conexion'];
+                $totalConexion = $this->obtenerLapsosDeAsistenciasPorDia($idemp, $fecha)['horas_conexion'];
 
                 $estadisticas[$fecha] = [
                     'asistencias' => $totalConexion,
