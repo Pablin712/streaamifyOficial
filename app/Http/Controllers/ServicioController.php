@@ -6,6 +6,7 @@ use App\Models\Servicio;
 use App\Models\Historial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ServicioController extends Controller
 {
@@ -21,7 +22,7 @@ class ServicioController extends Controller
 
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('servicios')) {
+        if (!Gate::allows('servicios')) {
             abort(403, 'No tienes permiso para ver los servicios.');
         }
 
@@ -31,7 +32,7 @@ class ServicioController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('servicios.store')) {
+        if (!Gate::allows('servicios.store')) {
             abort(403, 'No tienes permiso para crear servicios.');
         }
 
@@ -40,7 +41,7 @@ class ServicioController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('servicios.store')) {
+        if (!Gate::allows('servicios.store')) {
             abort(403, 'No tienes permiso para crear servicios.');
         }
 
@@ -73,7 +74,7 @@ class ServicioController extends Controller
 
     public function edit($idser)
     {
-        if (!Auth::user()->hasPermissionTo('servicios.update')) {
+        if (!Gate::allows('servicios.update')) {
             abort(403, 'No tienes permiso para editar servicios.');
         }
 
@@ -83,7 +84,7 @@ class ServicioController extends Controller
 
     public function update(Request $request, $idser)
     {
-        if (!Auth::user()->hasPermissionTo('servicios.update')) {
+        if (!Gate::allows('servicios.update')) {
             abort(403, 'No tienes permiso para actualizar servicios.');
         }
 
@@ -116,7 +117,7 @@ class ServicioController extends Controller
 
     public function destroy($idser)
     {
-        if (!Auth::user()->hasPermissionTo('servicios.destroy')) {
+        if (!Gate::allows('servicios.destroy')) {
             abort(403, 'No tienes permiso para eliminar servicios.');
         }
 
