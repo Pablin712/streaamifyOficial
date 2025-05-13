@@ -8,22 +8,13 @@ use App\Models\DetalleVenta;
 use App\Models\Cuenta;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class UsuarioController extends Controller
 {
-    /*
-    // Constructor original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:usuarios')->only('index');
-        $this->middleware('can:usuarios.change')->only('change');
-        $this->middleware('can:usuarios.update')->only('update');
-        $this->middleware('can:usuarios.destroy')->only('destroy');
-    }
-    */
-
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('usuarios')) {
+        if (!Gate::allows('usuarios')) {
             abort(403, 'No tienes permiso para ver los usuarios.');
         }
         $usuarios = ViewUsuarioActivo::orderBy('fecha_vencimiento')->orderBy('nombre_cliente')->get();
@@ -33,7 +24,7 @@ class UsuarioController extends Controller
     // Método para mostrar el formulario de cambio de usuario
     public function change($iddet)
     {
-        if (!Auth::user()->hasPermissionTo('usuarios.change')) {
+        if (!Gate::allows('usuarios.change')) {
             abort(403, 'No tienes permiso para cambiar datos de usuarios.');
         }
         $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
@@ -54,7 +45,7 @@ class UsuarioController extends Controller
 
     public function update(Request $request, $iddet)
     {
-        if (!Auth::user()->hasPermissionTo('usuarios.update')) {
+        if (!Gate::allows('usuarios.update')) {
             abort(403, 'No tienes permiso para actualizar usuarios.');
         }
         $request->validate([
@@ -81,7 +72,7 @@ class UsuarioController extends Controller
 
     public function destroy($iddet)
     {
-        if (!Auth::user()->hasPermissionTo('usuarios.destroy')) {
+        if (!Gate::allows('usuarios.destroy')) {
             abort(403, 'No tienes permiso para eliminar usuarios.');
         }
         $detalle = DetalleVenta::findOrFail($iddet);
