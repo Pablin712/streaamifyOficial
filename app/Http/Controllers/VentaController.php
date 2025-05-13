@@ -17,26 +17,12 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Gate;
 class VentaController extends Controller
 {
-    /*
-    // Constructor original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:ventas')->only('index');
-        $this->middleware('can:ventas.store')->only('create', 'store');
-        $this->middleware('can:ventas.storeRenew')->only('storeRenew');
-        $this->middleware('can:ventas.storeCliente')->only('storeCliente');
-        $this->middleware('can:ventas.status')->only('status');
-        $this->middleware('can:ventas.sendInvoice')->only('sendInvoice');
-        $this->middleware('can:ventas.update')->only('edit', 'update');
-        $this->middleware('can:ventas.destroy')->only('destroy');
-    }
-    */
-
     public function index(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('ventas')) {
+        if (!Gate::allows('ventas')) {
             abort(403, 'No tienes permiso para ver las ventas.');
         }
 
@@ -67,7 +53,7 @@ class VentaController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('ventas.store')) {
+        if (!Gate::allows('ventas.store')) {
             abort(403, 'No tienes permiso para crear ventas.');
         }
         $clientes = Cliente::all();
@@ -89,7 +75,7 @@ class VentaController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.store')) {
+        if (!Gate::allows('ventas.store')) {
             abort(403, 'No tienes permiso para crear ventas.');
         }
         $request->validate([
@@ -174,7 +160,7 @@ class VentaController extends Controller
 
     public function storeRenew(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.storeRenew')) {
+        if (!Gate::allows('ventas.storeRenew')) {
             abort(403, 'No tienes permiso para renovar ventas.');
         }
         $request->validate([
@@ -230,7 +216,7 @@ class VentaController extends Controller
 
     public function storeCliente(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.storeCliente')) {
+        if (!Gate::allows('ventas.storeCliente')) {
             abort(403, 'No tienes permiso para crear clientes desde ventas.');
         }
         $request->validate([
@@ -264,7 +250,7 @@ class VentaController extends Controller
 
     public function edit($idven)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.update')) {
+        if (!Gate::allows('ventas.update')) {
             abort(403, 'No tienes permiso para editar ventas.');
         }
         $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
@@ -286,7 +272,7 @@ class VentaController extends Controller
 
     public function renew($idcli, $idven)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.renew')) {
+        if (!Gate::allows('ventas.renew')) {
             abort(403, 'No tienes permiso para renovar ventas.');
         }
         $venta = Venta::with(['detalles_venta', 'cliente'])->findOrFail($idven);
@@ -327,7 +313,7 @@ class VentaController extends Controller
 
     public function update(Request $request, $idven)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.update')) {
+        if (!Gate::allows('ventas.update')) {
             abort(403, 'No tienes permiso para actualizar ventas.');
         }
         $request->validate([
@@ -377,7 +363,7 @@ class VentaController extends Controller
 
     public function status($iddet)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.status')) {
+        if (!Gate::allows('ventas.status')) {
             abort(403, 'No tienes permiso para actualizar el estado de la venta.');
         }
         $detalle = \App\Models\DetalleVenta::findOrFail($iddet);
@@ -396,7 +382,7 @@ class VentaController extends Controller
 
     public function sendInvoice($id)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.sendInvoice')) {
+        if (!Gate::allows('ventas.sendInvoice')) {
             abort(403, 'No tienes permiso para enviar facturas.');
         }
         $venta = Venta::findOrFail($id);
@@ -407,7 +393,7 @@ class VentaController extends Controller
 
     public function destroy($idven)
     {
-        if (!Auth::user()->hasPermissionTo('ventas.destroy')) {
+        if (!Gate::allows('ventas.destroy')) {
             abort(403, 'No tienes permiso para eliminar ventas.');
         }
         $venta = Venta::findOrFail($idven);
