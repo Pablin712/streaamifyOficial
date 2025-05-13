@@ -10,18 +10,10 @@ use App\Models\Historial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\CuentaService;
+use Illuminate\Support\Facades\Gate;
 
 class ValorController extends Controller
 {
-    /*
-    // Constructor original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:valores')->only('index');
-        $this->middleware('can:valores.store')->only('create', 'store');
-        $this->middleware('can:valores.update')->only('edit', 'update');
-        $this->middleware('can:valores.destroy')->only('destroy');
-    }
-    */
     protected $cuentaService;
 
     public function __construct(CuentaService $cuentaService)
@@ -30,7 +22,7 @@ class ValorController extends Controller
     }
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('valores')) {
+        if (!Gate::allows('valores')) {
             abort(403, 'No tienes permiso para ver los valores.');
         }
         $valores = Valor::with(['proveedor', 'servicio'])->where('activoval', true)->get();
@@ -39,7 +31,7 @@ class ValorController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('valores.store')) {
+        if (!Gate::allows('valores.store')) {
             abort(403, 'No tienes permiso para crear valores.');
         }
         $proveedores = Proveedor::where('activopro', true)->get();
@@ -49,7 +41,7 @@ class ValorController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('valores.store')) {
+        if (!Gate::allows('valores.store')) {
             abort(403, 'No tienes permiso para crear valores.');
         }
 
@@ -82,7 +74,7 @@ class ValorController extends Controller
 
     public function edit($idval)
     {
-        if (!Auth::user()->hasPermissionTo('valores.update')) {
+        if (!Gate::allows('valores.update')) {
             abort(403, 'No tienes permiso para editar valores.');
         }
         $valor = Valor::with(['proveedor', 'servicio'])->findOrFail($idval);
@@ -93,7 +85,7 @@ class ValorController extends Controller
 
     public function update(Request $request, $idval)
     {
-        if (!Auth::user()->hasPermissionTo('valores.update')) {
+        if (!Gate::allows('valores.update')) {
             abort(403, 'No tienes permiso para actualizar valores.');
         }
 
@@ -125,7 +117,7 @@ class ValorController extends Controller
     {
         try {
             // Verificar permisos
-            if (!Auth::user()->hasPermissionTo('valores.destroy')) {
+            if (!Gate::allows('valores.destroy')) {
                 abort(403, 'No tienes permiso para eliminar valores.');
             }
 
