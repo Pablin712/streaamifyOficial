@@ -9,6 +9,8 @@ use App\Models\Cuenta;
 use App\Models\ViewUsuarioActivo;
 use App\Services\TareaService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+
 class TareaController extends Controller
 {
     /*
@@ -66,7 +68,7 @@ class TareaController extends Controller
 
     public function destroy($id)
     {
-        if (!Auth::user()->hasPermissionTo('tareas.destroy')) {
+        if (!Gate::allows('tareas.destroy')) {
             abort(403, 'No tienes permiso para ver esta página.');
         }
         Tarea::findOrFail($id)->delete();
