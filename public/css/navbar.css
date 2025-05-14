@@ -323,3 +323,27 @@
 .inverted-green-navbar .navbar-brand {
     color: #198754 !important;
 }
+
+/* Modo oscuro para la barra de navegación */
+body.dark-mode .navbar {
+    background-color: #1e1e1e !important; /* Fondo oscuro */
+    color: #ffffff !important; /* Texto claro */
+}
+
+body.dark-mode .navbar .nav-link {
+    color: #ffffff !important; /* Texto claro para los enlaces */
+}
+
+body.dark-mode .navbar .nav-link:hover {
+    color: #bbbbbb !important; /* Texto más claro al pasar el mouse */
+}
+
+body.dark-mode .navbar .dropdown-menu {
+    background-color: #1e1e1e !important; /* Fondo oscuro para el menú desplegable */
+    color: #ffffff !important; /* Texto claro */
+}
+
+body.dark-mode .navbar .dropdown-menu .dropdown-item:hover {
+    background-color: #333333 !important; /* Fondo más oscuro al pasar el mouse */
+    color: #ffffff !important; /* Texto claro */
+}

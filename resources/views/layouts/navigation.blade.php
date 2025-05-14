@@ -14,6 +14,7 @@
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ asset('css/sistema.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     @yield('styles')
@@ -28,6 +29,11 @@
 
         <div id="layoutSidenav_content">
             <main>
+                <div class="d-flex justify-content-end align-items-center">
+                    <button id="toggleDarkMode" class="btn btn-sm btn-outline-secondary">
+                        Cambiar Modo
+                    </button>
+                </div>
                 @yield('main')
             </main>
             @include('partials.footer')
@@ -110,7 +116,8 @@
                 })
             });
         }, 300000); // 5 minutos = 300,000 ms
-    </script>    
+    </script>
+    <script src="{{asset('js/sistema.js')}}"></script>  
 </body>
 
 </html>

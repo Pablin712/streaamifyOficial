@@ -1,0 +1,108 @@
+/* Modo oscuro global */
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+/* Estilos para partials */
+body.dark-mode .sidebar {
+    background-color: #1e1e1e !important;
+}
+
+body.dark-mode .navbar {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .card {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* Modo oscuro para todas las tablas */
+body.dark-mode table {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode table thead th {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode table tbody tr:nth-child(odd) {
+    background-color: #2a2a2a !important;
+}
+
+body.dark-mode table tbody tr:nth-child(even) {
+    background-color: #1e1e1e !important;
+}
+
+body.dark-mode table tbody tr:hover {
+    background-color: #444444 !important;
+}
+
+body.dark-mode table td,
+body.dark-mode table th {
+    border: 1px solid #444444 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border-color: #444444 !important;
+}
+
+body.dark-mode .form-control {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.dark-mode .select2-container--default .select2-selection--single {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.dark-mode .sb-sidenav .nav-link {
+    color: #ffffff !important;
+}
+
+body.dark-mode .sb-sidenav .nav-link:hover {
+    background-color: #333333 !important;
+}
+
+/* Modo oscuro para tablas DataTables */
+body.dark-mode #datatablesSimple {
+    background-color: #1e1e1e !important; /* Fondo oscuro */
+    color: #ffffff !important; /* Texto claro */
+}
+
+body.dark-mode #datatablesSimple thead th {
+    background-color: #333333 !important; /* Fondo más oscuro para el encabezado */
+    color: #ffffff !important; /* Texto claro */
+}
+
+body.dark-mode #datatablesSimple tbody tr:nth-child(odd) {
+    background-color: #2a2a2a !important; /* Fondo oscuro para filas impares */
+}
+
+body.dark-mode #datatablesSimple tbody tr:nth-child(even) {
+    background-color: #1e1e1e !important; /* Fondo oscuro para filas pares */
+}
+
+body.dark-mode #datatablesSimple tbody tr:hover {
+    background-color: #444444 !important; /* Fondo más oscuro al pasar el mouse */
+}
+
+body.dark-mode #datatablesSimple td,
+body.dark-mode #datatablesSimple th {
+    border: 1px solid #444444 !important; /* Bordes más oscuros */
+}
+
+body.dark-mode #datatablesSimple td {
+    color: #ffffff !important; /* Texto claro */
+}
