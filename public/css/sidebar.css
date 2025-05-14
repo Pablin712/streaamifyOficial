@@ -119,7 +119,7 @@
     color: #222;
 }
 .blue-sidebar .sb-sidenav-footer {
-    color: #222 !important;
+    color: #fff !important;
 }
 .yellow-sidebar .nav-link:hover {
     background: rgba(0, 0, 0, 0.1);
@@ -234,20 +234,52 @@
     display: none;
 }
 
+/* Reducir el tamaño de las letras en el sidebar */
 .sb-sidenav .nav-link {
-    font-size: 14px; /* Reducir el tamaño de las letras */
+    font-size: 14px !important; /* Tamaño más pequeño para los enlaces */
+    padding: 5px 10px !important; /* Reducir el padding entre opciones */
 }
 
 .sb-sidenav .sb-sidenav-menu-heading {
-    font-size: 12px; /* Reducir el tamaño de los encabezados */
+    font-size: 14px !important; /* Tamaño más pequeño para los encabezados */
+    font-weight: bold !important;
+    padding: 15px 20px !important;
 }
 
 .sb-sidenav-footer {
-    font-size: 12px; /* Reducir el tamaño del pie de página */
+    font-size: 15px !important; /* Tamaño más pequeño para el pie de página */
 }
 
+/* Reducir el tamaño de los íconos en el sidebar */
+.sb-sidenav .sb-nav-link-icon {
+    font-size: 16px !important; /* Tamaño más pequeño para los íconos */
+    min-width: 30px !important; /* Reducir el ancho mínimo */
+    text-align: center !important;
+}
+
+/* Reducir el espaciado entre los enlaces */
 .sb-sidenav .nav-link {
-    padding: 5px 10px; /* Reducir el padding entre opciones */
+    margin-bottom: 5px !important; /* Reducir el margen inferior */
+}
+
+/* Reducir el espaciado entre los encabezados y los enlaces */
+.sb-sidenav .sb-sidenav-menu-heading {
+    margin-bottom: 5px !important; /* Reducir el margen inferior */
+    margin-top: 4px !important; /* Reducir el margen superior */
+}
+
+/* Reducir el ancho del sidebar */
+.sidebar {
+    width: 200px !important; /* Ajustar el ancho del sidebar */
+    transition: all 0.3s !important;
+}
+
+.sidebar.collapsed {
+    width: 80px; /* Ancho reducido cuando está colapsado */
+}
+
+.sidebar.collapsed .nav-text {
+    display: none; /* Ocultar el texto cuando está colapsado */
 }
 
 /* Modo oscuro para el sidebar */
@@ -284,5 +316,23 @@ body.dark-mode .sb-sidenav-footer {
 
     .white-sidebar.show {
         left: 0;
+    }
+    .sidebar {
+        position: fixed;
+        left: -250px;
+        height: 100vh;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+    }
+
+    .sidebar.show {
+        left: 0;
+    }
+
+    #toggleSidebar {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
     }
 }

@@ -4,7 +4,7 @@
         <i class="fas fa-bars"></i>
     </button>
 
-    <div id="layoutSidenav_nav" class="sidebar green-sidebar">
+    <div id="layoutSidenav_nav" class="sidebar blue-sidebar">
         <nav class="sb-sidenav accordion" id="sidenavAccordion">
 
             <div class="sb-sidenav-menu">
