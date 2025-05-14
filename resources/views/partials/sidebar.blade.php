@@ -21,6 +21,13 @@
                             Dashboard
                         </a>
                     @endif
+                    {{-- Reemplazamos @can('calendario') --}}
+                    @if (Auth::user()->hasPermissionTo('cuentas'))
+                        <a class="nav-link" href="{{ route('calendario') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-calendar"></i></div>
+                            Calendario
+                        </a>
+                    @endif
                     <div class="sb-sidenav-menu-heading">Negocio</div>
                     {{-- Reemplazamos @canany(['empleados', 'roles.index']) --}}
                     @if (Auth::user()->hasAnyPermission(['empleados', 'roles.index']))

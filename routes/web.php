@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AsistenciaController;
+use App\Http\Controllers\CalendarController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LoginController;
@@ -124,6 +125,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
         Route::get('/dashboard/filter', 'filterData')->name('dashboard.filter');
         Route::get('/dashboard/pdf', 'generarPDF')->name('dashboard.pdf');
+    });
+    Route::controller(CalendarController::class)->group(function () {
+        Route::get('/calendario', 'index')->name('calendario');
     });
 
     Route::controller(CostoController::class)->group(function () {
