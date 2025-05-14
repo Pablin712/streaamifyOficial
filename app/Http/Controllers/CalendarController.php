@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Services\CuentaService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use App\Models\Cuenta;
+use App\Models\Tarea;
+use App\Models\ViewUsuarioActivo;
+
 class CalendarController extends Controller
 {
     protected $cuentaService;
@@ -23,6 +25,8 @@ class CalendarController extends Controller
         }
         $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
         $this->cuentaService->asignarUsuarios($cuentas);
-        return view('administration.calendar', compact('cuentas'));
+        $usuarios = ViewUsuarioActivo::all();
+        $tareas = Tarea::all();
+        return view('administration.calendar', compact('cuentas', 'usuarios', 'tareas'));
     }
 }
