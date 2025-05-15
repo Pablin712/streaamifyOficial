@@ -11,14 +11,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\CuentaService;
 use Illuminate\Support\Facades\Gate;
+use App\Services\ValorService;
 
 class ValorController extends Controller
 {
     protected $cuentaService;
+    protected $valorService;
+    /**
+     * ValorController constructor.
+     *
+     * @param CuentaService $cuentaService
+     * @param ValorService $valorService
+     */
 
-    public function __construct(CuentaService $cuentaService)
+    public function __construct(CuentaService $cuentaService, ValorService $valorService)
     {
         $this->cuentaService = $cuentaService;
+        $this->valorService = $valorService;
     }
     public function index()
     {
@@ -26,7 +35,9 @@ class ValorController extends Controller
             abort(403, 'No tienes permiso para ver los valores.');
         }
         $valores = Valor::with(['proveedor', 'servicio'])->where('activoval', true)->get();
-        return view('inventory.valores.index', compact('valores'));
+        $serviciosPrincipales = $this->valorService->obtenerServiciosPrincipales(Servicio::all());
+
+        return view('inventory.valores.index', compact('valores', 'serviciosPrincipales'));
     }
 
     public function create()
@@ -111,6 +122,30 @@ class ValorController extends Controller
         $valor->update($request->all());
 
         return redirect()->route('valores')->with('success', 'Valor actualizado con éxito.');
+    }
+
+    public function updatePantallas(Request $request)
+    {
+        if (!Gate::allows('valores.update')) {
+            abort(403, 'No tienes permiso para actualizar valores.');
+        }
+        $datos = $request->input('pantallas');
+        $request->validate([
+            'pantallas' => 'required|array',
+            'pantallas.*.pantmin' => 'required|integer|min:1',
+            'pantallas.*.pantmax' => 'required|integer|min:1',
+        ]);
+
+        foreach ($datos as $servicioId => $valores) {
+            Valor::where('idser', $servicioId)
+                ->where('tipoval', 'completo')
+                ->update([
+                    'pantminval' => $valores['pantmin'],
+                    'pantmaxval' => $valores['pantmax'],
+                ]);
+        }
+
+        return redirect()->back()->with('success', 'Valores actualizados correctamente.');
     }
 
     public function destroy($idval)

@@ -166,6 +166,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/valores/createstore', 'store')->name('valores.store');
         Route::get('/valores/{id}/edit', 'edit')->name('valores.edit');
         Route::put('/valores/{id}', 'update')->name('valores.update');
+        Route::post('/valores/updatePantallas', 'updatePantallas')->name('valores.updatePantallas');
         Route::delete('/valores/{id}', 'destroy')->name('valores.destroy');
     });
 

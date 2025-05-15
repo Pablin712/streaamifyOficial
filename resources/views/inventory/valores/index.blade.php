@@ -15,6 +15,46 @@
         </div>
     @endif
     <p>Revisa el inventario y crea nuevos posibles contratos para luego agregarlas a stock.</p>
+    <form action="{{ route('valores.updatePantallas') }}" method="POST">
+        @csrf
+        <div class="row">
+            @foreach ($serviciosPrincipales as $servicio)
+                <div class="col-md-3 mb-3">
+                    <div class="card border-{{ $servicio->color }} shadow-sm">
+                        <div class="card-body text-center">
+                            @if (Str::startsWith($servicio->icon, 'fa-'))
+                                <i class="fab {{ $servicio->icon }} fa-2x text-gray-300"></i>
+                            @else
+                                <img src="{{ asset('images/' . $servicio->icon) }}" width="40" height="40"
+                                    alt="{{ $servicio->nombreser }}">
+                            @endif
+
+                            <h6 class="card-title mt-2">{{ $servicio->nombreser }}</h6>
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="pantmin_{{ $servicio->idser }}" class="form-label small">Pant Min</label>
+                                    <input type="number" step="1" class="form-control form-control-sm"
+                                        id="pantmin_{{ $servicio->idser }}"
+                                        name="pantallas[{{ $servicio->idser }}][pantmin]" required min="1">
+                                </div>
+                                <div class="col-6">
+                                    <label for="pantmax_{{ $servicio->idser }}" class="form-label small">Pant Max</label>
+                                    <input type="number" step="1" class="form-control form-control-sm"
+                                        id="pantmax_{{ $servicio->idser }}"
+                                        name="pantallas[{{ $servicio->idser }}][pantmax]" required min="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="text-center mb-3">
+            <button type="submit" class="btn btn-primary btn-sm">Guardar Cambios</button>
+        </div>
+    </form>
 @endsection
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('valores.create'))
@@ -36,6 +76,7 @@
                 <th>Servicio</th>
                 <th>Proveedor</th>
                 <th>Costo</th>
+                <th>Tipo</th>
                 <th>Pantallas Min</th>
                 <th>Pantallas Max</th>
                 <th>Meses</th>
@@ -52,6 +93,7 @@
                     <td>{{ $valor->idser }}</td>
                     <td>{{ $valor->proveedor->nombrepro }}</td>
                     <td>${{ number_format($valor->costoval, 2) }}</td>
+                    <td>{{ $valor->tipoval}}</td>
                     <td>{{ $valor->pantminval }}</td>
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>
