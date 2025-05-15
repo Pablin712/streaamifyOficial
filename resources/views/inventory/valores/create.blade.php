@@ -39,6 +39,15 @@
             <label for="costoval">Costo</label>
             <input type="number" name="costoval" id="costoval" class="form-control" step="0.01" required>
         </div>
+        {{-- seleccionar tipoval: completo, individual o hibrido --}}
+        <div class="form-group mb-3">
+            <label for="tipoval">Tipo de Valor</label>
+            <select name="tipoval" id="tipoval" class="form-control" required>
+                <option value="completo">Completo</option>
+                <option value="individual">Individual</option>
+                <option value="hibrido">Híbrido</option>
+            </select>
+        </div>
         <div class="form-group mb-3">
             <label for="pantminval">Pantallas Mínimas</label>
             <input type="number" name="pantminval" id="pantminval" class="form-control" required>

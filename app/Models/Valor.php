@@ -21,6 +21,7 @@ class Valor extends Model
         'idser',
         'idpro',
         'costoval',
+        'tipoval',
         'pantminval',
         'pantmaxval',
         'mesesval',

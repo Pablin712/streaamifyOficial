@@ -55,6 +55,16 @@
                 step="0.01" required>
         </div>
 
+        <!-- Campo para Tipo de Valor -->
+        <div class="form-group mb-3">
+            <label for="tipoval">Tipo de Valor</label>
+            <select name="tipoval" id="tipoval" class="form-control" required>
+                <option value="completo" {{ $valor->tipoval == 'completo' ? 'selected' : '' }}>Completo</option>
+                <option value="individual" {{ $valor->tipoval == 'individual' ? 'selected' : '' }}>Individual</option>
+                <option value="hibrido" {{ $valor->tipoval == 'hibrido' ? 'selected' : '' }}>Híbrido</option>
+            </select>
+        </div>
+
         <!-- Campo para Pantallas Mínimas -->
         <div class="form-group mb-3">
             <label for="pantminval">Pantallas Mínimas</label>
