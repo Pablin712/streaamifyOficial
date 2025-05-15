@@ -106,3 +106,110 @@ body.dark-mode #datatablesSimple th {
 body.dark-mode #datatablesSimple td {
     color: #ffffff !important; /* Texto claro */
 }
+
+/* Modo oscuro para los modales */
+body.dark-mode .modal-content {
+    background-color: #1e1e1e; /* Fondo oscuro */
+    color: #ffffff; /* Texto claro */
+    border: 1px solid #444444; /* Bordes oscuros */
+}
+
+body.dark-mode .modal-header {
+    background-color: #2a2a2a; /* Fondo más oscuro para el encabezado */
+    color: #ffffff; /* Texto claro */
+    border-bottom: 1px solid #444444; /* Borde inferior */
+}
+
+body.dark-mode .modal-footer {
+    background-color: #2a2a2a; /* Fondo más oscuro para el pie de página */
+    border-top: 1px solid #444444; /* Borde superior */
+}
+
+body.dark-mode .modal-body {
+    background-color: #1e1e1e; /* Fondo oscuro */
+    color: #ffffff; /* Texto claro */
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1); /* Cambiar el color del botón de cerrar */
+}
+
+body.dark-mode .table {
+    background-color: #1e1e1e; /* Fondo oscuro para tablas dentro del modal */
+    color: #ffffff; /* Texto claro */
+}
+
+body.dark-mode .table-bordered th,
+body.dark-mode .table-bordered td {
+    border: 1px solid #444444; /* Bordes oscuros */
+}
+
+/* Modo oscuro para Select2 */
+body.dark-mode .select2-container--default .select2-selection--single {
+    background-color: #1e1e1e; /* Fondo oscuro */
+    color: #ffffff; /* Texto claro */
+    border: 1px solid #444444; /* Bordes oscuros */
+}
+
+body.dark-mode .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff; /* Texto claro */
+}
+
+body.dark-mode .select2-container--default .select2-selection--single .select2-selection__arrow {
+    color: #ffffff; /* Flecha clara */
+}
+
+body.dark-mode .select2-container--default .select2-dropdown {
+    background-color: #1e1e1e; /* Fondo oscuro para el desplegable */
+    color: #ffffff; /* Texto claro */
+    border: 1px solid #444444; /* Bordes oscuros */
+}
+
+body.dark-mode .select2-container--default .select2-results__option {
+    background-color: #1e1e1e; /* Fondo oscuro para las opciones */
+    color: #ffffff; /* Texto claro */
+}
+
+body.dark-mode .select2-container--default .select2-results__option--highlighted {
+    background-color: #333333; /* Fondo más oscuro para la opción resaltada */
+    color: #ffffff; /* Texto claro */
+}
+
+/* Modo oscuro para campos de tipo date */
+body.dark-mode input[type="date"] {
+    background-color: #1e1e1e; /* Fondo oscuro */
+    color: #ffffff; /* Texto claro */
+    border: 1px solid #444444; /* Bordes oscuros */
+    border-radius: 5px; /* Bordes redondeados */
+    padding: 8px; /* Espaciado interno */
+}
+
+body.dark-mode input[type="date"]::placeholder {
+    color: #bbbbbb; /* Color claro para el texto del placeholder */
+}
+
+body.dark-mode input[type="date"]:focus {
+    outline: none; /* Quitar el borde predeterminado */
+    border-color: #007bff; /* Borde azul al enfocar */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Sombra azul */
+}
+
+/* Modo oscuro para el footer */
+body.dark-mode footer {
+    background-color: #1e1e1e !important; /* Fondo oscuro */
+    color: #ffffff !important; /* Texto claro */
+}
+
+body.dark-mode footer a {
+    color: #007bff; /* Enlaces en azul claro */
+    text-decoration: none;
+}
+
+body.dark-mode footer a:hover {
+    color: #0056b3; /* Enlaces más oscuros al pasar el mouse */
+    text-decoration: underline;
+}
+
+body.dark-mode footer .text-muted {
+    color: #bbbbbb !important; /* Texto claro para elementos con clase text-muted */
+}
