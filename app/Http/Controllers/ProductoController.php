@@ -303,7 +303,7 @@ class ProductoController extends Controller
                     continue; // Si no hay servicio, pasar al siguiente detalle
                 }
                 if($detalle->meses > 1) {
-                    $precio = $servicio->precioser * $detalle->meses - ($detalle->meses - 1) * 0.30;
+                    $precio = $servicio->comboser * $detalle->meses + ($detalle->meses - 1) * 0.10;
                 } else {
                     $precio = $servicio->precioser;
                 }
