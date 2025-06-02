@@ -72,10 +72,35 @@
                                         $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                                     @endphp
                                     @if ($diasRestantes <= 0)
-                                        <span class="badge bg-danger">{{ $usuario->nombre_cliente }} (Vencido)</span><br>
+                                        <span class="badge bg-danger">{{ $usuario->nombre_cliente }} (Vencido)</span>
+                                        @if (Auth::user()->hasPermissionTo('ventas.renew'))
+                                            <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
+                                                class="btn btn-success btn-sm">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </a>
+                                        @endif
+                                        @if (Auth::user()->hasPermissionTo('usuarios.destroy'))
+                                            <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
+                                                style="display: inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-circle btn-sm"
+                                                    onclick="return confirm('¿Eliminar este usuario?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                        <br>
                                     @elseif ($diasRestantes <= 3)
                                         <span class="badge bg-warning">{{ $usuario->nombre_cliente }}
-                                            {{ $usuario->fecha_vencimiento }}</span><br>
+                                            {{ $usuario->fecha_vencimiento }}</span>
+                                        @if (Auth::user()->hasPermissionTo('ventas.renew'))
+                                            <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
+                                                class="btn btn-success btn-sm">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </a>
+                                        @endif
+                                        <br>
                                     @else
                                         <span class="badge bg-success">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>

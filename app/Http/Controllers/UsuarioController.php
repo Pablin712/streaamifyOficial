@@ -87,6 +87,6 @@ class UsuarioController extends Controller
             'created_at' => now(),
         ]);
 
-        return redirect()->route('usuarios')->with('success', 'Usuario eliminado con éxito.');
+        return redirect()->back()->with('success', 'Usuario eliminado con éxito.');
     }
 }
