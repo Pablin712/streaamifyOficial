@@ -21,8 +21,18 @@
             {{ session('success') }}
         </div>
     @endif
-    <p>En esta sección puedes ver los perfiles asociados a la cuenta de suscripción <strong>{{ $cuenta->usuariocue }}</strong>.
+    <p>En esta sección puedes ver los perfiles asociados a la cuenta de suscripción
+        <strong>{{ $cuenta->usuariocue }}</strong>.
         Puedes editar el PIN de cada perfil o ver los datos de acceso de la cuenta.</p>
+    @if (Auth::user()->hasPermissionTo('cuentas.status'))
+        <form action="{{ route('cuentas.moverClientes') }}" method="POST" class="mb-3">
+            @csrf
+            <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-random"></i> Mover todos los clientes a Mesa de Trabajo
+            </button>
+        </form>
+    @endif
 @endsection
 @section('content')
     <div class="container">

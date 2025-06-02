@@ -14,6 +14,7 @@ use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+
 class CuentaController extends Controller
 {
     protected $cuentaService;
@@ -140,6 +141,17 @@ class CuentaController extends Controller
 
         $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
+    }
+
+    public function moverClientes(Request $request)
+    {
+        $cuentaOrigen = Cuenta::find($request->input('cuenta_origen'));
+        $cuentaDestino = $this->cuentaService->obtenerCuentaDestino($cuentaOrigen);
+
+        // Actualiza todos los clientes/perfiles de la cuenta origen a la cuenta destino
+        $this->cuentaService->moverClientesDeCuenta($cuentaOrigen, $cuentaDestino);
+
+        return redirect()->back()->with('success', 'Clientes movidos a la mesa de trabajo correctamente.');
     }
 
     public function mensaje($perfilId)

@@ -8,6 +8,7 @@ use App\Models\Valor;
 use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
+use App\Models\DetalleVenta;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 
@@ -296,5 +297,53 @@ class CuentaService
             });
 
         return $query->orderBy('fechavencue')->get();
+    }
+    public function obtenerCuentaDestino($cuentaOrigen)
+    {
+        if (!$cuentaOrigen) {
+            return null; // Si la cuenta origen no existe, retornar null
+        }
+        $IDcuentaDestino = $cuentaOrigen->valor->idser . '-Atencion';
+        $cuentaDestino = Cuenta::find($IDcuentaDestino);
+        if (!$cuentaDestino) {
+            $cuentaDestino = new Cuenta();
+            $cuentaDestino->idcue = $IDcuentaDestino;
+            $cuentaDestino->activocue = true;
+            $cuentaDestino->caidacue = true;
+            $cuentaDestino->usuariocue = 'Atencion'; // Asignar un usuario por defecto
+            $cuentaDestino->contrasenacue = 'Atencion'; // Asignar una contraseña por defecto
+            $cuentaDestino->fechavencue = now()->addYear(); // Asignar una fecha de vencimiento por defecto
+            $cuentaDestino->valor()->associate($cuentaOrigen->valor); // Asociar el mismo valor
+            $cuentaDestino->save();
+        }
+        return $cuentaDestino;
+    }
+    public function moverClientesDeCuenta($cuentaOrigen, $cuentaDestino)
+    {
+        if (!$cuentaOrigen || !$cuentaDestino) {
+            return false; // Si alguna cuenta no existe, retornar false
+        }
+
+        // Obtener los usuarios activos de la cuenta origen
+        $usuarios = ViewUsuarioActivo::where('idcue', $cuentaOrigen->idcue)->get();
+
+        if ($usuarios->isEmpty()) {
+            return false; // Si no hay usuarios para mover, retornar false
+        }
+
+        foreach ($usuarios as $usuario) {
+            // Buscar el perfil en la cuenta destino con el mismo número de perfil
+            $perfilDestino = Perfil::where('idcue', $cuentaDestino->idcue)
+                ->where('numeroper', $usuario->perfil)
+                ->first();
+
+            if ($perfilDestino) {
+                // Actualizar el idper en DetalleVenta para este usuario
+                DetalleVenta::where('iddet', $usuario->iddet)
+                    ->update(['idper' => $perfilDestino->idper]);
+            }
+            // Si no existe el perfil en la cuenta destino, puedes decidir ignorar o manejarlo de otra forma
+        }
+        return true; // Retornar true si se movieron los clientes exitosamente
     }
 }
