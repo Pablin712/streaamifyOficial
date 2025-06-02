@@ -149,8 +149,16 @@ class CuentaController extends Controller
         $cuentaDestino = $this->cuentaService->obtenerCuentaDestino($cuentaOrigen);
 
         // Actualiza todos los clientes/perfiles de la cuenta origen a la cuenta destino
-        $this->cuentaService->moverClientesDeCuenta($cuentaOrigen, $cuentaDestino);
-
+        $respuesta = $this->cuentaService->moverClientesDeCuenta($cuentaOrigen, $cuentaDestino);
+        if(!$respuesta) {
+            return redirect()->back()->with('error', 'No se pudieron mover los clientes a la mesa de trabajo.');
+        }
+        Historial::create([
+            'accion' => 'Se movieron clientes de la cuenta con ID: ' . $cuentaOrigen->idcue . ' a la cuenta con ID: ' . $cuentaDestino->idcue,
+            'descripcion' => 'Clientes movidos a la mesa de trabajo.',
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
         return redirect()->back()->with('success', 'Clientes movidos a la mesa de trabajo correctamente.');
     }
 

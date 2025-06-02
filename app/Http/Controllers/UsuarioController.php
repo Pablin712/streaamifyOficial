@@ -58,7 +58,7 @@ class UsuarioController extends Controller
         // Actualizar los campos del usuario
         $detalle->idper = $request->idcue . '.' . $request->perfil;
         $detalle->fechavendet = $request->fecha_vencimiento;
-        
+
         Historial::create([
             'accion' => 'Actualización de Usuario',
             'descripcion' => 'Cliente: ' . $detalle->venta->cliente->nombrecli . ' - Datos antiguos: ' . json_encode($detalle),
@@ -88,5 +88,28 @@ class UsuarioController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Usuario eliminado con éxito.');
+    }
+    public function destroyMultiple(Request $request)
+    {
+        $ids = $request->input('usuarios', []);
+        $ids = array_filter($ids, 'is_numeric');
+        if (!Gate::allows('usuarios.destroy')) {
+            abort(403, 'No tienes permiso para eliminar usuarios.');
+        }
+        if (!empty($ids)) {
+            $detalles = DetalleVenta::whereIn('iddet', $ids)->get();
+            foreach ($detalles as $detalle) {
+                $detalle->activodet = !$detalle->activodet;
+                $detalle->save();
+
+                Historial::create([
+                    'accion' => 'Cuenta-Quitada',
+                    'descripcion' => 'Cliente: ' . ($detalle->venta->cliente->nombrecli ?? 'N/A') . ' - Usuario que se quitó: ' . json_encode($detalle),
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
+            }
+        }
+        return redirect()->back()->with('success', 'Usuarios eliminados correctamente.');
     }
 }
