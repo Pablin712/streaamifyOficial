@@ -35,6 +35,6 @@ class ViewUsuarioActivo extends Model
     }
     public function detalle_venta()
     {
-        return $this->belongsTo(Cliente::class, 'iddet', 'iddet');
+        return $this->belongsTo(DetalleVenta::class, 'iddet', 'iddet');
     }
 }

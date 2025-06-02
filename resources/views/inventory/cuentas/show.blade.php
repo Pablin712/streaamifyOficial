@@ -23,9 +23,11 @@
     @endif
     <p>En esta sección puedes ver los perfiles asociados a la cuenta de suscripción
         <strong>{{ $cuenta->usuariocue }}</strong>.
-        Puedes editar el PIN de cada perfil o ver los datos de acceso de la cuenta.</p>
+        Puedes editar el PIN de cada perfil o ver los datos de acceso de la cuenta.
+    </p>
     @if (Auth::user()->hasPermissionTo('cuentas.status'))
-        <form action="{{ route('cuentas.moverClientes') }}" method="POST" class="mb-3">
+        <form action="{{ route('cuentas.moverClientes') }}" method="POST" class="mb-3"
+            onsubmit="return confirm('¿Estás seguro de mover TODOS los clientes de esta cuenta a la Mesa de Trabajo? Esta acción no se puede deshacer.');">
             @csrf
             <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
             <button type="submit" class="btn btn-danger">
@@ -41,6 +43,7 @@
                 <tr>
                     <th>Número de Perfil</th>
                     <th>PIN del Perfil</th>
+                    <th>Num Usuarios</th>
                     <th>Usuarios Activos</th>
                     @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
                         <th>Acciones</th>
@@ -57,6 +60,29 @@
                                 class="{{ $perfil->usuarios_activos == 0 ? 'badge bg-danger' : ($perfil->usuarios_activos == 1 ? 'badge bg-success' : 'badge bg-dark') }}">
                                 {{ $perfil->usuarios_activos }}
                             </span>
+                        </td>
+                        <td>
+                            @if ($perfil->usuarios_activos == 0)
+                                <span class="badge-success">Libre</span>
+                            @else
+                                @foreach ($perfil->usuarios as $usuario)
+                                    @php
+                                        $fechaVencimiento = \Carbon\Carbon::parse($usuario->fecha_vencimiento);
+                                        $hoy = \Carbon\Carbon::today();
+                                        $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
+                                    @endphp
+                                    @if ($diasRestantes <= 0)
+                                        <span class="badge bg-danger">{{ $usuario->nombre_cliente }} (Vencido)</span><br>
+                                    @elseif ($diasRestantes <= 3)
+                                        <span class="badge bg-warning">{{ $usuario->nombre_cliente }}
+                                            {{ $usuario->fecha_vencimiento }}</span><br>
+                                    @else
+                                        <span class="badge bg-success">{{ $usuario->nombre_cliente }}
+                                            {{ $usuario->fecha_vencimiento }}</span>
+                                        <br>
+                                    @endif
+                                @endforeach
+                            @endif
                         </td>
                         @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
                             <td>

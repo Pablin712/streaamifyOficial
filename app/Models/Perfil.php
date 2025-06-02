@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Perfil extends Model
 {
     use HasFactory;
@@ -25,10 +26,19 @@ class Perfil extends Model
     {
         return $this->belongsTo(Cuenta::class, 'idcue', 'idcue');
     }
-    /*
-    public function detalles_venta()
+    public function usuarios()
+    {
+        return $this->hasManyThrough(
+            ViewUsuarioActivo::class, // Modelo destino
+            DetalleVenta::class,      // Modelo intermedio
+            'idper',    // Foreign key en DetalleVenta
+            'iddet',    // Foreign key en ViewUsuarioActivo
+            'idper',    // Local key en Perfil
+            'iddet'     // Local key en DetalleVenta
+        );
+    }
+    public function detalles()
     {
         return $this->hasMany(DetalleVenta::class, 'idper', 'idper')->onDelete('cascade');
     }
-        */
 }
