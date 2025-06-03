@@ -94,3 +94,13 @@
     <p>¿No deseas agregar una cuenta al stock? Vuelve a la página de listado:</p>
     <a href="{{ route('cuentas') }}" class="btn btn-secondary">Volver a Cuentas</a>
 @endsection
+@section('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            $('#idval').select2({
+                placeholder: "Selecciona un valor",
+                width: '100%'
+            });
+        });
+    </script>
+@endsection
