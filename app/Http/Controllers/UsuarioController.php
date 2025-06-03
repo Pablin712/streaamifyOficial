@@ -7,11 +7,19 @@ use App\Models\ViewUsuarioActivo;
 use App\Models\DetalleVenta;
 use App\Models\Cuenta;
 use App\Models\Historial;
+use App\Services\CuentaService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class UsuarioController extends Controller
 {
+    protected $cuentaService;
+
+    public function __construct(CuentaService $cuentaService)
+    {
+        $this->cuentaService = $cuentaService;
+    }
+
     public function index()
     {
         if (!Gate::allows('usuarios')) {
@@ -70,6 +78,20 @@ class UsuarioController extends Controller
         return redirect()->route('usuarios')->with('success', 'Usuario actualizado exitosamente.');
     }
 
+    public function moverUsuario($iddet){
+        if (!Gate::allows('usuarios.update')) {
+            abort(403, 'No tienes permiso para actualizar usuarios.');
+        }
+        $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
+
+        $respuesta = $this->cuentaService->mudarClienteAOtraCuenta($usuario);
+        if($respuesta == 'error'){
+            return redirect()->back()->with('error', 'No se pudo mover el usuario, probablemente ya no quedan espacios');
+        }
+        else{
+            return redirect()->back()->with('success', 'Usuario mudado a otra cuenta correctamente');
+        }
+    }
     public function destroy($iddet)
     {
         if (!Gate::allows('usuarios.destroy')) {

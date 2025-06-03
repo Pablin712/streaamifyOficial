@@ -25,7 +25,7 @@ class DetalleVentaFactory extends Factory
                 return $attributes['idven'];  // Usar el idven proporcionado desde el factory de Venta
             }),
             'idper' => Perfil::inRandomOrder()->first()->idper, // Relación aleatoria con un perfil
-            'fechavendet' => $this->faker->dateTimeBetween('2024-12-16', '2025-02-13'), // Fecha aleatoria dentro de este año
+            'fechavendet' => $this->faker->dateTimeBetween('2025-06-16', '2025-12-13'), // Fecha aleatoria dentro de este año
             'montodet' => $this->faker->randomFloat(2, 1.5, 10), // Monto aleatorio entre 1.5 y 10
             'activodet' => $this->faker->boolean, // Estado aleatorio (activo o inactivo)
         ];

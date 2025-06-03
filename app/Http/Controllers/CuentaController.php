@@ -145,6 +145,9 @@ class CuentaController extends Controller
 
     public function moverClientes(Request $request)
     {
+        if (!Gate::allows('usuarios.change')) {
+            abort(403, 'No tienes permiso para cambiar usuarios de la cuenta.');
+        }
         $cuentaOrigen = Cuenta::find($request->input('cuenta_origen'));
         $cuentaDestino = $this->cuentaService->obtenerCuentaDestino($cuentaOrigen);
 
@@ -154,12 +157,30 @@ class CuentaController extends Controller
             return redirect()->back()->with('error', 'No se pudieron mover los clientes a la mesa de trabajo.');
         }
         Historial::create([
-            'accion' => 'Se movieron clientes de la cuenta con ID: ' . $cuentaOrigen->idcue . ' a la cuenta con ID: ' . $cuentaDestino->idcue,
-            'descripcion' => 'Clientes movidos a la mesa de trabajo.',
+            'accion' => 'Mover-Usuarios-Mesa',
+            'descripcion' => 'Se movieron clientes de la cuenta con ID: ' . $cuentaOrigen->idcue . ' a la cuenta con ID: ' . $cuentaDestino->idcue,
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
         return redirect()->back()->with('success', 'Clientes movidos a la mesa de trabajo correctamente.');
+    }
+
+    public function moverClientesDisperso(Request $request){
+        if (!Gate::allows('usuarios.change')) {
+            abort(403, 'No tienes permiso para cambiar usuarios de la cuenta.');
+        }
+        $cuentaOrigen = Cuenta::find($request->input('cuenta_origen'));
+
+        $respuesta = $this->cuentaService->mudarClientesAOtraCuenta($cuentaOrigen);
+        if($respuesta == 'null') {
+            return redirect()->back()->with('error', 'No se pudieron mover los clientes a otro espacio.');
+        }
+        elseif($respuesta == 'incompleto') {
+            return redirect()->back()->with('error', 'Ya no quedan espacios, se movieron los que alcanzaron.');
+        }
+        else{
+            return redirect()->back()->with('success', 'Clientes movidos a otros espacios correctamente.');
+        }
     }
 
     public function mensaje($perfilId)

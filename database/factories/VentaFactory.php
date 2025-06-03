@@ -22,39 +22,15 @@ class VentaFactory extends Factory
      */
     public function definition(): array
     {
-        // Obtener la fecha de venta aleatoria
-        $fechaVenta = $this->faker->dateTimeBetween('2024-11-25', '2025-01-13');
-        $fechaVentaFormatted = Carbon::parse($fechaVenta)->format('dmy'); // Formato de fecha 'ddmmyy'
-        // Obtener el contador de ventas para el día actual
-        $ventaDiaria = DB::table('ventas_diarias')->first();
-
-        if (!$ventaDiaria) {
-            // Si no existe, creamos un nuevo registro para hoy con el contador inicializado
-            DB::table('ventas_diarias')->insert([
-                'fecha' => Carbon::today()->toDateString(),
-                'numero_venta' => 2,  // Iniciamos el contador en 1
-            ]);
-            $numeroVenta = 1;
-        } else {
-            // Si ya existe un registro, incrementamos el contador
-            $numeroVenta = $ventaDiaria->numero_venta;
-            DB::table('ventas_diarias')
-                ->where('fecha', Carbon::today()->toDateString())
-                ->update(['numero_venta' => $numeroVenta + 1]);
-        }
-
-        // Generar el ID de venta en el formato deseado
-        $idVenta = 'FAC' . str_pad($numeroVenta, 3, '0', STR_PAD_LEFT) . '-' . $fechaVentaFormatted;
-
         // Crear la venta inicialmente con totalpagoven = 0
-        $venta = Venta::make([
-            'idemp' => Empleado::inRandomOrder()->first()->idemp, // Relación aleatoria con un empleado
-            'idcli' => Cliente::inRandomOrder()->first()->idcli, // Relación aleatoria con un cliente
-            'fechaven' => $fechaVenta, // Fecha aleatoria dentro de este año
-            'idven' => $idVenta, // Asignar el ID generado
-            'totalpagoven' => 0, // Inicializamos el total como 0
-        ]);
+        $venta = new Venta();
+        $venta->idemp = Empleado::inRandomOrder()->first()->idemp;
+        $venta->idcli = Cliente::inRandomOrder()->first()->idcli;
+        $venta->fechaven = $this->faker->dateTimeBetween('2025-05-01', '2025-06-02');
+        $venta->totalpagoven = 0; // Asignar un usuario por defecto// Asociar el mismo valor
+        $venta->save();
 
+        //dd($venta);
         // Generar detalles de venta, pasándole la venta creada
         $detalles = DetalleVenta::factory()->count($this->faker->numberBetween(1, 7))->make([
             'idven' => $venta->idven,  // Asignar el idven de la venta creada

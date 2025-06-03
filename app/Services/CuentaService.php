@@ -9,8 +9,10 @@ use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
 use App\Models\DetalleVenta;
+use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
+use Illuminate\Support\Facades\Auth;
 
 class CuentaService
 {
@@ -73,6 +75,28 @@ class CuentaService
                 $query->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = cuentas.idcue) < valores.pantmaxval');
             })
             ->first();
+    }
+    public function buscarPerfilDisponible($cuenta)
+    {
+        if (!$cuenta) {
+            return null;
+        }
+        // Primero, intenta encontrar un perfil con 0 usuarios activos
+        $perfil = Perfil::where('idcue', $cuenta->idcue)
+            ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
+                    WHERE view_usuarios_activos.idcue = perfiles.idcue 
+                    AND view_usuarios_activos.perfil = perfiles.numeroper) = 0')
+            ->first();
+
+        // Si no hay perfiles con 0 usuarios, intenta encontrar uno con solo 1 usuario activo
+        if (!$perfil) {
+            $perfil = Perfil::where('idcue', $cuenta->idcue)
+                ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
+                        WHERE view_usuarios_activos.idcue = perfiles.idcue 
+                        AND view_usuarios_activos.perfil = perfiles.numeroper) = 1')
+                ->first();
+        }
+        return $perfil; // Retorna el perfil encontrado o null si no hay ninguno disponible
     }
     public function actualizarEstadoProductos($idser)
     {
@@ -326,7 +350,6 @@ class CuentaService
 
         // Obtener los usuarios activos de la cuenta origen
         $usuarios = ViewUsuarioActivo::where('idcue', $cuentaOrigen->idcue)->get();
-
         if ($usuarios->isEmpty()) {
             return false; // Si no hay usuarios para mover, retornar false
         }
@@ -345,5 +368,60 @@ class CuentaService
             // Si no existe el perfil en la cuenta destino, puedes decidir ignorar o manejarlo de otra forma
         }
         return true; // Retornar true si se movieron los clientes exitosamente
+    }
+
+    public function mudarClientesAOtraCuenta($cuentaOrigen)
+    {
+        $idser = $cuentaOrigen->valor->idser;
+
+        // Obtener los usuarios activos de la cuenta origen
+        $usuarios = ViewUsuarioActivo::where('idcue', $cuentaOrigen->idcue)->orderBy('nombre_cliente')->get();
+        if ($usuarios->isEmpty()) {
+            return 'null'; // Si no hay usuarios para mover, retornar vacio
+        }
+        foreach ($usuarios as $usuario) {
+            // Buscar el perfil en la cuenta destino con el mismo número de perfil
+            $cuentaDestino = $this->buscarCuentaDisponible($idser);
+            $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
+
+            if ($perfilDestino) {
+                // Actualizar el idper en DetalleVenta para este usuario
+                DetalleVenta::where('iddet', $usuario->iddet)
+                    ->update(['idper' => $perfilDestino->idper]);
+                Historial::create([
+                    'accion' => 'Mudacion-Usuarios',
+                    'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta ' . $usuario->idcue . ' perfil: ' . $usuario->perfil,
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
+            } else {
+                return 'incompleto';
+            }
+            // Si no existe el perfil en la cuenta destino, puedes decidir ignorar o manejarlo de otra forma
+        }
+        return 'sucess';
+    }
+    public function mudarClienteAOtraCuenta($usuario)
+    {
+        $cuentaOrigen = $usuario->cuenta;
+        $idser = $cuentaOrigen->valor->idser;
+
+        $cuentaDestino = $this->buscarCuentaDisponible($idser);
+        $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
+
+        if ($perfilDestino) {
+            // Actualizar el idper en DetalleVenta para este usuario
+            DetalleVenta::where('iddet', $usuario->iddet)
+                ->update(['idper' => $perfilDestino->idper]);
+            Historial::create([
+                'accion' => 'Mudacion-Usuario',
+                'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta ' . $usuario->idcue . ' perfil: ' . $usuario->perfil,
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+            return 'success';
+        } else {
+            return 'error';
+        }
     }
 }

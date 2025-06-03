@@ -30,6 +30,8 @@
         @csrf
         @method('DELETE')
         <div class="mb-2">
+            Marcar todos
+            <input type="checkbox" id="check-todos">
             <button type="submit" class="btn btn-danger btn-sm" id="btn-borrar-seleccionados" disabled>
                 <i class="fas fa-trash"></i> Borrar seleccionados
             </button>
@@ -38,7 +40,7 @@
             <thead>
                 <tr>
                     <th>
-                        <input type="checkbox" id="check-todos">
+                        ✅
                     </th>
                     <th>Cliente</th>
                     <th>Teléfono</th>
@@ -88,6 +90,11 @@
                                         class="btn btn-warning btn-sm">
                                         <i class="fas fa-exchange-alt"></i>
                                     </a>
+                                    <a href="#" class="btn btn-dark btn-circle btn-sm btn-mover-usuario"
+                                        data-id="{{ $usuario->iddet }}"
+                                        onclick="event.preventDefault(); moverUsuario({{ $usuario->iddet }});">
+                                        <i class="fas fa-random"></i>
+                                    </a>
                                 @endif
                                 @if ($diasRestantes <= 3)
                                     @if (Auth::user()->hasPermissionTo('ventas.renew'))
@@ -119,16 +126,35 @@
             </tbody>
         </table>
     </form>
+    <form id="form-mover-usuario" method="POST" style="display:none;">
+    @csrf
+</form>
 @endsection
 @section('scripts')
+    @parent
     <script>
+        function moverUsuario(iddet) {
+            if (confirm('Mudar este usuario?')) {
+                var form = document.getElementById('form-mover-usuario');
+                form.action = "{{ url('admin/usuarios') }}/" + iddet + "/mover";
+                form.submit();
+            }
+        }
+        function borrarUsuario(iddet) {
+            if (confirm('¿Eliminar este usuario?')) {
+                var form = document.getElementById('form-borrar-individual');
+                form.action = "{{ url('admin/usuarios') }}/" + iddet;
+                form.submit();
+            }
+        }
         document.addEventListener('DOMContentLoaded', function() {
             const checkTodos = document.getElementById('check-todos');
             const btnBorrar = document.getElementById('btn-borrar-seleccionados');
             const form = document.getElementById('form-borrar-usuarios');
 
             function getCheckUsuarios() {
-                return document.querySelectorAll('.check-usuario');
+                // Solo checkboxes habilitados (los visibles)
+                return document.querySelectorAll('.check-usuario:not([disabled])');
             }
 
             function actualizarBoton() {
@@ -147,10 +173,13 @@
                 });
             }
 
-            // Habilitar/deshabilitar botón según selección
+            // Si se desmarca algún checkbox individual, desmarca el "check-todos"
             document.addEventListener('change', function(e) {
                 if (e.target.classList.contains('check-usuario')) {
                     actualizarBoton();
+                    const checkUsuarios = getCheckUsuarios();
+                    // Si todos están marcados, marca el check-todos; si no, desmárcalo
+                    checkTodos.checked = Array.from(checkUsuarios).every(chk => chk.checked);
                 }
             });
 
@@ -166,8 +195,11 @@
                 }
             });
 
-            // Inicializar estado del botón al cargar
+            // Inicializar estado del botón y del check-todos al cargar
             actualizarBoton();
+            // Si todos los checkboxes están marcados al cargar, marca el check-todos
+            const checkUsuarios = getCheckUsuarios();
+            checkTodos.checked = checkUsuarios.length > 0 && Array.from(checkUsuarios).every(chk => chk.checked);
         });
     </script>
 @endsection

@@ -25,16 +25,28 @@
         <strong>{{ $cuenta->usuariocue }}</strong>.
         Puedes editar el PIN de cada perfil o ver los datos de acceso de la cuenta.
     </p>
-    @if (Auth::user()->hasPermissionTo('cuentas.status'))
-        <form action="{{ route('cuentas.moverClientes') }}" method="POST" class="mb-3"
-            onsubmit="return confirm('¿Estás seguro de mover TODOS los clientes de esta cuenta a la Mesa de Trabajo? Esta acción no se puede deshacer.');">
-            @csrf
-            <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
-            <button type="submit" class="btn btn-danger">
-                <i class="fas fa-random"></i> Mover todos los clientes a Mesa de Trabajo
-            </button>
-        </form>
-    @endif
+    <div class="row">
+        @if (Auth::user()->hasPermissionTo('usuarios.change'))
+            <form action="{{ route('cuentas.moverClientes') }}" method="POST" class="mb-3"
+                onsubmit="return confirm('¿Estás seguro de mover TODOS los clientes de esta cuenta a la Mesa de Trabajo? Esta acción no se puede deshacer.');">
+                @csrf
+                <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-random"></i> Mover todos los clientes a Mesa de Trabajo
+                </button>
+            </form>
+        @endif
+        @if (Auth::user()->hasPermissionTo('usuarios.change'))
+            <form action="{{ route('cuentas.moverClientesDisperso') }}" method="POST" class="mb-3"
+                onsubmit="return confirm('¿Estás seguro de mover TODOS los clientes de esta cuenta a otras cuentas disponibles? Esta acción no se puede deshacer.');">
+                @csrf
+                <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-random"></i> Mover todos los clientes a otro lugar
+                </button>
+            </form>
+        @endif
+    </div>
 @endsection
 @section('content')
     <div class="container">
@@ -73,6 +85,16 @@
                                     @endphp
                                     @if ($diasRestantes <= 0)
                                         <span class="badge bg-danger">{{ $usuario->nombre_cliente }} (Vencido)</span>
+                                        @if (Auth::user()->hasPermissionTo('usuarios.change'))
+                                            <form action="{{ route('usuarios.moverUsuario', $usuario->iddet) }}"
+                                                method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-dark btn-circle btn-sm"
+                                                    onclick="return confirm('Mudar este usuario?')">
+                                                    <i class="fas fa-exchange"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
                                                 class="btn btn-success btn-sm">
@@ -94,6 +116,16 @@
                                     @elseif ($diasRestantes <= 3)
                                         <span class="badge bg-warning">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>
+                                        @if (Auth::user()->hasPermissionTo('usuarios.change'))
+                                            <form action="{{ route('usuarios.moverUsuario', $usuario->iddet) }}"
+                                                method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-dark btn-circle btn-sm"
+                                                    onclick="return confirm('Mudar este usuario?')">
+                                                    <i class="fas fa-exchange"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
                                                 class="btn btn-success btn-sm">
@@ -104,6 +136,16 @@
                                     @else
                                         <span class="badge bg-success">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>
+                                        @if (Auth::user()->hasPermissionTo('usuarios.change'))
+                                            <form action="{{ route('usuarios.moverUsuario', $usuario->iddet) }}"
+                                                method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-dark btn-circle btn-sm"
+                                                    onclick="return confirm('Mudar este usuario?')">
+                                                    <i class="fas fa-random"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         <br>
                                     @endif
                                 @endforeach
