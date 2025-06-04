@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: sans-serif;
-            font-size: 12px;
+            font-size: 10px;
             margin: 20px;
         }
 
@@ -85,49 +85,60 @@
     <h2>Reporte Top Valores - {{ $fecha }}</h2>
     <p style="text-align:center;">Premiación a los 3 mejores valores por servicio (último mes)</p>
 
-    <div class="table-container">
+    <table width="100%" cellpadding="10" cellspacing="0">
         @php
-            $agrupados = $mejoresValores->groupBy('idser');
-            $premios = [1, 2, 3];
+            $agrupados = $mejoresValores->groupBy('idser')->values();
+            $medallas = [1, 2, 3];
             $clases = ['oro', 'plata', 'bronce'];
-            $contador = 0;
         @endphp
 
-        @forelse($agrupados as $idser => $valoresServicio)
+        @for ($i = 0; $i < $agrupados->count(); $i += 2)
+            <tr>
+                @for ($j = 0; $j < 2; $j++)
+                    @php
+                        $index = $i + $j;
+                        if (!isset($agrupados[$index])) {
+                            echo '<td width="50%"></td>';
+                            continue;
+                        }
+                        $valoresServicio = $agrupados[$index];
+                        $servicio = $valoresServicio->first()->servicio->nombreser ?? $valoresServicio->first()->idser;
+                    @endphp
 
-            <div class="service-table" style="flex:1;">
-                <div class="titulo-servicio">
-                    {{ $valoresServicio->first()->servicio->nombreser ?? $idser }}
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="premio">#</th>
-                            <th>Proveedor</th>
-                            <th>Tipo</th>
-                            <th>Meses</th>
-                            <th>Costo</th>
-                            <th>ID Valor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($valoresServicio->take(3)->values() as $index => $valor)
-                            <tr class="{{ $clases[$index] ?? '' }}">
-                                <td class="premio">{{ $premios[$index] ?? '-' }}</td>
-                                <td>{{ $valor->proveedor->nombrepro ?? $valor->idpro }}</td>
-                                <td>{{ ucfirst($valor->tipoval) }}</td>
-                                <td>{{ $valor->mesesval }}</td>
-                                <td>${{ number_format($valor->costoval, 2) }}</td>
-                                <td>{{ $valor->idval }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @empty
-            <p>No hay valores para mostrar.</p>
-        @endforelse
-    </div>
+                    <td width="50%" valign="top">
+                        <div class="service-table">
+                            <div class="titulo-servicio">{{ $servicio }}</div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="premio">#</th>
+                                        <th>Proveedor</th>
+                                        <th>Tipo</th>
+                                        <th>Meses</th>
+                                        <th>Costo</th>
+                                        <th>ID Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($valoresServicio->take(3)->values() as $k => $valor)
+                                        <tr class="{{ $clases[$k] ?? '' }}">
+                                            <td>{{ $medallas[$k] ?? '' }}</td>
+                                            <td>{{ $valor->proveedor->nombrepro ?? $valor->idpro }}</td>
+                                            <td>{{ ucfirst($valor->tipoval) }}</td>
+                                            <td>{{ $valor->mesesval }}</td>
+                                            <td>${{ number_format($valor->costoval, 2) }}</td>
+                                            <td>{{ $valor->idval }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                @endfor
+            </tr>
+        @endfor
+    </table>
+
 
     <p style="font-size:11px; text-align:right;">Generado el {{ $fecha }}</p>
 </body>
