@@ -30,6 +30,8 @@
         <label><input type="checkbox" class="column-toggle" data-column="8"> Prime</label>
         <label><input type="checkbox" class="column-toggle" data-column="9"> Spotify</label>
         <label><input type="checkbox" class="column-toggle" data-column="10"> Otros</label>
+        <label><input type="checkbox" class="column-toggle" data-column="11"> Se debe</label>
+        <label><input type="checkbox" class="column-toggle" data-column="12"> Pagar en el mes</label>
     </div>
     <table id="datatablesSimpl" class="table table-striped table-bordered">
         <thead>
@@ -45,6 +47,8 @@
                 <th>Prime</th>
                 <th>Spotify</th>
                 <th>Otros</th>
+                <th>Se debe</th>
+                <th>Pagar en el mes</th>
                 @if (Auth::user()->hasAnyPermission(['proveedores.edit', 'proveedores.destroy']))
                     <th>Acciones</th>
                 @endif
@@ -64,6 +68,20 @@
                     <td>{{ $proveedor->cuentas_prime_v }}</td>
                     <td>{{ $proveedor->cuentas_spotify }}</td>
                     <td>{{ $proveedor->otras_cuentas }}</td>
+                    <td>
+                        @if ($proveedor->se_debe > 0)
+                            <span class="badge bg-danger">
+                                ${{ $proveedor->se_debe }}
+                            </span>
+                        @else
+                            <span class="badge bg-success">$0</span>
+                        @endif
+                    </td>
+                    <td>
+                        <span class="badge bg-warning">
+                            ${{ $proveedor->se_debe_mes }}
+                        </span>
+                    </td>
                     @if (Auth::user()->hasAnyPermission(['proveedores.edit', 'proveedores.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('proveedores.edit'))

@@ -95,4 +95,28 @@ class Proveedor extends Model
             'SPOTIFY'
         ])->count();
     }
+
+    private function calcularTotalAPagar($fecha)
+    {
+        $total = 0;
+        foreach ($this->valores as $valor) {
+            if ($valor->activoval) {
+                $cuentas = $valor->cuentas()->where('activocue', true)->get();
+                foreach ($cuentas as $cuenta) {
+                    if ($cuenta->fechavencue <= $fecha) {
+                        $total += $valor->costoval;
+                    }
+                }
+            }
+        }
+        return number_format($total, 2);
+    }
+    public function getSeDebeAttribute()
+    {
+        return $this->calcularTotalAPagar(now());
+    }
+    public function getSeDebeMesAttribute()
+    {
+        return $this->calcularTotalAPagar(now()->endOfMonth());
+    }
 }
