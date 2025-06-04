@@ -56,14 +56,14 @@
                     <td>{{ $proveedor->idpro }}</td>
                     <td>{{ $proveedor->nombrepro }}</td>
                     <td>{{ $proveedor->telefonopro }}</td>
-                    <td>{{ $proveedor->totalCuentas }}</td>
-                    <td>{{ $proveedor->cuentasNetflix }}</td>
-                    <td>{{ $proveedor->cuentasDisneyP }}</td>
-                    <td>{{ $proveedor->cuentasDisneyS }}</td>
-                    <td>{{ $proveedor->cuentasMAX }}</td>
-                    <td>{{ $proveedor->cuentasPrimeV }}</td>
-                    <td>{{ $proveedor->cuentasSpotify }}</td>
-                    <td>{{ $proveedor->otrasCuentas }}</td>
+                    <td>{{ $proveedor->total_cuentas }}</td>
+                    <td>{{ $proveedor->cuentas_netflix }}</td>
+                    <td>{{ $proveedor->cuentas_disney_p }}</td>
+                    <td>{{ $proveedor->cuentas_disney_s }}</td>
+                    <td>{{ $proveedor->cuentas_max }}</td>
+                    <td>{{ $proveedor->cuentas_prime_v }}</td>
+                    <td>{{ $proveedor->cuentas_spotify }}</td>
+                    <td>{{ $proveedor->otras_cuentas }}</td>
                     @if (Auth::user()->hasAnyPermission(['proveedores.edit', 'proveedores.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('proveedores.edit'))

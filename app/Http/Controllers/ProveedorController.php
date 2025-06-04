@@ -11,31 +11,12 @@ use App\Services\CuentaService;
 use Illuminate\Support\Facades\Gate;
 class ProveedorController extends Controller
 {
-    /*
-    // Constructor original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:proveedores')->only('index');
-        $this->middleware('can:proveedores.store')->only('create', 'store');
-        $this->middleware('can:proveedores.update')->only('edit', 'update');
-        $this->middleware('can:proveedores.destroy')->only('destroy');
-    }
-    */
     public function index()
     {
         if (!Gate::allows('proveedores')) {
             abort(403, 'No tienes permiso para ver los proveedores.');
         }
         $proveedores = Proveedor::where('activopro', true)->get();
-        foreach ($proveedores as $proveedor) {
-            $proveedor->totalCuentas = $proveedor->cuentas()->count();
-            $proveedor->cuentasNetflix = $proveedor->contarCuentasPorServicio('NETFLIX');
-            $proveedor->cuentasDisneyP = $proveedor->contarCuentasPorServicio('DISNEYP');
-            $proveedor->cuentasDisneyS = $proveedor->contarCuentasPorServicio('DISNEYS');
-            $proveedor->cuentasMAX = $proveedor->contarCuentasPorServicio('MAX');
-            $proveedor->cuentasPrimeV = $proveedor->contarCuentasPorServicio('PRIME');
-            $proveedor->cuentasSpotify = $proveedor->contarCuentasPorServicio('SPOTIFY');
-            $proveedor->otrasCuentas = $proveedor->cuentas()->whereNotIn('idser', ['NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'SPOTIFY'])->count();
-        }
         return view('inventory.proveedores.index', compact('proveedores'));
     }
 

@@ -49,4 +49,50 @@ class Proveedor extends Model
             $query->where('idser', $idser);
         })->count();
     }
+    public function getTotalCuentasAttribute()
+    {
+        return $this->cuentas()->count();
+    }
+
+    public function getCuentasNetflixAttribute()
+    {
+        return $this->contarCuentasPorServicio('NETFLIX');
+    }
+
+    public function getCuentasDisneyPAttribute()
+    {
+        return $this->contarCuentasPorServicio('DISNEYP');
+    }
+
+    public function getCuentasDisneySAttribute()
+    {
+        return $this->contarCuentasPorServicio('DISNEYS');
+    }
+
+    public function getCuentasMaxAttribute()
+    {
+        return $this->contarCuentasPorServicio('MAX');
+    }
+
+    public function getCuentasPrimeVAttribute()
+    {
+        return $this->contarCuentasPorServicio('PRIME');
+    }
+
+    public function getCuentasSpotifyAttribute()
+    {
+        return $this->contarCuentasPorServicio('SPOTIFY');
+    }
+
+    public function getOtrasCuentasAttribute()
+    {
+        return $this->cuentas()->whereNotIn('idser', [
+            'NETFLIX',
+            'DISNEYP',
+            'DISNEYS',
+            'MAX',
+            'PRIME',
+            'SPOTIFY'
+        ])->count();
+    }
 }
