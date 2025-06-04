@@ -14,6 +14,8 @@ use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
 
 class CuentaController extends Controller
 {
@@ -123,6 +125,27 @@ class CuentaController extends Controller
         }
     }
 
+    public function pdf()
+    {
+        $cuentas = Cuenta::with('valor.proveedor', 'valor.servicio')->get();
+        
+        $cuentasRenovar = $cuentas->filter(function($c) {
+            return $c->is_conveniente_renovar && $c->costo_mes > 0;
+        })->sortBy([
+            fn($a) => $a->valor->proveedor->nombrepro ?? 'Desconocido',
+            fn($a) => $a->valor->servicio->nombreser ?? 'Servicio'
+        ]);
+
+        $agrupadas = $cuentasRenovar->groupBy(fn($c) => $c->valor->proveedor->nombrepro ?? 'Sin proveedor');
+    
+        $fecha = now()->toDateString();
+        $pdf = Pdf::loadView('inventory.cuentas.pdf', compact('cuentas','agrupadas', 'fecha'))
+            ->setPaper('a4', 'portrait')
+            ->setOptions(['defaultFont' => 'sans-serif']);
+        $nombreArchivo = "Inventario-Cuentas-{$fecha}.pdf";
+        return $pdf->download($nombreArchivo);
+    }
+
     public function status($idcue)
     {
         if (!Gate::allows('cuentas.status')) {
@@ -153,7 +176,7 @@ class CuentaController extends Controller
 
         // Actualiza todos los clientes/perfiles de la cuenta origen a la cuenta destino
         $respuesta = $this->cuentaService->moverClientesDeCuenta($cuentaOrigen, $cuentaDestino);
-        if(!$respuesta) {
+        if (!$respuesta) {
             return redirect()->back()->with('error', 'No se pudieron mover los clientes a la mesa de trabajo.');
         }
         Historial::create([
@@ -165,20 +188,19 @@ class CuentaController extends Controller
         return redirect()->back()->with('success', 'Clientes movidos a la mesa de trabajo correctamente.');
     }
 
-    public function moverClientesDisperso(Request $request){
+    public function moverClientesDisperso(Request $request)
+    {
         if (!Gate::allows('usuarios.change')) {
             abort(403, 'No tienes permiso para cambiar usuarios de la cuenta.');
         }
         $cuentaOrigen = Cuenta::find($request->input('cuenta_origen'));
 
         $respuesta = $this->cuentaService->mudarClientesAOtraCuenta($cuentaOrigen);
-        if($respuesta == 'null') {
+        if ($respuesta == 'null') {
             return redirect()->back()->with('error', 'No se pudieron mover los clientes a otro espacio.');
-        }
-        elseif($respuesta == 'incompleto') {
+        } elseif ($respuesta == 'incompleto') {
             return redirect()->back()->with('error', 'Ya no quedan espacios, se movieron los que alcanzaron.');
-        }
-        else{
+        } else {
             return redirect()->back()->with('success', 'Clientes movidos a otros espacios correctamente.');
         }
     }

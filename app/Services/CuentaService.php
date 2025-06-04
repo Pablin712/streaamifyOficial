@@ -230,7 +230,6 @@ class CuentaService
     }
     public function obtenerCuentasColapsadas($cuentas)
     {
-        $this->asignarUsuarios($cuentas);
         return $cuentas->filter(function ($cuenta) {
             return $cuenta->valor->pantmaxval < $cuenta->usuarios_activos;
         });

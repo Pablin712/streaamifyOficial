@@ -104,6 +104,9 @@
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('cuentas.create'))
         <a href="{{ route('cuentas.create') }}" class="btn btn-primary mb-3">Crear Cuenta</a>
+        <a href="{{ route('cuentas.pdf') }}" class="btn btn-outline-primary" target="_blank">
+            <i class="fas fa-file-pdf"></i> Reporte PDF
+        </a>
     @endif
     @if (Auth::user()->hasPermissionTo('valores.create'))
         <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
@@ -115,12 +118,12 @@
 @section('table1')
     <ul class="nav nav-tabs" id="cuentasTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="todas-tab" data-bs-toggle="tab" data-bs-target="#todas"
-                type="button" role="tab">Todas</button>
+            <button class="nav-link active" id="todas-tab" data-bs-toggle="tab" data-bs-target="#todas" type="button"
+                role="tab">Todas</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="disponibles-tab" data-bs-toggle="tab" data-bs-target="#disponibles"
-                type="button" role="tab">Disponibles</button>
+            <button class="nav-link" id="disponibles-tab" data-bs-toggle="tab" data-bs-target="#disponibles" type="button"
+                role="tab">Disponibles</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="colapsadas-tab" data-bs-toggle="tab" data-bs-target="#colapsadas" type="button"
@@ -179,7 +182,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 const tables = document.querySelectorAll(
-                '.datatable'); // Selecciona todas las tablas con la clase 'datatable'
+                    '.datatable'); // Selecciona todas las tablas con la clase 'datatable'
 
                 tables.forEach((table) => {
                     const rows = table.querySelectorAll('tbody tr');

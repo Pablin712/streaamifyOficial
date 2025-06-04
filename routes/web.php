@@ -196,6 +196,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(CuentaController::class)->group(function () {
         Route::get('/cuentas', 'index')->name('cuentas');
         Route::get('/cuentas/create', 'create')->name('cuentas.create');
+        Route::get('/cuentas/pdf', 'pdf')->name('cuentas.pdf');
         Route::post('/cuentas/createstore', 'store')->name('cuentas.store');
         Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
         Route::post('/cuentas/mover-clientes', 'moverClientes')->name('cuentas.moverClientes');

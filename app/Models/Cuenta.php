@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Carbon;
+
 class Cuenta extends Model
 {
     use HasFactory;
@@ -40,5 +42,49 @@ class Cuenta extends Model
     public function mantenimiento()
     {
         return $this->hasOne(Mantenimiento::class, 'idcue', 'idcue');
+    }
+    public function usuarios() //obtiene los usuarios de la cuenta
+    {
+        return $this->hasMany(ViewUsuarioActivo::class, 'idcue', 'idcue');
+    }
+    public function clientes_activos() //obtiene los usuarios activos de la cuenta
+    {
+        return $this->hasMany(ViewUsuarioActivo::class, 'idcue', 'idcue')
+            ->where('fecha_vencimiento', '>', now())->get();
+    }
+    public function getUsuariosActivosAttribute()
+    {
+        return ViewUsuarioActivo::where('idcue', $this->idcue)
+            ->where('fecha_vencimiento', '>', now())
+            ->count();
+    }
+    public function usuarios_que_siguen()
+    {
+        return $this->hasMany(ViewUsuarioActivo::class, 'idcue', 'idcue')
+            ->where('fecha_vencimiento', '>', $this->fechavencue)->get();
+    }
+    public function getPagadoMesAttribute()
+    {
+        return $this->costos()
+            ->whereMonth('fechacos', Carbon::now()->month)
+            ->whereYear('fechacos', Carbon::now()->year)
+            ->sum('montocos');
+    }
+    public function getCostoMesAttribute()
+    {
+        $fechaVenc = $this->fechavencue ? Carbon::parse($this->fechavencue) : null;
+        if ($fechaVenc && $fechaVenc->month == Carbon::now()->month && $fechaVenc->year == Carbon::now()->year) {
+            return $this->valor->costoval;
+        } else {
+            return 0;
+        }
+    }
+    public function getIsConvenienteRenovarAttribute()
+    {
+        if ($this->usuarios_que_siguen()->count() >= $this->valor->pantminval) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
