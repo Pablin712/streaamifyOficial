@@ -58,25 +58,47 @@
 @endsection
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('valores.create'))
-        <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
-        <form action="{{ route('valores.corregir') }}" method="POST" class="mb-3 d-inline">
-            @csrf
-            <button type="submit" class="btn btn-primary">
-                Corregir idval de Valores
-            </button>
-        </form>
-        <form action="{{ route('valores.deletegroup') }}" method="POST" class="mb-3 d-inline">
-            @csrf
-            <button type="submit" class="btn btn-danger">
-                Borrar Valores innecesarios
-            </button>
-        </form>
-    @endif
-    @if (Auth::user()->hasPermissionTo('servicios.create'))
-        <a href="{{ route('servicios.create') }}" class="btn btn-primary mb-3">Nuevo Servicio</a>
-    @endif
-    @if (Auth::user()->hasPermissionTo('proveedores.create'))
-        <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Nuevo Proveedor</a>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            {{-- Crear Valor --}}
+            <a href="{{ route('valores.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Crear Valor
+            </a>
+
+            {{-- Corregir idval --}}
+            <form action="{{ route('valores.corregir') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-tools"></i> Corregir ID de Valores
+                </button>
+            </form>
+
+            {{-- Borrar innecesarios --}}
+            <form action="{{ route('valores.deletegroup') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash-alt"></i> Borrar Innecesarios
+                </button>
+            </form>
+
+            {{-- Descargar PDF --}}
+            <a href="{{ route('valores.pdf') }}" class="btn btn-outline-primary" target="_blank">
+                <i class="fas fa-file-pdf"></i> PDF - {{ \Carbon\Carbon::now()->format('Y-m-d') }}
+            </a>
+
+            {{-- Nuevo Servicio --}}
+            @if (Auth::user()->hasPermissionTo('servicios.create'))
+                <a href="{{ route('servicios.create') }}" class="btn btn-info text-white">
+                    <i class="fas fa-plus-circle"></i> Nuevo Servicio
+                </a>
+            @endif
+
+            {{-- Nuevo Proveedor --}}
+            @if (Auth::user()->hasPermissionTo('proveedores.create'))
+                <a href="{{ route('proveedores.create') }}" class="btn btn-secondary">
+                    <i class="fas fa-user-plus"></i> Nuevo Proveedor
+                </a>
+            @endif
+        </div>
     @endif
 @endsection
 @section('tablename', 'Valores')
@@ -89,10 +111,11 @@
                 <th>Proveedor</th>
                 <th>Costo</th>
                 <th>Tipo</th>
-                <th>Pantallas Min</th>
-                <th>Pantallas Max</th>
+                <th>Min</th>
+                <th>Max</th>
                 <th>Meses</th>
                 <th>Bot de códigos</th>
+                <th>Num cuentas</th>
                 @if (Auth::user()->hasAnyPermission(['valores.edit', 'valores.destroy']))
                     <th>Acciones</th>
                 @endif
@@ -116,6 +139,7 @@
                             <span class="text-danger">No disponible</span>
                         @endif
                     </td>
+                    <td><span class="badge bg-success">{{ $valor->num_cuentas }}</span></td>
                     @if (Auth::user()->hasAnyPermission(['valores.edit', 'valores.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('valores.edit'))

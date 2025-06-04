@@ -79,4 +79,61 @@ class ValorService
             }
         }
     }
+    public function obtenerMejorValorCompleto($servicio, $meses)
+    {
+        $valores = Valor::where('idser', $servicio->idser)
+            ->where('mesesval', $meses)
+            ->where('activoval', true)
+            ->where('tipoval', 'completo')
+            ->orderBy('costoval', 'asc')
+            ->get();
+
+        if ($valores->isEmpty()) {
+            return null; // No hay valores disponibles para este servicio y meses
+        }
+
+        return $valores->first(); // Retorna el valor con el costo más bajo
+    }
+    public function obtenerTresMejoresValoresCompletos($servicio, $meses)
+    {
+        $valores = Valor::where('idser', $servicio->idser)
+            ->where('mesesval', $meses)
+            ->where('activoval', true)
+            ->where('tipoval', 'completo')
+            ->orderBy('costoval', 'asc')
+            ->take(3)
+            ->get();
+
+        return $valores;
+    }
+    public function obtenerTodosMejoresValoresCompletosPrincipales($meses)
+    {
+        $idsServiciosPrincipales = Servicio::whereIn('idser', [
+            'NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'
+        ])->pluck('idser')->toArray();
+        $serviciosPrincipales = Servicio::whereIn('idser', $idsServiciosPrincipales)->get();
+        $valores = collect();
+        foreach ($serviciosPrincipales as $servicio) {
+            $mejorValor = $this->obtenerMejorValorCompleto($servicio, $meses);
+            if ($mejorValor) {
+                $valores->push($mejorValor);
+            }
+        }
+        return $valores->sortBy('costoval')->values();
+    }
+    public function obtenerTodosTresMejoresValoresCompletosPrincipales($meses){
+        $idsServiciosPrincipales = Servicio::whereIn('idser', [
+            'NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'
+        ])->pluck('idser')->toArray();
+        $serviciosPrincipales = Servicio::whereIn('idser', $idsServiciosPrincipales)->get();
+        $valores = collect();
+        foreach ($serviciosPrincipales as $servicio) {
+            $tresMejoresValores = $this->obtenerTresMejoresValoresCompletos($servicio, $meses);
+            
+            if ($tresMejoresValores->isNotEmpty()) {
+                $valores = $valores->merge($tresMejoresValores);
+            }
+        }
+        return $valores->sortBy('costoval')->values();
+    }
 }

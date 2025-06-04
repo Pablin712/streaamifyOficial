@@ -163,6 +163,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(ValorController::class)->group(function () {
         Route::get('/valores', 'index')->name('valores');
         Route::get('/valores/create', 'create')->name('valores.create');
+        Route::get('/valores/pdf', 'pdf')->name('valores.pdf');
         Route::post('/valores/createstore', 'store')->name('valores.store');
         Route::post('/valores/corregir-valores', 'corregir')->name('valores.corregir');
         Route::post('/valores/deletegroup', 'deletegroup')->name('valores.deletegroup');

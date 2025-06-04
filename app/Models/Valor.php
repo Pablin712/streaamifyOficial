@@ -41,4 +41,8 @@ class Valor extends Model
         return $this->hasMany(Cuenta::class, 'idval', 'idval');
         //->onDelete('cascade');
     }
+    public function getNumCuentasAttribute()
+    {
+        return $this->cuentas()->count();
+    }
 }

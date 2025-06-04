@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\CuentaService;
 use Illuminate\Support\Facades\Gate;
 use App\Services\ValorService;
-
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
 class ValorController extends Controller
 {
     protected $cuentaService;
@@ -81,6 +82,18 @@ class ValorController extends Controller
         ]);
 
         return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
+    }
+
+    public function pdf()
+    {
+        $valores = Valor::with('proveedor')->where('activoval', true)->get();
+        $mejoresValores = $this->valorService->obtenerTodosTresMejoresValoresCompletosPrincipales(1);
+        $fecha = Carbon::now()->format('Y-m-d');
+        $pdf = Pdf::loadView('inventory.valores.pdf', compact('valores', 'fecha', 'mejoresValores'))
+            ->setPaper('a4', 'portrait')
+            ->setOptions(['defaultFont' => 'sans-serif']);
+        $nombreArchivo = "TopValores-{$fecha}.pdf";
+        return $pdf->download($nombreArchivo);
     }
 
     public function edit($idval)
@@ -186,7 +199,8 @@ class ValorController extends Controller
             return redirect()->route('valores')->with('error', 'Error al desactivar el valor: ' . $e->getMessage());
         }
     }
-    public function corregir(){
+    public function corregir()
+    {
         if (!Gate::allows('valores.update')) {
             abort(403, 'No tienes permiso para actualizar valores.');
         }
