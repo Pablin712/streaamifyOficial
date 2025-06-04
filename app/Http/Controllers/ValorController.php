@@ -162,7 +162,7 @@ class ValorController extends Controller
 
             $cuentasAsociadas = Cuenta::where('idval', $valor->idval)->where('activocue', true)->exists();
             if ($cuentasAsociadas) {
-                return redirect()->route('proveedores')->with('error', 'No se puede eliminar porque tiene cuentas asociadas.');
+                return redirect()->back()->with('error', 'No se puede eliminar porque tiene cuentas asociadas.');
             }
 
             // Generar nuevo ID para el valor
@@ -192,5 +192,45 @@ class ValorController extends Controller
         }
         $this->valorService->corregirTodosIDValor();
         return redirect()->route('valores')->with('success', 'IDs de valores corregidos con éxito.');
+    }
+    public function deletegroup()
+    {
+        // Verificar permisos
+        if (!Gate::allows('valores.destroy')) {
+            abort(403, 'No tienes permiso para eliminar valores.');
+        }
+        $valores = Valor::where('activoval', true)->get();
+        foreach ($valores as $valor) {
+            // Verificar si tiene cuentas activas asociadas
+            $cuentasAsociadas = Cuenta::where('idval', $valor->idval)
+                ->where('activocue', true)
+                ->exists();
+            if ($cuentasAsociadas) {
+                // Opcional: podrías registrar en historial que no se eliminó por cuentas asociadas
+                continue;
+            }
+
+            // Generar nuevo ID para el valor
+            if (isset($this->cuentaService)) {
+                $nuevoIdVal = $this->cuentaService->generarNuevoIdValor($valor->idval);
+            } else {
+                $nuevoIdVal = $valor->idval . '-inactivo';
+            }
+
+            // Registrar en historial
+            Historial::create([
+                'accion' => 'Se desactivó el valor con ID: ' . $valor->idval,
+                'descripcion' => 'Datos inactivos: ' . json_encode($valor),
+                'empleado_id' => Auth::user()->idemp ?? null,
+                'created_at' => now(),
+            ]);
+
+            // Desactivar el valor y actualizar idval
+            $valor->update([
+                'activoval' => false,
+                'idval' => $nuevoIdVal
+            ]);
+        }
+        return redirect()->route('valores')->with('success', 'Valores inactivos procesados correctamente.');
     }
 }

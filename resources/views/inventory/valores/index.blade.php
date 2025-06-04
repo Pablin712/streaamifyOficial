@@ -65,6 +65,12 @@
                 Corregir idval de Valores
             </button>
         </form>
+        <form action="{{ route('valores.deletegroup') }}" method="POST" class="mb-3 d-inline">
+            @csrf
+            <button type="submit" class="btn btn-danger">
+                Borrar Valores innecesarios
+            </button>
+        </form>
     @endif
     @if (Auth::user()->hasPermissionTo('servicios.create'))
         <a href="{{ route('servicios.create') }}" class="btn btn-primary mb-3">Nuevo Servicio</a>

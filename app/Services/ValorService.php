@@ -68,8 +68,9 @@ class ValorService
             return $idValorFormateado;
         }
     }
-    public function corregirTodosIDValor(){
-        $valores = Valor::all();
+    public function corregirTodosIDValor()
+    {
+        $valores = Valor::where('activoval', true)->get();
         foreach ($valores as $valor) {
             $idValorFormateado = $this->construirFormatoIDValor($valor->idval);
             if ($idValorFormateado) {

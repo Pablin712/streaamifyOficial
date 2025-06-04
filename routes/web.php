@@ -165,6 +165,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/valores/create', 'create')->name('valores.create');
         Route::post('/valores/createstore', 'store')->name('valores.store');
         Route::post('/valores/corregir-valores', 'corregir')->name('valores.corregir');
+        Route::post('/valores/deletegroup', 'deletegroup')->name('valores.deletegroup');
         Route::get('/valores/{id}/edit', 'edit')->name('valores.edit');
         Route::put('/valores/{id}', 'update')->name('valores.update');
         Route::post('/valores/updatePantallas', 'updatePantallas')->name('valores.updatePantallas');
