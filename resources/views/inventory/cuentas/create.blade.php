@@ -45,8 +45,8 @@
             <label for="idval">ID del Valor</label>
             <select name="idval" id="idval" class="form-control" required>
                 @foreach ($valores as $valor)
-                    <option value="{{ $valor->idval }}">{{ $valor->idval }} - {{ $valor->idser }}
-                        ({{ $valor->proveedor->nombrepro }})
+                    <option value="{{ $valor->idval }}">{{ $valor->idser }} - 
+                        {{ $valor->proveedor->nombrepro }} ({{ $valor->mesesval }}m)
                     </option>
                 @endforeach
             </select>

@@ -16,11 +16,7 @@
     <form action="{{ route('valores.store') }}" method="POST">
         @csrf
         <div class="form-group mb-3">
-            <label for="idval">ID del Valor</label>
-            <input type="text" name="idval" id="idval" class="form-control select2" maxlength="20" required>
-        </div>
-        <div class="form-group mb-3">
-            <label for="idser">ID del Servicio</label>
+            <label for="idser">Servicio</label>
             <select name="idser" id="idser" class="form-control select2" required>
                 @foreach ($servicios as $servicio)
                     <option value="{{ $servicio->idser }}">{{ $servicio->nombreser }}</option>

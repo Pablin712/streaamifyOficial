@@ -57,7 +57,6 @@ class ValorController extends Controller
         }
 
         $request->validate([
-            'idval' => 'required|string|max:20|unique:valores,idval',
             'idser' => 'required|exists:servicios,idser',
             'idpro' => 'required|exists:proveedores,idpro',
             'costoval' => 'required|numeric|min:0|max:999.99',
@@ -186,5 +185,12 @@ class ValorController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('valores')->with('error', 'Error al desactivar el valor: ' . $e->getMessage());
         }
+    }
+    public function corregir(){
+        if (!Gate::allows('valores.update')) {
+            abort(403, 'No tienes permiso para actualizar valores.');
+        }
+        $this->valorService->corregirTodosIDValor();
+        return redirect()->route('valores')->with('success', 'IDs de valores corregidos con éxito.');
     }
 }

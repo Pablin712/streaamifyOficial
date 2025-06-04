@@ -59,6 +59,12 @@
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('valores.create'))
         <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
+        <form action="{{ route('valores.corregir') }}" method="POST" class="mb-3 d-inline">
+            @csrf
+            <button type="submit" class="btn btn-primary">
+                Corregir idval de Valores
+            </button>
+        </form>
     @endif
     @if (Auth::user()->hasPermissionTo('servicios.create'))
         <a href="{{ route('servicios.create') }}" class="btn btn-primary mb-3">Nuevo Servicio</a>
@@ -93,7 +99,7 @@
                     <td>{{ $valor->idser }}</td>
                     <td>{{ $valor->proveedor->nombrepro }}</td>
                     <td>${{ number_format($valor->costoval, 2) }}</td>
-                    <td>{{ $valor->tipoval}}</td>
+                    <td>{{ $valor->tipoval }}</td>
                     <td>{{ $valor->pantminval }}</td>
                     <td>{{ $valor->pantmaxval }}</td>
                     <td>{{ $valor->mesesval }}</td>

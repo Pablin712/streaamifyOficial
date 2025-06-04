@@ -54,4 +54,28 @@ class ValorService
 
         return $valoresFiltrados;
     }
+    public function construirFormatoIDValor($idValor)
+    {
+        $valor = Valor::find($idValor);
+        if ($valor) {
+            $servicio = $valor->servicio;
+            $proveedor = $valor->proveedor;
+            // Tomar solo las 3 letras del tipo de valor
+            $tipoValor = substr($valor->tipoval, 0, 3);
+            $meses = $valor->mesesval;
+            $proveedorNombre = explode(' ', $proveedor->nombrepro)[0];
+            $idValorFormateado = "{$servicio->idser}-{$proveedorNombre}-{$tipoValor}-{$meses}m";
+            return $idValorFormateado;
+        }
+    }
+    public function corregirTodosIDValor(){
+        $valores = Valor::all();
+        foreach ($valores as $valor) {
+            $idValorFormateado = $this->construirFormatoIDValor($valor->idval);
+            if ($idValorFormateado) {
+                $valor->idval = $idValorFormateado;
+                $valor->save();
+            }
+        }
+    }
 }
