@@ -89,7 +89,7 @@ class UsuarioController extends Controller
             return redirect()->back()->with('error', 'No se pudo mover el usuario, probablemente ya no quedan espacios');
         }
         else{
-            return redirect()->back()->with('success', 'Usuario mudado a otra cuenta correctamente');
+            return redirect()->back()->with('success', $respuesta);
         }
     }
     public function destroy($iddet)

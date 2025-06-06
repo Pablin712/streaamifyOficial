@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
-
+use Illuminate\Support\Str;
 class CuentaController extends Controller
 {
     protected $cuentaService;
@@ -128,8 +128,8 @@ class CuentaController extends Controller
     public function pdf()
     {
         $cuentas = Cuenta::with('valor.proveedor', 'valor.servicio')->get();
-        
-        $cuentasRenovar = $cuentas->filter(function($c) {
+
+        $cuentasRenovar = $cuentas->filter(function ($c) {
             return $c->is_conveniente_renovar && $c->costo_mes > 0;
         })->sortBy([
             fn($a) => $a->valor->proveedor->nombrepro ?? 'Desconocido',
@@ -137,9 +137,9 @@ class CuentaController extends Controller
         ]);
 
         $agrupadas = $cuentasRenovar->groupBy(fn($c) => $c->valor->proveedor->nombrepro ?? 'Sin proveedor');
-    
+
         $fecha = now()->toDateString();
-        $pdf = Pdf::loadView('inventory.cuentas.pdf', compact('cuentas','agrupadas', 'fecha'))
+        $pdf = Pdf::loadView('inventory.cuentas.pdf', compact('cuentas', 'agrupadas', 'fecha'))
             ->setPaper('a4', 'portrait')
             ->setOptions(['defaultFont' => 'sans-serif']);
         $nombreArchivo = "Inventario-Cuentas-{$fecha}.pdf";
@@ -166,7 +166,7 @@ class CuentaController extends Controller
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
     }
 
-    public function moverClientes(Request $request)
+    public function moverClientes(Request $request) //mesa de trabajo
     {
         if (!Gate::allows('usuarios.change')) {
             abort(403, 'No tienes permiso para cambiar usuarios de la cuenta.');
@@ -196,12 +196,14 @@ class CuentaController extends Controller
         $cuentaOrigen = Cuenta::find($request->input('cuenta_origen'));
 
         $respuesta = $this->cuentaService->mudarClientesAOtraCuenta($cuentaOrigen);
-        if ($respuesta == 'null') {
+        if ($respuesta === 'null') {
             return redirect()->back()->with('error', 'No se pudieron mover los clientes a otro espacio.');
-        } elseif ($respuesta == 'incompleto') {
-            return redirect()->back()->with('error', 'Ya no quedan espacios, se movieron los que alcanzaron.');
+        } elseif (Str::startsWith($respuesta, 'incompleto')) {
+            return redirect()->back()->with('warning', $respuesta);
+        } elseif (Str::startsWith($respuesta, 'success')) {
+            return redirect()->back()->with('success', $respuesta);
         } else {
-            return redirect()->back()->with('success', 'Clientes movidos a otros espacios correctamente.');
+            return redirect()->back()->with('info', 'Resultado desconocido: ' . $respuesta);
         }
     }
 

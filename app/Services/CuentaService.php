@@ -28,6 +28,7 @@ class CuentaService
                     $query->where('idser', $servicio); // Filtrar por nombre del servicio
                 })
                 ->where('activocue', true)
+                ->where('caidacue', false)
                 ->orderBy('fechavencue')
                 ->get();
             $espacios = 0;
@@ -372,7 +373,7 @@ class CuentaService
     public function mudarClientesAOtraCuenta($cuentaOrigen)
     {
         $idser = $cuentaOrigen->valor->idser;
-
+        $mensaje = '';
         // Obtener los usuarios activos de la cuenta origen
         $usuarios = ViewUsuarioActivo::where('idcue', $cuentaOrigen->idcue)->orderBy('nombre_cliente')->get();
         if ($usuarios->isEmpty()) {
@@ -393,18 +394,21 @@ class CuentaService
                     'empleado_id' => Auth::user()->idemp,
                     'created_at' => now(),
                 ]);
+                $mensaje .= 'Cliente ' . $usuario->nombre_cliente . ' movido a la cuenta ' .
+                 $cuentaDestino->valor->servicio->nombreser . ' Usuario: ' . $cuentaDestino->usuariocue .
+                 ' Clave: ' . $cuentaDestino->contrasenacue . ' PIN de Perfil ' . $usuario->perfil . ': ' .$usuario->profile->pinper.'\n';
             } else {
-                return 'incompleto';
+                return 'incompleto \n' . $mensaje; // Retornar incompleto si no se pudo mover algún usuario
             }
             // Si no existe el perfil en la cuenta destino, puedes decidir ignorar o manejarlo de otra forma
         }
-        return 'sucess';
+        return 'sucess \n' . $mensaje; // Retornar success si se movieron todos los usuarios exitosamente
     }
     public function mudarClienteAOtraCuenta($usuario)
     {
         $cuentaOrigen = $usuario->cuenta;
         $idser = $cuentaOrigen->valor->idser;
-
+        $mensaje = '';
         $cuentaDestino = $this->buscarCuentaDisponible($idser);
         $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
 
@@ -418,7 +422,10 @@ class CuentaService
                 'empleado_id' => Auth::user()->idemp,
                 'created_at' => now(),
             ]);
-            return 'success';
+            $mensaje .= 'Cliente ' . $usuario->nombre_cliente . ' movido a la cuenta ' .
+                $cuentaDestino->valor->servicio->nombreser . ' Usuario: ' . $cuentaDestino->usuariocue .
+                ' Clave: ' . $cuentaDestino->contrasenacue . ' PIN de Perfil ' . $usuario->perfil . ': ' . $usuario->profile->pinper;
+            return $mensaje; // Retornar mensaje de éxito
         } else {
             return 'error';
         }

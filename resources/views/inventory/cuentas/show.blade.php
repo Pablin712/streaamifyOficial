@@ -21,6 +21,21 @@
             {{ session('success') }}
         </div>
     @endif
+    @if (session('warning'))
+        <div class="alert alert-warning">
+            {{ session('warning') }}
+        </div>
+    @endif
+    @if (session('info'))
+        <div class="alert alert-info">
+            {{ session('info') }}
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
     <p>En esta sección puedes ver los perfiles asociados a la cuenta de suscripción
         <strong>{{ $cuenta->usuariocue }}</strong>.
         Puedes editar el PIN de cada perfil o ver los datos de acceso de la cuenta.

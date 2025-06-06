@@ -13,7 +13,13 @@ class ViewUsuarioActivo extends Model
 
     // Si quieres seleccionar solo algunas columnas, puedes especificarlas así
     protected $fillable = [
-        'idcli', 'nombre_cliente','idven','iddet', 'idcue', 'perfil', 'fecha_vencimiento'
+        'idcli',
+        'nombre_cliente',
+        'idven',
+        'iddet',
+        'idcue',
+        'perfil',
+        'fecha_vencimiento'
     ];
 
     // Si se desea, también puedes establecer relaciones con otros modelos
@@ -36,5 +42,16 @@ class ViewUsuarioActivo extends Model
     public function detalle_venta()
     {
         return $this->belongsTo(DetalleVenta::class, 'iddet', 'iddet');
+    }
+    public function profile()
+    {
+        return $this->hasOneThrough(
+            Perfil::class,         // Modelo destino
+            DetalleVenta::class,   // Modelo intermedio
+            'iddet',               // Foreign key en DetalleVenta (relaciona con ViewUsuarioActivo)
+            'idper',               // Foreign key en Perfil (relaciona con DetalleVenta)
+            'iddet',               // Local key en ViewUsuarioActivo
+            'idper'                // Local key en DetalleVenta
+        );
     }
 }
