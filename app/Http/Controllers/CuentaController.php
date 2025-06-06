@@ -127,7 +127,7 @@ class CuentaController extends Controller
 
     public function pdf()
     {
-        $cuentas = Cuenta::with('valor.proveedor', 'valor.servicio')->get();
+        $cuentas = Cuenta::with('valor.proveedor', 'valor.servicio')->where('activocue', true)->get();
 
         $cuentasRenovar = $cuentas->filter(function ($c) {
             return $c->is_conveniente_renovar && $c->costo_mes > 0;

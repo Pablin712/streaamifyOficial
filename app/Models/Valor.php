@@ -38,7 +38,7 @@ class Valor extends Model
     }
     public function cuentas()
     {
-        return $this->hasMany(Cuenta::class, 'idval', 'idval');
+        return $this->hasMany(Cuenta::class, 'idval', 'idval')->where('activocue', true);
         //->onDelete('cascade');
     }
     public function getNumCuentasAttribute()
