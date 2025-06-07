@@ -255,7 +255,7 @@ class CuentaService
     {
         return $cuentas->filter(function ($cuenta) {
             return !$cuenta->caidacue // No esté caída
-                && ($cuenta->valor->pantmaxval >= $cuenta->usuarios_activos); // No esté colapsada
+                && ($cuenta->valor->pantmaxval > $cuenta->usuarios_activos); // No esté colapsada
         });
     }
     public function calcularUsuariosPorPerfil($cuenta)
