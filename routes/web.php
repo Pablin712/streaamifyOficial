@@ -236,6 +236,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/usuarios/{id}/renew', 'renew')->name('usuarios.renew');
         Route::put('/usuarios/{id}', 'update')->name('usuarios.update');
         Route::post('/usuarios/{id}/mover', 'moverUsuario')->name('usuarios.moverUsuario');
+        Route::post('/usuarios/{id}/mover-mesa', 'moverUsuarioMesa')->name('usuarios.moverUsuarioMesa');
         Route::delete('/usuariosSeleccionados/delete-multiple', 'destroyMultiple')->name('usuarios.destroyMultiple');
         Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
     });

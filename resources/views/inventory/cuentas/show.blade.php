@@ -109,6 +109,14 @@
                                                     <i class="fas fa-exchange"></i>
                                                 </button>
                                             </form>
+                                            <form action="{{ route('usuarios.moverUsuarioMesa', $usuario->iddet) }}"
+                                                method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-info btn-circle btn-sm"
+                                                    onclick="return confirm('Mudar este usuario a la mesa de trabajo?')">
+                                                    <i class="fas fa-arrow-right-to-bracket"></i>
+                                                </button>
+                                            </form>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -140,6 +148,14 @@
                                                     <i class="fas fa-exchange"></i>
                                                 </button>
                                             </form>
+                                            <form action="{{ route('usuarios.moverUsuarioMesa', $usuario->iddet) }}"
+                                                method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-info btn-circle btn-sm"
+                                                    onclick="return confirm('Mudar este usuario a la mesa de trabajo?')">
+                                                    <i class="fas fa-arrow-right-to-bracket"></i>
+                                                </button>
+                                            </form>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -158,6 +174,14 @@
                                                 <button type="submit" class="btn btn-dark btn-circle btn-sm"
                                                     onclick="return confirm('Mudar este usuario?')">
                                                     <i class="fas fa-random"></i>
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('usuarios.moverUsuarioMesa', $usuario->iddet) }}"
+                                                method="POST" style="display: inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-info btn-circle btn-sm"
+                                                    onclick="return confirm('Mudar este usuario a la mesa de trabajo?')">
+                                                    <i class="fas fa-arrow-right-to-bracket"></i>
                                                 </button>
                                             </form>
                                         @endif

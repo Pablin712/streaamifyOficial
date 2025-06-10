@@ -92,6 +92,20 @@ class UsuarioController extends Controller
             return redirect()->back()->with('success', $respuesta);
         }
     }
+    public function moverUsuarioMesa($iddet){
+        if (!Gate::allows('usuarios.update')) {
+            abort(403, 'No tienes permiso para actualizar usuarios.');
+        }
+        $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
+
+        $respuesta = $this->cuentaService->mudarClienteAMesaDeTrabajo($usuario);
+        if($respuesta == 'error'){
+            return redirect()->back()->with('error', 'No se pudo mover el usuario, probablemente ya no quedan espacios');
+        }
+        else{
+            return redirect()->back()->with('success', $respuesta);
+        }
+    }
     public function destroy($iddet)
     {
         if (!Gate::allows('usuarios.destroy')) {

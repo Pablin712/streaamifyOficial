@@ -430,4 +430,30 @@ class CuentaService
             return 'error';
         }
     }
+    public function mudarClienteAMesaDeTrabajo($usuario)
+    {
+        $cuentaOrigen = $usuario->cuenta;
+        $cuentaDestino = $this->obtenerCuentaDestino($cuentaOrigen);
+        if ($cuentaDestino) {
+            $perfilDestino = Perfil::where('idcue', $cuentaDestino->idcue)
+                ->where('numeroper', $usuario->perfil)
+                ->first();
+            if ($perfilDestino) {
+                // Actualizar el idper en DetalleVenta para este usuario
+                DetalleVenta::where('iddet', $usuario->iddet)
+                    ->update(['idper' => $perfilDestino->idper]);
+                Historial::create([
+                    'accion' => 'Mudacion-Usuario',
+                    'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta de atención al cliente',
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
+                return 'Cliente ' . $usuario->nombre_cliente . ' movido a la mesa de trabajo';
+            } else {
+                return 'error';
+            }
+        } else {
+            return 'error';
+        }
+    }
 }
