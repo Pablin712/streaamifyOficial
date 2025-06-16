@@ -132,6 +132,10 @@ class ContabilidadController extends Controller
         $ventasChart = $this->dashboardService->getVentasChartData($range);
         $newCustomers = $this->dashboardService->getNewCustomersChartData($range);
         $users = $this->dashboardService->getUsersChartData($range);
+        $accounts = $this->dashboardService->getAccountsChartData($range);
+        $dangerAccounts = $this->dashboardService->getDangerAccountsChartData($range);
+        $pendingPayments = $this->dashboardService->getPendingPaymentsChartData($range);
+        $affectedCustomers = $this->dashboardService->getAffectedCustomersChartData($range);
         $labels = array_keys($ingresosHistorial);
         return response()->json([
             'labels' => $labels,
@@ -142,6 +146,10 @@ class ContabilidadController extends Controller
             'ventasChart' => array_values($ventasChart),
             'newCustomers' => array_values($newCustomers),
             'users' => array_values($users),
+            'accounts' => array_values($accounts),
+            'dangerAccounts' => array_values($dangerAccounts),
+            'pendingPayments' => array_values($pendingPayments),
+            'affectedCustomers' => array_values($affectedCustomers)
         ]);
     }
     public function generarPDF(){

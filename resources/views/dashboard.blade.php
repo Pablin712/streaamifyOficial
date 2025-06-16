@@ -843,7 +843,7 @@
             var ctx = document.getElementById("myAreaChart").getContext("2d");
             var myAreaChart;
 
-            function initChart(labels, ingresos, costos, gastos, ganancias, ventasChart, newCustomers, users) {
+            function initChart(labels, ingresos, costos, gastos, ganancias, ventasChart, newCustomers, users, accounts, dangerAccounts, pendingPayments, affectedCustomers) {
                 if (myAreaChart) {
                     myAreaChart.destroy(); // Destruir el gráfico si ya existe
                 }
@@ -912,6 +912,42 @@
                                 borderWidth: 2,
                                 hidden: true
                             },
+                            {
+                                label: "Cuentas",
+                                data: accounts,
+                                fill: false,
+                                backgroundColor: "rgba(139, 69, 19, 0.2)", // 🟤 Marrón translúcido
+                                borderColor: "rgba(139, 69, 19, 1)", // 🟤 Marrón fuerte
+                                borderWidth: 2,
+                                hidden: true
+                            },
+                            {
+                                label: "Cuentas Peligrosas",
+                                data: dangerAccounts,
+                                fill: false,
+                                backgroundColor: "rgba(255, 99, 132, 0.2)", // 🔴 Rojo translúcido
+                                borderColor: "rgba(255, 99, 132, 1)", // 🔴 Rojo fuerte
+                                borderWidth: 2,
+                                hidden: true
+                            },
+                            {
+                                label: "Pagos Pendientes",
+                                data: pendingPayments,
+                                fill: false,
+                                backgroundColor: "rgba(54, 162, 235, 0.2)", // 🔵 Azul translúcido
+                                borderColor: "rgba(54, 162, 235, 1)", // 🔵 Azul fuerte
+                                borderWidth: 2,
+                                hidden: true
+                            },
+                            {
+                                label: "Clientes Afectados",
+                                data: affectedCustomers,
+                                fill: false,
+                                backgroundColor: "rgba(255, 159, 64, 0.2)", // 🟠 Naranja translúcido
+                                borderColor: "rgba(255, 159, 64, 1)", // 🟠 Naranja fuerte
+                                borderWidth: 2,
+                                hidden: true
+                            }
                         ],
                     },
                     options: {
@@ -949,7 +985,11 @@
                             Object.values(data.ganancias),
                             Object.values(data.ventasChart),
                             Object.values(data.newCustomers),
-                            Object.values(data.users)
+                            Object.values(data.users),
+                            Object.values(data.accounts),
+                            Object.values(data.dangerAccounts),
+                            Object.values(data.pendingPayments),
+                            Object.values(data.affectedCustomers),
                         );
                     })
                     .catch((error) => console.error("Error al cargar datos:", error));

@@ -643,8 +643,8 @@ class DashboardService
     private function getUsersMonth(int $month, int $year): float
     {
         $dato = DailyStatistic::whereMonth('date', $month)
-        ->whereYear('date', $year)
-        ->max('active_users');
+            ->whereYear('date', $year)
+            ->max('active_users');
         return (float) $dato;
     }
     private function getUsersDay(string $date): float
@@ -711,9 +711,302 @@ class DashboardService
         //return dd($data); // Detiene la ejecución y muestra los datos
         return $data;
     }
+    private function getAccountsMonth(int $month, int $year): float
+    {
+        $dato = DailyStatistic::whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->max('accounts');
+        return (float) $dato;
+    }
+    private function getAccountsDay(string $date): float
+    {
+        return DailyStatistic::whereDate('date', $date)->value('accounts') ?? 0;
+    }
+    public function getAccountsBetweenDates(string $date1, string $date2): float
+    {
+        return (float) DailyStatistic::whereBetween('created_at', [$date1, $date2])
+            ->max('accounts');
+    }
+    public function getAccountsChartData(string $interval): array
+    {
+        $today = Carbon::today();
+        $data = [];
+
+        switch ($interval) {
+            case '1d': // Últimos 20 días (día a día)
+                for ($i = 20; $i >= 0; $i--) {
+                    $date = $today->copy()->subDays($i)->toDateString();
+                    $data[$date] = $this->getAccountsDay($date);
+                }
+                break;
+
+            case '1w': // Últimas 12 semanas (semana a semana)
+                for ($i = 12; $i >= 0; $i--) {
+                    $startOfWeek = $today->copy()->subWeeks($i)->startOfWeek()->toDateString();
+                    $endOfWeek = $today->copy()->subWeeks($i)->endOfWeek()->toDateString();
+                    $data[$startOfWeek] = $this->getAccountsBetweenDates($startOfWeek, $endOfWeek);
+                }
+                break;
+
+            case '1m': // Últimos 8 meses (mes a mes)
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getAccountsMonth($month, $year);
+                }
+                break;
+
+            case '3m': // Últimos 6 años (trimestre a trimestre)
+                for ($i = 6; $i >= 0; $i--) {
+                    $startOfQuarter = $today->copy()->subQuarters($i)->startOfQuarter()->toDateString();
+                    $endOfQuarter = $today->copy()->subQuarters($i)->endOfQuarter()->toDateString();
+                    $data[$startOfQuarter] = $this->getAccountsBetweenDates($startOfQuarter, $endOfQuarter);
+                }
+                break;
+
+            case '1y': // Últimos 5 años (año a año)
+                for ($i = 5; $i >= 0; $i--) {
+                    $year = $today->copy()->subYears($i)->year;
+                    $data[$year] = DailyStatistic::whereYear('date', $year)->max('accounts');
+                }
+                break;
+
+            default:
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getAccountsMonth($month, $year);
+                }
+                break;
+        }
+        //return dd($data); // Detiene la ejecución y muestra los datos
+        return $data;
+    }
+    private function getDangerAccountsMonth(int $month, int $year): float
+    {
+        $dato = DailyStatistic::whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->max('danger_accounts');
+        return (float) $dato;
+    }
+    private function getDangerAccountsDay(string $date): float
+    {
+        return DailyStatistic::whereDate('date', $date)->value('danger_accounts') ?? 0;
+    }
+    public function getDangerAccountsBetweenDates(string $date1, string $date2): float
+    {
+        return (float) DailyStatistic::whereBetween('created_at', [$date1, $date2])
+            ->max('danger_accounts');
+    }
+    public function getDangerAccountsChartData(string $interval): array
+    {
+        $today = Carbon::today();
+        $data = [];
+
+        switch ($interval) {
+            case '1d': // Últimos 20 días (día a día)
+                for ($i = 20; $i >= 0; $i--) {
+                    $date = $today->copy()->subDays($i)->toDateString();
+                    $data[$date] = $this->getDangerAccountsDay($date);
+                }
+                break;
+
+            case '1w': // Últimas 12 semanas (semana a semana)
+                for ($i = 12; $i >= 0; $i--) {
+                    $startOfWeek = $today->copy()->subWeeks($i)->startOfWeek()->toDateString();
+                    $endOfWeek = $today->copy()->subWeeks($i)->endOfWeek()->toDateString();
+                    $data[$startOfWeek] = $this->getDangerAccountsBetweenDates($startOfWeek, $endOfWeek);
+                }
+                break;
+
+            case '1m': // Últimos 8 meses (mes a mes)
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getDangerAccountsMonth($month, $year);
+                }
+                break;
+
+            case '3m': // Últimos 6 años (trimestre a trimestre)
+                for ($i = 6; $i >= 0; $i--) {
+                    $startOfQuarter = $today->copy()->subQuarters($i)->startOfQuarter()->toDateString();
+                    $endOfQuarter = $today->copy()->subQuarters($i)->endOfQuarter()->toDateString();
+                    $data[$startOfQuarter] = $this->getDangerAccountsBetweenDates($startOfQuarter, $endOfQuarter);
+                }
+                break;
+
+            case '1y': // Últimos 5 años (año a año)
+                for ($i = 5; $i >= 0; $i--) {
+                    $year = $today->copy()->subYears($i)->year;
+                    $data[$year] = DailyStatistic::whereYear('date', $year)->max('danger_accounts');
+                }
+                break;
+
+            default:
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getDangerAccountsMonth($month, $year);
+                }
+                break;
+        }
+        //return dd($data); // Detiene la ejecución y muestra los datos
+        return $data;
+    }
+    private function getAffectedCustomersMonth(int $month, int $year): float
+    {
+        $dato = DailyStatistic::whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->max('affected_customers');
+        return (float) $dato;
+    }
+    private function getAffectedCustomersDay(string $date): float
+    {
+        return DailyStatistic::whereDate('date', $date)->value('affected_customers') ?? 0;
+    }
+    public function getAffectedCustomersBetweenDates(string $date1, string $date2): float
+    {
+        return (float) DailyStatistic::whereBetween('created_at', [$date1, $date2])
+            ->max('affected_customers');
+    }
+    public function getAffectedCustomersChartData(string $interval): array
+    {
+        $today = Carbon::today();
+        $data = [];
+
+        switch ($interval) {
+            case '1d': // Últimos 20 días (día a día)
+                for ($i = 20; $i >= 0; $i--) {
+                    $date = $today->copy()->subDays($i)->toDateString();
+                    $data[$date] = $this->getAffectedCustomersDay($date);
+                }
+                break;
+
+            case '1w': // Últimas 12 semanas (semana a semana)
+                for ($i = 12; $i >= 0; $i--) {
+                    $startOfWeek = $today->copy()->subWeeks($i)->startOfWeek()->toDateString();
+                    $endOfWeek = $today->copy()->subWeeks($i)->endOfWeek()->toDateString();
+                    $data[$startOfWeek] = $this->getAffectedCustomersBetweenDates($startOfWeek, $endOfWeek);
+                }
+                break;
+
+            case '1m': // Últimos 8 meses (mes a mes)
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getAffectedCustomersMonth($month, $year);
+                }
+                break;
+
+            case '3m': // Últimos 6 años (trimestre a trimestre)
+                for ($i = 6; $i >= 0; $i--) {
+                    $startOfQuarter = $today->copy()->subQuarters($i)->startOfQuarter()->toDateString();
+                    $endOfQuarter = $today->copy()->subQuarters($i)->endOfQuarter()->toDateString();
+                    $data[$startOfQuarter] = $this->getAffectedCustomersBetweenDates($startOfQuarter, $endOfQuarter);
+                }
+                break;
+
+            case '1y': // Últimos 5 años (año a año)
+                for ($i = 5; $i >= 0; $i--) {
+                    $year = $today->copy()->subYears($i)->year;
+                    $data[$year] = DailyStatistic::whereYear('date', $year)->max('affected_customers');
+                }
+                break;
+
+            default:
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getAffectedCustomersMonth($month, $year);
+                }
+                break;
+        }
+        //return dd($data); // Detiene la ejecución y muestra los datos
+        return $data;
+    }
+    private function getPendingPaymentsMonth(int $month, int $year): float
+    {
+        $dato = DailyStatistic::whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->max('pending_payments');
+        return (float) $dato;
+    }
+    private function getPendingPaymentsDay(string $date): float
+    {
+        return DailyStatistic::whereDate('date', $date)->value('pending_payments') ?? 0;
+    }
+    public function getPendingPaymentsBetweenDates(string $date1, string $date2): float
+    {
+        return (float) DailyStatistic::whereBetween('created_at', [$date1, $date2])
+            ->max('pending_payments');
+    }
+    public function getPendingPaymentsChartData(string $interval): array
+    {
+        $today = Carbon::today();
+        $data = [];
+
+        switch ($interval) {
+            case '1d': // Últimos 20 días (día a día)
+                for ($i = 20; $i >= 0; $i--) {
+                    $date = $today->copy()->subDays($i)->toDateString();
+                    $data[$date] = $this->getPendingPaymentsDay($date);
+                }
+                break;
+
+            case '1w': // Últimas 12 semanas (semana a semana)
+                for ($i = 12; $i >= 0; $i--) {
+                    $startOfWeek = $today->copy()->subWeeks($i)->startOfWeek()->toDateString();
+                    $endOfWeek = $today->copy()->subWeeks($i)->endOfWeek()->toDateString();
+                    $data[$startOfWeek] = $this->getPendingPaymentsBetweenDates($startOfWeek, $endOfWeek);
+                }
+                break;
+
+            case '1m': // Últimos 8 meses (mes a mes)
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getPendingPaymentsMonth($month, $year);
+                }
+                break;
+
+            case '3m': // Últimos 6 años (trimestre a trimestre)
+                for ($i = 6; $i >= 0; $i--) {
+                    $startOfQuarter = $today->copy()->subQuarters($i)->startOfQuarter()->toDateString();
+                    $endOfQuarter = $today->copy()->subQuarters($i)->endOfQuarter()->toDateString();
+                    $data[$startOfQuarter] = $this->getPendingPaymentsBetweenDates($startOfQuarter, $endOfQuarter);
+                }
+                break;
+
+            case '1y': // Últimos 5 años (año a año)
+                for ($i = 5; $i >= 0; $i--) {
+                    $year = $today->copy()->subYears($i)->year;
+                    $data[$year] = DailyStatistic::whereYear('date', $year)->max('pending_payments');
+                }
+                break;
+
+            default:
+                for ($i = 8; $i >= 0; $i--) {
+                    $month = $today->copy()->subMonths($i)->month;
+                    $year = $today->copy()->subMonths($i)->year;
+                    $data["$year-$month"] = $this->getPendingPaymentsMonth($month, $year);
+                }
+                break;
+        }
+        //return dd($data); // Detiene la ejecución y muestra los datos
+        return $data;
+    }
     public function guardar($date)
     {
-        $activeUsers = ViewUsuarioActivo::count();
+        $usuarios = ViewUsuarioActivo::all();
+        $activeUsers = $usuarios->count();
+        $dangerAccounts = Cuenta::where('activocue', true)
+            ->where('caidacue', true)->count();
+        $affectedCustomers = Cuenta::where('activocue', true)
+            ->where('caidacue', true)
+            ->get()
+            ->sum('usuarios_activos');
+        $pendingPayments = $this->cuentaService->contarUsuariosACobrar($usuarios);
+        $accounts = Cuenta::where('activocue', true)->count();
         $dailyRevenue = Venta::whereDate('created_at', $date)->sum('totalpagoven');
         $dailyCost = Costo::whereDate('fechacos', $date)->sum('montocos');
         $dailyBill = Gasto::whereDate('created_at', $date)->sum('montogas');
@@ -723,6 +1016,10 @@ class DashboardService
             ['date' => $date], // Fecha única
             [
                 'active_users' => $activeUsers,
+                'affected_customers' => $affectedCustomers,
+                'pending_payments' => $pendingPayments,
+                'danger_accounts' => $dangerAccounts,
+                'accounts' => $accounts,
                 'daily_revenue' => $dailyRevenue,
                 'daily_cost' => $dailyCost,
                 'daily_bill' => $dailyBill,
