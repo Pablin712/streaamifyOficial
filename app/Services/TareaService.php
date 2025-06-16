@@ -45,7 +45,9 @@ class TareaService
                 'descripcion' => '🤖 Laravel dice: Hay ' . $totales . ' usuarios a quitar ' . $usuariosListado . $mensajeExtra,
                 'prioridad' => 'alta',
                 'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59)
+                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
+                'completada_por' => null, // Asegurarse de que no esté completada por nadie
+                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
             ]
         );
     }
@@ -70,7 +72,9 @@ class TareaService
                 'descripcion' => '🤖 Laravel dice: Hay ' . $totales . ' usuarios a cobrar💵 ' . $usuariosListado . $mensajeExtra,
                 'prioridad' => 'media',
                 'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59)
+                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
+                'completada_por' => null, // Asegurarse de que no esté completada por nadie
+                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
             ]
         );
     }
@@ -97,7 +101,9 @@ class TareaService
                 'descripcion' => "🤖 Laravel dice: Hay $totales cuentas que deben renovarse o eliminarse ⏳\n$cuentasListado$mensajeExtra",
                 'prioridad' => 'alta',
                 'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59)
+                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
+                'completada_por' => null, // Asegurarse de que no esté completada por nadie
+                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
             ]
         );
     }
@@ -124,7 +130,9 @@ class TareaService
                 'descripcion' => "🤖 Laravel dice: Hay $totales cuentas caídas ⚠️\n$cuentasListado$mensajeExtra",
                 'prioridad' => 'alta',
                 'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59)
+                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
+                'completada_por' => null, // Asegurarse de que no esté completada por nadie
+                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
             ]
         );
     }
@@ -151,7 +159,9 @@ class TareaService
                 'descripcion' => "🤖 Laravel dice: Hay $totales cuentas con espacios saturados 📌\n$cuentasListado$mensajeExtra",
                 'prioridad' => 'baja',
                 'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59)
+                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
+                'completada_por' => null, // Asegurarse de que no esté completada por nadie
+                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
             ]
         );
     }

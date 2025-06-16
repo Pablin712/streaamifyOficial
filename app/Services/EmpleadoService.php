@@ -272,13 +272,10 @@ class EmpleadoService
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
             throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
         }
+        $empleado = Empleado::find($idemp);
         // Contar todas las asistencias del empleado para el día, mes y año especificados
-        return Historial::where('empleado_id', $idemp)
-            ->where(function ($query) {
-                $query->where('accion', 'like', '%tarea%')
-                    ->orWhere('accion', 'like', '%Tarea%');
-            }) // Buscar texto que contenga "Tarea"
-            ->whereDate('created_at', $fecha)
+        return $empleado->tareas()
+            ->whereDate('fecha_completada', $fecha)
             ->count();
     }
     public function contarGestionCostosPorDia(int $idemp, string $fecha)

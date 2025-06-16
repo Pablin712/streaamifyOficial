@@ -45,7 +45,7 @@
                             <strong>Gestión de Clientes:</strong> {{ $dato['gestionClientesHoy'] }}<br>
                             <strong>Gestión de Cuentas:</strong> {{ $dato['gestionCuentasHoy'] }}<br>
                             <strong>Gestión de Inventario:</strong> {{ $dato['gestionInventarioHoy'] }}<br>
-                            <strong>Gestión de Tareas:</strong> {{ $dato['gestionTareasHoy'] }}<br>
+                            <strong>Tareas completadas:</strong> {{ $dato['empleado']->num_tareas_completadas }}<br>
                             <strong>Gestión de Recargas:</strong> {{ $dato['gestionRecargasHoy'] }}<br>
                             <strong>Gestión de Productos:</strong> {{ $dato['gestionProductosHoy'] }}<br>
                             <strong>Gestión de Costos:</strong> {{ $dato['gestionCostosHoy'] }}<br>

@@ -66,6 +66,15 @@ class Empleado extends Authenticatable implements JWTSubject
         );
     }
 
+    public function tareas()
+    {
+        return $this->hasMany(Tarea::class, 'completada_por', 'idemp');
+    }
+    public function getNumTareasCompletadasAttribute()
+    {
+        return $this->tareas()->where('completada', true)->count();
+    }
+
     /**
      * Verifica si el empleado tiene un rol específico.
      */

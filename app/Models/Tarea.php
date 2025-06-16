@@ -13,10 +13,13 @@ class Tarea extends Model
         'descripcion',
         'prioridad',
         'completada',
-        'fechalimit'
+        'fechalimit',
+        'completada_por',
+        'fecha_completada'
     ];
     protected $casts = [
         'completada' => 'boolean',
         'fechalimit' => 'datetime',
+        'fecha_completada' => 'datetime',
     ];
 }
