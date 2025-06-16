@@ -38,6 +38,7 @@ class CuentaController extends Controller
         $cuentasSinOcupar = $this->cuentaService->obtenerCuentasSinOcupar($cuentas);
         $cuentasPorVencer = $this->cuentaService->obtenerCuentasPorVencer($cuentas);
         $cuentasCaidas = $this->cuentaService->obtenerCuentasCaidas($cuentas);
+        $mesa = $this->cuentaService->obtenerMesasDeTrabajo($cuentas);
 
         $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
 
@@ -48,6 +49,7 @@ class CuentaController extends Controller
             'cuentasSinOcupar',
             'cuentasPorVencer',
             'cuentasCaidas',
+            'mesa',
             'espacios_por_servicio'
         ));
     }

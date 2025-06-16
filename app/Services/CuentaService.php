@@ -177,7 +177,18 @@ class CuentaService
     }
     public function obtenerCuentasCaidas($cuentas)
     {
+        // excluir la que tienen de sufijo o terminan con la palabra: atencion
+        $cuentas = $cuentas->filter(function ($cuenta) {
+            return !str_ends_with($cuenta->idcue, 'Atencion');
+        });
         return $cuentas->filter(fn($cuenta) => $cuenta->caidacue == true);
+    }
+    public function obtenerMesasDeTrabajo($cuentas)
+    {
+        // Obtener todas las cuentas que terminan con 'Atencion'
+        return $cuentas->filter(function ($cuenta) {
+            return str_ends_with($cuenta->idcue, 'Atencion');
+        });
     }
     public function contarUsuariosACobrar($usuarios)
     {

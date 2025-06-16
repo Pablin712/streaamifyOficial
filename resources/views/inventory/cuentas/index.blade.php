@@ -141,6 +141,10 @@
             <button class="nav-link" id="caidas-tab" data-bs-toggle="tab" data-bs-target="#caidas" type="button"
                 role="tab">Dañadas</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="caidas-tab" data-bs-toggle="tab" data-bs-target="#mesa" type="button"
+                role="tab">Mesa de Trabajo</button>
+        </li>
     </ul>
 
     <!-- Contenido de las pestañas -->
@@ -173,6 +177,11 @@
         <!-- Pestaña de Cuentas Dañadas -->
         <div class="tab-pane fade" id="caidas" role="tabpanel">
             @include('inventory.cuentas.tabla', ['cuentas' => $cuentasCaidas])
+        </div>
+
+        <!-- Pestaña de Mesa de Trabajo -->
+        <div class="tab-pane fade" id="mesa" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $mesa])
         </div>
 
     </div>

@@ -98,11 +98,10 @@ class TareaController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
-        $tarea->update([
-            'completada' => !$tarea->completada,
-            'fecha_completada' => now(),
-            'completada_por' => Auth::user()->idemp
-        ])->save();
+        $tarea->completada = true;
+        $tarea->fecha_completada = now();
+        $tarea->completada_por = Auth::user()->idemp;
+        $tarea->save();
 
         return redirect()->route('tareas.index')->with('success', 'Tarea completada.');
     }
