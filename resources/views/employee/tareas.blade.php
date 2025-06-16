@@ -56,29 +56,40 @@
             <h4>Tareas Pendientes</h4>
             @foreach ($tareas as $tarea)
                 @if (!$tarea->completada)
+                    @php
+                        $vencida = $tarea->fechalimit && \Carbon\Carbon::parse($tarea->fechalimit)->isPast();
+                        $formatoFecha = $tarea->fechalimit
+                            ? \Carbon\Carbon::parse($tarea->fechalimit)->format('d M Y H:i')
+                            : 'Sin fecha';
+                    @endphp
                     <div class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
-                            <span class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
+                            <span
+                                class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
                                 {{ ucfirst($tarea->prioridad) }}
                             </span>
                             {{ $tarea->nombretarea }}
                             <small class="text-muted d-block">{{ $tarea->descripcion }}</small>
+                            <small class="d-block mt-1">
+                                Fecha límite:
+                                <span class="{{ $vencida ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
+                                    {{ $formatoFecha }} {{ $vencida ? '(Vencida)' : '' }}
+                                </span>
+                            </small>
                         </div>
                         <div>
-                            <!-- Botón completar -->
                             <form action="{{ route('tareas.completar', $tarea->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-success">
+                                <button type="submit" class="btn btn-sm btn-success" title="Completar">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </form>
-                            <!-- Botón eliminar -->
                             @if (Auth::user()->hasPermissionTo('tareas.destroy'))
                                 <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -92,7 +103,8 @@
         <!-- Desplegable para tareas completadas -->
         <div class="mb-4">
             <h4>
-                <a class="text-decoration-none" data-bs-toggle="collapse" href="#completedTasks" role="button" aria-expanded="false" aria-controls="completedTasks">
+                <a class="text-decoration-none" data-bs-toggle="collapse" href="#completedTasks" role="button"
+                    aria-expanded="false" aria-controls="completedTasks">
                     Ver Tareas Completadas
                 </a>
             </h4>
@@ -100,21 +112,35 @@
                 <div class="list-group">
                     @foreach ($tareas as $tarea)
                         @if ($tarea->completada)
-                            <div class="list-group-item d-flex justify-content-between align-items-center bg-light text-decoration-line-through">
+                            @php
+                                $vencida = $tarea->fechalimit && \Carbon\Carbon::parse($tarea->fechalimit)->isPast();
+                                $formatoFecha = $tarea->fechalimit
+                                    ? \Carbon\Carbon::parse($tarea->fechalimit)->format('d M Y H:i')
+                                    : 'Sin fecha';
+                            @endphp
+                            <div
+                                class="list-group-item d-flex justify-content-between align-items-center bg-light text-decoration-line-through">
                                 <div>
-                                    <span class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
+                                    <span
+                                        class="badge bg-{{ $tarea->prioridad === 'alta' ? 'danger' : ($tarea->prioridad === 'media' ? 'warning' : 'secondary') }}">
                                         {{ ucfirst($tarea->prioridad) }}
                                     </span>
                                     {{ $tarea->nombretarea }}
                                     <small class="text-muted d-block">{{ $tarea->descripcion }}</small>
+                                    <small class="d-block mt-1">
+                                        Fecha límite:
+                                        <span class="{{ $vencida ? 'text-danger fw-bold' : 'text-success' }}">
+                                            {{ $formatoFecha }} {{ $vencida ? '(Vencida)' : '' }}
+                                        </span>
+                                    </small>
                                 </div>
                                 <div>
-                                    <!-- Botón eliminar -->
                                     @if (Auth::user()->hasPermissionTo('tareas.destroy'))
-                                        <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('tareas.destroy', $tarea->id) }}" method="POST"
+                                            class="d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -126,6 +152,5 @@
                 </div>
             </div>
         </div>
-
     </div>
 @endsection

@@ -41,7 +41,7 @@ class TareaController extends Controller
                     WHEN prioridad = 'baja' THEN 3
                 END
             ")
-            ->orderBy('created_at', 'desc')
+            ->orderBy('fechalimit', 'asc')
             ->get();
         return view('employee.tareas', compact('tareas'));
     }
