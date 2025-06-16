@@ -2,6 +2,42 @@
 @section('title')
     Usuarios
 @endsection
+@section('styles')
+    <style>
+        .btn-rosa-1 {
+            background: #f8bbd0;
+            color: #fff;
+        }
+
+        .btn-rosa-2 {
+            background: #f48fb1;
+            color: #fff;
+        }
+
+        .btn-rosa-3 {
+            background: #f06292;
+            color: #fff;
+        }
+
+        .btn-rosa-4 {
+            background: #ec407a;
+            color: #fff;
+        }
+
+        .btn-rosa-5 {
+            background: #ad1457;
+            color: #fff;
+        }
+
+        .btn-rosa-1:hover,
+        .btn-rosa-2:hover,
+        .btn-rosa-3:hover,
+        .btn-rosa-4:hover,
+        .btn-rosa-5:hover {
+            filter: brightness(0.95);
+        }
+    </style>
+@endsection
 @section('h1')
     Usuarios
 @endsection
@@ -97,6 +133,11 @@
                                     </a>
                                 @endif
                                 @if ($diasRestantes <= 3)
+                                    <button type="button" class="btn btn-rosa-3 btn-sm"
+                                        onclick="copiarMensaje('{{ $usuario->nombre_cliente }}', '{{ $usuario->fecha_vencimiento }}', '{{ $usuario->cuenta->usuariocue }}')"
+                                        title="Copiar mensaje">
+                                        <i class="fas fa-comment-alt"></i>
+                                    </button>
                                     @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                         <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
                                             class="btn btn-success btn-sm">
@@ -127,8 +168,25 @@
         </table>
     </form>
     <form id="form-mover-usuario" method="POST" style="display:none;">
-    @csrf
-</form>
+        @csrf
+    </form>
+    <div id="toast-mensaje"
+        style="
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 12px 16px;
+    border-radius: 6px;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-weight: bold;
+    ">
+        ✅ Mensaje copiado
+    </div>
 @endsection
 @section('scripts')
     @parent
@@ -201,5 +259,23 @@
             const checkUsuarios = getCheckUsuarios();
             checkTodos.checked = checkUsuarios.length > 0 && Array.from(checkUsuarios).every(chk => chk.checked);
         });
+    </script>
+    <script>
+        function copiarMensaje(nombre, fecha, cuenta) {
+            let hoy = new Date().toISOString().slice(0, 10);
+            let mensaje =
+                `Hola ${nombre}, su suscripción con usuario ${cuenta} se venc${fecha <= hoy ? 'ió' : 'e'} el ${fecha}. Por favor, contáctanos para renovar.`;
+            navigator.clipboard.writeText(mensaje).then(() => {
+                const toast = document.getElementById('toast-mensaje');
+                toast.style.display = 'block';
+                toast.style.opacity = 1;
+
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.5s ease';
+                    toast.style.opacity = 0;
+                    setTimeout(() => toast.style.display = 'none', 500);
+                }, 2000); // Mostrar por 2 segundos
+            });
+        }
     </script>
 @endsection
