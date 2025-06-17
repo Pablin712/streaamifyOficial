@@ -135,7 +135,7 @@
                         </div>
                     @endif
                     {{-- Reemplazamos @canany(['servicios', 'proveedores', 'valores']) --}}
-                    @if (Auth::user()->hasAnyPermission(['servicios', 'proveedores', 'valores']))
+                    @if (Auth::user()->hasAnyPermission(['servicios', 'proveedores', 'valores', 'mails.index']))
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseStock" aria-expanded="false" aria-controls="collapseStock">
                             <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
@@ -153,6 +153,9 @@
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('valores'))
                                     <a class="nav-link" href="{{ route('valores') }}">Valores</a>
+                                @endif
+                                @if (Auth::user()->hasPermissionTo('mails.index'))
+                                    <a class="nav-link" href="{{ route('mails.index') }}">Correos</a>
                                 @endif
                             </nav>
                         </div>

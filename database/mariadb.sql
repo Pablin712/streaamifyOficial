@@ -327,6 +327,11 @@ INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
 ('roles.store', 'web', NOW(), NOW()),
 ('roles.update', 'web', NOW(), NOW()),
 ('roles.destroy', 'web', NOW(), NOW());
+INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('mails.index', 'web', NOW(), NOW()),
+('mails.store', 'web', NOW(), NOW()),
+('mails.update', 'web', NOW(), NOW()),
+('mails.destroy', 'web', NOW(), NOW());
 
 INSERT INTO permissions (name, guard_name, created_at, updated_at) VALUES
 ('historial.clear', 'web', NOW(), NOW());

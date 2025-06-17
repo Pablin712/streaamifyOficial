@@ -35,7 +35,7 @@ use App\Http\Controllers\HistorialClientesController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Auth;
-
+use App\Http\Controllers\MailController;
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
@@ -285,6 +285,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/empleado/pedidos', 'index')->name('empleado.pedidos.index');
         Route::post('/empleado/pedidos/{id}', 'update')->name('empleado.pedidos.update');
     });
+    Route::resource('mails', MailController::class)->except(['show', 'create', 'edit']);
 
     Route::post('/notificaciones/marcar-como-leidas', function () {
         if (Auth::check()) {
