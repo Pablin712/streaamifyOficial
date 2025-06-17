@@ -26,7 +26,7 @@ class CalendarController extends Controller
         $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
         $this->cuentaService->asignarUsuarios($cuentas);
         $usuarios = ViewUsuarioActivo::all();
-        $tareas = Tarea::all();
+        $tareas = Tarea::where('completada', false)->get();
         return view('administration.calendar', compact('cuentas', 'usuarios', 'tareas'));
     }
 }
