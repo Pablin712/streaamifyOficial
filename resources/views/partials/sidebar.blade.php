@@ -109,7 +109,6 @@
                             </nav>
                         </div>
                     @endif
-                    <div class="sb-sidenav-menu-heading">Stock</div>
                     {{-- Reemplazamos @canany(['cuentas', 'usuarios', 'mantenimientos']) --}}
                     @if (Auth::user()->hasAnyPermission(['cuentas', 'usuarios', 'mantenimientos']))
                         <!-- Accounts collapsible -->
