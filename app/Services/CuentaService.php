@@ -173,6 +173,9 @@ class CuentaService
     }
     public function contarCuentasCaidas($cuentas)
     {
+        $cuentas = $cuentas->filter(function ($cuenta) {
+            return !str_ends_with($cuenta->idcue, 'Atencion');
+        });
         return $cuentas->filter(fn($cuenta) => $cuenta->caidacue == true)->count();
     }
     public function obtenerCuentasCaidas($cuentas)

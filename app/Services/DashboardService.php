@@ -999,14 +999,14 @@ class DashboardService
     {
         $usuarios = ViewUsuarioActivo::all();
         $activeUsers = $usuarios->count();
-        $dangerAccounts = Cuenta::where('activocue', true)
-            ->where('caidacue', true)->count();
+        $cc = Cuenta::where('activocue', true)->get();
+        $accounts = $cc->count();
+        $dangerAccounts = $this->cuentaService->contarCuentasCaidas($cc);
         $affectedCustomers = Cuenta::where('activocue', true)
             ->where('caidacue', true)
             ->get()
             ->sum('usuarios_activos');
         $pendingPayments = $this->cuentaService->contarUsuariosACobrar($usuarios);
-        $accounts = Cuenta::where('activocue', true)->count();
         $dailyRevenue = Venta::whereDate('created_at', $date)->sum('totalpagoven');
         $dailyCost = Costo::whereDate('fechacos', $date)->sum('montocos');
         $dailyBill = Gasto::whereDate('created_at', $date)->sum('montogas');
