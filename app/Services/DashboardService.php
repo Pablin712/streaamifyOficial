@@ -28,7 +28,7 @@ class DashboardService
         $year = Carbon::now()->year;
 
         $usuarios = ViewUsuarioActivo::all();
-        $cuentas = Cuenta::with(['valor'])->where('activocue', true)->orderBy('fechavencue')->get();
+        $cuentas = $this->cuentaService->obtenerCuentas();
         $usuarios_acobrar = $this->cuentaService->contarUsuariosACobrar($usuarios);
         $espacios = $this->cuentaService->calcularEspaciosTotales();
 

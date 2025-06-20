@@ -178,6 +178,16 @@ class CuentaService
         });
         return $cuentas->filter(fn($cuenta) => $cuenta->caidacue == true)->count();
     }
+    public function obtenerCuentas(){
+        $cuentas = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
+        $cuentas = $cuentas->filter(function ($cuenta) {
+            return !str_ends_with($cuenta->idcue, 'Atencion');
+        });
+        return $cuentas;
+    }
     public function obtenerCuentasCaidas($cuentas)
     {
         // excluir la que tienen de sufijo o terminan con la palabra: atencion
@@ -186,8 +196,12 @@ class CuentaService
         });
         return $cuentas->filter(fn($cuenta) => $cuenta->caidacue == true);
     }
-    public function obtenerMesasDeTrabajo($cuentas)
+    public function obtenerMesasDeTrabajo()
     {
+        $cuentas = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
         // Obtener todas las cuentas que terminan con 'Atencion'
         return $cuentas->filter(function ($cuenta) {
             return str_ends_with($cuenta->idcue, 'Atencion');
@@ -287,10 +301,7 @@ class CuentaService
     {
         // Si el usuario tiene permiso para ver todas las cuentas
         if ($usuario->can('todas_las_cuentas')) {
-            return Cuenta::with(['valor.servicio'])
-                ->where('activocue', true)
-                ->orderBy('fechavencue')
-                ->get();
+            return $this->obtenerCuentas();
         }
         // Verificar si el usuario tiene al menos un permiso específico
         $tienePermiso = $usuario->can('netflix') ||
@@ -333,7 +344,9 @@ class CuentaService
                     }
                 });
             });
-
+        $query = $query->filter(function ($cuenta) {
+            return !str_ends_with($cuenta->idcue, 'Atencion');
+        });
         return $query->orderBy('fechavencue')->get();
     }
     public function obtenerCuentaDestino($cuentaOrigen)
