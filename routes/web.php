@@ -36,14 +36,15 @@ use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\AlyssonController;
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
-
-Route::get('/', function () {
-    return view('principal');
-})->name('principal');
+Route::controller(AlyssonController::class)->group(function (){
+    Route::get('/', 'index')->name('principal');
+    Route::get('/alysson', 'exclusive')->name('alysson.exclusive');
+});
 Route::get('/tutorial', function () {
     return view('shopping.tutorial');
 })->name('tutorial');

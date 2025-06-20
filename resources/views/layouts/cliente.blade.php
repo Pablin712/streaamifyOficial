@@ -44,6 +44,48 @@
 </head>
 
 <body id="page-top">
+    @php
+        $esAlysson = $esAlysson ?? false;
+    @endphp
+    @if ($esAlysson)
+        <!-- Modal de confirmación para Alysson -->
+        <div class="modal fade" id="alyssonModal" tabindex="-1" aria-labelledby="alyssonModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: #f8bbd0;">
+                        <h5 class="modal-title" id="alyssonModalLabel">¡Hola Alysson! 💖</h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        Hemos preparado una página especial solo para ti.<br>
+                        ¿Quieres visitarla ahora?
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <a href="{{ route('alysson.exclusive') }}" class="btn btn-rosa-1">Ir a mi página especial</a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <style>
+            .btn-rosa-1 {
+                background: #f8bbd0;
+                color: #fff;
+                border: none;
+            }
+
+            .btn-rosa-1:hover,
+            .btn-rosa-1:focus {
+                background: #f06292;
+                color: #fff;
+            }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var alyssonModal = new bootstrap.Modal(document.getElementById('alyssonModal'));
+                alyssonModal.show();
+            });
+        </script>
+    @endif
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
         <div class="container px-5">
