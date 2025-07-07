@@ -37,7 +37,7 @@
         </div>
     @endif
     <p>En esta sección puedes ver los perfiles asociados a la cuenta de suscripción
-        <strong>{{ $cuenta->usuariocue }}</strong>.
+        <strong>{{$cuenta->idcue}} {{$cuenta->usuariocue }}</strong>.
         Puedes editar el PIN de cada perfil o ver los datos de acceso de la cuenta.
     </p>
     <div class="row">

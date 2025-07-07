@@ -126,11 +126,11 @@
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
                                 @php
                                     $rendimiento = '';
-                                    if ($ventas_dia < 4) {
+                                    if ($ventas_dia < 5) {
                                         $rendimiento = 'Bajo';
-                                    } elseif ($ventas_dia <= 7) {
-                                        $rendimiento = 'Regular';
                                     } elseif ($ventas_dia <= 10) {
+                                        $rendimiento = 'Regular';
+                                    } elseif ($ventas_dia <= 25) {
                                         $rendimiento = 'Bueno';
                                     } else {
                                         $rendimiento = 'Excelente';

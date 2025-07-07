@@ -13,6 +13,7 @@ use App\Models\Costo;
 use App\Models\Gasto;
 use App\Models\ViewClientesUsuarios;
 use App\Models\ViewUsuarioActivo;
+use Illuminate\Support\Str;
 
 class DashboardService
 {
@@ -66,7 +67,10 @@ class DashboardService
     }
     public function getNetflix($month, $year)
     {
-        $cuentas_netflix = Cuenta::where('idcue', 'like', 'NETFLIX%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_netflix = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'NETFLIX');
+        })->count();
         $usuarios_netflix = ViewUsuarioActivo::where('idcue', 'like', 'NETFLIX%')->count();
         $ingresos_netflix = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -79,7 +83,10 @@ class DashboardService
     }
     public function getDisney($month, $year)
     {
-        $cuentas_disney = Cuenta::where('idcue', 'like', 'DISNEY%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_disney = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'DISNEY');
+        })->count();
         $usuarios_disney = ViewUsuarioActivo::where('idcue', 'like', 'DISNEY%')->count();
         $ingresos_disney = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -92,7 +99,10 @@ class DashboardService
     }
     public function getPrime($month, $year)
     {
-        $cuentas_prime = Cuenta::where('idcue', 'like', 'PRIME%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_prime = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'PRIME');
+        })->count();
         $usuarios_prime = ViewUsuarioActivo::where('idcue', 'like', 'PRIME%')->count();
         $ingresos_prime = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -105,7 +115,10 @@ class DashboardService
     }
     public function getMax($month, $year)
     {
-        $cuentas_max = Cuenta::where('idcue', 'like', 'MAX%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_max = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'MAX');
+        })->count();
         $usuarios_max = ViewUsuarioActivo::where('idcue', 'like', 'MAX%')->count();
         $ingresos_max = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -118,7 +131,10 @@ class DashboardService
     }
     public function getMagis($month, $year)
     {
-        $cuentas_magis = Cuenta::where('idcue', 'like', 'FLUJO%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_magis = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'FLUJO');
+        })->count();
         $usuarios_magis = ViewUsuarioActivo::where('idcue', 'like', 'FLUJO%')->count();
         $ingresos_magis = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -131,7 +147,10 @@ class DashboardService
     }
     public function getCrunchyroll($month, $year)
     {
-        $cuentas_crunchy = Cuenta::where('idcue', 'like', 'CRUNCHY%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_crunchy = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'CRUNCHY');
+        })->count();
         $usuarios_crunchy = ViewUsuarioActivo::where('idcue', 'like', 'CRUNCHY%')->count();
         $ingresos_crunchy = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -144,7 +163,10 @@ class DashboardService
     }
     public function getParamount($month, $year)
     {
-        $cuentas_paramount = Cuenta::where('idcue', 'like', 'PARAMOUNT%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_paramount = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'PARAMOUNT');
+        })->count();
         $usuarios_paramount = ViewUsuarioActivo::where('idcue', 'like', 'PARAMOUNT%')->count();
         $ingresos_paramount = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -157,7 +179,10 @@ class DashboardService
     }
     public function getSpotify($month, $year)
     {
-        $cuentas_spotify = Cuenta::where('idcue', 'like', 'SPOTIFY%')->where('activocue', true)->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_spotify = $cuentas->filter(function ($cuenta) {
+            return Str::startsWith($cuenta->idcue, 'SPOTIFY');
+        })->count();
         $usuarios_spotify = ViewUsuarioActivo::where('idcue', 'like', 'SPOTIFY%')->count();
         $ingresos_spotify = DetalleVenta::whereHas('venta', function ($query) use ($month, $year) {
             $query->whereMonth('fechaven', $month)
@@ -170,15 +195,16 @@ class DashboardService
     }
     public function getOtros($month, $year)
     {
-        $cuentas_otros = Cuenta::where('idcue', 'not like', 'NETFLIX%')->where('activocue', true)
-            ->where('idcue', 'not like', 'DISNEY%')
-            ->where('idcue', 'not like', 'PRIME%')
-            ->where('idcue', 'not like', 'MAX%')
-            ->where('idcue', 'not like', 'FLUJO%')
-            ->where('idcue', 'not like', 'CRUNCHY%')
-            ->where('idcue', 'not like', 'PARAMOUNT%')
-            ->where('idcue', 'not like', 'SPOTIFY%')
-            ->count();
+        $cuentas = $this->cuentaService->obtenerCuentas();
+        $cuentas_otros = $cuentas->filter(function ($cuenta) {
+            $prefixes = ['NETFLIX', 'DISNEY', 'PRIME', 'MAX', 'FLUJO', 'CRUNCHY', 'PARAMOUNT', 'SPOTIFY'];
+            foreach ($prefixes as $prefix) {
+                if (Str::startsWith($cuenta->idcue, $prefix)) {
+                    return false; // excluir
+                }
+            }
+            return true; // incluir
+        })->count();
         $usuarios_otros = ViewUsuarioActivo::where('idcue', 'not like', 'NETFLIX%')
             ->where('idcue', 'not like', 'DISNEY%')
             ->where('idcue', 'not like', 'PRIME%')
@@ -999,7 +1025,7 @@ class DashboardService
     {
         $usuarios = ViewUsuarioActivo::all();
         $activeUsers = $usuarios->count();
-        $cc = Cuenta::where('activocue', true)->get();
+        $cc = $this->cuentaService->obtenerCuentas();
         $accounts = $cc->count();
         $dangerAccounts = $this->cuentaService->contarCuentasCaidas($cc);
         $affectedCustomers = Cuenta::where('activocue', true)
