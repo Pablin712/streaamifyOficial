@@ -44,7 +44,7 @@
                             <span class="me-2 badge bg-secondary">{{ $recarga->numcomprobante }}</span>
                             <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
                                 data-bs-target="#modalComprobante" data-id="{{ $recarga->idrec }}"
-                                data-img="{{ asset('public/storage/' . $recarga->foto) }}">
+                                data-img="{{ asset('storage/' . $recarga->foto) }}">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>

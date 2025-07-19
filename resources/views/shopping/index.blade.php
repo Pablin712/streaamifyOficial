@@ -255,7 +255,7 @@
                     <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
                             <!-- Imagen del producto -->
-                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
 
                             <!-- Detalles del producto -->
@@ -296,7 +296,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 200px; height: auto;">
 
@@ -351,7 +351,7 @@
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 100px;">
                                                     <h5>{{ $producto->nombrepro }}</h5>
@@ -388,7 +388,7 @@
                 @foreach ($productosCombos as $producto)
                     <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -424,7 +424,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 200px; height: auto;">
 
@@ -477,7 +477,7 @@
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 100px;">
                                                     <h5>{{ $producto->nombrepro }}</h5>
@@ -514,7 +514,7 @@
                 @foreach ($productosPedidos as $producto)
                     <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -544,7 +544,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 200px; height: auto;">
 
@@ -592,7 +592,7 @@
                                                         aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body text-center">
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 100px;">
                                                     <h5>{{ $producto->nombrepro }}</h5>
@@ -629,7 +629,7 @@
                 @foreach ($productosPersonalizados as $producto)
                     <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -659,7 +659,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 200px; height: auto;">
 
@@ -710,7 +710,7 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body text-center">
-                                            <img src="{{ asset('public/' . $producto->foto) }}"
+                                            <img src="{{ asset($producto->foto) }}"
                                                 alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                 style="max-width: 100px;">
                                             <h5>{{ $producto->nombrepro }}</h5>
@@ -761,7 +761,7 @@
                 @foreach ($productosCompletos as $producto)
                     <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -791,7 +791,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 200px; height: auto;">
 
@@ -841,7 +841,7 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body text-center">
-                                            <img src="{{ asset('public/' . $producto->foto) }}"
+                                            <img src="{{ asset($producto->foto) }}"
                                                 alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                 style="max-width: 100px;">
                                             <h5>{{ $producto->nombrepro }}</h5>
@@ -876,7 +876,7 @@
                 @foreach ($juegos as $producto)
                     <div class="col mb-5 producto-item" data-nombre="{{ strtolower($producto->nombrepro) }}">
                         <div class="card h-100">
-                            <img class="card-img-top" src="{{ asset('public/' . $producto->foto) }}"
+                            <img class="card-img-top" src="{{ asset($producto->foto) }}"
                                 alt="{{ $producto->nombrepro }}" />
                             <div class="card-body p-4 text-center">
                                 <h5 class="fw-bolder">{{ $producto->nombrepro }}</h5>
@@ -906,7 +906,7 @@
                                                 </div>
                                                 <div class="modal-body text-center">
                                                     <!-- Imagen del producto -->
-                                                    <img src="{{ asset('public/' . $producto->foto) }}"
+                                                    <img src="{{ asset($producto->foto) }}"
                                                         alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                         style="max-width: 200px; height: auto;">
 
@@ -956,7 +956,7 @@
                                                 aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body text-center">
-                                            <img src="{{ asset('public/' . $producto->foto) }}"
+                                            <img src="{{ asset($producto->foto) }}"
                                                 alt="{{ $producto->nombrepro }}" class="img-fluid rounded mb-3"
                                                 style="max-width: 100px;">
                                             <h5>{{ $producto->nombrepro }}</h5>

@@ -31,7 +31,7 @@
             <div class="col-md-4">
                 <div class="card mb-4">
                     <div class="card-body text-center">
-                        <img src="{{ $dato['empleado']->foto_url ? asset('public/storage/' . $dato['empleado']->foto_url) : 'https://via.placeholder.com/100/007bff/ffffff?text=Usuario' }}"
+                        <img src="{{ $dato['empleado']->foto_url ? asset('storage/' . $dato['empleado']->foto_url) : 'https://via.placeholder.com/100/007bff/ffffff?text=Usuario' }}"
                             alt="Foto de {{ $dato['empleado']->nombreemp }}" class="img-fluid rounded-circle mb-3"
                             style="width: 100px; height: 100px; object-fit: cover;">
                         <h5 class="card-title">{{ $dato['empleado']->nombreemp }}</h5>
