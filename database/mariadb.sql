@@ -94,42 +94,6 @@ DELIMITER ;
 
 
 
-DELIMITER $$
-
-CREATE TRIGGER trg_generar_idventa
-BEFORE INSERT ON ventas
-FOR EACH ROW
-BEGIN
-    DECLARE num_venta_dia INT;
-
-    -- Verificar el número máximo de ventas del día actual en la tabla ventas_diarias
-    SELECT COALESCE(MAX(numero_venta), 0)
-    INTO num_venta_dia
-    FROM ventas_diarias
-    WHERE fecha = CURRENT_DATE;
-
-    -- Incrementar el número de venta del día actual
-    SET num_venta_dia = num_venta_dia + 1;
-
-    -- Actualizar o insertar en ventas_diarias
-    IF EXISTS (SELECT 1 FROM ventas_diarias WHERE fecha = CURRENT_DATE) THEN
-        -- Actualizar el número de venta si ya existe la fecha
-        UPDATE ventas_diarias
-        SET numero_venta = num_venta_dia
-        WHERE fecha = CURRENT_DATE;
-    ELSE
-        -- Insertar nuevo registro si no existe la fecha
-        INSERT INTO ventas_diarias (fecha, numero_venta)
-        VALUES (CURRENT_DATE, num_venta_dia);
-    END IF;
-
-    -- Generar el ID de venta en el formato deseado: FAC + número + fecha
-    SET NEW.idven = CONCAT('FAC', LPAD(num_venta_dia, 3, '0'), '-', DATE_FORMAT(CURRENT_DATE, '%d%m%Y'));
-END$$
-
-DELIMITER ;
-
-
 
 -- Crear el trigger asociado
 -- Crear la función insertar_perfiles
@@ -259,11 +223,11 @@ BEGIN
     DECLARE total_pagado DECIMAL(10, 2);
 
     -- Calcular el total pagado por el cliente en el mes y año especificados
-    SELECT COALESCE(SUM(totalpago), 0) INTO total_pagado
+    SELECT COALESCE(SUM(totalpagoven), 0) INTO total_pagado
     FROM ventas
-    WHERE idcliente = cliente_id
-      AND MONTH(fechaventa) = mes
-      AND YEAR(fechaventa) = anio;
+    WHERE idcli = cliente_id
+      AND MONTH(fechaven) = mes
+      AND YEAR(fechaven) = anio;
 
     RETURN total_pagado;
 END$$
@@ -286,7 +250,7 @@ GROUP BY u.idcli, u.nombre_cliente;
 
 
 
--- Modificaciones forma 1 no para mysql mariadb
+-- Modificaciones forma 1 no para mysql, mariadb
 ALTER TABLE contabilidad 
 MODIFY COLUMN idcon INT NOT NULL AUTO_INCREMENT PRIMARY KEY;
 
@@ -389,6 +353,9 @@ DELIMITER ;
 -- referido por
 ALTER TABLE clientes 
 ADD COLUMN referido_por BIGINT(20) NULL;
+
+ALTER TABLE clientes
+MODIFY COLUMN referido_por INT UNSIGNED NULL;
 
 -- Agregar la foreign key (opcional)
 ALTER TABLE clientes
