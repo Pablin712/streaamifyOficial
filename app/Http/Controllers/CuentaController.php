@@ -71,6 +71,16 @@ class CuentaController extends Controller
         $perfiles = $this->cuentaService->calcularUsuariosPorPerfil($cuenta);
         return view('inventory.cuentas.show', compact('cuenta', 'perfiles'));
     }
+
+    public function PerfilesSpotify()
+    {
+        if (!Gate::allows('todas_las_cuentas') || !Gate::allows('spotify')) {
+            abort(403, 'No tienes permiso para ver las cuentas de spotify.');
+        }
+        $cuentas = $this->cuentaService->obtenerCuentasPorServicioSinFiltros("SPOTIFY");
+        return view('inventory.cuentas.spotify', compact('cuentas'));
+    }
+
     public function store(Request $request)
     {
         if (!Gate::allows('cuentas.store')) {

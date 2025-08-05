@@ -77,6 +77,19 @@ class CuentaService
             })
             ->first();
     }
+    public function obtenerCuentasPorServicioSinFiltros($idser)
+    {
+        //no tiene filtro caidacue, contando usuarios activos
+        //ver permiso de usuario si puede ver todas las cuentas o spotify
+        
+        return Cuenta::with(['valor.servicio'])
+            ->whereHas('valor.servicio', function ($query) use ($idser) {
+                $query->where('idser', $idser);
+            })
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
+    }
     public function buscarPerfilDisponible($cuenta)
     {
         if (!$cuenta) {

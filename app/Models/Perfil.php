@@ -41,4 +41,11 @@ class Perfil extends Model
     {
         return $this->hasMany(DetalleVenta::class, 'idper', 'idper')->onDelete('cascade');
     }
+    public function getNumUsuariosAttribute()
+    {
+        $usuariosActivos = ViewUsuarioActivo::where('perfil', $this->numeroper)
+                ->where('idcue', $this->idcue)
+                ->count();
+        return $usuariosActivos;
+    }
 }

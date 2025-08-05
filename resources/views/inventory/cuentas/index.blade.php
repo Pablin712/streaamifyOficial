@@ -111,6 +111,9 @@
     @if (Auth::user()->hasPermissionTo('valores.create'))
         <a href="{{ route('valores.create') }}" class="btn btn-primary mb-3">Crear Valor</a>
     @endif
+    @if (Auth::user()->hasPermissionTo('spotify') || Auth::user()->hasPermissionTo('todas_las_cuentas'))
+        <a href="{{ route('cuentas.spotify') }}" class="btn btn-success mb-3">Revisar Spotify</a>
+    @endif
 @endsection
 
 @section('tablename', 'Cuentas')
