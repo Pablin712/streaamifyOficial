@@ -32,7 +32,7 @@ function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot) {
     var message = "*" + servicio + "*\n";
     message += "Usuario: " + usuariocue + "\n";
     message += "Clave: " + contrasenacue + "\n";
-    message += "PIN de perfil Nro " + numeroper + ": " + pinper;
+    message += "PIN de perfil Nro " + numeroper + ": " + pinper + "\n";
     message += "*Prohibido:* Modificar perfiles o contraseñas.\n";
     // Verificar si el bot no está vacío
     if (bot && bot.trim() !== "") {

@@ -15,7 +15,8 @@
             {{ session('error') }}
         </div>
     @endif
-    Aquí puedes actualizar los detalles para la renovación de la cuenta seleccionada. Asegúrate de no modificar el ID de la cuenta ni el valor.
+    Aquí puedes actualizar los detalles para la renovación de la cuenta seleccionada. Asegúrate de no modificar el ID de la
+    cuenta ni el valor.
 @endsection
 
 @section('content')
@@ -26,7 +27,8 @@
         <!-- Campo para el ID de la cuenta (solo lectura) -->
         <div class="form-group mb-3">
             <label for="idcue">ID de Cuenta</label>
-            <input type="text" name="idcue" id="idcue" class="form-control" maxlength="20" value="{{ old('idcue', $cuenta->idcue) }}" readonly>
+            <input type="text" name="idcue" id="idcue" class="form-control" maxlength="20"
+                value="{{ old('idcue', $cuenta->idcue) }}" readonly>
         </div>
 
         <!-- Selección del Valor (solo lectura) -->
@@ -38,20 +40,24 @@
         <!-- Campo para el nombre de usuario de la cuenta -->
         <div class="form-group mb-3">
             <label for="usuariocue">Usuario</label>
-            <input type="text" name="usuariocue" id="usuariocue" class="form-control" value="{{ old('usuariocue', $cuenta->usuariocue) }}" required>
+            <input type="text" name="usuariocue" id="usuariocue" class="form-control"
+                value="{{ old('usuariocue', $cuenta->usuariocue) }}" required>
         </div>
 
         <!-- Campo para la contraseña de la cuenta -->
         <div class="form-group mb-3">
             <label for="contrasenacue">Contraseña</label>
-            <input type="text" name="contrasenacue" id="contrasenacue" class="form-control" value="{{ old('contrasenacue', $cuenta->contrasenacue) }}" required>
+            <input type="text" name="contrasenacue" id="contrasenacue" class="form-control"
+                value="{{ old('contrasenacue', $cuenta->contrasenacue) }}" required>
             <small>Salta este apartado si no deseas cambiar la contraseña</small>
         </div>
 
         <!-- Fecha de vencimiento de la cuenta -->
         <div class="form-group mb-3">
             <label for="fechavencue">Fecha de Vencimiento</label>
-            <input type="date" name="fechavencue" id="fechavencue" class="form-control" value="{{ old('fechavencue', $cuenta->fechavencue) }}" required>
+            <input type="date" name="fechavencue" id="fechavencue" class="form-control"
+                value="{{ old('fechavencue', \Carbon\Carbon::parse($cuenta->fechavencue)->addMonth()->format('Y-m-d')) }}"
+                required>
         </div>
 
         <!-- Campo para indicar si la cuenta está activa -->
@@ -67,9 +73,11 @@
         <div class="form-group mb-3">
             <label for="caidacue"><strong>Agregar Costo de Cuenta</strong></label><br>
             <label for="descripcioncos">Descripción del Costo</label>
-            <input type="text" name="descripcioncos" id="descripcioncos" class="form-control" value="{{ old('descripcioncos', $cuenta->costo->descripcioncos ?? '') }}">
+            <input type="text" name="descripcioncos" id="descripcioncos" class="form-control"
+                value="{{ old('descripcioncos', $cuenta->costo->descripcioncos ?? '') }}">
             <label for="montocos">Monto del Costo</label>
-            <input type="number" name="montocos" id="montocos" class="form-control" value="{{ old('montocos', $cuenta->costo->montocos ?? '') }}" step="0.01">
+            <input type="number" name="montocos" id="montocos" class="form-control"
+                value="{{ old('montocos', $cuenta->costo->montocos ?? '') }}" step="0.01">
         </div>
         <button type="submit" class="btn btn-success">Renovar Cuenta</button>
     </form>
