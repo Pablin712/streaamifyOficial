@@ -9,9 +9,16 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Historial;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
-
+use App\Services\DashboardService;
+use Carbon\Carbon;
 class LoginController extends Controller
 {
+    protected $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
     // Mostrar el formulario de login (web)
     public function showLoginForm()
     {
@@ -57,6 +64,8 @@ class LoginController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'ruta_actual' => 'inicio',
         ]);
+        $today = Carbon::today();
+        $this->dashboardService->guardar($today);
 
         return redirect()->route('inicio')->with('success', 'Inicio de sesión exitoso.');
     }
