@@ -124,7 +124,7 @@ class VentaController extends Controller
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
         // Lógica para generar y enviar la factura por correo
         if ($venta->cliente->email) {
-            Mail::to($venta->cliente->email)->send(new facturaMail($venta));
+            //Mail::to($venta->cliente->email)->send(new facturaMail($venta));
         }
         Historial::create([
             'accion' => 'Venta-Realizada Factura: ' . $venta->idven,
@@ -187,7 +187,7 @@ class VentaController extends Controller
             ->orderBy('idven', 'desc')
             ->value('idven');
         if ($ventaNueva->cliente->email) {
-            Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
+            //Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
         }
 
         Historial::create([
