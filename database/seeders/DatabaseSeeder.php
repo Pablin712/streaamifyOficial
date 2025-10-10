@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             
             // Gestión y estadísticas
             TareaSeeder::class,
-            DailyStatisticSeeder::class,
+            //DailyStatisticSeeder::class,
             MailSeeder::class,
         ]);
     }

@@ -148,5 +148,20 @@ class RoleSeeder extends Seeder
 
         Permission::create(['name' => 'historial.clear'])->syncRoles([$admin]);
         Permission::create(['name' => 'tareas.index'])->syncRoles([$admin]);
+
+        // Permisos para mails
+        Permission::create(['name' => 'mails.index'])->syncRoles([$admin, $gerente]);
+        Permission::create(['name' => 'mails.store'])->syncRoles([$admin, $gerente]);
+        Permission::create(['name' => 'mails.update'])->syncRoles([$admin, $gerente]);
+        Permission::create(['name' => 'mails.destroy'])->syncRoles([$admin, $gerente]);
+
+        // Permisos para vista de cuentas por servicios
+        Permission::create(['name' => 'todas_las_cuentas'])->syncRoles([$admin, $gerente]);
+        Permission::create(['name' => 'netflix'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        Permission::create(['name' => 'disney'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        Permission::create(['name' => 'max'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        Permission::create(['name' => 'spotify'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        Permission::create(['name' => 'otras'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        Permission::create(['name' => 'prime'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
     }
 }
