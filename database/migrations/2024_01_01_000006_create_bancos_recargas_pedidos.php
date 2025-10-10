@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -22,12 +23,14 @@ return new class extends Migration
             $table->string('foto', 255)->nullable();
             $table->timestamps();
         });
+
         Schema::create('estado_recargas', function (Blueprint $table) {
             $table->id('idestado');
             $table->string('nombre', 50);
             $table->text('descripcion')->nullable();
             $table->timestamps();
         });
+
         Schema::create('recargas', function (Blueprint $table) {
             $table->id('idrec');
             $table->unsignedBigInteger('idcli');
@@ -37,11 +40,23 @@ return new class extends Migration
             $table->unsignedBigInteger('idestado');
             $table->unsignedBigInteger('idban');
             $table->timestamps();
-
-            // Relaciones
+            
             $table->foreign('idcli')->references('idcli')->on('clientes')->onDelete('cascade');
             $table->foreign('idestado')->references('idestado')->on('estado_recargas')->onDelete('cascade');
             $table->foreign('idban')->references('idban')->on('bancos')->onDelete('cascade');
+        });
+
+        Schema::create('pedidos', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('idcli');
+            $table->unsignedBigInteger('producto_id');
+            $table->unsignedBigInteger('idestado')->default(1);
+            $table->timestamp('fechapedido')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->string('respuesta', 255);
+            
+            $table->foreign('idcli')->references('idcli')->on('clientes')->onDelete('cascade');
+            $table->foreign('producto_id')->references('id')->on('productos')->onDelete('cascade');
+            $table->foreign('idestado')->references('idestado')->on('estado_recargas');
         });
     }
 
@@ -50,8 +65,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bancos');
-        Schema::dropIfExists('estado_recargas');
+        Schema::dropIfExists('pedidos');
         Schema::dropIfExists('recargas');
+        Schema::dropIfExists('estado_recargas');
+        Schema::dropIfExists('bancos');
     }
 };
