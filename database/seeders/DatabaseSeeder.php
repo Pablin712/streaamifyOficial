@@ -13,27 +13,38 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // Datos básicos (sin dependencias)
             ServicioSeeder::class,
             ProveedorSeeder::class,
-            ValorSeeder::class,
-            //RolSeeder::class,
-            RoleSeeder::class,
-            EmpleadoSeeder::class,
             TipoGastoSeeder::class,
-            GastoSeeder::class,
-            ClienteSeeder::class,
-            CuentaSeeder::class,
-            //CostoSeeder::class,
-            //DetalleVentaSeeder::class,
-            ContabilidadSeeder::class,
-            //MantenimientoSeeder::class,
             TipoProductoSeeder::class,
             CategoriaSeeder::class,
-            ProductoSeeder::class,
             BancosSeeder::class,
             EstadoRecargaSeeder::class,
-            //VentaSeeder::class,
-            //DailyStatisticSeeder::class,
+            
+            // Sistema de roles y permisos
+            RoleSeeder::class,
+            
+            // Usuarios del sistema
+            EmpleadoSeeder::class,
+            ClienteSeeder::class,
+            
+            // Datos dependientes
+            ValorSeeder::class,
+            CuentaSeeder::class,
+            ProductoSeeder::class,
+            
+            // Transacciones y operaciones
+            GastoSeeder::class,
+            ContabilidadSeeder::class,
+            VentaSeeder::class, // ✅ Arreglado - ahora crea 150 ventas con 1-4 detalles
+            RecargaSeeder::class,
+            PedidoSeeder::class,
+            
+            // Gestión y estadísticas
+            TareaSeeder::class,
+            DailyStatisticSeeder::class,
+            MailSeeder::class,
         ]);
     }
 }
