@@ -50,6 +50,12 @@
                             @endif
                         </ul>
                     </li>
+                    <!-- Botón cambiar modo -->
+                    <li class="nav-item">
+                        <button class="nav-link btn btn-link p-2 border-0" id="toggleDarkMode" title="Cambiar modo de visualización">
+                            <i class="fas fa-moon fa-lg" id="darkModeIcon"></i>
+                        </button>
+                    </li>
                     <!-- Menú de usuario -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"

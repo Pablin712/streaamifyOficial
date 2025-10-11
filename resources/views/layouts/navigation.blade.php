@@ -29,11 +29,6 @@
 
         <div id="layoutSidenav_content">
             <main>
-                <div class="d-flex justify-content-end align-items-center">
-                    <button id="toggleDarkMode" class="btn btn-sm btn-outline-secondary">
-                        Cambiar Modo
-                    </button>
-                </div>
                 @yield('main')
             </main>
             @include('partials.footer')

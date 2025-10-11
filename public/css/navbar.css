@@ -347,3 +347,56 @@ body.dark-mode .navbar .dropdown-menu .dropdown-item:hover {
     background-color: #333333 !important; /* Fondo más oscuro al pasar el mouse */
     color: #ffffff !important; /* Texto claro */
 }
+
+/* Botón cambiar modo */
+#toggleDarkMode {
+    background: none !important;
+    border: none !important;
+    color: #fff !important;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+#toggleDarkMode:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.1);
+}
+
+#toggleDarkMode:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
+    outline: 0;
+}
+
+#darkModeIcon {
+    transition: all 0.3s ease;
+}
+
+/* Estilos para diferentes temas del navbar */
+.orange-navbar #toggleDarkMode {
+    color: #fff !important;
+}
+
+.orange-navbar #toggleDarkMode:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.blue-navbar #toggleDarkMode {
+    color: #fff !important;
+}
+
+.blue-navbar #toggleDarkMode:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.dark-mode #toggleDarkMode {
+    color: #ffffff !important;
+}
+
+body.dark-mode #toggleDarkMode:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
