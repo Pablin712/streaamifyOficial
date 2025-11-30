@@ -35,11 +35,11 @@ class RecoverClienteMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('test@mail.dev', 'Sistema Streamify'),
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
             subject: 'Recuperacion de Contraseña',
         );
     }
-    
+
     /**
      * Get the message content definition.
      */

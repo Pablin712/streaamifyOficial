@@ -32,7 +32,7 @@ class facturaMail extends Mailable
     {
         return new Envelope(
             subject: 'Recibo: ' . $this->venta->idven,
-            from: new Address('no-reply@streamify.com', 'Sistema Streamify'),
+            from: new Address(config('mail.from.address'), config('mail.from.name')),
         );
     }
 
@@ -58,6 +58,6 @@ class facturaMail extends Mailable
                     ->with([
                         'venta' => $this->venta,
                     ])
-                    ->from('no-reply@streamify.com', 'Sistema Streamify');
+                    ->from(config('mail.from.address'), config('mail.from.name'));
     }
 }
