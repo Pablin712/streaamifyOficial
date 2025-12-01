@@ -10,7 +10,6 @@
     <title>@yield('title', 'Streamify')</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -43,34 +42,8 @@
     </script>
     <script src="{{ asset('js/scripts.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
-        crossorigin="anonymous"></script>
     <script src="{{ asset('js/sidebar.js') }}"></script>
     <script src="{{ asset('js/navbar.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const dataTableElement = document.querySelector('#datatablesSimple');
-                if (dataTableElement) {
-                    const rows = dataTableElement.querySelectorAll('tbody tr');
-                    if (rows.length > 0) {
-                        new simpleDatatables.DataTable(dataTableElement, {
-                            searchable: true,
-                            perPageSelect: [5, 10, 20],
-                            labels: {
-                                placeholder: "Buscar...",
-                                perPage: "Registros por página",
-                                noRows: "No se encontraron registros.",
-                                info: "Mostrando {start} a {end} de {rows} registros",
-                            },
-                        });
-                    } else {
-                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
-                    }
-                }
-            }, 500);
-        });
-    </script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     @yield('scripts')
@@ -112,7 +85,7 @@
             });
         }, 300000); // 5 minutos = 300,000 ms
     </script>
-    <script src="{{asset('js/sistema.js')}}"></script>  
+    <script src="{{asset('js/sistema.js')}}"></script>
 </body>
 
 </html>
