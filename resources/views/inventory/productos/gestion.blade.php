@@ -33,14 +33,60 @@
 
 @section('tablename', 'Categorías')
 @section('table1')
-    <table id="datatablesSimple" class="table table-striped table-bordered">
+    <!-- Controles de búsqueda y registros -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+            <label for="categorias-table-search" class="form-label fw-semibold">
+                <i class="fas fa-search text-primary"></i> Buscar:
+            </label>
+            <input id="categorias-table-search"
+                   type="text"
+                   placeholder="Buscar categoría..."
+                   class="form-control">
+        </div>
+        <div class="col-lg-4 col-md-5 col-12">
+            <label for="categorias-table-rows-per-page" class="form-label fw-semibold">
+                <i class="fas fa-list text-primary"></i> Mostrar:
+            </label>
+            <select id="categorias-table-rows-per-page" class="form-select">
+                <option value="5">5 registros</option>
+                <option value="10" selected>10 registros</option>
+                <option value="20">20 registros</option>
+                <option value="50">50 registros</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="categorias-table" data-table="categorias-table" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Descripción</th>
+                <th class="sortable" data-type="number" data-col="0">
+                    ID
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="1">
+                    Nombre
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="2">
+                    Descripción
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
                 @if (Auth::user()->hasAnyPermission(['categorias.update', 'categorias.destroy']))
-                    <th>Acciones</th>
+                    <th data-type="actions">Acciones</th>
                 @endif
             </tr>
         </thead>
@@ -88,14 +134,60 @@
         </button>
     @endif
 
-    <table id="datatablesSimple2" class="table table-striped table-bordered">
+    <!-- Controles de búsqueda y registros -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+            <label for="tipos-producto-table-search" class="form-label fw-semibold">
+                <i class="fas fa-search text-primary"></i> Buscar:
+            </label>
+            <input id="tipos-producto-table-search"
+                   type="text"
+                   placeholder="Buscar tipo de producto..."
+                   class="form-control">
+        </div>
+        <div class="col-lg-4 col-md-5 col-12">
+            <label for="tipos-producto-table-rows-per-page" class="form-label fw-semibold">
+                <i class="fas fa-list text-primary"></i> Mostrar:
+            </label>
+            <select id="tipos-producto-table-rows-per-page" class="form-select">
+                <option value="5">5 registros</option>
+                <option value="10" selected>10 registros</option>
+                <option value="20">20 registros</option>
+                <option value="50">50 registros</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="tipos-producto-table" data-table="tipos-producto-table" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Descripción</th>
+                <th class="sortable" data-type="number" data-col="0">
+                    ID
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="1">
+                    Nombre
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="2">
+                    Descripción
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
                 @if (Auth::user()->hasAnyPermission(['tipos_producto.update', 'tipos_producto.destroy']))
-                    <th>Acciones</th>
+                    <th data-type="actions">Acciones</th>
                 @endif
             </tr>
         </thead>
@@ -132,6 +224,17 @@
             @endforeach
         </tbody>
     </table>
+    </div>
+
+    <!-- Información de paginación y controles -->
+    <div class="row mt-3 align-items-center">
+        <div class="col-md-6 col-12 mb-2 mb-md-0">
+            <div id="tipos-producto-table-row-info" class="text-muted"></div>
+        </div>
+        <div class="col-md-6 col-12">
+            <div id="tipos-producto-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
+        </div>
+    </div>
 @endsection
 <!-- Modal para crear una nueva categoría -->
 <div class="modal fade" id="crearCategoriaModal" tabindex="-1" aria-labelledby="crearCategoriaModalLabel"
@@ -284,4 +387,7 @@
             modal.find('#editTipoProductoForm').attr('action', formAction);
         });
     </script>
+
+    {{-- Enhanced Table v2 --}}
+    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 @endsection

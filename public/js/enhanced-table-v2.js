@@ -16,8 +16,36 @@
  */
 
 // ============================================================================
-// UTILIDADES DE NORMALIZACIÓN
+// UTILIDADES DE NORMALIZACIÓN Y TEMAS
 // ============================================================================
+
+/**
+ * Obtiene el color primario del tema actual en formato RGB para jsPDF
+ * @returns {Array} Array RGB [r, g, b]
+ */
+function getPrimaryColorRGB() {
+    const primaryColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--primary-color')
+        .trim();
+
+    // Convertir hex a RGB
+    if (primaryColor.startsWith('#')) {
+        const hex = primaryColor.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return [r, g, b];
+    }
+
+    // Si es rgb() o rgba(), extraer valores
+    const rgbMatch = primaryColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+        return [parseInt(rgbMatch[1]), parseInt(rgbMatch[2]), parseInt(rgbMatch[3])];
+    }
+
+    // Fallback al color amarillo del usuario por defecto
+    return [255, 226, 38]; // #ffe226
+}
 
 /**
  * Normaliza texto para búsqueda: elimina acentos, convierte a minúsculas,
@@ -111,7 +139,7 @@ function addTableStyles() {
         /* Estilos mejorados para tabla responsive */
         .overflow-x-auto {
             scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
+            scrollbar-color: var(--border-color) var(--bg-light);
             scroll-behavior: smooth;
         }
 
@@ -120,23 +148,23 @@ function addTableStyles() {
         }
 
         .overflow-x-auto::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: var(--bg-light);
             border-radius: 4px;
         }
 
         .overflow-x-auto::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: var(--border-color);
             border-radius: 4px;
             transition: background-color 0.2s ease;
         }
 
         .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: var(--primary-color);
         }
 
         /* Highlighting de búsqueda */
         .search-highlight {
-            background-color: #fef08a;
+            background-color: var(--warning-color, #fef08a);
             font-weight: 500;
             padding: 1px 2px;
             border-radius: 2px;
@@ -145,16 +173,16 @@ function addTableStyles() {
         /* Responsividad para móvil */
         @media (max-width: 767px) {
             .overflow-x-auto {
-                border-left: 3px solid #3b82f6;
-                border-right: 3px solid #3b82f6;
+                border-left: 3px solid var(--primary-color);
+                border-right: 3px solid var(--primary-color);
             }
 
             .overflow-x-auto::-webkit-scrollbar-thumb {
-                background: #3b82f6;
+                background: var(--primary-color);
             }
 
             .overflow-x-auto::-webkit-scrollbar-track {
-                background: #dbeafe;
+                background: var(--bg-hover);
             }
 
             table th, table td {
@@ -204,7 +232,7 @@ function addTableStyles() {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--bg-overlay, rgba(255, 255, 255, 0.8));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -212,8 +240,8 @@ function addTableStyles() {
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--primary-color);
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -227,8 +255,8 @@ function addTableStyles() {
 
         /* Fila seleccionada */
         tbody tr.selected {
-            background-color: #dbeafe !important;
-            border-left: 3px solid #3b82f6;
+            background-color: var(--bg-hover) !important;
+            border-left: 3px solid var(--primary-color);
         }
     `;
     document.head.appendChild(style);
@@ -855,7 +883,7 @@ function initResponsiveFeatures(config) {
 function addScrollIndicators(container) {
     let scrollTimeout;
     container.addEventListener('scroll', function() {
-        this.style.borderColor = '#3b82f6';
+        this.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(() => {
             this.style.borderColor = '';
@@ -951,7 +979,11 @@ function exportTableToPDF(config, filename = "export.pdf") {
         body: dataRows,
         startY: 28,
         theme: 'striped',
-        headStyles: { fillColor: [68, 114, 196], fontStyle: 'bold' }
+        headStyles: {
+            fillColor: getPrimaryColorRGB(),
+            fontStyle: 'bold',
+            textColor: [255, 255, 255]
+        }
     });
 
     doc.save(filename);
@@ -975,8 +1007,8 @@ function printTable(config) {
             <style>
                 body { font-family: Arial; margin: 20px; }
                 table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background: #4a5568; color: white; }
+                th, td { border: 1px solid var(--border-color); padding: 8px; text-align: left; }
+                th { background: var(--primary-gradient); color: var(--text-on-primary); }
             </style>
         </head>
         <body>

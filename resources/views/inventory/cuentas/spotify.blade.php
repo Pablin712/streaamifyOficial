@@ -1,7 +1,6 @@
 @extends('layouts.table')
 @section('title', 'Spotify')
 @section('styles')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
 @endsection
 @section('h1', 'Cuentas de Spotify')
@@ -31,16 +30,76 @@
 @endsection
 @section('tablename', 'Cuentas de Spotify')
 @section('table1')
-    <table id="datatablesSimple" class="datatable table table-striped table-bordered">
+    <!-- Controles de búsqueda y registros -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+            <label for="spotify-table-search" class="form-label fw-semibold">
+                <i class="fas fa-search text-primary"></i> Buscar:
+            </label>
+            <input id="spotify-table-search"
+                   type="text"
+                   placeholder="Buscar cuenta..."
+                   class="form-control">
+        </div>
+        <div class="col-lg-4 col-md-5 col-12">
+            <label for="spotify-table-rows-per-page" class="form-label fw-semibold">
+                <i class="fas fa-list text-primary"></i> Mostrar:
+            </label>
+            <select id="spotify-table-rows-per-page" class="form-select">
+                <option value="5">5 registros</option>
+                <option value="10" selected>10 registros</option>
+                <option value="20">20 registros</option>
+                <option value="50">50 registros</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="spotify-table" data-table="spotify-table" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Perfil</th>
-                <th>Datos</th>
-                <th>Vence Plan</th>
-                <th>Usuario</th>
+                <th class="sortable" data-type="number" data-col="0">
+                    ID
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="1">
+                    Perfil
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="2">
+                    Datos
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="3">
+                    Vence Plan
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="4">
+                    Usuario
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
                 @if (Auth::user()->hasAnyPermission(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
-                    <th>Acciones</th>
+                    <th data-type="actions">Acciones</th>
                 @endif
             </tr>
         </thead>
@@ -195,33 +254,20 @@
             @endforeach
         </tbody>
     </table>
+    </div>
+
+    <!-- Información de paginación y controles -->
+    <div class="row mt-3 align-items-center">
+        <div class="col-md-6 col-12 mb-2 mb-md-0">
+            <div id="spotify-table-row-info" class="text-muted"></div>
+        </div>
+        <div class="col-md-6 col-12">
+            <div id="spotify-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
+        </div>
+    </div>
 @endsection
 @section('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const tables = document.querySelectorAll(
-                    '.datatable'); // Selecciona todas las tablas con la clase 'datatable'
-
-                tables.forEach((table) => {
-                    const rows = table.querySelectorAll('tbody tr');
-                    if (rows.length > 0) {
-                        new simpleDatatables.DataTable(table, {
-                            searchable: true,
-                            perPageSelect: [5, 10, 20],
-                            labels: {
-                                placeholder: "Buscar...",
-                                perPage: "Registros por página",
-                                noRows: "No se encontraron registros.",
-                                info: "Mostrando {start} a {end} de {rows} registros",
-                            },
-                        });
-                    } else {
-                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
-                    }
-                });
-            }, 500);
-        });
-    </script>
+    {{-- Enhanced Table v2 --}}
+    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
     <script src="{{ asset('js/cuentas.js') }}?v={{ time() }}"></script>
 @endsection

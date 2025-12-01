@@ -62,6 +62,30 @@
     @endif
 @endsection
 @section('table1')
+    <!-- Controles de búsqueda y registros -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+            <label for="usuarios-table-search" class="form-label fw-semibold">
+                <i class="fas fa-search text-primary"></i> Buscar:
+            </label>
+            <input id="usuarios-table-search"
+                   type="text"
+                   placeholder="Buscar usuario..."
+                   class="form-control">
+        </div>
+        <div class="col-lg-4 col-md-5 col-12">
+            <label for="usuarios-table-rows-per-page" class="form-label fw-semibold">
+                <i class="fas fa-list text-primary"></i> Mostrar:
+            </label>
+            <select id="usuarios-table-rows-per-page" class="form-select">
+                <option value="5">5 registros</option>
+                <option value="10" selected>10 registros</option>
+                <option value="20">20 registros</option>
+                <option value="50">50 registros</option>
+            </select>
+        </div>
+    </div>
+
     <form id="form-borrar-usuarios" action="{{ route('usuarios.destroyMultiple') }}" method="POST">
         @csrf
         @method('DELETE')
@@ -72,21 +96,72 @@
                 <i class="fas fa-trash"></i> Borrar seleccionados
             </button>
         </div>
-        <table id="datatablesSimple" class="table table-striped table-bordered">
+
+        <div class="table-responsive">
+            <table id="usuarios-table" data-table="usuarios-table" class="table table-striped table-bordered">
             <thead>
                 <tr>
-                    <th>
+                    <th data-type="actions">
                         ✅
                     </th>
-                    <th>Cliente</th>
-                    <th>Teléfono</th>
-                    <th>ID Cuenta</th>
-                    <th>Usuario Cuenta</th>
-                    <th>Perfil</th>
-                    <th>Vencimiento</th>
-                    <th>Estado</th>
+                    <th class="sortable" data-type="string" data-col="1">
+                        Cliente
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
+                    <th class="sortable" data-type="string" data-col="2">
+                        Teléfono
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
+                    <th class="sortable" data-type="number" data-col="3">
+                        ID Cuenta
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
+                    <th class="sortable" data-type="string" data-col="4">
+                        Usuario Cuenta
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
+                    <th class="sortable" data-type="string" data-col="5">
+                        Perfil
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
+                    <th class="sortable" data-type="string" data-col="6">
+                        Vencimiento
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
+                    <th class="sortable" data-type="string" data-col="7">
+                        Estado
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
                     @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
-                        <th>Acciones</th>
+                        <th data-type="actions">Acciones</th>
                     @endif
                 </tr>
             </thead>
@@ -166,6 +241,17 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
+
+        <!-- Información de paginación y controles -->
+        <div class="row mt-3 align-items-center">
+            <div class="col-md-6 col-12 mb-2 mb-md-0">
+                <div id="usuarios-table-row-info" class="text-muted"></div>
+            </div>
+            <div class="col-md-6 col-12">
+                <div id="usuarios-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
+            </div>
+        </div>
     </form>
     <form id="form-mover-usuario" method="POST" style="display:none;">
         @csrf
@@ -278,4 +364,7 @@
             });
         }
     </script>
+
+    {{-- Enhanced Table v2 --}}
+    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 @endsection

@@ -279,20 +279,122 @@
             Resultados del mes
         </div>
         <div class="card-body">
-            <table id="datatablesSimple" class="table table-striped table-bordered">
+            <!-- Controles de búsqueda y registros -->
+            <div class="row mb-3 align-items-end">
+                <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+                    <label for="resultados-table-search" class="form-label fw-semibold">
+                        <i class="fas fa-search text-primary"></i> Buscar:
+                    </label>
+                    <input id="resultados-table-search"
+                           type="text"
+                           placeholder="Buscar servicio..."
+                           class="form-control">
+                </div>
+                <div class="col-lg-4 col-md-5 col-12">
+                    <label for="resultados-table-rows-per-page" class="form-label fw-semibold">
+                        <i class="fas fa-list text-primary"></i> Mostrar:
+                    </label>
+                    <select id="resultados-table-rows-per-page" class="form-select">
+                        <option value="5">5 registros</option>
+                        <option value="10" selected>10 registros</option>
+                        <option value="20">20 registros</option>
+                        <option value="50">50 registros</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="resultados-table" data-table="resultados-table" class="table table-striped table-bordered">
                 <thead>
                     <tr>
-                        <th>Servicio</th>
-                        <th>Cta</th>
-                        <th>Usuarios</th>
-                        <th>usu/cue</th>
-                        <th>Ingresos</th>
-                        <th>Costos</th>
-                        <th>Ganancias</th>
-                        <th>Renta</th>
-                        <th>Ing/Cli</th>
-                        <th>Cos/Cli</th>
-                        <th>Gan/Cli</th>
+                        <th class="sortable" data-type="string" data-col="0">
+                            Servicio
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="1">
+                            Cta
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="2">
+                            Usuarios
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="3">
+                            usu/cue
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="4">
+                            Ingresos
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="5">
+                            Costos
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="6">
+                            Ganancias
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="7">
+                            Renta
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="8">
+                            Ing/Cli
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="9">
+                            Cos/Cli
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
+                        <th class="sortable" data-type="number" data-col="10">
+                            Gan/Cli
+                            <span class="sort-arrow">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                                </svg>
+                            </span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -730,6 +832,17 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
+
+            <!-- Información de paginación y controles -->
+            <div class="row mt-3 align-items-center">
+                <div class="col-md-6 col-12 mb-2 mb-md-0">
+                    <div id="resultados-table-row-info" class="text-muted"></div>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div id="resultados-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="card mb-4">
@@ -1140,4 +1253,7 @@
             }
         });
     </script>
+
+    {{-- Enhanced Table v2 --}}
+    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 @endsection

@@ -130,18 +130,92 @@
 @section('tablename', 'Productos')
 
 @section('table1')
-    <table id="datatablesSimple" class="table table-striped table-bordered">
+    <!-- Controles de búsqueda y registros -->
+    <div class="row mb-3 align-items-end">
+        <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
+            <label for="productos-table-search" class="form-label fw-semibold">
+                <i class="fas fa-search text-primary"></i> Buscar:
+            </label>
+            <input id="productos-table-search"
+                   type="text"
+                   placeholder="Buscar producto..."
+                   class="form-control">
+        </div>
+        <div class="col-lg-4 col-md-5 col-12">
+            <label for="productos-table-rows-per-page" class="form-label fw-semibold">
+                <i class="fas fa-list text-primary"></i> Mostrar:
+            </label>
+            <select id="productos-table-rows-per-page" class="form-select">
+                <option value="5">5 registros</option>
+                <option value="10" selected>10 registros</option>
+                <option value="20">20 registros</option>
+                <option value="50">50 registros</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table id="productos-table" data-table="productos-table" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>ID Producto</th>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Precio</th>
-                <th>Categoría</th>
-                <th>Tipo</th>
-                <th>Activo</th>
+                <th class="sortable" data-type="number" data-col="0">
+                    ID Producto
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="1">
+                    Código
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="2">
+                    Nombre
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="number" data-col="3">
+                    Precio
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="4">
+                    Categoría
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="5">
+                    Tipo
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="string" data-col="6">
+                    Activo
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
                 @if (Auth::user()->hasAnyPermission(['productos.edit', 'productos.show', 'productos.destroy']))
-                    <th>Acciones</th>
+                    <th data-type="actions">Acciones</th>
                 @endif
             </tr>
         </thead>
@@ -193,6 +267,18 @@
             @endforeach
         </tbody>
     </table>
+    </div>
+
+    <!-- Información de paginación y controles -->
+    <div class="row mt-3 align-items-center">
+        <div class="col-md-6 col-12 mb-2 mb-md-0">
+            <div id="productos-table-row-info" class="text-muted"></div>
+        </div>
+        <div class="col-md-6 col-12">
+            <div id="productos-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
+        </div>
+    </div>
+
     <!-- 🔹 Sección de Modales fuera del foreach -->
     @foreach ($productos as $producto)
         <div class="modal fade" id="modalProducto{{ $producto->id }}" tabindex="-1"
@@ -396,4 +482,7 @@
             });
         });
     </script>
+
+    {{-- Enhanced Table v2 --}}
+    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 @endsection

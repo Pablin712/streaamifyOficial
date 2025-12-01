@@ -1,4 +1,4 @@
-<nav class="sb-topnav navbar navbar-expand-lg navbar-light blue-navbar">
+<nav class="sb-topnav navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">
         <!-- Logo / Nombre de la app -->
         <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>
@@ -71,6 +71,12 @@
                             @if (Auth::user()->hasPermissionTo('historial'))
                                 <li><a class="dropdown-item" href="{{ route('historial') }}">
                                         <i class="fas fa-history"></i> Actividad
+                                    </a></li>
+                            @endif
+
+                            @if (Auth::user()->hasRole('Admin'))
+                                <li><a class="dropdown-item" href="{{ route('sistema.index') }}">
+                                        <i class="fas fa-palette"></i> Sistema
                                     </a></li>
                             @endif
 

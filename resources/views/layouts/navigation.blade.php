@@ -13,9 +13,13 @@
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/sistema.css') }}">
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
+
+    <!-- Sistema de Temas Dinámicos -->
+    <link rel="stylesheet" href="{{ asset('css/themes.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}">
+
     @yield('styles')
     @livewireStyles
 </head>
@@ -46,6 +50,11 @@
     <script src="{{ asset('js/navbar.js') }}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <!-- Sistema de Temas Dinámicos -->
+    <script src="{{ asset('js/decorations.js') }}"></script>
+    <script src="{{ asset('js/theme-manager.js') }}"></script>
+
     @yield('scripts')
     <script>
         $(document).ready(function() {

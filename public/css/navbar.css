@@ -1,3 +1,71 @@
+/* ========================================
+   NAVBAR - Estilos usando Variables CSS de Temas
+   ======================================== */
+
+/* Navbar base con variables de temas */
+.navbar,
+.sb-topnav {
+    background: var(--primary-gradient, linear-gradient(135deg, #007bff 0%, #0056b3 100%)) !important;
+    border-bottom: 2px solid var(--border-primary, #0056b3);
+    box-shadow: var(--shadow-md, 0px 4px 6px rgba(0, 0, 0, 0.15));
+    padding: 10px 20px;
+}
+
+.navbar-brand {
+    color: var(--text-on-primary, #fff) !important;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: color 0.3s ease-in-out;
+}
+
+.navbar-brand:hover {
+    opacity: 0.9;
+}
+
+/* Enlaces del navbar */
+.navbar .nav-link {
+    color: var(--text-on-primary, #fff) !important;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.navbar .nav-link:hover {
+    opacity: 0.8;
+}
+
+/* Botón del sidebar */
+#sidebarToggle {
+    color: var(--text-on-primary, #fff) !important;
+    border-color: var(--text-on-primary, #fff) !important;
+}
+
+#sidebarToggle:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    transform: scale(1.05);
+}
+
+/* Dropdown */
+.navbar .dropdown-menu {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border-color, #ddd);
+    box-shadow: var(--shadow-lg, 0 8px 20px rgba(0, 0, 0, 0.15));
+}
+
+.navbar .dropdown-item {
+    color: var(--text-primary, #333);
+    transition: all 0.2s;
+}
+
+.navbar .dropdown-item:hover {
+    background: var(--bg-hover, #f0f0f0);
+    color: var(--primary-color, #007bff);
+}
+
+.navbar .dropdown-divider {
+    border-color: var(--border-color, #ddd);
+}
+
+/* LEGACY SUPPORT - Mantener compatibilidad con clases antiguas */
 .orange-navbar {
     background-color: #ff6b00 !important;
     border-bottom: 2px solid #cc5600;
@@ -18,11 +86,11 @@
 }
 
 /* Botón del sidebar */
-#sidebarToggle {
+.orange-navbar #sidebarToggle {
     color: #fff !important;
 }
 
-#sidebarToggle:hover {
+.orange-navbar #sidebarToggle:hover {
     color: #ffd166 !important;
 }
 
@@ -324,35 +392,11 @@
     color: #198754 !important;
 }
 
-/* Modo oscuro para la barra de navegación */
-body.dark-mode .navbar {
-    background-color: #1e1e1e !important; /* Fondo oscuro */
-    color: #ffffff !important; /* Texto claro */
-}
-
-body.dark-mode .navbar .nav-link {
-    color: #ffffff !important; /* Texto claro para los enlaces */
-}
-
-body.dark-mode .navbar .nav-link:hover {
-    color: #bbbbbb !important; /* Texto más claro al pasar el mouse */
-}
-
-body.dark-mode .navbar .dropdown-menu {
-    background-color: #1e1e1e !important; /* Fondo oscuro para el menú desplegable */
-    color: #ffffff !important; /* Texto claro */
-}
-
-body.dark-mode .navbar .dropdown-menu .dropdown-item:hover {
-    background-color: #333333 !important; /* Fondo más oscuro al pasar el mouse */
-    color: #ffffff !important; /* Texto claro */
-}
-
-/* Botón cambiar modo */
+/* Botón cambiar modo oscuro/claro */
 #toggleDarkMode {
     background: none !important;
     border: none !important;
-    color: #fff !important;
+    color: var(--text-on-primary, #fff) !important;
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -363,7 +407,7 @@ body.dark-mode .navbar .dropdown-menu .dropdown-item:hover {
 }
 
 #toggleDarkMode:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
     transform: scale(1.1);
 }
 
@@ -376,27 +420,3 @@ body.dark-mode .navbar .dropdown-menu .dropdown-item:hover {
     transition: all 0.3s ease;
 }
 
-/* Estilos para diferentes temas del navbar */
-.orange-navbar #toggleDarkMode {
-    color: #fff !important;
-}
-
-.orange-navbar #toggleDarkMode:hover {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-.blue-navbar #toggleDarkMode {
-    color: #fff !important;
-}
-
-.blue-navbar #toggleDarkMode:hover {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-body.dark-mode #toggleDarkMode {
-    color: #ffffff !important;
-}
-
-body.dark-mode #toggleDarkMode:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-}

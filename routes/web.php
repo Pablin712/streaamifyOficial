@@ -37,6 +37,7 @@ use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\AlyssonController;
+use App\Http\Controllers\SistemaController;
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
@@ -288,6 +289,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/empleado/pedidos/{id}', 'update')->name('empleado.pedidos.update');
     });
     Route::resource('mails', MailController::class)->except(['show', 'create', 'edit']);
+
+    // Ruta para configuración del sistema (solo administradores)
+    Route::get('/sistema', [SistemaController::class, 'index'])->name('sistema.index');
 
     Route::post('/notificaciones/marcar-como-leidas', function () {
         if (Auth::check()) {

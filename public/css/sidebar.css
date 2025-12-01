@@ -1,4 +1,58 @@
-/* Sidebar en blanco */
+/* ========================================
+   SIDEBAR - Estilos usando Variables CSS de Temas
+   ======================================== */
+
+/* Sidebar base con variables de temas */
+.sidebar,
+.sb-sidenav {
+    background-color: var(--bg-card, #fff) !important;
+    border-right: 2px solid var(--border-color, #ddd);
+    transition: all 0.3s;
+}
+
+.sb-sidenav-menu-heading {
+    color: var(--text-secondary, #555);
+    font-weight: bold;
+}
+
+.sidebar .nav-link,
+.sb-sidenav .nav-link {
+    color: var(--text-primary, #333);
+    font-weight: 500;
+    padding: 12px 15px;
+    transition: all 0.2s;
+    border-radius: 5px;
+}
+
+.sidebar .nav-link:hover,
+.sb-sidenav .nav-link:hover {
+    background: var(--bg-hover, #f0f0f0);
+    color: var(--primary-color, #007bff);
+}
+
+.sidebar .nav-link.active,
+.sb-sidenav .nav-link.active {
+    background: var(--primary-gradient, linear-gradient(135deg, #007bff 0%, #0056b3 100%));
+    color: var(--text-on-primary, #fff) !important;
+}
+
+.sb-nav-link-icon {
+    color: var(--primary-color, #007bff);
+    min-width: 40px;
+    text-align: center;
+}
+
+.sb-sidenav-collapse-arrow {
+    color: var(--text-muted, #888);
+}
+
+.sb-sidenav-footer {
+    background-color: var(--bg-table-odd, #f8f9fa);
+    color: var(--text-primary, #333) !important;
+    border-top: 1px solid var(--border-color, #ddd);
+}
+
+/* LEGACY SUPPORT - Mantener compatibilidad con clases antiguas */
 .white-sidebar {
     background-color: #fff !important;
     border-right: 1px solid #ddd;
@@ -280,29 +334,6 @@
 
 .sidebar.collapsed .nav-text {
     display: none; /* Ocultar el texto cuando está colapsado */
-}
-
-/* Modo oscuro para el sidebar */
-body.dark-mode .sidebar {
-    background-color: #1e1e1e !important; /* Fondo oscuro */
-    color: #ffffff !important; /* Texto claro */
-}
-
-body.dark-mode .sidebar .nav-link {
-    color: #ffffff !important; /* Texto claro para los enlaces */
-}
-
-body.dark-mode .sidebar .nav-link:hover {
-    background-color: #333333 !important; /* Fondo más oscuro al pasar el mouse */
-}
-
-body.dark-mode .sidebar .sb-sidenav-menu-heading {
-    color: #bbbbbb !important; /* Texto más claro para los encabezados */
-}
-
-body.dark-mode .sb-sidenav-footer {
-    background-color: #1e1e1e !important; /* Fondo oscuro para el pie de página */
-    color: #ffffff !important; /* Texto claro */
 }
 
 /* Responsivo */

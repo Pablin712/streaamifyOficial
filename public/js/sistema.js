@@ -1,8 +1,17 @@
+/**
+ * MODO OSCURO - INTEGRADO CON THEME MANAGER
+ * Versión: 2.0
+ * Fecha: 1 de diciembre de 2025
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
     const toggleDarkModeButton = document.getElementById("toggleDarkMode");
     const darkModeIcon = document.getElementById("darkModeIcon");
-    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
-    const currentTheme = localStorage.getItem("theme");
+
+    if (!toggleDarkModeButton || !darkModeIcon) {
+        console.warn('[DarkMode] Botón de modo oscuro no encontrado');
+        return;
+    }
 
     // Función para actualizar el icono
     function updateIcon(isDark) {
@@ -15,28 +24,46 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Aplicar el tema guardado o el predeterminado del sistema
-    if (currentTheme === "dark") {
-        document.body.classList.add("dark-mode");
-        updateIcon(true);
-    } else if (currentTheme === "light") {
-        document.body.classList.remove("dark-mode");
-        updateIcon(false);
-    } else if (prefersDarkScheme.matches) {
-        document.body.classList.add("dark-mode");
-        updateIcon(true);
+    // Sincronizar con ThemeManager si está disponible
+    function syncWithThemeManager() {
+        if (typeof ThemeManager !== 'undefined') {
+            const currentTheme = ThemeManager.getCurrentTheme();
+            const isDark = currentTheme === 'dark';
+            updateIcon(isDark);
+            console.log('[DarkMode] Sincronizado con ThemeManager:', currentTheme);
+        }
     }
 
-    // Cambiar el tema al hacer clic en el botón
+    // Cambiar entre modo claro y oscuro
     toggleDarkModeButton.addEventListener("click", function () {
-        if (document.body.classList.contains("dark-mode")) {
-            document.body.classList.remove("dark-mode");
-            localStorage.setItem("theme", "light");
-            updateIcon(false);
+        if (typeof ThemeManager !== 'undefined') {
+            const currentTheme = ThemeManager.getCurrentTheme();
+
+            if (currentTheme === 'dark') {
+                // Cambiar a tema default (claro)
+                ThemeManager.setTheme('default');
+                updateIcon(false);
+                console.log('[DarkMode] Cambiado a modo claro');
+            } else {
+                // Cambiar a tema dark
+                ThemeManager.setTheme('dark');
+                updateIcon(true);
+                console.log('[DarkMode] Cambiado a modo oscuro');
+            }
         } else {
-            document.body.classList.add("dark-mode");
-            localStorage.setItem("theme", "dark");
-            updateIcon(true);
+            console.error('[DarkMode] ThemeManager no está disponible');
         }
     });
+
+    // Escuchar cambios de tema
+    window.addEventListener('themeChanged', function(event) {
+        const isDark = event.detail.theme === 'dark';
+        updateIcon(isDark);
+        console.log('[DarkMode] Tema cambiado a:', event.detail.theme);
+    });
+
+    // Inicializar al cargar
+    setTimeout(syncWithThemeManager, 100);
+
+    console.log('[DarkMode] Sistema de modo oscuro inicializado ✓');
 });

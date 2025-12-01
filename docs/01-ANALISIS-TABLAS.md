@@ -44,30 +44,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ### Total: 20 archivos identificados
 
-#### **Ventas (Sales)**
-1. `resources/views/sales/ventas/index.blade.php`
-2. `resources/views/sales/clientes/index.blade.php`
-3. `resources/views/sales/pedidos/index.blade.php`
-4. `resources/views/sales/recargas/index.blade.php`
+#### **Ventas (Sales)** ✅
+- [x] `resources/views/sales/ventas/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/sales/clientes/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/sales/pedidos/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/sales/recargas/index.blade.php` - Enhanced Table v2 + Sort
 
-#### **Inventario (Inventory)**
-5. `resources/views/inventory/servicios/index.blade.php`
-6. `resources/views/inventory/valores/index.blade.php`
-7. `resources/views/inventory/usuarios/index.blade.php`
-8. `resources/views/inventory/productos/gestion.blade.php`
-9. `resources/views/inventory/productos/index.blade.php`
-10. `resources/views/inventory/mantenimientos/index.blade.php`
-11. `resources/views/inventory/cuentas/spotify.blade.php`
-12. `resources/views/inventory/cuentas/mails.blade.php`
+#### **Inventario (Inventory)** ✅
+- [x] `resources/views/inventory/servicios/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/valores/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/usuarios/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/productos/gestion.blade.php` - Enhanced Table v2 + Sort (2 tablas)
+- [x] `resources/views/inventory/productos/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/mantenimientos/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/cuentas/spotify.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/cuentas/mails.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/inventory/proveedores/index.blade.php` - Enhanced Table v2 + Sort
 
-#### **Finanzas (Finance)**
-13. `resources/views/finance/gastos.blade.php` (2 tablas)
-14. `resources/views/finance/costos.blade.php`
+#### **Finanzas (Finance)** ✅
+- [x] `resources/views/finance/gastos.blade.php` - Enhanced Table v2 + Sort (2 tablas)
+- [x] `resources/views/finance/costos.blade.php` - Enhanced Table v2 + Sort
 
-#### **Otros**
-15. `resources/views/roles/index.blade.php`
-16. `resources/views/historial/index.blade.php`
-17. `resources/views/dashboard.blade.php`
+#### **Otros** ✅
+- [x] `resources/views/roles/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/historial/index.blade.php` - Enhanced Table v2 + Sort
+- [x] `resources/views/dashboard.blade.php` - Enhanced Table v2 + Sort
 
 ---
 

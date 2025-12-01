@@ -2,60 +2,6 @@
 
 @section('title', 'Costos')
 
-@section('styles')
-    <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
-    <style>
-        /* Estilos personalizados para la tabla de costos */
-        #costos-table {
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        #costos-table thead th {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
-            color: white !important;
-            text-align: center;
-            padding: 14px 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-
-        #costos-table tbody tr:nth-child(odd) {
-            background-color: #f8f9fa;
-        }
-
-        #costos-table tbody tr:nth-child(even) {
-            background-color: white;
-        }
-
-        #costos-table tbody tr:hover {
-            background-color: #e3f2fd !important;
-            transform: scale(1.001);
-            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        #costos-table td {
-            text-align: center;
-            padding: 12px 10px;
-            vertical-align: middle;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .action-buttons .btn {
-            margin: 2px;
-        }
-    </style>
-@endsection
-
 @section('main')
 <div class="container-fluid px-4">
     <!-- Título y breadcrumb -->
