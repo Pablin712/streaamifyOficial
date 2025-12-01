@@ -26,8 +26,12 @@ class VentaController extends Controller
             abort(403, 'No tienes permiso para ver las ventas.');
         }
 
-        $ventas = Venta::with(['detalles_venta'])->orderBy('created_at', 'desc')->get();
+        // Si es petición AJAX, retornar datos paginados
+        if ($request->ajax() || $request->has('ajax')) {
+            return $this->getVentasAjax($request);
+        }
 
+        // Vista normal: solo estadísticas, NO cargar todas las ventas
         $hoy = Carbon::today();
         $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
         $ventas_dia = Venta::whereDate('fechaven', $hoy)->count();
@@ -41,7 +45,6 @@ class VentaController extends Controller
         $ventasLaravel = Venta::whereDate('fechaven', $hoy)->where('idemp', 10)->count();
 
         return view('sales.ventas.index', compact(
-            'ventas',
             'ingresos_dia',
             'ventas_dia',
             'autenticados',
@@ -49,6 +52,54 @@ class VentaController extends Controller
             'pedidosPendientes',
             'ventasLaravel'
         ));
+    }
+
+    /**
+     * Obtener ventas paginadas para AJAX (Enhanced Table v2 Server-side)
+     */
+    private function getVentasAjax(Request $request)
+    {
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        $sortBy = $request->input('sort_by', '');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        $query = Venta::with(['cliente', 'empleado']);
+
+        // Búsqueda
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('idven', 'like', "%{$search}%")
+                    ->orWhereHas('cliente', function ($q2) use ($search) {
+                        $q2->where('nombrecli', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('empleado', function ($q2) use ($search) {
+                        $q2->where('nombreemp', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Ordenamiento
+        $validSortColumns = ['idven' => 'idven', 'fechaven' => 'fechaven', 'totalpagoven' => 'totalpagoven'];
+        if ($sortBy !== '' && isset($validSortColumns[$sortBy])) {
+            $query->orderBy($validSortColumns[$sortBy], $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $totalRecords = $query->count();
+        $ventas = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        // Renderizar HTML de las filas
+        $html = view('sales.ventas.partials.table-rows', compact('ventas'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'total_records' => $totalRecords,
+            'current_page' => $page,
+            'per_page' => $perPage
+        ]);
     }
 
     public function create()

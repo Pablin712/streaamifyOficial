@@ -225,10 +225,12 @@
             <div class="table-responsive">
                 <table id="ventas-table"
                        data-table="ventas-table"
+                       data-server-side="true"
+                       data-search-url="{{ route('ventas') }}"
                        class="table table-striped table-bordered">
                     <thead>
                         <tr>
-                            <th class="sortable" data-type="number" data-col="0">
+                            <th class="sortable" data-type="number" data-col="idven">
                                 ID Recibo
                                 <span class="sort-arrow">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -252,7 +254,7 @@
                                     </svg>
                                 </span>
                             </th>
-                            <th class="sortable" data-type="string" data-col="3">
+                            <th class="sortable" data-type="string" data-col="fechaven">
                                 Fecha
                                 <span class="sort-arrow">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -260,7 +262,7 @@
                                     </svg>
                                 </span>
                             </th>
-                            <th class="sortable" data-type="number" data-col="4">
+                            <th class="sortable" data-type="number" data-col="totalpagoven">
                                 Total
                                 <span class="sort-arrow">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -274,56 +276,14 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($ventas as $venta)
-                            <tr>
-                                <td><strong>#{{ $venta->idven }}</strong></td>
-                                <td>{{ $venta->cliente->nombrecli }}</td>
-                                <td>{{ $venta->empleado->nombreemp }}</td>
-                                <td>{{ $venta->fechaven->format('Y/m/d') }}</td>
-                                <td><strong>${{ number_format($venta->totalpagoven, 2) }}</strong></td>
-                                @if (Auth::user()->hasAnyPermission(['ventas.edit', 'ventas.renew', 'ventas.sendInvoice', 'ventas.destroy']))
-                                    <td>
-                                        <div class="action-buttons">
-                                            <!-- Ver detalles -->
-                                            <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#ventaDetalleModal{{ $venta->idven }}"
-                                                title="Ver detalles">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-
-                                            @if (Auth::user()->hasPermissionTo('ventas.edit'))
-                                                <a href="{{ route('ventas.edit', $venta->idven) }}"
-                                                   class="btn btn-warning btn-sm"
-                                                   title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            @endif
-
-                                            @if (Auth::user()->hasPermissionTo('ventas.renew'))
-                                                <a href="{{ route('ventas.renew', ['idcli' => $venta->cliente->idcli, 'idven' => $venta->idven]) }}"
-                                                   class="btn btn-success btn-sm"
-                                                   title="Renovar">
-                                                    <i class="fas fa-sync-alt"></i>
-                                                </a>
-                                            @endif
-
-                                            @if (Auth::user()->hasPermissionTo('ventas.destroy'))
-                                                <form action="{{ route('ventas.destroy', $venta->idven) }}"
-                                                      method="POST"
-                                                      style="display: inline;"
-                                                      onsubmit="return confirm('¿Estás seguro de eliminar esta venta?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
+                        <!-- Los datos se cargarán via AJAX -->
+                        <tr>
+                            <td colspan="6" class="text-center p-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -340,77 +300,7 @@
         </div>
     </div>
 
-    <!-- Modales de detalles -->
-    @foreach ($ventas as $venta)
-        <div class="modal fade" id="ventaDetalleModal{{ $venta->idven }}" tabindex="-1"
-            aria-labelledby="ventaDetalleLabel{{ $venta->idven }}" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="ventaDetalleLabel{{ $venta->idven }}">
-                            Detalles de la Venta #{{ $venta->idven }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <p><strong>Cliente:</strong><br>{{ $venta->cliente->nombrecli }}</p>
-                            </div>
-                            <div class="col-md-4">
-                                <p><strong>Fecha de Venta:</strong><br>{{ $venta->fechaven->format('d/m/Y') }}</p>
-                            </div>
-                            <div class="col-md-4">
-                                <p><strong>Total Pagado:</strong><br>
-                                    <span class="badge bg-success">${{ number_format($venta->totalpagoven, 2) }}</span>
-                                </p>
-                            </div>
-                        </div>
-
-                        <h6 class="border-bottom pb-2 mb-3">
-                            <i class="fas fa-shopping-cart"></i> Productos Comprados
-                        </h6>
-
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Cuenta</th>
-                                        <th>Perfil</th>
-                                        <th>Descripción</th>
-                                        <th>Fecha de Vencimiento</th>
-                                        <th>Monto</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($venta->detalles_venta as $detalle)
-                                        <tr>
-                                            <td>{{ $detalle->perfil->idcue ?? 'N/A' }}</td>
-                                            <td>{{ $detalle->perfil->numeroper }}</td>
-                                            <td>{{ $detalle->descripciondet }}</td>
-                                            <td>{{ $detalle->fechavendet->format('Y-m-d') }}</td>
-                                            <td>${{ number_format($detalle->montodet, 2) }}</td>
-                                            <td>
-                                                @if ($detalle->activodet)
-                                                    <span class="badge bg-success">Activa</span>
-                                                @else
-                                                    <span class="badge bg-danger">Inactiva</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
+    <!-- Los modales se cargarán dinámicamente cuando se necesiten -->
 
 </div>
 @endsection
@@ -425,7 +315,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    console.log('Vista de ventas cargada con Enhanced Table v2.0');
-    console.log('Total de ventas en la tabla:', {{ $ventas->count() }});
+    console.log('Vista de ventas cargada con Enhanced Table v2.0 Server-side');
 </script>
 @endsection

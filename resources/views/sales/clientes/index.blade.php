@@ -90,6 +90,8 @@
             <div class="table-responsive">
                 <table id="clientes-table"
                        data-table="clientes-table"
+                       data-server-side="true"
+                       data-search-url="{{ route('clientes') }}"
                        class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -163,48 +165,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($clientes as $cliente)
-                            <tr>
-                                <td>{{ $cliente->idcli }}</td>
-                                <td>{{ $cliente->nombrecli }}</td>
-                                <td>{{ $cliente->telefonocli }}</td>
-                                <td>{{ $cliente->email ?? 'Ninguno' }}</td>
-                                <td>{{ $cliente->viewClienteUsuario->usuarios ?? 0 }}</td>
-                                <td>${{ $cliente->viewClienteUsuario->facturado ?? 0 }}</td>
-                                <td>${{ $cliente->saldo }}</td>
-                                <td>
-                                    @if ($cliente->email && $cliente->password)
-                                        <span class="badge bg-success">Sí</span>
-                                    @else
-                                        <span class="badge bg-danger">No</span>
-                                    @endif
-                                </td>
-                                @if (Auth::user()->hasAnyPermission(['clientes.edit', 'clientes.destroy']))
-                                    <td>
-                                        <div class="action-buttons">
-                                            @if (Auth::user()->hasPermissionTo('clientes.edit'))
-                                                <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning btn-sm" title="Editar">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            @endif
-                                            @if ($cliente->usuarios->isEmpty())
-                                                @if (Auth::user()->hasPermissionTo('clientes.destroy'))
-                                                    <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
-                                                        style="display: inline;"
-                                                        onsubmit="return confirm('¿Estás seguro?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            @endif
-                                        </div>
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <td colspan="9" class="text-center p-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -228,7 +195,6 @@
 <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 
 <script>
-    console.log('Vista de clientes cargada con Enhanced Table v2.0');
-    console.log('Total de clientes en la tabla:', {{ $clientes->count() }});
+    console.log('Vista de clientes cargada con Enhanced Table v2.0 Server-side');
 </script>
 @endsection

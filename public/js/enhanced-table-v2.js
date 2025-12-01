@@ -334,7 +334,10 @@ function initEnhancedTable(table) {
 
     // Renderizar inicial
     if (config.isServerSide) {
-        loadServerData(config);
+        // Usar requestAnimationFrame para asegurar que el DOM está listo
+        requestAnimationFrame(() => {
+            loadServerData(config);
+        });
     } else {
         renderClientPage(config);
     }
@@ -660,6 +663,12 @@ function renderClientPagination(config, totalRows) {
 // ============================================================================
 
 async function loadServerData(config) {
+    // Validar que la tabla existe
+    if (!config.table) {
+        console.error('[Enhanced Table] Tabla no encontrada');
+        return;
+    }
+
     try {
         setLoading(config, true);
 
@@ -676,7 +685,8 @@ async function loadServerData(config) {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
-            }
+            },
+            signal: AbortSignal.timeout(15000) // Timeout de 15 segundos
         });
 
         if (!response.ok) {
@@ -706,15 +716,24 @@ async function loadServerData(config) {
 
 function updateTableBody(config, html) {
     const tbody = config.table.tBodies[0];
+    if (!tbody) {
+        console.error('[Enhanced Table] tbody no encontrado');
+        return;
+    }
+
+    // Usar DocumentFragment para mejor rendimiento con muchas filas
     tbody.innerHTML = html;
 
-    const newRows = Array.from(tbody.querySelectorAll("tr"));
-    newRows.forEach((row) => {
-        row.addEventListener("click", (e) => {
-            if (e.target.closest('button, a')) return;
-            row.classList.toggle("selected");
-        });
-    });
+    // Delegar eventos en lugar de agregar listener a cada fila (mejor para muchas filas)
+    tbody.removeEventListener("click", handleRowClick);
+    tbody.addEventListener("click", handleRowClick);
+}
+
+function handleRowClick(e) {
+    const row = e.target.closest("tr");
+    if (!row) return;
+    if (e.target.closest('button, a')) return;
+    row.classList.toggle("selected");
 }
 
 function renderServerPagination(config, data) {
@@ -784,22 +803,34 @@ function renderServerPagination(config, data) {
 
 function setLoading(config, loading) {
     config.loading = loading;
-    const tableContainer = config.table.closest('.overflow-x-auto');
+
+    // Intentar múltiples estrategias para encontrar el contenedor
+    let tableContainer = config.table.closest('.overflow-x-auto')
+                      || config.table.closest('.table-responsive')
+                      || config.table.parentElement;
+
+    if (!tableContainer) {
+        console.warn('[Enhanced Table] No se pudo encontrar contenedor, usando tabla directamente');
+        tableContainer = config.table;
+    }
 
     if (loading) {
         tableContainer.classList.add('table-loading');
-        const spinner = document.createElement('div');
-        spinner.className = 'spinner';
-        spinner.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;';
-        tableContainer.appendChild(spinner);
+
+        // Evitar duplicar spinner
+        if (!tableContainer.querySelector('.spinner')) {
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            spinner.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:20;';
+            tableContainer.style.position = 'relative'; // Asegurar contexto posicional
+            tableContainer.appendChild(spinner);
+        }
     } else {
         tableContainer.classList.remove('table-loading');
         const spinner = tableContainer.querySelector('.spinner');
         if (spinner) spinner.remove();
     }
-}
-
-function showError(config, message) {
+}function showError(config, message) {
     const tbody = config.table.tBodies[0];
     const colCount = config.table.querySelectorAll('th').length;
     tbody.innerHTML = `

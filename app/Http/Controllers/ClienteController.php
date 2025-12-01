@@ -24,16 +24,66 @@ class ClienteController extends Controller
     }
     */
 
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->hasPermissionTo('clientes')) {
             abort(403, 'No tienes permiso para ver los clientes.');
         }
-        $clientes = Cliente::with('viewClienteUsuario')->orderBy('created_at', 'desc')->get();
+
+        // Si es petición AJAX, retornar datos paginados
+        if ($request->ajax() || $request->has('ajax')) {
+            return $this->getClientesAjax($request);
+        }
+
         $autenticados = Cliente::whereNotNull('email')
             ->whereNotNull('password')
             ->count();
-        return view('sales.clientes.index', compact('clientes', 'autenticados'));
+
+        return view('sales.clientes.index', compact('autenticados'));
+    }
+
+    /**
+     * Obtener clientes paginados para AJAX
+     */
+    private function getClientesAjax(Request $request)
+    {
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        $sortBy = $request->input('sort_by', '');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        $query = Cliente::with('viewClienteUsuario');
+
+        // Búsqueda
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nombrecli', 'like', "%{$search}%")
+                    ->orWhere('telefonocli', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('idcli', 'like', "%{$search}%");
+            });
+        }
+
+        // Ordenamiento
+        $validSortColumns = ['idcli' => 'idcli', 'nombrecli' => 'nombrecli', 'created_at' => 'created_at'];
+        if ($sortBy !== '' && isset($validSortColumns[$sortBy])) {
+            $query->orderBy($validSortColumns[$sortBy], $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $totalRecords = $query->count();
+        $clientes = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        $html = view('sales.clientes.partials.table-rows', compact('clientes'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'total_records' => $totalRecords,
+            'current_page' => $page,
+            'per_page' => $perPage
+        ]);
     }
 
     // Mostrar formulario para crear un cliente (para el caso general)

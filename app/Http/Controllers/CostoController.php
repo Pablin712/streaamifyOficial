@@ -14,9 +14,13 @@ class CostoController extends Controller
 
     public function index(Request $request)
     {
-        // Verificar permiso para ver costos (ajusta el nombre del permiso según corresponda)
         if (!Auth::user()->hasPermissionTo('costos')) {
             abort(403, 'No tienes permiso para ver los costos.');
+        }
+
+        // Si es petición AJAX, retornar datos paginados
+        if ($request->ajax() || $request->has('ajax')) {
+            return $this->getCostosAjax($request);
         }
 
         // Obtener todas las cuentas para el selector
@@ -25,11 +29,54 @@ class CostoController extends Controller
             ->orderBy('fechavencue')
             ->get();
 
-        // Puedes filtrar por cuenta si lo deseas, aquí se listan todos ordenados
         $idcueSeleccionado = $request->idcue;
-        $costos = Costo::orderBy('fechacos', 'desc')->get();
 
-        return view('finance.costos', compact('cuentas', 'costos', 'idcueSeleccionado'));
+        return view('finance.costos', compact('cuentas', 'idcueSeleccionado'));
+    }
+
+    /**
+     * Obtener costos paginados para AJAX
+     */
+    private function getCostosAjax(Request $request)
+    {
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        $sortBy = $request->input('sort_by', '');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        $query = Costo::with(['cuenta']);
+
+        // Búsqueda
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('descripcioncos', 'like', "%{$search}%")
+                    ->orWhere('montocos', 'like', "%{$search}%")
+                    ->orWhereHas('cuenta', function ($q2) use ($search) {
+                        $q2->where('idcue', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // Ordenamiento
+        $validSortColumns = ['idcos' => 'idcos', 'fechacos' => 'fechacos', 'montocos' => 'montocos'];
+        if ($sortBy !== '' && isset($validSortColumns[$sortBy])) {
+            $query->orderBy($validSortColumns[$sortBy], $sortOrder);
+        } else {
+            $query->orderBy('fechacos', 'desc');
+        }
+
+        $totalRecords = $query->count();
+        $costos = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        $html = view('finance.partials.costos-rows', compact('costos'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'total_records' => $totalRecords,
+            'current_page' => $page,
+            'per_page' => $perPage
+        ]);
     }
 
     public function store(Request $request)

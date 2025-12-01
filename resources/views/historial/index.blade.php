@@ -1,33 +1,6 @@
 @extends('layouts.navigation')
 @section('title', 'Historial')
 
-@section('styles')
-    <style>
-        #historial-table thead th {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
-            color: white !important;
-            text-align: center;
-            padding: 14px 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-        }
-
-        #historial-table tbody tr:hover {
-            background-color: #e3f2fd !important;
-            transform: scale(1.001);
-            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        #historial-table td {
-            text-align: center;
-            padding: 12px 10px;
-            vertical-align: middle;
-        }
-    </style>
-@endsection
-
 @section('main')
 <div class="container-fluid px-4">
     <h1 class="mt-4">Historial</h1>
@@ -70,7 +43,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
+            <h6 class="m-0 font-weight-bold">
                 <i class="fas fa-history"></i> Historial de Acciones
             </h6>
         </div>
@@ -103,6 +76,8 @@
             <div class="table-responsive">
                 <table id="historial-table"
                        data-table="historial-table"
+                       data-server-side="true"
+                       data-search-url="{{ route('historial') }}"
                        class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -149,21 +124,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($historial as $accion)
-                            <tr>
-                                <td><strong>{{ $accion->id }}</strong></td>
-                                <td>{{ $accion->accion }}</td>
-                                <td>{{ $accion->descripcion }}</td>
-                                <td>
-                                    @if ($accion->empleado)
-                                        {{ $accion->empleado->nombreemp }}
-                                    @else
-                                        <span class="text-muted">No asignado</span>
-                                    @endif
-                                </td>
-                                <td>{{ $accion->created_at->format('Y/m/d H:i') }}</td>
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <td colspan="5" class="text-center p-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -185,7 +152,6 @@
 @section('scripts')
 <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 <script>
-    console.log('Vista de historial cargada con Enhanced Table v2.0');
-    console.log('Total de registros en el historial:', {{ $historial->count() }});
+    console.log('Vista de historial cargada con Enhanced Table v2.0 Server-side');
 </script>
 @endsection
