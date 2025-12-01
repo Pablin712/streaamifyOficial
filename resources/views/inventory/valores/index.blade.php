@@ -75,14 +75,6 @@
             </form>
         </div>
     </div>
-                <div class="text-center mb-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Guardar Cambios
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- Botones de acción -->
     @if (Auth::user()->hasPermissionTo('valores.create'))

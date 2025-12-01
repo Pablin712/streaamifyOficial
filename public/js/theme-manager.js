@@ -9,20 +9,16 @@
 const ThemeManager = {
     // Configuración
     STORAGE_KEY: 'streamify_theme',
+    STORAGE_KEY_DARK: 'streamify_dark_mode',
     DEFAULT_THEME: 'default',
     currentTheme: null,
+    darkMode: false,
 
     // Temas disponibles con sus períodos automáticos
     themes: {
         default: {
             name: 'Streamify Original',
             icon: '🎨',
-            decoration: null,
-            autoActivate: null
-        },
-        dark: {
-            name: 'Modo Oscuro',
-            icon: '🌙',
             decoration: null,
             autoActivate: null
         },
@@ -70,18 +66,23 @@ const ThemeManager = {
     init() {
         console.log('[ThemeManager] Inicializando sistema de temas...');
 
-        // Cargar tema desde localStorage o determinar automático
+        // Cargar tema base y dark mode
         const savedTheme = this.loadSavedTheme();
+        const savedDarkMode = this.loadDarkMode();
         const autoTheme = this.getAutoTheme();
 
         // Prioridad: tema guardado > tema automático > default
         const themeToApply = savedTheme || autoTheme || this.DEFAULT_THEME;
 
-        console.log(`[ThemeManager] Tema guardado: ${savedTheme}, Auto: ${autoTheme}, Aplicando: ${themeToApply}`);
+        console.log(`[ThemeManager] Tema guardado: ${savedTheme}, Dark: ${savedDarkMode}, Auto: ${autoTheme}, Aplicando: ${themeToApply}`);
 
         this.setTheme(themeToApply, false); // false = no guardar (ya está guardado)
-        // NO crear selector automático - se controla desde vista Sistema
-        // this.createThemeSelector();
+
+        // Aplicar dark mode si estaba activo
+        if (savedDarkMode) {
+            this.setDarkMode(true, false);
+        }
+
         this.initEventListeners();
 
         console.log('[ThemeManager] Sistema de temas inicializado ✓');
@@ -103,6 +104,19 @@ const ThemeManager = {
     },
 
     /**
+     * Cargar estado de dark mode
+     */
+    loadDarkMode() {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY_DARK);
+            return saved === 'true';
+        } catch (error) {
+            console.warn('[ThemeManager] Error cargando dark mode:', error);
+        }
+        return false;
+    },
+
+    /**
      * Guardar tema en localStorage
      */
     saveTheme(themeId) {
@@ -111,6 +125,18 @@ const ThemeManager = {
             console.log(`[ThemeManager] Tema guardado: ${themeId}`);
         } catch (error) {
             console.error('[ThemeManager] Error guardando tema:', error);
+        }
+    },
+
+    /**
+     * Guardar estado de dark mode
+     */
+    saveDarkMode(enabled) {
+        try {
+            localStorage.setItem(this.STORAGE_KEY_DARK, enabled.toString());
+            console.log(`[ThemeManager] Dark mode guardado: ${enabled}`);
+        } catch (error) {
+            console.error('[ThemeManager] Error guardando dark mode:', error);
         }
     },
 
@@ -145,9 +171,9 @@ const ThemeManager = {
             return;
         }
 
-        console.log(`[ThemeManager] Aplicando tema: ${themeId}`);
+        console.log(`[ThemeManager] Aplicando tema base: ${themeId}`);
 
-        // Aplicar tema al documento
+        // Aplicar tema base al documento
         document.documentElement.setAttribute('data-theme', themeId);
         this.currentTheme = themeId;
 
@@ -174,7 +200,50 @@ const ThemeManager = {
             detail: { theme: themeId, config: themeConfig }
         }));
 
-        console.log(`[ThemeManager] Tema aplicado: ${themeId} ✓`);
+        console.log(`[ThemeManager] Tema base aplicado: ${themeId} ✓`);
+    },
+
+    /**
+     * Activar/Desactivar Dark Mode como overlay
+     */
+    setDarkMode(enabled, save = true) {
+        console.log(`[ThemeManager] ${enabled ? 'Activando' : 'Desactivando'} dark mode...`);
+
+        this.darkMode = enabled;
+
+        if (enabled) {
+            // Aplicar dark mode SIN cambiar el tema base
+            document.documentElement.setAttribute('data-dark-mode', 'true');
+        } else {
+            // Remover dark mode, volver al tema base
+            document.documentElement.removeAttribute('data-dark-mode');
+        }
+
+        // Guardar preferencia
+        if (save) {
+            this.saveDarkMode(enabled);
+        }
+
+        // Disparar evento
+        window.dispatchEvent(new CustomEvent('darkModeChanged', {
+            detail: { darkMode: enabled }
+        }));
+
+        console.log(`[ThemeManager] Dark mode ${enabled ? 'activado' : 'desactivado'} ✓`);
+    },
+
+    /**
+     * Toggle dark mode
+     */
+    toggleDarkMode() {
+        this.setDarkMode(!this.darkMode);
+    },
+
+    /**
+     * Obtener estado actual
+     */
+    isDarkMode() {
+        return this.darkMode;
     },
 
     /**

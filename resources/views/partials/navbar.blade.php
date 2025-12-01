@@ -101,3 +101,31 @@
         </div>
     </div>
 </nav>
+
+<script>
+// Toggle Dark Mode desde el navbar
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleDarkMode');
+    const icon = document.getElementById('darkModeIcon');
+
+    if (toggleBtn && icon) {
+        // Actualizar icono inicial
+        updateDarkModeIcon();
+
+        // Event listener para el botón
+        toggleBtn.addEventListener('click', function() {
+            ThemeManager.toggleDarkMode();
+            updateDarkModeIcon();
+        });
+
+        // Función para actualizar el icono según el estado
+        function updateDarkModeIcon() {
+            if (ThemeManager.isDarkMode()) {
+                icon.className = 'fas fa-sun fa-lg'; // Sol cuando está en modo oscuro
+            } else {
+                icon.className = 'fas fa-moon fa-lg'; // Luna cuando está en modo claro
+            }
+        }
+    }
+});
+</script>

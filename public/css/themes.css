@@ -1,6 +1,6 @@
 /* ========================================
    STREAMIFY - SISTEMA DE TEMAS DINÁMICOS
-   Versión: 1.0
+   Versión: 2.0 - Dark Mode como Overlay
    Fecha: 1 de diciembre de 2025
    ======================================== */
 
@@ -93,32 +93,26 @@
     --shadow-hover: 0 2px 8px rgba(201, 42, 42, 0.25);
 }
 
-/* TEMA DARK MODE (Oscuro Elegante) */
-[data-theme="dark"] {
-    --primary-color: #ffd43b;
-    --primary-dark: #fab005;
-    --primary-light: #ffe066;
-    --primary-gradient: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+/* ========================================
+   DARK MODE COMO OVERLAY (FUNCIONA CON CUALQUIER TEMA)
+   ======================================== */
+[data-dark-mode="true"] {
+    --bg-body: #121212 !important;
+    --bg-card: #1e1e1e !important;
+    --bg-light: #2a2a2a !important;
+    --bg-overlay: rgba(30, 30, 30, 0.95) !important;
+    --bg-table-odd: #2a2a2a !important;
+    --bg-table-even: #1e1e1e !important;
+    --bg-hover: #333333 !important;
 
-    --bg-body: #121212;
-    --bg-card: #1e1e1e;
-    --bg-light: #2a2a2a;
-    --bg-overlay: rgba(30, 30, 30, 0.95);
-    --bg-table-odd: #2a2a2a;
-    --bg-table-even: #1e1e1e;
-    --bg-hover: #333333;
+    --text-primary: #ffffff !important;
+    --text-secondary: #b0b0b0 !important;
+    --text-muted: #888888 !important;
 
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-muted: #888888;
-    --text-on-primary: #121212;
-
-    --border-color: #333333;
-    --border-primary: #ffd43b;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.5);
-    --shadow-hover: 0 2px 8px rgba(255, 212, 59, 0.3);
+    --border-color: #333333 !important;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+    --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* TEMA AÑO NUEVO (Dorado y Negro) */
@@ -283,3 +277,56 @@ body,
     transition: none !important;
 }
 
+/* ========================================
+   APLICAR VARIABLES CSS A ELEMENTOS
+   ======================================== */
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+}
+
+.card {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.table {
+    color: var(--text-primary);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: var(--bg-table-odd);
+    color: var(--text-primary);
+}
+
+.table-striped > tbody > tr:nth-of-type(even) > * {
+    background-color: var(--bg-table-even);
+    color: var(--text-primary);
+}
+
+.table thead th {
+    background-color: var(--primary-color);
+    color: var(--text-on-primary);
+    border-color: var(--border-primary);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.breadcrumb {
+    background-color: var(--bg-light);
+}
+
+.breadcrumb-item,
+.breadcrumb-item a {
+    color: var(--text-primary);
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}

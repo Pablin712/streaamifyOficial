@@ -154,66 +154,47 @@
     <div class="tab-content mt-3" id="cuentasTabContent">
         <!-- Pestaña de Cuentas -->
         <div class="tab-pane fade show active" id="todas" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $cuentas])
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentas, 'tableId' => 'cuentas-todas-table'])
         </div>
 
         <!-- Pestaña de Cuentas Disponibles -->
         <div class="tab-pane fade" id="disponibles" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasDisponibles])
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasDisponibles, 'tableId' => 'cuentas-disponibles-table'])
         </div>
 
         <!-- Pestaña de Cuentas Colapsadas -->
         <div class="tab-pane fade" id="colapsadas" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasColapsadas])
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasColapsadas, 'tableId' => 'cuentas-colapsadas-table'])
         </div>
 
         <!-- Pestaña de Cuentas Sin Ocupar -->
         <div class="tab-pane fade" id="sinocupar" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasSinOcupar])
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasSinOcupar, 'tableId' => 'cuentas-sinocupar-table'])
         </div>
 
         <!-- Pestaña de Cuentas Por Vencer -->
         <div class="tab-pane fade" id="porvencer" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasPorVencer])
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasPorVencer, 'tableId' => 'cuentas-porvencer-table'])
         </div>
 
         <!-- Pestaña de Cuentas Dañadas -->
         <div class="tab-pane fade" id="caidas" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasCaidas])
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasCaidas, 'tableId' => 'cuentas-caidas-table'])
         </div>
 
         <!-- Pestaña de Mesa de Trabajo -->
         <div class="tab-pane fade" id="mesa" role="tabpanel">
-            @include('inventory.cuentas.tabla', ['cuentas' => $mesa])
+            @include('inventory.cuentas.tabla', ['cuentas' => $mesa, 'tableId' => 'cuentas-mesa-table'])
         </div>
 
     </div>
 @endsection
 @section('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const tables = document.querySelectorAll(
-                    '.datatable'); // Selecciona todas las tablas con la clase 'datatable'
+<!-- Enhanced Table v2.0 -->
+<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 
-                tables.forEach((table) => {
-                    const rows = table.querySelectorAll('tbody tr');
-                    if (rows.length > 0) {
-                        new simpleDatatables.DataTable(table, {
-                            searchable: true,
-                            perPageSelect: [5, 10, 20],
-                            labels: {
-                                placeholder: "Buscar...",
-                                perPage: "Registros por página",
-                                noRows: "No se encontraron registros.",
-                                info: "Mostrando {start} a {end} de {rows} registros",
-                            },
-                        });
-                    } else {
-                        console.warn('La tabla sigue sin filas después del tiempo de espera.');
-                    }
-                });
-            }, 500);
-        });
-    </script>
+<script>
+    console.log('Vista de cuentas cargada con Enhanced Table v2.0');
+    console.log('Pestañas con tablas independientes inicializadas');
+</script>
 @endsection

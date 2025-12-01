@@ -33,6 +33,18 @@
                         Selecciona el tema visual para toda la plataforma. Los cambios se aplican en tiempo real.
                     </p>
 
+                    <!-- Toggle Dark Mode -->
+                    <div class="alert alert-info d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <i class="fas fa-moon me-2"></i>
+                            <strong>Modo Oscuro</strong>
+                            <p class="mb-0 small">Activa el modo oscuro sobre cualquier tema</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="darkModeToggle" style="width: 3rem; height: 1.5rem;">
+                        </div>
+                    </div>
+
                     <!-- Grid de temas -->
                     <div class="row g-3" id="themesGrid">
                         <!-- Tema Default -->
@@ -44,20 +56,6 @@
                                 <div class="theme-info">
                                     <h6 class="theme-name">Streamify Original</h6>
                                     <p class="theme-description">Amarillo y Marrón</p>
-                                    <button class="btn btn-sm btn-outline-primary select-theme-btn">Seleccionar</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tema Dark -->
-                        <div class="col-md-6 col-lg-4">
-                            <div class="theme-card" data-theme="dark">
-                                <div class="theme-preview" style="background: linear-gradient(135deg, #121212 0%, #1e1e1e 100%);">
-                                    <span class="theme-icon">🌙</span>
-                                </div>
-                                <div class="theme-info">
-                                    <h6 class="theme-name">Modo Oscuro</h6>
-                                    <p class="theme-description">Elegante y moderno</p>
                                     <button class="btn btn-sm btn-outline-primary select-theme-btn">Seleccionar</button>
                                 </div>
                             </div>
@@ -259,6 +257,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const themesGrid = document.getElementById('themesGrid');
+    const darkModeToggle = document.getElementById('darkModeToggle');
     const currentThemeIcon = document.getElementById('currentThemeIcon');
     const currentThemeName = document.getElementById('currentThemeName');
     const currentThemeDescription = document.getElementById('currentThemeDescription');
@@ -266,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Información de los temas
     const themesInfo = {
         default: { icon: '🎨', name: 'Streamify Original', description: 'Amarillo y Marrón' },
-        dark: { icon: '🌙', name: 'Modo Oscuro', description: 'Elegante y moderno' },
         christmas: { icon: '🎄', name: 'Navidad', description: 'Rojo y Verde festivo' },
         newyear: { icon: '🎆', name: 'Año Nuevo', description: 'Dorado y Negro' },
         valentine: { icon: '💝', name: 'San Valentín', description: 'Rosa romántico' },
@@ -274,6 +272,13 @@ document.addEventListener('DOMContentLoaded', function() {
         summer: { icon: '☀️', name: 'Verano', description: 'Azul cielo' },
         autumn: { icon: '🍂', name: 'Otoño', description: 'Naranja cálido' }
     };
+
+    // Actualizar toggle de dark mode
+    function updateDarkModeToggle() {
+        if (typeof ThemeManager !== 'undefined' && darkModeToggle) {
+            darkModeToggle.checked = ThemeManager.isDarkMode();
+        }
+    }
 
     // Actualizar UI de tema actual
     function updateCurrentThemeDisplay() {
@@ -315,13 +320,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Manejar toggle de dark mode
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', function() {
+            if (typeof ThemeManager !== 'undefined') {
+                ThemeManager.setDarkMode(this.checked);
+            }
+        });
+    }
+
     // Escuchar cambios de tema
     window.addEventListener('themeChanged', function() {
         updateCurrentThemeDisplay();
     });
 
+    // Escuchar cambios de dark mode
+    window.addEventListener('darkModeChanged', function() {
+        updateDarkModeToggle();
+    });
+
     // Inicializar
     updateCurrentThemeDisplay();
+    updateDarkModeToggle();
 });
 </script>
 @endsection
