@@ -157,9 +157,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/servicios', 'index')->name('servicios');
         Route::get('/servicios/create', 'create')->name('servicios.create');
         Route::post('/servicios/createstore', 'store')->name('servicios.store');
-        Route::get('/servicios/{id}/edit', 'edit')->name('servicios.edit');
-        Route::put('/servicios/{id}', 'update')->name('servicios.update');
-        Route::delete('/servicios/{id}', 'destroy')->name('servicios.destroy');
+        Route::get('/servicios/{idser}/edit', 'edit')->name('servicios.edit');
+        Route::put('/servicios/{idser}', 'update')->name('servicios.update');
+        Route::delete('/servicios/{idser}', 'destroy')->name('servicios.destroy');
     });
 
     Route::controller(ValorController::class)->group(function () {

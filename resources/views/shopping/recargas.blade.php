@@ -45,7 +45,7 @@
         </div>
         <div class="col-lg-6 d-flex align-items-center justify-content-center">
             <div class="text-center">
-            <img src="{{ asset('images/saldo.png') }}" alt="Recargar Saldo" class="img-fluid" 
+            <img src="{{ asset('images/saldo.png') }}" alt="Recargar Saldo" class="img-fluid"
             style="width: 80%; max-width: 600px; height: auto; object-fit: cover;">
             </div>
         </div>
@@ -79,7 +79,7 @@
                 <div class="col mb-5">
                     <div class="card h-100">
                         <!-- Imagen del banco -->
-                        <img class="card-img-top" src="{{ asset('public/' . $banco->foto) }}" alt="{{ $banco->nombreban }}" />
+                        <img class="card-img-top" src="{{ asset($banco->foto) }}" alt="{{ $banco->nombreban }}" />
 
                         <!-- Detalles del banco -->
                         <div class="card-body text-center">

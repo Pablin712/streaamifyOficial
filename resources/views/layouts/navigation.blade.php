@@ -19,6 +19,7 @@
     <!-- Sistema de Temas Dinámicos -->
     <link rel="stylesheet" href="{{ asset('css/themes.css') }}">
     <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}">
 
     @yield('styles')
     @livewireStyles
@@ -30,11 +31,10 @@
     <div id="layoutSidenav">
         @include('partials.sidebar')
 
-        <div id="layoutSidenav_content">
-            <main>
+        <div id="layoutSidenav_content" style="min-height: 100vh; display: flex; flex-direction: column;">
+            <main style="flex: 1;">
                 @yield('main')
             </main>
-            @include('partials.footer')
         </div>
     </div>
     <form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display: none;">
@@ -95,6 +95,9 @@
         }, 300000); // 5 minutos = 300,000 ms
     </script>
     <script src="{{asset('js/sistema.js')}}"></script>
+
+    <!-- Alpine.js para modales - Debe cargarse antes que los scripts de las vistas -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 
 </html>

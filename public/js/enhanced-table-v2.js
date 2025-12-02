@@ -628,7 +628,8 @@ function renderClientPagination(config, totalRows) {
     if (startPage > 1) {
         const dots = document.createElement("span");
         dots.textContent = "...";
-        dots.className = "mx-2 text-gray-500";
+        dots.className = "mx-2";
+        dots.style.color = "var(--text-secondary)";
         config.paginationContainer.appendChild(dots);
     }
 
@@ -643,7 +644,8 @@ function renderClientPagination(config, totalRows) {
     if (endPage < totalPages) {
         const dots = document.createElement("span");
         dots.textContent = "...";
-        dots.className = "mx-2 text-gray-500";
+        dots.className = "mx-2";
+        dots.style.color = "var(--text-secondary)";
         config.paginationContainer.appendChild(dots);
     }
 
@@ -745,12 +747,7 @@ function renderServerPagination(config, data) {
 
     function createBtn(label, page, disabled = false, active = false) {
         const btn = document.createElement("button");
-        btn.className =
-            "px-3 py-2 mx-1 rounded transition-colors duration-200 text-sm font-medium " +
-            (active
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-700 hover:bg-blue-100") +
-            (disabled ? " opacity-50 cursor-not-allowed" : "");
+        btn.className = "btn btn-sm mx-1" + (active ? " active" : "");
         btn.textContent = label;
         btn.disabled = disabled;
 
@@ -778,7 +775,8 @@ function renderServerPagination(config, data) {
     if (startPage > 1) {
         const dots = document.createElement("span");
         dots.textContent = "...";
-        dots.className = "mx-2 text-gray-500";
+        dots.className = "mx-2";
+        dots.style.color = "var(--text-secondary)";
         config.paginationContainer.appendChild(dots);
     }
 
@@ -789,7 +787,8 @@ function renderServerPagination(config, data) {
     if (endPage < totalPages) {
         const dots = document.createElement("span");
         dots.textContent = "...";
-        dots.className = "mx-2 text-gray-500";
+        dots.className = "mx-2";
+        dots.style.color = "var(--text-secondary)";
         config.paginationContainer.appendChild(dots);
     }
 

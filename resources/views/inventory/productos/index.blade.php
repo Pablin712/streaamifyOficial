@@ -92,9 +92,9 @@
 @section('btncrear')
     <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
         @if (Auth::user()->hasPermissionTo('productos.create'))
-            <a href="{{ route('productos.create') }}" class="btn btn-primary">
+            <button type="button" class="btn btn-primary" onclick="openCreateModal()">
                 <i class="fas fa-plus"></i> Crear Producto
-            </a>
+            </button>
         @endif
 
         <a href="{{ route('productos.pdf') }}" class="btn btn-success">
@@ -238,28 +238,19 @@
                     @if (Auth::user()->hasAnyPermission(['productos.edit', 'productos.show', 'productos.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('productos.show'))
-                                <!-- Botón para abrir el modal -->
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#modalProducto{{ $producto->id }}">
+                                <button type="button" class="btn btn-info btn-sm" onclick="openShowModal({{ $producto->id }})">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('productos.edit'))
-                                <a href="{{ route('productos.edit', $producto->id) }}" class="btn btn-warning btn-sm">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="openEditModal({{ $producto->id }})">
                                     <i class="fas fa-edit"></i>
-                                </a>
+                                </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('productos.destroy'))
-                                <!-- Eliminar producto -->
-                                <form action="{{ route('productos.destroy', $producto->id) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                        onclick="return confirm('¿Estás seguro de eliminar este producto?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="openDeleteModal({{ $producto->id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             @endif
                         </td>
                     @endif
@@ -279,82 +270,13 @@
         </div>
     </div>
 
-    <!-- 🔹 Sección de Modales fuera del foreach -->
-    @foreach ($productos as $producto)
-        <div class="modal fade" id="modalProducto{{ $producto->id }}" tabindex="-1"
-            aria-labelledby="modalProductoLabel{{ $producto->id }}" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="modalProductoLabel{{ $producto->id }}">
-                            Detalles del Producto
-                        </h5>
-                        <button type="button" class="btn-close text-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <!-- Información del Producto -->
-                            <div class="col-md-8">
-                                <h4 class="text-primary">{{ $producto->nombrepro }}</h4>
-                                <p><strong>Código:</strong> {{ $producto->codigopro }}</p>
-                                <p><strong>Precio:</strong> ${{ number_format($producto->preciopro, 2) }}</p>
-                                <p><strong>Descripción:</strong> {{ $producto->descripcionpro }}</p>
-                                <p><strong>Categoría:</strong> {{ $producto->categoria->nombre }}</p>
-                                <p><strong>Tipo de Producto:</strong> {{ $producto->tipoProducto->nombre }}</p>
-                                <p><strong>Estado:</strong>
-                                    @if ($producto->activo)
-                                        <span class="badge bg-success">Activo</span>
-                                    @else
-                                        <span class="badge bg-danger">Inactivo</span>
-                                    @endif
-                                </p>
-                            </div>
-                            <!-- Imagen del Producto -->
-                            <div class="col-md-4 text-center">
-                                @if ($producto->foto)
-                                    <img src="{{ asset('public/' . $producto->foto) }}" alt="Foto del Producto"
-                                        class="img-fluid rounded shadow">
-                                @else
-                                    <p class="text-muted">Sin imagen disponible</p>
-                                @endif
-                            </div>
-                        </div>
+    </div>
 
-                        <!-- 🔹 Hacer la tabla de detalles desplazable en móviles -->
-                        <div class="mt-4">
-                            <h5>Detalles del Producto</h5>
-                            <div class="table-responsive">
-                                <table class="table table-hover table-bordered text-center">
-                                    <thead class="table-primary">
-                                        <tr>
-                                            <th>ID Servicio</th>
-                                            <th>Descripción</th>
-                                            <th>Meses</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($producto->detalles as $detalle)
-                                            <tr>
-                                                <td>{{ $detalle->idser }}</td>
-                                                <td>{{ $detalle->descripcion }}</td>
-                                                <td>{{ $detalle->meses }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div> <!-- Fin tabla responsive -->
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times"></i> Cerrar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endforeach
+    {{-- Modales de Productos --}}
+    @include('inventory.productos.modals.create')
+    @include('inventory.productos.modals.edit')
+    @include('inventory.productos.modals.delete')
+    @include('inventory.productos.modals.show')
 @endsection
 
 @section('scripts')
@@ -366,6 +288,414 @@
         });
     </script>
     <script src="{{ asset('js/productos.js') }}"></script>
+
+    {{-- ============================================================================ --}}
+    {{-- FUNCIONES DE MODAL - SHOW --}}
+    {{-- ============================================================================ --}}
+    <script>
+        function openShowModal(id) {
+            console.log('🔷 Abriendo modal de ver producto:', id);
+
+            fetch(`{{ route('productos.show', '') }}/${id}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(producto => {
+                document.getElementById('show_producto_nombre').textContent = producto.nombrepro;
+                document.getElementById('show_producto_codigo').textContent = producto.codigopro;
+                document.getElementById('show_producto_precio').textContent = '$' + parseFloat(producto.preciopro).toFixed(2);
+
+                // Estrellas
+                let estrellas = '';
+                if (producto.estrellaspro) {
+                    for (let i = 0; i < producto.estrellaspro; i++) {
+                        estrellas += '⭐';
+                    }
+                } else {
+                    estrellas = 'Sin calificación';
+                }
+                document.getElementById('show_producto_estrellas').textContent = estrellas;
+
+                document.getElementById('show_producto_descripcion').textContent = producto.descripcionpro || 'Sin descripción';
+                document.getElementById('show_producto_categoria').textContent = producto.categoria?.nombre || 'N/A';
+                document.getElementById('show_producto_tipo').textContent = producto.tipo_producto?.nombre || 'N/A';
+
+                // Estado
+                const estadoBadge = producto.activo
+                    ? '<span class="badge bg-success">Activo</span>'
+                    : '<span class="badge bg-danger">Inactivo</span>';
+                document.getElementById('show_producto_estado').innerHTML = estadoBadge;
+
+                // Foto
+                const fotoDiv = document.getElementById('show_producto_foto');
+                if (producto.foto) {
+                    fotoDiv.innerHTML = `<img src="/public/${producto.foto}" class="img-fluid rounded shadow" alt="Foto del producto">`;
+                } else {
+                    fotoDiv.innerHTML = '<p class="text-muted">Sin imagen disponible</p>';
+                }
+
+                // Detalles
+                const tbody = document.getElementById('show_producto_detalles');
+                tbody.innerHTML = '';
+                if (producto.detalles && producto.detalles.length > 0) {
+                    producto.detalles.forEach(detalle => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${detalle.idser}</td>
+                                <td>${detalle.descripcion}</td>
+                                <td>${detalle.meses}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-muted">Sin detalles</td></tr>';
+                }
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'showProductoModal' }));
+            })
+            .catch(error => {
+                console.error('Error al cargar producto:', error);
+                alert('Error al cargar los datos del producto');
+            });
+        }
+    </script>
+
+    {{-- ============================================================================ --}}
+    {{-- FUNCIONES DE MODAL - CREAR --}}
+    {{-- ============================================================================ --}}
+    <script>
+        // Array para almacenar detalles temporalmente
+        let detallesCreate = [];
+        let detallesEdit = [];
+
+        function openCreateModal() {
+            console.log('🔷 Abriendo modal de crear producto...');
+            const form = document.getElementById('createProductoForm');
+            if (form) form.reset();
+            detallesCreate = [];
+            document.getElementById('create_tabla_detalles').innerHTML = '';
+            document.getElementById('create_detalles_producto').value = '';
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createProductoModal' }));
+        }
+
+        function closeCreateModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createProductoModal' }));
+        }
+
+        async function submitCreate(event) {
+            event.preventDefault();
+            console.log('📤 Enviando formulario de crear producto...');
+
+            const form = document.getElementById('createProductoForm');
+            const formData = new FormData(form);
+
+            // Agregar detalles al FormData
+            formData.set('detalles_producto', JSON.stringify(detallesCreate));
+
+            try {
+                const response = await fetch('{{ route("productos.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Producto creado:', data);
+                    closeCreateModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al crear:', data);
+                    alert(data.message || 'Error al crear el producto');
+                }
+            } catch (error) {
+                console.error('❌ Error de red:', error);
+                alert('Error de conexión. Por favor, intenta nuevamente.');
+            }
+        }
+
+        // Funciones para manejo de detalles en modal Create
+        function openAgregarDetalleModal() {
+            document.getElementById('formAgregarDetalle').reset();
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'agregarDetalleModal' }));
+        }
+
+        function closeAgregarDetalleModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agregarDetalleModal' }));
+        }
+
+        function guardarDetalle() {
+            const idser = document.getElementById('detalle_idser').value;
+            const descripcion = document.getElementById('detalle_descripcion').value;
+            const meses = document.getElementById('detalle_meses').value;
+
+            if (!idser || !descripcion || !meses) {
+                alert('Por favor complete todos los campos.');
+                return;
+            }
+
+            detallesCreate.push({ idser, descripcion, meses });
+            renderDetallesCreate();
+            closeAgregarDetalleModal();
+        }
+
+        function renderDetallesCreate() {
+            const tbody = document.getElementById('create_tabla_detalles');
+            tbody.innerHTML = '';
+
+            if (detallesCreate.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">No hay detalles agregados</td></tr>';
+                return;
+            }
+
+            detallesCreate.forEach((detalle, index) => {
+                const row = `
+                    <tr>
+                        <td>${detalle.idser}</td>
+                        <td>${detalle.descripcion}</td>
+                        <td>${detalle.meses}</td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarDetalleCreate(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById('create_detalles_producto').value = JSON.stringify(detallesCreate);
+        }
+
+        function eliminarDetalleCreate(index) {
+            detallesCreate.splice(index, 1);
+            renderDetallesCreate();
+        }
+    </script>
+
+    {{-- ============================================================================ --}}
+    {{-- FUNCIONES DE MODAL - EDITAR --}}
+    {{-- ============================================================================ --}}
+    <script>
+        function openEditModal(id) {
+            console.log('🔷 Abriendo modal de editar producto:', id);
+
+            fetch(`{{ route('productos.show', '') }}/${id}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(producto => {
+                document.getElementById('edit_producto_id').value = producto.id;
+                document.getElementById('edit_codigopro').value = producto.codigopro;
+                document.getElementById('edit_nombrepro').value = producto.nombrepro;
+                document.getElementById('edit_preciopro').value = producto.preciopro;
+                document.getElementById('edit_estrellaspro').value = producto.estrellaspro || '';
+                document.getElementById('edit_descripcionpro').value = producto.descripcionpro || '';
+                document.getElementById('edit_tipo_producto_id').value = producto.tipo_producto_id;
+                document.getElementById('edit_categoria_id').value = producto.categoria_id;
+                document.getElementById('edit_activo').value = producto.activo ? '1' : '0';
+
+                // Mostrar foto actual si existe
+                const fotoPreview = document.getElementById('edit_foto_preview');
+                if (producto.foto) {
+                    fotoPreview.innerHTML = `<img src="/public/${producto.foto}" class="img-thumbnail mt-2" width="150">`;
+                } else {
+                    fotoPreview.innerHTML = '';
+                }
+
+                // Cargar detalles
+                detallesEdit = producto.detalles || [];
+                renderDetallesEdit();
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editProductoModal' }));
+            })
+            .catch(error => {
+                console.error('Error al cargar producto:', error);
+                alert('Error al cargar los datos del producto');
+            });
+        }
+
+        function closeEditModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editProductoModal' }));
+        }
+
+        async function submitEdit(event) {
+            event.preventDefault();
+            console.log('📤 Enviando formulario de editar producto...');
+
+            const form = document.getElementById('editProductoForm');
+            const formData = new FormData(form);
+            const id = document.getElementById('edit_producto_id').value;
+
+            formData.set('detalles_producto', JSON.stringify(detallesEdit));
+
+            try {
+                const response = await fetch(`{{ route('productos.update', '') }}/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Producto actualizado:', data);
+                    closeEditModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al actualizar:', data);
+                    alert(data.message || 'Error al actualizar el producto');
+                }
+            } catch (error) {
+                console.error('❌ Error de red:', error);
+                alert('Error de conexión. Por favor, intenta nuevamente.');
+            }
+        }
+
+        function openAgregarDetalleModalEdit() {
+            const form = document.getElementById('formAgregarDetalle');
+            if (form) form.reset();
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'agregarDetalleModal' }));
+        }
+
+        function renderDetallesEdit() {
+            const tbody = document.getElementById('edit_tabla_detalles');
+            tbody.innerHTML = '';
+
+            if (detallesEdit.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">No hay detalles agregados</td></tr>';
+                return;
+            }
+
+            detallesEdit.forEach((detalle, index) => {
+                const row = `
+                    <tr>
+                        <td>${detalle.idser}</td>
+                        <td>${detalle.descripcion}</td>
+                        <td>${detalle.meses}</td>
+                        <td>
+                            <button type="button" class="btn btn-warning btn-sm" onclick="editarDetalleEdit(${index})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarDetalleEdit(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById('edit_detalles_producto').value = JSON.stringify(detallesEdit);
+        }
+
+        function eliminarDetalleEdit(index) {
+            detallesEdit.splice(index, 1);
+            renderDetallesEdit();
+        }
+
+        function editarDetalleEdit(index) {
+            const detalle = detallesEdit[index];
+            document.getElementById('editar_detalle_index').value = index;
+            document.getElementById('editar_idser').value = detalle.idser;
+            document.getElementById('editar_descripcion').value = detalle.descripcion;
+            document.getElementById('editar_meses').value = detalle.meses;
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editarDetalleModal' }));
+        }
+
+        function closeEditarDetalleModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editarDetalleModal' }));
+        }
+
+        function guardarCambiosDetalle() {
+            const index = document.getElementById('editar_detalle_index').value;
+            const idser = document.getElementById('editar_idser').value;
+            const descripcion = document.getElementById('editar_descripcion').value;
+            const meses = document.getElementById('editar_meses').value;
+
+            if (!idser || !descripcion || !meses) {
+                alert('Por favor complete todos los campos.');
+                return;
+            }
+
+            detallesEdit[index] = { idser, descripcion, meses };
+            renderDetallesEdit();
+            closeEditarDetalleModal();
+        }
+    </script>
+
+    {{-- ============================================================================ --}}
+    {{-- FUNCIONES DE MODAL - ELIMINAR --}}
+    {{-- ============================================================================ --}}
+    <script>
+        function openDeleteModal(id) {
+            console.log('🔷 Abriendo modal de eliminar producto:', id);
+
+            fetch(`{{ route('productos.show', '') }}/${id}`, {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(producto => {
+                document.getElementById('delete_producto_id').value = producto.id;
+                document.getElementById('delete_producto_codigo').textContent = producto.codigopro;
+                document.getElementById('delete_producto_nombre').textContent = producto.nombrepro;
+                document.getElementById('delete_producto_precio').textContent = '$' + parseFloat(producto.preciopro).toFixed(2);
+                document.getElementById('delete_producto_tipo').textContent = producto.tipo_producto?.nombre || 'N/A';
+                document.getElementById('delete_producto_categoria').textContent = producto.categoria?.nombre || 'N/A';
+                document.getElementById('delete_producto_estado').textContent = producto.activo ? 'Activo' : 'Inactivo';
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'deleteProductoModal' }));
+            })
+            .catch(error => {
+                console.error('Error al cargar producto:', error);
+                alert('Error al cargar los datos del producto');
+            });
+        }
+
+        function closeDeleteModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'deleteProductoModal' }));
+        }
+
+        async function submitDelete(event) {
+            event.preventDefault();
+            console.log('📤 Enviando solicitud de eliminar producto...');
+
+            const id = document.getElementById('delete_producto_id').value;
+
+            try {
+                const response = await fetch(`{{ route('productos.destroy', '') }}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Producto eliminado');
+                    closeDeleteModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al eliminar:', data);
+                    alert(data.message || 'Error al eliminar el producto');
+                }
+            } catch (error) {
+                console.error('❌ Error de red:', error);
+                alert('Error de conexión. Por favor, intenta nuevamente.');
+            }
+        }
+    </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const copiarMensajeProductosBtn = document.getElementById('copiarMensajeProductos');

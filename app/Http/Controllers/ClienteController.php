@@ -121,6 +121,16 @@ class ClienteController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
+
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente creado con éxito',
+                'cliente' => $cliente
+            ]);
+        }
+
         return redirect()->route('clientes')->with('success', 'Cliente creado con éxito.');
     }
 
@@ -161,6 +171,15 @@ class ClienteController extends Controller
             abort(403, 'No tienes permiso para editar clientes.');
         }
         $cliente = Cliente::findOrFail($idcli);
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'cliente' => $cliente
+            ]);
+        }
+
         return view('sales.clientes.edit', compact('cliente'));
     }
 
@@ -184,6 +203,16 @@ class ClienteController extends Controller
             'created_at' => now(),
         ]);
         $cliente->update($request->all());
+
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente actualizado con éxito',
+                'cliente' => $cliente
+            ]);
+        }
+
         return redirect()->route('clientes')->with('success', 'Cliente actualizado con éxito.');
     }
 
@@ -229,6 +258,15 @@ class ClienteController extends Controller
             'created_at' => now(),
         ]);
         $cliente->delete();
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente eliminado con éxito'
+            ]);
+        }
+
         return redirect()->route('clientes')->with('success', 'Cliente eliminado con éxito.');
     }
 

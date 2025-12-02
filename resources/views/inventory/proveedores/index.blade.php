@@ -7,6 +7,9 @@
     Proveedores
 @endsection
 @section('descripcion')
+    <!-- Alert Container para mensajes dinámicos -->
+    <div id="alert-container"></div>
+
     @if (session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -18,7 +21,9 @@
 @section('table1')
     <h1>Proveedores</h1>
     @if (Auth::user()->hasPermissionTo('proveedores.create'))
-        <a href="{{ route('proveedores.create') }}" class="btn btn-primary mb-3">Crear Proveedor</a>
+        <button type="button" class="btn btn-primary mb-3" onclick="openCreateModal()">
+            <i class="fas fa-plus me-1"></i>Crear Proveedor
+        </button>
     @endif
     <!-- Filtros con Checkboxes -->
     <div class="mb-3">
@@ -202,20 +207,18 @@
                     @if (Auth::user()->hasAnyPermission(['proveedores.edit', 'proveedores.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('proveedores.edit'))
-                                <a href="{{ route('proveedores.edit', $proveedor->idpro) }}" class="btn btn-warning">
+                                <button type="button"
+                                        class="btn btn-warning"
+                                        onclick="openEditModal({{ $proveedor->idpro }})">
                                     <i class="fas fa-edit"></i>
-                                </a>
+                                </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('proveedores.destroy'))
-                                <form action="{{ route('proveedores.destroy', $proveedor->idpro) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-circle"
-                                        onclick="return confirm('¿Estás seguro?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        class="btn btn-danger btn-circle"
+                                        onclick="openDeleteModal({{ $proveedor->idpro }}, '{{ $proveedor->nombrepro }}', '{{ $proveedor->telefonopro }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             @endif
                         </td>
                     @endif
@@ -234,11 +237,203 @@
             <div id="proveedores-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
         </div>
     </div>
+
+    <!-- Modals -->
+    @include('inventory.proveedores.modals.create')
+    @include('inventory.proveedores.modals.edit')
+    @include('inventory.proveedores.modals.delete')
 @endsection
 @section('scripts')
     <script>
+        // ========================================
+        // 🔷 MODAL: Crear Proveedor
+        // ========================================
+        function openCreateModal() {
+            console.log('🔷 Abriendo modal de crear proveedor');
+            document.getElementById('createProveedorForm').reset();
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createProveedorModal' }));
+        }
+
+        async function submitCreate(event) {
+            event.preventDefault();
+            console.log('📤 Enviando formulario de creación');
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('{{ route("proveedores.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Proveedor creado exitosamente');
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createProveedorModal' }));
+                    showAlert('Proveedor creado con éxito', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al crear proveedor:', data);
+                    showAlert(data.message || 'Error al crear el proveedor', 'danger');
+                }
+            } catch (error) {
+                console.error('❌ Error en la petición:', error);
+                showAlert('Error al procesar la solicitud', 'danger');
+            }
+        }
+
+        // ========================================
+        // ✏️ MODAL: Editar Proveedor
+        // ========================================
+        async function openEditModal(idpro) {
+            console.log('🔷 Abriendo modal de edición para ID:', idpro);
+
+            const url = '{{ route("proveedores.edit", "__ID__") }}'.replace('__ID__', idpro);
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar datos');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Datos del proveedor cargados:', data.proveedor);
+
+                    // Llenar formulario
+                    document.getElementById('edit_idpro').value = data.proveedor.idpro;
+                    document.getElementById('edit_idpro_display').value = data.proveedor.idpro;
+                    document.getElementById('edit_nombrepro').value = data.proveedor.nombrepro;
+                    document.getElementById('edit_telefonopro').value = data.proveedor.telefonopro || '';
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editProveedorModal' }));
+                } else {
+                    showAlert('Error al cargar los datos del proveedor', 'danger');
+                }
+            } catch (error) {
+                console.error('❌ Error al cargar datos:', error);
+                showAlert('Error al cargar los datos del proveedor', 'danger');
+            }
+        }
+
+        async function submitEdit(event) {
+            event.preventDefault();
+            console.log('📤 Enviando formulario de edición');
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const idpro = document.getElementById('edit_idpro').value;
+
+            const url = '{{ route("proveedores.update", "__ID__") }}'.replace('__ID__', idpro);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Proveedor actualizado exitosamente');
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editProveedorModal' }));
+                    showAlert('Proveedor actualizado con éxito', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al actualizar proveedor:', data);
+                    showAlert(data.message || 'Error al actualizar el proveedor', 'danger');
+                }
+            } catch (error) {
+                console.error('❌ Error en la petición:', error);
+                showAlert('Error al procesar la solicitud', 'danger');
+            }
+        }
+
+        // ========================================
+        // 🗑️ MODAL: Eliminar Proveedor
+        // ========================================
+        function openDeleteModal(idpro, nombrepro, telefonopro) {
+            console.log('🗑️ Abriendo modal de eliminación para:', nombrepro);
+
+            document.getElementById('delete_idpro').value = idpro;
+            document.getElementById('delete_idpro_display').textContent = idpro;
+            document.getElementById('delete_nombrepro_display').textContent = nombrepro;
+            document.getElementById('delete_telefonopro_display').textContent = telefonopro || 'N/A';
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'deleteProveedorModal' }));
+        }
+
+        async function confirmDelete(event) {
+            event.preventDefault();
+            console.log('📤 Confirmando eliminación');
+
+            const idpro = document.getElementById('delete_idpro').value;
+            const url = '{{ route("proveedores.destroy", "__ID__") }}'.replace('__ID__', idpro);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Proveedor eliminado exitosamente');
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'deleteProveedorModal' }));
+                    showAlert(data.message || 'Proveedor desactivado con éxito', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al eliminar:', data.message);
+                    showAlert(data.message || 'Error al eliminar el proveedor', 'danger');
+                }
+            } catch (error) {
+                console.error('❌ Error en la petición:', error);
+                showAlert('Error al procesar la solicitud', 'danger');
+            }
+        }
+
+        // ========================================
+        // 📢 SISTEMA DE ALERTAS
+        // ========================================
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.role = 'alert';
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }, 5000);
+        }
+
+        // ========================================
+        // 🔍 CHECKBOXES: Toggle de columnas
+        // ========================================
         document.addEventListener('DOMContentLoaded', function() {
-            // Ocultar columnas por defecto (excepto Total de cuentas y Acciones)
             const table = document.querySelector('#datatablesSimpl');
             const checkboxes = document.querySelectorAll('.column-toggle');
 
@@ -246,14 +441,12 @@
                 const column = checkbox.dataset.column;
                 const isChecked = checkbox.checked;
 
-                // Mostrar solo la columna "Total de cuentas" (data-column="3") al cargar la página
                 if (column !== "3") {
-                    checkbox.checked = false; // Desmarcar los checkboxes excepto el de Total de cuentas
+                    checkbox.checked = false;
                 }
 
                 toggleColumn(table, column, checkbox.checked);
 
-                // Agregar evento para mostrar/ocultar columnas
                 checkbox.addEventListener('change', function() {
                     toggleColumn(table, column, this.checked);
                 });
@@ -267,7 +460,7 @@
                         cells[columnIndex].style.display = show ? '' : 'none';
                     }
                 });
-            });
+            }
         });
     </script>
 

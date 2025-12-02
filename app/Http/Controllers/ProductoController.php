@@ -80,9 +80,15 @@ class ProductoController extends Controller
 
     public function store(Request $request)
     {
+        // VERIFICACIÓN 1: Permisos
         if (!Gate::allows('productos.store')) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para crear productos.'], 403);
+            }
             abort(403, 'No tienes permiso para crear productos.');
         }
+
+        // VERIFICACIÓN 2: Validación
         $request->validate([
             'codigopro' => 'required|string|max:50|unique:productos,codigopro',
             'nombrepro' => 'required|string|max:255',
@@ -122,6 +128,9 @@ class ProductoController extends Controller
         // Procesar los detalles
         $detalles = json_decode($request->detalles_producto, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'El formato de los detalles del producto es inválido.'], 422);
+            }
             return redirect()->back()->withErrors(['detalles_producto' => 'El formato de los detalles del producto es inválido.']);
         }
         foreach ($detalles as $detalle) {
@@ -139,15 +148,29 @@ class ProductoController extends Controller
             'created_at' => now(),
         ]);
 
+        // VERIFICACIÓN 3: Respuesta según tipo de petición
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Producto creado exitosamente.', 'producto' => $producto->load(['categoria', 'tipoProducto', 'detalles'])]);
+        }
+
         return redirect()->route('productos.index')->with('success', 'Producto creado exitosamente.');
     }
 
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         if (!Gate::allows('productos.show')) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para ver el producto.'], 403);
+            }
             abort(403, 'No tienes permiso para ver el producto.');
         }
         $producto = Producto::with(['categoria', 'tipoProducto', 'detalles'])->findOrFail($id);
+
+        // Si es petición AJAX, devolver JSON
+        if ($request->expectsJson()) {
+            return response()->json($producto);
+        }
+
         return view('inventory.productos.show', compact('producto'));
     }
 
@@ -201,9 +224,15 @@ class ProductoController extends Controller
 
     public function update(Request $request, string $id)
     {
+        // VERIFICACIÓN 1: Permisos
         if (!Gate::allows('productos.update')) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para actualizar productos.'], 403);
+            }
             abort(403, 'No tienes permiso para actualizar productos.');
         }
+
+        // VERIFICACIÓN 2: Validación
         $request->validate([
             'codigopro' => 'required|string|max:50|unique:productos,codigopro,' . $id,
             'nombrepro' => 'required|string|max:255',
@@ -237,6 +266,9 @@ class ProductoController extends Controller
 
         $detalles = json_decode($request->detalles_producto, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'El formato de los detalles del producto es inválido.'], 422);
+            }
             return redirect()->back()->withErrors(['detalles_producto' => 'El formato de los detalles del producto es inválido.']);
         }
         // Eliminar detalles existentes y recrearlos
@@ -255,6 +287,11 @@ class ProductoController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
+
+        // VERIFICACIÓN 3: Respuesta según tipo de petición
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Producto actualizado exitosamente.', 'producto' => $producto->load(['categoria', 'tipoProducto', 'detalles'])]);
+        }
 
         return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente.');
     }
@@ -336,12 +373,19 @@ class ProductoController extends Controller
         return redirect()->route('productos.index')->with('success', 'Precios actualizados correctamente.');
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
+        // VERIFICACIÓN 1: Permisos
         if (!Gate::allows('productos.destroy')) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar productos.'], 403);
+            }
             abort(403, 'No tienes permiso para eliminar productos.');
         }
+
+        // VERIFICACIÓN 2: Validación - El producto existe
         $producto = Producto::findOrFail($id);
+
         Historial::create([
             'accion' => 'Eliminación de Producto',
             'descripcion' => 'Datos eliminados: ' . json_encode($producto),
@@ -350,6 +394,12 @@ class ProductoController extends Controller
         ]);
         $producto->detalles()->delete();
         $producto->delete();
+
+        // VERIFICACIÓN 3: Respuesta según tipo de petición
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Producto eliminado exitosamente.']);
+        }
+
         return redirect()->route('productos.index')->with('success', 'Producto eliminado exitosamente.');
     }
 }

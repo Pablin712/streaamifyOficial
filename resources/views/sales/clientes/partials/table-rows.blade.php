@@ -18,21 +18,15 @@
             <td>
                 <div class="action-buttons">
                     @if (Auth::user()->hasPermissionTo('clientes.edit'))
-                        <a href="{{ route('clientes.edit', $cliente->idcli) }}" class="btn btn-warning btn-sm" title="Editar">
+                        <button onclick="openEditModal('{{ $cliente->idcli }}')" class="btn btn-warning btn-sm" title="Editar">
                             <i class="fas fa-edit"></i>
-                        </a>
+                        </button>
                     @endif
                     @if ($cliente->usuarios->isEmpty())
                         @if (Auth::user()->hasPermissionTo('clientes.destroy'))
-                            <form action="{{ route('clientes.destroy', $cliente->idcli) }}" method="POST"
-                                style="display: inline;"
-                                onsubmit="return confirm('¿Estás seguro?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
+                            <button onclick="openDeleteModal('{{ $cliente->idcli }}')" class="btn btn-danger btn-sm" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         @endif
                     @endif
                 </div>

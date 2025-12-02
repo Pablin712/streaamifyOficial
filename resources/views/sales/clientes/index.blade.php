@@ -43,12 +43,15 @@
         </div>
     </div>
 
+    <!-- Alert Container para mensajes dinámicos -->
+    <div id="alert-container"></div>
+
     <!-- Botones -->
     @if (Auth::user()->hasPermissionTo('clientes.create'))
         <div class="mb-3">
-            <a href="{{ route('clientes.create') }}" class="btn btn-primary">
+            <button type="button" onclick="openCreateModal()" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Crear Cliente
-            </a>
+            </button>
             <a href="{{ route('clientes.export') }}" class="btn btn-success">
                 <i class="fas fa-file-csv"></i> Exportar CSV
             </a>
@@ -188,6 +191,11 @@
         </div>
     </div>
 </div>
+
+<!-- Modales -->
+@include('sales.clientes.modals.create')
+@include('sales.clientes.modals.edit')
+@include('sales.clientes.modals.delete')
 @endsection
 
 @section('scripts')
@@ -196,5 +204,205 @@
 
 <script>
     console.log('Vista de clientes cargada con Enhanced Table v2.0 Server-side');
+
+    // ============================================================================
+    // FUNCIONES DE MODAL - CREAR
+    // ============================================================================
+    function openCreateModal() {
+        console.log('🔷 Abriendo modal de crear cliente...');
+        const form = document.getElementById('createClienteForm');
+        if (form) form.reset();
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createClienteModal' }));
+    }
+
+    function closeCreateModal() {
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createClienteModal' }));
+    }
+
+    async function submitCreate(event) {
+        event.preventDefault();
+        console.log('📤 Enviando formulario de crear cliente...');
+
+        const formData = new FormData(event.target);
+
+        try {
+            const response = await fetch('{{ route("clientes.store") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Cliente creado:', data);
+                showAlert(data.message, 'success');
+                closeCreateModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al crear:', data);
+                showAlert(data.message || 'Error al crear el cliente', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error de red:', error);
+            showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+        }
+    }
+
+    // ============================================================================
+    // FUNCIONES DE MODAL - EDITAR
+    // ============================================================================
+    function openEditModal(idcli) {
+        console.log('🔷 Abriendo modal de editar cliente:', idcli);
+
+        const url = '{{ route("clientes.edit", "__ID__") }}'.replace('__ID__', idcli);
+
+        fetch(url, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('edit_cliente_id').value = data.cliente.idcli;
+                document.getElementById('edit_nombrecli').value = data.cliente.nombrecli;
+                document.getElementById('edit_telefonocli').value = data.cliente.telefonocli;
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editClienteModal' }));
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar cliente:', error);
+            showAlert('Error al cargar los datos del cliente', 'danger');
+        });
+    }
+
+    function closeEditModal() {
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editClienteModal' }));
+    }
+
+    async function submitEdit(event) {
+        event.preventDefault();
+        console.log('📤 Enviando formulario de editar cliente...');
+
+        const idcli = document.getElementById('edit_cliente_id').value;
+        const formData = new FormData(event.target);
+
+        const url = '{{ route("clientes.update", "__ID__") }}'.replace('__ID__', idcli);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    _method: 'PUT',
+                    nombrecli: formData.get('nombrecli'),
+                    telefonocli: formData.get('telefonocli')
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Cliente actualizado:', data);
+                showAlert(data.message, 'success');
+                closeEditModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al actualizar:', data);
+                showAlert(data.message || 'Error al actualizar el cliente', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error de red:', error);
+            showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+        }
+    }
+
+    // ============================================================================
+    // FUNCIONES DE MODAL - ELIMINAR
+    // ============================================================================
+    function openDeleteModal(idcli) {
+        console.log('🔷 Abriendo modal de eliminar cliente:', idcli);
+
+        const url = '{{ route("clientes.edit", "__ID__") }}'.replace('__ID__', idcli);
+
+        fetch(url, {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('delete_cliente_id').value = data.cliente.idcli;
+                document.getElementById('delete_cliente_idcli').textContent = data.cliente.idcli;
+                document.getElementById('delete_cliente_nombre').textContent = data.cliente.nombrecli;
+                document.getElementById('delete_cliente_telefono').textContent = data.cliente.telefonocli;
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'deleteClienteModal' }));
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar cliente:', error);
+            showAlert('Error al cargar los datos del cliente', 'danger');
+        });
+    }
+
+    function closeDeleteModal() {
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'deleteClienteModal' }));
+    }
+
+    async function submitDelete(event) {
+        event.preventDefault();
+        console.log('🗑️ Eliminando cliente...');
+
+        const idcli = document.getElementById('delete_cliente_id').value;
+        const url = '{{ route("clientes.destroy", "__ID__") }}'.replace('__ID__', idcli);
+
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Cliente eliminado');
+                showAlert(data.message, 'success');
+                closeDeleteModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al eliminar:', data);
+                showAlert(data.message || 'Error al eliminar el cliente', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error de red:', error);
+            showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+        }
+    }
+
+    // ============================================================================
+    // FUNCIÓN DE ALERTAS
+    // ============================================================================
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alert-container');
+        const alert = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        alertContainer.innerHTML = alert;
+        setTimeout(() => alertContainer.innerHTML = '', 5000);
+    }
 </script>
 @endsection

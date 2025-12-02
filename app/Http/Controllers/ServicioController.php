@@ -69,6 +69,15 @@ class ServicioController extends Controller
             'created_at' => now(),
         ]);
 
+        // Si es petición AJAX, retornar JSON
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Servicio creado con éxito',
+                'servicio' => $servicio
+            ]);
+        }
+
         return redirect()->route('servicios')->with('success', 'Servicio creado con éxito.');
     }
 
@@ -78,7 +87,16 @@ class ServicioController extends Controller
             abort(403, 'No tienes permiso para editar servicios.');
         }
 
-        $servicio = Servicio::findOrFail($idser);
+        $servicio = Servicio::where('idser', $idser)->firstOrFail();
+
+        // Si es petición AJAX, retornar JSON
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'servicio' => $servicio
+            ]);
+        }
+
         return view('inventory.servicios.edit', compact('servicio'));
     }
 
@@ -101,7 +119,7 @@ class ServicioController extends Controller
             'nombreser' => ucwords(strtolower($request->nombreser))
         ]);
 
-        $servicio = Servicio::findOrFail($idser);
+        $servicio = Servicio::where('idser', $idser)->firstOrFail();
 
         Historial::create([
             'accion' => 'Actualización de Servicio',
@@ -112,6 +130,15 @@ class ServicioController extends Controller
 
         $servicio->update($request->all());
 
+        // Si es petición AJAX, retornar JSON
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Servicio actualizado con éxito',
+                'servicio' => $servicio
+            ]);
+        }
+
         return redirect()->route('servicios')->with('success', 'Servicio actualizado con éxito.');
     }
 
@@ -121,7 +148,7 @@ class ServicioController extends Controller
             abort(403, 'No tienes permiso para eliminar servicios.');
         }
 
-        $servicio = Servicio::findOrFail($idser);
+        $servicio = Servicio::where('idser', $idser)->firstOrFail();
 
         Historial::create([
             'accion' => 'Eliminación de Servicio',
@@ -131,6 +158,14 @@ class ServicioController extends Controller
         ]);
 
         $servicio->delete();
+
+        // Si es petición AJAX, retornar JSON
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Servicio eliminado con éxito'
+            ]);
+        }
 
         return redirect()->route('servicios')->with('success', 'Servicio eliminado con éxito.');
     }

@@ -11,6 +11,9 @@
     </ol>
 
     <!-- Descripción y alertas -->
+    <!-- Alert Container para mensajes dinámicos -->
+    <div id="alert-container"></div>
+
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle"></i> {{ session('success') }}
@@ -80,9 +83,9 @@
     @if (Auth::user()->hasPermissionTo('valores.create'))
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             {{-- Crear Valor --}}
-            <a href="{{ route('valores.create') }}" class="btn btn-success">
+            <button type="button" class="btn btn-success" onclick="openCreateModal()">
                 <i class="fas fa-plus"></i> Crear Valor
-            </a>
+            </button>
 
             {{-- Corregir idval --}}
             <form action="{{ route('valores.corregir') }}" method="POST" class="d-inline">
@@ -107,16 +110,16 @@
 
             {{-- Nuevo Servicio --}}
             @if (Auth::user()->hasPermissionTo('servicios.create'))
-                <a href="{{ route('servicios.create') }}" class="btn btn-info text-white">
+                <button type="button" class="btn btn-info text-white" onclick="openCreateServicioModal()">
                     <i class="fas fa-plus-circle"></i> Nuevo Servicio
-                </a>
+                </button>
             @endif
 
             {{-- Nuevo Proveedor --}}
             @if (Auth::user()->hasPermissionTo('proveedores.create'))
-                <a href="{{ route('proveedores.create') }}" class="btn btn-secondary">
+                <button type="button" class="btn btn-secondary" onclick="openCreateProveedorModal()">
                     <i class="fas fa-user-plus"></i> Nuevo Proveedor
-                </a>
+                </button>
             @endif
         </div>
     @endif
@@ -260,20 +263,20 @@
                                     <td>
                                         <div class="action-buttons">
                                             @if (Auth::user()->hasPermissionTo('valores.edit'))
-                                                <a href="{{ route('valores.edit', $valor->idval) }}" class="btn btn-warning btn-sm" title="Editar">
+                                                <button type="button"
+                                                        class="btn btn-warning btn-sm"
+                                                        onclick="openEditModal('{{ $valor->idval }}')"
+                                                        title="Editar">
                                                     <i class="fas fa-edit"></i>
-                                                </a>
+                                                </button>
                                             @endif
                                             @if (Auth::user()->hasPermissionTo('valores.destroy'))
-                                                <form action="{{ route('valores.destroy', $valor->idval) }}" method="POST"
-                                                    style="display: inline;"
-                                                    onsubmit="return confirm('¿Estás seguro?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
+                                                <button type="button"
+                                                        class="btn btn-danger btn-sm"
+                                                        onclick="openDeleteModal('{{ $valor->idval }}', '{{ $valor->servicio->nombreser }}', '{{ $valor->proveedor->nombrepro }}', {{ $valor->costoval }}, '{{ $valor->tipoval }}')"
+                                                        title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             @endif
                                         </div>
                                     </td>
@@ -295,6 +298,15 @@
             </div>
         </div>
     </div>
+
+    <!-- Modals -->
+    @include('inventory.valores.modals.create')
+    @include('inventory.valores.modals.edit')
+    @include('inventory.valores.modals.delete')
+
+    <!-- Modals de módulos relacionados -->
+    @include('inventory.servicios.modals.create')
+    @include('inventory.proveedores.modals.create')
 </div>
 @endsection
 
@@ -305,5 +317,290 @@
 <script>
     console.log('Vista de valores cargada con Enhanced Table v2.0');
     console.log('Total de valores en la tabla:', {{ $valores->count() }});
+
+    // ========================================
+    // 🔷 MODAL: Crear Valor
+    // ========================================
+    function openCreateModal() {
+        console.log('🔷 Abriendo modal de crear valor');
+        document.getElementById('createValorForm').reset();
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createValorModal' }));
+    }
+
+    async function submitCreate(event) {
+        event.preventDefault();
+        console.log('📤 Enviando formulario de creación');
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('{{ route("valores.store") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Valor creado exitosamente');
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createValorModal' }));
+                showAlert('Valor creado con éxito', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al crear valor:', data);
+                showAlert(data.message || 'Error al crear el valor', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error en la petición:', error);
+            showAlert('Error al procesar la solicitud', 'danger');
+        }
+    }
+
+    // ========================================
+    // ✏️ MODAL: Editar Valor
+    // ========================================
+    async function openEditModal(idval) {
+        console.log('🔷 Abriendo modal de edición para ID:', idval);
+
+        const url = '{{ route("valores.edit", "__ID__") }}'.replace('__ID__', idval);
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Error al cargar datos');
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Datos del valor cargados:', data.valor);
+
+                // Llenar formulario
+                document.getElementById('edit_idval').value = data.valor.idval;
+                document.getElementById('edit_idval_display').value = data.valor.idval;
+                document.getElementById('edit_idser').value = data.valor.idser;
+                document.getElementById('edit_idpro').value = data.valor.idpro;
+                document.getElementById('edit_costoval').value = data.valor.costoval;
+                document.getElementById('edit_tipoval').value = data.valor.tipoval;
+                document.getElementById('edit_pantminval').value = data.valor.pantminval;
+                document.getElementById('edit_pantmaxval').value = data.valor.pantmaxval;
+                document.getElementById('edit_mesesval').value = data.valor.mesesval;
+                document.getElementById('edit_bot').value = data.valor.bot || '';
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editValorModal' }));
+            } else {
+                showAlert('Error al cargar los datos del valor', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar datos:', error);
+            showAlert('Error al cargar los datos del valor', 'danger');
+        }
+    }
+
+    async function submitEdit(event) {
+        event.preventDefault();
+        console.log('📤 Enviando formulario de edición');
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const idval = document.getElementById('edit_idval').value;
+
+        const url = '{{ route("valores.update", "__ID__") }}'.replace('__ID__', idval);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Valor actualizado exitosamente');
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editValorModal' }));
+                showAlert('Valor actualizado con éxito', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al actualizar valor:', data);
+                showAlert(data.message || 'Error al actualizar el valor', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error en la petición:', error);
+            showAlert('Error al procesar la solicitud', 'danger');
+        }
+    }
+
+    // ========================================
+    // 🗑️ MODAL: Eliminar Valor
+    // ========================================
+    function openDeleteModal(idval, servicio, proveedor, costo, tipo) {
+        console.log('🗑️ Abriendo modal de eliminación para:', idval);
+
+        document.getElementById('delete_idval').value = idval;
+        document.getElementById('delete_idval_display').textContent = idval;
+        document.getElementById('delete_servicio_display').textContent = servicio;
+        document.getElementById('delete_proveedor_display').textContent = proveedor;
+        document.getElementById('delete_costo_display').textContent = parseFloat(costo).toFixed(2);
+        document.getElementById('delete_tipo_display').textContent = tipo;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'deleteValorModal' }));
+    }
+
+    async function confirmDelete(event) {
+        event.preventDefault();
+        console.log('📤 Confirmando eliminación');
+
+        const idval = document.getElementById('delete_idval').value;
+        const url = '{{ route("valores.destroy", "__ID__") }}'.replace('__ID__', idval);
+
+        try {
+            const response = await fetch(url, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Valor eliminado exitosamente');
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'deleteValorModal' }));
+                showAlert(data.message || 'Valor desactivado con éxito', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al eliminar:', data.message);
+                showAlert(data.message || 'Error al eliminar el valor', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error en la petición:', error);
+            showAlert('Error al procesar la solicitud', 'danger');
+        }
+    }
+
+    // ========================================
+    // 📢 SISTEMA DE ALERTAS
+    // ========================================
+    function showAlert(message, type = 'info') {
+        const alertContainer = document.getElementById('alert-container');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.role = 'alert';
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertContainer.appendChild(alert);
+
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 5000);
+    }
+
+    // ========================================
+    // 🔗 MODALES DE MÓDULOS RELACIONADOS
+    // ========================================
+
+    // Abrir modal de crear servicio
+    function openCreateServicioModal() {
+        console.log('🔷 Abriendo modal de crear servicio desde valores');
+        // Resetear formulario si existe
+        const form = document.getElementById('createServicioForm');
+        if (form) form.reset();
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createServicioModal' }));
+    }
+
+    // Abrir modal de crear proveedor
+    function openCreateProveedorModal() {
+        console.log('🔷 Abriendo modal de crear proveedor desde valores');
+        // Resetear formulario si existe
+        const form = document.getElementById('createProveedorForm');
+        if (form) form.reset();
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createProveedorModal' }));
+    }
+
+    // Funciones de submit para servicios (redirige a valores después de crear)
+    async function submitCreateServicio(event) {
+        event.preventDefault();
+        console.log('📤 Enviando formulario de creación de servicio');
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('{{ route("servicios.store") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Servicio creado exitosamente');
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createServicioModal' }));
+                showAlert('Servicio creado con éxito', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al crear servicio:', data);
+                showAlert(data.message || 'Error al crear el servicio', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error en la petición:', error);
+            showAlert('Error al procesar la solicitud', 'danger');
+        }
+    }
+
+    // Funciones de submit para proveedores (redirige a valores después de crear)
+    async function submitCreateProveedor(event) {
+        event.preventDefault();
+        console.log('📤 Enviando formulario de creación de proveedor');
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('{{ route("proveedores.store") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('✅ Proveedor creado exitosamente');
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createProveedorModal' }));
+                showAlert('Proveedor creado con éxito', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                console.error('❌ Error al crear proveedor:', data);
+                showAlert(data.message || 'Error al crear el proveedor', 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Error en la petición:', error);
+            showAlert('Error al procesar la solicitud', 'danger');
+        }
+    }
 </script>
 @endsection

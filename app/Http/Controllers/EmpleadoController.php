@@ -152,6 +152,15 @@ class EmpleadoController extends Controller
             'created_at' => now(),
         ]);
 
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado creado exitosamente',
+                'empleado' => $empleado
+            ]);
+        }
+
         return redirect()->route('empleados')->with('success', 'Empleado creado exitosamente.');
     }
 
@@ -170,6 +179,15 @@ class EmpleadoController extends Controller
     public function edit(string $id)
     {
         $empleado = Empleado::findOrFail($id);
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'empleado' => $empleado
+            ]);
+        }
+
         return view('employee.edit', compact('empleado'));
     }
 
@@ -234,6 +252,15 @@ class EmpleadoController extends Controller
 
         $empleado->update($data);
 
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado actualizado exitosamente',
+                'empleado' => $empleado
+            ]);
+        }
+
         return redirect()->route('empleados.edit', ['id' => $empleado->idemp])
             ->with('success', 'Perfil actualizado exitosamente.');
     }
@@ -261,6 +288,15 @@ class EmpleadoController extends Controller
             'created_at' => now(),
         ]);
         $empleado->delete();
-        return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente.');
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado eliminado exitosamente'
+            ]);
+        }
+
+        return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente');
     }
 }

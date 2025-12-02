@@ -52,6 +52,15 @@ class ProveedorController extends Controller
             'created_at' => now(),
         ]);
 
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Proveedor creado con éxito.',
+                'proveedor' => $proveedor
+            ]);
+        }
+
         return redirect()->route('proveedores')->with('success', 'Proveedor creado con éxito.');
     }
 
@@ -61,6 +70,15 @@ class ProveedorController extends Controller
             abort(403, 'No tienes permiso para editar proveedores.');
         }
         $proveedor = Proveedor::findOrFail($idpro);
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'proveedor' => $proveedor
+            ]);
+        }
+
         return view('inventory.proveedores.edit', compact('proveedor'));
     }
 
@@ -90,6 +108,15 @@ class ProveedorController extends Controller
 
         $proveedor->update($request->all());
 
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Proveedor actualizado con éxito.',
+                'proveedor' => $proveedor
+            ]);
+        }
+
         return redirect()->route('proveedores')->with('success', 'Proveedor actualizado con éxito.');
     }
 
@@ -104,6 +131,13 @@ class ProveedorController extends Controller
         // Verificar si hay valores asociados
         $valoresAsociados = Valor::where('idpro', $proveedor->idpro)->where('activoval', true)->exists();
         if ($valoresAsociados) {
+            // Triple verificación AJAX
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar porque tiene valores asociados.'
+                ], 400);
+            }
             return redirect()->route('proveedores')->with('error', 'No se puede eliminar porque tiene valores asociados.');
         }
 
@@ -118,6 +152,14 @@ class ProveedorController extends Controller
         $proveedor->update([
             'activopro' => false,
         ]);
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Proveedor desactivado con éxito.'
+            ]);
+        }
 
         return redirect()->route('proveedores')->with('success', 'Proveedor desactivado con éxito.');
     }

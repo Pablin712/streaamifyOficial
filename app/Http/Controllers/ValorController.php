@@ -38,7 +38,11 @@ class ValorController extends Controller
         $valores = Valor::with(['proveedor', 'servicio'])->where('activoval', true)->get();
         $serviciosPrincipales = $this->valorService->obtenerServiciosPrincipales(Servicio::all());
 
-        return view('inventory.valores.index', compact('valores', 'serviciosPrincipales'));
+        // Variables necesarias para los modales
+        $servicios = Servicio::all();
+        $proveedores = Proveedor::where('activopro', true)->get();
+
+        return view('inventory.valores.index', compact('valores', 'serviciosPrincipales', 'servicios', 'proveedores'));
     }
 
     public function create()
@@ -81,6 +85,15 @@ class ValorController extends Controller
             'created_at' => now(),
         ]);
 
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Valor creado con éxito.',
+                'valor' => $valor
+            ]);
+        }
+
         return redirect()->route('valores')->with('success', 'Valor creado con éxito.');
     }
 
@@ -102,6 +115,15 @@ class ValorController extends Controller
             abort(403, 'No tienes permiso para editar valores.');
         }
         $valor = Valor::with(['proveedor', 'servicio'])->findOrFail($idval);
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'valor' => $valor
+            ]);
+        }
+
         $proveedores = Proveedor::where('activopro', true)->get();
         $servicios = Servicio::all();
         return view('inventory.valores.edit', compact('valor', 'proveedores', 'servicios'));
@@ -134,6 +156,15 @@ class ValorController extends Controller
         ]);
 
         $valor->update($request->all());
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Valor actualizado con éxito.',
+                'valor' => $valor
+            ]);
+        }
 
         return redirect()->route('valores')->with('success', 'Valor actualizado con éxito.');
     }
@@ -175,6 +206,13 @@ class ValorController extends Controller
 
             $cuentasAsociadas = Cuenta::where('idval', $valor->idval)->where('activocue', true)->exists();
             if ($cuentasAsociadas) {
+                // Triple verificación AJAX
+                if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No se puede eliminar porque tiene cuentas asociadas.'
+                    ], 400);
+                }
                 return redirect()->back()->with('error', 'No se puede eliminar porque tiene cuentas asociadas.');
             }
 
@@ -193,6 +231,14 @@ class ValorController extends Controller
                 'activoval' => false,
                 'idval' => $nuevoIdVal
             ]);
+
+            // Triple verificación AJAX
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Valor desactivado con éxito.'
+                ]);
+            }
 
             return redirect()->route('valores')->with('success', 'Valor desactivado con éxito.');
         } catch (\Exception $e) {
