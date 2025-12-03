@@ -1,10 +1,4 @@
-// Inicializa Select2 en el select con el id 'idcli'
-$(document).ready(function () {
-    $("#idcli").select2({
-        placeholder: "Selecciona un Cliente",
-        allowClear: true, // Permite borrar la selección
-    });
-});
+// No necesitamos inicializar Select2 manualmente ya que el componente searchable-select lo hace automáticamente
 
 // Función para agregar un detalle a la tabla
 $("#guardarDetalleBtn").on("click", function () {
@@ -27,7 +21,7 @@ $("#guardarDetalleBtn").on("click", function () {
             <td>${descripcion}</td>
             <td>${fechaVencimiento}</td>
             <td>$${monto.toFixed(2)}</td>
-            <td> 
+            <td>
                 <button type="button" class="btn btn-warning btn-sm editarDetalleBtn"><i class="fas fa-edit"></i></button>
                 <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
                     <i class="fas fa-trash"></i>
@@ -43,14 +37,14 @@ $("#guardarDetalleBtn").on("click", function () {
         $("#total-venta").text(totalVenta.toFixed(2));
 
         // Limpiar los campos del modal
-        $("#selectCuenta").val("");
+        $("#selectCuenta").val(null).trigger('change'); // Limpiar Select2
         $("#selectPerfil").val("");
         $("#fechaVencimiento").val("");
         $("#descripcion").val("");
         $("#monto").val("");
 
-        // Cerrar el modal
-        $("#agregarDetalleModal").modal("hide");
+        // Cerrar el modal usando Alpine.js
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agregar-detalle-modal' }));
     } else {
         alert("Por favor complete todos los campos.");
     }
@@ -60,7 +54,7 @@ $("#guardarDetalleBtn").on("click", function () {
 $("#tabla-detalles").on("click", ".eliminarDetalleBtn", function () {
     // Obtener el monto de la fila a eliminar
     var montoEliminado = parseFloat(
-        $(this).closest("tr").find("td").eq(5).text().replace("$", "")
+        $(this).closest("tr").find("td").eq(4).text().replace("$", "")
     );
 
     // Restar el monto eliminado del total
@@ -72,26 +66,8 @@ $("#tabla-detalles").on("click", ".eliminarDetalleBtn", function () {
     // Actualizar el total de la venta
     $("#total-venta").text(totalVenta.toFixed(2));
 });
-$(document).ready(function () {
-    // Inicializar Select2 en el modal cuando se abra
-    $("#agregarDetalleModal").on("shown.bs.modal", function () {
-        $("#selectCuenta").select2({
-            dropdownParent: $("#agregarDetalleModal"), // Esto es clave para que funcione dentro del modal
-            placeholder: "Seleccione una cuenta",
-            allowClear: true,
-        });
-    });
-});
-$(document).ready(function () {
-    // Inicializar Select2 en el modal cuando se abra
-    $("#editarDetalleModal").on("shown.bs.modal", function () {
-        $("#editarSelectCuenta").select2({
-            dropdownParent: $("#editarDetalleModal"), // Esto es clave para que funcione dentro del modal
-            placeholder: "Seleccione una cuenta",
-            allowClear: true,
-        });
-    });
-});
+
+// El componente searchable-select inicializa automáticamente los selects cuando se abre un modal
 document
     .getElementById("form-venta")
     .addEventListener("submit", function (event) {
@@ -133,9 +109,6 @@ document
     });
 
 $(document).ready(function () {
-    // Inicializa Select2 en el select con el id 'idcli'
-    $("#idcli").select2();
-
     // Maneja el evento de clic en el botón "Editar Detalle"
     $(document).on("click", ".editarDetalleBtn", function () {
         var row = $(this).closest("tr");
@@ -145,14 +118,16 @@ $(document).ready(function () {
         var fechaVencimiento = row.find("td:eq(3)").text().trim();
         var monto = row.find("td:eq(4)").text().replace("$", "").trim();
 
-        $("#editarSelectCuenta").val(cuenta);
+        $("#editarSelectCuenta").val(cuenta).trigger('change'); // Usar trigger para Select2
         $("#editarSelectPerfil").val(perfil);
         $("#editarDescripcion").val(descripcion);
         $("#editarFechaVencimiento").val(fechaVencimiento);
         $("#editarMonto").val(monto);
 
         $("#guardarCambiosDetalleBtn").data("row", row);
-        $("#editarDetalleModal").modal("show");
+
+        // Abrir modal usando Alpine.js
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-detalle-modal' }));
     });
 
     // Maneja el evento de clic en el botón "Guardar Cambios"
@@ -174,6 +149,22 @@ $(document).ready(function () {
         row.find("td:eq(3)").text(fechaVencimiento);
         row.find("td:eq(4)").text("$" + parseFloat(monto).toFixed(2));
 
-        $("#editarDetalleModal").modal("hide");
+        // Actualizar total de venta
+        actualizarTotalVenta();
+
+        // Cerrar modal usando Alpine.js
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editar-detalle-modal' }));
     });
 });
+
+// Función auxiliar para actualizar el total
+function actualizarTotalVenta() {
+    let total = 0;
+    $('#tabla-detalles tr').each(function() {
+        const monto = parseFloat($(this).find('td').eq(4).text().replace('$', '').trim());
+        if (!isNaN(monto)) {
+            total += monto;
+        }
+    });
+    $('#total-venta').text(total.toFixed(2));
+}

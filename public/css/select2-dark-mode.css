@@ -1,0 +1,259 @@
+/**
+ * Select2 Dark Mode Styles
+ * Estilos para modo oscuro que se adaptan automáticamente al tema del sistema
+ */
+
+/* Estilos base para Select2 */
+.select2-container--bootstrap-5 .select2-selection {
+    min-height: 38px;
+}
+
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    line-height: 38px;
+}
+
+/* ========================================
+   MODO OSCURO - Select2
+   ======================================== */
+
+/* Contenedor principal en modo oscuro */
+.select2-dark-mode .select2-selection--single,
+.select2-dark-mode .select2-selection--multiple {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Texto del placeholder en modo oscuro */
+.select2-dark-mode .select2-selection__placeholder {
+    color: #a0aec0 !important;
+}
+
+/* Texto seleccionado en modo oscuro */
+.select2-dark-mode .select2-selection__rendered {
+    color: #e2e8f0 !important;
+}
+
+/* Flecha del select en modo oscuro */
+.select2-dark-mode .select2-selection__arrow b {
+    border-color: #a0aec0 transparent transparent transparent !important;
+}
+
+/* Botón de limpiar (X) en modo oscuro */
+.select2-dark-mode .select2-selection__clear {
+    color: #cbd5e0 !important;
+}
+
+.select2-dark-mode .select2-selection__clear:hover {
+    color: #f56565 !important;
+}
+
+/* Estado hover del select en modo oscuro */
+.select2-dark-mode .select2-selection--single:hover,
+.select2-dark-mode .select2-selection--multiple:hover {
+    border-color: #63b3ed !important;
+}
+
+/* Estado focus del select en modo oscuro */
+.select2-dark-mode.select2-container--focus .select2-selection,
+.select2-dark-mode.select2-container--open .select2-selection {
+    border-color: #4299e1 !important;
+    box-shadow: 0 0 0 0.2rem rgba(66, 153, 225, 0.25) !important;
+}
+
+/* Dropdown (lista desplegable) en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-dropdown {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+}
+
+/* Opciones del dropdown en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option {
+    color: #e2e8f0 !important;
+    background-color: #2d3748 !important;
+}
+
+/* Opción hover en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--highlighted {
+    background-color: #4a5568 !important;
+    color: #ffffff !important;
+}
+
+/* Opción seleccionada en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--selected {
+    background-color: #4299e1 !important;
+    color: #ffffff !important;
+}
+
+/* Campo de búsqueda dentro del dropdown en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-search__field {
+    background-color: #1a202c !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+.select2-container--bootstrap-5.select2-dark-mode .select2-search__field:focus {
+    border-color: #4299e1 !important;
+    box-shadow: 0 0 0 0.2rem rgba(66, 153, 225, 0.25) !important;
+}
+
+/* Mensaje "No se encontraron resultados" en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__message {
+    color: #a0aec0 !important;
+}
+
+/* Mensaje "Buscando..." en modo oscuro */
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--loading {
+    color: #a0aec0 !important;
+}
+
+/* Multi-select: tags/chips en modo oscuro */
+.select2-dark-mode .select2-selection__choice {
+    background-color: #4a5568 !important;
+    border-color: #718096 !important;
+    color: #e2e8f0 !important;
+}
+
+.select2-dark-mode .select2-selection__choice__remove {
+    color: #cbd5e0 !important;
+}
+
+.select2-dark-mode .select2-selection__choice__remove:hover {
+    color: #f56565 !important;
+}
+
+/* ========================================
+   MODO OSCURO GLOBAL (cuando body o html tienen clase 'dark')
+   ======================================== */
+
+.dark .select2-container--bootstrap-5 .select2-selection--single,
+.dark .select2-container--bootstrap-5 .select2-selection--multiple,
+html.dark .select2-container--bootstrap-5 .select2-selection--single,
+html.dark .select2-container--bootstrap-5 .select2-selection--multiple,
+body.dark .select2-container--bootstrap-5 .select2-selection--single,
+body.dark .select2-container--bootstrap-5 .select2-selection--multiple {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-selection__placeholder,
+html.dark .select2-container--bootstrap-5 .select2-selection__placeholder,
+body.dark .select2-container--bootstrap-5 .select2-selection__placeholder {
+    color: #a0aec0 !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-selection__rendered,
+html.dark .select2-container--bootstrap-5 .select2-selection__rendered,
+body.dark .select2-container--bootstrap-5 .select2-selection__rendered {
+    color: #e2e8f0 !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-dropdown,
+html.dark .select2-container--bootstrap-5 .select2-dropdown,
+body.dark .select2-container--bootstrap-5 .select2-dropdown {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-results__option,
+html.dark .select2-container--bootstrap-5 .select2-results__option,
+body.dark .select2-container--bootstrap-5 .select2-results__option {
+    color: #e2e8f0 !important;
+    background-color: #2d3748 !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-results__option--highlighted,
+html.dark .select2-container--bootstrap-5 .select2-results__option--highlighted,
+body.dark .select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: #4a5568 !important;
+    color: #ffffff !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-results__option--selected,
+html.dark .select2-container--bootstrap-5 .select2-results__option--selected,
+body.dark .select2-container--bootstrap-5 .select2-results__option--selected {
+    background-color: #4299e1 !important;
+    color: #ffffff !important;
+}
+
+.dark .select2-container--bootstrap-5 .select2-search__field,
+html.dark .select2-container--bootstrap-5 .select2-search__field,
+body.dark .select2-container--bootstrap-5 .select2-search__field {
+    background-color: #1a202c !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+/* ========================================
+   PREFERENCIA DEL SISTEMA (prefers-color-scheme: dark)
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    /* Solo aplicar si NO hay clase dark en el html/body (para evitar duplicados) */
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-selection--single,
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-selection--multiple {
+        background-color: #2d3748 !important;
+        border-color: #4a5568 !important;
+        color: #e2e8f0 !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-selection__placeholder {
+        color: #a0aec0 !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-selection__rendered {
+        color: #e2e8f0 !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-dropdown {
+        background-color: #2d3748 !important;
+        border-color: #4a5568 !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-results__option {
+        color: #e2e8f0 !important;
+        background-color: #2d3748 !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background-color: #4a5568 !important;
+        color: #ffffff !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-results__option--selected {
+        background-color: #4299e1 !important;
+        color: #ffffff !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-search__field {
+        background-color: #1a202c !important;
+        border-color: #4a5568 !important;
+        color: #e2e8f0 !important;
+    }
+
+    html:not(.light) body:not(.light) .select2-container--bootstrap-5 .select2-search__field:focus {
+        border-color: #4299e1 !important;
+        box-shadow: 0 0 0 0.2rem rgba(66, 153, 225, 0.25) !important;
+    }
+}
+
+/* ========================================
+   AJUSTES ADICIONALES
+   ======================================== */
+
+/* Asegurar que el dropdown tenga el z-index correcto en modales */
+.select2-container--open {
+    z-index: 9999 !important;
+}
+
+.select2-dropdown {
+    z-index: 9999 !important;
+}
+
+/* Transiciones suaves para cambios de tema */
+.select2-container--bootstrap-5 .select2-selection,
+.select2-container--bootstrap-5 .select2-dropdown,
+.select2-container--bootstrap-5 .select2-results__option {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}

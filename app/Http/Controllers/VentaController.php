@@ -431,15 +431,92 @@ class VentaController extends Controller
         return redirect()->route('ventas')->with('success', 'Estado de la cuenta del cliente actualizado correctamente.');
     }
 
+    /**
+     * Obtener detalles completos de una venta (AJAX)
+     */
+    public function getDetails($id)
+    {
+        try {
+            $venta = Venta::with(['cliente', 'empleado', 'detalles_venta.perfil.cuenta'])
+                ->findOrFail($id);
+
+            // Formatear los detalles para la respuesta
+            $detalles = $venta->detalles_venta->map(function($detalle) {
+                return [
+                    'cuenta' => $detalle->perfil->cuenta->idcue ?? 'N/A',
+                    'perfil' => 'Perfil ' . ($detalle->perfil->numeroper ?? 'N/A'),
+                    'descripcion' => $detalle->descripciondet ?? '',
+                    'cantidad' => 1,
+                    'precio' => number_format($detalle->montodet, 2),
+                    'subtotal' => number_format($detalle->montodet, 2),
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'venta' => [
+                    'idven' => $venta->idven,
+                    'fechaven' => $venta->fechaven->format('d/m/Y H:i'),
+                    'metodopagoven' => $venta->metodopagoven,
+                    'totalpagoven' => number_format($venta->totalpagoven, 2),
+                    'cliente' => [
+                        'nombrecli' => $venta->cliente->nombrecli,
+                        'telefonocli' => $venta->cliente->telefonocli ?? 'No especificado',
+                        'email' => $venta->cliente->email ?? 'No especificado',
+                    ],
+                    'empleado' => [
+                        'nombreemp' => $venta->empleado->nombreemp,
+                    ],
+                    'detalles' => $detalles,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los detalles de la venta: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function sendInvoice($id)
     {
         if (!Gate::allows('ventas.sendInvoice')) {
             abort(403, 'No tienes permiso para enviar facturas.');
         }
-        $venta = Venta::findOrFail($id);
-        $cliente = $venta->cliente;
-        Mail::to($cliente->email)->send(new facturaMail($venta));
-        return redirect()->route('ventas')->with('success', 'Factura enviada correctamente.');
+
+        try {
+            $venta = Venta::findOrFail($id);
+            $cliente = $venta->cliente;
+
+            if (!$cliente->email) {
+                if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El cliente no tiene email registrado.',
+                    ], 400);
+                }
+                return redirect()->route('ventas')->with('error', 'El cliente no tiene email registrado.');
+            }
+
+            Mail::to($cliente->email)->send(new facturaMail($venta));
+
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Factura enviada correctamente al email: ' . $cliente->email,
+                ]);
+            }
+
+            return redirect()->route('ventas')->with('success', 'Factura enviada correctamente.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al enviar la factura: ' . $e->getMessage(),
+                ], 500);
+            }
+            return redirect()->route('ventas')->with('error', 'Error al enviar la factura.');
+        }
     }
 
     public function destroy($idven)
@@ -447,16 +524,37 @@ class VentaController extends Controller
         if (!Gate::allows('ventas.destroy')) {
             abort(403, 'No tienes permiso para eliminar ventas.');
         }
-        $venta = Venta::findOrFail($idven);
-        Historial::create([
-            'accion' => 'Eliminación de Venta',
-            'descripcion' => 'Datos Eliminados: ' . json_encode($venta),
-            'empleado_id' => Auth::user()->idemp,
-            'created_at' => now(),
-        ]);
-        $venta->detalles_venta()->delete();
-        $venta->delete();
-        return redirect()->route('ventas')->with('success', 'Venta eliminada con éxito.');
+
+        try {
+            $venta = Venta::findOrFail($idven);
+
+            Historial::create([
+                'accion' => 'Eliminación de Venta',
+                'descripcion' => 'Datos Eliminados: ' . json_encode($venta),
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+
+            $venta->detalles_venta()->delete();
+            $venta->delete();
+
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Venta eliminada con éxito.',
+                ]);
+            }
+
+            return redirect()->route('ventas')->with('success', 'Venta eliminada con éxito.');
+        } catch (\Exception $e) {
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al eliminar la venta: ' . $e->getMessage(),
+                ], 500);
+            }
+            return redirect()->route('ventas')->with('error', 'Error al eliminar la venta.');
+        }
     }
 
     public function indexApi(Request $request)

@@ -231,6 +231,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/ventas/renew/{idcli}/{idven}', 'renew')->name('ventas.renew');
         Route::put('/ventas/{id}', 'update')->name('ventas.update');
         Route::delete('/ventas/{id}', 'destroy')->name('ventas.destroy');
+        Route::get('/ventas/{id}/details', 'getDetails')->name('ventas.details');
         Route::post('/ventas/{id}/sendInvoice', 'sendInvoice')->name('ventas.sendInvoice');
     });
 

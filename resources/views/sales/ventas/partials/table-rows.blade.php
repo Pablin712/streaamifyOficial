@@ -9,9 +9,9 @@
             <td>
                 <div class="action-buttons">
                     <!-- Ver detalles -->
-                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
-                        data-bs-target="#ventaDetalleModal{{ $venta->idven }}"
-                        title="Ver detalles">
+                    <button onclick="openViewDetailsModal('{{ $venta->idven }}')"
+                            class="btn btn-info btn-sm"
+                            title="Ver detalles">
                         <i class="fas fa-eye"></i>
                     </button>
 
@@ -32,27 +32,19 @@
                     @endif
 
                     @if (Auth::user()->hasPermissionTo('ventas.destroy'))
-                        <form action="{{ route('ventas.destroy', $venta->idven) }}"
-                              method="POST"
-                              style="display: inline;"
-                              onsubmit="return confirm('¿Estás seguro de eliminar esta venta?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
+                        <button onclick="openDeleteModal('{{ $venta->idven }}', '{{ addslashes($venta->cliente->nombrecli) }}', '{{ number_format($venta->totalpagoven, 2) }}')"
+                                class="btn btn-danger btn-sm"
+                                title="Eliminar">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     @endif
 
                     @if (Auth::user()->hasPermissionTo('ventas.sendInvoice'))
-                        <form action="{{ route('ventas.sendInvoice', $venta->idven) }}"
-                              method="POST"
-                              style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-secondary btn-sm" title="Enviar factura">
-                                <i class="fas fa-envelope"></i>
-                            </button>
-                        </form>
+                        <button onclick="openSendInvoiceModal('{{ $venta->idven }}', '{{ addslashes($venta->cliente->nombrecli) }}', '{{ $venta->cliente->email ?? '' }}', '{{ number_format($venta->totalpagoven, 2) }}')"
+                                class="btn btn-secondary btn-sm"
+                                title="Enviar factura">
+                            <i class="fas fa-envelope"></i>
+                        </button>
                     @endif
                 </div>
             </td>

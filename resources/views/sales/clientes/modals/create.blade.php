@@ -5,7 +5,7 @@
         </h5>
         <button type="button" class="btn-close" onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createClienteModal' }))"></button>
     </div>
-    <form id="createClienteForm" onsubmit="submitCreate(event)">
+    <form id="createClienteForm" onsubmit="typeof submitCreate === 'function' ? submitCreate(event) : submitCreateClienteFromVenta(event)">
         @csrf
         <div class="modal-body">
             <div class="row g-3">
@@ -27,7 +27,8 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">
+            <button type="button" class="btn btn-secondary"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createClienteModal' }))">
                 <i class="fas fa-times"></i> Cancelar
             </button>
             <button type="submit" class="btn btn-primary">

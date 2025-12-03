@@ -69,8 +69,8 @@
     </p>
     <div class="row">
         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-            <button 
-                type="button" 
+            <button
+                type="button"
                 class="btn btn-danger mb-3 btn-move-all-mesa"
                 data-cuenta-id="{{ $cuenta->idcue }}"
                 data-cuenta-nombre="{{ $cuenta->usuariocue }}"
@@ -79,8 +79,8 @@
             </button>
         @endif
         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-            <button 
-                type="button" 
+            <button
+                type="button"
                 class="btn btn-warning mb-3 btn-move-all-disperso"
                 data-cuenta-id="{{ $cuenta->idcue }}"
                 data-cuenta-nombre="{{ $cuenta->usuariocue }}"
@@ -128,16 +128,16 @@
                                     @if ($diasRestantes <= 0)
                                         <span class="badge bg-danger">{{ $usuario->nombre_cliente }} (Vencido)</span>
                                         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-dark btn-circle btn-sm btn-move-user"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
                                             >
                                                 <i class="fas fa-exchange"></i>
                                             </button>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-info btn-circle btn-sm btn-move-user-mesa"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
@@ -152,8 +152,8 @@
                                             </a>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('usuarios.destroy'))
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-danger btn-circle btn-sm btn-delete-user"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
@@ -166,16 +166,16 @@
                                         <span class="badge bg-warning">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>
                                         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-dark btn-circle btn-sm btn-move-user"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
                                             >
                                                 <i class="fas fa-exchange"></i>
                                             </button>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-info btn-circle btn-sm btn-move-user-mesa"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
@@ -194,16 +194,16 @@
                                         <span class="badge bg-success">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>
                                         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-dark btn-circle btn-sm btn-move-user"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
                                             >
                                                 <i class="fas fa-random"></i>
                                             </button>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 class="btn btn-info btn-circle btn-sm btn-move-user-mesa"
                                                 data-iddet="{{ $usuario->iddet }}"
                                                 data-nombre="{{ $usuario->nombre_cliente }}"

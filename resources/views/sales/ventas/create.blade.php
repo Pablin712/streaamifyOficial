@@ -1,10 +1,15 @@
 @extends('layouts.static')
 
 @section('title', 'Crear Venta')
+
 @section('styles')
-    <!-- CSS de Select2 -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Select2 Dark Mode -->
+    <link href="{{ asset('css/select2-dark-mode.css') }}" rel="stylesheet" />
 @endsection
+
 @section('h1', 'Crear Venta')
 @section('breadcrumb')
     <a href="{{ route('ventas') }}">Ventas</a>
@@ -27,13 +32,21 @@
 @endsection
 @section('content')
     <div class="container">
+        <!-- Alerta Informativa -->
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>¡Importante!</strong> Los cambios realizados en esta página NO se guardarán hasta que presiones el botón
+            <strong>"Registrar Venta"</strong> al final del formulario.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <h2>Crear Nueva Venta</h2>
         <form id="form-venta" method="POST" action="{{ route('ventas.store') }}">
             @csrf
             <div class="form-group mb-3">
                 <label for="idcli">Seleccionar Cliente</label>
-
-                <select name="idcli" id="idcli" class="form-control" required>
+                <select name="idcli" id="idcli" class="form-control searchable-select" required
+                        data-placeholder="Buscar cliente por nombre o teléfono...">
                     <option value="">-- Selecciona un Cliente --</option>
                     @foreach ($clientes as $cliente)
                         <option value="{{ $cliente->idcli }}" {{ request('idcli') == $cliente->idcli ? 'selected' : '' }}>
@@ -42,15 +55,16 @@
                     @endforeach
                 </select>
             </div>
-            <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal"
-                data-bs-target="#registrarClienteModal">
-                Nuevo Cliente
+            <button type="button" class="btn btn-primary mb-3"
+                onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createClienteModal' }))">
+                <i class="fas fa-user-plus me-1"></i> Nuevo Cliente
             </button>
 
             <div class="mt-4">
                 <h4>Detalles de Venta</h4>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#agregarDetalleModal">
-                    Agregar Detalle
+                <button type="button" class="btn btn-success"
+                    onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'agregar-detalle-modal' }))">
+                    <i class="fas fa-plus-circle me-1"></i> Agregar Detalle
                 </button>
 
                 <table class="table table-bordered mt-3" id="detalles-venta">
@@ -82,161 +96,9 @@
     </div>
     <br>
 
-    <!-- Modal para crear un nuevo cliente -->
-    <div class="modal fade" id="registrarClienteModal" tabindex="-1" aria-labelledby="registrarClienteModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="registrarClienteModalLabel">Registrar nuevo cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="{{ route('clientes.storeInVenta') }}" method="POST">
-                        @csrf
-                        <!-- Campos del Cliente -->
-                        <div class="form-group mb-3">
-                            <label for="nombrecli">Nombre:</label>
-                            <input type="text" name="nombrecli" id="nombrecli" class="form-control" required>
-                            {{-- antes: descripcioncos --}}
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="telefonocli">Teléfono:</label>
-                            <input type="text" name="telefonocli" id="telefonocli" class="form-control" required>
-                            {{-- antes: descripcioncos --}}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-primary">Guardar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para agregar detalle -->
-    <div class="modal fade" id="agregarDetalleModal" tabindex="-1" aria-labelledby="agregarDetalleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="agregarDetalleModalLabel">Agregar Detalle a la Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formDetalle">
-                        <!-- Select Cuenta -->
-                        <div class="mb-3">
-                            <label for="selectCuenta" class="form-label">Cuenta</label>
-                            <select class="form-select" id="selectCuenta" required>
-                                <option value="">Seleccione una cuenta</option>
-                                @foreach ($cuentas as $cuenta)
-                                    <option value="{{ $cuenta->idcue }}">
-                                        {{ $cuenta->idcue }}: Oc: {{ $cuenta->usuarios_activos }} ::
-                                        @foreach ($cuenta->perfiles as $perfil)
-                                            <!-- Mostrar todos los perfiles y sus usuarios activos -->
-                                            P{{ $perfil->numeroper }}: {{ $perfil->usuarios_activos }}&nbsp;&nbsp;
-                                        @endforeach
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Select Perfil -->
-                        <div class="mb-3">
-                            <label for="selectPerfil" class="form-label">Perfil</label>
-                            <input type="number" class="form-control" id="selectPerfil" min="1" max='7'
-                                required>
-                        </div>
-
-                        <!-- Fecha de vencimiento -->
-                        <div class="mb-3">
-                            <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento</label>
-                            <input type="date" class="form-control" id="fechaVencimiento" required>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <input type="text" class="form-control" id="descripcion" required>
-                        </div>
-
-                        <!-- Monto -->
-                        <div class="mb-3">
-                            <label for="monto" class="form-label">Monto</label>
-                            <input type="number" class="form-control" id="monto" step="0.01" min="0"
-                                required>
-                        </div>
-
-                        <button type="button" class="btn btn-primary" id="guardarDetalleBtn">Guardar Detalle</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Modal para editar detalle -->
-    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editarDetalleForm">
-                        <!-- Select Cuenta -->
-                        <div class="mb-3">
-                            <label for="editarSelectCuenta" class="form-label">Cuenta</label>
-                            <select class="form-select" id="editarSelectCuenta" required>
-                                <option value="">Seleccione una cuenta</option>
-                                @foreach ($cuentas as $cuenta)
-                                    <option value="{{ $cuenta->idcue }}">
-                                        {{ $cuenta->idcue }}: Oc: {{ $cuenta->usuarios_activos }} ::
-                                        @foreach ($cuenta->perfiles as $perfil)
-                                            <!-- Mostrar todos los perfiles y sus usuarios activos -->
-                                            P{{ $perfil->numeroper }}: {{ $perfil->usuarios_activos }}&nbsp;&nbsp;
-                                        @endforeach
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Select Perfil -->
-                        <div class="mb-3">
-                            <label for="editarSelectPerfil" class="form-label">Perfil</label>
-                            <input type="number" class="form-control" id="editarSelectPerfil" min="1"
-                                max="7" required>
-                        </div>
-
-                        <!-- Fecha de Vencimiento -->
-                        <div class="mb-3">
-                            <label for="editarFechaVencimiento" class="form-label">Fecha de Vencimiento</label>
-                            <input type="date" class="form-control" id="editarFechaVencimiento" required>
-                        </div>
-
-                        <!-- Monto -->
-                        <div class="mb-3">
-                            <label for="editarMonto" class="form-label">Monto</label>
-                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0"
-                                required>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="mb-3">
-                            <label for="editarDescripcion" class="form-label">Descripción</label>
-                            <input type="text" class="form-control" id="editarDescripcion" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" id="guardarCambiosDetalleBtn">Guardar Cambios</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('sales.clientes.modals.create')
+    @include('shared.modals.venta-agregar-detalle')
+    @include('shared.modals.venta-editar-detalle')
 @endsection
 @section('pie')
     <p>¿No deseas agregar una cuenta al stock? Vuelve a la página de listado:</p>
@@ -244,56 +106,16 @@
 @endsection
 
 @section('scripts')
+    <!-- jQuery (debe cargarse primero) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <!-- Select2 (debe cargarse después de jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Inicializador de searchable-selects -->
+    <script src="{{asset('js/searchable-select.js')}}"></script>
+
+    <!-- Scripts específicos de la vista -->
+    <script src="{{asset('js/ventasClienteHelper.js')}}"></script>
     <script src="{{asset('js/createVenta.js')}}"></script>
-    <script>
-        // Script que se ejecuta cuando se abre el modal
-        $('#registrarClienteModal').on('shown.bs.modal', function(event) {
-            var modal = $(this);
-            modal.find('#nombrecli').val(''); // Limpiar el campo de nombre
-            modal.find('#telefonocli').val(''); // Limpiar el campo de teléfono
-        });
-
-        // Verificar si la variable cliente está presente (es decir, se pasó desde el controlador)
-        @isset($cliente)
-            // Agregar la nueva opción al select
-            $('#clienteSelect').append(
-                '<option value="{{ $cliente->idcli }}" selected>{{ $cliente->nombrecli }} - {{ $cliente->telefonocli }}</option>'
-            );
-        @endisset
-
-        // Manejo del formulario para registrar un cliente
-        $('#formRegistrarCliente').submit(function(e) {
-            e.preventDefault(); // Evitar el envío normal del formulario
-
-            var form = $(this);
-            var formData = form.serialize(); // Obtener los datos del formulario
-
-            // Enviar los datos al servidor usando AJAX
-            $.ajax({
-                url: form.attr('action'), // URL del formulario
-                method: 'POST',
-                data: formData,
-                success: function(response) {
-                    // Suponemos que la respuesta contiene los datos del nuevo cliente (id y nombre)
-                    var nuevoCliente = response.cliente;
-
-                    // Agregar la nueva opción al select
-                    $('#clienteSelect').append(
-                        '<option value="' + nuevoCliente.idcli + '" selected>' + nuevoCliente
-                        .nombrecli +
-                        '</option>'
-                    );
-
-                    // Cerrar el modal
-                    $('#registrarClienteModal').modal('hide');
-                },
-                error: function(xhr, status, error) {
-                    // Manejar cualquier error
-                    alert('Ocurrió un error al registrar el cliente.');
-                }
-            });
-        });
-    </script>
 @endsection

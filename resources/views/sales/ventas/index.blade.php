@@ -18,6 +18,9 @@
         </div>
     @endif
 
+    <!-- Contenedor para alertas dinámicas -->
+    <div id="alert-container"></div>
+
     <div class="mb-4">
         <h3 class="text-primary">Gestión de Ventas</h3>
         <p class="text-muted">
@@ -300,7 +303,10 @@
         </div>
     </div>
 
-    <!-- Los modales se cargarán dinámicamente cuando se necesiten -->
+    <!-- Modales -->
+    @include('sales.ventas.modals.view-details')
+    @include('sales.ventas.modals.confirm-delete')
+    @include('sales.ventas.modals.confirm-send-invoice')
 
 </div>
 @endsection
@@ -315,6 +321,224 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-    console.log('Vista de ventas cargada con Enhanced Table v2.0 Server-side');
+    console.log('🔷 Vista de ventas cargada con Enhanced Table v2.0 Server-side');
+
+    // =================================================================
+    // VER DETALLES DE VENTA
+    // =================================================================
+    function openViewDetailsModal(idven) {
+        console.log('🔷 Abriendo modal de detalles para venta:', idven);
+
+        // Abrir modal
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'view-venta-details' }));
+
+        // Actualizar número de venta
+        document.getElementById('view_venta_number').textContent = idven;
+
+        // Mostrar loading
+        document.getElementById('view_details_loading').style.display = 'block';
+        document.getElementById('view_details_content').style.display = 'none';
+        document.getElementById('view_details_error').style.display = 'none';
+
+        // Cargar detalles vía AJAX
+        const url = '{{ route("ventas.details", "__ID__") }}'.replace('__ID__', idven);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('✅ Detalles cargados:', data);
+
+            if (data.success) {
+                // Llenar datos del cliente
+                document.getElementById('view_cliente_nombre').textContent = data.venta.cliente.nombrecli;
+                document.getElementById('view_cliente_telefono').textContent = data.venta.cliente.telefonocli;
+                document.getElementById('view_cliente_email').textContent = data.venta.cliente.email;
+
+                // Llenar datos del empleado y venta
+                document.getElementById('view_empleado_nombre').textContent = data.venta.empleado.nombreemp;
+                document.getElementById('view_venta_fecha').textContent = data.venta.fechaven;
+                document.getElementById('view_venta_metodo_pago').textContent = data.venta.metodopagoven;
+
+                // Llenar tabla de detalles
+                const tbody = document.getElementById('view_details_items');
+                tbody.innerHTML = '';
+
+                data.venta.detalles.forEach(detalle => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${detalle.cuenta}</td>
+                        <td>${detalle.perfil}</td>
+                        <td>${detalle.descripcion}</td>
+                        <td class="text-center">${detalle.cantidad}</td>
+                        <td class="text-end">$${detalle.precio}</td>
+                        <td class="text-end"><strong>$${detalle.subtotal}</strong></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Total
+                document.getElementById('view_venta_total').textContent = '$' + data.venta.totalpagoven;
+
+                // Ocultar loading, mostrar content
+                document.getElementById('view_details_loading').style.display = 'none';
+                document.getElementById('view_details_content').style.display = 'block';
+            } else {
+                throw new Error(data.message || 'Error al cargar los detalles');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+
+            document.getElementById('view_details_loading').style.display = 'none';
+            document.getElementById('view_details_error').style.display = 'block';
+            document.getElementById('view_details_error_message').textContent = error.message;
+        });
+    }
+
+    // =================================================================
+    // ELIMINAR VENTA
+    // =================================================================
+    function openDeleteModal(idven, cliente, total) {
+        console.log('🗑️ Abriendo modal de eliminar para venta:', idven);
+
+        document.getElementById('delete_venta_id').value = idven;
+        document.getElementById('delete_venta_number').textContent = idven;
+        document.getElementById('delete_cliente_nombre').textContent = cliente;
+        document.getElementById('delete_venta_total').textContent = '$' + total;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-delete-venta' }));
+    }
+
+    function submitDeleteVenta(event) {
+        event.preventDefault();
+        console.log('📤 Eliminando venta...');
+
+        const idven = document.getElementById('delete_venta_id').value;
+        const url = '{{ route("ventas.destroy", "__ID__") }}'.replace('__ID__', idven);
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ Respuesta:', data);
+
+            if (data.success) {
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirm-delete-venta' }));
+                showAlert(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                throw new Error(data.message || 'Error al eliminar la venta');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            showAlert(error.message || 'Error al eliminar la venta', 'danger');
+        });
+    }
+
+    // =================================================================
+    // ENVIAR FACTURA
+    // =================================================================
+    function openSendInvoiceModal(idven, cliente, email, total) {
+        console.log('📧 Abriendo modal de enviar factura para venta:', idven);
+
+        if (!email || email === 'No especificado' || email === '') {
+            showAlert('El cliente no tiene email registrado', 'warning');
+            return;
+        }
+
+        document.getElementById('send_venta_id').value = idven;
+        document.getElementById('send_venta_number').textContent = idven;
+        document.getElementById('send_cliente_nombre').textContent = cliente;
+        document.getElementById('send_cliente_email').textContent = email;
+        document.getElementById('send_venta_total').textContent = '$' + total;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-send-invoice' }));
+    }
+
+    function submitSendInvoice(event) {
+        event.preventDefault();
+        console.log('📤 Enviando factura...');
+
+        const idven = document.getElementById('send_venta_id').value;
+        const url = '{{ route("ventas.sendInvoice", "__ID__") }}'.replace('__ID__', idven);
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Enviando...';
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('✅ Respuesta:', data);
+
+            if (data.success) {
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirm-send-invoice' }));
+                showAlert(data.message, 'success');
+            } else {
+                throw new Error(data.message || 'Error al enviar la factura');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Error:', error);
+            showAlert(error.message || 'Error al enviar la factura', 'danger');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    }
+
+    // =================================================================
+    // UTILIDADES
+    // =================================================================
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alert-container');
+        if (!alertContainer) {
+            console.warn('Alert container no encontrado');
+            alert(message);
+            return;
+        }
+
+        const alertClass = type === 'success' ? 'alert-success' :
+                          type === 'warning' ? 'alert-warning' : 'alert-danger';
+        const iconClass = type === 'success' ? 'fa-check-circle' :
+                         type === 'warning' ? 'fa-exclamation-triangle' : 'fa-times-circle';
+
+        const alert = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="fas ${iconClass} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+        alertContainer.innerHTML = alert;
+        setTimeout(() => alertContainer.innerHTML = '', 5000);
+    }
 </script>
 @endsection

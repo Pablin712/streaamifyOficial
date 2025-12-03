@@ -2,6 +2,14 @@
 
 @section('title', 'Editar Venta')
 
+@section('styles')
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Select2 Dark Mode -->
+    <link href="{{ asset('css/select2-dark-mode.css') }}" rel="stylesheet" />
+@endsection
+
 @section('h1', 'Editar Venta')
 @section('breadcrumb')
     <a href="{{ route('ventas') }}">Ventas</a>
@@ -25,6 +33,14 @@
 
 @section('content')
     <div class="container">
+        <!-- Alerta Informativa -->
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>¡Atención!</strong> Recuerda que debes presionar el botón <strong>"Actualizar Venta"</strong>
+            al final del formulario para guardar todos los cambios realizados.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <h2>Editar Venta</h2>
         <form id="form-venta" method="POST" action="{{ route('ventas.update', $venta->idven) }}">
             @csrf
@@ -41,8 +57,9 @@
 
             <div class="mt-4">
                 <h4>Detalles de Venta</h4>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#agregarDetalleModal">
-                    Agregar Detalle
+                <button type="button" class="btn btn-success"
+                    onclick="window.dispatchEvent(new CustomEvent('open-modal', { detail: 'agregar-detalle-modal' }))">
+                    <i class="fas fa-plus-circle me-1"></i> Agregar Detalle
                 </button>
 
                 <table class="table table-bordered mt-3" id="detalles-venta">
@@ -68,7 +85,7 @@
                                 <td>
                                     <span @php
 $estado = $detalle->activodet @endphp
-                                        class="estado-{{ $detalle->iddet }} badge 
+                                        class="estado-{{ $detalle->iddet }} badge
                                         @if ($estado) bg-success @else bg-danger @endif">
                                         @if ($estado)
                                             Activa
@@ -92,8 +109,7 @@ $estado = $detalle->activodet @endphp
                                         data-cuenta="{{ $cuenta }}" data-perfil="{{ $perfil }}"
                                         data-descripcion="{{ $descripcion }}"
                                         data-fechavencimiento="{{ $fechaVencimiento }}" data-monto="{{ $monto }}"
-                                        data-id="{{ $detalle->iddet }}" data-bs-toggle="modal"
-                                        data-bs-target="#editarDetalleModal">
+                                        data-id="{{ $detalle->iddet }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
@@ -120,114 +136,8 @@ $estado = $detalle->activodet @endphp
     </div>
     <br>
 
-    <!-- Modal para agregar detalle -->
-    <div class="modal fade" id="agregarDetalleModal" tabindex="-1" aria-labelledby="agregarDetalleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="agregarDetalleModalLabel">Agregar Detalle a la Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formDetalle">
-                        <!-- Select Cuenta -->
-                        <div class="mb-3">
-                            <label for="selectCuenta" class="form-label">Cuenta</label>
-                            <select class="form-select" id="selectCuenta" required>
-                                <option value="">Seleccione una cuenta</option>
-                                @foreach ($cuentas as $cuenta)
-                                    <option value="{{ $cuenta->idcue }}">
-                                        {{ $cuenta->idcue }}: Oc: {{ $cuenta->usuarios_activos }} ::
-                                        @foreach ($cuenta->perfiles as $perfil)
-                                            P{{ $perfil->numeroper }}: {{ $perfil->usuarios_activos }}&nbsp;&nbsp;
-                                        @endforeach
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Select Perfil -->
-                        <div class="mb-3">
-                            <label for="selectPerfil" class="form-label">Perfil</label>
-                            <input type="number" class="form-control" id="selectPerfil" min="1" max="7"
-                                required>
-                        </div>
-
-                        <!-- Fecha de vencimiento -->
-                        <div class="mb-3">
-                            <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento</label>
-                            <input type="date" class="form-control" id="fechaVencimiento" required>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <input type="text" class="form-control" id="descripcion" required>
-                        </div>
-
-                        <!-- Monto -->
-                        <div class="mb-3">
-                            <label for="monto" class="form-label">Monto</label>
-                            <input type="number" class="form-control" id="monto" step="0.01" min="0"
-                                required>
-                        </div>
-
-                        <button type="button" class="btn btn-primary" id="guardarDetalleBtn">Guardar Detalle</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Modal para editar detalle -->
-    <div class="modal fade" id="editarDetalleModal" tabindex="-1" aria-labelledby="editarDetalleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editarDetalleModalLabel">Editar Detalle de la Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formEditarDetalle">
-                        <!-- Cuenta -->
-                        <div class="mb-3">
-                            <label for="editarCuenta" class="form-label">Cuenta</label>
-                            <input type="text" class="form-control" id="editarCuenta" readonly>
-                        </div>
-
-                        <!-- Perfil -->
-                        <div class="mb-3">
-                            <label for="editarPerfil" class="form-label">Perfil</label>
-                            <input type="text" class="form-control" id="editarPerfil" readonly>
-                        </div>
-
-                        <!-- Descripción -->
-                        <div class="mb-3">
-                            <label for="editarDescripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="editarDescripcion" rows="2" required></textarea>
-                        </div>
-
-                        <!-- Fecha de Vencimiento -->
-                        <div class="mb-3">
-                            <label for="editarFechaVencimiento" class="form-label">Fecha de Vencimiento</label>
-                            <input type="date" class="form-control" id="editarFechaVencimiento" required>
-                        </div>
-
-                        <!-- Monto -->
-                        <div class="mb-3">
-                            <label for="editarMonto" class="form-label">Monto</label>
-                            <input type="number" class="form-control" id="editarMonto" step="0.01" min="0"
-                                required>
-                        </div>
-
-                        <button type="button" class="btn btn-primary" id="guardarCambiosDetalleBtn">Guardar
-                            Cambios</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('shared.modals.venta-agregar-detalle')
+    @include('shared.modals.venta-editar-detalle')
 @endsection
 
 @section('pie')
@@ -236,6 +146,15 @@ $estado = $detalle->activodet @endphp
 @endsection
 
 @section('scripts')
+    <!-- jQuery (debe cargarse primero) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 (debe cargarse después de jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Inicializador de searchable-selects -->
+    <script src="{{asset('js/searchable-select.js')}}"></script>
+
     <script>
         let detalleEditando = null; // Variable para guardar el detalle que se está editando
 
@@ -284,14 +203,14 @@ $estado = $detalle->activodet @endphp
             detalleEditando = $(this).closest('tr');
 
             // Cargar los valores en los campos del modal
-            $('#editarCuenta').val(cuenta);
-            $('#editarPerfil').val(perfil);
+            $('#editarSelectCuenta').val(cuenta);
+            $('#editarSelectPerfil').val(perfil);
             $('#editarDescripcion').val(descripcion);
             $('#editarFechaVencimiento').val(fechaVencimiento);
             $('#editarMonto').val(monto);
 
-            // Abrir el modal de edición
-            $('#editarDetalleModal').modal('show');
+            // Abrir el modal de edición usando Alpine.js
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-detalle-modal' }));
         });
 
         // Guardar cambios en el detalle editado
@@ -318,8 +237,8 @@ $estado = $detalle->activodet @endphp
                 const nuevoTotal = totalVentaActual - montoAnterior + nuevoMonto;
                 $('#total-venta').text(nuevoTotal.toFixed(2));
 
-                // Cerrar el modal
-                $('#editarDetalleModal').modal('hide');
+                // Cerrar el modal usando Alpine.js
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editar-detalle-modal' }));
             } else {
                 alert('Por favor, completa todos los campos correctamente.');
             }
@@ -369,7 +288,8 @@ $estado = $detalle->activodet @endphp
                 $('#descripcion').val('');
                 $('#monto').val('');
 
-                $('#agregarDetalleModal').modal('hide');
+                // Cerrar modal usando Alpine.js
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agregar-detalle-modal' }));
             } else {
                 alert('Por favor complete todos los campos.');
             }
