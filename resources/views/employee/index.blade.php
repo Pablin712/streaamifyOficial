@@ -4,6 +4,67 @@
 @section('h1', 'Empleados')
 @section('breadcrumb', 'Empleados')
 
+@section('styles')
+<style>
+    /* Animación de Cards */
+    .employee-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e3e6f0;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    }
+
+    .employee-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.25);
+        border-color: #4e73df;
+    }
+
+    /* Estilo uniforme de botones */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons .btn {
+        min-width: 90px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .action-buttons .btn:active {
+        transform: translateY(0);
+    }
+
+    .action-buttons .btn i {
+        font-size: 0.875rem;
+    }
+
+    /* Efecto hover en foto */
+    .employee-photo {
+        transition: transform 0.3s ease;
+        border: 3px solid #e3e6f0;
+    }
+
+    .employee-card:hover .employee-photo {
+        transform: scale(1.05);
+        border-color: #4e73df;
+    }
+</style>
+@endsection
+
 @section('descripcion')
     <!-- Alert Container para mensajes dinámicos -->
     <div id="alert-container"></div>
@@ -33,13 +94,13 @@
     @endif
     <div class="row">
         @foreach ($datos as $dato)
-            <div class="col-md-4">
-                <div class="card mb-4">
+            <div class="col-md-4 mb-4">
+                <div class="card employee-card h-100">
                     <div class="card-body text-center">
                         <img src="{{ $dato['empleado']->foto_url ? asset('storage/' . $dato['empleado']->foto_url) : 'https://via.placeholder.com/100/007bff/ffffff?text=Usuario' }}"
-                            alt="Foto de {{ $dato['empleado']->nombreemp }}" class="img-fluid rounded-circle mb-3"
+                            alt="Foto de {{ $dato['empleado']->nombreemp }}" class="employee-photo img-fluid rounded-circle mb-3"
                             style="width: 100px; height: 100px; object-fit: cover;">
-                        <h5 class="card-title">{{ $dato['empleado']->nombreemp }}</h5>
+                        <h5 class="card-title fw-bold text-primary">{{ $dato['empleado']->nombreemp }}</h5>
                         <p class="card-text">
                             <strong>Teléfono:</strong> {{ $dato['empleado']->telefonoemp }}<br>
                             <strong>Usuario:</strong> {{ $dato['empleado']->usuarioemp }}<br>
@@ -61,19 +122,19 @@
                                 Sin rol asignado
                             @endif
                         </p>
-                        <div class="d-flex gap-2 justify-content-center">
+                        <div class="action-buttons mt-3">
                             @if (Auth::user()->hasPermissionTo('empleados.update'))
-                                <button onclick="openEditModal('{{ $dato['empleado']->idemp }}')" class="btn btn-sm btn-warning">
+                                <button onclick="openEditModal('{{ $dato['empleado']->idemp }}')" class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i> Editar
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('empleados.updateRol'))
-                                <a href="{{ route('empleados.editRoles', $dato['empleado']->idemp) }}" class="btn btn-sm btn-info">
+                                <button onclick="openRolesModal('{{ $dato['empleado']->idemp }}')" class="btn btn-info btn-sm">
                                     <i class="fas fa-user-tag"></i> Roles
-                                </a>
+                                </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('empleados.destroy'))
-                                <button onclick="openDeleteModal('{{ $dato['empleado']->idemp }}')" class="btn btn-sm btn-danger">
+                                <button onclick="openDeleteModal('{{ $dato['empleado']->idemp }}')" class="btn btn-danger btn-sm">
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             @endif

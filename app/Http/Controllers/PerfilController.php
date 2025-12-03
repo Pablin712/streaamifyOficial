@@ -93,6 +93,20 @@ class PerfilController extends Controller
             'pinper' => $request->input('pinper'),
         ]);
 
+        // Retornar JSON si es petición AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Perfil actualizado con éxito',
+                'perfil' => [
+                    'idper' => $perfil->idper,
+                    'numeroper' => $perfil->numeroper,
+                    'pinper' => $perfil->pinper,
+                    'idcue' => $perfil->idcue
+                ]
+            ]);
+        }
+
         return back()->with('success', 'Perfil actualizado con éxito.');
     }
 

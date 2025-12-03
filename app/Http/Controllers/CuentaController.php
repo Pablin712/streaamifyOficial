@@ -42,6 +42,9 @@ class CuentaController extends Controller
 
         $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
 
+        // Obtener valores activos para los modales
+        $valores = Valor::where('activoval', true)->get();
+
         return view('inventory.cuentas.index', compact(
             'cuentas',
             'cuentasDisponibles',
@@ -50,7 +53,8 @@ class CuentaController extends Controller
             'cuentasPorVencer',
             'cuentasCaidas',
             'mesa',
-            'espacios_por_servicio'
+            'espacios_por_servicio',
+            'valores'
         ));
     }
 
@@ -94,7 +98,7 @@ class CuentaController extends Controller
                 'idcue' => 'required|string|max:20|unique:cuentas,idcue',
                 'idval' => 'required|exists:valores,idval',
                 'fechavencue' => 'required|date',
-                'usuariocue' => 'required|string|max:50|unique:cuentas,idcue',
+                'usuariocue' => 'required|string|max:50|unique:cuentas,usuariocue',
                 'contrasenacue' => 'required|string|max:50',
                 'caidacue' => 'required|boolean',
             ]);
@@ -131,8 +135,24 @@ class CuentaController extends Controller
                     'created_at' => now(),
                 ]);
             }
+
+            // Triple verificación AJAX
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cuenta creada con éxito.',
+                    'cuenta' => $cuenta
+                ]);
+            }
+
             return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()
+                ], 422);
+            }
             return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()]);
         }
     }
@@ -163,18 +183,48 @@ class CuentaController extends Controller
         if (!Gate::allows('cuentas.status')) {
             abort(403, 'No tienes permiso para actualizar el estado de la cuenta.');
         }
-        $cuenta = Cuenta::findOrFail($idcue);
+        $cuenta = Cuenta::with('valor')->findOrFail($idcue);
         $cuenta->caidacue = !$cuenta->caidacue;
         $cuenta->save();
 
         Historial::create([
             'accion' => 'Se actualizó el estado de cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' => 'Estado cambiado a ' . $cuenta->caidacue,
+            'descripcion' => 'Estado cambiado a ' . ($cuenta->caidacue ? 'Dañada' : 'Activa'),
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
 
         $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
+
+        // Triple verificación AJAX - TIEMPO REAL
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            // Calcular nuevo estado para badge
+            $fechaVencimiento = Carbon::parse($cuenta->fechavencue);
+            $diasRestantes = Carbon::today()->diffInDays($fechaVencimiento, false);
+
+            if ($cuenta->caidacue) {
+                $statusClass = 'dark';
+                $statusText = 'Dañada';
+            } elseif ($diasRestantes <= 0) {
+                $statusClass = 'danger';
+                $statusText = 'Vencida';
+            } elseif ($diasRestantes <= 5) {
+                $statusClass = 'warning';
+                $statusText = 'Ya vence';
+            } else {
+                $statusClass = 'success';
+                $statusText = 'Activa';
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado de la cuenta actualizado correctamente.',
+                'cuenta' => $cuenta,
+                'statusClass' => $statusClass,
+                'statusText' => $statusText
+            ]);
+        }
+
         return redirect()->route('cuentas')->with('success', 'Estado de la cuenta actualizado correctamente.');
     }
 
@@ -257,8 +307,31 @@ class CuentaController extends Controller
         if (!Gate::allows('cuentas.update')) {
             abort(403, 'No tienes permiso para editar cuentas.');
         }
-        $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
+        $cuenta = Cuenta::with(['valor.proveedor'])->findOrFail($idcue);
         $valores = Valor::where('activoval', true)->get();
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'cuenta' => [
+                    'idcue' => $cuenta->idcue,
+                    'idval' => $cuenta->idval,
+                    'usuariocue' => $cuenta->usuariocue,
+                    'contrasenacue' => $cuenta->contrasenacue,
+                    'fechavencue' => $cuenta->fechavencue,
+                    'caidacue' => $cuenta->caidacue,
+                    'usuarios_activos' => $cuenta->usuarios_activos,
+                    'valor' => [
+                        'idser' => $cuenta->valor->idser ?? null,
+                        'proveedor' => [
+                            'nombrepro' => $cuenta->valor->proveedor->nombrepro ?? null,
+                        ]
+                    ]
+                ]
+            ]);
+        }
+
         return view('inventory.cuentas.edit', compact('cuenta', 'valores'));
     }
 
@@ -267,9 +340,92 @@ class CuentaController extends Controller
         if (!Gate::allows('cuentas.renew')) {
             abort(403, 'No tienes permiso para renovar cuentas.');
         }
-        $cuenta = Cuenta::with(['valor'])->findOrFail($idcue);
+        $cuenta = Cuenta::with(['valor.proveedor'])->findOrFail($idcue);
         $valor = $cuenta->idval;
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'cuenta' => [
+                    'idcue' => $cuenta->idcue,
+                    'idval' => $cuenta->idval,
+                    'usuariocue' => $cuenta->usuariocue,
+                    'contrasenacue' => $cuenta->contrasenacue,
+                    'fechavencue' => $cuenta->fechavencue,
+                    'caidacue' => $cuenta->caidacue,
+                    'valor' => [
+                        'idser' => $cuenta->valor->idser ?? null,
+                        'proveedor' => [
+                            'nombrepro' => $cuenta->valor->proveedor->nombrepro ?? null,
+                        ]
+                    ]
+                ]
+            ]);
+        }
+
         return view('inventory.cuentas.renew', compact('cuenta', 'valor'));
+    }
+
+    public function saveRenew(Request $request, $idcue)
+    {
+        if (!Gate::allows('cuentas.renew')) {
+            abort(403, 'No tienes permiso para renovar cuentas.');
+        }
+
+        try {
+            $request->validate([
+                'fechavencue' => 'required|date|after:today',
+                'montocos' => 'required|numeric|min:0',
+                'descripcioncos' => 'required|string|max:50'
+            ]);
+
+            $cuenta = Cuenta::findOrFail($idcue);
+
+            // Crear historial
+            Historial::create([
+                'accion' => 'Renovación de Cuenta',
+                'descripcion' => 'Fecha antigua: ' . $cuenta->fechavencue . ' | Nueva fecha: ' . $request->fechavencue,
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+
+            // Actualizar fecha de vencimiento
+            $cuenta->update([
+                'fechavencue' => $request->fechavencue
+            ]);
+
+            // Crear registro de costo
+            Costo::create([
+                'idcue' => $cuenta->idcue,
+                'descripcioncos' => $request->descripcioncos,
+                'montocos' => $request->montocos,
+                'fechacos' => now(),
+            ]);
+
+            // Actualizar estado de productos
+            $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
+
+            // Triple verificación AJAX
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cuenta renovada exitosamente',
+                    'cuenta' => $cuenta->fresh()->load('valor')
+                ]);
+            }
+
+            return redirect()->route('cuentas')->with('success', 'Cuenta renovada con éxito.');
+        } catch (\Exception $e) {
+            // Triple verificación AJAX para errores
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al renovar la cuenta: ' . $e->getMessage()
+                ], 422);
+            }
+            return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al renovar la cuenta: ' . $e->getMessage()]);
+        }
     }
 
     public function update(Request $request, $idcue)
@@ -311,8 +467,25 @@ class CuentaController extends Controller
                     'fechacos' => now(),
                 ]);
             }
+
+            // Triple verificación AJAX
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cuenta actualizada exitosamente',
+                    'cuenta' => $cuenta->fresh()->load('valor')
+                ]);
+            }
+
             return redirect()->route('cuentas')->with('success', 'Cuenta actualizada con éxito.');
         } catch (\Exception $e) {
+            // Triple verificación AJAX para errores
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al actualizar la cuenta: ' . $e->getMessage()
+                ], 422);
+            }
             return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()]);
         }
     }
@@ -326,8 +499,16 @@ class CuentaController extends Controller
         $cuentaInUsuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->exists();
 
         if ($cuentaInUsuariosActivos) {
+            // Triple verificación AJAX para error
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la cuenta porque uno o más clientes aun la usan'
+                ], 422);
+            }
             return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más clientes aun la usan');
         }
+
         Historial::create([
             'accion' => 'Se desactivó la cuenta con ID: ' . $cuenta->idcue,
             'descripcion' => 'Datos inactivos: ' . json_encode($cuenta),
@@ -350,6 +531,15 @@ class CuentaController extends Controller
             'idcue' => $nuevoId
         ]);
         $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
+
+        // Triple verificación AJAX
+        if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cuenta desactivada exitosamente'
+            ]);
+        }
+
         return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
     }
 }

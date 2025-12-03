@@ -123,28 +123,27 @@
                     </td>
                     <td>
                         @if ($cuenta->caidacue)
-                            <span class="badge bg-dark">Dañada</span>
+                            <span class="badge bg-dark status-badge" data-idcue="{{ $cuenta->idcue }}">Dañada</span>
                         @elseif ($diasRestantes <= 0)
-                            <span class="badge bg-danger">Vencida</span>
+                            <span class="badge bg-danger status-badge" data-idcue="{{ $cuenta->idcue }}">Vencida</span>
                         @elseif ($diasRestantes <= 5)
-                            <span class="badge bg-warning">Ya vence</span>
+                            <span class="badge bg-warning status-badge" data-idcue="{{ $cuenta->idcue }}">Ya vence</span>
                         @else
-                            <span class="badge bg-success">Activa</span>
+                            <span class="badge bg-success status-badge" data-idcue="{{ $cuenta->idcue }}">Activa</span>
                         @endif
                         @if (Auth::user()->hasPermissionTo('cuentas.status'))
-                            <!-- Botón para cambiar estado -->
-                            <form action="{{ route('cuentas.status', $cuenta->idcue) }}" method="POST"
-                                style="display:inline;">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="btn btn-dark btn-sm">
-                                    @if ($cuenta->caidacue)
-                                        <i class="fas fa-toggle-on fa-xs"></i>
-                                    @else
-                                        <i class="fas fa-toggle-off fa-xs"></i>
-                                    @endif
-                                </button>
-                            </form>
+                            <!-- Botón para cambiar estado en tiempo real -->
+                            <button type="button"
+                                class="btn {{ $cuenta->caidacue ? 'btn-danger' : 'btn-success' }} btn-sm ms-1"
+                                onclick="event.preventDefault(); toggleEstado('{{ $cuenta->idcue }}', {{ $cuenta->caidacue ? 'true' : 'false' }})"
+                                title="Cambiar estado de la cuenta"
+                                data-idcue="{{ $cuenta->idcue }}">
+                                @if ($cuenta->caidacue)
+                                    <i class="fas fa-toggle-on fa-xs"></i>
+                                @else
+                                    <i class="fas fa-toggle-off fa-xs"></i>
+                                @endif
+                            </button>
                         @endif
                     </td>
                     @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
@@ -156,29 +155,22 @@
                                     </a>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.edit'))
-                                    <a href="{{ route('cuentas.edit', $cuenta->idcue) }}" class="btn btn-warning btn-xs">
+                                    <button onclick="openEditModal('{{ $cuenta->idcue }}')" class="btn btn-warning btn-xs">
                                         <i class="fas fa-edit"></i>
-                                    </a>
+                                    </button>
                                 @endif
                                 <!-- Botón de renovación: Solo visible si la cuenta está por vencer o vencida -->
                                 @if ($diasRestantes <= 5 || $diasRestantes < 0)
                                     @if (Auth::user()->hasPermissionTo('cuentas.renew'))
-                                        <a href="{{ route('cuentas.renew', $cuenta->idcue) }}"
-                                            class="btn btn-success btn-xs">
+                                        <button onclick="openRenewModal('{{ $cuenta->idcue }}')" class="btn btn-success btn-xs">
                                             <i class="fas fa-sync-alt"></i>
-                                        </a>
+                                        </button>
                                     @endif
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
-                                    <form action="{{ route('cuentas.destroy', $cuenta->idcue) }}" method="POST"
-                                        style="display: inline;"
-                                        onsubmit="return confirm('¿Estás seguro?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-xs">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button onclick="openDeleteModal('{{ $cuenta->idcue }}')" class="btn btn-danger btn-xs">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 @endif
                             </div>
                         </td>

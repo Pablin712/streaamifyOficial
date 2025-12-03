@@ -208,6 +208,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');
         Route::get('/cuentas/{id}/show', 'show')->name('cuentas.show');
         Route::get('/cuentas/{id}/renew', 'renew')->name('cuentas.renew');
+        Route::post('/cuentas/{id}/renew', 'saveRenew')->name('cuentas.saveRenew');
         Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
         Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
     });

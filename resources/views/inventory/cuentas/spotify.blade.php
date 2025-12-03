@@ -2,6 +2,29 @@
 @section('title', 'Spotify')
 @section('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        /* ESTILOS PERSONALIZADOS PARA MODALES */
+        .modal-body {
+            background-color: #ffffff;
+            color: #212529;
+        }
+        .modal-body .form-label {
+            color: #495057;
+            font-weight: 600;
+        }
+        .modal-body .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .modal-header {
+            border-bottom: 1px solid #dee2e6;
+        }
+        .modal-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+    </style>
 @endsection
 @section('h1', 'Cuentas de Spotify')
 @section('breadcrumb')
@@ -11,6 +34,8 @@
     Cuentas de Spotify
 @endsection
 @section('descripcion')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <p>Revisa las cuentas de Spotify activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario
         asociadas a los servicios de streaming pertenecientes a Streamify HQ.</p>
     @if ($errors->any())
@@ -234,16 +259,28 @@
                         @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'perfil.update']))
                             <td>
                                 @if (Auth::user()->hasPermissionTo('perfil.update'))
-                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#editProfileModal"
-                                        data-action="{{ route('perfil.update', $perfil->idper) }}"
-                                        data-id="{{ $perfil->idper }}" data-pin="{{ $perfil->pinper }}">
-                                        <i class="fas fa-edit">Editar</i>
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary btn-sm btn-edit-profile"
+                                        data-idper="{{ $perfil->idper }}"
+                                        data-numeroper="{{ $perfil->numeroper }}"
+                                        data-pinper="{{ $perfil->pinper }}"
+                                    >
+                                        <i class="fas fa-edit me-1"></i>Editar
                                     </button>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
-                                    <button class="btn btn-success btn-sm"
-                                        onclick="copyMessage('{{ $perfil->cuenta->idcue }}', '{{ $perfil->cuenta->usuariocue }}', '{{ $perfil->cuenta->contrasenacue }}', '{{ $perfil->numeroper }}', '{{ $perfil->pinper }}', '{{ $perfil->cuenta->valor->bot }}')">
+                                    <button
+                                        class="btn btn-success btn-sm"
+                                        onclick="copyMessage(
+                                            {{ json_encode($perfil->cuenta->idcue) }},
+                                            {{ json_encode($perfil->cuenta->usuariocue) }},
+                                            {{ json_encode($perfil->cuenta->contrasenacue) }},
+                                            {{ json_encode($perfil->numeroper) }},
+                                            {{ json_encode($perfil->pinper) }},
+                                            {{ json_encode($perfil->cuenta->valor->bot ?? '') }}
+                                        )"
+                                    >
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 @endif
@@ -266,8 +303,132 @@
         </div>
     </div>
 @endsection
+
+@section('modals')
+    @include('inventory.cuentas.modals.edit-profile')
+@endsection
+
 @section('scripts')
     {{-- Enhanced Table v2 --}}
     <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
-    <script src="{{ asset('js/cuentas.js') }}?v={{ time() }}"></script>
+
+    <script>
+        // Event listeners para botones de editar perfil
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn-edit-profile').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const idper = this.getAttribute('data-idper');
+                    const numeroper = this.getAttribute('data-numeroper');
+                    const pinper = this.getAttribute('data-pinper');
+
+                    document.getElementById('edit_profile_id').value = idper;
+                    document.getElementById('edit_profile_numero').value = numeroper;
+                    document.getElementById('edit_profile_pin').value = pinper;
+
+                    // Abrir modal
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'edit-profile' }));
+                });
+            });
+        });
+
+        // Función para enviar el formulario de editar perfil
+        function submitEditProfile() {
+            const idper = document.getElementById('edit_profile_id').value;
+            const pinper = document.getElementById('edit_profile_pin').value;
+
+            if (!pinper || pinper.trim() === '') {
+                alert('Por favor ingresa un PIN válido');
+                return;
+            }
+
+            const url = "{{ route('perfil.update', ':idper') }}".replace(':idper', idper);
+
+            fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    pinper: pinper
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Cerrar modal
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'edit-profile' }));
+
+                    // Mostrar mensaje de éxito
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+
+                    const tableContainer = document.querySelector('.table-responsive');
+                    tableContainer.parentNode.insertBefore(alertDiv, tableContainer);
+
+                    // Recargar después de 1 segundo
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    alert(data.message || 'Error al actualizar el perfil');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al actualizar el perfil. Por favor intenta nuevamente.');
+            });
+        }
+
+        // Función para copiar mensaje
+        function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot) {
+            var servicio = idcue.replace(/[^a-zA-Z]/g, '');
+            var message = "*" + servicio + "*\n";
+            message += "Usuario: " + usuariocue + "\n";
+            message += "Clave: " + contrasenacue + "\n";
+            message += "PIN de perfil Nro " + numeroper + ": " + pinper + "\n";
+            message += "*Prohibido:* Modificar perfiles o contraseñas.\n";
+
+            // Verificar si el bot no está vacío
+            if (bot && bot.trim() !== "") {
+                message += "\n\n*Nota importante:*\n";
+                message += "Te daré acceso al bot de códigos. Si en algún momento se te solicita un código de acceso (Hogar), puedes obtenerlo ingresando al siguiente enlace:\n";
+                message += bot + "\n";
+                message += "¡Gracias por tu confianza!";
+            }
+
+            var tempTextArea = document.createElement("textarea");
+            tempTextArea.value = message;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempTextArea);
+
+            // Mostrar mensaje de confirmación
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                El mensaje se ha copiado al portapapeles
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+    </script>
 @endsection
