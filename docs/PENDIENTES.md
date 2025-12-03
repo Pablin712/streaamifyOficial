@@ -431,13 +431,778 @@ Archivo: `public/css/enhanced-table-global.css`
   - Documentación de componentes Blade
   - Diagramas de base de datos
 
+### 9. API REST con Autenticación por API Keys
+- **Estado**: 🆕 **NUEVO - PENDIENTE**
+- **Prioridad**: 🔴 **ALTA**
+- **Descripción**: Implementar API REST completa con autenticación mediante API Keys para permitir integración externa con el sistema Streamify.
+
+#### 9.1. Fundamentos de API en Laravel
+
+**¿Qué es una API REST?**
+- Interfaz de programación que permite a aplicaciones externas comunicarse con Streamify
+- Usa protocolo HTTP con métodos estándar (GET, POST, PUT, DELETE)
+- Responde en formato JSON
+- Permite automatización e integraciones con otros sistemas
+
+**Casos de uso en Streamify:**
+- Aplicación móvil para clientes
+- Integración con sistemas de terceros (facturación, CRM, etc.)
+- Webhooks para notificaciones automáticas
+- Dashboard público de estadísticas
+- Automatización de tareas con scripts externos
+
+#### 9.2. Sistema de Autenticación con API Keys
+
+**Tabla de API Keys** (Migración):
+```php
+// database/migrations/xxxx_create_api_keys_table.php
+Schema::create('api_keys', function (Blueprint $table) {
+    $table->id();
+    $table->string('name'); // Nombre descriptivo (ej: "App Móvil iOS")
+    $table->string('key', 64)->unique(); // API Key única
+    $table->unsignedBigInteger('user_id')->nullable(); // Usuario propietario
+    $table->json('permissions')->nullable(); // Permisos específicos
+    $table->timestamp('last_used_at')->nullable(); // Última vez usada
+    $table->timestamp('expires_at')->nullable(); // Fecha de expiración
+    $table->boolean('is_active')->default(true); // Activa/Inactiva
+    $table->timestamps();
+    
+    $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+});
+```
+
+**Modelo ApiKey**:
+```php
+// app/Models/ApiKey.php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class ApiKey extends Model
+{
+    protected $fillable = [
+        'name', 'key', 'user_id', 'permissions', 
+        'last_used_at', 'expires_at', 'is_active'
+    ];
+
+    protected $casts = [
+        'permissions' => 'array',
+        'last_used_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'is_active' => 'boolean',
+    ];
+
+    // Relación con usuario
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Generar API Key única
+    public static function generate($name, $userId = null, $permissions = [])
+    {
+        return self::create([
+            'name' => $name,
+            'key' => 'sk_' . Str::random(60), // Prefijo "sk_" + 60 caracteres
+            'user_id' => $userId,
+            'permissions' => $permissions,
+            'is_active' => true,
+        ]);
+    }
+
+    // Verificar si la key está vigente
+    public function isValid()
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // Actualizar última vez usada
+    public function markAsUsed()
+    {
+        $this->update(['last_used_at' => now()]);
+    }
+}
+```
+
+#### 9.3. Middleware de Autenticación
+
+**Crear Middleware**:
+```bash
+php artisan make:middleware AuthenticateApiKey
+```
+
+**Implementación**:
+```php
+// app/Http/Middleware/AuthenticateApiKey.php
+namespace App\Http\Middleware;
+
+use Closure;
+use App\Models\ApiKey;
+use Illuminate\Http\Request;
+
+class AuthenticateApiKey
+{
+    public function handle(Request $request, Closure $next)
+    {
+        $apiKey = $request->header('X-API-Key') ?? $request->input('api_key');
+
+        if (!$apiKey) {
+            return response()->json([
+                'error' => 'API Key no proporcionada',
+                'message' => 'Incluye el header X-API-Key o el parámetro api_key'
+            ], 401);
+        }
+
+        $key = ApiKey::where('key', $apiKey)->first();
+
+        if (!$key || !$key->isValid()) {
+            return response()->json([
+                'error' => 'API Key inválida o expirada',
+                'message' => 'La API Key proporcionada no es válida'
+            ], 403);
+        }
+
+        // Marcar como usada
+        $key->markAsUsed();
+
+        // Adjuntar al request para uso posterior
+        $request->merge(['api_key_model' => $key]);
+        
+        // Si tiene usuario asociado, autenticarlo
+        if ($key->user_id) {
+            auth()->loginUsingId($key->user_id);
+        }
+
+        return $next($request);
+    }
+}
+```
+
+**Registrar Middleware**:
+```php
+// app/Http/Kernel.php
+protected $middlewareAliases = [
+    // ... otros middlewares
+    'api.key' => \App\Http\Middleware\AuthenticateApiKey::class,
+];
+```
+
+#### 9.4. Rutas de API
+
+**Archivo de rutas**:
+```php
+// routes/api.php
+use App\Http\Controllers\Api\V1\{
+    ClienteApiController,
+    VentaApiController,
+    CuentaApiController,
+    ProductoApiController,
+    ServicioApiController,
+};
+
+// Grupo con versión v1
+Route::prefix('v1')->group(function () {
+    
+    // Ruta pública de prueba
+    Route::get('/ping', function () {
+        return response()->json([
+            'message' => 'Streamify API v1.0',
+            'status' => 'active',
+            'timestamp' => now(),
+        ]);
+    });
+
+    // Rutas protegidas con API Key
+    Route::middleware('api.key')->group(function () {
+        
+        // Clientes
+        Route::apiResource('clientes', ClienteApiController::class);
+        Route::get('clientes/{id}/ventas', [ClienteApiController::class, 'ventas']);
+        
+        // Ventas
+        Route::apiResource('ventas', VentaApiController::class);
+        Route::post('ventas/{id}/renovar', [VentaApiController::class, 'renovar']);
+        
+        // Cuentas
+        Route::apiResource('cuentas', CuentaApiController::class);
+        Route::get('cuentas/disponibles', [CuentaApiController::class, 'disponibles']);
+        
+        // Productos
+        Route::apiResource('productos', ProductoApiController::class);
+        
+        // Servicios
+        Route::get('servicios', [ServicioApiController::class, 'index']);
+        Route::get('servicios/{id}/estadisticas', [ServicioApiController::class, 'estadisticas']);
+        
+        // Estadísticas generales
+        Route::get('dashboard/stats', 'DashboardApiController@stats');
+    });
+});
+```
+
+#### 9.5. Controladores API (Ejemplo)
+
+**Estructura de controlador**:
+```php
+// app/Http/Controllers/Api/V1/ClienteApiController.php
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Models\Cliente;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class ClienteApiController extends Controller
+{
+    /**
+     * Listar todos los clientes
+     * GET /api/v1/clientes
+     */
+    public function index(Request $request)
+    {
+        $perPage = $request->input('per_page', 15);
+        $clientes = Cliente::with('ventas')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $clientes->items(),
+            'pagination' => [
+                'total' => $clientes->total(),
+                'per_page' => $clientes->perPage(),
+                'current_page' => $clientes->currentPage(),
+                'last_page' => $clientes->lastPage(),
+            ]
+        ]);
+    }
+
+    /**
+     * Obtener un cliente específico
+     * GET /api/v1/clientes/{id}
+     */
+    public function show($id)
+    {
+        $cliente = Cliente::with(['ventas', 'pedidos'])->find($id);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cliente no encontrado'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $cliente
+        ]);
+    }
+
+    /**
+     * Crear nuevo cliente
+     * POST /api/v1/clientes
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:50',
+            'telefono' => 'required|string|max:15',
+            'email' => 'nullable|email|max:50',
+            'usuario' => 'nullable|string|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $cliente = Cliente::create($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente creado exitosamente',
+            'data' => $cliente
+        ], 201);
+    }
+
+    /**
+     * Actualizar cliente
+     * PUT /api/v1/clientes/{id}
+     */
+    public function update(Request $request, $id)
+    {
+        $cliente = Cliente::find($id);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cliente no encontrado'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'string|max:50',
+            'telefono' => 'string|max:15',
+            'email' => 'nullable|email|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $cliente->update($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente actualizado',
+            'data' => $cliente
+        ]);
+    }
+
+    /**
+     * Eliminar cliente
+     * DELETE /api/v1/clientes/{id}
+     */
+    public function destroy($id)
+    {
+        $cliente = Cliente::find($id);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cliente no encontrado'
+            ], 404);
+        }
+
+        $cliente->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente eliminado'
+        ], 200);
+    }
+
+    /**
+     * Obtener ventas de un cliente
+     * GET /api/v1/clientes/{id}/ventas
+     */
+    public function ventas($id)
+    {
+        $cliente = Cliente::with('ventas.producto')->find($id);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Cliente no encontrado'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'cliente' => $cliente->only(['id', 'nombre', 'telefono']),
+                'ventas' => $cliente->ventas
+            ]
+        ]);
+    }
+}
+```
+
+#### 9.6. Panel de Administración de API Keys
+
+**Controlador**:
+```php
+// app/Http/Controllers/ApiKeyController.php
+namespace App\Http\Controllers;
+
+use App\Models\ApiKey;
+use Illuminate\Http\Request;
+
+class ApiKeyController extends Controller
+{
+    public function index()
+    {
+        $apiKeys = ApiKey::with('user')->latest()->get();
+        return view('administration.api-keys.index', compact('apiKeys'));
+    }
+
+    public function create()
+    {
+        return view('administration.api-keys.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'expires_at' => 'nullable|date|after:today',
+        ]);
+
+        $apiKey = ApiKey::generate(
+            $request->name,
+            auth()->id(),
+            $request->permissions ?? []
+        );
+
+        if ($request->expires_at) {
+            $apiKey->update(['expires_at' => $request->expires_at]);
+        }
+
+        return redirect()
+            ->route('api-keys.index')
+            ->with('success', 'API Key creada exitosamente')
+            ->with('new_key', $apiKey->key); // Mostrar una sola vez
+    }
+
+    public function destroy($id)
+    {
+        $apiKey = ApiKey::findOrFail($id);
+        $apiKey->delete();
+
+        return redirect()
+            ->route('api-keys.index')
+            ->with('success', 'API Key eliminada');
+    }
+
+    public function toggle($id)
+    {
+        $apiKey = ApiKey::findOrFail($id);
+        $apiKey->update(['is_active' => !$apiKey->is_active]);
+
+        return redirect()
+            ->route('api-keys.index')
+            ->with('success', 'Estado actualizado');
+    }
+}
+```
+
+**Vista Index**:
+```blade
+{{-- resources/views/administration/api-keys/index.blade.php --}}
+@extends('layouts.static')
+
+@section('content')
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-key text-primary"></i> API Keys</h1>
+        <a href="{{ route('api-keys.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva API Key
+        </a>
+    </div>
+
+    @if(session('new_key'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <h5><i class="fas fa-check-circle"></i> API Key creada exitosamente</h5>
+            <p class="mb-0">Guarda esta key de forma segura. No podrás verla nuevamente:</p>
+            <div class="input-group mt-2">
+                <input type="text" class="form-control font-monospace" 
+                       id="newApiKey" value="{{ session('new_key') }}" readonly>
+                <button class="btn btn-outline-success" onclick="copyApiKey()">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Key (oculta)</th>
+                            <th>Usuario</th>
+                            <th>Último uso</th>
+                            <th>Expira</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($apiKeys as $key)
+                        <tr>
+                            <td><i class="fas fa-key text-muted"></i> {{ $key->name }}</td>
+                            <td><code>{{ substr($key->key, 0, 10) }}...</code></td>
+                            <td>{{ $key->user->name ?? 'Sistema' }}</td>
+                            <td>{{ $key->last_used_at?->diffForHumans() ?? 'Nunca' }}</td>
+                            <td>{{ $key->expires_at?->format('d/m/Y') ?? 'Sin expiración' }}</td>
+                            <td>
+                                <span class="badge bg-{{ $key->is_active ? 'success' : 'danger' }}">
+                                    {{ $key->is_active ? 'Activa' : 'Inactiva' }}
+                                </span>
+                            </td>
+                            <td>
+                                <form action="{{ route('api-keys.toggle', $key) }}" 
+                                      method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-{{ $key->is_active ? 'ban' : 'check' }}"></i>
+                                    </button>
+                                </form>
+                                <form action="{{ route('api-keys.destroy', $key) }}" 
+                                      method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                            onclick="return confirm('¿Eliminar esta API Key?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                No hay API Keys creadas
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyApiKey() {
+    const input = document.getElementById('newApiKey');
+    input.select();
+    document.execCommand('copy');
+    alert('API Key copiada al portapapeles');
+}
+</script>
+@endsection
+```
+
+#### 9.7. Documentación de API (Swagger/Postman)
+
+**Opciones de documentación**:
+
+**A. Swagger/OpenAPI (Recomendado)**
+```bash
+composer require darkaonline/l5-swagger
+php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider"
+```
+
+**B. Postman Collection**
+- Exportar colección de endpoints
+- Compartir con desarrolladores
+- Incluir ejemplos de request/response
+
+**C. Documentación Manual** (Crear archivo):
+```markdown
+<!-- docs/API.md -->
+# Streamify API Documentation v1.0
+
+## Autenticación
+Todas las rutas requieren API Key en el header:
+```
+X-API-Key: sk_tu_api_key_aqui
+```
+
+## Endpoints
+
+### Clientes
+
+#### Listar clientes
+```http
+GET /api/v1/clientes
+```
+
+**Parámetros opcionales:**
+- `per_page`: Registros por página (default: 15)
+- `page`: Número de página
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {...}
+}
+```
+```
+
+#### 9.8. Rate Limiting (Límite de Peticiones)
+
+**Configuración**:
+```php
+// app/Http/Kernel.php
+protected $middlewareGroups = [
+    'api' => [
+        'throttle:60,1', // 60 peticiones por minuto
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+    ],
+];
+
+// Para API Keys específicas con más peticiones
+Route::middleware(['api.key', 'throttle:1000,1'])->group(function () {
+    // Rutas premium
+});
+```
+
+#### 9.9. Logging y Monitoreo
+
+**Registro de peticiones API**:
+```php
+// app/Http/Middleware/LogApiRequests.php
+public function handle(Request $request, Closure $next)
+{
+    $response = $next($request);
+    
+    Log::channel('api')->info('API Request', [
+        'method' => $request->method(),
+        'url' => $request->fullUrl(),
+        'ip' => $request->ip(),
+        'api_key' => substr($request->header('X-API-Key'), 0, 10) . '...',
+        'status' => $response->status(),
+        'timestamp' => now(),
+    ]);
+    
+    return $response;
+}
+```
+
+#### 9.10. Checklist de Implementación
+
+**Paso 1: Base de Datos**
+- [ ] Crear migración de tabla `api_keys`
+- [ ] Ejecutar migración: `php artisan migrate`
+- [ ] Crear modelo `ApiKey` con métodos auxiliares
+
+**Paso 2: Autenticación**
+- [ ] Crear middleware `AuthenticateApiKey`
+- [ ] Registrar middleware en `Kernel.php`
+- [ ] Probar autenticación con Postman
+
+**Paso 3: Rutas y Controladores**
+- [ ] Definir rutas en `routes/api.php`
+- [ ] Crear controladores API en `app/Http/Controllers/Api/V1/`
+- [ ] Implementar métodos CRUD (index, show, store, update, destroy)
+
+**Paso 4: Panel de Administración**
+- [ ] Crear controlador `ApiKeyController`
+- [ ] Crear vistas de administración (`index.blade.php`, `create.blade.php`)
+- [ ] Agregar rutas web para administración
+
+**Paso 5: Seguridad**
+- [ ] Implementar rate limiting
+- [ ] Configurar CORS si es necesario
+- [ ] Agregar logging de peticiones
+- [ ] Validar permisos por API Key
+
+**Paso 6: Documentación**
+- [ ] Documentar todos los endpoints
+- [ ] Crear ejemplos de uso
+- [ ] Generar Postman Collection
+- [ ] (Opcional) Implementar Swagger
+
+**Paso 7: Testing**
+- [ ] Probar todos los endpoints con Postman
+- [ ] Verificar respuestas de error (401, 403, 404, 422, 500)
+- [ ] Testear rate limiting
+- [ ] Validar expiración de keys
+
+#### 9.11. Ejemplo de Uso (Cliente HTTP)
+
+**JavaScript/Axios**:
+```javascript
+const axios = require('axios');
+
+const API_URL = 'https://streamify.com/api/v1';
+const API_KEY = 'sk_your_api_key_here';
+
+// Crear cliente
+async function crearCliente() {
+  try {
+    const response = await axios.post(`${API_URL}/clientes`, {
+      nombre: 'Juan Pérez',
+      telefono: '555-1234',
+      email: 'juan@example.com'
+    }, {
+      headers: {
+        'X-API-Key': API_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Cliente creado:', response.data);
+  } catch (error) {
+    console.error('Error:', error.response.data);
+  }
+}
+```
+
+**PHP/cURL**:
+```php
+$ch = curl_init('https://streamify.com/api/v1/clientes');
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-API-Key: sk_your_api_key_here',
+    'Content-Type: application/json',
+]);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+$clientes = json_decode($response, true);
+curl_close($ch);
+```
+
+#### 9.12. Archivos a Crear
+
+**Migraciones:**
+- `database/migrations/xxxx_create_api_keys_table.php`
+
+**Modelos:**
+- `app/Models/ApiKey.php`
+
+**Middleware:**
+- `app/Http/Middleware/AuthenticateApiKey.php`
+- `app/Http/Middleware/LogApiRequests.php` (opcional)
+
+**Controladores:**
+- `app/Http/Controllers/ApiKeyController.php` (administración)
+- `app/Http/Controllers/Api/V1/ClienteApiController.php`
+- `app/Http/Controllers/Api/V1/VentaApiController.php`
+- `app/Http/Controllers/Api/V1/CuentaApiController.php`
+- `app/Http/Controllers/Api/V1/ProductoApiController.php`
+- `app/Http/Controllers/Api/V1/ServicioApiController.php`
+- `app/Http/Controllers/Api/V1/DashboardApiController.php`
+
+**Vistas:**
+- `resources/views/administration/api-keys/index.blade.php`
+- `resources/views/administration/api-keys/create.blade.php`
+
+**Rutas:**
+- `routes/api.php` (rutas de API)
+- `routes/web.php` (administración de keys)
+
+**Documentación:**
+- `docs/API.md` (documentación de endpoints)
+- `postman/Streamify_API.json` (colección de Postman)
+
 ---
 
 ## 📊 Resumen por Prioridad - Versión 6.0
 
-### 🔴 Prioridad Alta (2 items)
+### 🔴 Prioridad Alta (3 items)
 1. **🎉 Celebración de Aniversario (26 Diciembre)** - Banner animado + estadísticas del año
-2. Modo oscuro en formularios, alerts y badges
+2. **🔑 API REST con API Keys** - Sistema completo de autenticación y endpoints
+3. Modo oscuro en formularios, alerts y badges
 
 ### 🟡 Prioridad Media (2 items)
 1. Gráficos visuales en Dashboard (Chart.js)
