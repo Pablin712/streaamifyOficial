@@ -69,24 +69,24 @@
     </p>
     <div class="row">
         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-            <form action="{{ route('cuentas.moverClientes') }}" method="POST" class="mb-3"
-                onsubmit="return confirm('¿Estás seguro de mover TODOS los clientes de esta cuenta a la Mesa de Trabajo? Esta acción no se puede deshacer.');">
-                @csrf
-                <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
-                <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-random"></i> Mover todos los clientes a Mesa de Trabajo
-                </button>
-            </form>
+            <button 
+                type="button" 
+                class="btn btn-danger mb-3 btn-move-all-mesa"
+                data-cuenta-id="{{ $cuenta->idcue }}"
+                data-cuenta-nombre="{{ $cuenta->usuariocue }}"
+            >
+                <i class="fas fa-random"></i> Mover todos los clientes a Mesa de Trabajo
+            </button>
         @endif
         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-            <form action="{{ route('cuentas.moverClientesDisperso') }}" method="POST" class="mb-3"
-                onsubmit="return confirm('¿Estás seguro de mover TODOS los clientes de esta cuenta a otras cuentas disponibles? Esta acción no se puede deshacer.');">
-                @csrf
-                <input type="hidden" name="cuenta_origen" value="{{ $cuenta->idcue }}">
-                <button type="submit" class="btn btn-warning">
-                    <i class="fas fa-random"></i> Mover todos los clientes a otro lugar
-                </button>
-            </form>
+            <button 
+                type="button" 
+                class="btn btn-warning mb-3 btn-move-all-disperso"
+                data-cuenta-id="{{ $cuenta->idcue }}"
+                data-cuenta-nombre="{{ $cuenta->usuariocue }}"
+            >
+                <i class="fas fa-random"></i> Mover todos los clientes a otro lugar
+            </button>
         @endif
     </div>
 @endsection
@@ -128,22 +128,22 @@
                                     @if ($diasRestantes <= 0)
                                         <span class="badge bg-danger">{{ $usuario->nombre_cliente }} (Vencido)</span>
                                         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                            <form action="{{ route('usuarios.moverUsuario', $usuario->iddet) }}"
-                                                method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-dark btn-circle btn-sm"
-                                                    onclick="return confirm('Mudar este usuario?')">
-                                                    <i class="fas fa-exchange"></i>
-                                                </button>
-                                            </form>
-                                            <form action="{{ route('usuarios.moverUsuarioMesa', $usuario->iddet) }}"
-                                                method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-info btn-circle btn-sm"
-                                                    onclick="return confirm('Mudar este usuario a la mesa de trabajo?')">
-                                                    <i class="fas fa-arrow-right-to-bracket"></i>
-                                                </button>
-                                            </form>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-dark btn-circle btn-sm btn-move-user"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-exchange"></i>
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-info btn-circle btn-sm btn-move-user-mesa"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-arrow-right-to-bracket"></i>
+                                            </button>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -152,37 +152,36 @@
                                             </a>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('usuarios.destroy'))
-                                            <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
-                                                style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-circle btn-sm"
-                                                    onclick="return confirm('¿Eliminar este usuario?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-danger btn-circle btn-sm btn-delete-user"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         @endif
                                         <br>
                                     @elseif ($diasRestantes <= 3)
                                         <span class="badge bg-warning">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>
                                         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                            <form action="{{ route('usuarios.moverUsuario', $usuario->iddet) }}"
-                                                method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-dark btn-circle btn-sm"
-                                                    onclick="return confirm('Mudar este usuario?')">
-                                                    <i class="fas fa-exchange"></i>
-                                                </button>
-                                            </form>
-                                            <form action="{{ route('usuarios.moverUsuarioMesa', $usuario->iddet) }}"
-                                                method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-info btn-circle btn-sm"
-                                                    onclick="return confirm('Mudar este usuario a la mesa de trabajo?')">
-                                                    <i class="fas fa-arrow-right-to-bracket"></i>
-                                                </button>
-                                            </form>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-dark btn-circle btn-sm btn-move-user"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-exchange"></i>
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-info btn-circle btn-sm btn-move-user-mesa"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-arrow-right-to-bracket"></i>
+                                            </button>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -195,22 +194,22 @@
                                         <span class="badge bg-success">{{ $usuario->nombre_cliente }}
                                             {{ $usuario->fecha_vencimiento }}</span>
                                         @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                            <form action="{{ route('usuarios.moverUsuario', $usuario->iddet) }}"
-                                                method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-dark btn-circle btn-sm"
-                                                    onclick="return confirm('Mudar este usuario?')">
-                                                    <i class="fas fa-random"></i>
-                                                </button>
-                                            </form>
-                                            <form action="{{ route('usuarios.moverUsuarioMesa', $usuario->iddet) }}"
-                                                method="POST" style="display: inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-info btn-circle btn-sm"
-                                                    onclick="return confirm('Mudar este usuario a la mesa de trabajo?')">
-                                                    <i class="fas fa-arrow-right-to-bracket"></i>
-                                                </button>
-                                            </form>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-dark btn-circle btn-sm btn-move-user"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-random"></i>
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                class="btn btn-info btn-circle btn-sm btn-move-user-mesa"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                            >
+                                                <i class="fas fa-arrow-right-to-bracket"></i>
+                                            </button>
                                         @endif
                                         <br>
                                     @endif
@@ -262,6 +261,11 @@
 
 @section('modals')
     @include('inventory.cuentas.modals.edit-profile')
+    @include('inventory.cuentas.modals.confirm-move-user')
+    @include('inventory.cuentas.modals.confirm-move-user-mesa')
+    @include('inventory.cuentas.modals.confirm-delete-user')
+    @include('inventory.cuentas.modals.confirm-move-all-mesa')
+    @include('inventory.cuentas.modals.confirm-move-all-disperso')
 @endsection
 
 @section('scripts')
@@ -288,6 +292,74 @@
 
                     // Abrir modal
                     window.dispatchEvent(new CustomEvent('open-modal', { detail: 'edit-profile' }));
+                });
+            });
+
+            // Event listeners para botones de mover usuario
+            document.querySelectorAll('.btn-move-user').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const iddet = this.getAttribute('data-iddet');
+                    const nombre = this.getAttribute('data-nombre');
+
+                    document.getElementById('confirm_move_user_id').value = iddet;
+                    document.getElementById('confirm_move_user_name').textContent = nombre;
+                    document.getElementById('confirm_move_user_form').action = "{{ route('usuarios.moverUsuario', ':id') }}".replace(':id', iddet);
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-user' }));
+                });
+            });
+
+            // Event listeners para botones de mover usuario a mesa
+            document.querySelectorAll('.btn-move-user-mesa').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const iddet = this.getAttribute('data-iddet');
+                    const nombre = this.getAttribute('data-nombre');
+
+                    document.getElementById('confirm_move_mesa_user_id').value = iddet;
+                    document.getElementById('confirm_move_mesa_user_name').textContent = nombre;
+                    document.getElementById('confirm_move_mesa_form').action = "{{ route('usuarios.moverUsuarioMesa', ':id') }}".replace(':id', iddet);
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-user-mesa' }));
+                });
+            });
+
+            // Event listeners para botones de eliminar usuario
+            document.querySelectorAll('.btn-delete-user').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const iddet = this.getAttribute('data-iddet');
+                    const nombre = this.getAttribute('data-nombre');
+
+                    document.getElementById('confirm_delete_user_id').value = iddet;
+                    document.getElementById('confirm_delete_user_name').textContent = nombre;
+                    document.getElementById('confirm_delete_user_form').action = "{{ route('usuarios.destroy', ':id') }}".replace(':id', iddet);
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-delete-user' }));
+                });
+            });
+
+            // Event listeners para botones de mover todos a mesa
+            document.querySelectorAll('.btn-move-all-mesa').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const cuentaId = this.getAttribute('data-cuenta-id');
+                    const cuentaNombre = this.getAttribute('data-cuenta-nombre');
+
+                    document.getElementById('confirm_move_all_mesa_id').value = cuentaId;
+                    document.getElementById('confirm_move_all_mesa_cuenta').textContent = cuentaNombre;
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-all-mesa' }));
+                });
+            });
+
+            // Event listeners para botones de dispersar todos
+            document.querySelectorAll('.btn-move-all-disperso').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const cuentaId = this.getAttribute('data-cuenta-id');
+                    const cuentaNombre = this.getAttribute('data-cuenta-nombre');
+
+                    document.getElementById('confirm_move_all_disperso_id').value = cuentaId;
+                    document.getElementById('confirm_move_all_disperso_cuenta').textContent = cuentaNombre;
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-all-disperso' }));
                 });
             });
         });
