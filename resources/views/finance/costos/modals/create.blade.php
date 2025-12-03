@@ -9,8 +9,9 @@
         <div class="modal-body">
             <!-- Selector de Cuentas -->
             <div class="form-group mb-3">
-                <label for="idcue">Seleccionar Cuenta</label>
-                <select id="idcue" name="idcue" class="form-control" required>
+                <label for="idcue">Cuenta</label>
+                <select id="idcue" name="idcue" class="form-control searchable-select" required
+                        data-placeholder="Seleccione una cuenta...">
                     <option value="">-- Selecciona una Cuenta --</option>
                     @foreach($cuentas as $cuenta)
                         <option value="{{ $cuenta->idcue }}">{{ $cuenta->usuariocue }}</option>

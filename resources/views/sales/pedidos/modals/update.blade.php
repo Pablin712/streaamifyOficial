@@ -13,8 +13,9 @@
             </div>
 
             <div class="form-group mb-4">
-                <label for="idestado" class="form-label">Estado:</label>
-                <select name="idestado" id="idestado" class="form-control" required>
+                <label for="idestado" class="form-label">Estado del Pedido</label>
+                <select name="idestado" id="idestado" class="form-control searchable-select" required
+                        data-placeholder="Seleccionar estado...">
                     <option value="">-- Selecciona un Estado --</option>
                     @foreach ($estados as $estado)
                         <option value="{{ $estado->idestado }}">{{ $estado->nombre }}</option>

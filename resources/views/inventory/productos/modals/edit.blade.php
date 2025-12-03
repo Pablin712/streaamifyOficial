@@ -58,9 +58,10 @@
                     <label for="edit_estrellaspro" class="form-label">
                         <i class="fas fa-star me-1"></i>Calificación (Estrellas)
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="edit_estrellaspro"
-                            name="estrellaspro">
+                            name="estrellaspro"
+                            data-placeholder="Seleccionar calificación...">
                         <option value="">Sin calificación</option>
                         <option value="1">⭐ 1 Estrella</option>
                         <option value="2">⭐⭐ 2 Estrellas</option>
@@ -75,10 +76,11 @@
                     <label for="edit_activo" class="form-label required">
                         <i class="fas fa-toggle-on me-1"></i>Estado
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="edit_activo"
                             name="activo"
-                            required>
+                            required
+                            data-placeholder="Seleccionar estado...">
                         <option value="1">Activo</option>
                         <option value="0">Inactivo</option>
                     </select>
@@ -89,10 +91,11 @@
                     <label for="edit_tipo_producto_id" class="form-label required">
                         <i class="fas fa-list me-1"></i>Tipo de Producto
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="edit_tipo_producto_id"
                             name="tipo_producto_id"
-                            required>
+                            required
+                            data-placeholder="Seleccionar tipo de producto...">
                         <option value="">Seleccionar tipo...</option>
                         @foreach ($tiposProducto as $tipo)
                             <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -105,10 +108,11 @@
                     <label for="edit_categoria_id" class="form-label required">
                         <i class="fas fa-folder me-1"></i>Categoría
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="edit_categoria_id"
                             name="categoria_id"
-                            required>
+                            required
+                            data-placeholder="Seleccionar categoría...">
                         <option value="">Seleccionar categoría...</option>
                         @foreach ($categorias as $categoria)
                             <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>

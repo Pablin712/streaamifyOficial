@@ -3,6 +3,12 @@
     Usuarios
 @endsection
 @section('styles')
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Select2 Dark Mode -->
+    <link href="{{ asset('css/select2-dark-mode.css') }}" rel="stylesheet" />
+
     <style>
         .btn-rosa-1 {
             background: #f8bbd0;
@@ -280,6 +286,15 @@
 @include('inventory.usuarios.modals.mover')
 @endsection
 @section('scripts')
+    <!-- jQuery (debe cargarse primero) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 (debe cargarse después de jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Inicializador de searchable-selects -->
+    <script src="{{ asset('js/searchable-select.js') }}"></script>
+
     @parent
     <script>
         // ========================================================================

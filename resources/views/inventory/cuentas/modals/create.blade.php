@@ -22,7 +22,8 @@
                     <label for="idval" class="form-label fw-semibold">
                         <i class="fas fa-layer-group text-primary me-1"></i>Servicio/Valor *
                     </label>
-                    <select name="idval" id="idval" class="form-select" required>
+                    <select name="idval" id="idval" class="form-select searchable-select" required
+                            data-placeholder="Seleccione un valor...">
                         <option value="">Seleccione un valor...</option>
                         @foreach ($valores ?? [] as $valor)
                             <option value="{{ $valor->idval }}">
@@ -68,7 +69,8 @@
                     <label for="caidacue" class="form-label fw-semibold">
                         <i class="fas fa-heartbeat text-primary me-1"></i>Estado de la Cuenta
                     </label>
-                    <select name="caidacue" id="caidacue" class="form-select" required>
+                    <select name="caidacue" id="caidacue" class="form-select searchable-select" required
+                            data-placeholder="Seleccionar estado...">
                         <option value="0" selected>Activa (Funcionando)</option>
                         <option value="1">Dañada (No funciona)</option>
                     </select>

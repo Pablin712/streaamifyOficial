@@ -67,20 +67,24 @@
     border-color: #4a5568 !important;
 }
 
-/* Opciones del dropdown en modo oscuro */
-.select2-container--bootstrap-5.select2-dark-mode .select2-results__option {
+/* Opciones del dropdown en modo oscuro - TODAS las opciones */
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option,
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option[aria-selected],
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option[role="option"] {
     color: #e2e8f0 !important;
     background-color: #2d3748 !important;
 }
 
 /* Opción hover en modo oscuro */
-.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--highlighted {
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--highlighted,
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--highlighted[aria-selected] {
     background-color: #4a5568 !important;
     color: #ffffff !important;
 }
 
 /* Opción seleccionada en modo oscuro */
-.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--selected {
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option--selected,
+.select2-container--bootstrap-5.select2-dark-mode .select2-results__option[aria-selected="true"] {
     background-color: #4299e1 !important;
     color: #ffffff !important;
 }
@@ -120,6 +124,59 @@
 
 .select2-dark-mode .select2-selection__choice__remove:hover {
     color: #f56565 !important;
+}
+
+/* ========================================
+   MODO OSCURO POR ATRIBUTO data-dark-mode
+   ======================================== */
+
+/* Cuando el HTML tiene data-dark-mode="true" */
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-dropdown {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option,
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option[aria-selected],
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option[role="option"] {
+    color: #e2e8f0 !important;
+    background-color: #2d3748 !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option--highlighted,
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #4a5568 !important;
+    color: #ffffff !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option--selected,
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-results__option[aria-selected="true"] {
+    background-color: #4299e1 !important;
+    color: #ffffff !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-search__field {
+    background-color: #1a202c !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-search__field::placeholder {
+    color: #a0aec0 !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-selection--single,
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-selection--multiple {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Reglas ULTRA específicas para resultados renderizados dinámicamente */
+html[data-dark-mode="true"] .select2-results > .select2-results__options > li,
+html[data-dark-mode="true"] .select2-results__options > .select2-results__option {
+    color: #e2e8f0 !important;
+    background-color: #2d3748 !important;
 }
 
 /* ========================================

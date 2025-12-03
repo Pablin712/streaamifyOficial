@@ -204,6 +204,20 @@ function initializeSearchableSelects(container = document) {
                 applyThemeToDropdown();
             }, 50);
         });
+
+        // Reaplicar estilos cuando se actualizan los resultados (al escribir/buscar)
+        $select.on('select2:results:message', function() {
+            setTimeout(function() {
+                applyThemeToDropdown();
+            }, 10);
+        });
+
+        // Reaplicar estilos después de cada búsqueda
+        $select.on('change', function() {
+            setTimeout(function() {
+                applyThemeToDropdown();
+            }, 10);
+        });
     });
 }
 
@@ -298,5 +312,34 @@ if (typeof MutationObserver !== 'undefined') {
     observer.observe(document.body, {
         attributes: true,
         attributeFilter: ['class']
+    });
+}
+
+// Observador para detectar cuando Select2 renderiza nuevos elementos en el dropdown
+if (typeof MutationObserver !== 'undefined') {
+    const dropdownObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            // Verificar si se agregaron nodos al dropdown de Select2
+            if (mutation.addedNodes.length > 0) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // Es un elemento
+                        // Si es un dropdown de Select2 o contiene resultados
+                        if ($(node).hasClass('select2-dropdown') ||
+                            $(node).find('.select2-results__option').length > 0 ||
+                            $(node).hasClass('select2-results__option')) {
+                            setTimeout(function() {
+                                applyThemeToDropdown();
+                            }, 10);
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    // Observar el body para detectar cambios en los dropdowns
+    dropdownObserver.observe(document.body, {
+        childList: true,
+        subtree: true
     });
 }

@@ -126,29 +126,49 @@ Archivo: `public/css/enhanced-table-global.css`
 ---
 
 ### 3. Componente Select2 Global
-- **Estado**: ✅ Completado en Ventas
+- **Estado**: ✅ **COMPLETADO EN MÚLTIPLES MÓDULOS**
 - **Prioridad**: Alta
-- **Descripción**: El componente `searchable-select` con Select2 está funcionando en el módulo de Ventas. Necesita aplicarse en todo el sistema de empleados.
+- **Descripción**: El componente `searchable-select` con Select2 está funcionando correctamente con modo oscuro automático.
 
-#### 3.1. Módulo de Empleados - Aplicar Select2
-- **Vistas a actualizar**:
-  - `resources/views/employees/empleados/create.blade.php`
-  - `resources/views/employees/empleados/edit.blade.php`
-  - Cualquier formulario con selects en módulo de empleados
+#### 3.1. Módulos Completados ✅
+**Sales:**
+- ✅ `sales/ventas/create.blade.php` - Select de clientes
+- ✅ `sales/ventas/edit.blade.php` - Select de clientes
+- ✅ `sales/ventas/renew.blade.php` - Select de clientes
+- ✅ `sales/pedidos/modals/update.blade.php` - Select de estado
 
-#### 3.2. Otros Módulos
-- **Pendiente**:
-  - Módulo de Clientes (selects de país, ciudad, etc.)
-  - Módulo de Productos (categorías, proveedores)
-  - Módulo de Cuentas (servicios, perfiles)
-  - Módulo de Servicios
-  - Filtros de búsqueda en listados
+**Inventory:**
+- ✅ `inventory/productos/modals/create.blade.php` - Selects: estrellas, activo, tipo, categoría, servicio
+- ✅ `inventory/productos/modals/edit.blade.php` - Selects: estrellas, activo, tipo, categoría
+- ✅ `inventory/cuentas/modals/create.blade.php` - Selects: valor, estado
+- ✅ `inventory/cuentas/modals/edit.blade.php` - Selects: valor, estado
+- ✅ `inventory/valores/modals/create.blade.php` - Selects: servicio, proveedor, tipo
+- ✅ `inventory/valores/modals/edit.blade.php` - Selects: servicio, proveedor, tipo
+- ✅ `inventory/mantenimientos/modals/create.blade.php` - Select de cuenta
+- ✅ `inventory/usuarios/modals/change.blade.php` - Select de cuenta
 
-#### 3.3. Pasos para Implementar
-1. Incluir CSS de Select2 en `@section('styles')`
-2. Incluir JS de Select2 en `@section('scripts')`
-3. Agregar clase `searchable-select` a los `<select>`
-4. O usar componente `<x-searchable-select>`
+**Finance:**
+- ✅ `finance/gastos/modals/create.blade.php` - Select de tipo de gasto
+- ✅ `finance/gastos/modals/edit.blade.php` - Select de tipo de gasto
+- ✅ `finance/costos/modals/create.blade.php` - Select de cuenta
+
+#### 3.2. Archivos Index con Dependencias ✅
+- ✅ `inventory/productos/index.blade.php`
+- ✅ `inventory/cuentas/index.blade.php`
+- ✅ `inventory/valores/index.blade.php`
+- ✅ `inventory/mantenimientos/index.blade.php`
+- ✅ `inventory/usuarios/index.blade.php`
+- ✅ `sales/pedidos/index.blade.php`
+- ✅ `finance/gastos.blade.php`
+- ✅ `finance/costos.blade.php`
+
+#### 3.3. Guía de Implementación
+📘 Consultar: `docs/GUIA_SEARCHABLE_SELECT.md`
+
+#### 3.4. Módulos Pendientes (Opcional)
+- ⚠️ Módulo de Empleados (si tiene selects)
+- ⚠️ Módulo de Clientes (si tiene selects de país, ciudad, etc.)
+- ⚠️ Otros módulos que se agreguen en el futuro
 5. Verificar funcionamiento en modales
 
 ---

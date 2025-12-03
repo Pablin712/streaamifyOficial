@@ -10,8 +10,9 @@
             @csrf
 
             <div class="mb-3">
-                <label for="create-idcue" class="form-label fw-semibold">Cuenta</label>
-                <select name="idcue" id="create-idcue" class="form-control" required>
+                <label for="create-idcue" class="form-label required">Cuenta</label>
+                <select name="idcue" id="create-idcue" class="form-control searchable-select" required
+                        data-placeholder="Seleccionar cuenta...">
                     <option value="">Seleccione una cuenta</option>
                     @foreach ($cuentas as $cuenta)
                         <option value="{{ $cuenta->idcue }}">{{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}</option>

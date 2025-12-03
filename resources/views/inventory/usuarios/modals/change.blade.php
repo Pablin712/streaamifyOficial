@@ -23,7 +23,8 @@
             <!-- Selector de Cuenta -->
             <div class="form-group mb-4">
                 <label for="change_idcue">Cuenta</label>
-                <select name="idcue" id="change_idcue" class="form-control" required>
+                <select name="idcue" id="change_idcue" class="form-control searchable-select" required
+                        data-placeholder="Seleccione una cuenta...">
                     <option value="">-- Selecciona una Cuenta --</option>
                     @foreach ($cuentas as $cuenta)
                         <option value="{{ $cuenta->idcue }}">{{ $cuenta->usuariocue }}</option>

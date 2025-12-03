@@ -10,8 +10,9 @@
         <div class="modal-body">
             <!-- Selector de Tipo de Gasto -->
             <div class="form-group mb-3">
-                <label for="edit_idtip">Seleccionar Tipo de Gasto</label>
-                <select id="edit_idtip" name="idtip" class="form-control" required>
+                <label for="edit_idtip">Tipo de Gasto</label>
+                <select id="edit_idtip" name="idtip" class="form-control searchable-select" required
+                        data-placeholder="Seleccione un tipo de gasto...">
                     <option value="">-- Selecciona un Tipo de Gasto --</option>
                     @foreach($tipoGastos as $tipo)
                         <option value="{{ $tipo->idtip }}">{{ $tipo->detalletip }}</option>

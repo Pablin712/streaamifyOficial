@@ -3,7 +3,11 @@
 @section('title', 'Cuentas')
 @section('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Select2 v4.1.0-rc.0 con Bootstrap 5 theme -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <!-- Select2 Dark Mode -->
+    <link rel="stylesheet" href="{{ asset('css/select2-dark-mode.css') }}">
     <style>
         /* Personalizando el fondo oscuro de las filas de la tabla a morado */
         .table-dark {
@@ -419,6 +423,14 @@
     @include('inventory.cuentas.modals.renew')
 @endsection
 @section('scripts')
+<!-- jQuery (requerido) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 v4.1.0-rc.0 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Select2 Spanish -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
+<!-- Searchable Select Component -->
+<script src="{{ asset('js/searchable-select.js') }}"></script>
 <!-- Enhanced Table v2.0 -->
 <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 

@@ -14,10 +14,11 @@
                     <label for="create_idser" class="form-label required">
                         <i class="fas fa-tv me-1"></i>Servicio
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="create_idser"
                             name="idser"
-                            required>
+                            required
+                            data-placeholder="Seleccionar servicio...">
                         <option value="">Seleccionar servicio...</option>
                         @foreach ($servicios as $servicio)
                             <option value="{{ $servicio->idser }}">{{ $servicio->nombreser }}</option>
@@ -30,10 +31,11 @@
                     <label for="create_idpro" class="form-label required">
                         <i class="fas fa-truck me-1"></i>Proveedor
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="create_idpro"
                             name="idpro"
-                            required>
+                            required
+                            data-placeholder="Seleccionar proveedor...">
                         <option value="">Seleccionar proveedor...</option>
                         @foreach ($proveedores as $proveedor)
                             <option value="{{ $proveedor->idpro }}">{{ $proveedor->nombrepro }}</option>
@@ -61,10 +63,11 @@
                     <label for="create_tipoval" class="form-label required">
                         <i class="fas fa-tag me-1"></i>Tipo de Valor
                     </label>
-                    <select class="form-control"
+                    <select class="form-control searchable-select"
                             id="create_tipoval"
                             name="tipoval"
-                            required>
+                            required
+                            data-placeholder="Seleccionar tipo...">
                         <option value="completo">Completo</option>
                         <option value="individual">Individual</option>
                         <option value="hibrido">Híbrido</option>
