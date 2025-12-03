@@ -207,62 +207,49 @@ class EmpleadoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if (!Gate::allows('empleados.update') || (Auth::user()->idemp != $id && Auth::user()->idemp != 1)) {
-            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.')->send();
+        if (!Gate::allows('empleados.update') && Auth::user()->idemp != $id) {
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.');
         }
+
         $empleado = Empleado::findOrFail($id);
+
         $rules = [
-            'nombreemp' => 'required|string|max:255',
-            'telefonoemp' => 'required|string|max:15',
-            'usuarioemp' => 'required|string|max:255|unique:empleados,usuarioemp,' . $id . ',idemp',
-            'passwordemp' => 'nullable|string|min:4',
-            'foto_url' => 'nullable|image|max:2048',
-            'email' => 'nullable|email|max:255',
+            'nombreemp' => 'required|string|max:50',
+            'usuarioemp' => 'required|string|max:20|unique:empleados,usuarioemp,' . $id . ',idemp',
+            'email' => 'nullable|email|max:50',
+            'telefonoemp' => 'nullable|string|max:15',
+            'foto_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
 
         $request->validate($rules);
-        $data = $request->all();
-        // Si no se envía contraseña, no actualizarla
-        if (!$request->filled('passwordemp')) {
-            unset($data['passwordemp']);
-        }
-        // Si no se envía email, no actualizarlo
-        if (!$request->filled('email')) {
-            unset($data['email']);
-        }
 
-        // Subir foto si existe
+        $empleado->nombreemp = $request->nombreemp;
+        $empleado->usuarioemp = $request->usuarioemp;
+        $empleado->email = $request->email;
+        $empleado->telefonoemp = $request->telefonoemp;
+
+        // Manejar subida de foto
         if ($request->hasFile('foto_url')) {
-            if (!empty($empleado->foto_url) && file_exists(public_path('storage/' . $empleado->foto_url))) {
-                unlink(public_path('storage/' . $empleado->foto_url));
+            // Eliminar foto anterior si existe
+            if ($empleado->foto_url && \Storage::disk('public')->exists($empleado->foto_url)) {
+                \Storage::disk('public')->delete($empleado->foto_url);
             }
-            $file = $request->file('foto_url');
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $destinationPath = public_path('storage/fotos');
-            $file->move($destinationPath, $filename);
-            $data['foto_url'] = 'fotos/' . $filename;
+
+            // Guardar nueva foto
+            $path = $request->file('foto_url')->store('empleados', 'public');
+            $empleado->foto_url = $path;
         }
 
         Historial::create([
-            'accion' => 'Actualización de empleado',
-            'descripcion' => 'Datos antiguos: ' . json_encode($empleado),
+            'accion' => 'Actualización de perfil',
+            'descripcion' => 'El empleado ' . $empleado->nombreemp . ' actualizó su perfil',
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
 
-        $empleado->update($data);
+        $empleado->save();
 
-        // Triple verificación AJAX
-        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
-            return response()->json([
-                'success' => true,
-                'message' => 'Empleado actualizado exitosamente',
-                'empleado' => $empleado
-            ]);
-        }
-
-        return redirect()->route('empleados.edit', ['id' => $empleado->idemp])
-            ->with('success', 'Perfil actualizado exitosamente.');
+        return redirect()->back()->with('success', 'Perfil actualizado exitosamente');
     }
 
     public function updateRoles(Request $request, $id)
@@ -299,4 +286,41 @@ class EmpleadoController extends Controller
 
         return redirect()->route('empleados')->with('success', 'Empleado eliminado exitosamente');
     }
+
+    /**
+     * Update employee password
+     */
+    public function updatePassword(Request $request, $id)
+    {
+        // Solo el propio usuario o admin puede cambiar la contraseña
+        if (Auth::user()->idemp != $id && Auth::user()->idemp != 1) {
+            return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.');
+        }
+
+        $empleado = Empleado::findOrFail($id);
+
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        // Verificar contraseña actual
+        if ($empleado->passwordemp !== $request->current_password) {
+            return redirect()->back()->with('error', 'La contraseña actual es incorrecta.');
+        }
+
+        // Actualizar contraseña
+        $empleado->passwordemp = $request->password;
+        $empleado->save();
+
+        Historial::create([
+            'accion' => 'Cambio de contraseña',
+            'descripcion' => 'El empleado ' . $empleado->nombreemp . ' cambió su contraseña',
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Contraseña actualizada exitosamente');
+    }
 }
+

@@ -45,6 +45,10 @@ class CuentaController extends Controller
         // Obtener valores activos para los modales
         $valores = Valor::where('activoval', true)->get();
 
+        // Obtener servicios y proveedores para el modal de crear valor
+        $servicios = \App\Models\Servicio::all();
+        $proveedores = \App\Models\Proveedor::all();
+
         return view('inventory.cuentas.index', compact(
             'cuentas',
             'cuentasDisponibles',
@@ -54,7 +58,9 @@ class CuentaController extends Controller
             'cuentasCaidas',
             'mesa',
             'espacios_por_servicio',
-            'valores'
+            'valores',
+            'servicios',
+            'proveedores'
         ));
     }
 

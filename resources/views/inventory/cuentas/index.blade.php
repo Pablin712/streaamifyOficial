@@ -329,9 +329,9 @@
             </a>
         @endif
         @if (Auth::user()->hasPermissionTo('valores.create'))
-            <a href="{{ route('valores.create') }}" class="btn btn-primary">
+            <button onclick="abrirModalCrearValorDesdeCuentas()" class="btn btn-primary">
                 <i class="fas fa-layer-group"></i> Crear Valor
-            </a>
+            </button>
         @endif
         @if (Auth::user()->hasPermissionTo('spotify') || Auth::user()->hasPermissionTo('todas_las_cuentas'))
             <a href="{{ route('cuentas.spotify') }}" class="btn btn-success">
@@ -421,6 +421,9 @@
     @include('inventory.cuentas.modals.edit')
     @include('inventory.cuentas.modals.delete')
     @include('inventory.cuentas.modals.renew')
+
+    {{-- Modal de Crear Valor (compartido desde valores) --}}
+    @include('inventory.valores.modals.create')
 @endsection
 @section('scripts')
 <!-- jQuery (requerido) -->
@@ -907,5 +910,47 @@ async function submitRenew(event) {
         showTemporaryAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
     }
 }
+
+// 🔷 Función para abrir modal de crear valor desde cuentas
+function abrirModalCrearValorDesdeCuentas() {
+    console.log('🔷 Abriendo modal de crear valor desde cuentas');
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createValorModal' }));
+}
+
+// 🔷 Función para enviar formulario de crear valor
+async function submitCreate(event) {
+    event.preventDefault();
+    console.log('📤 Enviando formulario de creación de valor');
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('{{ route("valores.store") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('✅ Valor creado exitosamente');
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createValorModal' }));
+            showTemporaryAlert('Valor creado con éxito', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            console.error('❌ Error al crear valor:', data);
+            showTemporaryAlert(data.message || 'Error al crear el valor', 'danger');
+        }
+    } catch (error) {
+        console.error('❌ Error en la petición:', error);
+        showTemporaryAlert('Error al procesar la solicitud', 'danger');
+    }
+}
+
 </script>
 @endsection

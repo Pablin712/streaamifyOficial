@@ -253,6 +253,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');
         Route::get('/empleados/{id}/roles', 'editRoles')->name('empleados.editRoles');
         Route::put('/empleados/{id}', 'update')->name('empleados.update');
+        Route::put('/empleados/{id}/update-password', 'updatePassword')->name('empleados.updatePassword');
         Route::put('/empleados/{id}/update-roles', 'updateRoles')->name('empleados.updateRoles');
         Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
     });

@@ -1,38 +1,26 @@
 @extends('layouts.static')
-@section('title')
-    Dashboard
+
+@section('title', 'Dashboard')
+
+@section('h1')
+    <i class="fas fa-chart-line text-primary me-2"></i> Dashboard Financiero
 @endsection
+
 @section('breadcrumb')
     Dashboard
 @endsection
-@section('styles')
-    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
 
-    <!-- Custom styles for this template-->
-    <link href="css/sb-admin-2.min.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet" />
-    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-    <style>
-        tfoot {
-            display: table-footer-group !important;
-        }
-    </style>
-@endsection
-@section('h1', 'Dashboard')
 @section('introduccion')
-    @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="mb-1">Bienvenido, <strong>{{ Auth::user()->nombreemp }}</strong></h4>
+            <p class="mb-0 text-muted">Resumen completo del rendimiento financiero y operativo de Streamify HQ</p>
         </div>
-    @endif
-    <h1>{{ Auth::user()->nombreemp }}</h1>
-    <div class="d-flex justify-content mb-3">
-        <a href="{{ route('dashboard.pdf') }}" class="btn btn-danger">
-            <i class="fas fa-file-pdf"></i> Descargar PDF
-        </a>
+        <div>
+            <a href="{{ route('dashboard.pdf') }}" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-1"></i> Descargar PDF
+            </a>
+        </div>
     </div>
 @endsection
 @section('content')
@@ -272,634 +260,91 @@
         </div>
         <!-- End of Main Content -->
     </div>
-    {{-- tabla de resultados del mes --}}
-    <div id="resultados" class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-money-bill-wave me-1"></i>
-            Resultados del mes
-        </div>
-        <div class="card-body">
-            <!-- Controles de búsqueda y registros -->
-            <div class="row mb-3 align-items-end">
-                <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
-                    <label for="resultados-table-search" class="form-label fw-semibold">
-                        <i class="fas fa-search text-primary"></i> Buscar:
-                    </label>
-                    <input id="resultados-table-search"
-                           type="text"
-                           placeholder="Buscar servicio..."
-                           class="form-control">
-                </div>
-                <div class="col-lg-4 col-md-5 col-12">
-                    <label for="resultados-table-rows-per-page" class="form-label fw-semibold">
-                        <i class="fas fa-list text-primary"></i> Mostrar:
-                    </label>
-                    <select id="resultados-table-rows-per-page" class="form-select">
-                        <option value="5">5 registros</option>
-                        <option value="10" selected>10 registros</option>
-                        <option value="20">20 registros</option>
-                        <option value="50">50 registros</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="table-responsive">
-                <table id="resultados-table" data-table="resultados-table" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-type="string" data-col="0">
-                            Servicio
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="1">
-                            Cta
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="2">
-                            Usuarios
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="3">
-                            usu/cue
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="4">
-                            Ingresos
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="5">
-                            Costos
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="6">
-                            Ganancias
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="7">
-                            Renta
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="8">
-                            Ing/Cli
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="9">
-                            Cos/Cli
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                        <th class="sortable" data-type="number" data-col="10">
-                            Gan/Cli
-                            <span class="sort-arrow">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
-                                </svg>
-                            </span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Netflix</td>
-                        <td>{{ $cuentas_netflix }}</td>
-                        <td>{{ $usuarios_netflix }}</td>
-                        <td>
-                            @if ($cuentas_netflix != 0)
-                                {{ number_format($usuarios_netflix / $cuentas_netflix, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_netflix }}</td>
-                        <td>{{ $costos_netflix }}</td>
-                        <td>{{ $ingresos_netflix - $costos_netflix }}</td>
-                        <td>
-                            @if ($costos_netflix != 0)
-                                {{ number_format($ingresos_netflix / $costos_netflix, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_netflix != 0)
-                                {{ number_format($ingresos_netflix / $usuarios_netflix, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_netflix != 0)
-                                {{ number_format($costos_netflix / $usuarios_netflix, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_netflix != 0)
-                                {{ number_format(($ingresos_netflix - $costos_netflix) / $usuarios_netflix, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Disney</td>
-                        <td>{{ $cuentas_disney }}</td>
-                        <td>{{ $usuarios_disney }}</td>
-                        <td>
-                            @if ($cuentas_disney != 0)
-                                {{ number_format($usuarios_disney / $cuentas_disney, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_disney }}</td>
-                        <td>{{ $costos_disney }}</td>
-                        <td>{{ $ingresos_disney - $costos_disney }}</td>
-                        <td>
-                            @if ($costos_disney != 0)
-                                {{ number_format($ingresos_disney / $costos_disney, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_disney != 0)
-                                {{ number_format($ingresos_disney / $usuarios_disney, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_disney != 0)
-                                {{ number_format($costos_disney / $usuarios_disney, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_disney != 0)
-                                {{ number_format(($ingresos_disney - $costos_disney) / $usuarios_disney, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Prime</td>
-                        <td>{{ $cuentas_prime }}</td>
-                        <td>{{ $usuarios_prime }}</td>
-                        <td>
-                            @if ($cuentas_prime != 0)
-                                {{ number_format($usuarios_prime / $cuentas_prime, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_prime }}</td>
-                        <td>{{ $costos_prime }}</td>
-                        <td>{{ $ingresos_prime - $costos_prime }}</td>
-                        <td>
-                            @if ($costos_prime != 0)
-                                {{ number_format($ingresos_prime / $costos_prime, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_prime != 0)
-                                {{ number_format($ingresos_prime / $usuarios_prime, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_prime != 0)
-                                {{ number_format($costos_prime / $usuarios_prime, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_prime != 0)
-                                {{ number_format(($ingresos_prime - $costos_prime) / $usuarios_prime, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Max</td>
-                        <td>{{ $cuentas_max }}</td>
-                        <td>{{ $usuarios_max }}</td>
-                        <td>
-                            @if ($cuentas_max != 0)
-                                {{ number_format($usuarios_max / $cuentas_max, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_max }}</td>
-                        <td>{{ $costos_max }}</td>
-                        <td>{{ $ingresos_max - $costos_max }}</td>
-                        <td>
-                            @if ($costos_max != 0)
-                                {{ number_format($ingresos_max / $costos_max, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_max != 0)
-                                {{ number_format($ingresos_max / $usuarios_max, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_max != 0)
-                                {{ number_format($costos_max / $usuarios_max, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_max != 0)
-                                {{ number_format(($ingresos_max - $costos_max) / $usuarios_max, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Magis</td>
-                        <td>{{ $cuentas_magis }}</td>
-                        <td>{{ $usuarios_magis }}</td>
-                        <td>
-                            @if ($cuentas_magis != 0)
-                                {{ number_format($usuarios_magis / $cuentas_magis, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_magis }}</td>
-                        <td>{{ $costos_magis }}</td>
-                        <td>{{ $ingresos_magis - $costos_magis }}</td>
-                        <td>
-                            @if ($costos_magis != 0)
-                                {{ number_format($ingresos_magis / $costos_magis, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_magis != 0)
-                                {{ number_format($ingresos_magis / $usuarios_magis, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_magis != 0)
-                                {{ number_format($costos_magis / $usuarios_magis, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_magis != 0)
-                                {{ number_format(($ingresos_magis - $costos_magis) / $usuarios_magis, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Crunchy</td>
-                        <td>{{ $cuentas_crunchy }}</td>
-                        <td>{{ $usuarios_crunchy }}</td>
-                        <td>
-                            @if ($cuentas_crunchy != 0)
-                                {{ number_format($usuarios_crunchy / $cuentas_crunchy, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_crunchy }}</td>
-                        <td>{{ $costos_crunchy }}</td>
-                        <td>{{ $ingresos_crunchy - $costos_crunchy }}</td>
-                        <td>
-                            @if ($costos_crunchy != 0)
-                                {{ number_format($ingresos_crunchy / $costos_crunchy, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_crunchy != 0)
-                                {{ number_format($ingresos_crunchy / $usuarios_crunchy, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_crunchy != 0)
-                                {{ number_format($costos_crunchy / $usuarios_crunchy, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_crunchy != 0)
-                                {{ number_format(($ingresos_crunchy - $costos_crunchy) / $usuarios_crunchy, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Paramount</td>
-                        <td>{{ $cuentas_paramount }}</td>
-                        <td>{{ $usuarios_paramount }}</td>
-                        <td>
-                            @if ($cuentas_paramount != 0)
-                                {{ number_format($usuarios_paramount / $cuentas_paramount, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_paramount }}</td>
-                        <td>{{ $costos_paramount }}</td>
-                        <td>{{ $ingresos_paramount - $costos_paramount }}</td>
-                        <td>
-                            @if ($costos_paramount != 0)
-                                {{ number_format($ingresos_paramount / $costos_paramount, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_paramount != 0)
-                                {{ number_format($ingresos_paramount / $usuarios_paramount, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_paramount != 0)
-                                {{ number_format($costos_paramount / $usuarios_paramount, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_paramount != 0)
-                                {{ number_format(($ingresos_paramount - $costos_paramount) / $usuarios_paramount, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Spotify</td>
-                        <td>{{ $cuentas_spotify }}</td>
-                        <td>{{ $usuarios_spotify }}</td>
-                        <td>
-                            @if ($cuentas_spotify != 0)
-                                {{ number_format($usuarios_spotify / $cuentas_spotify, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_spotify }}</td>
-                        <td>{{ $costos_spotify }}</td>
-                        <td>{{ $ingresos_spotify - $costos_spotify }}</td>
-                        <td>
-                            @if ($costos_spotify != 0)
-                                {{ number_format($ingresos_spotify / $costos_spotify, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_spotify != 0)
-                                {{ number_format($ingresos_spotify / $usuarios_spotify, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_spotify != 0)
-                                {{ number_format($costos_spotify / $usuarios_spotify, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_spotify != 0)
-                                {{ number_format(($ingresos_spotify - $costos_spotify) / $usuarios_spotify, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Otros</td>
-                        <td>{{ $cuentas_otros }}</td>
-                        <td>{{ $usuarios_otros }}</td>
-                        <td>
-                            @if ($cuentas_otros != 0)
-                                {{ number_format($usuarios_otros / $cuentas_otros, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>{{ $ingresos_otros }}</td>
-                        <td>{{ $costos_otros }}</td>
-                        <td>{{ $ingresos_otros - $costos_otros }}</td>
-                        <td>
-                            @if ($costos_otros != 0)
-                                {{ number_format($ingresos_otros / $costos_otros, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_otros != 0)
-                                {{ number_format($ingresos_otros / $usuarios_otros, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_otros != 0)
-                                {{ number_format($costos_otros / $usuarios_otros, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                        <td>
-                            @if ($usuarios_otros != 0)
-                                {{ number_format(($ingresos_otros - $costos_otros) / $usuarios_otros, 2) }}
-                            @else
-                                0
-                            @endif
-                        </td>
-                    </tr>
+    {{-- Tabla de Resultados del Mes --}}
+    @include('partials.dashboard-statistics-table')
 
-
-                    <tr>
-                        <td><strong>Totales</strong></td>
-                        <td><strong>{{ $num_cuentas }}</strong></td>
-                        <td><strong>{{ $total_usuarios_activos }}</strong></td>
-                        <td>
-                            @if ($num_cuentas != 0)
-                                <strong>{{ number_format($total_usuarios_activos / $num_cuentas, 2) }}</strong>
-                            @else
-                                <strong>0</strong>
-                            @endif
-                        </td>
-                        <td><strong>{{ $ingresos_mes }}</strong></td>
-                        <td><strong>{{ $costos_mes }}</strong></td>
-                        <td><strong>{{ $ingresos_mes - $costos_mes }}</strong></td>
-                        <td>
-                            @if ($costos_mes != 0)
-                                <strong>{{ number_format($ingresos_mes / $costos_mes, 2) }}</strong>
-                            @else
-                                <strong>0</strong>
-                            @endif
-                        </td>
-                        <td>
-                            @if ($total_usuarios_activos != 0)
-                                <strong>{{ number_format($ingresos_mes / $total_usuarios_activos, 2) }}</strong>
-                            @else
-                                <strong>0</strong>
-                            @endif
-                        </td>
-                        <td>
-                            @if ($total_usuarios_activos != 0)
-                                <strong>{{ number_format($costos_mes / $total_usuarios_activos, 2) }}</strong>
-                            @else
-                                <strong>0</strong>
-                            @endif
-                        </td>
-                        <td>
-                            @if ($total_usuarios_activos != 0)
-                                <strong>{{ number_format(($ingresos_mes - $costos_mes) / $total_usuarios_activos, 2) }}</strong>
-                            @else
-                                <strong>0</strong>
-                            @endif
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-
-            <!-- Información de paginación y controles -->
-            <div class="row mt-3 align-items-center">
-                <div class="col-md-6 col-12 mb-2 mb-md-0">
-                    <div id="resultados-table-row-info" class="text-muted"></div>
-                </div>
-                <div class="col-md-6 col-12">
-                    <div id="resultados-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- Resumen Financiero --}}
     <div class="card mb-4">
+        <div class="card-header" style="background-color: var(--bg-light);">
+            <h5 class="mb-0" style="color: var(--text-primary);">
+                <i class="fas fa-calculator me-2"></i>Resumen Financiero del Mes
+            </h5>
+        </div>
         <div class="card-body">
-            <h3>📊 Resumen financiero</h5>
-                <div class="row mb-2">
-                    <div class="col-4"><strong>📌 Concepto</strong></div>
-                    <div class="col-4 text-end"><strong>💰 Monto</strong></div>
-                    <div class="col-4 text-end"><strong>📈 Porcentaje</strong></div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-4"><strong>💵 Ingresos:</strong></div>
-                    <div class="col-4 text-end">{{ number_format($ingresos_mes, 2) }}</div>
-                    <div class="col-4 text-end"><strong>100%</strong></div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-4"><strong>🏭 Costos:</strong></div>
-                    <div class="col-4 text-end">{{ number_format($costos_mes, 2) }}</div>
-                    <div class="col-4 text-end">{{ number_format($costos_pct, 2) }}%</div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-4"><strong>💸 Gastos:</strong></div>
-                    <div class="col-4 text-end">{{ number_format($gastos_mes, 2) }}</div>
-                    <div class="col-4 text-end">{{ number_format($gastos_pct, 2) }}%</div>
-                </div>
-                <div class="row mb-2">
-                    <div class="col-4"><strong>📉 Balance:</strong></div>
-                    <div class="col-4 text-end">
-                        <strong>
-                            <span class="{{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
-                                {{ number_format($balance, 2) }}
-                            </span>
-                        </strong>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-chart-pie me-2 text-primary"></i>Análisis de Resultados
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>📌 Concepto</th>
+                                    <th class="text-end">💰 Monto</th>
+                                    <th class="text-end">📈 Porcentaje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>💵 Ingresos</strong></td>
+                                    <td class="text-end">${{ number_format($ingresos_mes, 2) }}</td>
+                                    <td class="text-end"><strong>100%</strong></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>🏭 Costos</strong></td>
+                                    <td class="text-end">${{ number_format($costos_mes, 2) }}</td>
+                                    <td class="text-end">{{ number_format($costos_pct, 2) }}%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>💸 Gastos</strong></td>
+                                    <td class="text-end">${{ number_format($gastos_mes, 2) }}</td>
+                                    <td class="text-end">{{ number_format($gastos_pct, 2) }}%</td>
+                                </tr>
+                                <tr class="table-{{ $balance >= 0 ? 'success' : 'danger' }}">
+                                    <td><strong>📊 Balance</strong></td>
+                                    <td class="text-end">
+                                        <strong>${{ number_format($balance, 2) }}</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ number_format($balance_pct, 2) }}%</strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="col-4 text-end">
-                        <strong>
-                            <span class="{{ $balance >= 0 ? 'text-success' : 'text-danger' }}">
-                                {{ number_format($balance_pct, 2) }}%
-                            </span>
-                        </strong>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-receipt me-2 text-warning"></i>Desglose de Gastos
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>📍 Concepto</th>
+                                    <th class="text-end">💲 Monto</th>
+                                    <th class="text-end">📊 %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($gastos as $gasto)
+                                    <tr>
+                                        <td>{{ $gasto['concepto'] }}</td>
+                                        <td class="text-end">${{ number_format($gasto['total'], 2) }}</td>
+                                        <td class="text-end">{{ $gasto['porcentaje'] }}%</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <hr> <!-- Línea de separación -->
-                <h4 class="mt-3">📌 Resumen de Gastos</h6>
-                <div class="row fw-bold">
-                    <div class="col-4">📍 Concepto</div>
-                    <div class="col-4 text-end">💲 Monto</div>
-                    <div class="col-4 text-end">📊 Porcentaje</div>
-                </div>
-                @foreach ($gastos as $gasto)
-                    <div class="row mb-2">
-                        <div class="col-4">{{ $gasto['concepto'] }}</div>
-                        <div class="col-4 text-end">{{ number_format($gasto['total'], 2) }}</div>
-                        <div class="col-4 text-end">{{ $gasto['porcentaje'] }}%</div>
-                    </div>
-                @endforeach
-                <p class="mt-3">Visualiza los gráficos de resultados del mes actual.</p>
+            </div>
+            <p class="text-muted mb-0">
+                <i class="fas fa-info-circle me-1"></i>
+                Visualiza los gráficos de resultados del mes actual en la sección inferior.
+            </p>
         </div>
     </div>
     <div class="card mb-4">
