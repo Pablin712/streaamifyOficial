@@ -172,6 +172,17 @@ html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-selection--
     color: #e2e8f0 !important;
 }
 
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-selection__rendered {
+    color: #e2e8f0 !important;
+}
+
+html[data-dark-mode="true"] .select2-container--bootstrap-5 .select2-selection__placeholder {
+    color: #a0aec0 !important;
+}
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
 /* Reglas ULTRA específicas para resultados renderizados dinámicamente */
 html[data-dark-mode="true"] .select2-results > .select2-results__options > li,
 html[data-dark-mode="true"] .select2-results__options > .select2-results__option {
