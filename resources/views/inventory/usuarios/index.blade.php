@@ -197,8 +197,13 @@
                         @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
                             <td>
                                 @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                    <button type="button" class="btn btn-warning btn-sm"
-                                        onclick="cambiarUsuario({{ $usuario->iddet }}, '{{ $usuario->nombre_cliente }}', {{ $usuario->idven }}, {{ $usuario->idcue }}, {{ $usuario->perfil }}, '{{ $usuario->fecha_vencimiento }}')"
+                                    <button type="button" class="btn btn-warning btn-sm btn-cambiar-usuario"
+                                        data-iddet="{{ $usuario->iddet }}"
+                                        data-nombrecli="{{ $usuario->nombre_cliente }}"
+                                        data-idven="{{ $usuario->idven }}"
+                                        data-idcue="{{ $usuario->idcue }}"
+                                        data-perfil="{{ $usuario->perfil }}"
+                                        data-fecha="{{ $usuario->fecha_vencimiento }}"
                                         title="Cambiar usuario">
                                         <i class="fas fa-exchange-alt"></i>
                                     </button>
@@ -289,18 +294,59 @@
             document.getElementById('change_perfil').value = perfil;
             document.getElementById('change_fecha_vencimiento').value = fechaVencimiento;
 
-            // Setear select de cuenta
-            const cuentaSelect = document.getElementById('change_idcue');
-            if (cuentaSelect) {
-                cuentaSelect.value = idcue;
-                $(cuentaSelect).trigger('change');
-            }
-
             const form = document.getElementById('changeUsuarioForm');
             form.action = "{{ route('usuarios.update', '') }}/" + iddet;
 
             window.dispatchEvent(new CustomEvent('open-modal', { detail: 'cambiar-usuario' }));
+
+            // Inicializar Select2 después de abrir el modal
+            setTimeout(function() {
+                const $select = $('#change_idcue');
+
+                // Destruir instancia previa si existe
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                // Inicializar Select2
+                $select.select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '-- Selecciona una Cuenta --',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('.modal-overlay:visible .modal-content'),
+                    language: {
+                        noResults: function() {
+                            return "No se encontraron resultados";
+                        }
+                    }
+                });
+
+                // Setear el valor seleccionado
+                $select.val(idcue).trigger('change');
+
+                // Asegurar que el dropdown se posicione correctamente
+                $select.on('select2:open', function() {
+                    $('.select2-dropdown').css('z-index', 99999);
+                });
+            }, 400);
         }
+
+        // Event listener para botones de cambiar usuario
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-cambiar-usuario')) {
+                    const btn = e.target.closest('.btn-cambiar-usuario');
+                    const iddet = btn.dataset.iddet;
+                    const nombrecli = btn.dataset.nombrecli;
+                    const idven = btn.dataset.idven;
+                    const idcue = btn.dataset.idcue;
+                    const perfil = btn.dataset.perfil;
+                    const fecha = btn.dataset.fecha;
+                    cambiarUsuario(iddet, nombrecli, idven, idcue, perfil, fecha);
+                }
+            });
+        });
 
         // ========================================================================
         // FUNCIÓN DE MODAL - MOVER USUARIO

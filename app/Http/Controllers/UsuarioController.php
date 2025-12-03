@@ -26,7 +26,8 @@ class UsuarioController extends Controller
             abort(403, 'No tienes permiso para ver los usuarios.');
         }
         $usuarios = ViewUsuarioActivo::orderBy('fecha_vencimiento')->orderBy('nombre_cliente')->get();
-        return view('inventory.usuarios.index', compact('usuarios'));
+        $cuentas = Cuenta::where('activocue', true)->orderBy('idcue')->get();
+        return view('inventory.usuarios.index', compact('usuarios', 'cuentas'));
     }
 
     // Método para mostrar el formulario de cambio de usuario

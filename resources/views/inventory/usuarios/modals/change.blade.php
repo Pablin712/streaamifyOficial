@@ -7,7 +7,7 @@
     <form id="changeUsuarioForm" method="POST">
         @csrf
         @method('PUT')
-        <div class="modal-body">
+        <div class="modal-body" style="padding-bottom: 200px;">
             <!-- Nombre del Cliente (readonly) -->
             <div class="form-group mb-3">
                 <label for="change_nombrecli">Nombre del Cliente</label>
@@ -21,18 +21,14 @@
             </div>
 
             <!-- Selector de Cuenta -->
-            <div class="form-group mb-3">
+            <div class="form-group mb-4">
                 <label for="change_idcue">Cuenta</label>
-                <x-searchable-select
-                    id="change_idcue"
-                    name="idcue"
-                    :options="$cuentas"
-                    valueField="idcue"
-                    labelField="usuariocue"
-                    placeholder="-- Selecciona una Cuenta --"
-                    :required="true"
-                    dropdownParent="body"
-                />
+                <select name="idcue" id="change_idcue" class="form-control" required>
+                    <option value="">-- Selecciona una Cuenta --</option>
+                    @foreach ($cuentas as $cuenta)
+                        <option value="{{ $cuenta->idcue }}">{{ $cuenta->usuariocue }}</option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- Número de Perfil -->
