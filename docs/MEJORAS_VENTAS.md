@@ -47,13 +47,26 @@ El layout de la aplicación utiliza `@yield('scripts')` en lugar de `@stack('scr
 - **Características**:
   - Verificación de dependencias (jQuery y Select2)
   - Configuración Bootstrap 5
+  - **Detección dinámica de modo oscuro/claro**:
+    - Integración con `ThemeManager` para detectar dark mode
+    - Verifica atributo `data-dark-mode` del documento
+    - Detección de clases `dark` en html/body
+    - Fallback a preferencia del sistema (`prefers-color-scheme`)
+  - **Estilos adaptativos**:
+    - Modo oscuro: fondo #2d3748, texto #e2e8f0
+    - Modo claro: fondo #ffffff, texto #212529
+    - Actualización automática al cambiar tema
   - Detección automática de modales para `dropdownParent`
   - Event listeners para modales Alpine.js
+  - Listener para cambios de tema (`darkModeChanged`)
+  - Observer para cambios en atributos del documento
   - Textos en español
 - **Inicialización automática en**:
   - `$(document).ready()` - Al cargar la página
   - `window.addEventListener('open-modal')` - Al abrir modales Alpine.js
+  - `window.addEventListener('darkModeChanged')` - Al cambiar tema
   - `window.addEventListener('reinitialize-selects')` - Evento personalizado
+  - `MutationObserver` - Al cambiar atributos `data-dark-mode`, `data-theme`, `class`
 
 **3. Helper de Clientes**:
 - **Archivo**: `public/js/ventasClienteHelper.js`

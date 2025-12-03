@@ -21,7 +21,7 @@
 @section('btncrear')
     <!-- Botón para abrir el modal de creación de gasto -->
     @if (Auth::user()->hasPermissionTo('gastos.store'))
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#seleccionarTipoGastoModal">
+        <button type="button" class="btn btn-primary mb-3" onclick="openCreateGastoModal()">
             Crear Gasto
         </button>
     @endif
@@ -113,22 +113,18 @@
                         <td>
                             @if (Auth::user()->hasPermissionTo('gastos.update'))
                                 <!-- Editar gasto (abre el modal con los datos del gasto) -->
-                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                                    data-bs-target="#editarGastoModal" data-id="{{ $gasto->idgas }}"
-                                    data-idtip="{{ $gasto->idtip }}" data-descripciongas="{{ $gasto->descripciongas }}"
-                                    data-montogas="{{ $gasto->montogas }}" data-fechagas="{{ $gasto->fechagas }}">
+                                <button type="button"
+                                    class="btn btn-warning fas fa-edit"
+                                    onclick="editarGasto({{ $gasto->idgas }}, {{ $gasto->idtip }}, '{{ $gasto->descripciongas }}', {{ $gasto->montogas }}, '{{ $gasto->fechagas }}')">
                                     Editar
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('gastos.destroy'))
-                                <!-- Eliminar gasto -->
-                                <form action="{{ route('gastos.destroy', $gasto->idgas) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger"
-                                        onclick="return confirm('¿Estás seguro?')"><i class="fas fa-trash"></i></button>
-                                </form>
+                                <button type="button" class="btn btn-danger"
+                                    onclick="confirmarEliminarGasto({{ $gasto->idgas }})"
+                                    title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             @endif
                         </td>
                     @endif
@@ -158,7 +154,7 @@
             @if (Auth::user()->hasPermissionTo('tipos.store'))
                 <div class="form-group mb-3">
                     <!-- Botón para abrir el modal -->
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#crearTipoGastoModal">
+                    <button class="btn btn-success" onclick="openCreateTipoGastoModal()">
                         Crear Tipo de Gasto
                     </button>
                 </div>
@@ -229,23 +225,18 @@
                                 <td>
                                     @if (Auth::user()->hasPermissionTo('tipos.update'))
                                         <!-- Editar Tipo de Gasto -->
-                                        <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                                            data-bs-target="#editarTipoGastoModal" data-idtip="{{ $tipoGasto->idtip }}"
-                                            data-detalletip="{{ $tipoGasto->detalletip }}">
+                                        <button type="button"
+                                            class="btn btn-warning fas fa-edit"
+                                            onclick="editarTipoGasto({{ $tipoGasto->idtip }}, '{{ $tipoGasto->detalletip }}')">
                                             Editar
                                         </button>
                                     @endif
                                     @if (Auth::user()->hasPermissionTo('tipos.destroy'))
-                                        <!-- Eliminar Tipo de Gasto -->
-                                        <form action="{{ route('tipos.destroy', $tipoGasto->idtip) }}" method="POST"
-                                            style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger"
-                                                onclick="return confirm('¿Estás seguro?')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-danger"
+                                            onclick="confirmarEliminarTipoGasto({{ $tipoGasto->idtip }})"
+                                            title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     @endif
                                 </td>
                             @endif
@@ -268,207 +259,159 @@
     </div>
 @endsection
 
-<!-- Modal para crear un nuevo gasto -->
-<div class="modal fade" id="seleccionarTipoGastoModal" tabindex="-1" aria-labelledby="seleccionarTipoGastoModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="seleccionarTipoGastoModalLabel">Seleccionar Tipo de Gasto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('gastos.store') }}" method="POST">
-                    @csrf
-                    <!-- Selector de Tipo de Gasto -->
-                    <div class="form-group mb-3">
-                        <label for="idtip">Seleccionar Tipo de Gasto</label>
-                        <select name="idtip" id="idtip" class="form-control" required>
-                            <option value="">-- Selecciona un Tipo de Gasto --</option>
-                            @foreach ($tipoGastos as $tipoGasto)
-                                <option value="{{ $tipoGasto->idtip }}">
-                                    {{ $tipoGasto->detalletip }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <!-- Campos del Gasto -->
-                    <div class="form-group mb-3">
-                        <label for="descripciongas">Descripción</label>
-                        <input type="text" name="descripciongas" id="descripciongas" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="montogas">Monto</label>
-                        <input type="number" name="montogas" id="montogas" class="form-control" step="0.01" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="fechagas">Fecha</label>
-                        <input type="date" name="fechagas" id="fechagas" class="form-control"
-                            value="{{ now()->format('Y-m-d') }}">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Editar Gasto -->
-<div class="modal fade" id="editarGastoModal" tabindex="-1" aria-labelledby="editarGastoModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarGastoModalLabel">Editar Gasto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="#" method="POST" id="editarGastoForm">
-                    @csrf
-                    @method('PUT')
-                    <!-- Selector de Tipo de Gasto -->
-                    <div class="form-group mb-3">
-                        <label for="idtip">Seleccionar Tipo de Gasto</label>
-                        <select name="idtip" id="edit_idtip" class="form-control" required>
-                            <option value="">-- Selecciona un Tipo de Gasto --</option>
-                            @foreach ($tipoGastos as $tipoGasto)
-                                <option value="{{ $tipoGasto->idtip }}">
-                                    {{ $tipoGasto->detalletip }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <!-- Campos de Gasto -->
-                    <div class="form-group mb-3">
-                        <label for="descripciongas">Descripción</label>
-                        <input type="text" name="descripciongas" id="edit_descripciongas" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="montogas">Monto</label>
-                        <input type="number" name="montogas" id="edit_montogas" class="form-control" step="0.01" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="fechagas">Fecha</label>
-                        <input type="date" name="fechagas" id="edit_fechagas" class="form-control">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para crear un nuevo Tipo de Gasto -->
-<div class="modal fade" id="crearTipoGastoModal" tabindex="-1" aria-labelledby="crearTipoGastoModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="crearTipoGastoModalLabel">Crear Tipo de Gasto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('tipos.store') }}" method="POST">
-                    @csrf
-                    <!-- Campo para el detalle del tipo de gasto -->
-                    <div class="form-group mb-3">
-                        <label for="detalletip">Detalle del Tipo de Gasto</label>
-                        <input type="text" name="detalletip" id="detalletip" class="form-control" required>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Editar Tipo de Gasto -->
-<div class="modal fade" id="editarTipoGastoModal" tabindex="-1" aria-labelledby="editarTipoGastoModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarTipoGastoModalLabel">Editar Tipo de Gasto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="#" method="POST" id="editarTipoGastoForm">
-                    @csrf
-                    @method('PUT')
-                    <!-- Campo para el detalle del tipo de gasto -->
-                    <div class="form-group mb-3">
-                        <label for="edit-detalletip">Detalle del Tipo de Gasto</label>
-                        <input type="text" name="detalletip" id="edit-detalletip" class="form-control" required>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Modales -->
+@include('finance.gastos.modals.create')
+@include('finance.gastos.modals.edit')
+@include('finance.gastos.modals.create-tipo')
+@include('finance.gastos.modals.edit-tipo')
+@include('finance.gastos.modals.delete')
+@include('finance.gastos.modals.delete-tipo')
 
 {{-- Scripts --}}
 @section('scripts')
-    <script>
-        $(document).ready(function() {
-            // Función para rellenar el formulario del modal al abrirlo (Editar Gasto)
-            $('#editarGastoModal').on('show.bs.modal', function(event) {
-                var button = $(event.relatedTarget);
-                var idgas = button.data('id');
-                var idtip = button.data('idtip');
-                var descripciongas = button.data('descripciongas');
-                var montogas = button.data('montogas');
-                var fechagas = button.data('fechagas');
-
-                console.log('ID Gasto:', idgas);
-                console.log('ID Tipo:', idtip);
-                console.log('Descripción:', descripciongas);
-                console.log('Monto:', montogas);
-                console.log('Fecha:', fechagas);
-
-                var modal = $(this);
-                modal.find('#edit_idtip').val(idtip);
-                modal.find('#edit_descripciongas').val(descripciongas);
-                modal.find('#edit_montogas').val(montogas);
-                modal.find('#edit_fechagas').val(fechagas);
-
-                var formAction = "{{ route('gastos.update', '') }}/" + idgas;
-                modal.find('#editarGastoForm').attr('action', formAction);
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Función para rellenar el formulario del modal al abrirlo (Editar Tipo de Gasto)
-            $('#editarTipoGastoModal').on('show.bs.modal', function(event) {
-                var button = $(event.relatedTarget);
-                var idtip = button.data('idtip');
-                var detalletip = button.data('detalletip');
-
-                console.log('ID Tipo de Gasto:', idtip);
-                console.log('Detalle Tipo de Gasto:', detalletip);
-
-                var modal = $(this);
-                modal.find('#edit-detalletip').val(detalletip);
-
-                var formAction = "{{ route('tipos.update', '') }}/" + idtip;
-                modal.find('#editarTipoGastoForm').attr('action', formAction);
-            });
-        });
-    </script>
-
     {{-- Enhanced Table v2 --}}
     <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+
+    <script>
+        console.log('Vista de gastos cargada con Enhanced Table v2.0');
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - CREAR GASTO
+        // ============================================================================
+        function openCreateGastoModal() {
+            console.log('🔷 Abriendo modal de crear gasto...');
+            const form = document.getElementById('createGastoForm');
+            if (form) form.reset();
+
+            // Resetear fecha a hoy
+            const fechaInput = document.getElementById('fechagas');
+            if (fechaInput) {
+                fechaInput.value = new Date().toISOString().split('T')[0];
+            }
+
+            // Abrir el modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-gasto' }));
+
+            // Inicializar Select2 después de abrir el modal
+            setTimeout(function() {
+                const $select = $('#idtip');
+
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '-- Selecciona un Tipo de Gasto --',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('.modal-overlay:visible .modal-content'),
+                    language: {
+                        noResults: function() { return "No se encontraron resultados"; },
+                        searching: function() { return "Buscando..."; }
+                    }
+                });
+
+                console.log('✅ Select2 inicializado en modal crear-gasto');
+            }, 400);
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - EDITAR GASTO
+        // ============================================================================
+        window.editarGasto = function(idgas, idtip, descripciongas, montogas, fechagas) {
+            console.log('🔷 Abriendo modal de editar gasto:', idgas);
+
+            // Llenar el formulario
+            document.getElementById('edit_descripciongas').value = descripciongas;
+            document.getElementById('edit_montogas').value = montogas;
+            document.getElementById('edit_fechagas').value = fechagas;
+
+            // Actualizar la acción del formulario
+            const form = document.getElementById('editarGastoForm');
+            form.action = "{{ route('gastos.update', '') }}/" + idgas;
+
+            // Abrir modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-gasto' }));
+
+            // Inicializar Select2 y establecer valor
+            setTimeout(function() {
+                const $select = $('#edit_idtip');
+
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.select2({
+                    theme: 'bootstrap-5',
+                    placeholder: '-- Selecciona un Tipo de Gasto --',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('.modal-overlay:visible .modal-content'),
+                    language: {
+                        noResults: function() { return "No se encontraron resultados"; },
+                        searching: function() { return "Buscando..."; }
+                    }
+                });
+
+                // Establecer el valor después de inicializar
+                $select.val(idtip).trigger('change');
+
+                console.log('✅ Select2 inicializado en modal editar-gasto');
+            }, 400);
+        };
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - CREAR TIPO GASTO
+        // ============================================================================
+        function openCreateTipoGastoModal() {
+            console.log('🔷 Abriendo modal de crear tipo gasto...');
+            const form = document.getElementById('createTipoGastoForm');
+            if (form) form.reset();
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-tipo-gasto' }));
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - EDITAR TIPO GASTO
+        // ============================================================================
+        window.editarTipoGasto = function(idtip, detalletip) {
+            console.log('🔷 Abriendo modal de editar tipo gasto:', idtip);
+
+            // Llenar el formulario
+            document.getElementById('edit_detalletip').value = detalletip;
+
+            // Actualizar la acción del formulario
+            const form = document.getElementById('editarTipoGastoForm');
+            form.action = "{{ route('tipos.update', '') }}/" + idtip;
+
+            // Abrir modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-tipo-gasto' }));
+        };
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - ELIMINAR GASTO
+        // ============================================================================
+        function confirmarEliminarGasto(idgas) {
+            console.log('🔷 Abriendo modal de eliminar gasto:', idgas);
+
+            const form = document.getElementById('deleteGastoForm');
+            form.action = "{{ route('gastos.destroy', '') }}/" + idgas;
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'eliminar-gasto' }));
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - ELIMINAR TIPO GASTO
+        // ============================================================================
+        function confirmarEliminarTipoGasto(idtip) {
+            console.log('🔷 Abriendo modal de eliminar tipo gasto:', idtip);
+
+            const form = document.getElementById('deleteTipoGastoForm');
+            form.action = "{{ route('tipos.destroy', '') }}/" + idtip;
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'eliminar-tipo-gasto' }));
+        }
+    </script>
 @endsection
+

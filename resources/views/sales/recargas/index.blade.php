@@ -122,9 +122,9 @@
                                 <td>
                                     <div class="d-flex align-items-center justify-content-center">
                                         <span class="me-2 badge bg-secondary">{{ $recarga->numcomprobante }}</span>
-                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#modalComprobante" data-id="{{ $recarga->idrec }}"
-                                            data-img="{{ asset('storage/' . $recarga->foto) }}">
+                                        <button type="button" class="btn btn-info btn-sm"
+                                            onclick="verComprobante('{{ asset('storage/' . $recarga->foto) }}')"
+                                            title="Ver comprobante">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
@@ -141,23 +141,17 @@
                                     </span>
                                     @if ($recarga->estado->nombre === 'Pendiente')
                                         @if (Auth::user()->hasPermissionTo('empleado.recargas.updateEstado'))
-                                            <form action="{{ route('empleado.recargas.updateEstado', $recarga->idrec) }}" method="POST"
-                                                style="display: inline;">
-                                                @csrf
-                                                <input type="hidden" name="idestado" id="idestado">
+                                            <button type="button" class="btn btn-success btn-sm"
+                                                onclick="confirmarAprobarRecarga({{ $recarga->idrec }})"
+                                                title="Aprobar recarga">
+                                                Aprobar
+                                            </button>
 
-                                                <!-- Botón Aprobar -->
-                                                <button type="submit" class="btn btn-success btn-sm"
-                                                    onclick="return confirmarAccion('¿Estás seguro de que quieres aprobar esta recarga?', 'aprobado');">
-                                                    Aprobar
-                                                </button>
-
-                                                <!-- Botón Rechazar -->
-                                                <button type="submit" class="btn btn-danger btn-sm"
-                                                    onclick="return confirmarAccion('¿Estás seguro de que quieres rechazar esta recarga?', 'rechazado');">
-                                                    Rechazar
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                onclick="confirmarRechazarRecarga({{ $recarga->idrec }})"
+                                                title="Rechazar recarga">
+                                                Rechazar
+                                            </button>
                                         @endif
                                     @endif
                                 </td>
@@ -176,28 +170,13 @@
                     <div id="recargas-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal Único -->
-    <div class="modal fade" id="modalComprobante" tabindex="-1" aria-labelledby="modalComprobanteLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalComprobanteLabel">Comprobante de Recarga</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="comprobanteImg" src="" alt="Comprobante" class="img-fluid"
-                        style="max-width: 300px; height: auto;">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+
+<!-- Modal de comprobante -->
+@include('sales.recargas.modals.comprobante')
+@include('sales.recargas.modals.aprobar')
+@include('sales.recargas.modals.rechazar')
 @endsection
 
 @section('scripts')
@@ -205,32 +184,41 @@
 <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 
 <script>
-    function confirmarAccion(mensaje, estado) {
-        const confirmacion = confirm(mensaje);
-        if (confirmacion) {
-            // Asigna el estado seleccionado al input oculto
-            document.getElementById('idestado').value = estado;
-            return true; // Permite enviar el formulario
-        }
-        return false; // Cancela el envío del formulario
-    }
-</script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var modalComprobante = document.getElementById('modalComprobante');
-
-        modalComprobante.addEventListener('show.bs.modal', function(event) {
-            var button = event.relatedTarget; // Botón que activó el modal
-            var imageUrl = button.getAttribute('data-img'); // Obtener URL de la imagen
-
-            var imgElement = document.getElementById('comprobanteImg');
-            imgElement.src = imageUrl; // Actualizar la imagen en el modal
-        });
-    });
-</script>
-
-<script>
     console.log('Vista de recargas cargada con Enhanced Table v2.0');
     console.log('Total de recargas en la tabla:', {{ $recargas->count() }});
+
+    // ============================================================================
+    // FUNCIÓN DE MODAL - VER COMPROBANTE
+    // ============================================================================
+    function verComprobante(imgUrl) {
+        console.log('🔷 Abriendo modal de comprobante:', imgUrl);
+
+        // Setear la imagen
+        document.getElementById('comprobanteImg').src = imgUrl;
+
+        // Abrir modal
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'ver-comprobante' }));
+    }
+
+    // ============================================================================
+    // FUNCIONES DE MODAL - APROBAR/RECHAZAR RECARGA
+    // ============================================================================
+    function confirmarAprobarRecarga(idrec) {
+        console.log('🔷 Abriendo modal de aprobar recarga:', idrec);
+
+        const form = document.getElementById('aprobarRecargaForm');
+        form.action = "{{ route('empleado.recargas.updateEstado', '') }}/" + idrec;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirmar-aprobar-recarga' }));
+    }
+
+    function confirmarRechazarRecarga(idrec) {
+        console.log('🔷 Abriendo modal de rechazar recarga:', idrec);
+
+        const form = document.getElementById('rechazarRecargaForm');
+        form.action = "{{ route('empleado.recargas.updateEstado', '') }}/" + idrec;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirmar-rechazar-recarga' }));
+    }
 </script>
 @endsection

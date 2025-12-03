@@ -26,7 +26,7 @@
 
     <!-- Botón crear costo -->
     <div class="mb-3">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#seleccionarCuentaModal">
+        <button type="button" class="btn btn-primary" onclick="openCreateCostoModal()">
             <i class="fas fa-plus"></i> Crear Costo
         </button>
     </div>
@@ -141,94 +141,10 @@
     </div>
 </div>
 
-<!-- Modal para crear un nuevo costo -->
-<div class="modal fade" id="seleccionarCuentaModal" tabindex="-1" aria-labelledby="seleccionarCuentaModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="seleccionarCuentaModalLabel">Crear Costo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('costos.store') }}" method="POST">
-                    @csrf
-                    <!-- Selector de Cuentas -->
-                    <div class="form-group mb-3">
-                        <label for="idcue">Seleccionar Cuenta</label>
-                        <select name="idcue" id="idcue" class="form-control" required>
-                            <option value="">-- Selecciona una Cuenta --</option>
-                            @foreach ($cuentas as $cuenta)
-                                <option value="{{ $cuenta->idcue }}">
-                                    {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <!-- Campos del Costo -->
-                    <div class="form-group mb-3">
-                        <label for="descripcioncos">Descripción</label>
-                        <input type="text" name="descripcioncos" id="descripcioncos" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="montocos">Monto</label>
-                        <input type="number" name="montocos" id="montocos" class="form-control" step="0.01"
-                            required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="fechacos">Fecha</label>
-                        <input type="date" name="fechacos" id="fechacos" class="form-control"
-                            value="{{ now()->format('Y-m-d') }}">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Modal para editar el costo -->
-<div class="modal fade" id="editarCostoModal" tabindex="-1" aria-labelledby="editarCostoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarCostoModalLabel">Editar Costo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editCostoForm" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group mb-3">
-                        <label for="edit_idcue">Cuenta</label>
-                        <!-- Campo solo lectura para la cuenta -->
-                        <input type="text" id="edit_idcue" class="form-control" readonly>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_descripcioncos">Descripción</label>
-                        <input type="text" name="descripcioncos" id="edit_descripcioncos" class="form-control"
-                            required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_montocos">Monto</label>
-                        <input type="number" name="montocos" id="edit_montocos" class="form-control"
-                            step="0.01" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_fechacos">Fecha</label>
-                        <input type="date" name="fechacos" id="edit_fechacos" class="form-control">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Modales -->
+@include('finance.costos.modals.create')
+@include('finance.costos.modals.edit')
+@include('finance.costos.modals.delete')
 @endsection
 
 @section('scripts')
@@ -236,167 +152,83 @@
 <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 
 <script>
-    // Función para llenar el formulario del modal con los datos del costo a editar
-    $('#editarCostoModal').on('show.bs.modal', function(event) {
-        var button = $(event.relatedTarget); // Botón que abrió el modal
-        var idcos = button.data('id');
-        var idcue = button.data('idcue'); // ID de la cuenta seleccionada
-        var descripcioncos = button.data('descripcioncos');
-        var montocos = button.data('montocos');
-        var fechacos = button.data('fechacos');
-
-        var modal = $(this);
-        modal.find('#edit_idcue').val(idcue); // Mostrar el ID de la cuenta asociada (campo solo lectura)
-        modal.find('#edit_descripcioncos').val(descripcioncos);
-        modal.find('#edit_montocos').val(montocos);
-        modal.find('#edit_fechacos').val(fechacos);
-
-        // Cambiar la acción del formulario de edición a la ruta del costo específico
-        var formAction = "{{ route('costos.update', '') }}/" + idcos;
-        modal.find('#editCostoForm').attr('action', formAction);
-    });
-</script>
-<script>
-    $(document).ready(function() {
-        // Inicializar Select2 en el modal cuando se abra
-        $("#seleccionarCuentaModal").on("shown.bs.modal", function() {
-            $("#idcue").select2({
-                dropdownParent: $(
-                "#seleccionarCuentaModal"), // Esto es clave para que funcione dentro del modal
-                placeholder: "Seleccione una cuenta",
-                allowClear: true,
-            });
-        });
-    });
-</script>
-
-<script>
     console.log('Vista de costos cargada con Enhanced Table v2.0 Server-side');
-</script>
-@endsection
 
-<!-- Modal para crear un nuevo costo -->
-<div class="modal fade" id="seleccionarCuentaModal" tabindex="-1" aria-labelledby="seleccionarCuentaModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="seleccionarCuentaModalLabel">Crear Costo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('costos.store') }}" method="POST">
-                    @csrf
-                    <!-- Selector de Cuentas -->
-                    <div class="form-group mb-3">
-                        <label for="idcue">Seleccionar Cuenta</label>
-                        <select name="idcue" id="idcue" class="form-control" required>
-                            <option value="">-- Selecciona una Cuenta --</option>
-                            @foreach ($cuentas as $cuenta)
-                                <option value="{{ $cuenta->idcue }}">
-                                    {{ $cuenta->idcue }} - {{ $cuenta->usuariocue }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <!-- Campos del Costo -->
-                    <div class="form-group mb-3">
-                        <label for="descripcioncos">Descripción</label>
-                        <input type="text" name="descripcioncos" id="descripcioncos" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="montocos">Monto</label>
-                        <input type="number" name="montocos" id="montocos" class="form-control" step="0.01"
-                            required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="fechacos">Fecha</label>
-                        <input type="date" name="fechacos" id="fechacos" class="form-control"
-                            value="{{ now()->format('Y-m-d') }}">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Modal para editar el costo -->
-<div class="modal fade" id="editarCostoModal" tabindex="-1" aria-labelledby="editarCostoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarCostoModalLabel">Editar Costo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editCostoForm" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group mb-3">
-                        <label for="edit_idcue">Cuenta</label>
-                        <!-- Campo solo lectura para la cuenta -->
-                        <input type="text" id="edit_idcue" class="form-control" readonly>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_descripcioncos">Descripción</label>
-                        <input type="text" name="descripcioncos" id="edit_descripcioncos" class="form-control"
-                            required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_montocos">Monto</label>
-                        <input type="number" name="montocos" id="edit_montocos" class="form-control"
-                            step="0.01" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_fechacos">Fecha</label>
-                        <input type="date" name="fechacos" id="edit_fechacos" class="form-control">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+    // ============================================================================
+    // FUNCIONES DE MODAL - CREAR COSTO
+    // ============================================================================
+    function openCreateCostoModal() {
+        console.log('🔷 Abriendo modal de crear costo...');
+        const form = document.getElementById('createCostoForm');
+        if (form) form.reset();
 
-@section('scripts')
-    <script>
-        // Función para llenar el formulario del modal con los datos del costo a editar
-        $('#editarCostoModal').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget); // Botón que abrió el modal
-            var idcos = button.data('id');
-            var idcue = button.data('idcue'); // ID de la cuenta seleccionada
-            var descripcioncos = button.data('descripcioncos');
-            var montocos = button.data('montocos');
-            var fechacos = button.data('fechacos');
+        // Resetear fecha a hoy
+        const fechaInput = document.getElementById('fechacos');
+        if (fechaInput) {
+            fechaInput.value = new Date().toISOString().split('T')[0];
+        }
 
-            var modal = $(this);
-            modal.find('#edit_idcue').val(idcue); // Mostrar el ID de la cuenta asociada (campo solo lectura)
-            modal.find('#edit_descripcioncos').val(descripcioncos);
-            modal.find('#edit_montocos').val(montocos);
-            modal.find('#edit_fechacos').val(fechacos);
+        // Abrir el modal
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-costo' }));
 
-            // Cambiar la acción del formulario de edición a la ruta del costo específico
-            var formAction = "{{ route('costos.update', '') }}/" + idcos;
-            modal.find('#editCostoForm').attr('action', formAction);
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
-            // Inicializar Select2 en el modal cuando se abra
-            $("#seleccionarCuentaModal").on("shown.bs.modal", function() {
-                $("#idcue").select2({
-                    dropdownParent: $(
-                    "#seleccionarCuentaModal"), // Esto es clave para que funcione dentro del modal
-                    placeholder: "Seleccione una cuenta",
-                    allowClear: true,
-                });
+        // Inicializar Select2 después de abrir el modal
+        setTimeout(function() {
+            const $select = $('#idcue');
+
+            // Destruir Select2 si ya existe
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            // Inicializar Select2
+            $select.select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecciona una Cuenta --',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('.modal-overlay:visible .modal-content'),
+                language: {
+                    noResults: function() { return "No se encontraron resultados"; },
+                    searching: function() { return "Buscando..."; }
+                }
             });
-        });
-    </script>
+
+            console.log('✅ Select2 inicializado en modal crear-costo');
+        }, 400);
+    }
+
+    // ============================================================================
+    // FUNCIONES DE MODAL - EDITAR COSTO
+    // ============================================================================
+    window.editarCosto = function(idcos, idcue, descripcioncos, montocos, fechacos) {
+        console.log('🔷 Abriendo modal de editar costo:', idcos);
+
+        // Llenar el formulario
+        document.getElementById('edit_idcue').value = idcue;
+        document.getElementById('edit_descripcioncos').value = descripcioncos;
+        document.getElementById('edit_montocos').value = montocos;
+        document.getElementById('edit_fechacos').value = fechacos;
+
+        // Actualizar la acción del formulario
+        const form = document.getElementById('editCostoForm');
+        form.action = "{{ route('costos.update', '') }}/" + idcos;
+
+        // Abrir modal
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-costo' }));
+    };
+
+    // ============================================================================
+    // FUNCIONES DE MODAL - ELIMINAR COSTO
+    // ============================================================================
+    window.confirmarEliminarCosto = function(idcos) {
+        console.log('🔷 Abriendo modal de eliminar costo:', idcos);
+
+        // Actualizar la acción del formulario
+        const form = document.getElementById('deleteCostoForm');
+        form.action = "{{ route('costos.destroy', '') }}/" + idcos;
+
+        // Abrir modal
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'eliminar-costo' }));
+    };
+</script>
 @endsection

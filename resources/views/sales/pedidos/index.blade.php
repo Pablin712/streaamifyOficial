@@ -143,8 +143,9 @@
                                 @if (Auth::user()->hasPermissionTo('empleado.pedidos.update'))
                                     <td>
                                         @if ($pedido->estado->nombre === 'Pendiente')
-                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#modalActualizarPedido-{{ $pedido->id }}" title="Responder">
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                onclick="abrirModalActualizarPedido({{ $pedido->id }}, '{{ $pedido->respuesta }}', {{ $pedido->idestado }})"
+                                                title="Responder">
                                                 <i class="fas fa-reply"></i> Responder
                                             </button>
                                         @else
@@ -169,48 +170,10 @@
             </div>
         </div>
     </div>
-
-    <!-- Modales de actualizar pedido -->
-    @foreach ($pedidos as $pedido)
-        <div class="modal fade" id="modalActualizarPedido-{{ $pedido->id }}" tabindex="-1"
-            aria-labelledby="modalActualizarPedidoLabel-{{ $pedido->id }}" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalActualizarPedidoLabel-{{ $pedido->id }}">
-                            Actualizar Pedido #{{ $pedido->id }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <form action="{{ route('empleado.pedidos.update', $pedido->id) }}" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <label for="respuesta" class="form-label">Respuesta:</label>
-                            <textarea name="respuesta" id="respuesta" class="form-control" rows="3" required>{{ $pedido->respuesta }}</textarea>
-
-                            <label for="idestado" class="form-label mt-3">Estado:</label>
-                            <select name="idestado" class="form-select" required>
-                                @foreach ($estados as $estado)
-                                    <option value="{{ $estado->idestado }}"
-                                        {{ $pedido->idestado == $estado->idestado ? 'selected' : '' }}>
-                                        {{ ucfirst($estado->nombre) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                            <button type="button" class="btn btn-secondary"
-                                data-bs-dismiss="modal">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endforeach
-
 </div>
+
+<!-- Modal de actualizar pedido -->
+@include('sales.pedidos.modals.update')
 @endsection
 
 @section('scripts')
@@ -220,5 +183,59 @@
 <script>
     console.log('Vista de pedidos cargada con Enhanced Table v2.0');
     console.log('Total de pedidos en la tabla:', {{ $pedidos->count() }});
+
+    // ============================================================================
+    // FUNCIÓN DE MODAL - ACTUALIZAR PEDIDO
+    // ============================================================================
+    function abrirModalActualizarPedido(pedidoId, respuesta, idestado) {
+        console.log('🔷 Abriendo modal de actualizar pedido:', pedidoId);
+
+        // Actualizar título
+        document.getElementById('updatePedidoModalTitle').textContent = 'Actualizar Pedido #' + pedidoId;
+
+        // Llenar formulario
+        document.getElementById('respuesta').value = respuesta;
+
+        // Actualizar acción del formulario
+        const form = document.getElementById('updatePedidoForm');
+        form.action = "{{ route('empleado.pedidos.update', '') }}/" + pedidoId;
+
+        // Abrir modal
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'actualizar-pedido' }));
+
+        // Inicializar Select2 después de abrir el modal
+        setTimeout(function() {
+            const $select = $('#idestado');
+
+            // Destruir instancia previa si existe
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            // Inicializar Select2
+            $select.select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecciona un Estado --',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('.modal-overlay:visible .modal-content'),
+                dropdownAutoWidth: false,
+                minimumResultsForSearch: -1, // Ocultar búsqueda para pocas opciones
+                language: {
+                    noResults: function() {
+                        return "No se encontraron resultados";
+                    }
+                }
+            });
+
+            // Setear el valor seleccionado
+            $select.val(idestado).trigger('change');
+
+            // Asegurar que el dropdown se posicione correctamente
+            $select.on('select2:open', function() {
+                $('.select2-dropdown').css('z-index', 99999);
+            });
+        }, 400);
+    }
 </script>
 @endsection

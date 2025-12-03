@@ -1,77 +1,136 @@
 /**
  * Inicializador de Searchable Selects (Select2)
  * Este archivo maneja la inicialización automática de todos los selects con clase 'searchable-select'
- * Incluye soporte para modo oscuro automático según el tema del sistema
+ * Incluye soporte para modo oscuro dinámico según el tema activo del sistema
  */
 
 // Función para detectar si el sistema está en modo oscuro
 function isDarkMode() {
-    // SIEMPRE aplicar modo oscuro por defecto
-    // TODO: Implementar toggle manual de tema claro/oscuro en el futuro
-    return true;
+    // Verificar si existe ThemeManager y tiene dark mode activo
+    if (typeof ThemeManager !== 'undefined' && ThemeManager.isDarkMode()) {
+        return true;
+    }
 
-    /* Lógica original comentada para referencia futura:
-    // Primero verificar si hay una clase dark en el html o body
+    // Verificar atributo data-dark-mode en el documento
+    if (document.documentElement.hasAttribute('data-dark-mode')) {
+        return true;
+    }
+
+    // Verificar clases dark en html o body
     if (document.documentElement.classList.contains('dark') || document.body.classList.contains('dark')) {
         return true;
     }
-    // Si no, usar la preferencia del sistema
+
+    // Por defecto, usar preferencia del sistema
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    */
 }
 
-// Función para aplicar estilos de modo oscuro directamente
-function applyDarkModeStyles($container) {
-    // Estilos para el campo de selección
-    $container.find('.select2-selection').css({
-        'background-color': '#2d3748',
-        'border-color': '#4a5568',
-        'color': '#e2e8f0'
-    });
+// Función para aplicar estilos de modo oscuro O claro
+function applyThemeStyles($container) {
+    const darkMode = isDarkMode();
 
-    $container.find('.select2-selection__rendered').css({
-        'color': '#e2e8f0'
-    });
+    if (darkMode) {
+        // Estilos para modo oscuro
+        $container.find('.select2-selection').css({
+            'background-color': '#2d3748',
+            'border-color': '#4a5568',
+            'color': '#e2e8f0'
+        });
 
-    $container.find('.select2-selection__placeholder').css({
-        'color': '#a0aec0'
-    });
+        $container.find('.select2-selection__rendered').css({
+            'color': '#e2e8f0'
+        });
+
+        $container.find('.select2-selection__placeholder').css({
+            'color': '#a0aec0'
+        });
+    } else {
+        // Estilos para modo claro
+        $container.find('.select2-selection').css({
+            'background-color': '#ffffff',
+            'border-color': '#ced4da',
+            'color': '#212529'
+        });
+
+        $container.find('.select2-selection__rendered').css({
+            'color': '#212529'
+        });
+
+        $container.find('.select2-selection__placeholder').css({
+            'color': '#6c757d'
+        });
+    }
 }
 
-// Función para aplicar estilos de modo oscuro al dropdown
-function applyDarkModeToDropdown() {
-    $('.select2-dropdown').css({
-        'background-color': '#2d3748',
-        'border-color': '#4a5568'
-    });
+// Función para aplicar estilos al dropdown (modo oscuro O claro)
+function applyThemeToDropdown() {
+    const darkMode = isDarkMode();
 
-    $('.select2-results__option').css({
-        'background-color': '#2d3748',
-        'color': '#e2e8f0'
-    });
+    if (darkMode) {
+        // Estilos para modo oscuro
+        $('.select2-dropdown').css({
+            'background-color': '#2d3748',
+            'border-color': '#4a5568'
+        });
 
-    $('.select2-search__field').css({
-        'background-color': '#1a202c',
-        'border-color': '#4a5568',
-        'color': '#e2e8f0'
-    });
+        $('.select2-results__option').css({
+            'background-color': '#2d3748',
+            'color': '#e2e8f0'
+        });
 
-    // Estilos para hover (delegado a CSS pero reforzado aquí)
-    $('.select2-results__option').on('mouseenter', function() {
-        if (isDarkMode()) {
+        $('.select2-search__field').css({
+            'background-color': '#1a202c',
+            'border-color': '#4a5568',
+            'color': '#e2e8f0'
+        });
+
+        // Estilos para hover
+        $('.select2-results__option').off('mouseenter mouseleave').on('mouseenter', function() {
             $(this).css({
                 'background-color': '#4a5568',
                 'color': '#ffffff'
             });
-        }
-    }).on('mouseleave', function() {
-        if (isDarkMode() && !$(this).hasClass('select2-results__option--selected')) {
+        }).on('mouseleave', function() {
+            if (!$(this).hasClass('select2-results__option--selected')) {
+                $(this).css({
+                    'background-color': '#2d3748',
+                    'color': '#e2e8f0'
+                });
+            }
+        });
+    } else {
+        // Estilos para modo claro
+        $('.select2-dropdown').css({
+            'background-color': '#ffffff',
+            'border-color': '#ced4da'
+        });
+
+        $('.select2-results__option').css({
+            'background-color': '#ffffff',
+            'color': '#212529'
+        });
+
+        $('.select2-search__field').css({
+            'background-color': '#ffffff',
+            'border-color': '#ced4da',
+            'color': '#212529'
+        });
+
+        // Estilos para hover en modo claro
+        $('.select2-results__option').off('mouseenter mouseleave').on('mouseenter', function() {
             $(this).css({
-                'background-color': '#2d3748',
-                'color': '#e2e8f0'
+                'background-color': '#e9ecef',
+                'color': '#000000'
             });
-        }
-    });
+        }).on('mouseleave', function() {
+            if (!$(this).hasClass('select2-results__option--selected')) {
+                $(this).css({
+                    'background-color': '#ffffff',
+                    'color': '#212529'
+                });
+            }
+        });
+    }
 }
 
 // Función global para inicializar selects
@@ -132,18 +191,18 @@ function initializeSearchableSelects(container = document) {
         if (darkMode) {
             $select2Container.addClass('select2-dark-mode');
             console.log('🎨 Aplicando modo oscuro a:', $select.attr('id') || $select.attr('name'));
-            applyDarkModeStyles($select2Container);
+            applyThemeStyles($select2Container);
         } else {
             $select2Container.removeClass('select2-dark-mode');
+            console.log('🎨 Aplicando modo claro a:', $select.attr('id') || $select.attr('name'));
+            applyThemeStyles($select2Container);
         }
 
         // Aplicar estilos al abrir el dropdown
         $select.on('select2:open', function() {
-            if (isDarkMode()) {
-                setTimeout(function() {
-                    applyDarkModeToDropdown();
-                }, 50);
-            }
+            setTimeout(function() {
+                applyThemeToDropdown();
+            }, 50);
         });
     });
 }
@@ -155,29 +214,35 @@ $(document).ready(function() {
 
 // Reinicializar cuando se abre un modal Alpine.js
 window.addEventListener('open-modal', function(event) {
-    // Esperar a que Alpine.js muestre el modal completamente
-    setTimeout(function() {
-        const modalName = event.detail;
-        console.log('📢 Evento open-modal detectado:', modalName);
+    const modalName = event.detail;
+    console.log('📢 Evento open-modal detectado:', modalName);
 
-        // Buscar todos los modales visibles
+    // Esperar a que Alpine.js complete la transición del modal (200ms + margen)
+    setTimeout(function() {
+        console.log('🔍 Buscando selects en modales visibles...');
+
+        // Buscar todos los modal-overlay que estén visibles
+        let initialized = false;
         $('.modal-overlay').each(function() {
             const $modalOverlay = $(this);
 
-            // Verificar si el modal está visible (Alpine.js lo muestra con x-show)
-            if ($modalOverlay.is(':visible')) {
-                console.log('✅ Modal visible encontrado, inicializando Select2...');
-
-                // Buscar selects dentro del modal
+            // Verificar si el modal está visible
+            if ($modalOverlay.is(':visible') && $modalOverlay.css('display') !== 'none') {
                 const $selects = $modalOverlay.find('.searchable-select');
-                console.log('🔍 Selects encontrados:', $selects.length);
+                console.log('🔍 Modal visible encontrado con', $selects.length, 'selects');
 
                 if ($selects.length > 0) {
+                    console.log('✅ Inicializando Select2 en modal...');
                     initializeSearchableSelects($modalOverlay[0]);
+                    initialized = true;
                 }
             }
         });
-    }, 300);
+
+        if (!initialized) {
+            console.log('⚠️ No se encontraron modales visibles con selects');
+        }
+    }, 350); // 200ms de transición + 150ms de margen
 });
 
 // Evento personalizado para reinicializar manualmente
@@ -194,21 +259,32 @@ if (window.matchMedia) {
     });
 }
 
-// Observar cambios en la clase 'dark' del documento (para temas manuales)
+// Escuchar cambios de tema desde ThemeManager
+window.addEventListener('darkModeChanged', function(event) {
+    const darkMode = event.detail.darkMode;
+    console.log('🌓 Dark mode cambiado desde ThemeManager:', darkMode ? 'oscuro' : 'claro');
+
+    // Reinicializar todos los selects para aplicar el nuevo tema
+    initializeSearchableSelects();
+});
+
+// Observar cambios en el atributo data-dark-mode del documento
 if (typeof MutationObserver !== 'undefined') {
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
-            if (mutation.attributeName === 'class') {
+            if (mutation.attributeName === 'data-dark-mode' || mutation.attributeName === 'class') {
                 const darkMode = isDarkMode();
-                console.log('🎨 Clase del documento cambió, aplicando tema:', darkMode ? 'oscuro' : 'claro');
+                console.log('🎨 Atributos del documento cambiaron, aplicando tema:', darkMode ? 'oscuro' : 'claro');
 
                 // Actualizar todas las instancias de Select2
                 $('.select2-container').each(function() {
+                    const $container = $(this);
                     if (darkMode) {
-                        $(this).addClass('select2-dark-mode');
+                        $container.addClass('select2-dark-mode');
                     } else {
-                        $(this).removeClass('select2-dark-mode');
+                        $container.removeClass('select2-dark-mode');
                     }
+                    applyThemeStyles($container);
                 });
             }
         });
@@ -216,7 +292,7 @@ if (typeof MutationObserver !== 'undefined') {
 
     observer.observe(document.documentElement, {
         attributes: true,
-        attributeFilter: ['class']
+        attributeFilter: ['class', 'data-dark-mode', 'data-theme']
     });
 
     observer.observe(document.body, {

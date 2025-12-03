@@ -197,15 +197,16 @@
                         @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
                             <td>
                                 @if (Auth::user()->hasPermissionTo('usuarios.change'))
-                                    <a href="{{ route('usuarios.change', $usuario->iddet) }}"
-                                        class="btn btn-warning btn-sm">
+                                    <button type="button" class="btn btn-warning btn-sm"
+                                        onclick="cambiarUsuario({{ $usuario->iddet }}, '{{ $usuario->nombre_cliente }}', {{ $usuario->idven }}, {{ $usuario->idcue }}, {{ $usuario->perfil }}, '{{ $usuario->fecha_vencimiento }}')"
+                                        title="Cambiar usuario">
                                         <i class="fas fa-exchange-alt"></i>
-                                    </a>
-                                    <a href="#" class="btn btn-dark btn-circle btn-sm btn-mover-usuario"
-                                        data-id="{{ $usuario->iddet }}"
-                                        onclick="event.preventDefault(); moverUsuario({{ $usuario->iddet }});">
+                                    </button>
+                                    <button type="button" class="btn btn-dark btn-circle btn-sm"
+                                        onclick="abrirModalMoverUsuario({{ $usuario->iddet }})"
+                                        title="Mover usuario">
                                         <i class="fas fa-random"></i>
-                                    </a>
+                                    </button>
                                 @endif
                                 @if ($diasRestantes <= 3)
                                     <button type="button" class="btn btn-rosa-3 btn-sm"
@@ -220,15 +221,11 @@
                                         </a>
                                     @endif
                                     @if (Auth::user()->hasPermissionTo('usuarios.destroy'))
-                                        <form action="{{ route('usuarios.destroy', $usuario->iddet) }}" method="POST"
-                                            style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-circle btn-sm"
-                                                onclick="return confirm('¿Eliminar este usuario?')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-danger btn-circle btn-sm"
+                                            onclick="confirmarEliminarUsuario({{ $usuario->iddet }})"
+                                            title="Eliminar usuario">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     @endif
                                 @endif
                             </td>
@@ -253,9 +250,7 @@
             </div>
         </div>
     </form>
-    <form id="form-mover-usuario" method="POST" style="display:none;">
-        @csrf
-    </form>
+
     <div id="toast-mensaje"
         style="
     display: none;
@@ -273,23 +268,62 @@
     ">
         ✅ Mensaje copiado
     </div>
+
+<!-- Modales -->
+@include('inventory.usuarios.modals.change')
+@include('inventory.usuarios.modals.delete')
+@include('inventory.usuarios.modals.mover')
 @endsection
 @section('scripts')
     @parent
     <script>
-        function moverUsuario(iddet) {
-            if (confirm('Mudar este usuario?')) {
-                var form = document.getElementById('form-mover-usuario');
-                form.action = "{{ url('admin/usuarios') }}/" + iddet + "/mover";
-                form.submit();
+        // ========================================================================
+        // FUNCIÓN DE MODAL - CAMBIAR USUARIO
+        // ========================================================================
+        function cambiarUsuario(iddet, nombrecli, idven, idcue, perfil, fechaVencimiento) {
+            console.log('🔷 Abriendo modal de cambiar usuario:', iddet);
+
+            document.getElementById('changeUsuarioModalTitle').textContent = 'Actualizar Usuario - ' + nombrecli;
+            document.getElementById('change_nombrecli').value = nombrecli;
+            document.getElementById('change_idven').value = idven;
+            document.getElementById('change_perfil').value = perfil;
+            document.getElementById('change_fecha_vencimiento').value = fechaVencimiento;
+
+            // Setear select de cuenta
+            const cuentaSelect = document.getElementById('change_idcue');
+            if (cuentaSelect) {
+                cuentaSelect.value = idcue;
+                $(cuentaSelect).trigger('change');
             }
+
+            const form = document.getElementById('changeUsuarioForm');
+            form.action = "{{ route('usuarios.update', '') }}/" + iddet;
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'cambiar-usuario' }));
         }
-        function borrarUsuario(iddet) {
-            if (confirm('¿Eliminar este usuario?')) {
-                var form = document.getElementById('form-borrar-individual');
-                form.action = "{{ url('admin/usuarios') }}/" + iddet;
-                form.submit();
-            }
+
+        // ========================================================================
+        // FUNCIÓN DE MODAL - MOVER USUARIO
+        // ========================================================================
+        function abrirModalMoverUsuario(iddet) {
+            console.log('🔷 Abriendo modal de mover usuario:', iddet);
+
+            const form = document.getElementById('moverUsuarioForm');
+            form.action = "{{ url('admin/usuarios') }}/" + iddet + "/mover";
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mover-usuario' }));
+        }
+
+        // ========================================================================
+        // FUNCIÓN DE MODAL - ELIMINAR USUARIO
+        // ========================================================================
+        function confirmarEliminarUsuario(iddet) {
+            console.log('🔷 Abriendo modal de eliminar usuario:', iddet);
+
+            const form = document.getElementById('deleteUsuarioForm');
+            form.action = "{{ route('usuarios.destroy', '') }}/" + iddet;
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirmar-eliminar-usuario' }));
         }
         document.addEventListener('DOMContentLoaded', function() {
             const checkTodos = document.getElementById('check-todos');

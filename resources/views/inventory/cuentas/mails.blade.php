@@ -25,7 +25,7 @@
 
     <!-- Botón crear buzón -->
     <div class="mb-3">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearMailModal">
+        <button type="button" class="btn btn-primary" onclick="openCreateMailModal()">
             <i class="fas fa-plus"></i> Crear Buzón
         </button>
     </div>
@@ -125,14 +125,16 @@
                                     <td>
                                         <div class="action-buttons">
                                             @if (Auth::user()->hasPermissionTo('mails.update'))
-                                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#editarMailModal{{ $mail->id }}" title="Editar">
+                                                <button type="button" class="btn btn-warning btn-sm"
+                                                    onclick="editarMail({{ $mail->id }}, '{{ $mail->email }}', '{{ $mail->password }}', '{{ $mail->host }}', '{{ $mail->description }}')"
+                                                    title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                             @endif
                                             @if (Auth::user()->hasPermissionTo('mails.destroy'))
-                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#eliminarMailModal{{ $mail->id }}" title="Eliminar">
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                    onclick="eliminarMail({{ $mail->id }})"
+                                                    title="Eliminar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             @endif
@@ -156,109 +158,12 @@
             </div>
         </div>
     </div>
-
-    <!-- Modales de Editar y Eliminar -->
-    @foreach ($mails as $mail)
-        <!-- Modal Editar Mail -->
-        <div class="modal fade" id="editarMailModal{{ $mail->id }}" tabindex="-1" aria-labelledby="editarMailModalLabel{{ $mail->id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <form action="{{ route('mails.update', $mail) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editarMailModalLabel{{ $mail->id }}">Editar Buzón</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group mb-3">
-                                <label for="email{{ $mail->id }}">Email</label>
-                                <input type="email" name="email" id="email{{ $mail->id }}" class="form-control" value="{{ $mail->email }}" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="password{{ $mail->id }}">Contraseña</label>
-                                <input type="text" name="password" id="password{{ $mail->id }}" class="form-control" value="{{ $mail->password }}" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="host{{ $mail->id }}">Host</label>
-                                <input type="text" name="host" id="host{{ $mail->id }}" class="form-control" value="{{ $mail->host }}" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="description{{ $mail->id }}">Descripción</label>
-                                <input type="text" name="description" id="description{{ $mail->id }}" class="form-control" value="{{ $mail->description }}">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-success">Guardar</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal Eliminar Mail -->
-        <div class="modal fade" id="eliminarMailModal{{ $mail->id }}" tabindex="-1" aria-labelledby="eliminarMailModalLabel{{ $mail->id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <form action="{{ route('mails.destroy', $mail) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="eliminarMailModalLabel{{ $mail->id }}">Eliminar Buzón</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            ¿Seguro que deseas eliminar este buzón?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    @endforeach
-
 </div>
 
-<!-- Modal Crear Mail -->
-<div class="modal fade" id="crearMailModal" tabindex="-1" aria-labelledby="crearMailModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form action="{{ route('mails.store') }}" method="POST">
-            @csrf
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="crearMailModalLabel">Crear Buzón</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label for="email">Email</label>
-                        <input type="email" name="email" id="email" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="password">Contraseña</label>
-                        <input type="text" name="password" id="password" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="host">Host</label>
-                        <input type="text" name="host" id="host" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="description">Descripción</label>
-                        <input type="text" name="description" id="description" class="form-control">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Crear</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Modales -->
+@include('inventory.cuentas.mails.modals.create')
+@include('inventory.cuentas.mails.modals.edit')
+@include('inventory.cuentas.mails.modals.delete')
 @endsection
 
 @section('scripts')
@@ -268,5 +173,46 @@
 <script>
     console.log('Vista de correos cargada con Enhanced Table v2.0');
     console.log('Total de buzones en la tabla:', {{ $mails->count() }});
+
+    // ============================================================================
+    // FUNCIÓN DE MODAL - CREAR MAIL
+    // ============================================================================
+    function openCreateMailModal() {
+        console.log('🔷 Abriendo modal de crear buzón...');
+
+        const form = document.getElementById('createMailForm');
+        if (form) form.reset();
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-mail' }));
+    }
+
+    // ============================================================================
+    // FUNCIÓN DE MODAL - EDITAR MAIL
+    // ============================================================================
+    function editarMail(id, email, password, host, description) {
+        console.log('🔷 Abriendo modal de editar buzón:', id);
+
+        document.getElementById('edit_email').value = email;
+        document.getElementById('edit_password').value = password;
+        document.getElementById('edit_host').value = host;
+        document.getElementById('edit_description').value = description || '';
+
+        const form = document.getElementById('editMailForm');
+        form.action = "{{ route('mails.update', '') }}/" + id;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-mail' }));
+    }
+
+    // ============================================================================
+    // FUNCIÓN DE MODAL - ELIMINAR MAIL
+    // ============================================================================
+    function eliminarMail(id) {
+        console.log('🔷 Abriendo modal de eliminar buzón:', id);
+
+        const form = document.getElementById('deleteMailForm');
+        form.action = "{{ route('mails.destroy', '') }}/" + id;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'eliminar-mail' }));
+    }
 </script>
 @endsection

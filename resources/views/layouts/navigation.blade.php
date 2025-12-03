@@ -53,8 +53,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
     <script src="{{ asset('js/sidebar.js') }}"></script>
     <script src="{{ asset('js/navbar.js') }}"></script>
+
+    <!-- Alpine.js para modales - DEBE cargarse ANTES de jQuery y Select2 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <!-- Inicializador automático de searchable-select -->
+    <script src="{{ asset('js/searchable-select.js') }}"></script>
 
     <!-- Sistema de Temas Dinámicos -->
     <script src="{{ asset('js/decorations.js') }}"></script>
@@ -100,9 +107,6 @@
         }, 300000); // 5 minutos = 300,000 ms
     </script>
     <script src="{{asset('js/sistema.js')}}"></script>
-
-    <!-- Alpine.js para modales - Debe cargarse antes que los scripts de las vistas -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 
 </html>

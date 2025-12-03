@@ -9,24 +9,19 @@
             <td>
                 <div class="action-buttons">
                     @if (Auth::user()->hasPermissionTo('costos.update'))
-                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#editarCostoModal" data-id="{{ $costo->idcos }}"
-                            data-idcue="{{ $costo->idcue }}" data-descripcioncos="{{ $costo->descripcioncos }}"
-                            data-montocos="{{ $costo->montocos }}" data-fechacos="{{ $costo->fechacos }}"
+                        <button type="button"
+                            class="btn btn-warning btn-sm"
+                            onclick="editarCosto({{ $costo->idcos }}, '{{ $costo->idcue }}', '{{ $costo->descripcioncos }}', {{ $costo->montocos }}, '{{ $costo->fechacos }}')"
                             title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
                     @endif
                     @if (Auth::user()->hasPermissionTo('costos.destroy'))
-                        <form action="{{ route('costos.destroy', $costo->idcos) }}" method="POST"
-                            style="display: inline;"
-                            onsubmit="return confirm('¿Estás seguro?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-danger btn-sm"
+                            onclick="confirmarEliminarCosto({{ $costo->idcos }})"
+                            title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     @endif
                 </div>
             </td>

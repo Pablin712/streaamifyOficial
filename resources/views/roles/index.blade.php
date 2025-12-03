@@ -1,36 +1,8 @@
 @extends('layouts.navigation')
 
-@section('title', 'Roles')tyles')
-    <style>
-        #roles-table thead th {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
-            color: white !important;
-            text-align: center;
-            padding: 14px 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-        }
+@section('title', 'Roles')
 
-        #roles-table tbody tr:hover {
-            background-color: #e3f2fd !important;
-            transform: scale(1.001);
-            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        #roles-table td {
-            text-align: center;
-            padding: 12px 10px;
-            vertical-align: middle;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-    </style>
+@section('styles')
 @endsection
 
 @section('main')

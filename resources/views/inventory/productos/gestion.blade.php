@@ -25,8 +25,8 @@
 @section('btncrear')
     @if (Auth::user()->hasPermissionTo('categorias.store'))
         <!-- Botón para abrir el modal de crear categoría -->
-        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#crearCategoriaModal">
-            Crear Categoría
+        <button type="button" class="btn btn-primary mb-3" onclick="openCreateCategoriaModal()">
+            <i class="fas fa-plus-circle me-1"></i> Crear Categoría
         </button>
     @endif
 @endsection
@@ -100,23 +100,19 @@
                         <td>
                             @if (Auth::user()->hasPermissionTo('categorias.update'))
                                 <!-- Botón para editar categoría -->
-                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                                    data-bs-target="#editarCategoriaModal" data-id="{{ $categoria->id }}"
-                                    data-nombre="{{ $categoria->nombre }}" data-descripcion="{{ $categoria->descripcion }}">
-                                    Editar
+                                <button type="button" class="btn btn-warning btn-sm"
+                                    onclick="editarCategoria({{ $categoria->id }}, '{{ $categoria->nombre }}', '{{ $categoria->descripcion }}')"
+                                    title="Editar">
+                                    <i class="fas fa-edit"></i>
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('categorias.destroy'))
-                                <!-- Formulario para eliminar categoría -->
-                                <form action="{{ route('categorias.destroy', $categoria->id) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger"
-                                        onclick="return confirm('¿Estás seguro?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <!-- Botón para eliminar categoría -->
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    onclick="confirmarEliminarCategoria({{ $categoria->id }})"
+                                    title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             @endif
                         </td>
                     @endif
@@ -127,15 +123,19 @@
 @endsection
 <!-- Tabla de Tipos de Producto -->
 @section('table2')
-    <h3>Tipos de Producto</h3>
-    @if (Auth::user()->hasPermissionTo('tipos_producto.store'))
-        <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#crearTipoProductoModal">
-            Crear Tipo de Producto
-        </button>
-    @endif
+    <div class="px-3 pt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Tipos de Producto</h3>
+            @if (Auth::user()->hasPermissionTo('tipos_producto.store'))
+                <button type="button" class="btn btn-success" onclick="openCreateTipoProductoModal()">
+                    <i class="fas fa-plus-circle me-1"></i> Crear Tipo de Producto
+                </button>
+            @endif
+        </div>
+    </div>
 
     <!-- Controles de búsqueda y registros -->
-    <div class="row mb-3 align-items-end">
+    <div class="row mb-3 align-items-end px-3">
         <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
             <label for="tipos-producto-table-search" class="form-label fw-semibold">
                 <i class="fas fa-search text-primary"></i> Buscar:
@@ -158,7 +158,7 @@
         </div>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive px-3">
         <table id="tipos-producto-table" data-table="tipos-producto-table" class="table table-striped table-bordered">
         <thead>
             <tr>
@@ -200,23 +200,18 @@
                     @if (Auth::user()->hasAnyPermission(['tipos_producto.update', 'tipos_producto.destroy']))
                         <td>
                             @if (Auth::user()->hasPermissionTo('tipos_producto.update'))
-                                <button type="button" class="btn btn-warning fas fa-edit" data-bs-toggle="modal"
-                                    data-bs-target="#editarTipoProductoModal" data-id="{{ $tipoProducto->id }}"
-                                    data-nombre="{{ $tipoProducto->nombre }}"
-                                    data-descripcion="{{ $tipoProducto->descripcion }}">
-                                    Editar
+                                <button type="button" class="btn btn-warning btn-sm"
+                                    onclick="editarTipoProducto({{ $tipoProducto->id }}, '{{ $tipoProducto->nombre }}', '{{ $tipoProducto->descripcion }}')"
+                                    title="Editar">
+                                    <i class="fas fa-edit"></i>
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('tipos_producto.destroy'))
-                                <form action="{{ route('tipos_producto.destroy', $tipoProducto->id) }}" method="POST"
-                                    style="display: inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger"
-                                        onclick="return confirm('¿Estás seguro?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-danger btn-sm"
+                                    onclick="confirmarEliminarTipoProducto({{ $tipoProducto->id }})"
+                                    title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             @endif
                         </td>
                     @endif
@@ -227,7 +222,7 @@
     </div>
 
     <!-- Información de paginación y controles -->
-    <div class="row mt-3 align-items-center">
+    <div class="row mt-3 align-items-center px-3 pb-3">
         <div class="col-md-6 col-12 mb-2 mb-md-0">
             <div id="tipos-producto-table-row-info" class="text-muted"></div>
         </div>
@@ -236,156 +231,102 @@
         </div>
     </div>
 @endsection
-<!-- Modal para crear una nueva categoría -->
-<div class="modal fade" id="crearCategoriaModal" tabindex="-1" aria-labelledby="crearCategoriaModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="crearCategoriaModalLabel">Crear Categoría</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('categorias.store') }}" method="POST">
-                    @csrf
-                    <!-- Campos del formulario -->
-                    <div class="form-group mb-3">
-                        <label for="nombre">Nombre</label>
-                        <input type="text" name="nombre" id="nombre" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="descripcion">Descripción</label>
-                        <textarea name="descripcion" id="descripcion" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Modal para editar una categoría -->
-<div class="modal fade" id="editarCategoriaModal" tabindex="-1" aria-labelledby="editarCategoriaModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarCategoriaModalLabel">Editar Categoría</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editCategoriaForm" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <!-- Campos del formulario -->
-                    <div class="form-group mb-3">
-                        <label for="edit_nombre">Nombre</label>
-                        <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="edit_descripcion">Descripción</label>
-                        <textarea name="descripcion" id="edit_descripcion" class="form-control" rows="3"></textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Modal para Crear Tipo de Producto -->
-<div class="modal fade" id="crearTipoProductoModal" tabindex="-1" aria-labelledby="crearTipoProductoModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <form action="{{ route('tipos_producto.store') }}" method="POST" class="modal-content">
-            @csrf
-            <div class="modal-header">
-                <h5 class="modal-title" id="crearTipoProductoModalLabel">Crear Tipo de Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label for="nombre">Nombre</label>
-                    <input type="text" name="nombre" id="nombre" class="form-control" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="descripcion">Descripción</label>
-                    <textarea name="descripcion" id="descripcion" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Modales de Categorías -->
+@include('inventory.productos.modals.crear-categoria')
+@include('inventory.productos.modals.editar-categoria')
+@include('inventory.productos.modals.eliminar-categoria')
 
-<!-- Modal para Editar Tipo de Producto -->
-<div class="modal fade" id="editarTipoProductoModal" tabindex="-1" aria-labelledby="editarTipoProductoModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog">
-        <form id="editTipoProductoForm" method="POST" class="modal-content">
-            @csrf
-            @method('PUT')
-            <div class="modal-header">
-                <h5 class="modal-title" id="editarTipoProductoModalLabel">Editar Tipo de Producto</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label for="edit_nombre">Nombre</label>
-                    <input type="text" name="nombre" id="edit_tipo_nombre" class="form-control" required>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="edit_descripcion">Descripción</label>
-                    <textarea name="descripcion" id="edit_tipo_descripcion" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Actualizar</button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Modales de Tipos de Producto -->
+@include('inventory.productos.modals.crear-tipo-producto')
+@include('inventory.productos.modals.editar-tipo-producto')
+@include('inventory.productos.modals.eliminar-tipo-producto')
 
 @section('scripts')
     <script>
-        // Llenar el modal de edición con los datos de la categoría
-        $('#editarCategoriaModal').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget); // Botón que abrió el modal
-            var id = button.data('id');
-            var nombre = button.data('nombre');
-            var descripcion = button.data('descripcion');
+        console.log('Vista de gestión de productos cargada');
 
-            var modal = $(this);
-            modal.find('#edit_nombre').val(nombre);
-            modal.find('#edit_descripcion').val(descripcion);
+        // ============================================================================
+        // FUNCIONES DE MODAL - CREAR CATEGORÍA
+        // ============================================================================
+        function openCreateCategoriaModal() {
+            console.log('🔷 Abriendo modal de crear categoría...');
+            const form = document.getElementById('createCategoriaForm');
+            if (form) form.reset();
 
-            // Cambiar la acción del formulario para la categoría específica
-            var formAction = "{{ route('categorias.update', '') }}/" + id;
-            modal.find('#editCategoriaForm').attr('action', formAction);
-        });
-        // Llenar los datos en el modal para editar tipo de producto
-        $('#editarTipoProductoModal').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget);
-            var id = button.data('id');
-            var nombre = button.data('nombre');
-            var descripcion = button.data('descripcion');
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-categoria' }));
+        }
 
-            var modal = $(this);
-            modal.find('#edit_tipo_nombre').val(nombre);
-            modal.find('#edit_tipo_descripcion').val(descripcion);
+        // ============================================================================
+        // FUNCIONES DE MODAL - EDITAR CATEGORÍA
+        // ============================================================================
+        function editarCategoria(id, nombre, descripcion) {
+            console.log('🔷 Abriendo modal de editar categoría:', id);
 
-            var formAction = "{{ route('tipos_producto.update', '') }}/" + id;
-            modal.find('#editTipoProductoForm').attr('action', formAction);
-        });
+            // Llenar el formulario
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_descripcion').value = descripcion;
+
+            // Actualizar la acción del formulario
+            const form = document.getElementById('editCategoriaForm');
+            form.action = "{{ route('categorias.update', '') }}/" + id;
+
+            // Abrir modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-categoria' }));
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - ELIMINAR CATEGORÍA
+        // ============================================================================
+        function confirmarEliminarCategoria(id) {
+            console.log('🔷 Abriendo modal de eliminar categoría:', id);
+
+            const form = document.getElementById('deleteCategoriaForm');
+            form.action = "{{ route('categorias.destroy', '') }}/" + id;
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'eliminar-categoria' }));
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - CREAR TIPO PRODUCTO
+        // ============================================================================
+        function openCreateTipoProductoModal() {
+            console.log('🔷 Abriendo modal de crear tipo producto...');
+            const form = document.getElementById('createTipoProductoForm');
+            if (form) form.reset();
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-tipo-producto' }));
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - EDITAR TIPO PRODUCTO
+        // ============================================================================
+        function editarTipoProducto(id, nombre, descripcion) {
+            console.log('🔷 Abriendo modal de editar tipo producto:', id);
+
+            // Llenar el formulario
+            document.getElementById('edit_tipo_nombre').value = nombre;
+            document.getElementById('edit_tipo_descripcion').value = descripcion;
+
+            // Actualizar la acción del formulario
+            const form = document.getElementById('editTipoProductoForm');
+            form.action = "{{ route('tipos_producto.update', '') }}/" + id;
+
+            // Abrir modal
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editar-tipo-producto' }));
+        }
+
+        // ============================================================================
+        // FUNCIONES DE MODAL - ELIMINAR TIPO PRODUCTO
+        // ============================================================================
+        function confirmarEliminarTipoProducto(id) {
+            console.log('🔷 Abriendo modal de eliminar tipo producto:', id);
+
+            const form = document.getElementById('deleteTipoProductoForm');
+            form.action = "{{ route('tipos_producto.destroy', '') }}/" + id;
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'eliminar-tipo-producto' }));
+        }
     </script>
 
     {{-- Enhanced Table v2 --}}
