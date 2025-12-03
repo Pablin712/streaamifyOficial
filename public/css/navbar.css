@@ -1,422 +1,352 @@
 /* ========================================
-   NAVBAR - Estilos usando Variables CSS de Temas
+   NAVBAR - Sistema de Temas Integrado
+   Versión 2.0 - Completamente basado en variables CSS
    ======================================== */
 
-/* Navbar base con variables de temas */
+/* ========================================
+   NAVBAR BASE
+   ======================================== */
+
 .navbar,
 .sb-topnav {
-    background: var(--primary-gradient, linear-gradient(135deg, #007bff 0%, #0056b3 100%)) !important;
-    border-bottom: 2px solid var(--border-primary, #0056b3);
-    box-shadow: var(--shadow-md, 0px 4px 6px rgba(0, 0, 0, 0.15));
+    background: var(--primary-gradient) !important;
+    border-bottom: 2px solid var(--border-primary);
+    box-shadow: var(--shadow-md);
     padding: 10px 20px;
 }
 
 .navbar-brand {
-    color: var(--text-on-primary, #fff) !important;
+    color: var(--text-on-primary) !important;
     font-weight: bold;
     font-size: 1.2rem;
-    transition: color 0.3s ease-in-out;
+    transition: var(--transition-fast);
 }
 
 .navbar-brand:hover {
     opacity: 0.9;
+    transform: scale(1.02);
 }
 
 /* Enlaces del navbar */
 .navbar .nav-link {
-    color: var(--text-on-primary, #fff) !important;
+    color: var(--text-on-primary) !important;
     font-weight: 500;
-    transition: all 0.2s ease-in-out;
+    transition: var(--transition-fast);
 }
 
 .navbar .nav-link:hover {
     opacity: 0.8;
 }
 
-/* Botón del sidebar */
+/* ========================================
+   BOTONES DEL NAVBAR - Mobile First
+   ======================================== */
+
+/* Botón del sidebar toggle */
 #sidebarToggle {
-    color: var(--text-on-primary, #fff) !important;
-    border-color: var(--text-on-primary, #fff) !important;
+    background-color: var(--bg-card) !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
 }
 
 #sidebarToggle:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--bg-hover) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
     transform: scale(1.05);
+    box-shadow: var(--shadow-hover);
 }
 
-/* Dropdown */
-.navbar .dropdown-menu {
-    background: var(--bg-card, #fff);
-    border: 1px solid var(--border-color, #ddd);
-    box-shadow: var(--shadow-lg, 0 8px 20px rgba(0, 0, 0, 0.15));
-}
-
-.navbar .dropdown-item {
-    color: var(--text-primary, #333);
-    transition: all 0.2s;
-}
-
-.navbar .dropdown-item:hover {
-    background: var(--bg-hover, #f0f0f0);
-    color: var(--primary-color, #007bff);
-}
-
-.navbar .dropdown-divider {
-    border-color: var(--border-color, #ddd);
-}
-
-/* LEGACY SUPPORT - Mantener compatibilidad con clases antiguas */
-.orange-navbar {
-    background-color: #ff6b00 !important;
-    border-bottom: 2px solid #cc5600;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
-    padding: 10px 20px;
-}
-.white-navbar #sidebarToggle {
-    color: #010101 !important;
-}
-/* Enlaces */
-.orange-navbar .nav-link {
-    color: #fff !important;
-    font-weight: 500;
-}
-
-.orange-navbar .nav-link:hover {
-    color: #f8f9fa !important;
-}
-
-/* Botón del sidebar */
-.orange-navbar #sidebarToggle {
-    color: #fff !important;
-}
-
-.orange-navbar #sidebarToggle:hover {
-    color: #ffd166 !important;
-}
-
-/* Dropdown */
-.orange-navbar .dropdown-menu {
-    background: #fff8e1;
-}
-
-.orange-navbar .dropdown-item:hover {
-    background: #ffd166;
-}
-.blue-navbar {
-    background-color: #007bff !important;
-    border-bottom: 2px solid #0056b3;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.blue-navbar .nav-link {
-    color: #fff !important;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
-}
-
-.blue-navbar .nav-link:hover {
-    color: #f8f9fa !important;
-}
-
-/* Botón del sidebar */
-#sidebarToggle {
-    color: #fff !important;
-}
-
-#sidebarToggle:hover {
-    color: #dfe6f1 !important;
-}
-
-/* Dropdown */
-.blue-navbar .dropdown-menu {
-    background: #f8f9fa;
-}
-
-.blue-navbar .dropdown-item:hover {
-    background: #dfe6f1;
-}
-.dark-navbar {
-    background-color: #222831 !important;
-    border-bottom: 2px solid #393e46;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.dark-navbar .nav-link {
-    color: #eeeeee !important;
-    font-weight: 500;
-}
-
-.dark-navbar .nav-link:hover {
-    color: #00adb5 !important;
-}
-
-/* Botón del sidebar */
-#sidebarToggle {
-    color: #eeeeee !important;
-}
-
-#sidebarToggle:hover {
-    color: #00adb5 !important;
-}
-
-/* Dropdown */
-.dark-navbar .dropdown-menu {
-    background: #393e46;
-    border: 1px solid #eeeeee;
-}
-
-.dark-navbar .dropdown-item {
-    color: #eeeeee;
-}
-
-.dark-navbar .dropdown-item:hover {
-    background: #00adb5;
-    color: #222831;
-}
-.orange-navbar {
-    background-color: #ff6b00 !important;
-    border-bottom: 2px solid #cc5600;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.orange-navbar .nav-link {
-    color: #fff !important;
-    font-weight: 500;
-}
-
-.orange-navbar .nav-link:hover {
-    color: #f8f9fa !important;
-}
-.purple-navbar {
-    background-color: #6f42c1 !important;
-    border-bottom: 2px solid #563d7c;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.purple-navbar .nav-link {
-    color: #fff !important;
-    font-weight: 500;
-}
-
-.purple-navbar .nav-link:hover {
-    color: #d1c4e9 !important; /* Un tono claro de púrpura */
-}
-
-.purple-navbar #sidebarToggle:hover {
-    color: #d1c4e9 !important;
-}
-
-/* Dropdown */
-.purple-navbar .dropdown-menu {
-    background: #f3e5f5; /* Fondo morado claro */
-}
-
-.purple-navbar .dropdown-item:hover {
-    background: #d1c4e9 !important;
-}
-
-/* Logo */
-.purple-navbar .navbar-brand {
-    color: #fff !important;
-}
-.yellow-navbar {
-    background-color: #f4c20d !important;
-    border-bottom: 2px solid #d1a80a;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.yellow-navbar .nav-link {
-    color: #222 !important;
-    font-weight: 500;
-}
-
-.yellow-navbar .nav-link:hover {
-    color: #010101 !important;
-}
-
-/* Botón del sidebar */
-.yellow-navbar #sidebarToggle {
-    color: #222 !important;
-}
-
-.yellow-navbar #sidebarToggle:hover {
-    color: #010101 !important;
-}
-
-/* Dropdown */
-.yellow-navbar .dropdown-menu {
-    background: #fff9c4; /* Fondo amarillo claro */
-}
-
-.yellow-navbar .dropdown-item:hover {
-    background: #ffeb3b !important;
-}
-
-/* Logo */
-.yellow-navbar .navbar-brand {
-    color: #222 !important;
-}
-.green-navbar {
-    background-color: #198754 !important;
-    border-bottom: 2px solid #145c41;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.green-navbar .nav-link {
-    color: #fff !important;
-    font-weight: 500;
-}
-
-.green-navbar .nav-link:hover {
-    color: #c8e6c9 !important; /* Un verde claro */
-}
-
-/* Botón del sidebar */
-.green-navbar #sidebarToggle {
-    color: #fff !important;
-}
-
-.green-navbar #sidebarToggle:hover {
-    color: #c8e6c9 !important;
-}
-
-/* Dropdown */
-.green-navbar .dropdown-menu {
-    background: #e8f5e9; /* Verde claro */
-}
-
-.green-navbar .dropdown-item:hover {
-    background: #c8e6c9 !important;
-}
-
-/* Logo */
-.green-navbar .navbar-brand {
-    color: #fff !important;
-}
-/* Botón del sidebar */
-#sidebarToggle {
-    color: #fff !important;
-}
-
-#sidebarToggle:hover {
-    color: #ffd166 !important;
-}
-
-/* Dropdown */
-.orange-navbar .dropdown-menu {
-    background: #fff8e1;
-}
-
-.orange-navbar .dropdown-item:hover {
-    background: #ffd166;
-}
-/* Estilo general para el texto del logo */
-.navbar-brand {
-    color: #fff !important; /* Color blanco por defecto */
-    font-weight: bold;
-    font-size: 1.2rem;
-    transition: color 0.3s ease-in-out;
-}
-/* Si el navbar es oscuro, usa blanco */
-.dark-navbar .navbar-brand,
-.blue-navbar .navbar-brand,
-.orange-navbar .navbar-brand {
-    color: #fff !important;
-}
-
-/* Si el navbar es claro, usa un color oscuro */
-.light-navbar .navbar-brand {
-    color: #222 !important;
-}
-
-/* Efecto hover para el logo */
-.navbar-brand:hover {
-    color: #f8f9fa !important;
-}
-
-
-.inverted-green-navbar {
-    background-color: #e8f5e9 !important; /* Verde claro */
-    border-bottom: 2px solid #c8e6c9;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.15);
-    padding: 10px 20px;
-}
-
-/* Enlaces */
-.inverted-green-navbar .nav-link {
-    color: #198754 !important; /* Verde oscuro */
-    font-weight: 500;
-}
-
-.inverted-green-navbar .nav-link:hover {
-    color: #145c41 !important; /* Verde aún más oscuro */
-}
-
-/* Botón del sidebar */
-.inverted-green-navbar #sidebarToggle {
-    color: #198754 !important;
-}
-
-.inverted-green-navbar #sidebarToggle:hover {
-    color: #145c41 !important;
-}
-
-/* Dropdown */
-.inverted-green-navbar .dropdown-menu {
-    background: #dff5e1; /* Un verde más claro */
-}
-
-.inverted-green-navbar .dropdown-item {
-    color: #198754 !important;
-}
-
-.inverted-green-navbar .dropdown-item:hover {
-    background: #c8e6c9 !important;
-    color: #145c41 !important;
-}
-
-/* Logo */
-.inverted-green-navbar .navbar-brand {
-    color: #198754 !important;
-}
-
-/* Botón cambiar modo oscuro/claro */
-#toggleDarkMode {
-    background: none !important;
-    border: none !important;
-    color: var(--text-on-primary, #fff) !important;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-#toggleDarkMode:hover {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-    transform: scale(1.1);
-}
-
-#toggleDarkMode:focus {
-    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
+#sidebarToggle:focus {
+    box-shadow: 0 0 0 0.2rem var(--primary-color);
     outline: 0;
 }
 
-#darkModeIcon {
-    transition: all 0.3s ease;
+/* Botón de menú móvil (3 puntos verticales) */
+.btn-navbar-menu {
+    background-color: var(--bg-card) !important;
+    border: 2px solid var(--border-color);
+    color: var(--text-primary) !important;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
 }
 
+.btn-navbar-menu:hover {
+    background-color: var(--bg-hover) !important;
+    border-color: var(--primary-color);
+    color: var(--primary-color) !important;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-navbar-menu:focus {
+    box-shadow: 0 0 0 0.2rem var(--primary-color);
+    outline: 0;
+}
+
+/* Botones de icono (notificaciones, dark mode) */
+.navbar-icon-btn {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px !important;
+    margin: 0 4px;
+    border-radius: 8px;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.navbar-icon-btn:hover {
+    background-color: var(--bg-hover) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.navbar-icon-btn:focus {
+    box-shadow: 0 0 0 0.2rem var(--primary-color) !important;
+    outline: 0;
+}
+
+/* Botón de usuario */
+.navbar-user-btn {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    min-height: 44px;
+    padding: 8px 16px !important;
+    margin: 0 4px;
+    border-radius: 8px;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+}
+
+.navbar-user-btn:hover {
+    background-color: var(--bg-hover) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.navbar-user-btn:focus {
+    box-shadow: 0 0 0 0.2rem var(--primary-color);
+    outline: 0;
+}
+
+.navbar-user-btn::after {
+    border-top-color: var(--text-primary);
+    transition: var(--transition-fast);
+}
+
+.navbar-user-btn:hover::after {
+    border-top-color: var(--primary-color);
+}
+
+/* ========================================
+   DROPDOWN MENUS
+   ======================================== */
+
+/* Dropdown principal */
+.navbar .dropdown-menu {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Dropdown items */
+.navbar .dropdown-item {
+    color: var(--text-primary);
+    transition: var(--transition-fast);
+}
+
+.navbar .dropdown-item:hover {
+    background: var(--bg-hover);
+    color: var(--primary-color);
+}
+
+.navbar .dropdown-item:active {
+    background: var(--primary-color);
+    color: var(--text-on-primary);
+}
+
+/* Dividers y headers */
+.navbar .dropdown-divider {
+    border-color: var(--border-color);
+}
+
+.navbar .dropdown-header {
+    color: var(--text-secondary);
+    background-color: var(--bg-light);
+}
+
+/* Dropdown items con iconos */
+.navbar .dropdown-item i {
+    width: 20px;
+    transition: var(--transition-fast);
+}
+
+.navbar .dropdown-item:hover i {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+/* Logout con color de peligro */
+.navbar .dropdown-item.text-danger {
+    color: var(--danger-color) !important;
+}
+
+.navbar .dropdown-item.text-danger:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color) !important;
+}
+
+/* Badge de notificaciones */
+.navbar .badge {
+    box-shadow: var(--shadow-sm);
+}
+
+/* ========================================
+   DROPDOWN MÓVIL
+   ======================================== */
+
+.navbar-mobile-menu {
+    min-width: 280px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+
+.navbar-mobile-menu .dropdown-header {
+    color: var(--text-primary);
+    font-weight: 600;
+    padding: 12px 16px 8px;
+    background-color: var(--bg-light);
+}
+
+.navbar-mobile-menu .dropdown-item {
+    padding: 10px 16px;
+    transition: var(--transition-fast);
+    color: var(--text-primary);
+}
+
+.navbar-mobile-menu .dropdown-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--primary-color);
+}
+
+.navbar-mobile-menu .dropdown-divider {
+    border-color: var(--border-color);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+/* Espaciado general */
+.navbar-nav .nav-item {
+    margin: 0 2px;
+}
+
+/* Desktop */
+@media (min-width: 992px) {
+    .navbar-nav {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .navbar-nav .nav-item {
+        margin: 0 4px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 991.98px) {
+    .navbar-brand {
+        flex: 1;
+        font-size: 1rem;
+    }
+
+    #sidebarToggle {
+        margin-right: 8px;
+    }
+}
+
+/* ========================================
+   DARK MODE ESPECÍFICO PARA NAVBAR
+   ======================================== */
+
+/* MODO CLARO: Botones con fondo semi-transparente oscuro para contraste */
+[data-dark-mode="false"] .navbar-icon-btn,
+[data-dark-mode="false"] .navbar-user-btn,
+[data-dark-mode="false"] #sidebarToggle,
+[data-dark-mode="false"] .btn-navbar-menu,
+:root:not([data-dark-mode="true"]) .navbar-icon-btn,
+:root:not([data-dark-mode="true"]) .navbar-user-btn,
+:root:not([data-dark-mode="true"]) #sidebarToggle,
+:root:not([data-dark-mode="true"]) .btn-navbar-menu {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid rgba(52, 24, 6, 0.2) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-dark-mode="false"] .navbar-icon-btn:hover,
+[data-dark-mode="false"] .navbar-user-btn:hover,
+[data-dark-mode="false"] #sidebarToggle:hover,
+[data-dark-mode="false"] .btn-navbar-menu:hover,
+:root:not([data-dark-mode="true"]) .navbar-icon-btn:hover,
+:root:not([data-dark-mode="true"]) .navbar-user-btn:hover,
+:root:not([data-dark-mode="true"]) #sidebarToggle:hover,
+:root:not([data-dark-mode="true"]) .btn-navbar-menu:hover {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Ajustes específicos de dark mode para el navbar */
+[data-dark-mode="true"] .navbar,
+[data-dark-mode="true"] .sb-topnav {
+    border-bottom-color: var(--border-color);
+}
+
+/* Mejorar contraste en dark mode */
+[data-dark-mode="true"] .navbar-icon-btn,
+[data-dark-mode="true"] .navbar-user-btn,
+[data-dark-mode="true"] #sidebarToggle,
+[data-dark-mode="true"] .btn-navbar-menu {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-dark-mode="true"] .navbar-icon-btn:hover,
+[data-dark-mode="true"] .navbar-user-btn:hover,
+[data-dark-mode="true"] #sidebarToggle:hover,
+[data-dark-mode="true"] .btn-navbar-menu:hover {
+    background-color: var(--bg-hover) !important;
+    border-color: var(--primary-color) !important;
+}

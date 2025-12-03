@@ -4,16 +4,93 @@
         <a class="navbar-brand ps-3" href="{{ route('inicio') }}">Streamify HQ</a>
 
         <!-- Botón para colapsar el sidebar -->
-        <button class="btn btn-outline-primary me-auto order-2" id="sidebarToggle">
+        <button class="btn btn-outline-primary" id="sidebarToggle">
             <i class="fas fa-bars"></i>
         </button>
-        <!-- Contenido del navbar -->
-        <div class="navbar-collapse justify-content-end order-3 main-header-right" id="navbarContent">
-            <ul class="navbar-nav me-3 me-lg-4">
+
+        <!-- Menú dropdown para controles del navbar en móvil -->
+        <div class="dropdown ms-auto d-lg-none">
+            <button class="btn btn-navbar-menu" type="button" id="navbarMenuDropdown"
+                data-bs-toggle="dropdown" aria-expanded="false" title="Menú">
+                <i class="fas fa-ellipsis-v fa-lg"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end navbar-mobile-menu shadow" aria-labelledby="navbarMenuDropdown">
                 @auth
+                    <!-- Notificaciones en móvil -->
+                    <li class="dropdown-header">
+                        <i class="fas fa-bell me-2"></i>Notificaciones
+                        @if (Auth::user()->unreadNotifications->count() > 0)
+                            <span class="badge bg-danger ms-2">
+                                {{ Auth::user()->unreadNotifications->count() }}
+                            </span>
+                        @endif
+                    </li>
+                    @forelse (Auth::user()->unreadNotifications->take(3) as $notificacion)
+                        <li>
+                            <a class="dropdown-item small" href="{{ $notificacion->data['url'] ?? '#' }}">
+                                <small class="text-muted d-block">{{ $notificacion->created_at->diffForHumans() }}</small>
+                                {{ Str::limit($notificacion->data['mensaje'], 50) }}
+                            </a>
+                        </li>
+                    @empty
+                        <li><a class="dropdown-item text-muted small">No hay notificaciones</a></li>
+                    @endforelse
+
+                    @if (Auth::user()->unreadNotifications->count() > 3)
+                        <li><a class="dropdown-item text-center small text-primary" href="#" id="verTodasNotif">Ver todas...</a></li>
+                    @endif
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- Dark Mode Toggle en móvil -->
+                    <li>
+                        <button class="dropdown-item" id="toggleDarkModeMobile">
+                            <i class="fas fa-moon me-2" id="darkModeIconMobile"></i>
+                            <span id="darkModeTextMobile">Modo Oscuro</span>
+                        </button>
+                    </li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- Usuario en móvil -->
+                    <li class="dropdown-header">
+                        <i class="fas fa-user me-2"></i>{{ Auth::user()->nombreemp }}
+                    </li>
+                    <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
+                            <i class="fas fa-cog me-2"></i> Ajustes
+                        </a></li>
+                    @if (Auth::user()->hasPermissionTo('historial'))
+                        <li><a class="dropdown-item" href="{{ route('historial') }}">
+                                <i class="fas fa-history me-2"></i> Actividad
+                            </a></li>
+                    @endif
+                    @if (Auth::user()->hasRole('Admin'))
+                        <li><a class="dropdown-item" href="{{ route('sistema.index') }}">
+                                <i class="fas fa-palette me-2"></i> Sistema
+                            </a></li>
+                    @endif
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                        </a>
+                    </li>
+                    <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                @endauth
+            </ul>
+        </div>
+
+        <!-- Contenido del navbar (solo visible en desktop) -->
+        <div class="d-none d-lg-flex ms-auto" id="navbarContent">
+            <ul class="navbar-nav ms-auto">
+                @auth
+                    <!-- Notificaciones (Desktop) -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link position-relative" href="#" id="notificacionesDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="nav-link navbar-icon-btn" id="notificacionesDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false" title="Notificaciones">
                             <i class="fas fa-bell fa-lg"></i>
                             @if (Auth::user()->unreadNotifications->count() > 0)
                                 <span id="contadorNotificaciones"
@@ -21,10 +98,10 @@
                                     {{ Auth::user()->unreadNotifications->count() }}
                                 </span>
                             @endif
-                        </a>
+                        </button>
 
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificacionesDropdown">
-                            <li class="dropdown-header">Notificaciones Pablin</li>
+                            <li class="dropdown-header">Notificaciones</li>
 
                             @forelse (Auth::user()->unreadNotifications as $notificacion)
                                 <li>
@@ -50,33 +127,35 @@
                             @endif
                         </ul>
                     </li>
+
                     <!-- Botón cambiar modo -->
                     <li class="nav-item">
-                        <button class="nav-link btn btn-link p-2 border-0" id="toggleDarkMode" title="Cambiar modo de visualización">
+                        <button class="nav-link btn btn-link navbar-icon-btn" id="toggleDarkMode" title="Cambiar modo de visualización">
                             <i class="fas fa-moon fa-lg" id="darkModeIcon"></i>
                         </button>
                     </li>
-                    <!-- Menú de usuario -->
+
+                    <!-- Menú de usuario (Desktop) -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
-                            role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user fa-fw"></i>
-                            {{ Auth::user()->nombreemp }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <button class="nav-link dropdown-toggle navbar-user-btn" id="userDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user fa-fw me-1"></i>
+                            <span>{{ Auth::user()->nombreemp }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
                             <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
-                                    <i class="fas fa-cog"></i> Ajustes
+                                    <i class="fas fa-cog me-2"></i> Ajustes
                                 </a></li>
 
                             @if (Auth::user()->hasPermissionTo('historial'))
                                 <li><a class="dropdown-item" href="{{ route('historial') }}">
-                                        <i class="fas fa-history"></i> Actividad
+                                        <i class="fas fa-history me-2"></i> Actividad
                                     </a></li>
                             @endif
 
                             @if (Auth::user()->hasRole('Admin'))
                                 <li><a class="dropdown-item" href="{{ route('sistema.index') }}">
-                                        <i class="fas fa-palette"></i> Sistema
+                                        <i class="fas fa-palette me-2"></i> Sistema
                                     </a></li>
                             @endif
 
@@ -87,7 +166,7 @@
                             <li>
                                 <a class="dropdown-item" href="{{ route('logout') }}"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
                                 </a>
                             </li>
 
@@ -101,31 +180,3 @@
         </div>
     </div>
 </nav>
-
-<script>
-// Toggle Dark Mode desde el navbar
-document.addEventListener('DOMContentLoaded', function() {
-    const toggleBtn = document.getElementById('toggleDarkMode');
-    const icon = document.getElementById('darkModeIcon');
-
-    if (toggleBtn && icon) {
-        // Actualizar icono inicial
-        updateDarkModeIcon();
-
-        // Event listener para el botón
-        toggleBtn.addEventListener('click', function() {
-            ThemeManager.toggleDarkMode();
-            updateDarkModeIcon();
-        });
-
-        // Función para actualizar el icono según el estado
-        function updateDarkModeIcon() {
-            if (ThemeManager.isDarkMode()) {
-                icon.className = 'fas fa-sun fa-lg'; // Sol cuando está en modo oscuro
-            } else {
-                icon.className = 'fas fa-moon fa-lg'; // Luna cuando está en modo claro
-            }
-        }
-    }
-});
-</script>
