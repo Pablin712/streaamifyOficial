@@ -587,12 +587,8 @@ function renderClientPagination(config, totalRows) {
 
     function createBtn(label, page, disabled = false, active = false) {
         const btn = document.createElement("button");
-        btn.className =
-            "px-3 py-2 mx-1 rounded transition-colors duration-200 text-sm font-medium " +
-            (active
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-700 hover:bg-blue-100") +
-            (disabled ? " opacity-50 cursor-not-allowed" : "");
+        // Usar las mismas clases de Bootstrap que server-side
+        btn.className = "btn btn-sm mx-1" + (active ? " active" : "");
         btn.textContent = label;
         btn.disabled = disabled;
 

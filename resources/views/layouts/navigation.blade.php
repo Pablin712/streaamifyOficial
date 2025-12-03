@@ -10,6 +10,22 @@
     <meta name="author" content="" />
     <title>@yield('title', 'Streamify')</title>
 
+    <!-- ⚡ APLICACIÓN INMEDIATA DE DARK MODE (antes de cargar CSS) -->
+    <script>
+        (function() {
+            try {
+                const darkMode = localStorage.getItem('streamify_dark_mode');
+                const theme = localStorage.getItem('streamify_theme');
+                if (darkMode === 'true') {
+                    document.documentElement.setAttribute('data-dark-mode', 'true');
+                }
+                if (theme) {
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
+            } catch (e) {}
+        })();
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
@@ -18,9 +34,9 @@
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
 
     <!-- Sistema de Temas Dinámicos -->
-    <link rel="stylesheet" href="{{ asset('css/themes.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/themes.css') }}?v={{ filemtime(public_path('css/themes.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}?v={{ filemtime(public_path('css/enhanced-table-global.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}?v={{ filemtime(public_path('css/modal-system.css')) }}">
 
     @yield('styles')
     @livewireStyles

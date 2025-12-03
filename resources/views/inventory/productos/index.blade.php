@@ -280,13 +280,6 @@
 @endsection
 
 @section('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializa DataTables
-            $('#datatablesSimple').DataTable();
-            // Script adicional si deseas agregar eventos específicos
-        });
-    </script>
     <script src="{{ asset('js/productos.js') }}"></script>
 
     {{-- ============================================================================ --}}

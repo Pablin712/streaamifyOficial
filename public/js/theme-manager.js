@@ -6,6 +6,19 @@
  * Controlador central para cambio de temas y persistencia
  */
 
+// ⚡ APLICACIÓN INMEDIATA DE DARK MODE (antes de que el DOM cargue)
+(function() {
+    try {
+        const savedDarkMode = localStorage.getItem('streamify_dark_mode');
+        if (savedDarkMode === 'true') {
+            document.documentElement.setAttribute('data-dark-mode', 'true');
+            console.log('[ThemeManager] Dark mode aplicado inmediatamente (pre-init)');
+        }
+    } catch (e) {
+        console.warn('[ThemeManager] Error aplicando dark mode temprano:', e);
+    }
+})();
+
 const ThemeManager = {
     // Configuración
     STORAGE_KEY: 'streamify_theme',

@@ -337,6 +337,87 @@ body {
 }
 
 /* ===================================
+   MODO OSCURO - PAGINACIÓN
+   =================================== */
+
+/* Especificidad máxima para sobrescribir Bootstrap */
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn-sm,
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn {
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+    background-color: var(--bg-card) !important;
+}
+
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn-sm:hover:not(:disabled),
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn:hover:not(:disabled) {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-on-primary) !important;
+    box-shadow: 0 3px 6px rgba(255, 226, 38, 0.3);
+}
+
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn-sm.active,
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn.active {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-on-primary) !important;
+}
+
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn-sm:disabled,
+html[data-dark-mode="true"] body [id$="-pagination"] .btn.btn:disabled {
+    opacity: 0.3 !important;
+    background-color: var(--bg-light) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+html[data-dark-mode="true"] body [id$="-pagination"] span {
+    color: var(--text-primary) !important;
+}
+
+html[data-dark-mode="true"] body [id$="-row-info"] {
+    color: var(--text-secondary) !important;
+}
+
+/* ===================================
+   MODO OSCURO - FORM CONTROLS
+   =================================== */
+
+html[data-dark-mode="true"] .form-control,
+html[data-dark-mode="true"] .form-select,
+html[data-dark-mode="true"] textarea.form-control {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+html[data-dark-mode="true"] .form-control:focus,
+html[data-dark-mode="true"] .form-select:focus,
+html[data-dark-mode="true"] textarea.form-control:focus {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 226, 38, 0.25) !important;
+}
+
+html[data-dark-mode="true"] .form-control::placeholder,
+html[data-dark-mode="true"] textarea.form-control::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.6;
+}
+
+/* ===================================
+   MODO OSCURO - PRE Y CODE
+   =================================== */
+
+html[data-dark-mode="true"] pre,
+html[data-dark-mode="true"] code {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* ===================================
    BADGES
    =================================== */
 
