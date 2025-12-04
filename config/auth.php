@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'empleado' => [
+            'driver' => 'session',
+            'provider' => 'users', // Usa el provider 'users' que apunta a Empleado
+        ],
         'cliente' => [
             'driver' => 'session',
             'provider' => 'clientes', // Clientes (nuevo)
@@ -47,7 +51,7 @@ return [
         'api' => [
             'driver' => 'jwt',
             'provider' => 'users',
-    ],
+        ],
     ],
 
     /*

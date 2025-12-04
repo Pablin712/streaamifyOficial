@@ -29,6 +29,16 @@ use App\Http\Controllers\CodigoController;
 use App\Http\Controllers\TipoProductoController;
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
+
+// === RUTAS DE DEMO CHAT ===
+Route::get('/chat/demo-widget', function () {
+    return view('chat.demo-widget');
+})->name('chat.demo.widget');
+
+Route::get('/chat/panel', function () {
+    return view('chat.panel-empleados');
+})->name('chat.panel')->middleware('auth');
+// === FIN RUTAS DEMO ===
 use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\HistorialClientesController;

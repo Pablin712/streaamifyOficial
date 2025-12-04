@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description"
-        content="Adquiere tu suscripción premium 
+        content="Adquiere tu suscripción premium
             para disfrutar de contenido exclusivo en Streamify." />
     <meta name="author" content="Pablo Jiménez" />
     <title>@yield('title')</title>
@@ -41,6 +41,9 @@
             border-color: #274698;
         }
     </style>
+
+    <!-- Chat Widget CSS (scoped) -->
+    <link rel="stylesheet" href="{{ asset('build/assets/chat-widget-hSw3BKoY.css') }}">
 </head>
 
 <body id="page-top">
@@ -185,13 +188,12 @@
     </footer>
     <!-- Bootstrap core JS-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    @yield('scripts')
+
     <!-- Core theme JS-->
     <script src="{{ asset('js/scripts2.js') }}"></script>
-    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-    <!-- * *                               SB Forms JS                               * *-->
-    <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
-    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const yearSpan = document.getElementById("currentYear");
@@ -200,27 +202,31 @@
             }
         });
     </script>
-    <!-- Bootstrap JS y Popper.js
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    -->
-    @yield('scripts')
-    <!--Start of Tawk.to Script
-    <script type="text/javascript">
-        var Tawk_API = Tawk_API || {},
-            Tawk_LoadStart = new Date();
-        (function() {
-            var s1 = document.createElement("script"),
-                s0 = document.getElementsByTagName("script")[0];
-            s1.async = true;
-            s1.src = 'https://embed.tawk.to/67ed7177f50d4a1910554d03/1inro6f1q';
-            s1.charset = 'UTF-8';
-            s1.setAttribute('crossorigin', '*');
-            s0.parentNode.insertBefore(s1, s0);
-        })();
+
+    <!-- Widget de Chat -->
+    <div id="chat-widget-mount"></div>
+
+    <!-- Chat Widget JS -->
+    <script type="module" src="{{ asset('build/assets/chat-widget-BUHuOVYH.js') }}"></script>
+    <script type="module" src="{{ asset('build/assets/vue.esm-bundler-B3jZp_Ae.js') }}"></script>
+
+    <script>
+        // Inicializar el widget cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Esperar un poco para asegurar que todo esté cargado
+            setTimeout(function() {
+                if (typeof window.initChatWidget === 'function') {
+                    @if (Auth::guard('cliente')->check())
+                        window.initChatWidget({{ Auth::guard('cliente')->user()->idcli }}, '/api/v1/chat');
+                    @else
+                        window.initChatWidget(null, '/api/v1/chat');
+                    @endif
+                } else {
+                    console.error('Chat widget no disponible');
+                }
+            }, 200);
+        });
     </script>
-    End of Tawk.to Script-->
-    <script src="{{ asset('js/bot-azure.js') }}"></script>
 </body>
 
 </html>
