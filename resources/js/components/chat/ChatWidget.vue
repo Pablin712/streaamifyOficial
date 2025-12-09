@@ -37,9 +37,17 @@ export default {
       type: Number,
       default: null, // null = anónimo
     },
-    apiUrl: {
+    enviarUrl: {
       type: String,
-      default: '/api/v1/chat',
+      required: true,
+    },
+    conversacionUrl: {
+      type: String,
+      required: true,
+    },
+    csrfToken: {
+      type: String,
+      required: true,
     },
   },
   data() {
@@ -63,6 +71,14 @@ export default {
     },
   },
   async mounted() {
+    console.log('🟢 ChatWidget mounted');
+    console.log('📋 Config:', {
+      clienteId: this.clienteId,
+      enviarUrl: this.enviarUrl,
+      conversacionUrl: this.conversacionUrl,
+      isAuthenticated: this.isAuthenticated,
+    });
+
     await this.initSession();
 
     // Actualizar tiempo de expiración cada minuto
@@ -92,46 +108,58 @@ export default {
     async loadConversation() {
       try {
         const endpoint = this.isAuthenticated
-          ? `${this.apiUrl}/cliente/${this.clienteId}/conversacion`
-          : `${this.apiUrl}/anonimo/${this.sessionId}/conversacion`;
+          ? this.conversacionUrl
+          : `${this.conversacionUrl}/${this.sessionId}/conversacion`;
+
+        console.log('📥 Loading conversation from:', endpoint);
 
         const response = await fetch(endpoint);
         const data = await response.json();
+
+        console.log('📨 Conversation response:', data);
 
         if (data.success && data.data.conversacion) {
           this.conversation = data.data.conversacion;
           this.messages = data.data.mensajes || [];
           this.unreadCount = 0;
+          console.log('✅ Conversation loaded:', this.messages.length, 'messages');
+        } else {
+          console.warn('⚠️ No conversation found or success=false');
         }
       } catch (error) {
-        console.error('Error loading conversation:', error);
+        console.error('❌ Error loading conversation:', error);
       }
     },
 
     async sendMessage(contenido) {
       try {
+        console.log('📤 Sending message:', contenido);
+
         const payload = this.isAuthenticated
           ? { idcli: this.clienteId, contenido }
           : { session_id: this.sessionId, contenido };
 
-        const endpoint = this.isAuthenticated
-          ? `${this.apiUrl}/cliente/enviar`
-          : `${this.apiUrl}/anonimo/enviar`;
+        console.log('📦 Payload:', payload);
+        console.log('🔗 URL:', this.enviarUrl);
 
-        const response = await fetch(endpoint, {
+        const response = await fetch(this.enviarUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'X-CSRF-TOKEN': this.csrfToken,
           },
           body: JSON.stringify(payload),
         });
 
+        console.log('📨 Response status:', response.status);
         const data = await response.json();
+        console.log('📨 Response data:', data);
 
         if (data.success) {
           this.messages.push(data.data.mensaje);
           this.conversation = data.data.conversacion;
+          console.log('✅ Message sent successfully');
 
           // Simular typing indicator
           this.isTyping = true;
@@ -139,10 +167,12 @@ export default {
             this.isTyping = false;
           }, 2000);
         } else {
-          console.error('Error al enviar mensaje:', data.error);
+          console.error('❌ Error al enviar mensaje:', data.error, data.message);
+          alert('Error al enviar mensaje: ' + (data.message || data.error));
         }
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('❌ Error sending message:', error);
+        alert('Error de conexión: ' + error.message);
       }
     },
 

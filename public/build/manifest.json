@@ -18,7 +18,7 @@
     ]
   },
   "resources/js/chat-widget.js": {
-    "file": "assets/chat-widget-BUHuOVYH.js",
+    "file": "assets/chat-widget-D0qbCfCX.js",
     "name": "chat-widget",
     "src": "resources/js/chat-widget.js",
     "isEntry": true,
@@ -26,7 +26,7 @@
       "_vue.esm-bundler-B3jZp_Ae.js"
     ],
     "css": [
-      "assets/chat-widget-hSw3BKoY.css"
+      "assets/chat-widget-B4bUEDhZ.css"
     ]
   }
 }

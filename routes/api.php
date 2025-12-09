@@ -99,11 +99,11 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    // Chat - Público (sin autenticación, para clientes)
-    Route::post('/chat/cliente/enviar', [ChatController::class, 'clienteEnviarMensaje']);
-    Route::get('/chat/cliente/{idcli}/conversacion', [ChatController::class, 'obtenerConversacionCliente']);
-    Route::post('/chat/anonimo/enviar', [ChatController::class, 'anonimoEnviarMensaje']);
-    Route::get('/chat/anonimo/{sessionId}/conversacion', [ChatController::class, 'obtenerConversacionAnonima']);
+    // Chat - Público (clientes autenticados y anónimos) - SIN API Key
+    Route::post('/chat/cliente/enviar', [ChatController::class, 'clienteEnviarMensaje'])->name('api.chat.cliente.enviar');
+    Route::get('/chat/cliente/{idcli}/conversacion', [ChatController::class, 'obtenerConversacionCliente'])->name('api.chat.cliente.conversacion');
+    Route::post('/chat/anonimo/enviar', [ChatController::class, 'anonimoEnviarMensaje'])->name('api.chat.anonimo.enviar');
+    Route::get('/chat/anonimo/{sessionId}/conversacion', [ChatController::class, 'obtenerConversacionAnonima'])->name('api.chat.anonimo.conversacion');
 
     // Respuestas Rápidas - Público (para clientes, solo tipo=cliente o ambos)
     Route::get('/public/quick-responses', [QuickResponseController::class, 'index']);

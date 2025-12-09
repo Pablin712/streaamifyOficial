@@ -43,7 +43,7 @@
     </style>
 
     <!-- Chat Widget CSS (scoped) -->
-    <link rel="stylesheet" href="{{ asset('build/assets/chat-widget-hSw3BKoY.css') }}">
+    <link rel="stylesheet" href="{{ asset('build/assets/chat-widget-B4bUEDhZ.css') }}">
 </head>
 
 <body id="page-top">
@@ -206,21 +206,26 @@
     <!-- Widget de Chat -->
     <div id="chat-widget-mount"></div>
 
-    {{-- Chat Widget JS --}}
-    <script type="module" src="{{ asset('build/assets/chat-widget-BUHuOVYH.js') }}"></script>
-    <script type="module" src="{{ asset('build/assets/vue.esm-bundler-B3jZp_Ae.js') }}"></script>
-
     <script>
+        // Configuración de rutas para el chat widget
+        window.chatConfig = {
+            @if (Auth::guard('cliente')->check())
+                clienteId: {{ Auth::guard('cliente')->user()->idcli }},
+                enviarUrl: "{{ route('api.chat.cliente.enviar') }}",
+                conversacionUrl: "{{ route('api.chat.cliente.conversacion', ['idcli' => Auth::guard('cliente')->user()->idcli]) }}",
+            @else
+                clienteId: null,
+                enviarUrl: "{{ route('api.chat.anonimo.enviar') }}",
+                conversacionUrl: "{{ url('/api/v1/chat/anonimo') }}", // Se completará con /{sessionId}/conversacion
+            @endif
+            csrfToken: "{{ csrf_token() }}"
+        };
+
         // Inicializar el widget cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', function() {
-            // Esperar un poco para asegurar que todo esté cargado
             setTimeout(function() {
                 if (typeof window.initChatWidget === 'function') {
-                    @if (Auth::guard('cliente')->check())
-                        window.initChatWidget({{ Auth::guard('cliente')->user()->idcli }}, '/api/v1/chat');
-                    @else
-                        window.initChatWidget(null, '/api/v1/chat');
-                    @endif
+                    window.initChatWidget(window.chatConfig);
                 } else {
                     console.error('Chat widget no disponible');
                 }
@@ -228,6 +233,8 @@
         });
     </script>
 
+    <!-- Chat Widget JS (module) -->
+    <script type="module" src="{{ asset('build/assets/chat-widget-D0qbCfCX.js') }}"></script>
 
     {{-- comentado por n8n
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
