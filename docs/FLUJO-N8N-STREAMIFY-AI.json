@@ -1,0 +1,468 @@
+{
+  "name": "Streamify AI Chat Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "trigger-polling",
+      "name": "Ejecutar cada 30 segundos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/chat/n8n/mensajes-pendientes",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {
+          "timeout": 10000
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "id": "obtener-mensajes-pendientes",
+      "name": "Obtener Mensajes Pendientes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [250, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "streamify-api-key",
+          "name": "Streamify API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.count }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "hay-mensajes",
+      "name": "¿Hay mensajes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 0]
+    },
+    {
+      "parameters": {
+        "mode": "jsonToBinary",
+        "options": {
+          "operation": "split",
+          "itemPropertyName": "data"
+        }
+      },
+      "id": "dividir-mensajes",
+      "name": "Dividir por Mensaje",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, -100]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/public/ai/knowledge-base",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "obtener-knowledge-base",
+      "name": "Obtener Knowledge Base",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, -200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/public/ai/servicios",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "obtener-servicios",
+      "name": "Obtener Servicios",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 0]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/ai/cliente/{{ $('Dividir por Mensaje').item.json.cliente.idcli }}/ventas",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "obtener-ventas-cliente",
+      "name": "Obtener Ventas del Cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "streamify-api-key",
+          "name": "Streamify API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ctx-knowledge",
+              "name": "knowledgeBase",
+              "value": "={{ JSON.stringify($('Obtener Knowledge Base').item.json.data) }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-servicios",
+              "name": "servicios",
+              "value": "={{ JSON.stringify($('Obtener Servicios').item.json.data) }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-ventas",
+              "name": "ventasCliente",
+              "value": "={{ JSON.stringify($('Obtener Ventas del Cliente').item.json.data) }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-mensaje",
+              "name": "mensajeCliente",
+              "value": "={{ $('Dividir por Mensaje').item.json.mensaje.contenido }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-cliente",
+              "name": "nombreCliente",
+              "value": "={{ $('Dividir por Mensaje').item.json.cliente.nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-idconv",
+              "name": "idconv",
+              "value": "={{ $('Dividir por Mensaje').item.json.idconv }}",
+              "type": "string"
+            },
+            {
+              "id": "ctx-idmsg",
+              "name": "idmsg",
+              "value": "={{ $('Dividir por Mensaje').item.json.idmsg }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "preparar-contexto",
+      "name": "Preparar Contexto",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1050, 0]
+    },
+    {
+      "parameters": {
+        "model": "deepseek-chat",
+        "apiKey": "={{ $credentials.deepSeekApi.apiKey }}",
+        "baseUrl": "https://api.deepseek.com",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Eres el asistente virtual de Streamify, empresa ecuatoriana de servicios de streaming compartidos.\n\nINFORMACIÓN DE LA EMPRESA:\n{{ $json.knowledgeBase }}\n\nSERVICIOS DISPONIBLES:\n{{ $json.servicios }}\n\nVENTAS DEL CLIENTE {{ $json.nombreCliente }}:\n{{ $json.ventasCliente }}\n\nINSTRUCCIONES IMPORTANTES:\n1. Sé amable, profesional y conciso (máximo 3 párrafos cortos)\n2. Llama al cliente por su nombre: {{ $json.nombreCliente }}\n3. Si preguntan por PRECIOS, menciona los 5 tipos disponibles claramente\n4. Si preguntan por RENOVACIÓN y el cliente tiene ventas activas, menciona sus servicios actuales\n5. Si preguntan por disponibilidad de perfiles, indica que deben consultar disponibilidad actual\n6. Para PAGOS, indica los métodos: transferencia bancaria, PayPal, Binance\n7. Usa emojis apropiadamente: 🎬📺💳✅\n8. Si detectas solicitudes de: renovación, pago, problema técnico grave → deriva a humano\n9. NUNCA inventes precios, servicios o información que no esté en el contexto\n10. Si no sabes algo, di: \"Déjame derivarte con un asesor para ayudarte mejor 👨‍💼\"\n\nFRASES PARA DERIVAR A HUMANO:\n- \"quiero hablar con una persona\"\n- \"necesito ayuda urgente\"\n- \"tengo un problema\"\n- \"no funciona\"\n- \"quiero renovar\"\n- \"quiero pagar\"\n\nSi detectas alguna de estas frases, responde educadamente y SIEMPRE termina con:\n\"🔔 Te estoy derivando con un asesor humano que te atenderá enseguida.\""
+            },
+            {
+              "role": "user",
+              "content": "{{ $json.mensajeCliente }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 400,
+          "topP": 0.9
+        }
+      },
+      "id": "deepseek-ai",
+      "name": "DeepSeek AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 0],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "deepseek-account",
+          "name": "DeepSeek Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/chat/n8n/responder",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idconv\": \"{{ $('Preparar Contexto').item.json.idconv }}\",\n  \"idmsg\": \"{{ $('Preparar Contexto').item.json.idmsg }}\",\n  \"contenido\": \"{{ $('DeepSeek AI').item.json.choices[0].message.content }}\",\n  \"metadata\": {\n    \"model\": \"deepseek-chat\",\n    \"tokens\": {{ $('DeepSeek AI').item.json.usage.total_tokens }},\n    \"finish_reason\": \"{{ $('DeepSeek AI').item.json.choices[0].finish_reason }}\"\n  }\n}",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "enviar-respuesta",
+      "name": "Enviar Respuesta a Streamify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "streamify-api-key",
+          "name": "Streamify API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $('DeepSeek AI').item.json.choices[0].message.content.toLowerCase() }}",
+              "operation": "contains",
+              "value2": "asesor humano"
+            }
+          ]
+        }
+      },
+      "id": "requiere-humano",
+      "name": "¿Requiere Humano?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1450, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/api/v1/chat/n8n/marcar-requiere-humano",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"idconv\": \"{{ $('Preparar Contexto').item.json.idconv }}\",\n  \"razon\": \"Cliente derivado por AI - requiere atención personalizada\"\n}",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "marcar-humano",
+      "name": "Marcar para Humano",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1650, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "streamify-api-key",
+          "name": "Streamify API Key"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Ejecutar cada 30 segundos": {
+      "main": [
+        [
+          {
+            "node": "Obtener Mensajes Pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Mensajes Pendientes": {
+      "main": [
+        [
+          {
+            "node": "¿Hay mensajes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay mensajes?": {
+      "main": [
+        [
+          {
+            "node": "Dividir por Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dividir por Mensaje": {
+      "main": [
+        [
+          {
+            "node": "Obtener Knowledge Base",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener Servicios",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener Ventas del Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Knowledge Base": {
+      "main": [
+        [
+          {
+            "node": "Preparar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Servicios": {
+      "main": [
+        [
+          {
+            "node": "Preparar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Ventas del Cliente": {
+      "main": [
+        [
+          {
+            "node": "Preparar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Contexto": {
+      "main": [
+        [
+          {
+            "node": "DeepSeek AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek AI": {
+      "main": [
+        [
+          {
+            "node": "Enviar Respuesta a Streamify",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Requiere Humano?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Requiere Humano?": {
+      "main": [
+        [
+          {
+            "node": "Marcar para Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-04T00:00:00.000Z",
+  "versionId": "1"
+}

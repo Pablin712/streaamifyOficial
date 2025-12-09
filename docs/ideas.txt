@@ -1,0 +1,6 @@
+Ideas para los bots
+
+- sin IA, solo respuestas rápidas como en whatsapp bussiness, el empleado escribe en el chat "/" y aparecen las respuestas rápidas que hay, escribe y se busca entre las que hay, digamos /bancos, y se muestran los métodos de pago, /precios, y se muestra lista de precios
+- sin IA, respuestas automáticas para cliente, el cliente escribe así mismo, un comando, /pagos o /bancos, y aparecen los métodos de pago, etc
+- con IA, flujo n8n con deepseek (ya listo el flujo, solo falta endpoints, el flujo usará la api key de empleado Laravel), como ejemplo de prueba quiero que el empleado consulte por perfiles disponibles en spotify (perfiles cuya cuenta pertenezcan a perfil.cuenta.valor.servicio=SPOTIFY, y usuarios activos en ese perfil sea 0, es decir nadie la ocupa), el modelo deepseek usa esta herramienta de api key para hacer la respectiva consulta y responde al empleado (para seguridad, el bot debe revisar permisos de empleado para no proporcionar información no autorizada)
+- con IA, flujo n8n con deepseek (usando api key de empleado Laravel), un cliente chatea al soporte de Streamify y hace preguntas, el modelo en n8n usa una base de conocimientos de todo lo que hay que saber de Streamify, y una consulta a los productos, servicios, entre otras tablas para saber precios actuales, combos, servicios disponibles etc. en tiempo real

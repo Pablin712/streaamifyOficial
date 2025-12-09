@@ -506,5 +506,256 @@ class ChatController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * ================================================
+     * ENDPOINTS PARA N8N AI BOT
+     * ================================================
+     */
+
+    /**
+     * Obtener mensajes pendientes de respuesta AI
+     * GET /api/v1/chat/n8n/mensajes-pendientes
+     *
+     * Este endpoint retorna los mensajes de clientes que:
+     * - Pertenecen a conversaciones en estado 'abierta' o 'bot_activo'
+     * - NO tienen requiere_humano = true
+     * - Son del cliente (tipo_remitente = 'cliente')
+     * - Aún no han sido respondidos por el bot
+     */
+    public function mensajesPendientesParaAI(Request $request)
+    {
+        try {
+            $limit = $request->input('limit', 5); // Máximo 5 mensajes por request
+
+            // Buscar conversaciones que el bot puede atender
+            $conversaciones = Conversacion::with([
+                'cliente:idcli,nombrecli,telefonocli,email',
+                'mensajes' => function($query) {
+                    $query->where('tipo_remitente', 'cliente')
+                          ->whereNull('respondido_por_ai')
+                          ->orWhere('respondido_por_ai', false)
+                          ->orderBy('created_at', 'desc')
+                          ->limit(1); // Solo el último mensaje sin responder
+                }
+            ])
+            ->where('requiere_humano', false)
+            ->whereIn('estado', ['abierta', 'bot_activo'])
+            ->whereHas('mensajes', function($query) {
+                $query->where('tipo_remitente', 'cliente')
+                      ->where(function($q) {
+                          $q->whereNull('respondido_por_ai')
+                            ->orWhere('respondido_por_ai', false);
+                      });
+            })
+            ->orderBy('ultima_actividad', 'asc')
+            ->limit($limit)
+            ->get();
+
+            // Formatear respuesta para n8n
+            $mensajesPendientes = $conversaciones->map(function($conv) {
+                $ultimoMensaje = $conv->mensajes->first();
+
+                return [
+                    'idconv' => $conv->idconv,
+                    'idmsg' => $ultimoMensaje->idmsg ?? null,
+                    'cliente' => [
+                        'idcli' => $conv->cliente->idcli,
+                        'nombre' => $conv->cliente->nombrecli,
+                        'telefono' => $conv->cliente->telefonocli,
+                        'email' => $conv->cliente->email,
+                    ],
+                    'mensaje' => [
+                        'contenido' => $ultimoMensaje->contenido ?? '',
+                        'tipo_contenido' => $ultimoMensaje->tipo_contenido ?? 'texto',
+                        'fecha' => $ultimoMensaje->created_at ?? null,
+                    ],
+                    'conversacion' => [
+                        'estado' => $conv->estado,
+                        'mensajes_no_leidos' => $conv->mensajes_no_leidos,
+                        'ultima_actividad' => $conv->ultima_actividad,
+                    ],
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'count' => $mensajesPendientes->count(),
+                'data' => $mensajesPendientes
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener mensajes pendientes',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Responder desde AI (n8n + DeepSeek)
+     * POST /api/v1/chat/n8n/responder
+     *
+     * Body:
+     * {
+     *   "idconv": "001",
+     *   "idmsg": "001",  // ID del mensaje del cliente que se está respondiendo
+     *   "contenido": "¡Hola! Netflix cuesta $2.50 el perfil...",
+     *   "metadata": { "model": "deepseek-chat", "tokens": 150 }
+     * }
+     */
+    public function responderDesdeAI(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'idconv' => 'required|exists:conversaciones,idconv',
+                'idmsg' => 'required|exists:mensajes,idmsg',
+                'contenido' => 'required|string',
+                'metadata' => 'nullable|array',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $conversacion = Conversacion::find($request->idconv);
+
+            if (!$conversacion) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Conversación no encontrada'
+                ], 404);
+            }
+
+            // Verificar que la conversación no requiera atención humana
+            if ($conversacion->requiere_humano) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Esta conversación requiere atención humana'
+                ], 403);
+            }
+
+            // Marcar el mensaje del cliente como respondido por AI
+            $mensajeCliente = Mensaje::find($request->idmsg);
+            if ($mensajeCliente) {
+                $mensajeCliente->update([
+                    'respondido_por_ai' => true,
+                    'metadata' => array_merge(
+                        $mensajeCliente->metadata ?? [],
+                        ['ai_response_at' => now()]
+                    )
+                ]);
+            }
+
+            // Crear mensaje de respuesta del bot
+            $mensaje = Mensaje::create([
+                'idconv' => $request->idconv,
+                'tipo_remitente' => 'bot',
+                'idemp' => null, // No es un empleado
+                'idcli' => null, // No es un cliente
+                'contenido' => $request->contenido,
+                'tipo_contenido' => 'texto',
+                'metadata' => array_merge(
+                    $request->metadata ?? [],
+                    [
+                        'respuesta_ai' => true,
+                        'modelo' => $request->metadata['model'] ?? 'deepseek-chat',
+                        'timestamp' => now(),
+                    ]
+                ),
+            ]);
+
+            // Actualizar estado de conversación
+            $conversacion->update([
+                'estado' => 'bot_activo',
+                'ultima_actividad' => now(),
+                'mensajes_no_leidos' => 0, // Reset porque el bot respondió
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Respuesta AI enviada correctamente',
+                'data' => $mensaje
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al enviar respuesta AI',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marcar conversación como requiere atención humana
+     * POST /api/v1/chat/n8n/marcar-requiere-humano
+     *
+     * Body:
+     * {
+     *   "idconv": "001",
+     *   "razon": "Cliente solicita hablar con asesor"
+     * }
+     */
+    public function marcarRequiereHumano(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'idconv' => 'required|exists:conversaciones,idconv',
+                'razon' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $conversacion = Conversacion::find($request->idconv);
+
+            $conversacion->update([
+                'requiere_humano' => true,
+                'estado' => 'en_espera',
+                'metadata' => array_merge(
+                    $conversacion->metadata ?? [],
+                    [
+                        'requiere_humano_desde' => now(),
+                        'razon' => $request->razon ?? 'Derivado por AI',
+                    ]
+                ),
+            ]);
+
+            // Crear mensaje automático informando al cliente
+            Mensaje::create([
+                'idconv' => $request->idconv,
+                'tipo_remitente' => 'sistema',
+                'contenido' => '🔔 Hemos derivado tu consulta a un asesor humano. En breve te atenderemos.',
+                'tipo_contenido' => 'texto',
+                'metadata' => [
+                    'tipo' => 'notificacion_sistema',
+                    'razon_derivacion' => $request->razon ?? 'Solicitud de atención humana'
+                ],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Conversación marcada para atención humana',
+                'data' => $conversacion
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al marcar conversación',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
 

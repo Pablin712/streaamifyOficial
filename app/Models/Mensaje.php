@@ -22,12 +22,14 @@ class Mensaje extends Model
         'archivo_url',
         'leido',
         'leido_at',
+        'respondido_por_ai',
         'metadata',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'leido' => 'boolean',
+        'respondido_por_ai' => 'boolean',
         'leido_at' => 'datetime',
     ];
 

@@ -206,7 +206,7 @@
     <!-- Widget de Chat -->
     <div id="chat-widget-mount"></div>
 
-    <!-- Chat Widget JS -->
+    {{-- Chat Widget JS --}}
     <script type="module" src="{{ asset('build/assets/chat-widget-BUHuOVYH.js') }}"></script>
     <script type="module" src="{{ asset('build/assets/vue.esm-bundler-B3jZp_Ae.js') }}"></script>
 
@@ -227,6 +227,20 @@
             }, 200);
         });
     </script>
+
+
+    {{-- comentado por n8n
+    <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+    <script type="module">
+        import {
+            createChat
+        } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+
+        createChat({
+            webhookUrl: 'https://autobot.aaronsoft.es/webhook/0d88cdca-bd3d-4cc2-a36b-672c5ee16b0b/chat'
+        });
+    </script>
+    --}}
 </body>
 
 </html>

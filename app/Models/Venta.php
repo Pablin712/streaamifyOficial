@@ -13,8 +13,8 @@ class Venta extends Model
     protected $casts = [
         'fechaven' => 'datetime',
     ];
-    //public $incrementing = false; // Si no es incremental, establece esto en false
-    protected $keyType = 'string'; // Si es de tipo string, define esto como 'string'
+    public $incrementing = false; // No es auto-incremental, lo genera el trigger MySQL
+    protected $keyType = 'string'; // El idven es VARCHAR(20) formato: 001-001-000000001
     public $timestamps = true;
 
     // Define los atributos que puedes asignar masivamente

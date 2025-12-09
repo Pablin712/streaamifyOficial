@@ -5,64 +5,64 @@
 @section('breadcrumb', 'Empleados')
 
 @section('styles')
-<style>
-    /* Animación de Cards */
-    .employee-card {
-        transition: all 0.3s ease;
-        border: 1px solid #e3e6f0;
-        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-    }
+    <style>
+        /* Animación de Cards */
+        .employee-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e3e6f0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
 
-    .employee-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.25);
-        border-color: #4e73df;
-    }
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.25);
+            border-color: #4e73df;
+        }
 
-    /* Estilo uniforme de botones */
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-    }
+        /* Estilo uniforme de botones */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-    .action-buttons .btn {
-        min-width: 90px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.35rem;
-    }
+        .action-buttons .btn {
+            min-width: 90px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
 
-    .action-buttons .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
 
-    .action-buttons .btn:active {
-        transform: translateY(0);
-    }
+        .action-buttons .btn:active {
+            transform: translateY(0);
+        }
 
-    .action-buttons .btn i {
-        font-size: 0.875rem;
-    }
+        .action-buttons .btn i {
+            font-size: 0.875rem;
+        }
 
-    /* Efecto hover en foto */
-    .employee-photo {
-        transition: transform 0.3s ease;
-        border: 3px solid #e3e6f0;
-    }
+        /* Efecto hover en foto */
+        .employee-photo {
+            transition: transform 0.3s ease;
+            border: 3px solid #e3e6f0;
+        }
 
-    .employee-card:hover .employee-photo {
-        transform: scale(1.05);
-        border-color: #4e73df;
-    }
-</style>
+        .employee-card:hover .employee-photo {
+            transform: scale(1.05);
+            border-color: #4e73df;
+        }
+    </style>
 @endsection
 
 @section('descripcion')
@@ -98,7 +98,8 @@
                 <div class="card employee-card h-100">
                     <div class="card-body text-center">
                         <img src="{{ $dato['empleado']->foto_url ? asset('storage/' . $dato['empleado']->foto_url) : 'https://via.placeholder.com/100/007bff/ffffff?text=Usuario' }}"
-                            alt="Foto de {{ $dato['empleado']->nombreemp }}" class="employee-photo img-fluid rounded-circle mb-3"
+                            alt="Foto de {{ $dato['empleado']->nombreemp }}"
+                            class="employee-photo img-fluid rounded-circle mb-3"
                             style="width: 100px; height: 100px; object-fit: cover;">
                         <h5 class="card-title fw-bold text-primary">{{ $dato['empleado']->nombreemp }}</h5>
                         <p class="card-text">
@@ -124,17 +125,20 @@
                         </p>
                         <div class="action-buttons mt-3">
                             @if (Auth::user()->hasPermissionTo('empleados.update'))
-                                <button onclick="openEditModal('{{ $dato['empleado']->idemp }}')" class="btn btn-warning btn-sm">
+                                <button onclick="openEditModal('{{ $dato['empleado']->idemp }}')"
+                                    class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i> Editar
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('empleados.updateRol'))
-                                <button onclick="openRolesModal('{{ $dato['empleado']->idemp }}')" class="btn btn-info btn-sm">
+                                <a href="{{ route('empleados.editRoles', $dato['empleado']->idemp) }}"
+                                    class="btn btn-info btn-sm">
                                     <i class="fas fa-user-tag"></i> Roles
-                                </button>
+                                </a>
                             @endif
                             @if (Auth::user()->hasPermissionTo('empleados.destroy'))
-                                <button onclick="openDeleteModal('{{ $dato['empleado']->idemp }}')" class="btn btn-danger btn-sm">
+                                <button onclick="openDeleteModal('{{ $dato['empleado']->idemp }}')"
+                                    class="btn btn-danger btn-sm">
                                     <i class="fas fa-trash"></i> Eliminar
                                 </button>
                             @endif
@@ -152,219 +156,237 @@
 @endsection
 
 @section('scripts')
-<script>
-    // ============================================================================
-    // FUNCIONES DE MODAL - CREAR
-    // ============================================================================
-    function openCreateModal() {
-        console.log('🔷 Abriendo modal de crear empleado...');
-        const form = document.getElementById('createEmpleadoForm');
-        if (form) form.reset();
-        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createEmpleadoModal' }));
-    }
-
-    function closeCreateModal() {
-        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createEmpleadoModal' }));
-    }
-
-    async function submitCreate(event) {
-        event.preventDefault();
-        console.log('📤 Enviando formulario de crear empleado...');
-
-        const formData = new FormData(event.target);
-
-        try {
-            const response = await fetch('{{ route("empleados.store") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                console.log('✅ Empleado creado:', data);
-                showAlert(data.message, 'success');
-                closeCreateModal();
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                console.error('❌ Error al crear:', data);
-                showAlert(data.message || 'Error al crear el empleado', 'danger');
-            }
-        } catch (error) {
-            console.error('❌ Error de red:', error);
-            showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+    <script>
+        // ============================================================================
+        // FUNCIONES DE MODAL - CREAR
+        // ============================================================================
+        function openCreateModal() {
+            console.log('🔷 Abriendo modal de crear empleado...');
+            const form = document.getElementById('createEmpleadoForm');
+            if (form) form.reset();
+            window.dispatchEvent(new CustomEvent('open-modal', {
+                detail: 'createEmpleadoModal'
+            }));
         }
-    }
 
-    // ============================================================================
-    // FUNCIONES DE MODAL - EDITAR
-    // ============================================================================
-    function openEditModal(idemp) {
-        console.log('🔷 Abriendo modal de editar empleado:', idemp);
+        function closeCreateModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', {
+                detail: 'createEmpleadoModal'
+            }));
+        }
 
-        const url = '{{ route("empleados.edit", "__ID__") }}'.replace('__ID__', idemp);
+        async function submitCreate(event) {
+            event.preventDefault();
+            console.log('📤 Enviando formulario de crear empleado...');
 
-        fetch(url, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('edit_empleado_id').value = data.empleado.idemp;
-                document.getElementById('edit_nombreemp').value = data.empleado.nombreemp;
-                document.getElementById('edit_telefonoemp').value = data.empleado.telefonoemp;
-                document.getElementById('edit_usuarioemp').value = data.empleado.usuarioemp;
-                document.getElementById('edit_email').value = data.empleado.email || '';
+            const formData = new FormData(event.target);
 
-                // Mostrar foto actual si existe
-                const fotoPreview = document.getElementById('edit_foto_preview');
-                if (data.empleado.foto_url) {
-                    fotoPreview.innerHTML = `<img src="{{ asset('storage') }}/${data.empleado.foto_url}" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">`;
+            try {
+                const response = await fetch('{{ route('empleados.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Empleado creado:', data);
+                    showAlert(data.message, 'success');
+                    closeCreateModal();
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    fotoPreview.innerHTML = '<p class="text-muted">Sin foto</p>';
+                    console.error('❌ Error al crear:', data);
+                    showAlert(data.message || 'Error al crear el empleado', 'danger');
                 }
-
-                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editEmpleadoModal' }));
+            } catch (error) {
+                console.error('❌ Error de red:', error);
+                showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
             }
-        })
-        .catch(error => {
-            console.error('Error al cargar empleado:', error);
-            showAlert('Error al cargar los datos del empleado', 'danger');
-        });
-    }
-
-    function closeEditModal() {
-        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editEmpleadoModal' }));
-    }
-
-    async function submitEdit(event) {
-        event.preventDefault();
-        console.log('📤 Enviando formulario de editar empleado...');
-
-        const idemp = document.getElementById('edit_empleado_id').value;
-        const formData = new FormData(event.target);
-
-        const url = '{{ route("empleados.update", "__ID__") }}'.replace('__ID__', idemp);
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                console.log('✅ Empleado actualizado:', data);
-                showAlert(data.message, 'success');
-                closeEditModal();
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                console.error('❌ Error al actualizar:', data);
-                showAlert(data.message || 'Error al actualizar el empleado', 'danger');
-            }
-        } catch (error) {
-            console.error('❌ Error de red:', error);
-            showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
         }
-    }
 
-    // ============================================================================
-    // FUNCIONES DE MODAL - ELIMINAR
-    // ============================================================================
-    function openDeleteModal(idemp) {
-        console.log('🔷 Abriendo modal de eliminar empleado:', idemp);
+        // ============================================================================
+        // FUNCIONES DE MODAL - EDITAR
+        // ============================================================================
+        function openEditModal(idemp) {
+            console.log('🔷 Abriendo modal de editar empleado:', idemp);
 
-        const url = '{{ route("empleados.edit", "__ID__") }}'.replace('__ID__', idemp);
+            const url = '{{ route('empleados.edit', '__ID__') }}'.replace('__ID__', idemp);
 
-        fetch(url, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('delete_empleado_id').value = data.empleado.idemp;
-                document.getElementById('delete_empleado_nombre').textContent = data.empleado.nombreemp;
-                document.getElementById('delete_empleado_telefono').textContent = data.empleado.telefonoemp;
-                document.getElementById('delete_empleado_usuario').textContent = data.empleado.usuarioemp;
-                document.getElementById('delete_empleado_email').textContent = data.empleado.email || 'N/A';
+            fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('edit_empleado_id').value = data.empleado.idemp;
+                        document.getElementById('edit_nombreemp').value = data.empleado.nombreemp;
+                        document.getElementById('edit_telefonoemp').value = data.empleado.telefonoemp;
+                        document.getElementById('edit_usuarioemp').value = data.empleado.usuarioemp;
+                        document.getElementById('edit_email').value = data.empleado.email || '';
 
-                // Mostrar foto
-                const fotoDiv = document.getElementById('delete_empleado_foto');
-                if (data.empleado.foto_url) {
-                    fotoDiv.innerHTML = `<img src="{{ asset('storage') }}/${data.empleado.foto_url}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">`;
+                        // Mostrar foto actual si existe
+                        const fotoPreview = document.getElementById('edit_foto_preview');
+                        if (data.empleado.foto_url) {
+                            fotoPreview.innerHTML =
+                                `<img src="{{ asset('storage') }}/${data.empleado.foto_url}" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">`;
+                        } else {
+                            fotoPreview.innerHTML = '<p class="text-muted">Sin foto</p>';
+                        }
+
+                        window.dispatchEvent(new CustomEvent('open-modal', {
+                            detail: 'editEmpleadoModal'
+                        }));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar empleado:', error);
+                    showAlert('Error al cargar los datos del empleado', 'danger');
+                });
+        }
+
+        function closeEditModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', {
+                detail: 'editEmpleadoModal'
+            }));
+        }
+
+        async function submitEdit(event) {
+            event.preventDefault();
+            console.log('📤 Enviando formulario de editar empleado...');
+
+            const idemp = document.getElementById('edit_empleado_id').value;
+            const formData = new FormData(event.target);
+
+            const url = '{{ route('empleados.update', '__ID__') }}'.replace('__ID__', idemp);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Empleado actualizado:', data);
+                    showAlert(data.message, 'success');
+                    closeEditModal();
+                    setTimeout(() => location.reload(), 1500);
                 } else {
-                    fotoDiv.innerHTML = '<i class="fas fa-user-circle fa-4x text-muted"></i>';
+                    console.error('❌ Error al actualizar:', data);
+                    showAlert(data.message || 'Error al actualizar el empleado', 'danger');
                 }
-
-                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'deleteEmpleadoModal' }));
+            } catch (error) {
+                console.error('❌ Error de red:', error);
+                showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
             }
-        })
-        .catch(error => {
-            console.error('Error al cargar empleado:', error);
-            showAlert('Error al cargar los datos del empleado', 'danger');
-        });
-    }
-
-    function closeDeleteModal() {
-        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'deleteEmpleadoModal' }));
-    }
-
-    async function submitDelete(event) {
-        event.preventDefault();
-        console.log('🗑️ Eliminando empleado...');
-
-        const idemp = document.getElementById('delete_empleado_id').value;
-        const url = '{{ route("empleados.destroy", "__ID__") }}'.replace('__ID__', idemp);
-
-        try {
-            const response = await fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                console.log('✅ Empleado eliminado');
-                showAlert(data.message, 'success');
-                closeDeleteModal();
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                console.error('❌ Error al eliminar:', data);
-                showAlert(data.message || 'Error al eliminar el empleado', 'danger');
-            }
-        } catch (error) {
-            console.error('❌ Error de red:', error);
-            showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
         }
-    }
 
-    // ============================================================================
-    // FUNCIÓN DE ALERTAS
-    // ============================================================================
-    function showAlert(message, type) {
-        const alertContainer = document.getElementById('alert-container');
-        const alert = `
+        // ============================================================================
+        // FUNCIONES DE MODAL - ELIMINAR
+        // ============================================================================
+        function openDeleteModal(idemp) {
+            console.log('🔷 Abriendo modal de eliminar empleado:', idemp);
+
+            const url = '{{ route('empleados.edit', '__ID__') }}'.replace('__ID__', idemp);
+
+            fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('delete_empleado_id').value = data.empleado.idemp;
+                        document.getElementById('delete_empleado_nombre').textContent = data.empleado.nombreemp;
+                        document.getElementById('delete_empleado_telefono').textContent = data.empleado.telefonoemp;
+                        document.getElementById('delete_empleado_usuario').textContent = data.empleado.usuarioemp;
+                        document.getElementById('delete_empleado_email').textContent = data.empleado.email || 'N/A';
+
+                        // Mostrar foto
+                        const fotoDiv = document.getElementById('delete_empleado_foto');
+                        if (data.empleado.foto_url) {
+                            fotoDiv.innerHTML =
+                                `<img src="{{ asset('storage') }}/${data.empleado.foto_url}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">`;
+                        } else {
+                            fotoDiv.innerHTML = '<i class="fas fa-user-circle fa-4x text-muted"></i>';
+                        }
+
+                        window.dispatchEvent(new CustomEvent('open-modal', {
+                            detail: 'deleteEmpleadoModal'
+                        }));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar empleado:', error);
+                    showAlert('Error al cargar los datos del empleado', 'danger');
+                });
+        }
+
+        function closeDeleteModal() {
+            window.dispatchEvent(new CustomEvent('close-modal', {
+                detail: 'deleteEmpleadoModal'
+            }));
+        }
+
+        async function submitDelete(event) {
+            event.preventDefault();
+            console.log('🗑️ Eliminando empleado...');
+
+            const idemp = document.getElementById('delete_empleado_id').value;
+            const url = '{{ route('empleados.destroy', '__ID__') }}'.replace('__ID__', idemp);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('✅ Empleado eliminado');
+                    showAlert(data.message, 'success');
+                    closeDeleteModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    console.error('❌ Error al eliminar:', data);
+                    showAlert(data.message || 'Error al eliminar el empleado', 'danger');
+                }
+            } catch (error) {
+                console.error('❌ Error de red:', error);
+                showAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+            }
+        }
+
+        // ============================================================================
+        // FUNCIÓN DE ALERTAS
+        // ============================================================================
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                 <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
-        alertContainer.innerHTML = alert;
-        setTimeout(() => alertContainer.innerHTML = '', 5000);
-    }
-</script>
+            alertContainer.innerHTML = alert;
+            setTimeout(() => alertContainer.innerHTML = '', 5000);
+        }
+    </script>
 @endsection
