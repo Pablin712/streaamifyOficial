@@ -14,6 +14,7 @@ use App\Services\CuentaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -381,7 +382,7 @@ class CuentaController extends Controller
 
         try {
             $request->validate([
-                'fechavencue' => 'required|date|after:today',
+                'nuevafechavencue' => 'required|date|after:today',
                 'montocos' => 'required|numeric|min:0',
                 'descripcioncos' => 'required|string|max:50'
             ]);
@@ -391,14 +392,14 @@ class CuentaController extends Controller
             // Crear historial
             Historial::create([
                 'accion' => 'Renovación de Cuenta',
-                'descripcion' => 'Fecha antigua: ' . $cuenta->fechavencue . ' | Nueva fecha: ' . $request->fechavencue,
+                'descripcion' => 'Fecha antigua: ' . $cuenta->fechavencue . ' | Nueva fecha: ' . $request->nuevafechavencue,
                 'empleado_id' => Auth::user()->idemp,
                 'created_at' => now(),
             ]);
 
             // Actualizar fecha de vencimiento
             $cuenta->update([
-                'fechavencue' => $request->fechavencue
+                'fechavencue' => $request->nuevafechavencue
             ]);
 
             // Crear registro de costo

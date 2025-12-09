@@ -7,7 +7,6 @@
     </div>
     <form id="renewCuentaForm" onsubmit="submitRenew(event)">
         @csrf
-        @method('PUT')
         <input type="hidden" id="renew_idcue" name="idcue">
 
         <div class="modal-body">
