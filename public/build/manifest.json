@@ -1,0 +1,32 @@
+{
+  "_vue.esm-bundler-B3jZp_Ae.js": {
+    "file": "assets/vue.esm-bundler-B3jZp_Ae.js",
+    "name": "vue.esm-bundler"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-BWfsH-Zy.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-BmnYE4Bp.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_vue.esm-bundler-B3jZp_Ae.js"
+    ]
+  },
+  "resources/js/chat-widget.js": {
+    "file": "assets/chat-widget-BUHuOVYH.js",
+    "name": "chat-widget",
+    "src": "resources/js/chat-widget.js",
+    "isEntry": true,
+    "imports": [
+      "_vue.esm-bundler-B3jZp_Ae.js"
+    ],
+    "css": [
+      "assets/chat-widget-hSw3BKoY.css"
+    ]
+  }
+}

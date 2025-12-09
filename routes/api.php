@@ -47,11 +47,23 @@ Route::prefix('v1')->group(function () {
         });
 
         // Clientes (CRUD completo)
-        Route::apiResource('clientes', ClienteApiController::class);
+        Route::apiResource('clientes', ClienteApiController::class)->names([
+            'index' => 'api.clientes.index',
+            'store' => 'api.clientes.store',
+            'show' => 'api.clientes.show',
+            'update' => 'api.clientes.update',
+            'destroy' => 'api.clientes.destroy',
+        ]);
         Route::get('clientes/{id}/ventas', [ClienteApiController::class, 'ventas']);
 
         // Ventas (CRUD completo + métodos adicionales)
-        Route::apiResource('ventas', VentaApiController::class);
+        Route::apiResource('ventas', VentaApiController::class)->names([
+            'index' => 'api.ventas.index',
+            'store' => 'api.ventas.store',
+            'show' => 'api.ventas.show',
+            'update' => 'api.ventas.update',
+            'destroy' => 'api.ventas.destroy',
+        ]);
         Route::post('ventas/{id}/renovar', [VentaApiController::class, 'renovar']);
         Route::get('ventas/{id}/detalles', [VentaApiController::class, 'detalles']);
         Route::get('ventas-estadisticas', [VentaApiController::class, 'estadisticas']);
