@@ -5,7 +5,9 @@
         </h5>
         <button type="button" class="btn-close" onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createClienteModal' }))"></button>
     </div>
-    <form id="createClienteForm" onsubmit="typeof submitCreate === 'function' ? submitCreate(event) : submitCreateClienteFromVenta(event)">
+    <form id="createClienteForm"
+          data-store-url="{{ route('clientes.store') }}"
+          onsubmit="typeof submitCreate === 'function' ? submitCreate(event) : submitCreateClienteFromVenta(event)">
         @csrf
         <div class="modal-body">
             <div class="row g-3">

@@ -918,7 +918,7 @@ function abrirModalCrearValorDesdeCuentas() {
 }
 
 // 🔷 Función para enviar formulario de crear valor
-async function submitCreate(event) {
+async function submitCreateValor(event) {
     event.preventDefault();
     console.log('📤 Enviando formulario de creación de valor');
 

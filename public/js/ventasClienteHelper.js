@@ -8,7 +8,10 @@ async function submitCreateClienteFromVenta(event) {
     const formData = new FormData(event.target);
 
     try {
-        const response = await fetch('/clientes', {
+        // Obtener la URL de la ruta desde el formulario o usar la ruta por defecto
+        const storeUrl = event.target.dataset.storeUrl || window.Laravel?.routes?.clientesStore || '/admin/clientes/createstore';
+
+        const response = await fetch(storeUrl, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',

@@ -5,7 +5,7 @@
         </h5>
         <button type="button" class="btn-close" onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createValorModal' }))"></button>
     </div>
-    <form id="createValorForm" onsubmit="submitCreate(event)">
+    <form id="createValorForm" onsubmit="submitCreateValor(event)">
         @csrf
         <div class="modal-body">
             <div class="row g-3">
