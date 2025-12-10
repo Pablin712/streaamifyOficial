@@ -203,7 +203,7 @@
 </div>
 
 <script>
-    let notificationTimeout;
+    let panelNotificationTimeout; // Renombrado para evitar conflicto con notificador-global
 
     // Auto-scroll al final cuando llega un nuevo mensaje
     document.addEventListener('livewire:init', () => {
@@ -244,8 +244,8 @@
         notif.style.display = 'flex';
 
         // Auto-ocultar después de 5 segundos
-        clearTimeout(notificationTimeout);
-        notificationTimeout = setTimeout(() => {
+        clearTimeout(panelNotificationTimeout);
+        panelNotificationTimeout = setTimeout(() => {
             cerrarNotificacion();
         }, 5000);
 
@@ -261,7 +261,7 @@
     function cerrarNotificacion() {
         const notif = document.getElementById('chat-notification');
         notif.style.display = 'none';
-        clearTimeout(notificationTimeout);
+        clearTimeout(panelNotificationTimeout);
     }
 
     function reproducirSonido() {

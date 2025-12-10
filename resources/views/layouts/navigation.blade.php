@@ -133,6 +133,9 @@
         }, 300000); // 5 minutos = 300,000 ms
     </script>
     <script src="{{asset('js/sistema.js')}}"></script>
+
+    {{-- Livewire Scripts (REQUERIDO para notificador global y otros componentes) --}}
+    @livewireScripts
 </body>
 
 </html>
