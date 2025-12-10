@@ -38,7 +38,7 @@ class ContabilidadController extends Controller
         $today = Carbon::today();
         $this->dashboardService->guardar($today);
         extract($this->dashboardService->obtenerDatosDashboard());
-        $gastos = $this->dashboardService->getGastos($ingresos_mes);
+        $gastos = $this->dashboardService->getGastos($ingresos_mes, $month, $year);
 
         extract($this->dashboardService->getNetflix($month, $year));
         extract($this->dashboardService->getDisney($month, $year));

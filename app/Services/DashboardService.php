@@ -1054,14 +1054,16 @@ class DashboardService
             ]
         );
     }
-    public function getGastos($ingresos_mes)
+    public function getGastos($ingresos_mes, $month = null, $year = null)
     {
         // Evitar división por cero
         $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1;
-        $mes = Carbon::now();
-        // Obtener todos los tipos de gastos con sus montos sumados
+        $month = $month ?? Carbon::now()->month;
+        $year = $year ?? Carbon::now()->year;
+        // Obtener todos los tipos de gastos con sus montos sumados para el mes y año dados
         $gastos = Gasto::selectRaw('idtip, SUM(montogas) as total')
-            ->whereMonth('fechagas', $mes)
+            ->whereMonth('fechagas', $month)
+            ->whereYear('fechagas', $year)
             ->groupBy('idtip')
             ->with('tipoGasto') // Relación para obtener el nombre del tipo de gasto
             ->havingRaw('SUM(montogas) > 0') // Corrección: repetir SUM() en HAVING
