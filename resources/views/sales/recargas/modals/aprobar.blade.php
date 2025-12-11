@@ -6,7 +6,7 @@
 
     <form id="aprobarRecargaForm" method="POST">
         @csrf
-        <input type="hidden" name="idestado" value="2">
+        <input type="hidden" name="idestado" value="3">
         <div class="modal-body">
             <p>¿Estás seguro de que quieres aprobar esta recarga?</p>
         </div>

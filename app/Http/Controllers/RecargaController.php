@@ -27,52 +27,68 @@ class RecargaController extends Controller
         return view('sales.recargas.index', compact('recargas'));
     }
 
-    public function updateEstado(Request $request, $idrec)
+    public function updateEstado(Request $request, $id)
     {
         if (!Gate::allows('empleado.recargas.updateEstado')) {
             abort(403, 'No tienes permiso para aprobar o rechazar las recargas.');
         }
+
         try {
             DB::beginTransaction(); // Iniciar transacción
-            $recarga = Recarga::where('idrec', $idrec)
+
+            $recarga = Recarga::where('idrec', $id)
                 ->where('idestado', 1) // Solo procesar si sigue pendiente
                 ->lockForUpdate() // Bloquea la fila hasta que termine la transacción
                 ->first();
+
             if (!$recarga) {
+                DB::rollBack();
                 return redirect()->route('empleado.recargas.index')
-                    ->withErrors(['error' => 'La recarga ya fue procesada por otro usuario.']);
+                    ->withErrors(['error' => 'La recarga ya fue procesada por otro usuario o no existe.']);
             }
-            // Mapeo de texto a IDs
-            $estadoMap = [
-                'aprobado' => 3,
-                'rechazado' => 2,
-            ];
+
             // Validar que el estado sea "aprobado" o "rechazado"
             $request->validate([
-                'idestado' => 'required|in:aprobado,rechazado',
+                'idestado' => 'required|in:2,3', // 2 = Rechazado, 3 = Aprobado
             ]);
-            // Obtener el ID del estado
-            $estadoId = $estadoMap[$request->idestado];
+
             // Actualizar el estado
             $recarga->update([
-                'idestado' => $estadoId,
+                'idestado' => $request->idestado,
             ]);
-            // Si el estado es "aprobado", actualizar el saldo del cliente
-            if ($request->idestado === 'aprobado') {
+
+            // Si el estado es "aprobado" (3), actualizar el saldo del cliente
+            if ($request->idestado == 3) { // Comparar con el texto, no con número
                 $cliente = $recarga->cliente; // Usar la relación con Cliente
+
                 if ($cliente) { // Validar que exista el cliente relacionado
                     $cliente->saldo += $recarga->valor; // Sumar el valor de la recarga al saldo
                     $cliente->save(); // Guardar el nuevo saldo
+
                     Historial::create([
                         'accion' => 'Recarga-Procesada',
-                        'descripcion' =>  'Datos aprobados: ' . json_encode($recarga) . ' Saldo de cliente: ' . $cliente->saldo, // Campo opcional
+                        'descripcion' => 'Recarga ID: ' . $recarga->idrec . ' aprobada. Valor: $' . $recarga->valor . '. Nuevo saldo cliente: $' . $cliente->saldo,
                         'empleado_id' => Auth::user()->idemp,
                         'created_at' => now(),
                     ]);
                 }
+            } else {
+                // Registrar el rechazo en el historial
+                Historial::create([
+                    'accion' => 'Recarga-Rechazada',
+                    'descripcion' => 'Recarga ID: ' . $recarga->idrec . ' rechazada. Valor: $' . $recarga->valor,
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
             }
+
             DB::commit(); // Confirmar cambios
-            return redirect()->route('empleado.recargas.index')->with('success', 'Estado de la recarga actualizado exitosamente.');
+
+            $mensaje = $request->idestado == 3
+                ? 'Recarga aprobada exitosamente.'
+                : 'Recarga rechazada exitosamente.';
+
+            return redirect()->route('empleado.recargas.index')->with('success', $mensaje);
         } catch (\Exception $e) {
             DB::rollBack(); // Revertir cambios si hay un error
             return redirect()->route('empleado.recargas.index')

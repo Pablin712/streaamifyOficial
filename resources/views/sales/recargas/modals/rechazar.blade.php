@@ -6,7 +6,7 @@
 
     <form id="rechazarRecargaForm" method="POST">
         @csrf
-        <input type="hidden" name="idestado" value="3">
+        <input type="hidden" name="idestado" value="2">
         <div class="modal-body">
             <p>¿Estás seguro de que quieres rechazar esta recarga?</p>
         </div>
