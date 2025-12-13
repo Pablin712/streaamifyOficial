@@ -18,6 +18,7 @@ class Recarga extends Model
         'foto',
         'idestado',
         'idban',
+        'transaccion_id', // FK to transacciones
     ];
 
     // Relación con Cliente (una recarga pertenece a un cliente)
@@ -32,7 +33,13 @@ class Recarga extends Model
         return $this->belongsTo(EstadoRecarga::class, 'idestado', 'idestado');
     }
 
-    // Relación con Banco (una recarga pertenece a un banco)
+    public function transaccion()
+    {
+        return $this->belongsTo(Transaccion::class, 'transaccion_id', 'id');
+    }
+
+    // Relación con Banco - mantener idban para el formulario de recarga
+    // pero usar transaccion->banco cuando la recarga fue aprobada
     public function banco()
     {
         return $this->belongsTo(Banco::class, 'idban', 'idban');

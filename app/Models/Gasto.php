@@ -18,11 +18,30 @@ class Gasto extends Model
         'fechagas',       // Fecha del Gasto
         'montogas',       // Monto del Gasto
         'descripciongas', // Descripción del Gasto
+        'transaccion_id', // Transacción asociada
     ];
 
     // Relación con el modelo TipoGasto
     public function tipoGasto()
     {
         return $this->belongsTo(TipoGasto::class, 'idtip');
+    }
+
+    public function transaccion()
+    {
+        return $this->belongsTo(Transaccion::class, 'transaccion_id', 'id');
+    }
+
+    // Acceso al banco a través de la transacción
+    public function banco()
+    {
+        return $this->hasOneThrough(
+            Banco::class,
+            Transaccion::class,
+            'id',        // FK en transacciones
+            'idban',     // FK en bancos
+            'transaccion_id', // Local key en gastos
+            'banco_id'   // Local key en transacciones
+        );
     }
 }

@@ -108,6 +108,79 @@
                     {{-- otro card --}}
 
                 </div>
+
+                <!-- Cards de Resumen Financiero Total -->
+                <div class="row mb-4">
+                    <div class="col-12 mb-3">
+                        <h5 class="font-weight-bold text-primary">
+                            <i class="fas fa-money-bill-wave me-2"></i> Resumen Financiero del Negocio
+                        </h5>
+                    </div>
+
+                    <div class="col-xl-4 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            <i class="fas fa-university"></i> Total Disponible en Bancos
+                                        </div>
+                                        <div class="h4 mb-0 font-weight-bold text-success">
+                                            ${{ number_format($totalDisponible ?? 0, 2) }}
+                                        </div>
+                                        <small class="text-muted">Suma de todos los bancos registrados</small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-coins fa-3x text-success" style="opacity: 0.3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4 col-md-6 mb-4">
+                        <div class="card border-left-danger shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                            <i class="fas fa-file-invoice-dollar"></i> Deudas Pendientes
+                                        </div>
+                                        <div class="h4 mb-0 font-weight-bold text-danger">
+                                            ${{ number_format($totalDeudasPendientes ?? 0, 2) }}
+                                        </div>
+                                        <small class="text-muted">Total por pagar a proveedores</small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-exclamation-triangle fa-3x text-danger" style="opacity: 0.3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-4 col-md-6 mb-4">
+                        <div class="card shadow h-100 py-2" style="border-left: 4px solid {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }};">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }};">
+                                            <i class="fas fa-balance-scale"></i> Balance Neto
+                                        </div>
+                                        <div class="h4 mb-0 font-weight-bold" style="color: {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }};">
+                                            ${{ number_format(($totalDisponible ?? 0) - ($totalDeudasPendientes ?? 0), 2) }}
+                                        </div>
+                                        <small class="text-muted">Disponible - Deudas</small>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-chart-line fa-3x" style="color: {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }}; opacity: 0.3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <!-- Clientes activos (Monthly) Card Example -->
                     <div class="col-xl-3 col-md-6 mb-4">

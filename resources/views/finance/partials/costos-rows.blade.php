@@ -11,7 +11,7 @@
                     @if (Auth::user()->hasPermissionTo('costos.update'))
                         <button type="button"
                             class="btn btn-warning btn-sm"
-                            onclick="editarCosto({{ $costo->idcos }}, '{{ $costo->idcue }}', '{{ $costo->descripcioncos }}', {{ $costo->montocos }}, '{{ $costo->fechacos }}')"
+                            onclick="editarCosto({{ $costo->idcos }}, '{{ $costo->idcue }}', '{{ $costo->descripcioncos }}', {{ $costo->montocos }}, '{{ $costo->fechacos }}', {{ $costo->transaccion ? $costo->transaccion->banco_id : 'null' }})"
                             title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>

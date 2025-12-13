@@ -16,10 +16,39 @@
 @endsection
 @section('descripcion')
     @if (session('success'))
-        <div class="alert alert-success">
+        <div class="alert alert-success alert-dismissible fade show">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <script>
+        // Auto-dismiss mensajes y cerrar modales
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            @if (session('success') || session('error'))
+                // Cerrar modales
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'crear-gasto' }));
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editar-gasto' }));
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'crear-tipo-gasto' }));
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editar-tipo-gasto' }));
+            @endif
+        });
+    </script>
+
     <p>Aquí puedes ver todos los gastos asociados al negocio y registrar nuevos gastos. Si deseas ver los gastos de un tipo
         de gasto específico, selecciona un tipo de gasto en el modal.</p>
 @endsection
@@ -121,7 +150,7 @@
                                 <!-- Editar gasto (abre el modal con los datos del gasto) -->
                                 <button type="button"
                                     class="btn btn-warning fas fa-edit"
-                                    onclick="editarGasto({{ $gasto->idgas }}, {{ $gasto->idtip }}, '{{ $gasto->descripciongas }}', {{ $gasto->montogas }}, '{{ $gasto->fechagas }}')">
+                                    onclick="editarGasto({{ $gasto->idgas }}, {{ $gasto->idtip }}, '{{ $gasto->descripciongas }}', {{ $gasto->montogas }}, '{{ $gasto->fechagas }}', {{ $gasto->transaccion ? $gasto->transaccion->banco_id : 'null' }})">
                                     Editar
                                 </button>
                             @endif
@@ -334,13 +363,19 @@
         // ============================================================================
         // FUNCIONES DE MODAL - EDITAR GASTO
         // ============================================================================
-        window.editarGasto = function(idgas, idtip, descripciongas, montogas, fechagas) {
+        window.editarGasto = function(idgas, idtip, descripciongas, montogas, fechagas, bancoId) {
             console.log('🔷 Abriendo modal de editar gasto:', idgas);
 
             // Llenar el formulario
             document.getElementById('edit_descripciongas').value = descripciongas;
             document.getElementById('edit_montogas').value = montogas;
             document.getElementById('edit_fechagas').value = fechagas;
+
+            // Seleccionar banco
+            const bancoSelect = document.getElementById('edit_banco_id');
+            if (bancoSelect && bancoId) {
+                bancoSelect.value = bancoId;
+            }
 
             // Actualizar la acción del formulario
             const form = document.getElementById('editarGastoForm');

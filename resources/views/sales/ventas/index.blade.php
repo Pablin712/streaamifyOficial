@@ -3,7 +3,7 @@
 @section('title', 'Ventas')
 
 @section('main')
-<div class="container-fluid px-4")
+<div class="container-fluid px-4">
     <!-- Título y breadcrumb -->
     <h1 class="mt-4">Ventas</h1>
     <ol class="breadcrumb mb-4">
@@ -368,7 +368,7 @@
                 // Llenar datos del empleado y venta
                 document.getElementById('view_empleado_nombre').textContent = data.venta.empleado.nombreemp;
                 document.getElementById('view_venta_fecha').textContent = data.venta.fechaven;
-                document.getElementById('view_venta_metodo_pago').textContent = data.venta.metodopagoven;
+                document.getElementById('view_venta_metodo_pago').textContent = data.venta.banco.nombreban;
 
                 // Llenar tabla de detalles
                 const tbody = document.getElementById('view_details_items');

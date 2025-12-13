@@ -41,6 +41,20 @@
 
             </div>
 
+            <div class="form-group mb-3">
+                <label for="banco_id">Banco <span class="text-danger">*</span></label>
+                <select name="banco_id" id="banco_id" class="form-control searchable-select" required
+                        data-placeholder="Seleccione un banco...">
+                    <option value="">-- Selecciona un Banco --</option>
+                    @foreach ($bancos as $banco)
+                        <option value="{{ $banco->idban }}"
+                            {{ ($venta->transaccion && $venta->transaccion->banco_id == $banco->idban) ? 'selected' : '' }}>
+                            {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="mt-4">
                 <h4>Detalles de Venta</h4>
                 <button type="button" class="btn btn-success"

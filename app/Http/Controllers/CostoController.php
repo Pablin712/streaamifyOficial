@@ -4,13 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Costo;
 use App\Models\Cuenta;
+use App\Models\Banco;
 use App\Models\Historial;
+use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CostoController extends Controller
 {
-    // Eliminamos el __construct() que usaba middleware para probar los métodos de forma manual
+    protected $bancoService;
+
+    public function __construct(BancoService $bancoService)
+    {
+        $this->bancoService = $bancoService;
+    }
 
     public function index(Request $request)
     {
@@ -29,9 +36,12 @@ class CostoController extends Controller
             ->orderBy('fechavencue')
             ->get();
 
+        // Obtener todos los bancos para el selector
+        $bancos = Banco::all();
+
         $idcueSeleccionado = $request->idcue;
 
-        return view('finance.costos', compact('cuentas', 'idcueSeleccionado'));
+        return view('finance.costos', compact('cuentas', 'bancos', 'idcueSeleccionado'));
     }
 
     /**
@@ -45,7 +55,7 @@ class CostoController extends Controller
         $sortBy = $request->input('sort_by', '');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Costo::with(['cuenta']);
+        $query = Costo::with(['cuenta', 'transaccion']);
 
         // Búsqueda
         if ($search) {
@@ -85,26 +95,95 @@ class CostoController extends Controller
             abort(403, 'No tienes permiso para crear costos.');
         }
 
-        // Validar los datos
+        // Validar los datos - banco_id es opcional si no se pagó
         $request->validate([
             'idcue' => 'required|exists:cuentas,idcue',
             'descripcioncos' => 'required|string|max:50',
             'montocos' => 'required|numeric|min:0',
-            'fechacos' => 'nullable|date'
+            'fechacos' => 'nullable|date',
+            'banco_id' => 'nullable|exists:bancos,idban',
+            'se_pago' => 'nullable|boolean'
         ]);
+
+        $sePago = $request->has('se_pago') && $request->se_pago;
+
+        // Validar que si se pagó, debe tener banco
+        if ($sePago && !$request->banco_id) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Debe seleccionar un banco si el costo se pagó.');
+        }
 
         // Crear el costo
-        $costo = Costo::create($request->all());
-
-        Historial::create([
-            'accion' => 'Creación de Costo',
-            'descripcion' => 'Datos: ' . json_encode($costo),
-            'empleado_id' => Auth::user()->idemp,
-            'created_at' => now(),
+        $costo = Costo::create([
+            'idcue' => $request->idcue,
+            'descripcioncos' => $request->descripcioncos,
+            'montocos' => $request->montocos,
+            'fechacos' => $request->fechacos ?? now(),
         ]);
 
-        return redirect()->route('costos', ['idcue' => $request->idcue])
-            ->with('success', 'Costo creado correctamente.');
+        if ($sePago) {
+            // Si se pagó, registrar transacción bancaria (egreso)
+            try {
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $request->montocos,
+                    'egreso',
+                    'Costo #' . $costo->idcos . ' - ' . $request->descripcioncos
+                );
+
+                // Guardar ID de transacción en el costo
+                $costo->transaccion_id = $transaccion->id;
+                $costo->save();
+
+                Historial::create([
+                    'accion' => 'Creación de Costo (Pagado)',
+                    'descripcion' => 'Datos: ' . json_encode($costo),
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
+
+                return redirect()->route('costos', ['idcue' => $request->idcue])
+                    ->with('success', 'Costo creado y pagado correctamente.');
+
+            } catch (\Exception $e) {
+                // Si falla la transacción, eliminar el costo y mostrar error
+                $costo->delete();
+                return redirect()->route('costos', ['idcue' => $request->idcue])
+                    ->with('error', $e->getMessage());
+            }
+        } else {
+            // Si NO se pagó, acumular en la deuda del proveedor
+            $cuenta = Cuenta::with('valor.proveedor')->find($request->idcue);
+
+            if (!$cuenta || !$cuenta->valor || !$cuenta->valor->proveedor) {
+                $costo->delete();
+                return redirect()->route('costos', ['idcue' => $request->idcue])
+                    ->with('error', 'No se pudo determinar el proveedor de esta cuenta.');
+            }
+
+            $proveedor = $cuenta->valor->proveedor;
+
+            // Buscar o crear deuda del proveedor
+            $deuda = \App\Models\Deuda::firstOrCreate(
+                ['proveedor_id' => $proveedor->idpro, 'estado' => 'pendiente'],
+                ['monto' => 0, 'monto_pagado' => 0]
+            );
+
+            // Acumular el monto al total de la deuda
+            $deuda->monto += $request->montocos;
+            $deuda->save();
+
+            Historial::create([
+                'accion' => 'Creación de Costo (Deuda)',
+                'descripcion' => 'Costo #' . $costo->idcos . ' - Proveedor: ' . $proveedor->nombrepro . ' - Monto acumulado: $' . $deuda->monto,
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+
+            return redirect()->route('costos', ['idcue' => $request->idcue])
+                ->with('success', 'Costo registrado. Deuda acumulada con ' . $proveedor->nombrepro . ': $' . number_format($deuda->monto_restante, 2));
+        }
     }
 
     public function update(Request $request, $idcos)
@@ -117,9 +196,15 @@ class CostoController extends Controller
             'descripcioncos' => 'required|string|max:50',
             'montocos' => 'required|numeric',
             'fechacos' => 'required|date',
+            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $costo = Costo::findOrFail($idcos);
+
+        $montoAnterior = $costo->montocos;
+        // Obtener banco anterior desde la transacción
+        $bancoAnterior = $costo->transaccion ? $costo->transaccion->banco_id : null;
+        $transaccionAnterior = $costo->transaccion_id;
 
         Historial::create([
             'accion' => 'Actualización de Costo',
@@ -134,6 +219,31 @@ class CostoController extends Controller
             'fechacos' => $request->fechacos,
         ]);
 
+        // Si el banco cambió o el monto cambió, ajustar transacciones
+        if ($bancoAnterior && ($bancoAnterior != $request->banco_id || $montoAnterior != $request->montocos)) {
+            // Anular transacción anterior
+            if ($transaccionAnterior) {
+                $this->bancoService->anularTransaccion($transaccionAnterior);
+            }
+        }
+
+        // Registrar nueva transacción
+        if ($request->banco_id) {
+            try {
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $request->montocos,
+                    'egreso',
+                    'Costo #' . $costo->idcos . ' - ' . $request->descripcioncos
+                );
+
+                $costo->transaccion_id = $transaccion->id;
+                $costo->save();
+            } catch (\Exception $e) {
+                return redirect()->route('costos')->with('error', $e->getMessage());
+            }
+        }
+
         return redirect()->route('costos')->with('success', 'Costo actualizado con éxito.');
     }
 
@@ -145,6 +255,11 @@ class CostoController extends Controller
 
         $costo = Costo::findOrFail($idcos);
         $idcue = $costo->idcue; // Para regresar a la cuenta seleccionada
+
+        // Anular transacción si existe
+        if ($costo->transaccion_id) {
+            $this->bancoService->anularTransaccion($costo->transaccion_id);
+        }
 
         Historial::create([
             'accion' => 'Eliminación de Costo',

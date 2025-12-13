@@ -13,6 +13,8 @@ use App\Models\Recarga;
 use App\Models\Pedido;
 use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
+use App\Models\Banco;
+use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -20,6 +22,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 class VentaController extends Controller
 {
+    protected $bancoService;
+
+    public function __construct(BancoService $bancoService)
+    {
+        $this->bancoService = $bancoService;
+    }
+
     public function index(Request $request)
     {
         if (!Gate::allows('ventas')) {
@@ -65,7 +74,7 @@ class VentaController extends Controller
         $sortBy = $request->input('sort_by', '');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Venta::with(['cliente', 'empleado']);
+        $query = Venta::with(['cliente', 'empleado', 'banco']);
 
         // Búsqueda
         if ($search) {
@@ -110,6 +119,7 @@ class VentaController extends Controller
         $clientes = Cliente::all();
         $empleados = Empleado::all();
         $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
+        $bancos = Banco::all();
 
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
@@ -121,7 +131,7 @@ class VentaController extends Controller
                 $perfil->usuarios_activos = $usuariosActivos;
             }
         }
-        return view('sales.ventas.create', compact('empleados', 'clientes', 'cuentas'));
+        return view('sales.ventas.create', compact('empleados', 'clientes', 'cuentas', 'bancos'));
     }
 
     public function store(Request $request)
@@ -133,6 +143,7 @@ class VentaController extends Controller
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
             'detalles_venta' => 'required|json',
+            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $detalles = json_decode($request->detalles_venta, true);
@@ -173,6 +184,28 @@ class VentaController extends Controller
             $descripcionDetalles .= "Cuenta: {$idcue}, Perfil: {$numeroper}, Monto: {$detalleRec->montodet}; ";
         }
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
+
+        // Registrar transacción bancaria (ingreso)
+        try {
+            // Recargar venta con relación cliente para la referencia
+            $venta->load('cliente');
+
+            $transaccion = $this->bancoService->registrarTransaccion(
+                $request->banco_id,
+                $total_venta,
+                'ingreso',
+                'Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+            );
+
+            $venta->transaccion_id = $transaccion->id;
+            $venta->save();
+        } catch (\Exception $e) {
+            // Si falla la transacción, eliminar la venta y sus detalles
+            $venta->detalles_venta()->delete();
+            $venta->delete();
+            return redirect()->route('ventas.create')->with('error', $e->getMessage());
+        }
+
         // Lógica para generar y enviar la factura por correo
         if ($venta->cliente->email) {
             //Mail::to($venta->cliente->email)->send(new facturaMail($venta));
@@ -304,9 +337,10 @@ class VentaController extends Controller
         if (!Gate::allows('ventas.update')) {
             abort(403, 'No tienes permiso para editar ventas.');
         }
-        $venta = Venta::with(['detalles_venta'])->findOrFail($idven);
+        $venta = Venta::with(['detalles_venta', 'transaccion'])->findOrFail($idven);
         $empleados = Empleado::all();
         $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
+        $bancos = Banco::all();
 
         foreach ($cuentas as $cuenta) {
             $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
@@ -318,7 +352,7 @@ class VentaController extends Controller
                 $perfil->usuarios_activos = $usuariosActivos;
             }
         }
-        return view('sales.ventas.edit', compact('venta', 'empleados', 'cuentas'));
+        return view('sales.ventas.edit', compact('venta', 'empleados', 'cuentas', 'bancos'));
     }
 
     public function renew($idcli, $idven)
@@ -326,9 +360,10 @@ class VentaController extends Controller
         if (!Gate::allows('ventas.renew')) {
             abort(403, 'No tienes permiso para renovar ventas.');
         }
-        $venta = Venta::with(['detalles_venta', 'cliente'])->findOrFail($idven);
+        $venta = Venta::with(['detalles_venta', 'cliente', 'transaccion'])->findOrFail($idven);
         $empleados = Empleado::all();
         $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
+        $bancos = Banco::all();
 
         if ($venta->idcli != $idcli) {
             abort(404, 'Cliente no coincide con la venta.');
@@ -358,7 +393,8 @@ class VentaController extends Controller
             'cuentas' => $cuentas,
             'venta' => $venta,
             'detalles' => $detalles,
-            'totalVenta' => $totalVenta
+            'totalVenta' => $totalVenta,
+            'bancos' => $bancos
         ]);
     }
 
@@ -371,12 +407,19 @@ class VentaController extends Controller
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
             'detalles_venta' => 'required|json',
+            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $venta = Venta::findOrFail($idven);
         if ($venta->idcli != $request->idcli) {
             return redirect()->route('ventas.edit', $idven)->with('error', 'El cliente no puede modificarse.');
         }
+
+        $montoAnterior = $venta->totalpagoven;
+        // Obtener banco anterior desde la transacción
+        $bancoAnterior = $venta->transaccion ? $venta->transaccion->banco_id : null;
+        $transaccionAnterior = $venta->transaccion_id;
+
         $venta->totalpagoven = 0;
         $venta->save();
 
@@ -401,6 +444,28 @@ class VentaController extends Controller
         }
         $venta->totalpagoven = $totalVenta;
         $venta->save();
+
+        // Si el banco cambió o el monto cambió, anular transacción anterior
+        if ($bancoAnterior && ($bancoAnterior != $request->banco_id || $montoAnterior != $totalVenta)) {
+            if ($transaccionAnterior) {
+                $this->bancoService->anularTransaccion($transaccionAnterior);
+            }
+        }
+
+        // Registrar nueva transacción bancaria (ingreso)
+        try {
+            $transaccion = $this->bancoService->registrarTransaccion(
+                $request->banco_id,
+                $totalVenta,
+                'ingreso',
+                'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+            );
+
+            $venta->transaccion_id = $transaccion->id;
+            $venta->save();
+        } catch (\Exception $e) {
+            return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
+        }
 
         Historial::create([
             'accion' => 'Actualización de venta ' . $venta->idven,
@@ -437,7 +502,7 @@ class VentaController extends Controller
     public function getDetails($id)
     {
         try {
-            $venta = Venta::with(['cliente', 'empleado', 'detalles_venta.perfil.cuenta'])
+            $venta = Venta::with(['cliente', 'empleado', 'detalles_venta.perfil.cuenta', 'transaccion.banco'])
                 ->findOrFail($id);
 
             // Formatear los detalles para la respuesta
@@ -457,7 +522,7 @@ class VentaController extends Controller
                 'venta' => [
                     'idven' => $venta->idven,
                     'fechaven' => $venta->fechaven->format('d/m/Y H:i'),
-                    'metodopagoven' => $venta->metodopagoven,
+                    'metodopagoven' => $venta->transaccion && $venta->transaccion->banco ? $venta->transaccion->banco->nombreban : 'No especificado',
                     'totalpagoven' => number_format($venta->totalpagoven, 2),
                     'cliente' => [
                         'nombrecli' => $venta->cliente->nombrecli,
@@ -466,6 +531,10 @@ class VentaController extends Controller
                     ],
                     'empleado' => [
                         'nombreemp' => $venta->empleado->nombreemp,
+                    ],
+                    'banco' => [
+                        'nombreban' => $venta->transaccion && $venta->transaccion->banco ? $venta->transaccion->banco->nombreban : 'No especificado',
+                        'idban' => $venta->transaccion && $venta->transaccion->banco ? $venta->transaccion->banco->idban : null,
                     ],
                     'detalles' => $detalles,
                 ],
@@ -527,6 +596,11 @@ class VentaController extends Controller
 
         try {
             $venta = Venta::findOrFail($idven);
+
+            // Anular transacción si existe
+            if ($venta->transaccion_id) {
+                $this->bancoService->anularTransaccion($venta->transaccion_id);
+            }
 
             Historial::create([
                 'accion' => 'Eliminación de Venta',

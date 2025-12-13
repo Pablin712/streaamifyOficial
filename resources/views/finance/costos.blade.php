@@ -26,6 +26,32 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <script>
+        // Auto-dismiss mensajes y cerrar modales
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+
+            @if (session('success') || session('error'))
+                // Cerrar modales
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'crear-costo' }));
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'editar-costo' }));
+            @endif
+        });
+    </script>
+
     <div class="mb-4">
         <h3 class="text-primary">Gestión de Costos</h3>
         <p class="text-muted">Aquí puedes ver todos los costos asociados al negocio y registrar nuevos costos. Si deseas ver los costos de una
@@ -185,6 +211,13 @@
             fechaInput.value = new Date().toISOString().split('T')[0];
         }
 
+        // Marcar checkbox como pagado por defecto
+        const sePagoCheckbox = document.getElementById('se_pago');
+        if (sePagoCheckbox) {
+            sePagoCheckbox.checked = true;
+            toggleBancoField();
+        }
+
         // Abrir el modal
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'crear-costo' }));
 
@@ -214,10 +247,44 @@
         }, 400);
     }
 
+    // Función para controlar el campo de banco según el checkbox
+    function toggleBancoField() {
+        const sePago = document.getElementById('se_pago');
+        const bancoField = document.getElementById('banco_id');
+        const bancoLabel = document.querySelector('label[for="banco_id"]');
+
+        if (sePago && bancoField) {
+            if (sePago.checked) {
+                // Si se pagó, el banco es requerido
+                bancoField.required = true;
+                if (bancoLabel) {
+                    bancoLabel.innerHTML = 'Banco <span class="text-danger">*</span>';
+                }
+                bancoField.parentElement.style.display = 'block';
+            } else {
+                // Si no se pagó (deuda), el banco no es requerido
+                bancoField.required = false;
+                bancoField.value = '';
+                if (bancoLabel) {
+                    bancoLabel.textContent = 'Banco';
+                }
+                bancoField.parentElement.style.display = 'none';
+            }
+        }
+    }
+
+    // Event listener para el checkbox
+    document.addEventListener('DOMContentLoaded', function() {
+        const sePagoCheckbox = document.getElementById('se_pago');
+        if (sePagoCheckbox) {
+            sePagoCheckbox.addEventListener('change', toggleBancoField);
+        }
+    });
+
     // ============================================================================
     // FUNCIONES DE MODAL - EDITAR COSTO
     // ============================================================================
-    window.editarCosto = function(idcos, idcue, descripcioncos, montocos, fechacos) {
+    window.editarCosto = function(idcos, idcue, descripcioncos, montocos, fechacos, bancoId) {
         console.log('🔷 Abriendo modal de editar costo:', idcos);
 
         // Llenar el formulario
@@ -225,6 +292,12 @@
         document.getElementById('edit_descripcioncos').value = descripcioncos;
         document.getElementById('edit_montocos').value = montocos;
         document.getElementById('edit_fechacos').value = fechacos;
+
+        // Seleccionar banco
+        const bancoSelect = document.getElementById('edit_banco_id');
+        if (bancoSelect && bancoId) {
+            bancoSelect.value = bancoId;
+        }
 
         // Actualizar la acción del formulario
         const form = document.getElementById('editCostoForm');

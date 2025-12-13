@@ -26,6 +26,20 @@ class Proveedor extends Model
     {
         return $this->hasMany(Valor::class, 'idpro', 'idpro');
     }
+
+    // Relación con deudas
+    public function deudas()
+    {
+        return $this->hasMany(Deuda::class, 'proveedor_id', 'idpro');
+    }
+
+    // Obtener deuda pendiente del proveedor
+    public function getDeudaPendienteAttribute()
+    {
+        $deuda = $this->deudas()->where('estado', 'pendiente')->first();
+        return $deuda ? $deuda->monto_restante : 0;
+    }
+
     public function cuentas()
     {
         return $this->hasManyThrough(

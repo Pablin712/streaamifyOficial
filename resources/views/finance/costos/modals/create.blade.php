@@ -31,6 +31,24 @@
                 <label for="fechacos">Fecha</label>
                 <input type="date" name="fechacos" id="fechacos" class="form-control" value="{{ now()->format('Y-m-d') }}">
             </div>
+            <div class="form-group mb-3">
+                <label for="banco_id">Banco <span class="text-danger">*</span></label>
+                <select id="banco_id" name="banco_id" class="form-control searchable-select"
+                        data-placeholder="Seleccione un banco...">
+                    <option value="">-- Selecciona un Banco --</option>
+                    @foreach($bancos as $banco)
+                        <option value="{{ $banco->idban }}">{{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Checkbox para indicar si se pagó -->
+            <div class="form-check mb-3 text-start">
+                <input style="width: 20px; height: 20px;" type="checkbox" id="se_pago" name="se_pago" value="1" checked>
+                <label class="form-check-label" for="se_pago">
+                    ¿Se pagó? <small class="text-muted">(Si no se marca, se creará una deuda pendiente)</small>
+                </label>
+            </div>
         </div>
 
         <div class="modal-footer">

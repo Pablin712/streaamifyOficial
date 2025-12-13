@@ -4,21 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Gasto;
 use App\Models\TipoGasto;
+use App\Models\Banco;
 use App\Models\Historial;
+use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class GastoController extends Controller
 {
-    /*
-    // Método __construct original con middlewares, mantenido comentado para referencia:
-    public function __construct() {
-        $this->middleware('can:gastos')->only('index');
-        $this->middleware('can:gastos.store')->only('store');
-        $this->middleware('can:gastos.update')->only('update');
-        $this->middleware('can:gastos.destroy')->only('destroy');
+    protected $bancoService;
+
+    public function __construct(BancoService $bancoService)
+    {
+        $this->bancoService = $bancoService;
     }
-    */
 
     // Mostrar todos los gastos
     public function index()
@@ -27,10 +26,11 @@ class GastoController extends Controller
             abort(403, 'No tienes permiso para ver los gastos.');
         }
 
-        $gastos = Gasto::with('tipoGasto')->orderBy('fechagas', 'desc')->get();
+        $gastos = Gasto::with(['tipoGasto', 'transaccion'])->orderBy('fechagas', 'desc')->get();
         $tipoGastos = TipoGasto::all();
+        $bancos = Banco::all();
 
-        return view('finance.gastos', compact('gastos', 'tipoGastos'));
+        return view('finance.gastos', compact('gastos', 'tipoGastos', 'bancos'));
     }
 
     // Crear un nuevo gasto desde el modal
@@ -45,6 +45,7 @@ class GastoController extends Controller
             'fechagas' => 'required|date',
             'montogas' => 'required|numeric',
             'descripciongas' => 'required|string|max:50',
+            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $gasto = Gasto::create([
@@ -52,7 +53,28 @@ class GastoController extends Controller
             'fechagas' => $request->fechagas,
             'montogas' => $request->montogas,
             'descripciongas' => $request->descripciongas,
+            'banco_id' => $request->banco_id,
         ]);
+
+        // Registrar transacción bancaria (egreso)
+        if ($request->banco_id) {
+            try {
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $request->montogas,
+                    'egreso',
+                    'Gasto #' . $gasto->idgas . ' - ' . $request->descripciongas
+                );
+
+                // Guardar ID de transacción en el gasto
+                $gasto->transaccion_id = $transaccion->id;
+                $gasto->save();
+            } catch (\Exception $e) {
+                // Si falla la transacción, eliminar el gasto y mostrar error
+                $gasto->delete();
+                return redirect()->route('gastos')->with('error', $e->getMessage());
+            }
+        }
 
         Historial::create([
             'accion' => 'Creación de Gasto',
@@ -74,10 +96,12 @@ class GastoController extends Controller
 
         $gasto = Gasto::findOrFail($id);
         $tipoGastos = TipoGasto::all();
+        $bancos = Banco::all();
 
         return response()->json([
             'gasto' => $gasto,
-            'tipoGastos' => $tipoGastos
+            'tipoGastos' => $tipoGastos,
+            'bancos' => $bancos
         ]);
     }
 
@@ -93,9 +117,15 @@ class GastoController extends Controller
             'fechagas' => 'required|date',
             'montogas' => 'required|numeric',
             'descripciongas' => 'required|string|max:50',
+            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $gasto = Gasto::findOrFail($idgas);
+
+        $montoAnterior = $gasto->montogas;
+        // Obtener banco anterior desde la transacción
+        $bancoAnterior = $gasto->transaccion ? $gasto->transaccion->banco_id : null;
+        $transaccionAnterior = $gasto->transaccion_id;
 
         Historial::create([
             'accion' => 'Actualización de Gasto',
@@ -105,10 +135,36 @@ class GastoController extends Controller
         ]);
 
         $gasto->update([
+            'idtip' => $request->idtip,
             'fechagas' => $request->fechagas,
             'montogas' => $request->montogas,
             'descripciongas' => $request->descripciongas,
         ]);
+
+        // Si el banco cambió o el monto cambió, ajustar transacciones
+        if ($bancoAnterior && ($bancoAnterior != $request->banco_id || $montoAnterior != $request->montogas)) {
+            // Anular transacción anterior
+            if ($transaccionAnterior) {
+                $this->bancoService->anularTransaccion($transaccionAnterior);
+            }
+        }
+
+        // Registrar nueva transacción si hay banco seleccionado
+        if ($request->banco_id) {
+            try {
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $request->montogas,
+                    'egreso',
+                    'Gasto #' . $gasto->idgas . ' - ' . $request->descripciongas
+                );
+
+                $gasto->transaccion_id = $transaccion->id;
+                $gasto->save();
+            } catch (\Exception $e) {
+                return redirect()->route('gastos')->with('error', $e->getMessage());
+            }
+        }
 
         return redirect()->route('gastos')->with('success', 'Gasto actualizado con éxito');
     }
@@ -121,6 +177,11 @@ class GastoController extends Controller
         }
 
         $gasto = Gasto::findOrFail($id);
+
+        // Anular transacción si existe
+        if ($gasto->transaccion_id) {
+            $this->bancoService->anularTransaccion($gasto->transaccion_id);
+        }
 
         Historial::create([
             'accion' => 'Eliminación de Gasto',

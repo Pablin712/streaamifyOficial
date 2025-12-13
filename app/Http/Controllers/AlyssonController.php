@@ -8,11 +8,7 @@ class AlyssonController extends Controller
 {
     public function index()
     {
-        $cliente = Auth::guard('cliente')->user();
-        $esAlysson = $cliente
-            && $cliente->nombrecli === 'Alysson Julieth Pilataxi Valencia'
-            && $cliente->telefonocli === '+593 97 890 0148';
-        return view('principal', compact('esAlysson'));
+        return view('principal');
     }
     public function exclusive()
     {

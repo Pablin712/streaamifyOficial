@@ -50,6 +50,15 @@ class ContabilidadController extends Controller
         extract($this->dashboardService->getSpotify($month, $year));
         extract($this->dashboardService->getOtros($month, $year));
 
+        // Calcular totales financieros del negocio
+        $bancos = \App\Models\Banco::all();
+        $totalDisponible = $bancos->sum('monto');
+
+        $deudas = \App\Models\Deuda::where('estado', 'pendiente')->get();
+        $totalDeudasPendientes = $deudas->sum(function($deuda) {
+            return $deuda->monto - $deuda->monto_pagado;
+        });
+
         return view('dashboard', compact(
             'ventas',
             'ingresos_mes',
@@ -118,7 +127,10 @@ class ContabilidadController extends Controller
             'cuentas_otros', // Agrega la variable para "otros"
             'usuarios_otros',
             'ingresos_otros',
-            'costos_otros'
+            'costos_otros',
+
+            'totalDisponible',
+            'totalDeudasPendientes'
         ));
     }
     public function filterData(Request $request)

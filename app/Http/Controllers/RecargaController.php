@@ -7,6 +7,7 @@ use App\Models\Banco;
 use App\Models\Recarga;
 use App\Models\Historial;
 use App\Models\Empleado;
+use App\Services\BancoService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -16,6 +17,13 @@ use Livewire\Livewire;
 
 class RecargaController extends Controller
 {
+    protected $bancoService;
+
+    public function __construct(BancoService $bancoService)
+    {
+        $this->bancoService = $bancoService;
+    }
+
     public function index()
     {
         if (!Gate::allows('empleado.recargas.index')) {
@@ -64,6 +72,26 @@ class RecargaController extends Controller
                 if ($cliente) { // Validar que exista el cliente relacionado
                     $cliente->saldo += $recarga->valor; // Sumar el valor de la recarga al saldo
                     $cliente->save(); // Guardar el nuevo saldo
+
+                    // Registrar transacción bancaria (ingreso) si la recarga tiene banco asociado
+                    if ($recarga->idban) {
+                        try {
+                            $transaccion = $this->bancoService->registrarTransaccion(
+                                $recarga->idban,
+                                $recarga->valor,
+                                'ingreso',
+                                'Recarga #' . $recarga->idrec . ' - Cliente: ' . $cliente->nombrecli
+                            );
+
+                            $recarga->transaccion_id = $transaccion->id;
+                            $recarga->save();
+                        } catch (\Exception $e) {
+                            // Si falla, revertir el saldo del cliente
+                            $cliente->saldo -= $recarga->valor;
+                            $cliente->save();
+                            return redirect()->route('recargas.index')->with('error', $e->getMessage());
+                        }
+                    }
 
                     Historial::create([
                         'accion' => 'Recarga-Procesada',

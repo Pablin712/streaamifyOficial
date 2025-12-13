@@ -29,6 +29,7 @@ use App\Http\Controllers\CodigoController;
 use App\Http\Controllers\TipoProductoController;
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\BancoController;
 
 // === RUTAS DE DEMO CHAT ===
 Route::get('/chat/demo-widget', function () {
@@ -52,8 +53,12 @@ use App\Http\Controllers\SistemaController;
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
+
+Route::get('/', function () {
+    return view('principal');
+})->name('principal');
+
 Route::controller(AlyssonController::class)->group(function (){
-    Route::get('/', 'index')->name('principal');
     Route::get('/alysson', 'exclusive')->name('alysson.exclusive');
 });
 Route::get('/tutorial', function () {
@@ -140,6 +145,14 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     });
     Route::controller(CalendarController::class)->group(function () {
         Route::get('/calendario', 'index')->name('calendario');
+    });
+
+    Route::controller(BancoController::class)->group(function () {
+        Route::get('/bancos', 'index')->name('bancos.index')->middleware('permission:bancos.index');
+        Route::post('/bancos', 'store')->name('bancos.store')->middleware('permission:bancos.store');
+        Route::put('/bancos/{id}', 'update')->name('bancos.update')->middleware('permission:bancos.update');
+        Route::post('/bancos/{banco_id}/transacciones', 'registrarTransaccion')->name('bancos.transacciones.store')->middleware('permission:bancos.transacciones.store');
+        Route::put('/bancos/deudas/{id}/pagar', 'pagarDeuda')->name('bancos.pagar-deuda')->middleware('permission:bancos.transacciones.store');
     });
 
     Route::controller(CostoController::class)->group(function () {
@@ -295,7 +308,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargas', 'index')->name('empleado.recargas.index');
-        Route::post('/recargas/{idrec}/estado', 'updateEstado')->name('empleado.recargas.updateEstado');
+        Route::post('/recargas/{id}/estado', 'updateEstado')->name('empleado.recargas.updateEstado');
     });
     Route::controller(PedidoController::class)->group(function () {
         Route::get('/empleado/pedidos', 'index')->name('empleado.pedidos.index');

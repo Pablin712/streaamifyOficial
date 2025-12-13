@@ -67,6 +67,27 @@
                 <input type="number" name="montocos" id="renew_montocos" class="form-control"
                     step="0.01" min="0" placeholder="0.00" required>
             </div>
+
+            <div class="mb-3" id="banco-section-renew">
+                <label for="renew_banco_id" class="form-label">Banco</label>
+                <select name="banco_id" id="renew_banco_id" class="form-select searchable-select"
+                        data-placeholder="Seleccione un banco...">
+                    <option value="">Seleccione un banco...</option>
+                    @foreach ($bancos ?? [] as $banco)
+                        <option value="{{ $banco->idban }}">
+                            {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Checkbox para indicar si se pagó -->
+            <div class="form-check mb-3 text-start">
+                <input style="width: 20px; height: 20px;" type="checkbox" id="se_pago_renew" name="se_pago" value="1" checked>
+                <label class="form-check-label" for="se_pago_renew">
+                    ¿Se pagó? <small class="text-muted">(Si no se marca, se creará una deuda pendiente)</small>
+                </label>
+            </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeRenewModal()">
@@ -96,6 +117,41 @@ function calculateMonthsAhead(months) {
     const day = String(currentDate.getDate()).padStart(2, '0');
 
     document.getElementById('nuevafechavencue').value = `${year}-${month}-${day}`;
+}
+
+// Función para controlar el campo de banco según el checkbox
+function toggleBancoFieldRenew() {
+    const sePago = document.getElementById('se_pago_renew');
+    const bancoField = document.getElementById('renew_banco_id');
+    const bancoSection = document.getElementById('banco-section-renew');
+    const bancoLabel = document.querySelector('label[for="renew_banco_id"]');
+
+    if (sePago && bancoField && bancoSection) {
+        if (sePago.checked) {
+            // Si se pagó, el banco es requerido
+            bancoField.required = true;
+            if (bancoLabel) {
+                bancoLabel.innerHTML = 'Banco <span class="text-danger">*</span>';
+            }
+            bancoSection.style.display = 'block';
+        } else {
+            // Si no se pagó (deuda), el banco no es requerido
+            bancoField.required = false;
+            bancoField.value = '';
+            if (bancoLabel) {
+                bancoLabel.textContent = 'Banco';
+            }
+            bancoSection.style.display = 'none';
+        }
+    }
+}
+
+// Event listener para el checkbox
+const sePagoCheckboxRenew = document.getElementById('se_pago_renew');
+if (sePagoCheckboxRenew) {
+    sePagoCheckboxRenew.addEventListener('change', toggleBancoFieldRenew);
+    // Ejecutar al cargar para estado inicial
+    toggleBancoFieldRenew();
 }
 
 // Validar que la nueva fecha sea mayor a la actual

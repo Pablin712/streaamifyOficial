@@ -31,6 +31,16 @@
                 <label for="fechagas">Fecha</label>
                 <input type="date" name="fechagas" id="fechagas" class="form-control" value="{{ now()->format('Y-m-d') }}">
             </div>
+            <div class="form-group mb-3">
+                <label for="banco_id">Banco <span class="text-danger">*</span></label>
+                <select id="banco_id" name="banco_id" class="form-control searchable-select" required
+                        data-placeholder="Seleccione un banco...">
+                    <option value="">-- Selecciona un Banco --</option>
+                    @foreach($bancos as $banco)
+                        <option value="{{ $banco->idban }}">{{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         <div class="modal-footer">

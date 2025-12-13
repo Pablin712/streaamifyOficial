@@ -32,6 +32,20 @@
                 <label for="edit_fechagas">Fecha</label>
                 <input type="date" name="fechagas" id="edit_fechagas" class="form-control">
             </div>
+
+            <!-- Selector de Banco -->
+            <div class="form-group mb-3">
+                <label for="edit_banco_id">Banco <span class="text-danger">*</span></label>
+                <select id="edit_banco_id" name="banco_id" class="form-control searchable-select" required
+                        data-placeholder="Seleccione un banco...">
+                    <option value="">-- Selecciona un Banco --</option>
+                    @foreach($bancos as $banco)
+                        <option value="{{ $banco->idban }}">
+                            {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
 
         <div class="modal-footer">

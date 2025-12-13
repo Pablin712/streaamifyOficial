@@ -10,7 +10,9 @@ use App\Models\Costo;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use App\Models\Historial;
+use App\Models\Deuda;
 use App\Services\CuentaService;
+use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -21,10 +23,12 @@ use Illuminate\Support\Str;
 class CuentaController extends Controller
 {
     protected $cuentaService;
+    protected $bancoService;
 
-    public function __construct(CuentaService $cuentaService)
+    public function __construct(CuentaService $cuentaService, BancoService $bancoService)
     {
         $this->cuentaService = $cuentaService;
+        $this->bancoService = $bancoService;
     }
     public function index(Request $request)
     {
@@ -50,6 +54,9 @@ class CuentaController extends Controller
         $servicios = \App\Models\Servicio::all();
         $proveedores = \App\Models\Proveedor::all();
 
+        // Obtener bancos para los modales de crear y renovar cuenta
+        $bancos = \App\Models\Banco::orderBy('nombreban')->get();
+
         return view('inventory.cuentas.index', compact(
             'cuentas',
             'cuentasDisponibles',
@@ -61,7 +68,8 @@ class CuentaController extends Controller
             'espacios_por_servicio',
             'valores',
             'servicios',
-            'proveedores'
+            'proveedores',
+            'bancos'
         ));
     }
 
@@ -128,11 +136,34 @@ class CuentaController extends Controller
                     'montocos' => 'required|numeric|min:0',
                 ]);
 
+                $sePago = $request->has('se_pago') && $request->se_pago == '1';
+                $transaccionId = null;
+
+                // Si se pagó, validar banco y crear transacción
+                if ($sePago) {
+                    $request->validate([
+                        'banco_id' => 'required|exists:bancos,idban',
+                    ]);
+
+                    try {
+                        $transaccion = $this->bancoService->registrarTransaccion(
+                            $request->banco_id,
+                            $validatedCosto['montocos'],
+                            'egreso',
+                            'Compra/Creación de cuenta: ' . $request->idcue . ' - ' . $validatedCosto['descripcioncos']
+                        );
+                        $transaccionId = $transaccion->id;
+                    } catch (\Exception $e) {
+                        throw new \Exception('Error al procesar transacción bancaria: ' . $e->getMessage());
+                    }
+                }
+
                 $costo = Costo::create([
                     'idcue' => $request->idcue,
                     'fechacos' => now(),
                     'montocos' => $validatedCosto['montocos'],
                     'descripcioncos' => $validatedCosto['descripcioncos'],
+                    'transaccion_id' => $transaccionId,
                 ]);
 
                 Historial::create([
@@ -141,6 +172,38 @@ class CuentaController extends Controller
                     'empleado_id' => Auth::user()->idemp,
                     'created_at' => now(),
                 ]);
+
+                // Si NO se pagó, crear/acumular deuda
+                if (!$sePago) {
+                    // Obtener proveedor desde: cuenta -> valor -> proveedor
+                    $cuenta = Cuenta::with('valor.proveedor')->find($request->idcue);
+                    $proveedor = $cuenta->valor->proveedor;
+
+                    if ($proveedor) {
+                        // Buscar o crear deuda pendiente para este proveedor
+                        $deuda = Deuda::firstOrCreate(
+                            [
+                                'proveedor_id' => $proveedor->idpro,
+                                'estado' => 'pendiente'
+                            ],
+                            [
+                                'monto' => 0,
+                                'monto_pagado' => 0
+                            ]
+                        );
+
+                        // ACUMULAR el monto a la deuda existente
+                        $deuda->monto += $validatedCosto['montocos'];
+                        $deuda->save();
+
+                        Historial::create([
+                            'accion' => 'Deuda acumulada a proveedor',
+                            'descripcion' => 'Proveedor: ' . $proveedor->nombrepro . ' - Monto acumulado: $' . $validatedCosto['montocos'] . ' - Total deuda: $' . $deuda->monto,
+                            'empleado_id' => Auth::user()->idemp,
+                            'created_at' => now(),
+                        ]);
+                    }
+                }
             }
 
             // Triple verificación AJAX
@@ -402,13 +465,69 @@ class CuentaController extends Controller
                 'fechavencue' => $request->nuevafechavencue
             ]);
 
+            // Procesar pago y crear costo
+            $sePago = $request->has('se_pago') && $request->se_pago == '1';
+            $transaccionId = null;
+
+            // Si se pagó, validar banco y crear transacción
+            if ($sePago) {
+                $request->validate([
+                    'banco_id' => 'required|exists:bancos,idban',
+                ]);
+
+                try {
+                    $transaccion = $this->bancoService->registrarTransaccion(
+                        $request->banco_id,
+                        $request->montocos,
+                        'egreso',
+                        'Renovación de cuenta: ' . $cuenta->idcue . ' - ' . $request->descripcioncos
+                    );
+                    $transaccionId = $transaccion->id;
+                } catch (\Exception $e) {
+                    throw new \Exception('Error al procesar transacción bancaria: ' . $e->getMessage());
+                }
+            }
+
             // Crear registro de costo
-            Costo::create([
+            $costo = Costo::create([
                 'idcue' => $cuenta->idcue,
                 'descripcioncos' => $request->descripcioncos,
                 'montocos' => $request->montocos,
                 'fechacos' => now(),
+                'transaccion_id' => $transaccionId,
             ]);
+
+            // Si NO se pagó, crear/acumular deuda
+            if (!$sePago) {
+                // Obtener proveedor desde: cuenta -> valor -> proveedor
+                $cuenta = Cuenta::with('valor.proveedor')->find($cuenta->idcue);
+                $proveedor = $cuenta->valor->proveedor;
+
+                if ($proveedor) {
+                    // Buscar o crear deuda pendiente para este proveedor
+                    $deuda = Deuda::firstOrCreate(
+                        [
+                            'proveedor_id' => $proveedor->idpro,
+                            'estado' => 'pendiente'
+                        ],
+                        [
+                            'monto' => 0,
+                            'monto_pagado' => 0
+                        ]
+                    );
+
+                    // ACUMULAR el monto a la deuda existente
+                    $deuda->monto += $request->montocos;
+                    $deuda->save();
+
+                    Historial::create([
+                        'accion' => 'Deuda acumulada a proveedor',
+                        'descripcion' => 'Proveedor: ' . $proveedor->nombrepro . ' - Monto acumulado: $' . $request->montocos . ' - Total deuda: $' . $deuda->monto,
+                        'empleado_id' => Auth::user()->idemp,
+                        'created_at' => now(),
+                    ]);
+                }
+            }
 
             // Actualizar estado de productos
             $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
