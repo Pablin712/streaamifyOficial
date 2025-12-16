@@ -184,12 +184,14 @@ function toggleBancoFieldCreate() {
 }
 
 // Event listener para el checkbox
-const sePagoCheckboxCreate = document.getElementById('se_pago_create');
-if (sePagoCheckboxCreate) {
-    sePagoCheckboxCreate.addEventListener('change', toggleBancoFieldCreate);
-    // Ejecutar al cargar para estado inicial
-    toggleBancoFieldCreate();
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const sePagoCheckboxCreate = document.getElementById('se_pago_create');
+    if (sePagoCheckboxCreate) {
+        sePagoCheckboxCreate.addEventListener('change', toggleBancoFieldCreate);
+        // Ejecutar al cargar para estado inicial
+        toggleBancoFieldCreate();
+    }
+});
 
 // Validar que si hay monto, haya descripción
 document.getElementById('createCuentaForm')?.addEventListener('submit', function(e) {

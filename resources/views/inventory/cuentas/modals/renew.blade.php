@@ -147,12 +147,14 @@ function toggleBancoFieldRenew() {
 }
 
 // Event listener para el checkbox
-const sePagoCheckboxRenew = document.getElementById('se_pago_renew');
-if (sePagoCheckboxRenew) {
-    sePagoCheckboxRenew.addEventListener('change', toggleBancoFieldRenew);
-    // Ejecutar al cargar para estado inicial
-    toggleBancoFieldRenew();
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const sePagoCheckboxRenew = document.getElementById('se_pago_renew');
+    if (sePagoCheckboxRenew) {
+        sePagoCheckboxRenew.addEventListener('change', toggleBancoFieldRenew);
+        // Ejecutar al cargar para estado inicial
+        toggleBancoFieldRenew();
+    }
+});
 
 // Validar que la nueva fecha sea mayor a la actual
 document.getElementById('renewCuentaForm')?.addEventListener('submit', function(e) {

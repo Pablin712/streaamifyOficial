@@ -139,16 +139,26 @@ class VentaController extends Controller
         if (!Gate::allows('ventas.store')) {
             abort(403, 'No tienes permiso para crear ventas.');
         }
+
         $request->validate([
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
             'detalles_venta' => 'required|json',
-            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $detalles = json_decode($request->detalles_venta, true);
         $total_venta = collect($detalles)->sum('monto');
         $fecha = Carbon::today()->toDateString();
+
+        // Verificar si se pagó y registrar transacción
+        $sePago = $request->has('se_pago') && $request->se_pago == '1';
+        $transaccionId = null;
+
+        if ($sePago) {
+            $request->validate([
+                'banco_id' => 'required|exists:bancos,idban'
+            ]);
+        }
 
         $venta = Venta::create([
             'idcli' => $request->idcli,
@@ -185,25 +195,28 @@ class VentaController extends Controller
         }
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
 
-        // Registrar transacción bancaria (ingreso)
-        try {
-            // Recargar venta con relación cliente para la referencia
-            $venta->load('cliente');
+        // Registrar transacción bancaria (ingreso) solo si se pagó
+        if ($sePago) {
+            try {
+                // Recargar venta con relación cliente para la referencia
+                $venta->load('cliente');
 
-            $transaccion = $this->bancoService->registrarTransaccion(
-                $request->banco_id,
-                $total_venta,
-                'ingreso',
-                'Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
-            );
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $total_venta,
+                    'ingreso',
+                    'Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+                );
 
-            $venta->transaccion_id = $transaccion->id;
-            $venta->save();
-        } catch (\Exception $e) {
-            // Si falla la transacción, eliminar la venta y sus detalles
-            $venta->detalles_venta()->delete();
-            $venta->delete();
-            return redirect()->route('ventas.create')->with('error', $e->getMessage());
+                $transaccionId = $transaccion->id;
+                $venta->transaccion_id = $transaccionId;
+                $venta->save();
+            } catch (\Exception $e) {
+                // Si falla la transacción, eliminar la venta y sus detalles
+                $venta->detalles_venta()->delete();
+                $venta->delete();
+                return redirect()->route('ventas.create')->with('error', $e->getMessage());
+            }
         }
 
         // Lógica para generar y enviar la factura por correo
@@ -247,6 +260,7 @@ class VentaController extends Controller
         if (!Gate::allows('ventas.storeRenew')) {
             abort(403, 'No tienes permiso para renovar ventas.');
         }
+
         $request->validate([
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
@@ -259,17 +273,38 @@ class VentaController extends Controller
         $total_venta = collect($detalles)->sum('monto');
         $fecha = Carbon::today()->toDateString();
 
+        // Verificar si se pagó y registrar transacción
+        $sePago = $request->has('se_pago') && $request->se_pago == '1';
+        $transaccionId = null;
+
+        if ($sePago) {
+            $request->validate([
+                'banco_id' => 'required|exists:bancos,idban'
+            ]);
+
+            $transaccion = $this->bancoService->registrarTransaccion(
+                $request->banco_id,
+                $total_venta,
+                'ingreso',
+                'Renovación de venta #' . $idvenPasado . ' - Total: $' . number_format($total_venta, 2)
+            );
+            $transaccionId = $transaccion->id;
+        }
+
         $ventaNueva = Venta::create([
             'idcli' => $request->idcli,
             'idemp' => $request->idemp,
             'fechaven' => $fecha,
             'totalpagoven' => $total_venta,
+            'transaccion_id' => $transaccionId,
         ]);
+
         $ventaNueva->idven = DB::table('ventas')->where('idcli', $request->idcli)
             ->where('idemp', $request->idemp)
             ->where('fechaven', $fecha)
             ->orderBy('idven', 'desc')
             ->value('idven');
+
         if ($ventaNueva->cliente->email) {
             //Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
         }
@@ -403,11 +438,11 @@ class VentaController extends Controller
         if (!Gate::allows('ventas.update')) {
             abort(403, 'No tienes permiso para actualizar ventas.');
         }
+
         $request->validate([
             'idcli' => 'required|exists:clientes,idcli',
             'idemp' => 'required|exists:empleados,idemp',
             'detalles_venta' => 'required|json',
-            'banco_id' => 'required|exists:bancos,idban',
         ]);
 
         $venta = Venta::findOrFail($idven);
@@ -445,26 +480,42 @@ class VentaController extends Controller
         $venta->totalpagoven = $totalVenta;
         $venta->save();
 
-        // Si el banco cambió o el monto cambió, anular transacción anterior
-        if ($bancoAnterior && ($bancoAnterior != $request->banco_id || $montoAnterior != $totalVenta)) {
+        // Verificar si se pagó y registrar transacción
+        $sePago = $request->has('se_pago') && $request->se_pago == '1';
+
+        if ($sePago) {
+            $request->validate([
+                'banco_id' => 'required|exists:bancos,idban'
+            ]);
+
+            // Si el banco cambió o el monto cambió, anular transacción anterior
+            if ($bancoAnterior && ($bancoAnterior != $request->banco_id || $montoAnterior != $totalVenta)) {
+                if ($transaccionAnterior) {
+                    $this->bancoService->anularTransaccion($transaccionAnterior);
+                }
+            }
+
+            // Registrar nueva transacción bancaria (ingreso)
+            try {
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $totalVenta,
+                    'ingreso',
+                    'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+                );
+
+                $venta->transaccion_id = $transaccion->id;
+                $venta->save();
+            } catch (\Exception $e) {
+                return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
+            }
+        } else {
+            // Si no se pagó y había transacción anterior, anularla
             if ($transaccionAnterior) {
                 $this->bancoService->anularTransaccion($transaccionAnterior);
+                $venta->transaccion_id = null;
+                $venta->save();
             }
-        }
-
-        // Registrar nueva transacción bancaria (ingreso)
-        try {
-            $transaccion = $this->bancoService->registrarTransaccion(
-                $request->banco_id,
-                $totalVenta,
-                'ingreso',
-                'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
-            );
-
-            $venta->transaccion_id = $transaccion->id;
-            $venta->save();
-        } catch (\Exception $e) {
-            return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
         }
 
         Historial::create([

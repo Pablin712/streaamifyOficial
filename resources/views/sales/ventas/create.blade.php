@@ -60,9 +60,20 @@
                 <i class="fas fa-user-plus me-1"></i> Nuevo Cliente
             </button>
 
+            <!-- Checkbox: ¿Se pagó? -->
             <div class="form-group mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="se_pago" id="se_pago_create" value="1" checked>
+                    <label class="form-check-label" for="se_pago_create">
+                        ¿Se pagó?
+                    </label>
+                </div>
+            </div>
+
+            <!-- Campo Banco (visible solo si se marcó como pagado) -->
+            <div class="form-group mb-3" id="banco_field_create">
                 <label for="banco_id">Banco <span class="text-danger">*</span></label>
-                <select name="banco_id" id="banco_id" class="form-control searchable-select" required
+                <select name="banco_id" id="banco_id" class="form-control searchable-select"
                         data-placeholder="Seleccione un banco...">
                     <option value="">-- Selecciona un Banco --</option>
                     @foreach ($bancos as $banco)
@@ -131,4 +142,29 @@
     <!-- Scripts específicos de la vista -->
     <script src="{{asset('js/ventasClienteHelper.js')}}"></script>
     <script src="{{asset('js/createVenta.js')}}"></script>
+
+    <!-- Toggle del campo Banco según checkbox "¿Se pagó?" -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sePagoCheckboxCreate = document.getElementById('se_pago_create');
+            const bancoFieldCreate = document.getElementById('banco_field_create');
+            const bancoSelectCreate = document.getElementById('banco_id');
+
+            function toggleBancoFieldCreate() {
+                if (sePagoCheckboxCreate && sePagoCheckboxCreate.checked) {
+                    bancoFieldCreate.style.display = 'block';
+                    bancoSelectCreate.required = true;
+                } else {
+                    bancoFieldCreate.style.display = 'none';
+                    bancoSelectCreate.required = false;
+                    bancoSelectCreate.value = '';
+                }
+            }
+
+            if (sePagoCheckboxCreate) {
+                sePagoCheckboxCreate.addEventListener('change', toggleBancoFieldCreate);
+                toggleBancoFieldCreate(); // Ejecutar al cargar
+            }
+        });
+    </script>
 @endsection

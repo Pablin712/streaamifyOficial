@@ -41,9 +41,20 @@
 
             </div>
 
+            <!-- Checkbox: ¿Se pagó? -->
             <div class="form-group mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="se_pago" id="se_pago_renew" value="1" checked>
+                    <label class="form-check-label" for="se_pago_renew">
+                        ¿Se pagó?
+                    </label>
+                </div>
+            </div>
+
+            <!-- Campo Banco (visible solo si se marcó como pagado) -->
+            <div class="form-group mb-3" id="banco_field_renew">
                 <label for="banco_id">Banco <span class="text-danger">*</span></label>
-                <select name="banco_id" id="banco_id" class="form-control searchable-select" required
+                <select name="banco_id" id="banco_id" class="form-control searchable-select"
                         data-placeholder="Seleccione un banco...">
                     <option value="">-- Selecciona un Banco --</option>
                     @foreach ($bancos as $banco)
@@ -274,6 +285,29 @@
 
             $('#detalles_venta').val(JSON.stringify(detalles));
             this.submit();
+        });
+
+        // Toggle del campo Banco según checkbox "¿Se pagó?"
+        document.addEventListener('DOMContentLoaded', function() {
+            const sePagoCheckboxRenew = document.getElementById('se_pago_renew');
+            const bancoFieldRenew = document.getElementById('banco_field_renew');
+            const bancoSelectRenew = document.getElementById('banco_id');
+
+            function toggleBancoFieldRenew() {
+                if (sePagoCheckboxRenew && sePagoCheckboxRenew.checked) {
+                    bancoFieldRenew.style.display = 'block';
+                    bancoSelectRenew.required = true;
+                } else {
+                    bancoFieldRenew.style.display = 'none';
+                    bancoSelectRenew.required = false;
+                    bancoSelectRenew.value = '';
+                }
+            }
+
+            if (sePagoCheckboxRenew) {
+                sePagoCheckboxRenew.addEventListener('change', toggleBancoFieldRenew);
+                toggleBancoFieldRenew(); // Ejecutar al cargar
+            }
         });
     </script>
 @endsection

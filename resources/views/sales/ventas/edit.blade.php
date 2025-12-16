@@ -55,9 +55,21 @@
                 <input type="hidden" name="idcli" value="{{ $venta->idcli }}">
             </div>
 
+            <!-- Checkbox: ¿Se pagó? -->
             <div class="form-group mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="se_pago" id="se_pago_edit" value="1"
+                           {{ $venta->transaccion_id ? 'checked' : '' }}>
+                    <label class="form-check-label" for="se_pago_edit">
+                        ¿Se pagó?
+                    </label>
+                </div>
+            </div>
+
+            <!-- Campo Banco (visible solo si se marcó como pagado) -->
+            <div class="form-group mb-3" id="banco_field_edit">
                 <label for="banco_id">Banco <span class="text-danger">*</span></label>
-                <select name="banco_id" id="banco_id" class="form-control searchable-select" required
+                <select name="banco_id" id="banco_id" class="form-control searchable-select"
                         data-placeholder="Seleccione un banco...">
                     <option value="">-- Selecciona un Banco --</option>
                     @foreach ($bancos as $banco)
@@ -353,6 +365,29 @@ $estado = $detalle->activodet @endphp
 
             document.getElementById('detalles_venta').value = JSON.stringify(detalles);
             this.submit();
+        });
+
+        // Toggle del campo Banco según checkbox "¿Se pagó?"
+        document.addEventListener('DOMContentLoaded', function() {
+            const sePagoCheckboxEdit = document.getElementById('se_pago_edit');
+            const bancoFieldEdit = document.getElementById('banco_field_edit');
+            const bancoSelectEdit = document.getElementById('banco_id');
+
+            function toggleBancoFieldEdit() {
+                if (sePagoCheckboxEdit && sePagoCheckboxEdit.checked) {
+                    bancoFieldEdit.style.display = 'block';
+                    bancoSelectEdit.required = true;
+                } else {
+                    bancoFieldEdit.style.display = 'none';
+                    bancoSelectEdit.required = false;
+                    bancoSelectEdit.value = '';
+                }
+            }
+
+            if (sePagoCheckboxEdit) {
+                sePagoCheckboxEdit.addEventListener('change', toggleBancoFieldEdit);
+                toggleBancoFieldEdit(); // Ejecutar al cargar
+            }
         });
     </script>
 @endsection
