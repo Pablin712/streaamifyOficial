@@ -149,9 +149,12 @@
                         <i class="fas fa-university"></i> Lista de Bancos
                     </h6>
                     @if (Auth::user()->hasPermissionTo('bancos.store'))
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateBancoModal()">
-                        <i class="fas fa-plus"></i> Nuevo Banco
-                    </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openCreateBancoModal()">
+                            <i class="fas fa-plus"></i> Nuevo Banco
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openTransferirFondosModal()">
+                            <i class="fas fa-plus"></i> Transferir Fondos
+                        </button>
                     @endif
                 </div>
                 <div class="card-body">
@@ -461,6 +464,9 @@
 <!-- Modal Pagar Deuda -->
 @include('finance.bancos.modals.pagar-deuda')
 
+<!-- Modal Transferir Fondos -->
+@include('finance.bancos.modals.transferir')
+
 <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
 <script>
     // Inicializar enhanced tables
@@ -538,5 +544,9 @@
         // Abrir modal
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'pagar-deuda' }));
     };
+    // Función para abrir modal de transferir fondos
+    function openTransferirFondosModal() {
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'transferir' }));
+    }
 </script>
 @endsection

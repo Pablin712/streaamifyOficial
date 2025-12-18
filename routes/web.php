@@ -152,6 +152,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/bancos', 'store')->name('bancos.store')->middleware('permission:bancos.store');
         Route::put('/bancos/{id}', 'update')->name('bancos.update')->middleware('permission:bancos.update');
         Route::post('/bancos/{banco_id}/transacciones', 'registrarTransaccion')->name('bancos.transacciones.store')->middleware('permission:bancos.transacciones.store');
+        Route::post('/bancos/transferir', 'transferirFondos')->name('bancos.transferir')->middleware('permission:bancos.transacciones.store');
         Route::put('/bancos/deudas/{id}/pagar', 'pagarDeuda')->name('bancos.pagar-deuda')->middleware('permission:bancos.transacciones.store');
     });
 

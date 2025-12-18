@@ -19,9 +19,8 @@ class BancoController extends Controller
     public function index()
     {
         $bancos = Banco::with(['transacciones' => function ($query) {
-            $query->where('anulada', false)
-                ->orderBy('created_at', 'desc');
-        }])->get();
+            $query->where('anulada', false);
+        }])->orderBy('monto', 'desc')->get();
 
         // Obtener deudas pendientes con información del proveedor
         $deudas = \App\Models\Deuda::with(['proveedor'])
@@ -33,6 +32,7 @@ class BancoController extends Controller
         foreach ($bancos as $banco) {
             $allTransactions = $allTransactions->concat($banco->transacciones);
         }
+        $allTransactions = $allTransactions->sortByDesc('created_at');
 
         // Calcular totales financieros
         $totalDisponible = $bancos->sum('monto'); // Total de dinero en todos los bancos
@@ -60,6 +60,34 @@ class BancoController extends Controller
         );
 
         return redirect()->route('bancos.index')->with('success', 'Transacción registrada correctamente.');
+    }
+
+    public function transferirFondos(Request $request)
+    {
+        $request->validate([
+            'banco_origen_id' => 'required|exists:bancos,idban',
+            'banco_destino_id' => 'required|exists:bancos,idban|different:banco_origen_id',
+            'monto_transferir' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            $this->bancoService->registrarTransaccion(
+                $request->banco_origen_id,
+                $request->monto_transferir,
+                'egreso',
+                'Transferencia a banco ID ' . $request->banco_destino_id
+            );
+            $this->bancoService->registrarTransaccion(
+                $request->banco_destino_id,
+                $request->monto_transferir,
+                'ingreso',
+                'Transferencia desde banco ID ' . $request->banco_origen_id
+            );
+
+            return redirect()->route('bancos.index')->with('success', 'Fondos transferidos correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->route('bancos.index')->with('error', $e->getMessage());
+        }
     }
 
     // Crear nuevo banco (solo Admin)
