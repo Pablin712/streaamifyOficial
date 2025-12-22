@@ -6,7 +6,7 @@
         <button type="button" class="btn-close" onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createClienteModal' }))"></button>
     </div>
     <form id="createClienteForm"
-          data-store-url="{{ route('clientes.store') }}"
+          data-store-url="{{ Route::currentRouteName() == 'ventas.create' ? route('clientes.storeInVenta') : route('clientes.store') }}"
           onsubmit="typeof submitCreate === 'function' ? submitCreate(event) : submitCreateClienteFromVenta(event)">
         @csrf
         <div class="modal-body">
@@ -16,7 +16,7 @@
                     <label for="create_nombrecli" class="form-label required">
                         <i class="fas fa-user me-1"></i>Nombre del Cliente
                     </label>
-                    <input type="text" class="form-control" id="create_nombrecli" name="nombrecli" maxlength="20" required>
+                    <input type="text" class="form-control" id="create_nombrecli" name="nombrecli" maxlength="50" required>
                 </div>
 
                 <!-- Teléfono -->

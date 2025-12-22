@@ -151,6 +151,13 @@ class ClienteController extends Controller
             ->orWhere('telefonocli', $request->telefonocli)
             ->first();
         if ($clienteExistente) {
+            // Triple verificación AJAX para errores
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este cliente ya existe. Verifica los valores de nombre o teléfono.'
+                ], 422);
+            }
             return redirect()->route('ventas.create')
                 ->with('error', 'Este cliente ya existe. Verifica los valores de nombre o teléfono.');
         }
@@ -161,6 +168,16 @@ class ClienteController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
+
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cliente creado con éxito',
+                'cliente' => $cliente
+            ]);
+        }
+
         return redirect()->route('ventas.create')->with('success', 'Cliente creado correctamente.')->with('cliente', $cliente);
     }
 
