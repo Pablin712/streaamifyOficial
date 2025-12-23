@@ -68,9 +68,12 @@ class BancoController extends Controller
             'banco_origen_id' => 'required|exists:bancos,idban',
             'banco_destino_id' => 'required|exists:bancos,idban|different:banco_origen_id',
             'monto_transferir' => 'required|numeric|min:0.01',
+            'fees' => 'nullable|numeric|min:0',
+            'fees_bank' => 'required|in:origen,destino',
         ]);
 
         try {
+            // Transferencia de fondos del origen al destino
             $this->bancoService->registrarTransaccion(
                 $request->banco_origen_id,
                 $request->monto_transferir,
@@ -84,7 +87,37 @@ class BancoController extends Controller
                 'Transferencia desde banco ID ' . $request->banco_origen_id
             );
 
-            return redirect()->route('bancos.index')->with('success', 'Fondos transferidos correctamente.');
+            // Registrar fees si existe
+            $fees = $request->fees ?? 0;
+            if ($fees > 0) {
+                $transaccionFees = $this->bancoService->registrarTransaccion(
+                    $request->fees_bank === 'origen' ? $request->banco_origen_id : $request->banco_destino_id,
+                    $fees,
+                    'egreso',
+                    'Fees de transferencia'
+                );
+
+                // Buscar el tipo de gasto "OTRO"
+                $tipoGastoOtro = \App\Models\TipoGasto::where('detalletip', 'OTRO')->first();
+
+                if ($tipoGastoOtro) {
+                    // Registrar fees como gasto
+                    \App\Models\Gasto::create([
+                        'idtip' => $tipoGastoOtro->idtip,
+                        'fechagas' => now(),
+                        'montogas' => $fees,
+                        'descripciongas' => 'Fees - Transferencia entre bancos',
+                        'transaccion_id' => $transaccionFees->id,
+                    ]);
+                }
+            }
+
+            $mensaje = 'Fondos transferidos correctamente.';
+            if ($fees > 0) {
+                $mensaje .= ' Se aplicaron fees de $' . number_format($fees, 2) . ' registrados como gasto.';
+            }
+
+            return redirect()->route('bancos.index')->with('success', $mensaje);
         } catch (\Exception $e) {
             return redirect()->route('bancos.index')->with('error', $e->getMessage());
         }
