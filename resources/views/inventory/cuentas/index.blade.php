@@ -566,32 +566,61 @@ async function submitCreate(event) {
     event.preventDefault();
     console.log('📤 Enviando formulario de crear cuenta...');
 
-    const formData = new FormData(event.target);
+    const form = event.target;
+    const formData = new FormData(form);
+
+    // Log de datos que se enviarán
+    console.log('📋 Datos del formulario:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+    }
 
     try {
         const response = await fetch('{{ route("cuentas.store") }}', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: formData
+            body: formData,
+            credentials: 'same-origin'
         });
 
-        const data = await response.json();
+        console.log('📡 Status de respuesta:', response.status);
 
-        if (data.success) {
-            console.log('✅ Cuenta creada:', data);
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('❌ Respuesta no es JSON:', contentType);
+            const text = await response.text();
+            console.error('Contenido de respuesta:', text.substring(0, 500));
+            throw new Error('La respuesta del servidor no es JSON válido');
+        }
+
+        const data = await response.json();
+        console.log('📦 Datos recibidos:', data);
+
+        if (response.ok && data.success) {
+            console.log('✅ Cuenta creada exitosamente:', data);
             showTemporaryAlert(data.message || 'Cuenta creada exitosamente', 'success');
             closeCreateModal();
             setTimeout(() => location.reload(), 1500);
         } else {
             console.error('❌ Error al crear:', data);
-            showTemporaryAlert(data.message || 'Error al crear la cuenta', 'danger');
+            const errorMessage = data.message || data.error || 'Error al crear la cuenta';
+
+            // Mostrar errores de validación si existen
+            if (data.errors) {
+                const errorList = Object.values(data.errors).flat().join('\n');
+                showTemporaryAlert(errorList, 'danger');
+            } else {
+                showTemporaryAlert(errorMessage, 'danger');
+            }
         }
     } catch (error) {
-        console.error('❌ Error de red:', error);
-        showTemporaryAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+        console.error('❌ Error de red o procesamiento:', error);
+        showTemporaryAlert('Error de conexión. Por favor, intenta nuevamente.\n' + error.message, 'danger');
     }
 }
 

@@ -102,13 +102,33 @@ class CuentaController extends Controller
 
     public function store(Request $request)
     {
+        // Log detallado para debugging
+        Log::info('=== INICIO STORE CUENTA ===');
+        Log::info('Método: ' . $request->method());
+        Log::info('Content-Type: ' . $request->header('Content-Type'));
+        Log::info('Accept: ' . $request->header('Accept'));
+        Log::info('Datos recibidos: ' . json_encode($request->all()));
+
         if (!Gate::allows('cuentas.store')) {
+            Log::warning('Permiso denegado para crear cuentas');
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para crear cuentas.'
+                ], 403);
+            }
             abort(403, 'No tienes permiso para crear cuentas.');
         }
+
         try {
+            // Convertir a mayúsculas
             $request->merge([
                 'idcue' => strtoupper($request->idcue)
             ]);
+
+            Log::info('ID cuenta (mayúsculas): ' . $request->idcue);
+
             $validated = $request->validate([
                 'idcue' => 'required|string|max:20|unique:cuentas,idcue',
                 'idval' => 'required|exists:valores,idval',
@@ -117,6 +137,8 @@ class CuentaController extends Controller
                 'contrasenacue' => 'required|string|max:50',
                 'caidacue' => 'required|boolean',
             ]);
+
+            Log::info('Validación exitosa');
 
             $cuenta = Cuenta::create($validated);
 
@@ -206,22 +228,41 @@ class CuentaController extends Controller
                 }
             }
 
+            Log::info('Cuenta creada exitosamente: ' . $cuenta->idcue);
+            Log::info('=== FIN STORE CUENTA (ÉXITO) ===');
+
             // Triple verificación AJAX
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => true,
                     'message' => 'Cuenta creada con éxito.',
                     'cuenta' => $cuenta
-                ]);
+                ], 200);
             }
 
             return redirect()->route('cuentas')->with('success', 'Cuenta creada con éxito.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Error de validación: ' . json_encode($e->errors()));
+            Log::error('=== FIN STORE CUENTA (ERROR VALIDACIÓN) ===');
+
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación en los datos.',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            return redirect()->back()->withInput()->withErrors($e->errors());
         } catch (\Exception $e) {
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            Log::error('Error general al crear cuenta: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('=== FIN STORE CUENTA (ERROR GENERAL) ===');
+
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()
-                ], 422);
+                ], 500);
             }
             return redirect()->back()->withInput()->withErrors(['error' => 'Hubo un problema al crear la cuenta: ' . $e->getMessage()]);
         }
