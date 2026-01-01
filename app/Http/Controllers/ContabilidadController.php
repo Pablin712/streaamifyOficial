@@ -19,7 +19,7 @@ use App\Services\DashboardService;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 class ContabilidadController extends Controller
 {
     protected $dashboardService;
@@ -60,7 +60,6 @@ class ContabilidadController extends Controller
         });
 
         return view('dashboard', compact(
-            'ventas',
             'ingresos_mes',
             'ingresos_ano',
             'clientes_activos',
@@ -164,16 +163,26 @@ class ContabilidadController extends Controller
             'affectedCustomers' => array_values($affectedCustomers)
         ]);
     }
-    public function generarPDF(){
+    public function generarPDF(Request $request){
         if (!Gate::allows('dashboard')) {
             abort(403, 'No tienes permiso para ver esta página.');
         }
-        $month = Carbon::now()->month;
-        $year = Carbon::now()->year;
+
+        // Validar parámetros
+        $tipoReporte = $request->get('tipo', 'mensual'); // mensual o anual
+
+        if ($tipoReporte === 'anual') {
+            return $this->generarReporteAnual($request);
+        }
+
+        // Reporte mensual
+        $month = $request->get('mes', Carbon::now()->subMonth()->month);
+        $year = $request->get('ano', Carbon::now()->year);
+
         $today = Carbon::today();
         $this->dashboardService->guardar($today);
-        extract($this->dashboardService->obtenerDatosDashboard());
-        $gastos = $this->dashboardService->getGastos($ingresos_mes);
+        extract($this->dashboardService->obtenerDatosDashboardMensuales($month, $year));
+        $gastos = $this->dashboardService->getGastos($ingresos_mes, $month, $year);
 
         extract($this->dashboardService->getNetflix($month, $year));
         extract($this->dashboardService->getDisney($month, $year));
@@ -184,12 +193,12 @@ class ContabilidadController extends Controller
         extract($this->dashboardService->getParamount($month, $year));
         extract($this->dashboardService->getSpotify($month, $year));
         extract($this->dashboardService->getOtros($month, $year));
-        $mes = Carbon::now()->translatedFormat('F'); // Devuelve 'mayo' si está en español
+
+        $mes = Carbon::create($year, $month, 1)->translatedFormat('F');
         $pdf = PDF::loadView('finance.resultPDF', compact(
             'mes',
             'year',
 
-            'ventas',
             'ingresos_mes',
             'ingresos_ano',
             'clientes_activos',
@@ -260,5 +269,33 @@ class ContabilidadController extends Controller
         ));
         // formato de descarga: contabilidad-Mes-Año.pdf
         return $pdf->download('contabilidad-'.$mes.'-'.$year.'.pdf');
+    }
+
+    /**
+     * Generar reporte anual consolidado
+     */
+    public function generarReporteAnual(Request $request)
+    {
+        $year = $request->get('ano', Carbon::now()->year);
+
+        // Obtener datos anuales consolidados desde el servicio
+        $datosAnuales = $this->dashboardService->getDatosAnuales($year);
+
+        // Datos adicionales para el reporte
+        $today = Carbon::today();
+        $this->dashboardService->guardar($today);
+        extract($this->dashboardService->obtenerDatosDashboard());
+
+        // Generar PDF con vista específica para reporte anual
+        $pdf = PDF::loadView('finance.resultPDF-anual', compact(
+            'year',
+            'datosAnuales',
+            'clientes_activos',
+            'total_usuarios_activos',
+            'num_cuentas',
+            'cuentas_caidas'
+        ));
+
+        return $pdf->download('contabilidad-anual-'.$year.'.pdf');
     }
 }

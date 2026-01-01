@@ -17,9 +17,9 @@
             <p class="mb-0 text-muted">Resumen completo del rendimiento financiero y operativo de Streamify HQ</p>
         </div>
         <div>
-            <a href="{{ route('dashboard.pdf') }}" class="btn btn-danger">
-                <i class="fas fa-file-pdf me-1"></i> Descargar PDF
-            </a>
+            <button type="button" class="btn btn-danger" onclick="abrirModalReportes()">
+                <i class="fas fa-file-pdf me-1"></i> Generar Reporte
+            </button>
         </div>
     </div>
 @endsection
@@ -774,4 +774,112 @@
 
     {{-- Enhanced Table v2 --}}
     <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+
+    <script>
+        function abrirModalReportes() {
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'reportesDashboardModal' }));
+        }
+
+        function generarReporteMensual() {
+            const mes = document.getElementById('mes_reporte').value;
+            const ano = document.getElementById('ano_reporte').value;
+
+            if (!mes || !ano) {
+                alert('Por favor selecciona mes y año');
+                return;
+            }
+
+            const url = `{{ route('dashboard.pdf') }}?tipo=mensual&mes=${mes}&ano=${ano}`;
+            window.open(url, '_blank');
+        }
+
+        function generarReporteAnual() {
+            const ano = document.getElementById('ano_reporte_anual').value;
+
+            if (!ano) {
+                alert('Por favor selecciona el año');
+                return;
+            }
+
+            const url = `{{ route('dashboard.pdf') }}?tipo=anual&ano=${ano}`;
+            window.open(url, '_blank');
+        }
+    </script>
 @endsection
+
+<!-- Modal para Generar Reportes -->
+<x-modal name="reportesDashboardModal" :show="false" maxWidth="md">
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+            <i class="fas fa-file-pdf me-2"></i>Generar Reporte
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'reportesDashboardModal' }))">
+        </button>
+    </div>
+    <div class="modal-body">
+        <!-- Reporte Mensual -->
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Reporte Mensual</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="mes_reporte" class="form-label fw-semibold">Mes</label>
+                        <select id="mes_reporte" class="form-select">
+                            <option value="1" {{ now()->subMonth()->month == 1 ? 'selected' : '' }}>Enero</option>
+                            <option value="2" {{ now()->subMonth()->month == 2 ? 'selected' : '' }}>Febrero</option>
+                            <option value="3" {{ now()->subMonth()->month == 3 ? 'selected' : '' }}>Marzo</option>
+                            <option value="4" {{ now()->subMonth()->month == 4 ? 'selected' : '' }}>Abril</option>
+                            <option value="5" {{ now()->subMonth()->month == 5 ? 'selected' : '' }}>Mayo</option>
+                            <option value="6" {{ now()->subMonth()->month == 6 ? 'selected' : '' }}>Junio</option>
+                            <option value="7" {{ now()->subMonth()->month == 7 ? 'selected' : '' }}>Julio</option>
+                            <option value="8" {{ now()->subMonth()->month == 8 ? 'selected' : '' }}>Agosto</option>
+                            <option value="9" {{ now()->subMonth()->month == 9 ? 'selected' : '' }}>Septiembre</option>
+                            <option value="10" {{ now()->subMonth()->month == 10 ? 'selected' : '' }}>Octubre</option>
+                            <option value="11" {{ now()->subMonth()->month == 11 ? 'selected' : '' }}>Noviembre</option>
+                            <option value="12" {{ now()->subMonth()->month == 12 ? 'selected' : '' }}>Diciembre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="ano_reporte" class="form-label fw-semibold">Año</label>
+                        <select id="ano_reporte" class="form-select">
+                            @for ($i = now()->year; $i >= 2020; $i--)
+                                <option value="{{ $i }}" {{ $i == now()->year ? 'selected' : '' }}>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary w-100" onclick="generarReporteMensual()">
+                    <i class="fas fa-file-pdf me-2"></i>Generar Reporte Mensual
+                </button>
+            </div>
+        </div>
+
+        <!-- Reporte Anual -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Reporte Anual</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="ano_reporte_anual" class="form-label fw-semibold">Año</label>
+                    <select id="ano_reporte_anual" class="form-select">
+                        @for ($i = now()->year; $i >= 2020; $i--)
+                            <option value="{{ $i }}" {{ $i == now()->year ? 'selected' : '' }}>{{ $i }}</option>
+                        @endfor
+                    </select>
+                </div>
+                <button type="button" class="btn btn-success w-100" onclick="generarReporteAnual()">
+                    <i class="fas fa-file-pdf me-2"></i>Generar Reporte Anual
+                </button>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            <small>Por defecto se muestra el <strong>mes anterior</strong> para facilitar la generación de reportes históricos.</small>
+        </div>
+    </div>
+</x-modal>

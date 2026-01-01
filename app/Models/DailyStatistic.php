@@ -19,6 +19,10 @@ class DailyStatistic extends Model
     protected $fillable = [
         'date',
         'active_users',
+        'usuarios_a_cobrar',
+        'espacios',
+        'cliente_mas_facturado',
+        'total_customers',
         'affected_customers',
         'pending_payments',
         'danger_accounts',

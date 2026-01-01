@@ -42,7 +42,6 @@ class DashboardService
         $balance = $ingresos_mes - $costos_mes - $gastos_mes;
         $balance_pct = ($balance / $ingresos) * 100;
         return [
-            'ventas' => Venta::with('detalles_venta')->orderBy('fechaven')->get(),
             'total_usuarios_activos' => ViewUsuarioActivo::count(),
             'ingresos_mes' => $ingresos_mes,
             'ingresos_ano' => Venta::whereYear('fechaven', $year)->sum('totalpagoven'),
@@ -61,6 +60,101 @@ class DashboardService
             'usuarios_acobrar' => $usuarios_acobrar,
             'promedio_pagos_mes' => Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->avg('totalpagoven'),
             'cliente_mas_facturado' => ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first(),
+            'cuentas' => $cuentas,
+            'espacios' => $espacios,
+        ];
+    }
+
+    public function obtenerDatosDashboardMensuales($month, $year)
+    {
+        $usuarios = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('active_users')
+            ->unique();
+        $cuentas = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('accounts')
+            ->unique();
+        $usuarios_acobrar = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('usuarios_a_cobrar')
+            ->unique();
+        $espacios = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('espacios')
+            ->unique();
+
+        $cliente_mas_facturado = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->orderByDesc('cliente_mas_facturado')
+            ->first();
+
+        $total_customers = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('total_customers')
+            ->unique();
+
+        $cuentas_caidas = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('danger_accounts')
+            ->unique();
+
+        $ingresos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->sum('daily_revenue');
+        $costos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->sum('daily_cost');
+        $gastos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->sum('daily_bill');
+        $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1; // Evita división por cero
+        $costos_pct = ($costos_mes / $ingresos) * 100;
+        $gastos_pct = ($gastos_mes / $ingresos) * 100;
+        $balance = $ingresos_mes - $costos_mes - $gastos_mes;
+        $balance_pct = ($balance / $ingresos) * 100;
+        $ingresos_ano = DailyStatistic::where('date', '>=', Carbon::create($year, 1, 1)->startOfYear())
+            ->where('date', '<=', Carbon::create($year, 12, 31)->endOfYear())
+            ->sum('daily_revenue');
+        $num_cuentas = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->get()
+            ->pluck('accounts')
+            ->unique();
+        $ventas_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->sum('daily_sales');
+        $ventas_ano = DailyStatistic::where('date', '>=', Carbon::create($year, 1, 1)->startOfYear())
+            ->where('date', '<=', Carbon::create($year, 12, 31)->endOfYear())
+            ->sum('daily_sales');
+        $promedio_pagos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->avg('daily_revenue');
+        return [
+            'total_usuarios_activos' => $usuarios->count(),
+            'ingresos_mes' => $ingresos_mes,
+            'ingresos_ano' => $ingresos_ano,
+            'ingresos' => $ingresos,
+            'costos_mes' => $costos_mes,
+            'costos_pct' => $costos_pct,
+            'gastos_mes' => $gastos_mes,
+            'gastos_pct' => $gastos_pct,
+            'balance' => $balance,
+            'balance_pct' => $balance_pct,
+            'clientes_activos' => $total_customers->count(),
+            'cuentas_caidas' => $cuentas_caidas->count(),
+            'num_cuentas' => $num_cuentas->count(),
+            'ventas_mes' => $ventas_mes,
+            'ventas_ano' => $ventas_ano,
+            'usuarios_acobrar' => $usuarios_acobrar,
+            'promedio_pagos_mes' => $promedio_pagos_mes,
+            'cliente_mas_facturado' => $cliente_mas_facturado,
             'cuentas' => $cuentas,
             'espacios' => $espacios,
         ];
@@ -1038,6 +1132,11 @@ class DashboardService
         $dailyBill = Gasto::whereDate('created_at', $date)->sum('montogas');
         $dailySales = Venta::whereDate('created_at', $date)->count();
         $newCustomers = Cliente::whereDate('created_at', $date)->count();
+        $espacios = $this->cuentaService->calcularEspaciosTotales();
+        $usuarios_acobrar = $this->cuentaService->contarUsuariosACobrar($usuarios);
+        $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first();
+        $total_customers = ViewClientesUsuarios::count();
+
         DailyStatistic::updateOrCreate(
             ['date' => $date], // Fecha única
             [
@@ -1051,6 +1150,10 @@ class DashboardService
                 'daily_bill' => $dailyBill,
                 'daily_sales' => $dailySales,
                 'new_customers' => $newCustomers,
+                'usuarios_a_cobrar' => $usuarios_acobrar,
+                'espacios' => $espacios,
+                'cliente_mas_facturado' => $cliente_mas_facturado->nombre_cliente ?? '',
+                'total_customers' => $total_customers,
             ]
         );
     }
@@ -1078,5 +1181,116 @@ class DashboardService
             ];
         });
         return $gastosData->toArray();
+    }
+
+    /**
+     * Obtener ingresos mensuales por rango de fechas
+     * @param int $month
+     * @param int $year
+     * @return float
+     */
+    public function getIngresosMensuales(int $month, int $year): float
+    {
+        return Venta::whereMonth('fechaven', $month)
+            ->whereYear('fechaven', $year)
+            ->sum('totalpagoven');
+    }
+
+    /**
+     * Obtener costos mensuales por rango de fechas
+     * @param int $month
+     * @param int $year
+     * @return float
+     */
+    public function getCostosMensuales(int $month, int $year): float
+    {
+        return Costo::whereMonth('fechacos', $month)
+            ->whereYear('fechacos', $year)
+            ->sum('montocos');
+    }
+
+    /**
+     * Obtener gastos mensuales por rango de fechas
+     * @param int $month
+     * @param int $year
+     * @return float
+     */
+    public function getGastosMensuales(int $month, int $year): float
+    {
+        return Gasto::whereMonth('fechagas', $month)
+            ->whereYear('fechagas', $year)
+            ->sum('montogas');
+    }
+
+    /**
+     * Obtener cantidad de ventas mensuales
+     * @param int $month
+     * @param int $year
+     * @return int
+     */
+    public function getVentasMensuales(int $month, int $year): int
+    {
+        return Venta::whereMonth('fechaven', $month)
+            ->whereYear('fechaven', $year)
+            ->count();
+    }
+
+    /**
+     * Obtener datos consolidados anuales
+     * @param int $year
+     * @return array
+     */
+    public function getDatosAnuales(int $year): array
+    {
+        $datosAnuales = [
+            'ingresos_totales' => 0,
+            'costos_totales' => 0,
+            'gastos_totales' => 0,
+            'ventas_totales' => 0,
+            'balance_anual' => 0,
+            'meses_data' => []
+        ];
+
+        // Recopilar datos por cada mes del año
+        for ($month = 1; $month <= 12; $month++) {
+            $mesCarbon = Carbon::create($year, $month, 1);
+            $nombreMes = $mesCarbon->translatedFormat('F');
+
+            $ingresosMes = $this->getIngresosMensuales($month, $year);
+            $costosMes = $this->getCostosMensuales($month, $year);
+            $gastosMes = $this->getGastosMensuales($month, $year);
+            $ventasMes = $this->getVentasMensuales($month, $year);
+            $balanceMes = $ingresosMes - $costosMes - $gastosMes;
+
+            // Acumular totales
+            $datosAnuales['ingresos_totales'] += $ingresosMes;
+            $datosAnuales['costos_totales'] += $costosMes;
+            $datosAnuales['gastos_totales'] += $gastosMes;
+            $datosAnuales['ventas_totales'] += $ventasMes;
+
+            // Guardar datos del mes
+            $datosAnuales['meses_data'][] = [
+                'mes' => $nombreMes,
+                'ingresos' => round($ingresosMes, 2),
+                'costos' => round($costosMes, 2),
+                'gastos' => round($gastosMes, 2),
+                'ventas' => $ventasMes,
+                'balance' => round($balanceMes, 2)
+            ];
+        }
+
+        // Calcular balance anual y redondear totales
+        $datosAnuales['balance_anual'] = round(
+            $datosAnuales['ingresos_totales'] -
+            $datosAnuales['costos_totales'] -
+            $datosAnuales['gastos_totales'],
+            2
+        );
+
+        $datosAnuales['ingresos_totales'] = round($datosAnuales['ingresos_totales'], 2);
+        $datosAnuales['costos_totales'] = round($datosAnuales['costos_totales'], 2);
+        $datosAnuales['gastos_totales'] = round($datosAnuales['gastos_totales'], 2);
+
+        return $datosAnuales;
     }
 }
