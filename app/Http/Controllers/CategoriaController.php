@@ -22,7 +22,9 @@ class CategoriaController extends Controller
 
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('gestion')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('gestion')) {
             abort(403, 'No tienes permiso para ver la gestión de productos.');
         }
         $categorias = Categoria::all();
@@ -38,7 +40,9 @@ class CategoriaController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('categorias.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('categorias.store')) {
             abort(403, 'No tienes permiso para crear categorías.');
         }
         $request->validate([
@@ -66,7 +70,9 @@ class CategoriaController extends Controller
 
     public function edit(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('categorias.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('categorias.update')) {
             abort(403, 'No tienes permiso para editar categorías.');
         }
         $categoria = Categoria::findOrFail($id);
@@ -75,7 +81,9 @@ class CategoriaController extends Controller
 
     public function update(Request $request, string $id)
     {
-        if (!Auth::user()->hasPermissionTo('categorias.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('categorias.update')) {
             abort(403, 'No tienes permiso para actualizar categorías.');
         }
         $request->validate([
@@ -83,7 +91,7 @@ class CategoriaController extends Controller
             'descripcion' => 'nullable|string',
         ]);
         $categoria = Categoria::findOrFail($id);
-        
+
         Historial::create([
             'accion' => 'Actualización de categoría',
             'descripcion' => 'Datos antiguos: ' . json_encode($categoria),
@@ -96,7 +104,9 @@ class CategoriaController extends Controller
 
     public function destroy(string $id)
     {
-        if (!Auth::user()->hasPermissionTo('categorias.destroy')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('categorias.destroy')) {
             abort(403, 'No tienes permiso para eliminar categorías.');
         }
         $categoria = Categoria::findOrFail($id);

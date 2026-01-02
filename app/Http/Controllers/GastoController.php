@@ -22,7 +22,9 @@ class GastoController extends Controller
     // Mostrar todos los gastos
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('gastos')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('gastos')) {
             abort(403, 'No tienes permiso para ver los gastos.');
         }
 
@@ -36,7 +38,10 @@ class GastoController extends Controller
     // Crear un nuevo gasto desde el modal
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('gastos.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
+        if (!$user->hasPermissionTo('gastos.store')) {
             abort(403, 'No tienes permiso para crear costos.');
         }
 
@@ -89,8 +94,11 @@ class GastoController extends Controller
     // Mostrar el formulario para editar un gasto (modal)
     public function edit($id)
     {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
         // Para la edición no se aplica verificación de permisos manualmente, pero puedes agregarla si lo deseas:
-        if (!Auth::user()->hasPermissionTo('gastos.update')) {
+        if (!$user->hasPermissionTo('gastos.update')) {
             abort(403, 'No tienes permiso para editar costos.');
         }
 
@@ -108,7 +116,9 @@ class GastoController extends Controller
     // Actualizar un gasto (desde el modal)
     public function update(Request $request, $idgas)
     {
-        if (!Auth::user()->hasPermissionTo('gastos.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('gastos.update')) {
             abort(403, 'No tienes permiso para actualizar costos.');
         }
 
@@ -172,7 +182,9 @@ class GastoController extends Controller
     // Eliminar un gasto
     public function destroy($id)
     {
-        if (!Auth::user()->hasPermissionTo('gastos.destroy')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('gastos.destroy')) {
             abort(403, 'No tienes permiso para eliminar costos.');
         }
 

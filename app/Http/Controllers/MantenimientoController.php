@@ -22,7 +22,10 @@ class MantenimientoController extends Controller
 
     public function index()
     {
-        if (!Auth::user()->hasPermissionTo('mantenimientos')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
+        if (!$user->hasPermissionTo('mantenimientos')) {
             abort(403, 'No tienes permiso para ver los mantenimientos.');
         }
         $mantenimientos = Mantenimiento::with('cuenta')->orderBy('fechaman', 'asc')->get();
@@ -35,7 +38,9 @@ class MantenimientoController extends Controller
 
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('mantenimientos.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('mantenimientos.store')) {
             return response()->json(['error' => 'No tienes permiso para crear mantenimientos.'], 403);
         }
         $cuentas = Cuenta::with(['valor'])
@@ -47,7 +52,9 @@ class MantenimientoController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('mantenimientos.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('mantenimientos.store')) {
             return response()->json(['error' => 'No tienes permiso para crear mantenimientos.'], 403);
         }
 
@@ -83,7 +90,10 @@ class MantenimientoController extends Controller
 
     public function edit($id)
     {
-        if (!Auth::user()->hasPermissionTo('mantenimientos.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
+        if (!$user->hasPermissionTo('mantenimientos.update')) {
             return response()->json(['error' => 'No tienes permiso para editar mantenimientos.'], 403);
         }
         $mantenimiento = Mantenimiento::with('cuenta')->findOrFail($id);
@@ -96,7 +106,9 @@ class MantenimientoController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->hasPermissionTo('mantenimientos.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('mantenimientos.update')) {
             return response()->json(['error' => 'No tienes permiso para actualizar mantenimientos.'], 403);
         }
 
@@ -132,7 +144,9 @@ class MantenimientoController extends Controller
 
     public function destroy($id)
     {
-        if (!Auth::user()->hasPermissionTo('mantenimientos.destroy')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('mantenimientos.destroy')) {
             return response()->json(['error' => 'No tienes permiso para eliminar mantenimientos.'], 403);
         }
 

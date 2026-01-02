@@ -10,7 +10,10 @@ class HistorialController extends Controller
 {
     public function show(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('historial')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
+        if (!$user->hasPermissionTo('historial')) {
             abort(403, 'No tienes permiso para ver esta página.');
         }
 
@@ -66,7 +69,9 @@ class HistorialController extends Controller
     }
     public function clear(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('historial.clear')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('historial.clear')) {
             abort(403, 'No tienes permiso para ver esta página.');
         }
         $request->validate([

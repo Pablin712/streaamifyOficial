@@ -26,7 +26,10 @@ class ClienteController extends Controller
 
     public function index(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('clientes')) {
+        // Informar a IDE para que no muestre errores con Auth::user()
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes')) {
             abort(403, 'No tienes permiso para ver los clientes.');
         }
 
@@ -89,7 +92,9 @@ class ClienteController extends Controller
     // Mostrar formulario para crear un cliente (para el caso general)
     public function create()
     {
-        if (!Auth::user()->hasPermissionTo('clientes.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes.store')) {
             abort(403, 'No tienes permiso para crear clientes.');
         }
         return view('sales.clientes.create');
@@ -97,7 +102,9 @@ class ClienteController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('clientes.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes.store')) {
             abort(403, 'No tienes permiso para crear clientes.');
         }
         $request->validate([
@@ -137,7 +144,9 @@ class ClienteController extends Controller
     // Método para crear cliente desde vista de venta
     public function storeInVenta(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('clientes.storeInVenta')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes.storeInVenta')) {
             abort(403, 'No tienes permiso para crear clientes desde ventas.');
         }
         $request->validate([
@@ -184,7 +193,9 @@ class ClienteController extends Controller
     // Mostrar formulario para editar cliente
     public function edit($idcli)
     {
-        if (!Auth::user()->hasPermissionTo('clientes.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes.update')) {
             abort(403, 'No tienes permiso para editar clientes.');
         }
         $cliente = Cliente::findOrFail($idcli);
@@ -202,7 +213,9 @@ class ClienteController extends Controller
 
     public function update(Request $request, $idcli)
     {
-        if (!Auth::user()->hasPermissionTo('clientes.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes.update')) {
             abort(403, 'No tienes permiso para actualizar clientes.');
         }
         $request->validate([
@@ -264,7 +277,9 @@ class ClienteController extends Controller
     // Eliminar un cliente
     public function destroy($idcli)
     {
-        if (!Auth::user()->hasPermissionTo('clientes.destroy')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes.destroy')) {
             abort(403, 'No tienes permiso para eliminar clientes.');
         }
         $cliente = Cliente::findOrFail($idcli);

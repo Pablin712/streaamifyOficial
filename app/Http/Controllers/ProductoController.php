@@ -10,7 +10,7 @@ use App\Models\TipoProducto;
 use App\Models\DetalleProducto;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Gate;
 
 class ProductoController extends Controller

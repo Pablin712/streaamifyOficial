@@ -21,7 +21,10 @@ class CostoController extends Controller
 
     public function index(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('costos')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
+        if (!$user->hasPermissionTo('costos')) {
             abort(403, 'No tienes permiso para ver los costos.');
         }
 
@@ -91,7 +94,10 @@ class CostoController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasPermissionTo('costos.store')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+
+        if (!$user->hasPermissionTo('costos.store')) {
             abort(403, 'No tienes permiso para crear costos.');
         }
 
@@ -188,7 +194,9 @@ class CostoController extends Controller
 
     public function update(Request $request, $idcos)
     {
-        if (!Auth::user()->hasPermissionTo('costos.update')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('costos.update')) {
             abort(403, 'No tienes permiso para actualizar costos.');
         }
 
@@ -249,7 +257,9 @@ class CostoController extends Controller
 
     public function destroy($idcos)
     {
-        if (!Auth::user()->hasPermissionTo('costos.destroy')) {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('costos.destroy')) {
             abort(403, 'No tienes permiso para eliminar costos.');
         }
 

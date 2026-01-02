@@ -11,6 +11,7 @@ use App\Models\Rol; // Verifica si lo necesitas o se utiliza en el código
 use Illuminate\Support\Facades\Auth;
 use App\Services\EmpleadoService;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 class EmpleadoController extends Controller
 {
     /*
@@ -231,8 +232,8 @@ class EmpleadoController extends Controller
         // Manejar subida de foto
         if ($request->hasFile('foto_url')) {
             // Eliminar foto anterior si existe
-            if ($empleado->foto_url && \Storage::disk('public')->exists($empleado->foto_url)) {
-                \Storage::disk('public')->delete($empleado->foto_url);
+            if ($empleado->foto_url && Storage::disk('public')->exists($empleado->foto_url)) {
+                Storage::disk('public')->delete($empleado->foto_url);
             }
 
             // Guardar nueva foto

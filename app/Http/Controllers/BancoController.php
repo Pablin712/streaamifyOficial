@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Banco;
 use App\Services\BancoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class BancoController extends Controller
 {
@@ -180,8 +182,8 @@ class BancoController extends Controller
         // Manejar foto si se subió
         if ($request->hasFile('foto')) {
             // Eliminar foto anterior si existe (storage/fotos/...)
-            if ($banco->foto && \Storage::disk('public')->exists(str_replace('storage/', '', $banco->foto))) {
-                \Storage::disk('public')->delete(str_replace('storage/', '', $banco->foto));
+            if ($banco->foto && Storage::disk('public')->exists(str_replace('storage/', '', $banco->foto))) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $banco->foto));
             }
 
             $foto = $request->file('foto');
@@ -239,7 +241,7 @@ class BancoController extends Controller
             \App\Models\Historial::create([
                 'accion' => 'Pago de Deuda',
                 'descripcion' => 'Proveedor: ' . $deuda->proveedor->nombrepro . ' - Abono: $' . $request->monto_abono . ' - Total pagado: $' . $deuda->monto_pagado . ' de $' . $deuda->monto,
-                'empleado_id' => \Auth::user()->idemp,
+                'empleado_id' => Auth::user()->idemp,
                 'created_at' => now(),
             ]);
 
