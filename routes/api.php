@@ -99,6 +99,20 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // === TELEGRAM AUTH - Sin autenticación (público para N8N) ===
+    Route::prefix('telegram')->group(function () {
+        Route::post('/check-registered', [\App\Http\Controllers\Api\TelegramAuthController::class, 'checkRegistered']);
+        Route::post('/get-session', [\App\Http\Controllers\Api\TelegramAuthController::class, 'getSession']);
+        Route::post('/process-input', [\App\Http\Controllers\Api\TelegramAuthController::class, 'processInput']);
+        Route::post('/validate-credentials', [\App\Http\Controllers\Api\TelegramAuthController::class, 'validateCredentials']);
+        Route::post('/check-email', [\App\Http\Controllers\Api\TelegramAuthController::class, 'checkEmail']);
+        Route::post('/create-cliente', [\App\Http\Controllers\Api\TelegramAuthController::class, 'createCliente']);
+        Route::post('/link-telegram', [\App\Http\Controllers\Api\TelegramAuthController::class, 'linkTelegram']);
+        Route::post('/reset-session', [\App\Http\Controllers\Api\TelegramAuthController::class, 'resetSession']);
+        Route::delete('/delete-session', [\App\Http\Controllers\Api\TelegramAuthController::class, 'deleteSession']);
+        Route::post('/clean-sessions', [\App\Http\Controllers\Api\TelegramAuthController::class, 'cleanSessions']);
+    });
+
     // Chat - Público (clientes autenticados y anónimos) - SIN API Key
     Route::post('/chat/cliente/enviar', [ChatController::class, 'clienteEnviarMensaje'])->name('api.chat.cliente.enviar');
     Route::get('/chat/cliente/{idcli}/conversacion', [ChatController::class, 'obtenerConversacionCliente'])->name('api.chat.cliente.conversacion');
