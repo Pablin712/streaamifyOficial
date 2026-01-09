@@ -42,6 +42,78 @@
         .btn-rosa-5:hover {
             filter: brightness(0.95);
         }
+
+        /* Toggle Switch para estado de cobro */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #28a745;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .toggle-slider.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Fila clicable para copiar mensaje */
+        tbody tr.clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr.clickable-row:hover {
+            background-color: rgba(248, 187, 208, 0.2) !important;
+        }
+
+        tbody tr.clickable-row td {
+            position: relative;
+        }
+
+        /* Evitar que los clicks en botones activen la fila */
+        tbody tr.clickable-row .btn,
+        tbody tr.clickable-row .toggle-switch,
+        tbody tr.clickable-row input[type="checkbox"] {
+            pointer-events: auto;
+        }
     </style>
 @endsection
 @section('h1')
@@ -166,6 +238,14 @@
                             </svg>
                         </span>
                     </th>
+                    <th class="sortable" data-type="string" data-col="8">
+                        Cobro
+                        <span class="sort-arrow">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                            </svg>
+                        </span>
+                    </th>
                     @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
                         <th data-type="actions">Acciones</th>
                     @endif
@@ -177,9 +257,15 @@
                         $fechaVencimiento = \Carbon\Carbon::parse($usuario->fecha_vencimiento);
                         $hoy = \Carbon\Carbon::today();
                         $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
+                        $estadoCobro = $usuario->detalle_venta->estado ?? 'PENDIENTE';
                     @endphp
-                    <tr>
-                        <td>
+                    <tr class="{{ $diasRestantes <= 3 ? 'clickable-row' : '' }}"
+                        data-iddet="{{ $usuario->iddet }}"
+                        data-servicio="{{ $usuario->cuenta->valor->servicio->nombreser ?? 'Servicio' }}"
+                        data-cuenta="{{ $usuario->cuenta->usuariocue }}"
+                        data-fecha="{{ $usuario->fecha_vencimiento }}"
+                        data-estado="{{ $fechaVencimiento <= $hoy ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo') }}">
+                        <td onclick="event.stopPropagation();">
                             @if ($diasRestantes <= 3)
                                 <input type="checkbox" name="usuarios[]" value="{{ $usuario->iddet }}"
                                     class="check-usuario">
@@ -198,6 +284,22 @@
                                 <span class="badge bg-warning">Ya vence</span>
                             @else
                                 <span class="badge bg-success">Activo</span>
+                            @endif
+                        </td>
+                        <td onclick="event.stopPropagation();">
+                            @if ($diasRestantes <= 3)
+                                <label class="toggle-switch" title="Cambiar estado de cobro">
+                                    <input type="checkbox"
+                                           class="toggle-estado-cobro"
+                                           data-iddet="{{ $usuario->iddet }}"
+                                           {{ $estadoCobro === 'COBRADO' ? 'checked' : '' }}>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <small class="d-block mt-1 text-{{ $estadoCobro === 'COBRADO' ? 'success' : 'warning' }}">
+                                    {{ $estadoCobro }}
+                                </small>
+                            @else
+                                <span class="badge bg-secondary">N/A</span>
                             @endif
                         </td>
                         @if (Auth::user()->hasAnyPermission(['usuarios.change', 'ventas.renew', 'usuarios.destroy']))
@@ -221,9 +323,14 @@
                                 @endif
                                 @if ($diasRestantes <= 3)
                                     <button type="button" class="btn btn-rosa-3 btn-sm"
-                                        onclick="copiarMensaje('{{ $usuario->nombre_cliente }}', '{{ $usuario->fecha_vencimiento }}', '{{ $usuario->cuenta->usuariocue }}')"
+                                        onclick="copiarMensaje('{{ $usuario->cuenta->valor->servicio->nombreser ?? 'Servicio' }}', '{{ $usuario->cuenta->usuariocue }}', '{{ $usuario->fecha_vencimiento }}', '{{ $diasRestantes <= 0 ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo') }}')"
                                         title="Copiar mensaje">
                                         <i class="fas fa-comment-alt"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-info btn-sm"
+                                        onclick="event.stopPropagation(); copiarTelefono('{{ $usuario->cliente->telefonocli }}')"
+                                        title="Copiar teléfono">
+                                        <i class="fas fa-phone"></i>
                                     </button>
                                     @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                         <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -244,7 +351,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center">No hay usuarios activos disponibles.</td>
+                        <td colspan="10" class="text-center">No hay usuarios activos disponibles.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -442,12 +549,11 @@
         });
     </script>
     <script>
-        function copiarMensaje(nombre, fecha, cuenta) {
-            let hoy = new Date().toISOString().slice(0, 10);
-            let mensaje =
-                `Hola ${nombre}, su suscripción con usuario ${cuenta} se venc${fecha <= hoy ? 'ió' : 'e'} el ${fecha}. Por favor, contáctanos para renovar.`;
+        function copiarMensaje(servicio, cuenta, fecha, estado) {
+            let mensaje = `Hola, tu cuenta de *${servicio}* - *${cuenta}* vence el *${fecha}* y su estado es *${estado}*`; // resaltar en negrita a servicio, cuenta, fecha y estado
             navigator.clipboard.writeText(mensaje).then(() => {
                 const toast = document.getElementById('toast-mensaje');
+                toast.textContent = '✅ Mensaje copiado';
                 toast.style.display = 'block';
                 toast.style.opacity = 1;
 
@@ -455,9 +561,110 @@
                     toast.style.transition = 'opacity 0.5s ease';
                     toast.style.opacity = 0;
                     setTimeout(() => toast.style.display = 'none', 500);
-                }, 2000); // Mostrar por 2 segundos
+                }, 2000);
             });
         }
+
+        function copiarTelefono(telefono) {
+            navigator.clipboard.writeText(telefono).then(() => {
+                const toast = document.getElementById('toast-mensaje');
+                toast.textContent = '✅ Teléfono copiado';
+                toast.style.display = 'block';
+                toast.style.opacity = 1;
+
+                setTimeout(() => {
+                    toast.style.transition = 'opacity 0.5s ease';
+                    toast.style.opacity = 0;
+                    setTimeout(() => toast.style.display = 'none', 500);
+                }, 2000);
+            });
+        }
+
+        // ========================================================================
+        // FUNCIONALIDAD: CLICK EN FILA PARA COPIAR MENSAJE
+        // ========================================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manejar click en filas para copiar mensaje
+            document.addEventListener('click', function(e) {
+                const row = e.target.closest('tr.clickable-row');
+                if (row) {
+                    const servicio = row.dataset.servicio;
+                    const cuenta = row.dataset.cuenta;
+                    const fecha = row.dataset.fecha;
+                    const estado = row.dataset.estado;
+                    copiarMensaje(servicio, cuenta, fecha, estado);
+                }
+            });
+
+            // ========================================================================
+            // FUNCIONALIDAD: TOGGLE ESTADO DE COBRO CON AJAX
+            // ========================================================================
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('toggle-estado-cobro')) {
+                    const toggle = e.target;
+                    const iddet = toggle.dataset.iddet;
+                    const nuevoEstado = toggle.checked ? 'COBRADO' : 'PENDIENTE';
+                    const slider = toggle.nextElementSibling;
+
+                    // Buscar el elemento small que muestra el estado (puede estar dentro o fuera del label)
+                    const toggleLabel = toggle.closest('label');
+                    const labelEstado = toggleLabel.parentElement.querySelector('small');
+
+                    // Deshabilitar el toggle mientras se procesa
+                    toggle.disabled = true;
+                    slider.classList.add('disabled');
+
+                    // Hacer petición AJAX
+                    fetch(`/admin/usuarios/${iddet}/estado-cobro`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            estado: nuevoEstado
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Actualizar el label del estado si existe
+                            if (labelEstado) {
+                                labelEstado.textContent = nuevoEstado;
+                                labelEstado.className = `d-block mt-1 text-${nuevoEstado === 'COBRADO' ? 'success' : 'warning'}`;
+                            }
+
+                            // Mostrar toast de éxito
+                            const toast = document.getElementById('toast-mensaje');
+                            toast.textContent = `✅ Estado actualizado a ${nuevoEstado}`;
+                            toast.style.display = 'block';
+                            toast.style.opacity = 1;
+
+                            setTimeout(() => {
+                                toast.style.transition = 'opacity 0.5s ease';
+                                toast.style.opacity = 0;
+                                setTimeout(() => toast.style.display = 'none', 500);
+                            }, 2000);
+                        } else {
+                            // Revertir el toggle si hay error
+                            toggle.checked = !toggle.checked;
+                            alert('Error al actualizar el estado: ' + (data.message || 'Error desconocido'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Revertir el toggle si hay error
+                        toggle.checked = !toggle.checked;
+                        alert('Error al actualizar el estado. Por favor, intenta de nuevo.');
+                    })
+                    .finally(() => {
+                        // Re-habilitar el toggle
+                        toggle.disabled = false;
+                        slider.classList.remove('disabled');
+                    });
+                }
+            });
+        });
     </script>
 
     {{-- Enhanced Table v2 --}}

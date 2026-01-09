@@ -25,7 +25,10 @@ class UsuarioController extends Controller
         if (!Gate::allows('usuarios')) {
             abort(403, 'No tienes permiso para ver los usuarios.');
         }
-        $usuarios = ViewUsuarioActivo::orderBy('fecha_vencimiento')->orderBy('nombre_cliente')->get();
+        $usuarios = ViewUsuarioActivo::with(['cuenta.valor.servicio', 'cliente'])
+            ->orderBy('fecha_vencimiento')
+            ->orderBy('nombre_cliente')
+            ->get();
         $cuentas = Cuenta::where('activocue', true)->orderBy('idcue')->get();
         return view('inventory.usuarios.index', compact('usuarios', 'cuentas'));
     }
@@ -107,6 +110,39 @@ class UsuarioController extends Controller
             return redirect()->back()->with('success', $respuesta);
         }
     }
+    public function actualizarEstadoCobro(Request $request, $iddet)
+    {
+        try {
+            $request->validate([
+                'estado' => 'required|in:COBRADO,PENDIENTE'
+            ]);
+
+            $detalle = DetalleVenta::findOrFail($iddet);
+            $estadoAnterior = $detalle->estado;
+            $detalle->estado = $request->estado;
+            $detalle->save();
+
+            Historial::create([
+                'accion' => 'Actualización Estado de Cobro',
+                'descripcion' => 'Usuario ID: ' . $iddet . ' - Estado cambió de ' . $estadoAnterior . ' a ' . $request->estado,
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado correctamente',
+                'estado' => $detalle->estado
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function destroy($iddet)
     {
         if (!Gate::allows('usuarios.destroy')) {

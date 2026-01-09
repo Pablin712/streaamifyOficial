@@ -23,7 +23,8 @@ class DetalleVenta extends Model
         'descripciondet',
         'fechavendet',
         'montodet',
-        'activodet'
+        'activodet',
+        'estado',
     ];
     public function venta()
     {
