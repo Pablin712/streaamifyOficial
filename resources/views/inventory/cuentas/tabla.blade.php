@@ -104,10 +104,22 @@
                     $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                 @endphp
                 <tr>
-                    <td>{{ $cuenta->idcue }}</td>
+                    <td class="clickable-copy"
+                        onclick="copiarInfoCuenta('{{ $cuenta->valor->servicio->nombreser ?? 'Servicio' }}', '{{ $cuenta->usuariocue }}', '{{ $cuenta->contrasenacue }}')"
+                        title="Click para copiar información completa">
+                        {{ $cuenta->idcue }}
+                    </td>
                     <td>{{ $cuenta->valor->idser }}-{{ $cuenta->valor->proveedor->nombrepro }}</td>
-                    <td>{{ $cuenta->usuariocue }}</td>
-                    <td>{{ $cuenta->contrasenacue }}</td>
+                    <td class="clickable-copy"
+                        onclick="copiarTexto('{{ $cuenta->usuariocue }}', 'Usuario')"
+                        title="Click para copiar usuario">
+                        {{ $cuenta->usuariocue }}
+                    </td>
+                    <td class="clickable-copy"
+                        onclick="copiarTexto('{{ $cuenta->contrasenacue }}', 'Contraseña')"
+                        title="Click para copiar contraseña">
+                        {{ $cuenta->contrasenacue }}
+                    </td>
                     <td>{{ $cuenta->fechavencue }}</td>
                     <td>
                         @php

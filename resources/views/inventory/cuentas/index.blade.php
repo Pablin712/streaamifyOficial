@@ -148,6 +148,53 @@
             color: #dc3545;
         }
 
+        /* Columnas clickeables para copiar */
+        .clickable-copy {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .clickable-copy:hover {
+            background-color: rgba(13, 110, 253, 0.1);
+        }
+
+        /* Toast de notificación */
+        .toast-success, .toast-error {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-weight: 600;
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .toast-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .toast-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         .modal-body .fw-semibold {
             color: #495057;
         }
@@ -424,6 +471,11 @@
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
     @include('inventory.valores.modals.create')
+
+    {{-- Toast de notificación para copiar --}}
+    <div id="toast-copy" class="toast-success" style="display: none;">
+        ✅ Copiado
+    </div>
 @endsection
 @section('scripts')
 <!-- jQuery (requerido) -->
@@ -979,6 +1031,44 @@ async function submitCreateValor(event) {
         console.error('❌ Error en la petición:', error);
         showTemporaryAlert('Error al procesar la solicitud', 'danger');
     }
+}
+
+// 📋 Funciones para copiar al portapapeles
+function copiarTexto(texto, tipo) {
+    navigator.clipboard.writeText(texto).then(() => {
+        mostrarToast(`✅ ${tipo} copiado`);
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+        mostrarToast('❌ Error al copiar', 'error');
+    });
+}
+
+function copiarInfoCuenta(servicio, usuario, contrasena) {
+    const mensaje = `*${servicio}*\n${usuario}\n${contrasena}`;
+    navigator.clipboard.writeText(mensaje).then(() => {
+        mostrarToast('✅ Información de cuenta copiada');
+    }).catch(err => {
+        console.error('Error al copiar:', err);
+        mostrarToast('❌ Error al copiar', 'error');
+    });
+}
+
+function mostrarToast(mensaje, tipo = 'success') {
+    const toast = document.getElementById('toast-copy');
+    if (!toast) return;
+
+    toast.textContent = mensaje;
+    toast.className = tipo === 'error' ? 'toast-error' : 'toast-success';
+    toast.style.display = 'block';
+    toast.style.opacity = '1';
+
+    setTimeout(() => {
+        toast.style.transition = 'opacity 0.5s ease';
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 500);
+    }, 2000);
 }
 
 </script>
