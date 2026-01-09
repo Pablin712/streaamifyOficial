@@ -29,6 +29,7 @@ class CuentaService
                 })
                 ->where('activocue', true)
                 ->where('caidacue', false)
+                ->where('fechavencue', '>', now())
                 ->orderBy('fechavencue')
                 ->get();
             $espacios = 0;
@@ -81,7 +82,7 @@ class CuentaService
     {
         //no tiene filtro caidacue, contando usuarios activos
         //ver permiso de usuario si puede ver todas las cuentas o spotify
-        
+
         return Cuenta::with(['valor.servicio'])
             ->whereHas('valor.servicio', function ($query) use ($idser) {
                 $query->where('idser', $idser);
@@ -97,16 +98,16 @@ class CuentaService
         }
         // Primero, intenta encontrar un perfil con 0 usuarios activos
         $perfil = Perfil::where('idcue', $cuenta->idcue)
-            ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
-                    WHERE view_usuarios_activos.idcue = perfiles.idcue 
+            ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos
+                    WHERE view_usuarios_activos.idcue = perfiles.idcue
                     AND view_usuarios_activos.perfil = perfiles.numeroper) = 0')
             ->first();
 
         // Si no hay perfiles con 0 usuarios, intenta encontrar uno con solo 1 usuario activo
         if (!$perfil) {
             $perfil = Perfil::where('idcue', $cuenta->idcue)
-                ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos 
-                        WHERE view_usuarios_activos.idcue = perfiles.idcue 
+                ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos
+                        WHERE view_usuarios_activos.idcue = perfiles.idcue
                         AND view_usuarios_activos.perfil = perfiles.numeroper) = 1')
                 ->first();
         }
@@ -296,7 +297,8 @@ class CuentaService
     {
         return $cuentas->filter(function ($cuenta) {
             return !$cuenta->caidacue // No esté caída
-                && ($cuenta->valor->pantmaxval > $cuenta->usuarios_activos); // No esté colapsada
+                && ($cuenta->valor->pantmaxval > $cuenta->usuarios_activos) // Tenga espacio para más usuarios
+                && ($cuenta->fechavencue > now()); // No esté vencida
         });
     }
     public function calcularUsuariosPorPerfil($cuenta)
