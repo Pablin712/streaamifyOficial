@@ -614,8 +614,11 @@
                     toggle.disabled = true;
                     slider.classList.add('disabled');
 
+                    // Construir la URL con el ID dinámico
+                    const url = "{{ route('usuarios.actualizarEstadoCobro', ['id' => '__ID__']) }}".replace('__ID__', iddet);
+
                     // Hacer petición AJAX
-                    fetch(`/admin/usuarios/${iddet}/estado-cobro`, {
+                    fetch(url, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
