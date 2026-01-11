@@ -18,13 +18,11 @@ return new class extends Migration
             $table->enum('proceso', ['login', 'registro'])->nullable()->comment('Tipo de proceso en curso');
             $table->text('datos')->nullable()->comment('Datos recolectados durante el proceso: email, nombre, telefono, etc.');
             $table->tinyInteger('intentos')->unsigned()->default(0)->comment('Número de intentos fallidos de login');
-            $table->timestamp('last_activity')->nullable()->comment('Última actividad del usuario');
             $table->timestamps();
 
             // Índices para optimizar consultas
             $table->index('chat_id');
             $table->index('step');
-            $table->index('last_activity');
         });
     }
 

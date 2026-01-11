@@ -27,7 +27,6 @@ class TelegramAuthSession extends Model
         'proceso',
         'datos',
         'intentos',
-        'last_activity',
     ];
 
     /**
@@ -51,7 +50,6 @@ class TelegramAuthSession extends Model
                 'proceso' => null,
                 'datos' => [],
                 'intentos' => 0,
-                'last_activity' => now(),
             ]
         );
     }
