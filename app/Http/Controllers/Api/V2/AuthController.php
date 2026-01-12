@@ -130,7 +130,7 @@ class AuthController extends Controller
             $clienteExistente->update([
                 'nombrecli' => ucwords($request->name),
                 'email' => $request->email,
-                'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+                'password' => $request->password,
                 'referido_por' => $referidoPor,
             ]);
 
@@ -160,7 +160,7 @@ class AuthController extends Controller
         $cliente = Cliente::create([
             'nombrecli' => ucwords($request->name),
             'email' => $request->email,
-            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'password' => $request->password,
             'telefonocli' => $telefonoFormateado,
             'saldo' => 0,
             'referido_por' => $referidoPor,
