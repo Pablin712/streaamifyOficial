@@ -41,21 +41,33 @@ class AuthController extends Controller
                 'success' => false,
                 'valid' => false,
                 'message' => 'Usuario no encontrado'
-            ]);
+            ], 200); // Agregué el status code 200 para consistencia
         }
 
+        // Verificar la contraseña
         $valid = \Illuminate\Support\Facades\Hash::check($request->password, $cliente->password);
 
+        // ❌ PROBLEMA: Si la contraseña es incorrecta, NO deberías retornar success: true
+        if (!$valid) {
+            return response()->json([
+                'success' => false,
+                'valid' => false,
+                'message' => 'Contraseña incorrecta'
+            ], 200);
+        }
+
+        // ✅ Solo llega aquí si la contraseña es correcta
         return response()->json([
             'success' => true,
-            'valid' => $valid,
-            'cliente' => $valid ? [
+            'valid' => true,
+            'message' => 'Credenciales válidas',
+            'cliente' => [
                 'id' => $cliente->idcli,
                 'nombre' => $cliente->nombrecli,
                 'email' => $cliente->email,
                 'telefono' => $cliente->telefonocli,
-            ] : null
-        ]);
+            ]
+        ], 200);
     }
 
     public function crearCliente(Request $request)
