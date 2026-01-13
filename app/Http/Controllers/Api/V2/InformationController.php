@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V2;
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use App\Models\Servicio;
+use App\Models\Banco;
 use Illuminate\Http\Request;
 
 class InformationController extends Controller
@@ -59,6 +60,59 @@ class InformationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al generar el mensaje de precios',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtiene información de todos los métodos de pago (bancos)
+     */
+    public function getMetodosPago()
+    {
+        try {
+            $mensaje = $this->generarMensajeMetodosPagoGeneral();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'mensaje' => $mensaje
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el mensaje de métodos de pago',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtiene información de un banco específico
+     */
+    public function getBanco($id)
+    {
+        try {
+            $mensaje = $this->generarMensajeBancoEspecifico($id);
+
+            if ($mensaje === "Método de pago no encontrado") {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Banco no encontrado'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'mensaje' => $mensaje
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la información del banco',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -196,5 +250,66 @@ class InformationController extends Controller
         }
 
         return $serviciosConfig;
+    }
+
+    /**
+     * Genera mensaje general con todos los métodos de pago
+     */
+    protected function generarMensajeMetodosPagoGeneral()
+    {
+        $bancos = Banco::orderBy('nombreban')->get();
+
+        if ($bancos->isEmpty()) {
+            return "No hay métodos de pago disponibles";
+        }
+
+        // Usar el primer banco para obtener los datos del propietario
+        $primerBanco = $bancos->first();
+
+        $mensaje = "*Para realizar pagos* 💰\n\n";
+        $mensaje .= "*Owner:* {$primerBanco->propietarioban}\n";
+        $mensaje .= "*CI:* {$primerBanco->cedulaban}\n";
+
+        // Email fijo (no está en la tabla bancos)
+        $email = "pablojimenezelizalde@gmail.com";
+        $mensaje .= "*Mail:* {$email}\n\n";
+
+        foreach ($bancos as $banco) {
+            $tipoCuenta = $banco->tipoban ?? 'Cuenta';
+            $mensaje .= "*{$tipoCuenta} {$banco->nombreban}*\n";
+            $mensaje .= "{$banco->numeroban}\n\n";
+        }
+
+        return $mensaje;
+    }
+
+    /**
+     * Genera mensaje de un banco específico
+     */
+    protected function generarMensajeBancoEspecifico($bancoId)
+    {
+        $banco = Banco::find($bancoId);
+
+        if (!$banco) {
+            return "Método de pago no encontrado";
+        }
+
+        $tipoCuenta = $banco->tipoban ?? 'Cuenta';
+
+        // Email fijo (no está en la tabla bancos)
+        $email = "pablojimenezelizalde@gmail.com";
+
+        $mensaje = "*Información de Pago* 💰\n\n";
+        $mensaje .= "*Owner:* {$banco->propietarioban}\n";
+        $mensaje .= "*CI:* {$banco->cedulaban}\n";
+        $mensaje .= "*Mail:* {$email}\n\n";
+        $mensaje .= "*{$tipoCuenta} {$banco->nombreban}*\n";
+        $mensaje .= "{$banco->numeroban}\n";
+
+        if ($banco->detalleban) {
+            $mensaje .= "\n*Detalles:* {$banco->detalleban}\n";
+        }
+
+        return $mensaje;
     }
 }
