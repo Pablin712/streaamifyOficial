@@ -131,7 +131,7 @@ Route::prefix('v2')->group(function () {
     Route::controller(InformationController::class)->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios');
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago');
-        Route::get('/banco/{id}', 'getBanco')->name('api.v2.banco');
+        Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco');
     });
 });
 

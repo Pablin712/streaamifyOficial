@@ -286,9 +286,10 @@ class InformationController extends Controller
     /**
      * Genera mensaje de un banco específico
      */
-    protected function generarMensajeBancoEspecifico($bancoId)
+    protected function generarMensajeBancoEspecifico($nombrebanco)
     {
-        $banco = Banco::find($bancoId);
+        //busque like e ignorecase
+        $banco = Banco::where('nombreban', 'LIKE', "%{$nombrebanco}%")->first();
 
         if (!$banco) {
             return "Método de pago no encontrado";
