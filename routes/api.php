@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\VentaApiController;
 use App\Http\Controllers\Api\V1\QuickResponseController;
 use App\Http\Controllers\Api\V1\AIAssistantController;
 use App\Http\Controllers\Api\V2\AuthController;
+use App\Http\Controllers\Api\V2\InformationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,6 +125,11 @@ Route::prefix('v2')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('/auth/create-customer', 'crearCliente')->name('api.auth.create-customer');
         Route::post('/auth/validate-credentials', 'validarCredenciales')->name('api.auth.validate');
+    });
+
+    // Información y Precios - Público
+    Route::controller(InformationController::class)->group(function () {
+        Route::get('/precios', 'getPrecios')->name('api.v2.precios');
     });
 });
 
