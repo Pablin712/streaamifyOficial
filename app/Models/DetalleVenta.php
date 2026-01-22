@@ -23,8 +23,8 @@ class DetalleVenta extends Model
         'descripciondet',
         'fechavendet',
         'montodet',
-        'activodet',
-        'estado',
+        'activodet', // SÍ, NO
+        'estado', // PENDIENTE, COBRADO
     ];
     public function venta()
     {
@@ -33,5 +33,18 @@ class DetalleVenta extends Model
     public function perfil()
     {
         return $this->belongsTo(Perfil::class, 'idper', 'idper');
+    }
+
+    // Relación directa a servicio a través de perfil -> cuenta -> valor
+    public function servicio()
+    {
+        return $this->hasOneThrough(
+            Servicio::class,
+            Perfil::class,
+            'idper', // FK en perfiles
+            'idser', // FK en servicios
+            'idper', // Local key en detalles_venta
+            'idser'  // Local key en perfiles (a través de cuenta -> valor)
+        );
     }
 }

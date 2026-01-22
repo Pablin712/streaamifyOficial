@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\QuickResponseController;
 use App\Http\Controllers\Api\V1\AIAssistantController;
 use App\Http\Controllers\Api\V2\AuthController;
 use App\Http\Controllers\Api\V2\InformationController;
+use App\Http\Controllers\Api\V2\ContadorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -132,6 +133,28 @@ Route::prefix('v2')->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios');
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago');
         Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco');
+    });
+
+    // ==========================================
+    // RUTAS PARA EMPLEADOS - ROL CONTADOR
+    // ==========================================
+    Route::controller(ContadorController::class)->prefix('accountant')->group(function () {
+        // Ventas y Finanzas
+        Route::get('/ventas/resumen', 'resumenVentas')->name('api.accountant.ventas.resumen');
+        Route::get('/ventas/facturas-pendientes', 'facturasPendientes')->name('api.accountant.ventas.facturas-pendientes');
+        Route::get('/ventas/ingresos-por-servicio', 'ingresosPorServicio')->name('api.accountant.ventas.ingresos-por-servicio');
+        Route::get('/ventas/proyeccion', 'proyeccionIngresos')->name('api.accountant.ventas.proyeccion');
+
+        // Clientes y Análisis
+        Route::get('/clientes/morosos', 'clientesMorosos')->name('api.accountant.clientes.morosos');
+        Route::get('/clientes/estadisticas', 'estadisticasClientes')->name('api.accountant.clientes.estadisticas');
+
+        // Reportes
+        Route::get('/reportes/general', 'reporteGeneral')->name('api.accountant.reportes.general');
+        Route::post('/reportes/exportar', 'exportarReporte')->name('api.accountant.reportes.exportar');
+
+        // Métodos de Pago
+        Route::get('/metodos-pago/estadisticas', 'estadisticasMetodosPago')->name('api.accountant.metodos-pago.estadisticas');
     });
 });
 
