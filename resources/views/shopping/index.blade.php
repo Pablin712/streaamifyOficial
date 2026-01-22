@@ -1101,7 +1101,7 @@
             <span>${item.nombre} (x${item.cantidad})</span>
             <span class="badge bg-primary rounded-pill">$${(item.precio * item.cantidad).toFixed(2)}</span>
             <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑</button>
-        `;
+            `;
                 cartItems.appendChild(listItem);
             });
 
@@ -1116,11 +1116,11 @@
 
             // Mostrar total y descuento si aplica
             let resumenHTML = `
-        <li class="list-group-item d-flex justify-content-between">
-            <strong>Subtotal:</strong>
-            <span>$${subtotal.toFixed(2)}</span>
-        </li>
-    `;
+            <li class="list-group-item d-flex justify-content-between">
+                <strong>Subtotal:</strong>
+                <span>$${subtotal.toFixed(2)}</span>
+            </li>
+            `;
 
             if (descuento > 0) {
                 resumenHTML += `
@@ -1128,15 +1128,15 @@
                 <strong>Descuento:</strong>
                 <span>-$${descuento.toFixed(2)}</span>
             </li>
-        `;
+            `;
             }
 
             resumenHTML += `
-        <li class="list-group-item d-flex justify-content-between text-success">
-            <strong>Total a pagar:</strong>
-            <span>$${total.toFixed(2)}</span>
-        </li>
-    `;
+                <li class="list-group-item d-flex justify-content-between text-success">
+                    <strong>Total a pagar:</strong>
+                    <span>$${total.toFixed(2)}</span>
+                </li>
+            `;
 
             cartItems.innerHTML += resumenHTML;
             cartCount.textContent = totalItems;

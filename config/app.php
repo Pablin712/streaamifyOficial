@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Asset URL
+    |--------------------------------------------------------------------------
+    |
+    | The asset URL is used to generate URLs for your assets. This is useful
+    | if you are hosting your assets on a separate server or CDN. If not set,
+    | the APP_URL will be used to generate asset URLs.
+    |
+    */
+
+    'asset_url' => env('ASSET_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

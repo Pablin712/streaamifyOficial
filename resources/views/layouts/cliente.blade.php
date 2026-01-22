@@ -236,7 +236,7 @@
     <!-- Chat Widget JS (module) -->
     <script type="module" src="{{ asset('build/assets/chat-widget-D0qbCfCX.js') }}"></script>
 
-    {{-- comentado por n8n--}}
+    {{-- comentado por n8n
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
     <script type="module">
         import {
@@ -246,7 +246,7 @@
         createChat({
             webhookUrl: 'https://autobot.aaronsoft.es/webhook/0d88cdca-bd3d-4cc2-a36b-672c5ee16b0b/chat'
         });
-    </script>
+    </script>--}}
 
 </body>
 
