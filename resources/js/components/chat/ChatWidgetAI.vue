@@ -57,7 +57,7 @@ export default {
 
     // Si no hay mensajes, agregar bienvenida
     if (this.messages.length === 0) {
-      this.addBotMessage('¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?');
+      this.addBotMessage('¡Hola pendejo! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?');
     }
   },
   methods: {

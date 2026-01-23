@@ -203,7 +203,7 @@ export default {
 }
 
 .chat-header {
-  background: linear-gradient(135deg, #c92a2a 0%, #2f9e44 100%);
+  background: linear-gradient(135deg, #7950f2 0%, #5f3dc4 100%);
   color: white;
   padding: 16px;
   display: flex;
@@ -228,7 +228,7 @@ export default {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2f9e44;
+  background: #51cf66;
 }
 
 .status-dot.offline {
@@ -252,11 +252,11 @@ export default {
 }
 
 .anonymous-warning {
-  background: #fff5f5;
-  border-bottom: 2px solid #c92a2a;
+  background: #f3f0ff;
+  border-bottom: 2px solid #7950f2;
   padding: 12px;
   font-size: 13px;
-  color: #7f1d1d;
+  color: #5f3dc4;
 }
 
 .warning-content {
@@ -320,7 +320,7 @@ export default {
 }
 
 .message-sent .message-content {
-  background: #c92a2a;
+  background: #7950f2;
   color: white;
   border-radius: 12px 12px 0 12px;
 }
@@ -409,7 +409,7 @@ export default {
 }
 
 .message-input:focus {
-  border-color: #c92a2a;
+  border-color: #7950f2;
 }
 
 .message-input:disabled {
@@ -421,7 +421,7 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #c92a2a;
+  background: #7950f2;
   border: none;
   color: white;
   cursor: pointer;
@@ -438,7 +438,7 @@ export default {
 }
 
 .send-btn:not(:disabled):hover {
-  background: #a61e1e;
+  background: #5f3dc4;
 }
 
 .spinner {
