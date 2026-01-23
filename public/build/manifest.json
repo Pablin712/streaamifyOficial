@@ -1,32 +1,50 @@
 {
-  "_vue.esm-bundler-B3jZp_Ae.js": {
-    "file": "assets/vue.esm-bundler-B3jZp_Ae.js",
+  "__plugin-vue_export-helper-DlAUqK2U.js": {
+    "file": "assets/_plugin-vue_export-helper-DlAUqK2U.js",
+    "name": "_plugin-vue_export-helper"
+  },
+  "_vue.esm-bundler-Bvy_hQaX.js": {
+    "file": "assets/vue.esm-bundler-Bvy_hQaX.js",
     "name": "vue.esm-bundler"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BWfsH-Zy.css",
+    "file": "assets/app-DBDZSXe9.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BmnYE4Bp.js",
+    "file": "assets/app-BT_kUz3A.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_vue.esm-bundler-B3jZp_Ae.js"
+      "_vue.esm-bundler-Bvy_hQaX.js"
+    ]
+  },
+  "resources/js/chat-widget-ai.js": {
+    "file": "assets/chat-widget-ai-ROQKNiF5.js",
+    "name": "chat-widget-ai",
+    "src": "resources/js/chat-widget-ai.js",
+    "isEntry": true,
+    "imports": [
+      "_vue.esm-bundler-Bvy_hQaX.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/chat-widget-ai-BkEE2XxP.css"
     ]
   },
   "resources/js/chat-widget.js": {
-    "file": "assets/chat-widget-D0qbCfCX.js",
+    "file": "assets/chat-widget-DMIsQKqg.js",
     "name": "chat-widget",
     "src": "resources/js/chat-widget.js",
     "isEntry": true,
     "imports": [
-      "_vue.esm-bundler-B3jZp_Ae.js"
+      "_vue.esm-bundler-Bvy_hQaX.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/chat-widget-B4bUEDhZ.css"
+      "assets/chat-widget-BBk_e4ez.css"
     ]
   }
 }

@@ -8,7 +8,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'resources/js/chat-widget.js'
+                'resources/js/chat-widget.js',
+                'resources/js/chat-widget-ai.js'
             ],
             refresh: true,
         }),

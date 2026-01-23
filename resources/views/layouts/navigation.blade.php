@@ -136,6 +136,36 @@
 
     {{-- Livewire Scripts (REQUERIDO para notificador global y otros componentes) --}}
     @livewireScripts
+
+    {{-- Widget de Chat con IA (solo para empleados) --}}
+    @if(Auth::check())
+        <div id="chat-ai-widget-mount"></div>
+
+        <script>
+            // ID del empleado autenticado (para tracking en n8n)
+            window.empleadoId = {{ Auth::id() }};
+
+            // Configuración del chat con IA para empleados
+            window.chatAIConfig = {
+                apiUrl: "{{ route('api.v2.chat.ai.send') }}",
+                csrfToken: "{{ csrf_token() }}"
+            };
+
+            // Inicializar el widget cuando el DOM esté listo
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(function() {
+                    if (typeof window.initChatWidgetAI === 'function') {
+                        window.initChatWidgetAI(window.chatAIConfig);
+                    } else {
+                        console.error('Chat AI widget no disponible');
+                    }
+                }, 300);
+            });
+        </script>
+
+        <!-- Chat Widget AI JS (module) -->
+        @vite(['resources/js/chat-widget-ai.js'])
+    @endif
 </body>
 
 </html>

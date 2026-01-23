@@ -156,6 +156,9 @@ Route::prefix('v2')->group(function () {
         // Métodos de Pago
         Route::get('/metodos-pago/estadisticas', 'estadisticasMetodosPago')->name('api.accountant.metodos-pago.estadisticas');
     });
+
+    // Chat AI - Para empleados (proxy a n8n) - Necesita middleware web para sesiones
+    Route::middleware('web')->post('/chat/ai/send', [\App\Http\Controllers\Api\ChatAIController::class, 'sendMessage'])->name('api.v2.chat.ai.send');
 });
 
 //Route::middleware('auth:api')->post('ventas', [VentaController::class, 'storeApi']);
