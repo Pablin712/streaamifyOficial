@@ -7,6 +7,7 @@ use App\Models\Conversacion;
 use App\Models\Mensaje;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class PanelConversaciones extends Component
 {
@@ -24,7 +25,7 @@ class PanelConversaciones extends Component
     public function mount()
     {
         // Verificar permiso
-        if (!auth()->user() || !auth()->user()->can('chat.ver')) {
+        if (Gate::denies('chat.ver')) {
             abort(403, 'No tienes permiso para acceder al chat');
         }
     }
@@ -72,6 +73,7 @@ class PanelConversaciones extends Component
         $this->vistaMobile = 'chat';
 
         $this->dispatch('mensajesActualizados');
+        $this->dispatch('mensaje-enviado');
     }
 
     public function volverALista()
@@ -117,7 +119,7 @@ class PanelConversaciones extends Component
             return;
         }
 
-        if (!auth()->user()->can('chat.responder')) {
+        if (!Gate::allows('chat.responder')) {
             $this->addError('mensaje', 'No tienes permiso para responder');
             return;
         }
@@ -125,33 +127,37 @@ class PanelConversaciones extends Component
         $mensaje = Mensaje::create([
             'idconv' => $this->conversacionActiva->idconv,
             'tipo_remitente' => 'empleado',
-            'idemp' => auth()->id(),
+            'idemp' => Auth::id(),
             'contenido' => $this->nuevoMensaje,
             'tipo_contenido' => 'texto',
         ]);
 
         // Actualizar estado de conversación
-        $this->conversacionActiva->cambiarEstado('en_atencion', auth()->id());
+        $this->conversacionActiva->cambiarEstado('en_atencion', Auth::id());
 
         $this->mensajes[] = $mensaje->load('empleado')->toArray();
-        $this->nuevoMensaje = '';
+
+        // Limpiar el input
+        $this->reset('nuevoMensaje');
+
         $this->dispatch('mensajesActualizados');
+        $this->dispatch('mensaje-enviado');
     }
 
     public function cerrarConversacion()
     {
-        if (!auth()->user()->can('chat.cerrar')) {
+        if (Gate::denies('chat.cerrar')) {
             $this->addError('mensaje', 'No tienes permiso para cerrar conversaciones');
             return;
         }
 
-        $this->conversacionActiva->cambiarEstado('cerrada', auth()->id());
+        $this->conversacionActiva->cambiarEstado('cerrada', Auth::id());
 
         // Mensaje del sistema
         Mensaje::create([
             'idconv' => $this->conversacionActiva->idconv,
             'tipo_remitente' => 'sistema',
-            'contenido' => 'Conversación cerrada por ' . auth()->user()->nombreemp,
+            'contenido' => 'Conversación cerrada por ' . Auth::user()->nombreemp,
             'tipo_contenido' => 'sistema',
         ]);
 

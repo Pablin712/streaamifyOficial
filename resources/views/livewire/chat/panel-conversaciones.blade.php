@@ -303,5 +303,16 @@
             console.log('Error al generar sonido:', err);
         }
     }
+
+    // Limpiar input después de enviar mensaje
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('mensaje-enviado', () => {
+            const input = document.querySelector('.chat-input-field');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        });
+    });
 </script>
 </div>
