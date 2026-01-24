@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\AIAssistantController;
 use App\Http\Controllers\Api\V2\AuthController;
 use App\Http\Controllers\Api\V2\InformationController;
 use App\Http\Controllers\Api\V2\ContadorController;
+use App\Http\Controllers\Api\V2\TecnicoCuentasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -155,6 +156,26 @@ Route::prefix('v2')->group(function () {
 
         // Métodos de Pago
         Route::get('/metodos-pago/estadisticas', 'estadisticasMetodosPago')->name('api.accountant.metodos-pago.estadisticas');
+    });
+
+    // ==========================================
+    // RUTAS PARA AGENTE IA - TÉCNICO DE CUENTAS
+    // ==========================================
+    Route::controller(TecnicoCuentasController::class)->prefix('tech-accounts')->group(function () {
+        // Resumen y Estado de Cuentas
+        Route::get('/resumen', 'resumenGeneral')->name('api.tech-accounts.resumen');
+        Route::get('/por-servicio', 'cuentasPorServicio')->name('api.tech-accounts.por-servicio');
+        Route::get('/estado', 'cuentasPorEstado')->name('api.tech-accounts.estado');
+        Route::get('/cuenta/{id}', 'detalleCuenta')->name('api.tech-accounts.detalle');
+
+        // Estadísticas y Análisis
+        Route::get('/estadisticas-uso', 'estadisticasUso')->name('api.tech-accounts.estadisticas-uso');
+        Route::get('/mas-vendidos', 'serviciosMasVendidos')->name('api.tech-accounts.mas-vendidos');
+        Route::get('/promedio-clientes', 'promedioClientesPorCuenta')->name('api.tech-accounts.promedio-clientes');
+
+        // Análisis Financiero
+        Route::get('/analisis-financiero', 'analisisFinanciero')->name('api.tech-accounts.analisis-financiero');
+        Route::get('/costos-servicio', 'costosPorServicio')->name('api.tech-accounts.costos-servicio');
     });
 
     // Chat AI - Para empleados (proxy a n8n) - Necesita middleware web para sesiones
