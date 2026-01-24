@@ -238,7 +238,8 @@
                                             {{ json_encode($perfil->cuenta->contrasenacue) }},
                                             {{ json_encode($perfil->numeroper) }},
                                             {{ json_encode($perfil->pinper) }},
-                                            {{ json_encode($perfil->cuenta->valor->bot ?? '') }}
+                                            {{ json_encode($perfil->cuenta->valor->bot ?? '') }},
+                                            {{ json_encode($perfil->cuenta->valor->idser ?? '') }}
                                         )"
                                     >
                                         <i class="fas fa-eye"></i>
@@ -423,20 +424,55 @@
         }
 
         // Función para copiar mensaje
-        function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot) {
-            var servicio = idcue.replace(/[^a-zA-Z]/g, '');
-            var message = "*" + servicio + "*\n";
-            message += "Usuario: " + usuariocue + "\n";
-            message += "Clave: " + contrasenacue + "\n";
-            message += "PIN de perfil Nro " + numeroper + ": " + pinper + "\n";
-            message += "*Prohibido:* Modificar perfiles o contraseñas.\n";
+        function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot, servicio) {
+            var message = "";
 
-            // Verificar si el bot no está vacío
-            if (bot && bot.trim() !== "") {
-                message += "\n\n*Nota importante:*\n";
-                message += "Te daré acceso al bot de códigos. Si en algún momento se te solicita un código de acceso (Hogar), puedes obtenerlo ingresando al siguiente enlace:\n";
-                message += bot + "\n";
-                message += "¡Gracias por tu confianza!";
+            // Verificar si es Spotify
+            if (servicio === 'SPOTIFY') {
+                // Mensaje especial para Spotify
+                message = "🎵 *SPOTIFY PREMIUM* 🎵\n\n";
+
+                // Si es perfil 1 (owner)
+                if (numeroper === 1) {
+                    message += "👤 *Usuario:* " + usuariocue + "\n";
+                    message += "🔑 *Contraseña:* " + contrasenacue + "\n";
+                    message += "📍 *Perfil:* Owner (Administrador)\n";
+                } else {
+                    // Perfiles invitados (2-6)
+                    // El pinper tiene formato "usuario|contraseña"
+                    if (pinper && pinper.includes('|')) {
+                        var credenciales = pinper.split('|');
+                        message += "👤 *Usuario:* " + credenciales[0] + "\n";
+                        message += "🔑 *Contraseña:* " + credenciales[1] + "\n";
+                        message += "📍 *Perfil:* Invitado #" + numeroper + "\n";
+                    } else {
+                        // Si no está configurado el invitado
+                        message += "⚠️ *Perfil invitado no configurado*\n";
+                        message += "Usuario: " + usuariocue + "\n";
+                        message += "Contraseña: " + contrasenacue + "\n";
+                        message += "Perfil #" + numeroper + "\n";
+                    }
+                }
+
+                message += "\n*Prohibido:* Modificar perfil o contraseña.\n";
+                message += "¡Gracias por tu confianza! 🎶";
+
+            } else {
+                // Mensaje estándar para otros servicios
+                var servicioNombre = idcue.replace(/[^a-zA-Z]/g, '');
+                message = "*" + servicioNombre + "*\n";
+                message += "Usuario: " + usuariocue + "\n";
+                message += "Clave: " + contrasenacue + "\n";
+                message += "PIN de perfil Nro " + numeroper + ": " + pinper + "\n";
+                message += "*Prohibido:* Modificar perfiles o contraseñas.\n";
+
+                // Verificar si el bot no está vacío
+                if (bot && bot.trim() !== "") {
+                    message += "\n\n*Nota importante:*\n";
+                    message += "Te daré acceso al bot de códigos. Si en algún momento se te solicita un código de acceso (Hogar), puedes obtenerlo ingresando al siguiente enlace:\n";
+                    message += bot + "\n";
+                    message += "¡Gracias por tu confianza!";
+                }
             }
 
             var tempTextArea = document.createElement("textarea");

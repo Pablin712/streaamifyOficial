@@ -10,27 +10,41 @@
         <div class="modal-body">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="idcue" class="form-label fw-semibold">
-                        <i class="fas fa-id-card text-primary me-1"></i>ID de Cuenta *
+                    <label for="tipo_cuenta" class="form-label fw-semibold">
+                        <i class="fas fa-layer-group text-primary me-1"></i>Tipo de Cuenta *
                     </label>
-                    <input type="text" name="idcue" id="idcue" class="form-control" maxlength="20"
-                        placeholder="Ej: NET001" required style="text-transform: uppercase;">
-                    <small class="text-muted">Máximo 20 caracteres (se convertirá a mayúsculas)</small>
+                    <select name="tipo_cuenta" id="tipo_cuenta" class="form-select" required>
+                        <option value="">Seleccione tipo...</option>
+                        <option value="completa" selected>Completa (Ej: NETFLIX-1)</option>
+                        <option value="individual">Individual (Ej: IND.NETFLIX-1)</option>
+                    </select>
+                    <small class="text-muted">El ID se generará automáticamente</small>
                 </div>
 
                 <div class="col-md-6 mb-3">
                     <label for="idval" class="form-label fw-semibold">
-                        <i class="fas fa-layer-group text-primary me-1"></i>Servicio/Valor *
+                        <i class="fas fa-cube text-primary me-1"></i>Servicio/Valor *
                     </label>
                     <select name="idval" id="idval" class="form-select searchable-select" required
                             data-placeholder="Seleccione un valor...">
                         <option value="">Seleccione un valor...</option>
                         @foreach ($valores ?? [] as $valor)
-                            <option value="{{ $valor->idval }}">
+                            <option value="{{ $valor->idval }}" data-servicio="{{ $valor->idser }}">
                                 {{ $valor->idser }} - {{ $valor->proveedor->nombrepro }} ({{ $valor->mesesval }}m)
                             </option>
                         @endforeach
                     </select>
+                </div>
+            </div>
+
+            <!-- Previsualización del ID que se generará -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="alert alert-info py-2">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>ID a generar:</strong>
+                        <span id="preview_idcue" class="fw-bold">Seleccione servicio y tipo</span>
+                    </div>
                 </div>
             </div>
 
@@ -190,6 +204,40 @@ document.addEventListener('DOMContentLoaded', function() {
         sePagoCheckboxCreate.addEventListener('change', toggleBancoFieldCreate);
         // Ejecutar al cargar para estado inicial
         toggleBancoFieldCreate();
+    }
+
+    // Previsualización del ID de cuenta
+    const tipoCuentaSelect = document.getElementById('tipo_cuenta');
+    const idvalSelect = document.getElementById('idval');
+    const previewElement = document.getElementById('preview_idcue');
+
+    function actualizarPreview() {
+        const tipoCuenta = tipoCuentaSelect?.value;
+        const idvalOption = idvalSelect?.options[idvalSelect.selectedIndex];
+        const servicio = idvalOption?.getAttribute('data-servicio');
+
+        if (!tipoCuenta || !servicio) {
+            if (previewElement) {
+                previewElement.textContent = 'Seleccione servicio y tipo';
+                previewElement.style.color = '#6c757d';
+            }
+            return;
+        }
+
+        const prefijo = tipoCuenta === 'individual' ? 'IND.' : '';
+        const preview = `${prefijo}${servicio}-[AUTO]`;
+
+        if (previewElement) {
+            previewElement.textContent = preview;
+            previewElement.style.color = '#0d6efd';
+        }
+    }
+
+    if (tipoCuentaSelect) {
+        tipoCuentaSelect.addEventListener('change', actualizarPreview);
+    }
+    if (idvalSelect) {
+        idvalSelect.addEventListener('change', actualizarPreview);
     }
 });
 

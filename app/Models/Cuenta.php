@@ -24,7 +24,8 @@ class Cuenta extends Model
         'usuariocue',
         'contrasenacue',
         'caidacue',
-        'activocue'
+        'activocue',
+        'tipo_cuenta' // 'completa' o 'individual'
     ];
     public function valor()
     {

@@ -21,30 +21,32 @@ class DatabaseSeeder extends Seeder
             CategoriaSeeder::class,
             BancosSeeder::class,
             EstadoRecargaSeeder::class,
-            
+
             // Sistema de roles y permisos
             RoleSeeder::class,
-            
+
             // Usuarios del sistema
             EmpleadoSeeder::class,
             ClienteSeeder::class,
-            
+
             // Datos dependientes
             ValorSeeder::class,
             CuentaSeeder::class,
             ProductoSeeder::class,
-            
+
             // Transacciones y operaciones
             GastoSeeder::class,
             ContabilidadSeeder::class,
             VentaSeeder::class, // ✅ Arreglado - ahora crea 150 ventas con 1-4 detalles
             RecargaSeeder::class,
             PedidoSeeder::class,
-            
+
             // Gestión y estadísticas
             TareaSeeder::class,
             //DailyStatisticSeeder::class,
             MailSeeder::class,
+            ChatPermisosSeeder::class,
+            BancosPermisosSeeder::class,
         ]);
     }
 }

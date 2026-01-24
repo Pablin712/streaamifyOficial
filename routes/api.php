@@ -176,6 +176,14 @@ Route::prefix('v2')->group(function () {
         // Análisis Financiero
         Route::get('/analisis-financiero', 'analisisFinanciero')->name('api.tech-accounts.analisis-financiero');
         Route::get('/costos-servicio', 'costosPorServicio')->name('api.tech-accounts.costos-servicio');
+
+        // ⚡ ACCIONES AUTOMÁTICAS (POST)
+        Route::prefix('acciones')->group(function () {
+            Route::get('/usuarios-por-mover', 'usuariosPorMover')->name('api.tech-accounts.acciones.usuarios-por-mover');
+            Route::post('/mover-servicio-a-mesa', 'moverServicioAMesa')->name('api.tech-accounts.acciones.mover-servicio-a-mesa');
+            Route::post('/desactivar-usuarios', 'desactivarUsuariosMasivo')->name('api.tech-accounts.acciones.desactivar-usuarios');
+            Route::post('/limpiar-cuentas', 'limpiarCuentas')->name('api.tech-accounts.acciones.limpiar-cuentas');
+        });
     });
 
     // Chat AI - Para empleados (proxy a n8n) - Necesita middleware web para sesiones

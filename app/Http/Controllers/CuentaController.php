@@ -122,15 +122,19 @@ class CuentaController extends Controller
         }
 
         try {
-            // Convertir a mayúsculas
-            $request->merge([
-                'idcue' => strtoupper($request->idcue)
-            ]);
-
-            Log::info('ID cuenta (mayúsculas): ' . $request->idcue);
+            // Convertir a mayúsculas solo si se proporciona idcue manualmente
+            if ($request->filled('idcue')) {
+                $request->merge([
+                    'idcue' => strtoupper($request->idcue)
+                ]);
+                Log::info('ID cuenta manual (mayúsculas): ' . $request->idcue);
+            } else {
+                Log::info('ID cuenta será generado automáticamente por el trigger');
+            }
 
             $validated = $request->validate([
-                'idcue' => 'required|string|max:20|unique:cuentas,idcue',
+                'idcue' => 'nullable|string|max:20|unique:cuentas,idcue',
+                'tipo_cuenta' => 'required|in:completa,individual',
                 'idval' => 'required|exists:valores,idval',
                 'fechavencue' => 'required|date',
                 'usuariocue' => 'required|string|max:50|unique:cuentas,usuariocue',
