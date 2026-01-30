@@ -209,6 +209,12 @@ class EmpleadoController extends Controller
     public function update(Request $request, $id)
     {
         if (!Gate::allows('empleados.update') && Auth::user()->idemp != $id) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permisos para realizar esta acción.'
+                ], 403);
+            }
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.');
         }
 
@@ -220,6 +226,7 @@ class EmpleadoController extends Controller
             'email' => 'nullable|email|max:50',
             'telefonoemp' => 'nullable|string|max:15',
             'foto_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'passwordemp' => 'nullable|string|min:4',
         ];
 
         $request->validate($rules);
@@ -228,6 +235,11 @@ class EmpleadoController extends Controller
         $empleado->usuarioemp = $request->usuarioemp;
         $empleado->email = $request->email;
         $empleado->telefonoemp = $request->telefonoemp;
+
+        // Actualizar contraseña solo si se proporciona
+        if ($request->filled('passwordemp')) {
+            $empleado->passwordemp = $request->passwordemp;
+        }
 
         // Manejar subida de foto
         if ($request->hasFile('foto_url')) {
@@ -249,6 +261,15 @@ class EmpleadoController extends Controller
         ]);
 
         $empleado->save();
+
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Perfil actualizado exitosamente',
+                'empleado' => $empleado
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Perfil actualizado exitosamente');
     }
@@ -295,6 +316,12 @@ class EmpleadoController extends Controller
     {
         // Solo el propio usuario o admin puede cambiar la contraseña
         if (Auth::user()->idemp != $id && Auth::user()->idemp != 1) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permisos para realizar esta acción.'
+                ], 403);
+            }
             return redirect()->back()->with('error', 'No tienes permisos para realizar esta acción.');
         }
 
@@ -307,6 +334,12 @@ class EmpleadoController extends Controller
 
         // Verificar contraseña actual
         if ($empleado->passwordemp !== $request->current_password) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La contraseña actual es incorrecta.'
+                ], 422);
+            }
             return redirect()->back()->with('error', 'La contraseña actual es incorrecta.');
         }
 
@@ -320,6 +353,14 @@ class EmpleadoController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
+
+        // Triple verificación AJAX
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Contraseña actualizada exitosamente'
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Contraseña actualizada exitosamente');
     }

@@ -69,20 +69,46 @@
     <!-- Alert Container para mensajes dinámicos -->
     <div id="alert-container"></div>
 
+    <!-- Mensajes de Sesión -->
     @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i><strong>Error de validación:</strong>
+            <ul class="mb-0 mt-2">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
+
+    <script>
+        // Auto-dismiss mensajes después de 5 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert:not(#alert-container .alert)');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+    </script>
+
     <h3>Información de Empleados</h3>
 @endsection
 
@@ -263,6 +289,9 @@
             const idemp = document.getElementById('edit_empleado_id').value;
             const formData = new FormData(event.target);
 
+            // Agregar el método PUT para Laravel
+            formData.append('_method', 'PUT');
+
             const url = '{{ route('empleados.update', '__ID__') }}'.replace('__ID__', idemp);
 
             try {
@@ -277,14 +306,20 @@
 
                 const data = await response.json();
 
-                if (data.success) {
+                if (response.ok && data.success) {
                     console.log('✅ Empleado actualizado:', data);
                     showAlert(data.message, 'success');
                     closeEditModal();
                     setTimeout(() => location.reload(), 1500);
                 } else {
                     console.error('❌ Error al actualizar:', data);
-                    showAlert(data.message || 'Error al actualizar el empleado', 'danger');
+                    // Manejar errores de validación
+                    if (data.errors) {
+                        const errorMessages = Object.values(data.errors).flat().join('<br>');
+                        showAlert(errorMessages, 'danger');
+                    } else {
+                        showAlert(data.message || 'Error al actualizar el empleado', 'danger');
+                    }
                 }
             } catch (error) {
                 console.error('❌ Error de red:', error);
