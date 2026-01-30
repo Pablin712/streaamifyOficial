@@ -1,7 +1,13 @@
 @foreach ($costos as $costo)
     <tr>
         <td>{{ $costo->idcos }}</td>
-        <td>{{ $costo->cuenta->idcue }} - {{ $costo->cuenta->usuariocue }}</td>
+        <td>
+            @if($costo->cuenta)
+                {{ $costo->cuenta->idcue }} - {{ $costo->cuenta->usuariocue }}
+            @else
+                <span class="text-muted">Sin cuenta</span>
+            @endif
+        </td>
         <td>{{ $costo->fechacos }}</td>
         <td>{{ $costo->descripcioncos }}</td>
         <td>${{ number_format($costo->montocos, 2) }}</td>
