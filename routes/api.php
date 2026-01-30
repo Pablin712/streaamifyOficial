@@ -13,6 +13,10 @@ use App\Http\Controllers\Api\V2\AuthController;
 use App\Http\Controllers\Api\V2\InformationController;
 use App\Http\Controllers\Api\V2\ContadorController;
 use App\Http\Controllers\Api\V2\TecnicoCuentasController;
+use App\Http\Controllers\Api\V2\TecnicoUsuariosController;
+use App\Http\Controllers\Api\V2\TecnicoVentasController;
+use App\Http\Controllers\Api\V2\TecnicoProductosController;
+use App\Http\Controllers\Api\V2\TecnicoConfigController;
 
 /*
 |--------------------------------------------------------------------------
@@ -167,6 +171,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/por-servicio', 'cuentasPorServicio')->name('api.tech-accounts.por-servicio');
         Route::get('/estado', 'cuentasPorEstado')->name('api.tech-accounts.estado');
         Route::get('/cuenta/{id}', 'detalleCuenta')->name('api.tech-accounts.detalle');
+        Route::get('/clientes-vencen-hoy', 'clientesVencenHoy')->name('api.tech-accounts.clientes-vencen-hoy');
 
         // Estadísticas y Análisis
         Route::get('/estadisticas-uso', 'estadisticasUso')->name('api.tech-accounts.estadisticas-uso');
@@ -183,6 +188,73 @@ Route::prefix('v2')->group(function () {
             Route::post('/mover-servicio-a-mesa', 'moverServicioAMesa')->name('api.tech-accounts.acciones.mover-servicio-a-mesa');
             Route::post('/desactivar-usuarios', 'desactivarUsuariosMasivo')->name('api.tech-accounts.acciones.desactivar-usuarios');
             Route::post('/limpiar-cuentas', 'limpiarCuentas')->name('api.tech-accounts.acciones.limpiar-cuentas');
+        });
+    });
+
+    // ==========================================
+    // RUTAS PARA AGENTE IA - GESTIÓN DE USUARIOS
+    // ==========================================
+    Route::controller(TecnicoUsuariosController::class)->prefix('tech-usuarios')->group(function () {
+        Route::post('/desactivar-vencidos', 'desactivarVencidos')->name('api.tech-usuarios.desactivar-vencidos');
+        Route::get('/vencidos-hoy', 'vencidosHoy')->name('api.tech-usuarios.vencidos-hoy');
+        Route::post('/cambiar-perfil', 'cambiarPerfil')->name('api.tech-usuarios.cambiar-perfil');
+        Route::get('/por-cliente/{idcli}', 'usuariosPorCliente')->name('api.tech-usuarios.por-cliente');
+        Route::get('/obtener/{iddet}', 'obtener')->name('api.tech-usuarios.obtener');
+        Route::get('/estadisticas', 'estadisticas')->name('api.tech-usuarios.estadisticas');
+    });
+
+    // ==========================================
+    // RUTAS PARA AGENTE IA - GESTIÓN DE VENTAS
+    // ==========================================
+    Route::controller(TecnicoVentasController::class)->prefix('tech-ventas')->group(function () {
+        Route::post('/crear', 'crear')->name('api.tech-ventas.crear');
+        Route::put('/editar/{idven}', 'editar')->name('api.tech-ventas.editar');
+        Route::get('/detalle/{idven}', 'detalle')->name('api.tech-ventas.detalle');
+        Route::get('/listar', 'listar')->name('api.tech-ventas.listar');
+        Route::get('/estadisticas', 'estadisticas')->name('api.tech-ventas.estadisticas');
+    });
+
+    // ==========================================
+    // RUTAS PARA AGENTE IA - GESTIÓN DE PRODUCTOS
+    // ==========================================
+    Route::controller(TecnicoProductosController::class)->prefix('tech-productos')->group(function () {
+        Route::post('/cambiar-estado', 'cambiarEstado')->name('api.tech-productos.cambiar-estado');
+        Route::post('/cambiar-estado-masivo', 'cambiarEstadoMasivo')->name('api.tech-productos.cambiar-estado-masivo');
+        Route::post('/cambiar-precio', 'cambiarPrecio')->name('api.tech-productos.cambiar-precio');
+        Route::post('/actualizar-precios-base', 'actualizarPreciosBase')->name('api.tech-productos.actualizar-precios-base');
+        Route::post('/crear', 'crear')->name('api.tech-productos.crear');
+        Route::put('/editar/{idprod}', 'editar')->name('api.tech-productos.editar');
+        Route::get('/obtener/{id}', 'obtener')->name('api.tech-productos.obtener');
+        Route::get('/listar', 'listar')->name('api.tech-productos.listar');
+    });
+
+    // ==========================================
+    // RUTAS PARA AGENTE IA - CONFIGURACIÓN (Valores, Servicios, Proveedores)
+    // ==========================================
+    Route::controller(TecnicoConfigController::class)->prefix('tech-config')->group(function () {
+        // Valores
+        Route::prefix('valores')->group(function () {
+            Route::post('/pantallas', 'definirPantallas')->name('api.tech-config.valores.pantallas');
+            Route::post('/crear', 'crearValor')->name('api.tech-config.valores.crear');
+            Route::put('/editar/{idval}', 'editarValor')->name('api.tech-config.valores.editar');
+            Route::get('/obtener/{idval}', 'obtenerValor')->name('api.tech-config.valores.obtener');
+            Route::get('/listar', 'listarValores')->name('api.tech-config.valores.listar');
+        });
+
+        // Servicios
+        Route::prefix('servicios')->group(function () {
+            Route::post('/crear', 'crearServicio')->name('api.tech-config.servicios.crear');
+            Route::put('/editar/{idser}', 'editarServicio')->name('api.tech-config.servicios.editar');
+            Route::get('/obtener/{idser}', 'obtenerServicio')->name('api.tech-config.servicios.obtener');
+            Route::get('/listar', 'listarServicios')->name('api.tech-config.servicios.listar');
+        });
+
+        // Proveedores
+        Route::prefix('proveedores')->group(function () {
+            Route::post('/crear', 'crearProveedor')->name('api.tech-config.proveedores.crear');
+            Route::put('/editar/{idpro}', 'editarProveedor')->name('api.tech-config.proveedores.editar');
+            Route::get('/obtener/{idpro}', 'obtenerProveedor')->name('api.tech-config.proveedores.obtener');
+            Route::get('/listar', 'listarProveedores')->name('api.tech-config.proveedores.listar');
         });
     });
 
