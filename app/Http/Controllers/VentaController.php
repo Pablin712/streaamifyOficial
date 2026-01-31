@@ -181,6 +181,17 @@ class VentaController extends Controller
             $numeroper = $detalle['perfil'];
             $idper = $idcue . '.' . $numeroper;
 
+            // Verificar si el perfil existe, si no crearlo
+            $perfil = \App\Models\Perfil::find($idper);
+            if (!$perfil) {
+                $perfil = \App\Models\Perfil::create([
+                    'idper' => $idper,
+                    'idcue' => $idcue,
+                    'numeroper' => $numeroper,
+                    'pinper' => null, // Se puede actualizar después si es necesario
+                ]);
+            }
+
             $detalleRec = \App\Models\DetalleVenta::create([
                 'idven' => $venta->idven,
                 'idper' => $idper,
