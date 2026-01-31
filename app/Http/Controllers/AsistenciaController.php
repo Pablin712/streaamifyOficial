@@ -49,16 +49,30 @@ class AsistenciaController extends Controller
     }
     /**
      * Registra la asistencia del empleado.
+     * Evita duplicados: No registra si ya existe una asistencia del mismo empleado
+     * en los últimos 30 segundos (previene múltiples pestañas).
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function ping(Request $request)
     {
-        Asistencia::create([
-            'empleado_id' => Auth::user()->idemp, // asumiendo que usas Auth con empleados
-            'ruta_actual' => $request->input('ruta_actual'),
-        ]);
+        $empleadoId = Auth::user()->idemp;
+        $rutaActual = $request->input('ruta_actual');
+
+        // Verificar si ya existe una asistencia reciente (últimos 30 segundos)
+        $asistenciaReciente = Asistencia::where('empleado_id', $empleadoId)
+            ->where('created_at', '>=', Carbon::now()->subSeconds(30))
+            ->first();
+
+        // Solo registrar si no hay asistencia reciente o si la ruta cambió
+        if (!$asistenciaReciente || $asistenciaReciente->ruta_actual !== $rutaActual) {
+            Asistencia::create([
+                'empleado_id' => $empleadoId,
+                'ruta_actual' => $rutaActual,
+                'created_at' => Carbon::now(),
+            ]);
+        }
 
         return response()->noContent();
     }

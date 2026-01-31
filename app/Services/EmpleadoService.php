@@ -27,9 +27,16 @@ class EmpleadoService
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
             throw new \InvalidArgumentException('Formato de fecha inválido. Debe ser YYYY-MM-DD.');
         }
-        // Obtener todas las asistencias del empleado para el día, mes y año especificados
+
+        // Convertir la fecha a la zona horaria de la aplicación
+        $fechaInicio = Carbon::parse($fecha)->startOfDay();
+        $fechaFin = Carbon::parse($fecha)->endOfDay();
+
+        // Obtener todas las asistencias del empleado para el día especificado
+        // Laravel maneja automáticamente la conversión de timezone
         return Asistencia::where('empleado_id', $idemp)
-            ->whereDate('created_at', $fecha)
+            ->whereBetween('created_at', [$fechaInicio, $fechaFin])
+            ->orderBy('created_at')
             ->get();
     }
     public function obtenerLapsosDeAsistenciasPorDia(int $idemp, string $fecha)
@@ -38,7 +45,7 @@ class EmpleadoService
         $lapsos = [];
         $total_conexion = 0;
 
-        if (count($asistencias) === 0) {
+        if ($asistencias->count() === 0) {
             return [
                 'lapsos' => [],
                 'total_conexion' => 0,
@@ -46,43 +53,89 @@ class EmpleadoService
             ];
         }
 
-        $inicio = Carbon::parse($asistencias[0]->created_at);
-        $fin = Carbon::parse($asistencias[0]->created_at);
+        // DEDUPLICAR: Agrupar asistencias que estén en el mismo intervalo de 30 segundos
+        // Esto elimina el problema de múltiples pestañas
+        $asistenciasDeduplicadas = [];
+        $ultimaAsistencia = null;
 
-        for ($i = 1; $i < count($asistencias); $i++) {
-            $anterior = Carbon::parse($asistencias[$i - 1]->created_at);
-            $actual = Carbon::parse($asistencias[$i]->created_at); // 👈 AQUI
+        foreach ($asistencias as $asistencia) {
+            // created_at ya es un objeto Carbon por el cast del modelo
+            $actual = $asistencia->created_at;
 
+            // Si no hay última asistencia o han pasado más de 30 segundos, agregar
+            if ($ultimaAsistencia === null ||
+                abs($ultimaAsistencia->diffInSeconds($actual)) > 30) {
+                $asistenciasDeduplicadas[] = $actual->copy();
+                $ultimaAsistencia = $actual->copy();
+            }
+            // Si están en el mismo intervalo de 30s, ignorar (es un duplicado)
+        }
+
+        // Si después de deduplicar no hay asistencias, retornar vacío
+        if (count($asistenciasDeduplicadas) === 0) {
+            return [
+                'lapsos' => [],
+                'total_conexion' => 0,
+                'horas_conexion' => 0,
+            ];
+        }
+
+        // Si solo hay una asistencia, considerar un lapso mínimo de 1 minuto
+        if (count($asistenciasDeduplicadas) === 1) {
+            return [
+                'lapsos' => [[
+                    'inicio' => $asistenciasDeduplicadas[0]->copy(),
+                    'fin' => $asistenciasDeduplicadas[0]->copy(),
+                    'tiempo_conexion' => 1.0,
+                ]],
+                'total_conexion' => 1.0,
+                'horas_conexion' => 0.02,
+            ];
+        }
+
+        // Calcular lapsos con asistencias deduplicadas
+        $inicio = $asistenciasDeduplicadas[0]->copy();
+        $fin = $asistenciasDeduplicadas[0]->copy();
+
+        for ($i = 1; $i < count($asistenciasDeduplicadas); $i++) {
+            $anterior = $asistenciasDeduplicadas[$i - 1];
+            $actual = $asistenciasDeduplicadas[$i];
+
+            // Si la diferencia es menor o igual a 5 minutos, extender el lapso
             if ($actual->diffInMinutes($anterior) <= 5) {
-                $fin = $actual;
+                $fin = $actual->copy();
             } else {
                 // Guardar lapso anterior
                 $duracion = $inicio->floatDiffInMinutes($fin);
-                if ($duracion > 0) {
-                    $lapsos[] = [
-                        'inicio' => $inicio,
-                        'fin' => $fin,
-                        'tiempo_conexion' => round($duracion, 2),
-                    ];
-                    $total_conexion += $duracion;
+                // Considerar al menos 1 minuto si la duración es 0
+                if ($duracion == 0) {
+                    $duracion = 1.0;
                 }
+                $lapsos[] = [
+                    'inicio' => $inicio->copy(),
+                    'fin' => $fin->copy(),
+                    'tiempo_conexion' => round($duracion, 2),
+                ];
+                $total_conexion += $duracion;
 
                 // Iniciar nuevo lapso
-                $inicio = $actual;
-                $fin = $actual;
+                $inicio = $actual->copy();
+                $fin = $actual->copy();
             }
         }
 
         // Último lapso
         $duracion = $inicio->floatDiffInMinutes($fin);
-        if ($duracion > 0) {
-            $lapsos[] = [
-                'inicio' => $inicio,
-                'fin' => $fin,
-                'tiempo_conexion' => round($duracion, 2),
-            ];
-            $total_conexion += $duracion;
+        // Considerar al menos 1 minuto si la duración es 0
+        if ($duracion == 0) {
+            $duracion = 1.0;
         }
+        $lapsos[] = [
+            'inicio' => $inicio->copy(),
+            'fin' => $fin->copy(),
+            'tiempo_conexion' => round($duracion, 2),
+        ];
+        $total_conexion += $duracion;
 
         return [
             'lapsos' => $lapsos,
