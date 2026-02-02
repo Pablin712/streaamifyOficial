@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V2\TecnicoUsuariosController;
 use App\Http\Controllers\Api\V2\TecnicoVentasController;
 use App\Http\Controllers\Api\V2\TecnicoProductosController;
 use App\Http\Controllers\Api\V2\TecnicoConfigController;
+use App\Http\Controllers\Api\DailyStatisticsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,13 @@ Route::get('/ping', function () {
         'timestamp' => now()->toIso8601String(),
         'version' => '1.0.0',
     ]);
+});
+
+// === ESTADÍSTICAS DIARIAS (CRON JOB) ===
+Route::prefix('daily-statistics')->group(function () {
+    Route::match(['get', 'post'], '/save', [DailyStatisticsController::class, 'save']);
+    Route::post('/save-range', [DailyStatisticsController::class, 'saveRange']);
+    Route::get('/{date}', [DailyStatisticsController::class, 'show']);
 });
 
 // === RUTAS ANTIGUAS (mantener temporalmente para compatibilidad) ===

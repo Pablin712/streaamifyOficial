@@ -35,8 +35,6 @@ class ContabilidadController extends Controller
         }
         $month = Carbon::now()->month;
         $year = Carbon::now()->year;
-        $today = Carbon::today();
-        $this->dashboardService->guardar($today);
         extract($this->dashboardService->obtenerDatosDashboard());
         $gastos = $this->dashboardService->getGastos($ingresos_mes, $month, $year);
 
@@ -179,8 +177,6 @@ class ContabilidadController extends Controller
         $month = $request->get('mes', Carbon::now()->subMonth()->month);
         $year = $request->get('ano', Carbon::now()->year);
 
-        $today = Carbon::today();
-        $this->dashboardService->guardar($today);
         extract($this->dashboardService->obtenerDatosDashboardMensuales($month, $year));
         $gastos = $this->dashboardService->getGastos($ingresos_mes, $month, $year);
 
@@ -282,8 +278,6 @@ class ContabilidadController extends Controller
         $datosAnuales = $this->dashboardService->getDatosAnuales($year);
 
         // Datos adicionales para el reporte
-        $today = Carbon::today();
-        $this->dashboardService->guardar($today);
         extract($this->dashboardService->obtenerDatosDashboard());
 
         // Generar PDF con vista específica para reporte anual

@@ -1127,10 +1127,13 @@ class DashboardService
             ->get()
             ->sum('usuarios_activos');
         $pendingPayments = $this->cuentaService->contarUsuariosACobrar($usuarios);
-        $dailyRevenue = Venta::whereDate('created_at', $date)->sum('totalpagoven');
+
+        // CORREGIDO: Usar fechaven en lugar de created_at para ventas
+        $dailyRevenue = Venta::whereDate('fechaven', $date)->sum('totalpagoven');
         $dailyCost = Costo::whereDate('fechacos', $date)->sum('montocos');
-        $dailyBill = Gasto::whereDate('created_at', $date)->sum('montogas');
-        $dailySales = Venta::whereDate('created_at', $date)->count();
+        // CORREGIDO: Usar fechagas en lugar de created_at para gastos
+        $dailyBill = Gasto::whereDate('fechagas', $date)->sum('montogas');
+        $dailySales = Venta::whereDate('fechaven', $date)->count();
         $newCustomers = Cliente::whereDate('created_at', $date)->count();
         $espacios = $this->cuentaService->calcularEspaciosTotales();
         $usuarios_acobrar = $this->cuentaService->contarUsuariosACobrar($usuarios);
@@ -1156,6 +1159,21 @@ class DashboardService
                 'total_customers' => $total_customers,
             ]
         );
+
+        // AGREGADO: Retornar datos para verificación en la API
+        return [
+            'success' => true,
+            'date' => $date,
+            'data' => [
+                'active_users' => $activeUsers,
+                'accounts' => $accounts,
+                'daily_revenue' => $dailyRevenue,
+                'daily_cost' => $dailyCost,
+                'daily_bill' => $dailyBill,
+                'daily_sales' => $dailySales,
+                'balance' => $dailyRevenue - $dailyCost - $dailyBill,
+            ]
+        ];
     }
     public function getGastos($ingresos_mes, $month = null, $year = null)
     {

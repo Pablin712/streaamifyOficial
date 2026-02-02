@@ -64,8 +64,6 @@ class LoginController extends Controller
             'empleado_id' => Auth::user()->idemp,
             'ruta_actual' => 'inicio',
         ]);
-        $today = Carbon::today();
-        $this->dashboardService->guardar($today);
 
         return redirect()->route('inicio')->with('success', 'Inicio de sesión exitoso.');
     }
