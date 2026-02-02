@@ -233,9 +233,11 @@ Route::prefix('v2')->group(function () {
         Route::post('/cambiar-precio', 'cambiarPrecio')->name('api.tech-productos.cambiar-precio');
         Route::post('/actualizar-precios-base', 'actualizarPreciosBase')->name('api.tech-productos.actualizar-precios-base');
         Route::post('/crear', 'crear')->name('api.tech-productos.crear');
-        Route::put('/editar/{idprod}', 'editar')->name('api.tech-productos.editar');
+        Route::put('/editar/{idprod?}', 'editar')->name('api.tech-productos.editar');
+        Route::post('/editar', 'editar')->name('api.tech-productos.editar-post');
         Route::get('/obtener/{id}', 'obtener')->name('api.tech-productos.obtener');
         Route::get('/listar', 'listar')->name('api.tech-productos.listar');
+        Route::get('/servicios', 'listarServicios')->name('api.tech-productos.servicios');
     });
 
     // ==========================================

@@ -284,7 +284,7 @@ class TecnicoProductosController extends Controller
             // PASO 1: Actualizar los precios base de los servicios
             foreach ($precios as $idser => $precio) {
                 $servicio = Servicio::where('idser', $idser)->first();
-                
+
                 if (!$servicio) {
                     continue;
                 }
@@ -423,15 +423,38 @@ class TecnicoProductosController extends Controller
     public function crear(Request $request)
     {
         try {
+            // Normalizar el campo activo (n8n puede enviar string "true"/"false")
+            if ($request->has('activo') && is_string($request->activo)) {
+                $request->merge([
+                    'activo' => filter_var($request->activo, FILTER_VALIDATE_BOOLEAN)
+                ]);
+            }
+
+            // Normalizar campos numéricos (n8n puede enviar strings)
+            $numericFields = ['preciopro', 'tipo_producto_id', 'categoria_id'];
+            foreach ($numericFields as $field) {
+                if ($request->has($field) && is_string($request->$field) && is_numeric($request->$field)) {
+                    $request->merge([$field => floatval($request->$field)]);
+                }
+            }
+
+            // Normalizar servicios si viene como string JSON
+            if ($request->has('servicios') && is_string($request->servicios)) {
+                $servicios = json_decode($request->servicios, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $request->merge(['servicios' => $servicios]);
+                }
+            }
+
             $validator = Validator::make($request->all(), [
                 'codigopro' => 'required|string|max:50|unique:productos,codigopro',
                 'nombrepro' => 'required|string|max:255',
                 'preciopro' => 'required|numeric|min:0',
                 'activo' => 'nullable|boolean',
-                'tipo_producto_id' => 'required|integer|exists:tipo_productos,id',
+                'tipo_producto_id' => 'required|integer|exists:tipos_producto,id',
                 'categoria_id' => 'required|integer|exists:categorias,id',
                 'servicios' => 'required|array|min:1',
-                'servicios.*.idser' => 'required|integer|exists:servicios,idser',
+                'servicios.*.idser' => 'required|string|exists:servicios,idser',
                 'servicios.*.meses' => 'nullable|integer|min:1',
                 'servicios.*.descripcion' => 'nullable|string|max:255'
             ]);
@@ -507,23 +530,69 @@ class TecnicoProductosController extends Controller
     /**
      * Editar producto existente
      * PUT /api/v2/tech-productos/editar/{idprod}
+     * POST /api/v2/tech-productos/editar (con id en el body)
      *
      * Body:
      * {
+     *   "id": 123,  // Opcional si está en la URL
      *   "nombrepro": "Netflix Premium Individual Actualizado",
      *   "preciopro": 17.99,
      *   "activo": true
      * }
      */
-    public function editar(Request $request, $idprod)
+    public function editar(Request $request, $idprod = null)
     {
         try {
+            // Obtener el ID desde la URL o desde el body
+            $productoId = $idprod;
+
+            // Si no viene en la URL o viene como placeholder, buscar en el body
+            if (!is_numeric($productoId) || $productoId <= 0 || $productoId === '{idprod}' || $productoId === '{id}') {
+                if ($request->has('id')) {
+                    $productoId = $request->id;
+                } elseif ($request->has('idprod')) {
+                    $productoId = $request->idprod;
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'ID de producto requerido',
+                        'error' => 'Debes proporcionar el ID del producto en la URL (/editar/123) o en el body como "id" o "idprod"',
+                        'ejemplo_body' => ['id' => 123, 'preciopro' => 5.99]
+                    ], 400);
+                }
+            }
+
+            // Validar que el ID sea numérico
+            if (!is_numeric($productoId) || $productoId <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ID de producto inválido',
+                    'error' => 'El ID debe ser un número entero positivo',
+                    'recibido' => $productoId
+                ], 400);
+            }
+
+            // Normalizar el campo activo (n8n puede enviar string "true"/"false")
+            if ($request->has('activo') && is_string($request->activo)) {
+                $request->merge([
+                    'activo' => filter_var($request->activo, FILTER_VALIDATE_BOOLEAN)
+                ]);
+            }
+
+            // Normalizar campos numéricos (n8n puede enviar strings)
+            $numericFields = ['preciopro', 'tipo_producto_id', 'categoria_id'];
+            foreach ($numericFields as $field) {
+                if ($request->has($field) && is_string($request->$field) && is_numeric($request->$field)) {
+                    $request->merge([$field => floatval($request->$field)]);
+                }
+            }
+
             $validator = Validator::make($request->all(), [
-                'codigopro' => 'nullable|string|max:50|unique:productos,codigopro,' . $idprod,
+                'codigopro' => 'nullable|string|max:50|unique:productos,codigopro,' . $productoId,
                 'nombrepro' => 'nullable|string|max:255',
                 'preciopro' => 'nullable|numeric|min:0',
                 'activo' => 'nullable|boolean',
-                'tipo_producto_id' => 'nullable|integer|exists:tipo_productos,id',
+                'tipo_producto_id' => 'nullable|integer|exists:tipos_producto,id',
                 'categoria_id' => 'nullable|integer|exists:categorias,id'
             ]);
 
@@ -535,7 +604,7 @@ class TecnicoProductosController extends Controller
                 ], 422);
             }
 
-            $producto = Producto::findOrFail($idprod);
+            $producto = Producto::findOrFail($productoId);
 
             if ($request->has('codigopro')) {
                 $producto->codigopro = $request->codigopro;
@@ -705,6 +774,47 @@ class TecnicoProductosController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al listar productos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar todos los servicios disponibles
+     * GET /api/v2/tech-productos/servicios
+     *
+     * Query params:
+     * - nombre: Filtrar por nombre de servicio
+     */
+    public function listarServicios(Request $request)
+    {
+        try {
+            $query = Servicio::query();
+
+            if ($request->has('nombre')) {
+                $query->where('nombreser', 'LIKE', '%' . strtoupper($request->nombre) . '%');
+            }
+
+            $servicios = $query->get()->map(function($ser) {
+                return [
+                    'idser' => $ser->idser,
+                    'nombreser' => $ser->nombreser,
+                    'precioser' => $ser->precioser,
+                    'comboser' => $ser->comboser,
+                    'descripcion' => $ser->descripcion,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'count' => $servicios->count(),
+                'servicios' => $servicios
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al listar servicios',
                 'error' => $e->getMessage()
             ], 500);
         }
