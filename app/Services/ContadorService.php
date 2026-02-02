@@ -166,6 +166,64 @@ class ContadorService
     }
 
     /**
+     * Obtener facturas que vencen HOY (para recordatorios)
+     *
+     * @param string|null $servicio ID del servicio para filtrar
+     * @return array
+     */
+    public function facturasVencenHoy($servicio = null)
+    {
+        $hoy = Carbon::today();
+
+        // Usar ViewUsuarioActivo: incluye solo cuentas activas
+        // Filtrar solo por fecha_vencimiento = hoy
+        $query = ViewUsuarioActivo::with([
+            'cliente',
+            'detalle_venta.perfil.cuenta.valor.servicio',
+            'venta'
+        ])
+        ->whereDate('fecha_vencimiento', $hoy);
+
+        if ($servicio) {
+            $query->whereHas('detalle_venta.perfil.cuenta.valor.servicio', function($q) use ($servicio) {
+                $q->where('idser', $servicio);
+            });
+        }
+
+        $facturas = $query->orderBy('nombre_cliente', 'asc')->get();
+
+        $facturasProcesadas = $facturas->map(function($usuario) {
+            $fechaVencimiento = Carbon::parse($usuario->fecha_vencimiento);
+            $detalle = $usuario->detalle_venta;
+            $servicio = $detalle?->perfil?->cuenta?->valor?->servicio?->nombreser ?? 'N/A';
+            $cliente = $usuario->cliente;
+
+            return [
+                'id_detalle' => $usuario->iddet,
+                'id_venta' => $usuario->idven,
+                'id_cliente' => $usuario->idcli,
+                'cliente' => $usuario->nombre_cliente,
+                'email' => $cliente?->email ?? '',
+                'telefono' => $cliente?->telefonocli ?? '',
+                'perfil' => $usuario->perfil,
+                'cuenta' => $usuario->idcue,
+                'servicio' => $servicio,
+                'monto' => round($detalle?->montodet ?? 0, 2),
+                'fecha_venta' => $usuario->venta?->fechaven?->format('Y-m-d') ?? 'N/A',
+                'fecha_vencimiento' => $fechaVencimiento->format('Y-m-d'),
+                'hora_vencimiento' => $fechaVencimiento->format('H:i:s'),
+            ];
+        });
+
+        return [
+            'fecha' => $hoy->format('Y-m-d'),
+            'total_facturas' => $facturasProcesadas->count(),
+            'monto_total' => round($facturasProcesadas->sum('monto'), 2),
+            'facturas' => $facturasProcesadas->values()
+        ];
+    }
+
+    /**
      * Análisis de ingresos por servicio
      *
      * @param string $periodo

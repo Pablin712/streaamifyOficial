@@ -122,6 +122,49 @@ class ContadorController extends Controller
     }
 
     /**
+     * A2.1. Facturas que Vencen HOY (para recordatorios)
+     * GET /api/v2/accountant/ventas/facturas-vencen-hoy
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function facturasVencenHoy(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'servicio' => 'nullable|integer|exists:servicios,idser'
+            ], [
+                'servicio.exists' => 'El servicio especificado no existe'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 400);
+            }
+
+            $servicio = $request->input('servicio');
+
+            $data = $this->contadorService->facturasVencenHoy($servicio);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Facturas que vencen hoy obtenidas correctamente',
+                'data' => $data
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener facturas que vencen hoy',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * A3. Ingresos por Servicio
      * GET /api/v2/accountant/ventas/ingresos-por-servicio
      *

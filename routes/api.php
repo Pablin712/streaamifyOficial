@@ -155,6 +155,7 @@ Route::prefix('v2')->group(function () {
         // Ventas y Finanzas
         Route::get('/ventas/resumen', 'resumenVentas')->name('api.accountant.ventas.resumen');
         Route::get('/ventas/facturas-pendientes', 'facturasPendientes')->name('api.accountant.ventas.facturas-pendientes');
+        Route::get('/ventas/facturas-vencen-hoy', 'facturasVencenHoy')->name('api.accountant.ventas.facturas-vencen-hoy');
         Route::get('/ventas/ingresos-por-servicio', 'ingresosPorServicio')->name('api.accountant.ventas.ingresos-por-servicio');
         Route::get('/ventas/proyeccion', 'proyeccionIngresos')->name('api.accountant.ventas.proyeccion');
 
