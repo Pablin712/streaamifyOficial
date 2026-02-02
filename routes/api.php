@@ -142,10 +142,11 @@ Route::prefix('v2')->group(function () {
     });
 
     // Información y Precios - Público
-    Route::controller(InformationController::class)->group(function () {
+    Route::controller(InformationController::class)->prefix('info')->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios');
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago');
         Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco');
+        Route::get('/tareas-hoy', 'getTareasHoy')->name('api.v2.tareas-hoy');
     });
 
     // ==========================================

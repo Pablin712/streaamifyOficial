@@ -6,6 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use App\Models\Servicio;
 use App\Models\Banco;
+use App\Models\ViewUsuarioActivo;
+use App\Models\Cuenta;
+use App\Models\Cliente;
+use App\Models\DailyStatistic;
+use App\Models\ViewClientesUsuarios;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class InformationController extends Controller
@@ -113,6 +119,95 @@ class InformationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener la información del banco',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtiene resumen de tareas diarias (para WhatsApp)
+     * GET /api/v2/info/tareas-hoy
+     */
+    public function getTareasHoy()
+    {
+        try {
+            $hoy = Carbon::today();
+            $ayer = Carbon::yesterday();
+
+            // 1. Total usuarios atrasados (fecha_vencimiento < hoy)
+            $usuariosAtrasados = ViewUsuarioActivo::where('fecha_vencimiento', '<', $hoy)->count();
+
+            // 2. Total usuarios a cobrar HOY (fecha_vencimiento = hoy)
+            $usuariosCobrarHoy = ViewUsuarioActivo::whereDate('fecha_vencimiento', $hoy)->count();
+
+            // 3. Usuarios a cobrar en 3 días (pending payments)
+            $fechaLimite = $hoy->copy()->addDays(3);
+            $usuariosPendientes = ViewUsuarioActivo::whereBetween('fecha_vencimiento', [$hoy, $fechaLimite])->count();
+
+            // 4. Total cuentas caídas (activocue=true, caidacue=true, no es mesa de trabajo)
+            $cuentasCaidas = Cuenta::where('activocue', true)
+                ->where('caidacue', true)
+                ->where('idcue', 'NOT LIKE', '%Atencion%')
+                ->count();
+
+            // 5. Total de clientes
+            $totalClientes = ViewClientesUsuarios::count();
+
+            // 6. Total de usuarios activos
+            $totalUsuarios = ViewUsuarioActivo::count();
+
+            // 7 y 8. Estadísticas de ayer (ingresos y ventas)
+            $estadisticasAyer = DailyStatistic::whereDate('date', $ayer)->first();
+            $ingresosAyer = $estadisticasAyer->daily_revenue ?? 0;
+            $ventasAyer = $estadisticasAyer->daily_sales ?? 0;
+
+            // 9. Total cuentas vencidas (usuarios atrasados agrupados por cuenta)
+            $cuentasVencidas = ViewUsuarioActivo::where('fecha_vencimiento', '<', $hoy)
+                ->distinct('idcue')
+                ->count('idcue');
+
+            // Generar mensaje para WhatsApp
+            $mensaje = "*📋 Tareas de Hoy - " . $hoy->format('d/m/Y') . "*\n\n";
+
+            $mensaje .= "🔴 *Usuarios atrasados:* {$usuariosAtrasados}\n";
+            $mensaje .= "💰 *Cobrar hoy:* {$usuariosCobrarHoy}\n";
+            $mensaje .= "⏰ *Pendientes (3 días):* {$usuariosPendientes}\n";
+            $mensaje .= "⚠️ *Cuentas caídas:* {$cuentasCaidas}\n";
+            $mensaje .= "📦 *Cuentas vencidas:* {$cuentasVencidas}\n\n";
+
+            $mensaje .= "👥 *Total clientes:* {$totalClientes}\n";
+            $mensaje .= "👤 *Total usuarios:* {$totalUsuarios}\n\n";
+
+            $mensaje .= "*📊 Ayer (" . $ayer->format('d/m') . ")*\n";
+            $mensaje .= "💵 Ingresos: \$" . number_format($ingresosAyer, 2) . "\n";
+            $mensaje .= "🛒 Ventas: {$ventasAyer}\n";
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'fecha' => $hoy->format('Y-m-d'),
+                    'resumen' => [
+                        'usuarios_atrasados' => $usuariosAtrasados,
+                        'cobrar_hoy' => $usuariosCobrarHoy,
+                        'pendientes_3dias' => $usuariosPendientes,
+                        'cuentas_caidas' => $cuentasCaidas,
+                        'cuentas_vencidas' => $cuentasVencidas,
+                        'total_clientes' => $totalClientes,
+                        'total_usuarios' => $totalUsuarios,
+                    ],
+                    'ayer' => [
+                        'fecha' => $ayer->format('Y-m-d'),
+                        'ingresos' => round($ingresosAyer, 2),
+                        'ventas' => $ventasAyer
+                    ],
+                    'mensaje' => $mensaje
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener tareas del día',
                 'error' => $e->getMessage()
             ], 500);
         }
