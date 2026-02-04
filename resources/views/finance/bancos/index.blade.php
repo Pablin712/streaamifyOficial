@@ -314,11 +314,7 @@
                                     <td>{{ $deuda->id }}</td>
                                     <td>{{ $deuda->proveedor->nombrepro ?? 'N/A' }}</td>
                                     <td class="fw-bold text-danger" style="font-size: 1.1em;">
-                                        ${{ number_format($deuda->monto, 2) }}
-                                        @if($deuda->monto_pagado > 0)
-                                            <br><small class="text-muted">Pagado: ${{ number_format($deuda->monto_pagado, 2) }}</small>
-                                            <br><small class="text-success">Restante: ${{ number_format($deuda->monto_restante, 2) }}</small>
-                                        @endif
+                                        ${{ number_format($deuda->monto_restante, 2) }}
                                     </td>
                                     <td>
                                         <span class="badge bg-{{ $deuda->estado === 'pendiente' ? 'warning' : 'success' }}">
