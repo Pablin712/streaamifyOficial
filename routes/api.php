@@ -205,9 +205,11 @@ Route::prefix('v2')->group(function () {
     // RUTAS PARA AGENTE IA - GESTIÓN DE USUARIOS
     // ==========================================
     Route::controller(TecnicoUsuariosController::class)->prefix('tech-usuarios')->group(function () {
+        Route::get('/listar', 'listarUsuariosConFiltros')->name('api.tech-usuarios.listar');
         Route::post('/desactivar-vencidos', 'desactivarVencidos')->name('api.tech-usuarios.desactivar-vencidos');
         Route::get('/vencidos-hoy', 'vencidosHoy')->name('api.tech-usuarios.vencidos-hoy');
         Route::post('/cambiar-perfil', 'cambiarPerfil')->name('api.tech-usuarios.cambiar-perfil');
+        Route::post('/mover-otro-servicio', 'moverClienteOtroServicio')->name('api.tech-usuarios.mover-otro-servicio');
         Route::get('/por-cliente/{idcli}', 'usuariosPorCliente')->name('api.tech-usuarios.por-cliente');
         Route::get('/obtener/{iddet}', 'obtener')->name('api.tech-usuarios.obtener');
         Route::get('/estadisticas', 'estadisticas')->name('api.tech-usuarios.estadisticas');
