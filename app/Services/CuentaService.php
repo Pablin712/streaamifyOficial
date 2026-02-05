@@ -13,6 +13,7 @@ use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Empleado;
 
 class CuentaService
 {
@@ -433,7 +434,7 @@ class CuentaService
                 Historial::create([
                     'accion' => 'Mudacion-Usuarios',
                     'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta ' . $usuario->idcue . ' perfil: ' . $usuario->perfil,
-                    'empleado_id' => Auth::user()->idemp,
+                    'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
                     'created_at' => now(),
                 ]);
                 $mensaje .= 'Cliente ' . $usuario->nombre_cliente . ' movido a la cuenta ' .
@@ -461,7 +462,7 @@ class CuentaService
             Historial::create([
                 'accion' => 'Mudacion-Usuario',
                 'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta ' . $usuario->idcue . ' perfil: ' . $usuario->perfil,
-                'empleado_id' => Auth::user()->idemp,
+                'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
                 'created_at' => now(),
             ]);
             $mensaje .= 'Cliente ' . $usuario->nombre_cliente . ' movido a la cuenta ' .
@@ -487,7 +488,7 @@ class CuentaService
                 Historial::create([
                     'accion' => 'Mudacion-Usuario',
                     'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta de atención al cliente',
-                    'empleado_id' => Auth::user()->idemp,
+                    'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
                     'created_at' => now(),
                 ]);
                 return 'Cliente ' . $usuario->nombre_cliente . ' movido a la mesa de trabajo';
@@ -527,7 +528,7 @@ class CuentaService
                 'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente .
                     ' del servicio ' . $idserOrigen . ' al servicio ' . $idserDestino .
                     ' en la cuenta ' . $cuentaDestino->idcue . ' perfil: ' . $perfilDestino->numeroper,
-                'empleado_id' => Auth::user()->idemp,
+                'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
                 'created_at' => now(),
             ]);
 
