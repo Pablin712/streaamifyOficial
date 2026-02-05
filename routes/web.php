@@ -267,6 +267,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/usuarios/{id}/estado-cobro', 'actualizarEstadoCobro')->name('usuarios.actualizarEstadoCobro');
         Route::post('/usuarios/{id}/mover', 'moverUsuario')->name('usuarios.moverUsuario');
         Route::post('/usuarios/{id}/mover-mesa', 'moverUsuarioMesa')->name('usuarios.moverUsuarioMesa');
+        Route::post('/usuarios/{id}/mover-otro-servicio', 'moverUsuarioOtroServicio')->name('usuarios.moverUsuarioOtroServicio');
         Route::delete('/usuariosSeleccionados/delete-multiple', 'destroyMultiple')->name('usuarios.destroyMultiple');
         Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
     });

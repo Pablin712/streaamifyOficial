@@ -144,6 +144,16 @@
                                             >
                                                 <i class="fas fa-arrow-right-to-bracket"></i>
                                             </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-circle btn-sm btn-move-user-otro-servicio"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                                data-servicio="{{ $cuenta->valor->idser }}"
+                                                title="Mover a otro servicio"
+                                            >
+                                                <i class="fas fa-retweet"></i>
+                                            </button>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -182,6 +192,16 @@
                                             >
                                                 <i class="fas fa-arrow-right-to-bracket"></i>
                                             </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-circle btn-sm btn-move-user-otro-servicio"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                                data-servicio="{{ $cuenta->valor->idser }}"
+                                                title="Mover a otro servicio"
+                                            >
+                                                <i class="fas fa-retweet"></i>
+                                            </button>
                                         @endif
                                         @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                             <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
@@ -209,6 +229,16 @@
                                                 data-nombre="{{ $usuario->nombre_cliente }}"
                                             >
                                                 <i class="fas fa-arrow-right-to-bracket"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger btn-circle btn-sm btn-move-user-otro-servicio"
+                                                data-iddet="{{ $usuario->iddet }}"
+                                                data-nombre="{{ $usuario->nombre_cliente }}"
+                                                data-servicio="{{ $cuenta->valor->idser }}"
+                                                title="Mover a otro servicio"
+                                            >
+                                                <i class="fas fa-retweet"></i>
                                             </button>
                                         @endif
                                         <br>
@@ -267,6 +297,7 @@
     @include('inventory.cuentas.modals.confirm-delete-user')
     @include('inventory.cuentas.modals.confirm-move-all-mesa')
     @include('inventory.cuentas.modals.confirm-move-all-disperso')
+    @include('inventory.cuentas.modals.confirm-move-user-otro-servicio')
 @endsection
 
 @section('scripts')
@@ -361,6 +392,38 @@
                     document.getElementById('confirm_move_all_disperso_cuenta').textContent = cuentaNombre;
 
                     window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-all-disperso' }));
+                });
+            });
+
+            // Event listeners para botones de mover a otro servicio
+            document.querySelectorAll('.btn-move-user-otro-servicio').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const iddet = this.getAttribute('data-iddet');
+                    const nombre = this.getAttribute('data-nombre');
+                    const servicio = this.getAttribute('data-servicio');
+
+                    document.getElementById('confirm_move_otro_servicio_user_id').value = iddet;
+                    document.getElementById('confirm_move_otro_servicio_user_name').textContent = nombre;
+                    document.getElementById('confirm_move_otro_servicio_actual').textContent = servicio;
+                    document.getElementById('confirm_move_otro_servicio_form').action =
+                        "{{ route('usuarios.moverUsuarioOtroServicio', ':id') }}".replace(':id', iddet);
+
+                    // Filtrar el servicio actual de las opciones
+                    const selectServicio = document.getElementById('idser_destino');
+                    Array.from(selectServicio.options).forEach(option => {
+                        if (option.value === servicio) {
+                            option.disabled = true;
+                            option.textContent = option.value + ' (Servicio actual)';
+                        } else {
+                            option.disabled = false;
+                            // Restaurar el texto original sin el sufijo
+                            if (option.value !== '') {
+                                option.textContent = option.value;
+                            }
+                        }
+                    });
+
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-user-otro-servicio' }));
                 });
             });
         });

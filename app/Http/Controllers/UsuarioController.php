@@ -185,4 +185,36 @@ class UsuarioController extends Controller
         }
         return redirect()->back()->with('success', 'Usuarios eliminados correctamente.');
     }
+
+    /**
+     * Mover usuario a un servicio diferente
+     */
+    public function moverUsuarioOtroServicio(Request $request, $iddet)
+    {
+        if (!Gate::allows('usuarios.update')) {
+            abort(403, 'No tienes permiso para actualizar usuarios.');
+        }
+
+        $request->validate([
+            'idser_destino' => 'required|string'
+        ]);
+
+        $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
+
+        if (!$usuario) {
+            return redirect()->back()->with('error', 'Usuario no encontrado');
+        }
+
+        $idserDestino = $request->idser_destino;
+
+        $respuesta = $this->cuentaService->mudarClienteAOtroServicio($usuario, $idserDestino);
+
+        if ($respuesta == 'error_no_disponible') {
+            return redirect()->back()->with('error', 'No hay cuentas disponibles en el servicio ' . $idserDestino);
+        } elseif ($respuesta == 'error_sin_perfil') {
+            return redirect()->back()->with('error', 'No hay perfiles disponibles en las cuentas del servicio ' . $idserDestino);
+        } else {
+            return redirect()->back()->with('success', $respuesta);
+        }
+    }
 }

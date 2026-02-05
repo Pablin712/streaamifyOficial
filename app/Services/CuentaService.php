@@ -498,4 +498,48 @@ class CuentaService
             return 'error';
         }
     }
+
+    /**
+     * Mudar cliente a una cuenta de otro servicio
+     */
+    public function mudarClienteAOtroServicio($usuario, $idserDestino)
+    {
+        $cuentaOrigen = $usuario->cuenta;
+        $idserOrigen = $cuentaOrigen->valor->idser;
+        $mensaje = '';
+
+        // Buscar cuenta disponible del servicio destino
+        $cuentaDestino = $this->buscarCuentaDisponible($idserDestino);
+
+        if (!$cuentaDestino) {
+            return 'error_no_disponible';
+        }
+
+        $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
+
+        if ($perfilDestino) {
+            // Actualizar el idper en DetalleVenta para este usuario
+            DetalleVenta::where('iddet', $usuario->iddet)
+                ->update(['idper' => $perfilDestino->idper]);
+
+            Historial::create([
+                'accion' => 'Mudacion-Usuario-Servicio',
+                'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente .
+                    ' del servicio ' . $idserOrigen . ' al servicio ' . $idserDestino .
+                    ' en la cuenta ' . $cuentaDestino->idcue . ' perfil: ' . $perfilDestino->numeroper,
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+
+            $mensaje = 'Cliente ' . $usuario->nombre_cliente . ' movido del servicio ' .
+                $idserOrigen . ' al servicio ' . $idserDestino .
+                ' - Cuenta: ' . $cuentaDestino->usuariocue .
+                ' - Clave: ' . $cuentaDestino->contrasenacue .
+                ' - PIN de Perfil ' . $perfilDestino->numeroper . ': ' . $perfilDestino->pinper;
+
+            return $mensaje; // Retornar mensaje de éxito
+        } else {
+            return 'error_sin_perfil';
+        }
+    }
 }
