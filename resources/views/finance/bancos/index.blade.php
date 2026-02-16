@@ -388,6 +388,9 @@
                     <div class="table-responsive">
                         <table id="transacciones-table"
                                data-table="transacciones-table"
+                               data-server-side="true"
+                               data-search-url="{{ route('bancos.index') }}"
+                               data-rows-per-page="25"
                                class="table table-striped table-bordered">
                             <thead>
                                 <tr>
@@ -409,26 +412,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($allTransactions as $transaccion)
                                 <tr>
-                                    <td>{{ $transaccion->id }}</td>
-                                    <td>{{ $transaccion->banco->nombreban ?? 'N/A' }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $transaccion->tipo === 'ingreso' ? 'success' : 'danger' }}">
-                                            {{ ucfirst($transaccion->tipo) }}
-                                        </span>
+                                    <td colspan="8" class="text-center p-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
                                     </td>
-                                    <td>${{ number_format($transaccion->monto_anterior, 2) }}</td>
-                                    <td>${{ number_format($transaccion->monto_actualizado, 2) }}</td>
-                                    <td class="fw-bold text-{{ $transaccion->tipo === 'ingreso' ? 'success' : 'danger' }}" style="font-size: 1.1em;">${{ number_format($transaccion->monto_transaccion, 2) }}</td>
-                                    <td>{{ $transaccion->referencia ?? '-' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($transaccion->fecha)->format('d/m/Y H:i') }}</td>
                                 </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted">No hay transacciones registradas</td>
-                                </tr>
-                                @endforelse
                             </tbody>
                         </table>
                     </div>

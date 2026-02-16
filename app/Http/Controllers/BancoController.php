@@ -18,11 +18,14 @@ class BancoController extends Controller
     }
 
     // Listar bancos
-    public function index()
+    public function index(Request $request)
     {
-        $bancos = Banco::with(['transacciones' => function ($query) {
-            $query->where('anulada', false);
-        }])->orderBy('monto', 'desc')->get();
+        // Si es petición AJAX para transacciones, devolver JSON
+        if ($request->ajax() || $request->has('ajax')) {
+            return $this->loadTransactions($request);
+        }
+
+        $bancos = Banco::orderBy('monto', 'desc')->get();
 
         // Obtener deudas pendientes con información del proveedor
         $deudas = \App\Models\Deuda::with(['proveedor'])
@@ -30,19 +33,66 @@ class BancoController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $allTransactions = collect();
-        foreach ($bancos as $banco) {
-            $allTransactions = $allTransactions->concat($banco->transacciones);
-        }
-        $allTransactions = $allTransactions->sortByDesc('created_at');
-
         // Calcular totales financieros
         $totalDisponible = $bancos->sum('monto'); // Total de dinero en todos los bancos
         $totalDeudasMonto = $deudas->sum('monto'); // Total acumulado de deudas
         $totalDeudasPagado = $deudas->sum('monto_pagado'); // Total pagado de deudas
         $totalDeudasPendientes = $totalDeudasMonto - $totalDeudasPagado; // Deuda restante
 
-        return view('finance.bancos.index', compact('bancos', 'deudas', 'allTransactions', 'totalDisponible', 'totalDeudasPendientes'));
+        // Para la vista inicial, no cargar todas las transacciones
+        // La tabla usará modo servidor y las cargará vía AJAX
+        return view('finance.bancos.index', compact('bancos', 'deudas', 'totalDisponible', 'totalDeudasPendientes'));
+    }
+
+    // Cargar transacciones con paginación (AJAX)
+    private function loadTransactions(Request $request)
+    {
+        $perPage = $request->input('per_page', 25);
+        $page = $request->input('page', 1);
+        $search = $request->input('search', '');
+        $sortBy = $request->input('sort_by', '');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        // Query base
+        $query = \App\Models\Transaccion::with('banco')
+            ->where('anulada', false);
+
+        // Búsqueda
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('referencia', 'like', "%{$search}%")
+                  ->orWhere('id', 'like', "%{$search}%")
+                  ->orWhere('monto_transaccion', 'like', "%{$search}%")
+                  ->orWhereHas('banco', function($subQ) use ($search) {
+                      $subQ->where('nombreban', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Ordenamiento
+        $validSortColumns = ['id' => 'id', 'created_at' => 'created_at', 'fecha' => 'fecha'];
+        if ($sortBy !== '' && isset($validSortColumns[$sortBy])) {
+            $query->orderBy($validSortColumns[$sortBy], $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // Paginación
+        $totalRecords = $query->count();
+        $transacciones = $query
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        // Generar HTML usando vista parcial
+        $html = view('finance.bancos.partials.transacciones-rows', compact('transacciones'))->render();
+
+        return response()->json([
+            'html' => $html,
+            'total_records' => $totalRecords,
+            'current_page' => $page,
+            'per_page' => $perPage
+        ]);
     }
 
     // Registrar una transacción
