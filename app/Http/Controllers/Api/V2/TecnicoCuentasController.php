@@ -240,9 +240,9 @@ class TecnicoCuentasController extends Controller
     public function serviciosMasVendidos()
     {
         try {
+            // view_usuarios_activos ya tiene idcue, conectar directamente
             $servicios = DB::table('view_usuarios_activos')
-                ->join('perfiles', 'view_usuarios_activos.idper', '=', 'perfiles.idper')
-                ->join('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
+                ->join('cuentas', 'view_usuarios_activos.idcue', '=', 'cuentas.idcue')
                 ->join('valores', 'cuentas.idval', '=', 'valores.idval')
                 ->join('servicios', 'valores.idser', '=', 'servicios.idser')
                 ->where('view_usuarios_activos.fecha_vencimiento', '>', Carbon::now())
@@ -392,9 +392,9 @@ class TecnicoCuentasController extends Controller
     public function promedioClientesPorCuenta()
     {
         try {
+            // view_usuarios_activos ya tiene idcue, conectar directamente
             $estadisticas = DB::table('view_usuarios_activos')
-                ->join('perfiles', 'view_usuarios_activos.idper', '=', 'perfiles.idper')
-                ->join('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
+                ->join('cuentas', 'view_usuarios_activos.idcue', '=', 'cuentas.idcue')
                 ->join('valores', 'cuentas.idval', '=', 'valores.idval')
                 ->join('servicios', 'valores.idser', '=', 'servicios.idser')
                 ->where('view_usuarios_activos.fecha_vencimiento', '>', Carbon::now())
@@ -754,9 +754,9 @@ class TecnicoCuentasController extends Controller
 
             $servicioId = strtoupper($request->servicio_id);
 
+            // view_usuarios_activos ya tiene idcue, conectar directamente
             $usuarios = DB::table('view_usuarios_activos')
-                ->join('perfiles', 'view_usuarios_activos.idper', '=', 'perfiles.idper')
-                ->join('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
+                ->join('cuentas', 'view_usuarios_activos.idcue', '=', 'cuentas.idcue')
                 ->join('valores', 'cuentas.idval', '=', 'valores.idval')
                 ->join('servicios', 'valores.idser', '=', 'servicios.idser')
                 ->where('servicios.idser', $servicioId)

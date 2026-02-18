@@ -135,13 +135,26 @@ Route::prefix('v1')->group(function () {
 });
 
 Route::prefix('v2')->group(function () {
+    // Ruta de prueba simple
+    Route::get('/test', function () {
+        return response()->json(['success' => true, 'message' => 'Test route works!']);
+    });
+
     // Validación de Credenciales - Público (para N8N sin bcrypt)
     Route::controller(AuthController::class)->group(function () {
         Route::post('/auth/create-customer', 'crearCliente')->name('api.auth.create-customer');
         Route::post('/auth/validate-credentials', 'validarCredenciales')->name('api.auth.validate');
     });
 
-    // Información y Precios - Público
+    // Rutas públicas de información (sin prefijo 'info')
+    Route::controller(InformationController::class)->group(function () {
+        Route::get('/precios', 'getPrecios')->name('api.v2.precios.public');
+        Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago.public');
+        Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco.public');
+        Route::get('/tareas-hoy', 'getTareasHoy')->name('api.v2.tareas-hoy.public');
+    });
+
+    // Información y Precios - Público (con prefijo 'info' - legacy)
     Route::controller(InformationController::class)->prefix('info')->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios');
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago');

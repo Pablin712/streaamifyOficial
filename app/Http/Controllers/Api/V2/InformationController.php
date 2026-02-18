@@ -265,7 +265,7 @@ class InformationController extends Controller
     {
         $productos = Producto::with(['detalles', 'categoria'])
             ->whereHas('categoria', function($query) {
-                $query->where('nombre', 'Combos');
+                $query->where('nombre', 'Combo');
             })
             ->whereHas('detalles', function($query) {
                 $query->where('meses', 1);
