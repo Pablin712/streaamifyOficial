@@ -62,7 +62,7 @@ class LoginController extends Controller
             ]);
 
             return back()->withErrors([
-                'usuarioemp' => 'Tu cuenta no tiene roles asignados. Contacta al administrador para activar tu cuenta.',
+                'usuarioemp' => 'Tu cuenta no tiene roles asignados :(. Contacta al administrador para activar tu cuenta.',
             ])->withInput($request->except('passwordemp'));
         }
 
@@ -106,7 +106,7 @@ class LoginController extends Controller
             ]);
 
             return response()->json([
-                'error' => 'Tu cuenta no tiene roles asignados. Contacta al administrador para activar tu cuenta.'
+                'error' => 'Tu cuenta no tiene roles asignados :(. Contacta al administrador para activar tu cuenta.'
             ], 403);
         }
 
