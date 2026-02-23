@@ -52,6 +52,20 @@ class LoginController extends Controller
             ])->withInput($request->except('passwordemp'));
         }
 
+        // Verificar si el empleado tiene roles asignados
+        if ($empleado->roles->isEmpty()) {
+            Historial::create([
+                'accion' => 'Fallo-Login-Sin-Roles',
+                'descripcion' => 'Intento de login del empleado sin roles asignados: ' . $empleado->usuarioemp,
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+
+            return back()->withErrors([
+                'usuarioemp' => 'Tu cuenta no tiene roles asignados. Contacta al administrador para activar tu cuenta.',
+            ])->withInput($request->except('passwordemp'));
+        }
+
         Auth::login($empleado);
 
         Historial::create([
@@ -80,6 +94,20 @@ class LoginController extends Controller
 
         if (!$empleado || !Hash::check($request->passwordemp, $empleado->passwordemp)) {
             return response()->json(['error' => 'Usuario o contraseña incorrectos.'], 401);
+        }
+
+        // Verificar si el empleado tiene roles asignados
+        if ($empleado->roles->isEmpty()) {
+            Historial::create([
+                'accion' => 'Fallo-Login-API-Sin-Roles',
+                'descripcion' => 'Intento de login API del empleado sin roles asignados: ' . $empleado->usuarioemp,
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'error' => 'Tu cuenta no tiene roles asignados. Contacta al administrador para activar tu cuenta.'
+            ], 403);
         }
 
         try {
