@@ -36,19 +36,21 @@ class HistorialController extends Controller
         $sortBy = $request->input('sort_by', '');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $query = Historial::query();
+        $query = Historial::with('empleado');
 
         // Búsqueda
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('accionhis', 'like', "%{$search}%")
-                    ->orWhere('empleadohis', 'like', "%{$search}%")
-                    ->orWhere('descripcionhis', 'like', "%{$search}%");
+                $q->where('accion', 'like', "%{$search}%")
+                    ->orWhere('descripcion', 'like', "%{$search}%")
+                    ->orWhereHas('empleado', function ($q) use ($search) {
+                        $q->where('nombreemp', 'like', "%{$search}%");
+                    });
             });
         }
 
         // Ordenamiento
-        $validSortColumns = ['idhis' => 'idhis', 'created_at' => 'created_at'];
+        $validSortColumns = ['id' => 'id', 'created_at' => 'created_at'];
         if ($sortBy !== '' && isset($validSortColumns[$sortBy])) {
             $query->orderBy($validSortColumns[$sortBy], $sortOrder);
         } else {
