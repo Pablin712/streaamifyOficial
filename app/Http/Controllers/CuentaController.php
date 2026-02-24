@@ -91,6 +91,38 @@ class CuentaController extends Controller
         return view('inventory.cuentas.show', compact('cuenta', 'perfiles'));
     }
 
+    public function loadPerfiles(Request $request, $idcue)
+    {
+        if (!Gate::allows('cuentas.mensaje')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permiso para ver esta cuenta.'
+            ], 403);
+        }
+
+        try {
+            $cuenta = Cuenta::with(['valor', 'costos'])->findOrFail($idcue);
+            $perfiles = $this->cuentaService->calcularUsuariosPorPerfil($cuenta);
+
+            $html = view('inventory.cuentas.partials.perfiles-content', compact('cuenta', 'perfiles'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'cuenta' => [
+                    'idcue' => $cuenta->idcue,
+                    'usuariocue' => $cuenta->usuariocue,
+                    'servicio' => $cuenta->valor->idser ?? ''
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cargar los perfiles: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function PerfilesSpotify()
     {
         if (!Gate::allows('todas_las_cuentas') || !Gate::allows('spotify')) {

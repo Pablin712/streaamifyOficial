@@ -468,6 +468,7 @@
     @include('inventory.cuentas.modals.edit')
     @include('inventory.cuentas.modals.delete')
     @include('inventory.cuentas.modals.renew')
+    @include('inventory.cuentas.modals.view-perfiles')
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
     @include('inventory.valores.modals.create')

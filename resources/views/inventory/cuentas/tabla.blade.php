@@ -162,9 +162,9 @@
                         <td>
                             <div class="action-buttons">
                                 @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
-                                    <a href="{{ route('cuentas.show', $cuenta->idcue) }}" class="btn btn-info btn-xs">
+                                    <button onclick="loadPerfilesInModal('{{ $cuenta->idcue }}', '{{ $cuenta->usuariocue }}')" class="btn btn-info btn-xs" title="Ver perfiles">
                                         <i class="fas fa-eye"></i>
-                                    </a>
+                                    </button>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.edit'))
                                     <button onclick="openEditModal('{{ $cuenta->idcue }}')" class="btn btn-warning btn-xs">
