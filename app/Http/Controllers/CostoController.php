@@ -98,23 +98,46 @@ class CostoController extends Controller
         $user = Auth::user();
 
         if (!$user->hasPermissionTo('costos.store')) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para crear costos.'
+                ], 403);
+            }
             abort(403, 'No tienes permiso para crear costos.');
         }
 
         // Validar los datos - banco_id es opcional si no se pagó
-        $request->validate([
-            'idcue' => 'required|exists:cuentas,idcue',
-            'descripcioncos' => 'required|string|max:50',
-            'montocos' => 'required|numeric|min:0',
-            'fechacos' => 'nullable|date',
-            'banco_id' => 'nullable|exists:bancos,idban',
-            'se_pago' => 'nullable|boolean'
-        ]);
+        try {
+            $validated = $request->validate([
+                'idcue' => 'required|exists:cuentas,idcue',
+                'descripcioncos' => 'required|string|max:50',
+                'montocos' => 'required|numeric|min:0',
+                'fechacos' => 'nullable|date',
+                'banco_id' => 'nullable|exists:bancos,idban',
+                'se_pago' => 'nullable|boolean'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        }
 
         $sePago = $request->has('se_pago') && $request->se_pago;
 
         // Validar que si se pagó, debe tener banco
         if ($sePago && !$request->banco_id) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Debe seleccionar un banco si el costo se pagó.'
+                ], 422);
+            }
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Debe seleccionar un banco si el costo se pagó.');
@@ -149,12 +172,27 @@ class CostoController extends Controller
                     'created_at' => now(),
                 ]);
 
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Costo creado y pagado correctamente.'
+                    ]);
+                }
+
                 return redirect()->route('costos', ['idcue' => $request->idcue])
                     ->with('success', 'Costo creado y pagado correctamente.');
 
             } catch (\Exception $e) {
                 // Si falla la transacción, eliminar el costo y mostrar error
                 $costo->delete();
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage()
+                    ], 500);
+                }
+
                 return redirect()->route('costos', ['idcue' => $request->idcue])
                     ->with('error', $e->getMessage());
             }
@@ -164,6 +202,14 @@ class CostoController extends Controller
 
             if (!$cuenta || !$cuenta->valor || !$cuenta->valor->proveedor) {
                 $costo->delete();
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No se pudo determinar el proveedor de esta cuenta.'
+                    ], 500);
+                }
+
                 return redirect()->route('costos', ['idcue' => $request->idcue])
                     ->with('error', 'No se pudo determinar el proveedor de esta cuenta.');
             }
@@ -186,6 +232,13 @@ class CostoController extends Controller
                 'empleado_id' => Auth::user()->idemp,
                 'created_at' => now(),
             ]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Costo registrado. Deuda acumulada con ' . $proveedor->nombrepro . ': $' . number_format($deuda->monto_restante, 2)
+                ]);
+            }
 
             return redirect()->route('costos', ['idcue' => $request->idcue])
                 ->with('success', 'Costo registrado. Deuda acumulada con ' . $proveedor->nombrepro . ': $' . number_format($deuda->monto_restante, 2));
