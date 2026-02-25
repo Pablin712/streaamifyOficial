@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 class CuentaController extends Controller
 {
     protected $cuentaService;
@@ -169,7 +170,14 @@ class CuentaController extends Controller
                 'tipo_cuenta' => 'required|in:completa,individual',
                 'idval' => 'required|exists:valores,idval',
                 'fechavencue' => 'required|date',
-                'usuariocue' => 'required|string|max:50|unique:cuentas,usuariocue',
+                'usuariocue' => [
+                    'required',
+                    'string',
+                    'max:50',
+                    Rule::unique('cuentas', 'usuariocue')->where(function ($query) {
+                        return $query->where('activocue', true);
+                    })
+                ],
                 'contrasenacue' => 'required|string|max:50',
                 'caidacue' => 'required|boolean',
             ]);
@@ -640,7 +648,16 @@ class CuentaController extends Controller
             $request->validate([
                 'idval' => 'required|exists:valores,idval',
                 'fechavencue' => 'required|date',
-                'usuariocue' => 'required|string|max:50',
+                'usuariocue' => [
+                    'required',
+                    'string',
+                    'max:50',
+                    Rule::unique('cuentas', 'usuariocue')
+                        ->ignore($idcue, 'idcue')
+                        ->where(function ($query) {
+                            return $query->where('activocue', true);
+                        })
+                ],
                 'contrasenacue' => 'required|string|max:50',
                 'caidacue' => 'required|boolean|min:1'
             ]);
