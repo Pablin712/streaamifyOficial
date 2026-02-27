@@ -216,7 +216,7 @@ class CuentaController extends Controller
                             $request->banco_id,
                             $validatedCosto['montocos'],
                             'egreso',
-                            'Compra/Creación de cuenta: ' . $request->idcue . ' - ' . $validatedCosto['descripcioncos']
+                            'Compra/Creación de cuenta: ' . $cuenta->idcue . ' - ' . $validatedCosto['descripcioncos']
                         );
                         $transaccionId = $transaccion->id;
                     } catch (\Exception $e) {
@@ -225,7 +225,7 @@ class CuentaController extends Controller
                 }
 
                 $costo = Costo::create([
-                    'idcue' => $request->idcue,
+                    'idcue' => $cuenta->idcue,
                     'fechacos' => now(),
                     'montocos' => $validatedCosto['montocos'],
                     'descripcioncos' => $validatedCosto['descripcioncos'],
@@ -241,9 +241,9 @@ class CuentaController extends Controller
 
                 // Si NO se pagó, crear/acumular deuda
                 if (!$sePago) {
-                    // Obtener proveedor desde: cuenta -> valor -> proveedor
-                    $cuenta = Cuenta::with('valor.proveedor')->find($request->idcue);
-                    $proveedor = $cuenta->valor->proveedor;
+                    // Obtener proveedor desde: cuenta recién creada -> valor -> proveedor
+                    $cuenta->loadMissing('valor.proveedor');
+                    $proveedor = $cuenta->valor->proveedor ?? null;
 
                     if ($proveedor) {
                         // Buscar o crear deuda pendiente para este proveedor
