@@ -165,6 +165,49 @@ class ContadorController extends Controller
     }
 
     /**
+     * A2.2. Facturas Vencidas para Quitar Usuarios (ayer o antes)
+     * GET /api/v2/accountant/ventas/facturas-vencidas-quitar
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function facturasVencidasParaQuitar(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'servicio' => 'nullable|integer|exists:servicios,idser'
+            ], [
+                'servicio.exists' => 'El servicio especificado no existe'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 400);
+            }
+
+            $servicio = $request->input('servicio');
+
+            $data = $this->contadorService->facturasVencidasParaQuitar($servicio);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Facturas vencidas para quitar usuarios obtenidas correctamente',
+                'data' => $data
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener facturas vencidas para quitar usuarios',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * A3. Ingresos por Servicio
      * GET /api/v2/accountant/ventas/ingresos-por-servicio
      *

@@ -224,6 +224,68 @@ class ContadorService
     }
 
     /**
+     * Obtener facturas/usuarios vencidos para quitar
+     * (fecha de vencimiento: ayer o antes)
+     *
+     * @param string|null $servicio ID del servicio para filtrar
+     * @return array
+     */
+    public function facturasVencidasParaQuitar($servicio = null)
+    {
+        $hoy = Carbon::today();
+        $fechaCorte = Carbon::yesterday();
+
+        // Usar ViewUsuarioActivo: incluye solo cuentas activas
+        // Filtrar vencidas: fecha_vencimiento <= ayer
+        $query = ViewUsuarioActivo::with([
+            'cliente',
+            'detalle_venta.perfil.cuenta.valor.servicio',
+            'venta'
+        ])
+        ->whereDate('fecha_vencimiento', '<=', $fechaCorte);
+
+        if ($servicio) {
+            $query->whereHas('detalle_venta.perfil.cuenta.valor.servicio', function($q) use ($servicio) {
+                $q->where('idser', $servicio);
+            });
+        }
+
+        $facturas = $query->orderBy('fecha_vencimiento', 'asc')->get();
+
+        $facturasProcesadas = $facturas->map(function($usuario) use ($hoy) {
+            $fechaVencimiento = Carbon::parse($usuario->fecha_vencimiento);
+            $dias_atraso = $fechaVencimiento->diffInDays($hoy);
+            $detalle = $usuario->detalle_venta;
+            $servicio = $detalle?->perfil?->cuenta?->valor?->servicio?->nombreser ?? 'N/A';
+            $cliente = $usuario->cliente;
+
+            return [
+                'id_detalle' => $usuario->iddet,
+                'id_venta' => $usuario->idven,
+                'id_cliente' => $usuario->idcli,
+                'cliente' => $usuario->nombre_cliente,
+                'email' => $cliente?->email ?? '',
+                'telefono' => $cliente?->telefonocli ?? '',
+                'perfil' => $usuario->perfil,
+                'cuenta' => $usuario->idcue,
+                'servicio' => $servicio,
+                'monto' => round($detalle?->montodet ?? 0, 2),
+                'fecha_venta' => $usuario->venta?->fechaven?->format('Y-m-d') ?? 'N/A',
+                'fecha_vencimiento' => $fechaVencimiento->format('Y-m-d'),
+                'dias_atraso' => $dias_atraso,
+            ];
+        });
+
+        return [
+            'fecha_hoy' => $hoy->format('Y-m-d'),
+            'fecha_corte' => $fechaCorte->format('Y-m-d'),
+            'total_facturas' => $facturasProcesadas->count(),
+            'monto_total' => round($facturasProcesadas->sum('monto'), 2),
+            'facturas' => $facturasProcesadas->values()
+        ];
+    }
+
+    /**
      * Análisis de ingresos por servicio
      *
      * @param string $periodo
