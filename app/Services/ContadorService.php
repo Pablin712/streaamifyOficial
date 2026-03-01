@@ -629,6 +629,206 @@ class ContadorService
     }
 
     /**
+     * Evaluar usuarios que requieren atención por estar en cuentas dañadas
+     * y/o mesas de trabajo (Atencion), proponiendo cuentas destino.
+     *
+     * NOTA: Solo simulación para toma de decisiones (NO ejecuta cambios).
+     *
+     * @param string|null $servicio ID del servicio para filtrar
+     * @return array
+     */
+    public function evaluarUsuariosParaAtencion($servicio = null)
+    {
+        $hoy = Carbon::today();
+
+        // 1) Cuentas que requieren atención: dañadas y/o mesas de trabajo
+        $queryCuentasAtencion = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->where(function ($q) {
+                $q->where('caidacue', true)
+                    ->orWhere('idcue', 'LIKE', '%Atencion%');
+            });
+
+        if ($servicio) {
+            $queryCuentasAtencion->whereHas('valor.servicio', function ($q) use ($servicio) {
+                $q->where('idser', $servicio);
+            });
+        }
+
+        $cuentasAtencion = $queryCuentasAtencion->orderBy('fechavencue', 'asc')->get();
+
+        if ($cuentasAtencion->isEmpty()) {
+            return [
+                'fecha_hoy' => $hoy->format('Y-m-d'),
+                'servicio_filtro' => $servicio,
+                'resumen' => [
+                    'total_cuentas_atencion' => 0,
+                    'total_usuarios_para_atencion' => 0,
+                    'total_espacios_destino' => 0,
+                    'usuarios_no_asignables' => 0,
+                    'plan_completo' => true,
+                ],
+                'por_servicio' => [],
+                'cuentas_atencion' => [],
+                'usuarios_para_atencion' => [],
+            ];
+        }
+
+        $idsCuentasAtencion = $cuentasAtencion->pluck('idcue')->values();
+        $mapServicioPorCuenta = $cuentasAtencion->pluck('valor.servicio.idser', 'idcue')->toArray();
+
+        // 2) Usuarios activos vigentes dentro de cuentas de atención
+        $usuariosAtencion = ViewUsuarioActivo::query()
+            ->whereIn('idcue', $idsCuentasAtencion)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->orderBy('fecha_vencimiento', 'asc')
+            ->get()
+            ->map(function ($usuario) use ($mapServicioPorCuenta) {
+                return [
+                    'id_detalle' => $usuario->iddet,
+                    'id_cliente' => $usuario->idcli,
+                    'cliente' => $usuario->nombre_cliente,
+                    'idcue_origen' => $usuario->idcue,
+                    'perfil' => $usuario->perfil,
+                    'fecha_vencimiento' => Carbon::parse($usuario->fecha_vencimiento)->format('Y-m-d'),
+                    'servicio_id' => $mapServicioPorCuenta[$usuario->idcue] ?? null,
+                ];
+            });
+
+        // 3) Cuentas destino sanas: activas, no dañadas, no mesa, con espacios
+        $queryDestino = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->where('caidacue', false)
+            ->where('idcue', 'NOT LIKE', '%Atencion%')
+            ->whereNotIn('idcue', $idsCuentasAtencion);
+
+        if ($servicio) {
+            $queryDestino->whereHas('valor.servicio', function ($q) use ($servicio) {
+                $q->where('idser', $servicio);
+            });
+        }
+
+        $cuentasDestino = $queryDestino->get();
+        $idsDestino = $cuentasDestino->pluck('idcue')->values();
+
+        $activosPorDestino = ViewUsuarioActivo::query()
+            ->select('idcue', DB::raw('COUNT(*) as total_activos'))
+            ->whereIn('idcue', $idsDestino)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->groupBy('idcue')
+            ->pluck('total_activos', 'idcue');
+
+        $destinosConCapacidad = $cuentasDestino->map(function ($cuenta) use ($activosPorDestino) {
+            $activos = (int) ($activosPorDestino[$cuenta->idcue] ?? 0);
+            $pantMax = (int) ($cuenta->valor->pantmaxval ?? 0);
+            $espacios = max(0, $pantMax - $activos);
+
+            return [
+                'idcue' => $cuenta->idcue,
+                'usuario' => $cuenta->usuariocue,
+                'servicio_id' => $cuenta->valor->servicio->idser ?? null,
+                'servicio' => $cuenta->valor->servicio->nombreser ?? 'N/A',
+                'pantmax' => $pantMax,
+                'usuarios_activos' => $activos,
+                'espacios_disponibles' => $espacios,
+            ];
+        })->filter(fn ($d) => $d['espacios_disponibles'] > 0)->values();
+
+        // 4) Marcar tipo de atención por cuenta
+        $cuentasAtencionPayload = $cuentasAtencion->map(function ($cuenta) {
+            $esMesa = str_contains((string) $cuenta->idcue, 'Atencion');
+            $esDanada = (bool) $cuenta->caidacue;
+
+            $tipo = match (true) {
+                $esDanada && $esMesa => 'DANADA_Y_MESA',
+                $esDanada => 'DANADA',
+                $esMesa => 'MESA_TRABAJO',
+                default => 'ATENCION',
+            };
+
+            return [
+                'idcue' => $cuenta->idcue,
+                'usuario' => $cuenta->usuariocue,
+                'servicio_id' => $cuenta->valor->servicio->idser ?? null,
+                'servicio' => $cuenta->valor->servicio->nombreser ?? 'N/A',
+                'fecha_vencimiento_cuenta' => Carbon::parse($cuenta->fechavencue)->format('Y-m-d'),
+                'tipo_atencion' => $tipo,
+                'caidacue' => $esDanada,
+                'es_mesa_trabajo' => $esMesa,
+            ];
+        })->values();
+
+        // 5) Propuesta de asignación greedy por servicio
+        $destinoMutable = $destinosConCapacidad->map(fn ($d) => $d)->values();
+        $asignaciones = collect();
+
+        foreach ($usuariosAtencion as $usuario) {
+            $idx = $destinoMutable->search(function ($dest) use ($usuario) {
+                return $dest['servicio_id'] === $usuario['servicio_id']
+                    && $dest['espacios_disponibles'] > 0;
+            });
+
+            if ($idx === false) {
+                $asignaciones->push(array_merge($usuario, [
+                    'idcue_destino_sugerido' => null,
+                    'asignable' => false,
+                ]));
+                continue;
+            }
+
+            $dest = $destinoMutable[$idx];
+            $dest['espacios_disponibles'] = $dest['espacios_disponibles'] - 1;
+            $destinoMutable[$idx] = $dest;
+
+            $asignaciones->push(array_merge($usuario, [
+                'idcue_destino_sugerido' => $dest['idcue'],
+                'asignable' => true,
+            ]));
+        }
+
+        // 6) Resumen por servicio
+        $porServicio = collect();
+        $servicios = $usuariosAtencion->pluck('servicio_id')->filter()->unique()->values();
+
+        foreach ($servicios as $servicioId) {
+            $usuariosServicio = $usuariosAtencion->where('servicio_id', $servicioId);
+            $destinoServicio = $destinosConCapacidad->where('servicio_id', $servicioId);
+            $noAsignablesServicio = $asignaciones
+                ->where('servicio_id', $servicioId)
+                ->where('asignable', false)
+                ->count();
+
+            $porServicio->push([
+                'servicio_id' => $servicioId,
+                'servicio' => $destinoServicio->first()['servicio']
+                    ?? $cuentasAtencionPayload->firstWhere('servicio_id', $servicioId)['servicio']
+                    ?? 'N/A',
+                'usuarios_para_atencion' => $usuariosServicio->count(),
+                'espacios_disponibles' => (int) $destinoServicio->sum('espacios_disponibles'),
+                'usuarios_no_asignables' => $noAsignablesServicio,
+                'plan_completo' => $noAsignablesServicio === 0,
+            ]);
+        }
+
+        $noAsignables = $asignaciones->where('asignable', false)->count();
+
+        return [
+            'fecha_hoy' => $hoy->format('Y-m-d'),
+            'servicio_filtro' => $servicio,
+            'resumen' => [
+                'total_cuentas_atencion' => $cuentasAtencionPayload->count(),
+                'total_usuarios_para_atencion' => $usuariosAtencion->count(),
+                'total_espacios_destino' => (int) $destinosConCapacidad->sum('espacios_disponibles'),
+                'usuarios_no_asignables' => $noAsignables,
+                'plan_completo' => $noAsignables === 0,
+            ],
+            'por_servicio' => $porServicio->values(),
+            'cuentas_atencion' => $cuentasAtencionPayload,
+            'usuarios_para_atencion' => $asignaciones->values(),
+        ];
+    }
+
+    /**
      * Análisis de ingresos por servicio
      *
      * @param string $periodo

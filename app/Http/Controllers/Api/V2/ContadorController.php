@@ -300,6 +300,53 @@ class ContadorController extends Controller
     }
 
     /**
+     * A2.5. Evaluar Usuarios para Atención (cuentas dañadas/mesa)
+     * GET /api/v2/accountant/cuentas/evaluar-atencion
+     *
+     * Evalúa usuarios activos en cuentas dañadas y/o mesas de trabajo,
+     * proponiendo reubicación en cuentas sanas con espacio disponible.
+     * Solo simulación (no ejecuta cambios).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function evaluarUsuariosParaAtencion(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'servicio' => 'nullable|string|exists:servicios,idser'
+            ], [
+                'servicio.exists' => 'El servicio especificado no existe'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 400);
+            }
+
+            $servicio = $request->input('servicio');
+
+            $data = $this->contadorService->evaluarUsuariosParaAtencion($servicio);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evaluación de usuarios para atención obtenida correctamente',
+                'data' => $data
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al evaluar usuarios para atención',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * A3. Ingresos por Servicio
      * GET /api/v2/accountant/ventas/ingresos-por-servicio
      *
