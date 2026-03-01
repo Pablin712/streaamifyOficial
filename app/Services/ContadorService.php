@@ -9,6 +9,7 @@ use App\Models\DetalleVenta;
 use App\Models\Cliente;
 use App\Models\Servicio;
 use App\Models\Banco;
+use App\Models\Cuenta;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Support\Facades\DB;
 
@@ -282,6 +283,93 @@ class ContadorService
             'total_facturas' => $facturasProcesadas->count(),
             'monto_total' => round($facturasProcesadas->sum('monto'), 2),
             'facturas' => $facturasProcesadas->values()
+        ];
+    }
+
+    /**
+     * Evaluar cuentas que conviene renovar o no renovar.
+     * Considera cuentas cuya fecha de vencimiento sea <= hoy + 2 días.
+     * Para rentabilidad, cuenta usuarios activos con fecha_vencimiento > hoy
+     * y compara contra pantminval.
+     *
+     * @param string|null $servicio ID del servicio para filtrar
+     * @return array
+     */
+    public function evaluarCuentasRenovacion($servicio = null)
+    {
+        $hoy = Carbon::today();
+        $fechaLimite = $hoy->copy()->addDays(2);
+
+        $query = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->whereDate('fechavencue', '<=', $fechaLimite);
+
+        if ($servicio) {
+            $query->whereHas('valor.servicio', function ($q) use ($servicio) {
+                $q->where('idser', $servicio);
+            });
+        }
+
+        $cuentas = $query->orderBy('fechavencue', 'asc')->get();
+
+        if ($cuentas->isEmpty()) {
+            return [
+                'fecha_hoy' => $hoy->format('Y-m-d'),
+                'fecha_limite_evaluacion' => $fechaLimite->format('Y-m-d'),
+                'total_cuentas_evaluadas' => 0,
+                'totales' => [
+                    'a_renovar' => 0,
+                    'no_renovar' => 0,
+                ],
+                'cuentas_a_renovar' => [],
+                'cuentas_no_renovar' => [],
+            ];
+        }
+
+        $idsCuentas = $cuentas->pluck('idcue')->values();
+
+        $usuariosActivosPorCuenta = ViewUsuarioActivo::query()
+            ->select('idcue', DB::raw('COUNT(*) as total_activos'))
+            ->whereIn('idcue', $idsCuentas)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->groupBy('idcue')
+            ->pluck('total_activos', 'idcue');
+
+        $procesadas = $cuentas->map(function ($cuenta) use ($usuariosActivosPorCuenta, $hoy) {
+            $totalUsuariosActivos = (int) ($usuariosActivosPorCuenta[$cuenta->idcue] ?? 0);
+            $minimoRentable = (int) ($cuenta->valor->pantminval ?? 0);
+            $convieneRenovar = $totalUsuariosActivos >= $minimoRentable;
+
+            $fechaVencimiento = Carbon::parse($cuenta->fechavencue);
+            $diasParaVencer = $hoy->diffInDays($fechaVencimiento, false);
+
+            return [
+                'idcue' => $cuenta->idcue,
+                'usuario' => $cuenta->usuariocue,
+                'contraseña' => $cuenta->contrasenacue,
+                'servicio_id' => $cuenta->valor->servicio->idser ?? null,
+                'servicio' => $cuenta->valor->servicio->nombreser ?? 'N/A',
+                'fecha_vencimiento_cuenta' => $fechaVencimiento->format('Y-m-d'),
+                'dias_para_vencer' => $diasParaVencer,
+                'total_usuarios_activos' => $totalUsuariosActivos,
+                'total_minimo_usuarios_rentable' => $minimoRentable,
+                'conviene_renovar' => $convieneRenovar,
+            ];
+        });
+
+        $cuentasARenovar = $procesadas->where('conviene_renovar', true)->values();
+        $cuentasNoRenovar = $procesadas->where('conviene_renovar', false)->values();
+
+        return [
+            'fecha_hoy' => $hoy->format('Y-m-d'),
+            'fecha_limite_evaluacion' => $fechaLimite->format('Y-m-d'),
+            'total_cuentas_evaluadas' => $procesadas->count(),
+            'totales' => [
+                'a_renovar' => $cuentasARenovar->count(),
+                'no_renovar' => $cuentasNoRenovar->count(),
+            ],
+            'cuentas_a_renovar' => $cuentasARenovar,
+            'cuentas_no_renovar' => $cuentasNoRenovar,
         ];
     }
 
