@@ -62,6 +62,17 @@
                         <i class="fas fa-calendar-alt me-1" style="color: #fd7e14;"></i>Fecha de Vencimiento *
                     </label>
                     <input type="date" name="fechavencue" id="edit_fechavencue" class="form-control" required>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="setEditCuentaMonthsAhead(1)">
+                            <i class="fas fa-plus me-1"></i>+1 Mes
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="setEditCuentaMonthsAhead(2)">
+                            <i class="fas fa-plus me-1"></i>+2 Meses
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="setEditCuentaMonthsAhead(3)">
+                            <i class="fas fa-plus me-1"></i>+3 Meses
+                        </button>
+                    </div>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -88,6 +99,20 @@
 </x-modal>
 
 <script>
+function setEditCuentaMonthsAhead(months) {
+    const field = document.getElementById('edit_fechavencue');
+    if (!field) return;
+
+    const baseDate = new Date();
+    baseDate.setMonth(baseDate.getMonth() + months);
+
+    const year = baseDate.getFullYear();
+    const month = String(baseDate.getMonth() + 1).padStart(2, '0');
+    const day = String(baseDate.getDate()).padStart(2, '0');
+
+    field.value = `${year}-${month}-${day}`;
+}
+
 function togglePassword(fieldId) {
     const field = document.getElementById(fieldId);
     const icon = document.getElementById(fieldId + '-icon');
