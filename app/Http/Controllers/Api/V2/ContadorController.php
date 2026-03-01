@@ -254,6 +254,52 @@ class ContadorController extends Controller
     }
 
     /**
+     * A2.4. Evaluar Usuarios para Mudanza (solo simulación)
+     * GET /api/v2/accountant/cuentas/evaluar-mudanza
+     *
+     * Evalúa usuarios en cuentas no renovables y propone reubicación en cuentas
+     * con espacio; si falta capacidad, sugiere rescatar cuentas no renovables.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function evaluarUsuariosParaMudanza(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'servicio' => 'nullable|string|exists:servicios,idser'
+            ], [
+                'servicio.exists' => 'El servicio especificado no existe'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors()
+                ], 400);
+            }
+
+            $servicio = $request->input('servicio');
+
+            $data = $this->contadorService->evaluarUsuariosParaMudanza($servicio);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evaluación de mudanza de usuarios obtenida correctamente',
+                'data' => $data
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al evaluar mudanza de usuarios',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * A3. Ingresos por Servicio
      * GET /api/v2/accountant/ventas/ingresos-por-servicio
      *

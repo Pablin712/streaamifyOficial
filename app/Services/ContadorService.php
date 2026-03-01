@@ -374,6 +374,261 @@ class ContadorService
     }
 
     /**
+     * Evaluar usuarios que habría que mudar desde cuentas NO renovables,
+     * considerando capacidad disponible en otras cuentas activas y, si hace
+     * falta, rescatando cuentas no renovables para renovarlas.
+     *
+     * NOTA: Este método NO ejecuta cambios, solo genera una propuesta.
+     *
+     * @param string|null $servicio ID del servicio para filtrar
+     * @return array
+     */
+    public function evaluarUsuariosParaMudanza($servicio = null)
+    {
+        $hoy = Carbon::today();
+
+        // 1) Base: cuentas a renovar / no renovar (misma lógica existente)
+        $evaluacionRenovacion = $this->evaluarCuentasRenovacion($servicio);
+        $cuentasNoRenovar = collect($evaluacionRenovacion['cuentas_no_renovar'] ?? []);
+
+        if ($cuentasNoRenovar->isEmpty()) {
+            return [
+                'fecha_hoy' => $hoy->format('Y-m-d'),
+                'servicio_filtro' => $servicio,
+                'resumen' => [
+                    'total_cuentas_no_renovar' => 0,
+                    'total_usuarios_en_cuentas_no_renovar' => 0,
+                    'total_usuarios_a_mudar' => 0,
+                    'total_espacios_disponibles_sin_rescate' => 0,
+                    'deficit_inicial' => 0,
+                    'cuentas_rescatadas' => 0,
+                    'plan_completo' => true,
+                ],
+                'por_servicio' => [],
+                'cuentas_no_renovar' => [],
+                'cuentas_rescatadas_para_renovar' => [],
+                'usuarios_a_mudar' => [],
+            ];
+        }
+
+        $cuentasNoRenovarIds = $cuentasNoRenovar->pluck('idcue')->values();
+        $mapCuentaServicio = $cuentasNoRenovar
+            ->pluck('servicio_id', 'idcue')
+            ->toArray();
+
+        // 2) Usuarios activos (vigentes) dentro de cuentas no renovables
+        $usuariosNoRenovar = ViewUsuarioActivo::query()
+            ->whereIn('idcue', $cuentasNoRenovarIds)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->orderBy('fecha_vencimiento', 'asc')
+            ->get()
+            ->map(function ($usuario) use ($mapCuentaServicio) {
+                return [
+                    'id_detalle' => $usuario->iddet,
+                    'id_cliente' => $usuario->idcli,
+                    'cliente' => $usuario->nombre_cliente,
+                    'idcue_origen' => $usuario->idcue,
+                    'perfil' => $usuario->perfil,
+                    'fecha_vencimiento' => Carbon::parse($usuario->fecha_vencimiento)->format('Y-m-d'),
+                    'servicio_id' => $mapCuentaServicio[$usuario->idcue] ?? null,
+                ];
+            });
+
+        // 3) Cuentas destino iniciales: activas, fuera de las NO renovables,
+        //    con espacios disponibles (usuarios_activos < pantmaxval)
+        $queryCuentasDestino = Cuenta::with(['valor.servicio'])
+            ->where('activocue', true)
+            ->whereNotIn('idcue', $cuentasNoRenovarIds);
+
+        if ($servicio) {
+            $queryCuentasDestino->whereHas('valor.servicio', function ($q) use ($servicio) {
+                $q->where('idser', $servicio);
+            });
+        }
+
+        $cuentasDestino = $queryCuentasDestino->get();
+
+        $idsDestino = $cuentasDestino->pluck('idcue')->values();
+        $activosEnDestino = ViewUsuarioActivo::query()
+            ->select('idcue', DB::raw('COUNT(*) as total_activos'))
+            ->whereIn('idcue', $idsDestino)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->groupBy('idcue')
+            ->pluck('total_activos', 'idcue');
+
+        $destinosConCapacidad = $cuentasDestino->map(function ($cuenta) use ($activosEnDestino) {
+            $activos = (int) ($activosEnDestino[$cuenta->idcue] ?? 0);
+            $pantMax = (int) ($cuenta->valor->pantmaxval ?? 0);
+            $espacios = max(0, $pantMax - $activos);
+
+            return [
+                'idcue' => $cuenta->idcue,
+                'usuario' => $cuenta->usuariocue,
+                'servicio_id' => $cuenta->valor->servicio->idser ?? null,
+                'servicio' => $cuenta->valor->servicio->nombreser ?? 'N/A',
+                'pantmax' => $pantMax,
+                'usuarios_activos' => $activos,
+                'espacios_disponibles' => $espacios,
+            ];
+        })->filter(fn ($c) => $c['espacios_disponibles'] > 0)->values();
+
+        // 4) Preparar cuentas no renovables como candidatas de rescate
+        $activosEnNoRenovar = ViewUsuarioActivo::query()
+            ->select('idcue', DB::raw('COUNT(*) as total_activos'))
+            ->whereIn('idcue', $cuentasNoRenovarIds)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->groupBy('idcue')
+            ->pluck('total_activos', 'idcue');
+
+        $candidatasRescate = $cuentasNoRenovar->map(function ($cuenta) use ($activosEnNoRenovar) {
+            $activos = (int) ($activosEnNoRenovar[$cuenta['idcue']] ?? 0);
+            // En cuentas no renovar ya tenemos mínimo rentable; usamos pantmax real
+            $pantMax = (int) (Cuenta::with('valor')->find($cuenta['idcue'])?->valor?->pantmaxval ?? 0);
+            $espacios = max(0, $pantMax - $activos);
+
+            return [
+                'idcue' => $cuenta['idcue'],
+                'servicio_id' => $cuenta['servicio_id'] ?? null,
+                'servicio' => $cuenta['servicio'] ?? 'N/A',
+                'fecha_vencimiento_cuenta' => $cuenta['fecha_vencimiento_cuenta'] ?? null,
+                'usuarios_activos' => $activos,
+                'pantmax' => $pantMax,
+                'espacios_disponibles' => $espacios,
+            ];
+        })->values();
+
+        // 5) Evaluación por servicio: espacios vs usuarios a mudar
+        $servicios = $usuariosNoRenovar->pluck('servicio_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $porServicio = collect();
+        $rescatadas = collect();
+
+        foreach ($servicios as $servicioId) {
+            $usuariosServicio = $usuariosNoRenovar->where('servicio_id', $servicioId)->values();
+            $destinosServicio = $destinosConCapacidad->where('servicio_id', $servicioId)->values();
+            $candidatasServicio = $candidatasRescate
+                ->where('servicio_id', $servicioId)
+                ->sortByDesc('pantmax')
+                ->values();
+
+            $usuariosAMudar = $usuariosServicio->count();
+            $espaciosSinRescate = (int) $destinosServicio->sum('espacios_disponibles');
+            $deficit = max(0, $usuariosAMudar - $espaciosSinRescate);
+
+            $rescatadasServicio = collect();
+
+            // Si faltan espacios, "rescatar" cuentas no renovables para renovar
+            // y así mantener usuarios / liberar capacidad adicional.
+            if ($deficit > 0) {
+                foreach ($candidatasServicio as $candidata) {
+                    $rescatadasServicio->push($candidata);
+                    // Ganancia neta por rescatar una cuenta = pantmax
+                    $deficit -= (int) $candidata['pantmax'];
+                    if ($deficit <= 0) {
+                        break;
+                    }
+                }
+            }
+
+            $rescatadas = $rescatadas->merge($rescatadasServicio);
+
+            $porServicio->push([
+                'servicio_id' => $servicioId,
+                'servicio' => $usuariosServicio->first()['servicio_id']
+                    ? ($destinosServicio->first()['servicio'] ?? $candidatasServicio->first()['servicio'] ?? 'N/A')
+                    : 'N/A',
+                'usuarios_en_no_renovar' => $usuariosAMudar,
+                'espacios_disponibles_sin_rescate' => $espaciosSinRescate,
+                'deficit_inicial' => max(0, $usuariosAMudar - $espaciosSinRescate),
+                'cuentas_rescatadas_requeridas' => $rescatadasServicio->pluck('idcue')->values(),
+                'espacios_extra_por_rescate' => (int) $rescatadasServicio->sum('espacios_disponibles'),
+                'plan_completo' => $deficit <= 0,
+            ]);
+        }
+
+        $idsRescatadas = $rescatadas->pluck('idcue')->unique()->values();
+
+        // 6) Usuarios que efectivamente hay que mover (excluye cuentas rescatadas)
+        $usuariosAMover = $usuariosNoRenovar
+            ->reject(fn ($u) => $idsRescatadas->contains($u['idcue_origen']))
+            ->values();
+
+        // 7) Pool final de destino = destinos originales + cuentas rescatadas con espacios
+        $poolDestino = $destinosConCapacidad->map(function ($d) {
+            $d['es_rescatada'] = false;
+            return $d;
+        })->values();
+
+        $rescatadasComoDestino = $rescatadas->map(function ($r) {
+            return [
+                'idcue' => $r['idcue'],
+                'usuario' => null,
+                'servicio_id' => $r['servicio_id'],
+                'servicio' => $r['servicio'],
+                'pantmax' => $r['pantmax'],
+                'usuarios_activos' => $r['usuarios_activos'],
+                'espacios_disponibles' => $r['espacios_disponibles'],
+                'es_rescatada' => true,
+            ];
+        })->filter(fn ($r) => $r['espacios_disponibles'] > 0)->values();
+
+        $poolDestino = $poolDestino->merge($rescatadasComoDestino)->values();
+
+        // 8) Propuesta de asignación (greedy) por servicio
+        $asignaciones = collect();
+        $destinoMutable = $poolDestino->map(fn ($d) => $d)->values();
+
+        foreach ($usuariosAMover as $usuario) {
+            $idx = $destinoMutable->search(function ($dest) use ($usuario) {
+                return $dest['servicio_id'] === $usuario['servicio_id']
+                    && $dest['espacios_disponibles'] > 0;
+            });
+
+            if ($idx === false) {
+                $asignaciones->push(array_merge($usuario, [
+                    'idcue_destino_sugerido' => null,
+                    'asignable' => false,
+                ]));
+                continue;
+            }
+
+            $dest = $destinoMutable[$idx];
+            $dest['espacios_disponibles'] = $dest['espacios_disponibles'] - 1;
+            $destinoMutable[$idx] = $dest;
+
+            $asignaciones->push(array_merge($usuario, [
+                'idcue_destino_sugerido' => $dest['idcue'],
+                'destino_es_rescatada' => $dest['es_rescatada'],
+                'asignable' => true,
+            ]));
+        }
+
+        $noAsignables = $asignaciones->where('asignable', false)->count();
+
+        return [
+            'fecha_hoy' => $hoy->format('Y-m-d'),
+            'servicio_filtro' => $servicio,
+            'resumen' => [
+                'total_cuentas_no_renovar' => $cuentasNoRenovar->count(),
+                'total_usuarios_en_cuentas_no_renovar' => $usuariosNoRenovar->count(),
+                'total_usuarios_a_mudar' => $usuariosAMover->count(),
+                'total_espacios_disponibles_sin_rescate' => (int) $destinosConCapacidad->sum('espacios_disponibles'),
+                'deficit_inicial' => max(0, $usuariosNoRenovar->count() - (int) $destinosConCapacidad->sum('espacios_disponibles')),
+                'cuentas_rescatadas' => $idsRescatadas->count(),
+                'usuarios_no_asignables' => $noAsignables,
+                'plan_completo' => $noAsignables === 0,
+            ],
+            'por_servicio' => $porServicio->values(),
+            'cuentas_no_renovar' => $cuentasNoRenovar->values(),
+            'cuentas_rescatadas_para_renovar' => $rescatadas->unique('idcue')->values(),
+            'usuarios_a_mudar' => $asignaciones->values(),
+        ];
+    }
+
+    /**
      * Análisis de ingresos por servicio
      *
      * @param string $periodo
