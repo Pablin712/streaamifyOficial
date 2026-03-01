@@ -186,6 +186,23 @@ class CuentaController extends Controller
 
             $cuenta = Cuenta::create($validated);
 
+            // Cuando idcue se genera por trigger, Eloquent puede mantener 0/null en memoria.
+            // Resolver el ID real persistido antes de crear registros relacionados (costos/deudas).
+            $cuentaId = $cuenta->idcue;
+            if (empty($cuentaId) || (string) $cuentaId === '0') {
+                $cuentaPersistida = Cuenta::where('usuariocue', $validated['usuariocue'])
+                    ->where('activocue', true)
+                    ->latest('created_at')
+                    ->first();
+
+                if (!$cuentaPersistida || empty($cuentaPersistida->idcue) || (string) $cuentaPersistida->idcue === '0') {
+                    throw new \Exception('No se pudo resolver el ID real de la cuenta creada.');
+                }
+
+                $cuenta = $cuentaPersistida;
+                $cuentaId = $cuentaPersistida->idcue;
+            }
+
             Historial::create([
                 'accion' => 'Se creó la cuenta con ID: ' . $cuenta->idcue,
                 'descripcion' => 'Datos: ' . json_encode($cuenta),
@@ -216,7 +233,7 @@ class CuentaController extends Controller
                             $request->banco_id,
                             $validatedCosto['montocos'],
                             'egreso',
-                            'Compra/Creación de cuenta: ' . $cuenta->idcue . ' - ' . $validatedCosto['descripcioncos']
+                            'Compra/Creación de cuenta: ' . $cuentaId . ' - ' . $validatedCosto['descripcioncos']
                         );
                         $transaccionId = $transaccion->id;
                     } catch (\Exception $e) {
@@ -225,7 +242,7 @@ class CuentaController extends Controller
                 }
 
                 $costo = Costo::create([
-                    'idcue' => $cuenta->idcue,
+                    'idcue' => $cuentaId,
                     'fechacos' => now(),
                     'montocos' => $validatedCosto['montocos'],
                     'descripcioncos' => $validatedCosto['descripcioncos'],
