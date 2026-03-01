@@ -11,13 +11,18 @@ use App\Models\Cuenta;
 use App\Models\Cliente;
 use App\Models\DailyStatistic;
 use App\Models\ViewClientesUsuarios;
+use App\Services\ContadorService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class InformationController extends Controller
 {
-    public function __construct()
+    protected ContadorService $contadorService;
+
+    public function __construct(ContadorService $contadorService)
     {
+        $this->contadorService = $contadorService;
+
         // Forzar que todas las respuestas sean JSON
         request()->headers->set('Accept', 'application/json');
     }
@@ -166,7 +171,22 @@ class InformationController extends Controller
                 ->distinct('idcue')
                 ->count('idcue');
 
-            // Generar mensaje para WhatsApp
+            // 10. Indicadores de renovación (nuevas APIs internas)
+            $evaluacionRenovacion = $this->contadorService->evaluarCuentasRenovacion();
+            $cuentasRenovar = (int) ($evaluacionRenovacion['totales']['a_renovar'] ?? 0);
+            $cuentasNoRenovar = (int) ($evaluacionRenovacion['totales']['no_renovar'] ?? 0);
+
+            // 11. Indicadores de mudanza (nueva API interna)
+            $evaluacionMudanza = $this->contadorService->evaluarUsuariosParaMudanza();
+            $usuariosMudanza = (int) ($evaluacionMudanza['resumen']['total_usuarios_a_mudar'] ?? 0);
+            $usuariosMudanzaNoAsignables = (int) ($evaluacionMudanza['resumen']['usuarios_no_asignables'] ?? 0);
+
+            // 12. Indicadores de atención (cuentas dañadas/mesa)
+            $evaluacionAtencion = $this->contadorService->evaluarUsuariosParaAtencion();
+            $usuariosAtencion = (int) ($evaluacionAtencion['resumen']['total_usuarios_para_atencion'] ?? 0);
+            $usuariosAtencionNoAsignables = (int) ($evaluacionAtencion['resumen']['usuarios_no_asignables'] ?? 0);
+
+            // Generar mensaje para WhatsApp (formato completo + nuevos indicadores)
             $mensaje = "*📋 Tareas de Hoy - " . $hoy->format('d/m/Y') . "*\n\n";
 
             $mensaje .= "🔴 *Usuarios atrasados:* {$usuariosAtrasados}\n";
@@ -174,6 +194,19 @@ class InformationController extends Controller
             $mensaje .= "⏰ *Pendientes (3 días):* {$usuariosPendientes}\n";
             $mensaje .= "⚠️ *Cuentas caídas:* {$cuentasCaidas}\n";
             $mensaje .= "📦 *Cuentas vencidas:* {$cuentasVencidas}\n\n";
+
+            $mensaje .= "✅ *Cuentas a renovar:* {$cuentasRenovar}\n";
+            $mensaje .= "🛑 *Cuentas no renovar:* {$cuentasNoRenovar}\n";
+            $mensaje .= "🔄 *Usuarios para mudanza:* {$usuariosMudanza}";
+            if ($usuariosMudanzaNoAsignables > 0) {
+                $mensaje .= " (sin cupo: {$usuariosMudanzaNoAsignables})";
+            }
+            $mensaje .= "\n";
+            $mensaje .= "🧰 *Usuarios para atención:* {$usuariosAtencion}";
+            if ($usuariosAtencionNoAsignables > 0) {
+                $mensaje .= " (sin cupo: {$usuariosAtencionNoAsignables})";
+            }
+            $mensaje .= "\n\n";
 
             $mensaje .= "👥 *Total clientes:* {$totalClientes}\n";
             $mensaje .= "👤 *Total usuarios:* {$totalUsuarios}\n\n";
@@ -192,6 +225,12 @@ class InformationController extends Controller
                         'pendientes_3dias' => $usuariosPendientes,
                         'cuentas_caidas' => $cuentasCaidas,
                         'cuentas_vencidas' => $cuentasVencidas,
+                        'cuentas_a_renovar' => $cuentasRenovar,
+                        'cuentas_no_renovar' => $cuentasNoRenovar,
+                        'usuarios_mudanza' => $usuariosMudanza,
+                        'usuarios_mudanza_no_asignables' => $usuariosMudanzaNoAsignables,
+                        'usuarios_atencion' => $usuariosAtencion,
+                        'usuarios_atencion_no_asignables' => $usuariosAtencionNoAsignables,
                         'total_clientes' => $totalClientes,
                         'total_usuarios' => $totalUsuarios,
                     ],

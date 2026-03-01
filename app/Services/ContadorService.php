@@ -438,6 +438,8 @@ class ContadorService
         //    con espacios disponibles (usuarios_activos < pantmaxval)
         $queryCuentasDestino = Cuenta::with(['valor.servicio'])
             ->where('activocue', true)
+            ->where('caidacue', false)
+            ->where('idcue', 'NOT LIKE', '%Atencion%')
             ->whereNotIn('idcue', $cuentasNoRenovarIds);
 
         if ($servicio) {
@@ -481,9 +483,19 @@ class ContadorService
             ->pluck('total_activos', 'idcue');
 
         $candidatasRescate = $cuentasNoRenovar->map(function ($cuenta) use ($activosEnNoRenovar) {
+            $cuentaModel = Cuenta::with('valor')->find($cuenta['idcue']);
+
+            if (!$cuentaModel) {
+                return null;
+            }
+
+            // Nunca considerar cuentas dañadas o mesas de trabajo como disponibles
+            if ($cuentaModel->caidacue || str_contains((string) $cuentaModel->idcue, 'Atencion')) {
+                return null;
+            }
+
             $activos = (int) ($activosEnNoRenovar[$cuenta['idcue']] ?? 0);
-            // En cuentas no renovar ya tenemos mínimo rentable; usamos pantmax real
-            $pantMax = (int) (Cuenta::with('valor')->find($cuenta['idcue'])?->valor?->pantmaxval ?? 0);
+            $pantMax = (int) ($cuentaModel->valor->pantmaxval ?? 0);
             $espacios = max(0, $pantMax - $activos);
 
             return [
@@ -495,7 +507,7 @@ class ContadorService
                 'pantmax' => $pantMax,
                 'espacios_disponibles' => $espacios,
             ];
-        })->values();
+        })->filter()->values();
 
         // 5) Evaluación por servicio: espacios vs usuarios a mudar
         $servicios = $usuariosNoRenovar->pluck('servicio_id')
