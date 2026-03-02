@@ -219,7 +219,7 @@ class ClienteController extends Controller
             abort(403, 'No tienes permiso para actualizar clientes.');
         }
         $request->validate([
-            'nombrecli' => 'required|string|max:20',
+            'nombrecli' => 'required|string|max:50',
             'telefonocli' => 'nullable|string|max:25'
         ]);
         $request->merge([

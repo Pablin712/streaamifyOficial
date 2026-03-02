@@ -16,7 +16,7 @@
                     <label for="edit_nombrecli" class="form-label required">
                         <i class="fas fa-user me-1"></i>Nombre del Cliente
                     </label>
-                    <input type="text" class="form-control" id="edit_nombrecli" name="nombrecli" maxlength="20" required>
+                    <input type="text" class="form-control" id="edit_nombrecli" name="nombrecli" maxlength="50" required>
                 </div>
 
                 <!-- Teléfono -->
