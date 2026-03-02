@@ -258,11 +258,14 @@
                         $hoy = \Carbon\Carbon::today();
                         $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                         $estadoCobro = $usuario->detalle_venta->estado ?? 'PENDIENTE';
+                        $pinPerfil = optional($usuario->profile)->pinper
+                            ?? optional($usuario->cuenta->perfiles->firstWhere('numeroper', $usuario->perfil))->pinper;
                     @endphp
                     <tr class="{{ $diasRestantes <= 3 ? 'clickable-row' : '' }}"
                         data-iddet="{{ $usuario->iddet }}"
                         data-servicio="{{ $usuario->cuenta->valor->servicio->nombreser ?? 'Servicio' }}"
                         data-cuenta="{{ $usuario->cuenta->usuariocue }}"
+                        data-pinper="{{ $pinPerfil }}"
                         data-fecha="{{ $usuario->fecha_vencimiento }}"
                         data-estado="{{ $fechaVencimiento <= $hoy ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo') }}">
                         <td onclick="event.stopPropagation();">
@@ -323,7 +326,13 @@
                                 @endif
                                 @if ($diasRestantes <= 3)
                                     <button type="button" class="btn btn-rosa-3 btn-sm"
-                                        onclick="copiarMensaje('{{ $usuario->cuenta->valor->servicio->nombreser ?? 'Servicio' }}', '{{ $usuario->cuenta->usuariocue }}', '{{ $usuario->fecha_vencimiento }}', '{{ $diasRestantes <= 0 ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo') }}')"
+                                        onclick="copiarMensaje(
+                                            {{ json_encode($usuario->cuenta->valor->servicio->nombreser ?? 'Servicio') }},
+                                            {{ json_encode($usuario->cuenta->usuariocue) }},
+                                            {{ json_encode($usuario->fecha_vencimiento) }},
+                                            {{ json_encode($diasRestantes <= 0 ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo')) }},
+                                            {{ json_encode($pinPerfil) }}
+                                        )"
                                         title="Copiar mensaje">
                                         <i class="fas fa-comment-alt"></i>
                                     </button>
@@ -549,8 +558,30 @@
         });
     </script>
     <script>
-        function copiarMensaje(servicio, cuenta, fecha, estado) {
-            let mensaje = `Hola, tu cuenta de *${servicio}* - *${cuenta}* vence el *${fecha}* y su estado es *${estado}*`; // resaltar en negrita a servicio, cuenta, fecha y estado
+        function copiarMensaje(servicio, cuenta, fecha, estado, pinper = '') {
+            const servicioTexto = (servicio || '').toString().trim();
+            const esSpotify = servicioTexto.toUpperCase().includes('SPOTIFY');
+            let mensaje = `Hola, tu cuenta de *${servicio}* - *${cuenta}* vence el *${fecha}* y su estado es *${estado}*`;
+
+            if (esSpotify) {
+                const pinTexto = (pinper || '').toString().trim();
+
+                if (pinTexto) {
+                    let usuarioSpotify = pinTexto;
+                    let claveSpotify = pinTexto;
+
+                    if (pinTexto.includes('|')) {
+                        const credenciales = pinTexto.split('|');
+                        usuarioSpotify = (credenciales[0] || '').trim();
+                        claveSpotify = (credenciales[1] || '').trim();
+                    }
+
+                    mensaje = `Hola, tu cuenta de *${servicio}* vence el *${fecha}* y su estado es *${estado}*\n👤 Usuario: *${usuarioSpotify}*\n🔑 Clave: *${claveSpotify}*`;
+                } else {
+                    mensaje = `Hola, tu cuenta de *${servicio}* vence el *${fecha}* y su estado es *${estado}*\n⚠️ No hay pinper configurado para este perfil.`;
+                }
+            }
+
             navigator.clipboard.writeText(mensaje).then(() => {
                 const toast = document.getElementById('toast-mensaje');
                 toast.textContent = '✅ Mensaje copiado';
@@ -590,9 +621,10 @@
                 if (row) {
                     const servicio = row.dataset.servicio;
                     const cuenta = row.dataset.cuenta;
+                    const pinper = row.dataset.pinper || '';
                     const fecha = row.dataset.fecha;
                     const estado = row.dataset.estado;
-                    copiarMensaje(servicio, cuenta, fecha, estado);
+                    copiarMensaje(servicio, cuenta, fecha, estado, pinper);
                 }
             });
 

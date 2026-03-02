@@ -25,7 +25,7 @@ class UsuarioController extends Controller
         if (!Gate::allows('usuarios')) {
             abort(403, 'No tienes permiso para ver los usuarios.');
         }
-        $usuarios = ViewUsuarioActivo::with(['cuenta.valor.servicio', 'cliente'])
+        $usuarios = ViewUsuarioActivo::with(['cuenta.valor.servicio', 'cuenta.perfiles', 'cliente', 'profile'])
             ->orderBy('fecha_vencimiento')
             ->orderBy('nombre_cliente')
             ->get();

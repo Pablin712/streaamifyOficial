@@ -393,12 +393,28 @@
 
         // Función para copiar mensaje
         function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot) {
-            var servicio = idcue.replace(/[^a-zA-Z]/g, '');
-            var message = "*" + servicio + "*\n";
-            message += "Usuario: " + usuariocue + "\n";
-            message += "Clave: " + contrasenacue + "\n";
-            message += "PIN de perfil Nro " + numeroper + ": " + pinper + "\n";
-            message += "*Prohibido:* Modificar perfiles o contraseñas.\n";
+            var message = "🎵 *SPOTIFY PREMIUM* 🎵\n\n";
+
+            if (pinper && pinper.trim() !== '') {
+                var usuarioSpotify = pinper;
+                var claveSpotify = pinper;
+
+                if (pinper.includes('|')) {
+                    var credenciales = pinper.split('|');
+                    usuarioSpotify = (credenciales[0] || '').trim();
+                    claveSpotify = (credenciales[1] || '').trim();
+                }
+
+                message += "👤 *Usuario:* " + usuarioSpotify + "\n";
+                message += "🔑 *Contraseña:* " + claveSpotify + "\n";
+            } else {
+                message += "⚠️ *Perfil sin PIN configurado*\n";
+                message += "Usuario: " + usuariocue + "\n";
+                message += "Contraseña: " + contrasenacue + "\n";
+            }
+
+            message += "📍 *Perfil:* #" + numeroper + "\n";
+            message += "\n*Prohibido:* Modificar perfiles o contraseñas.\n";
 
             // Verificar si el bot no está vacío
             if (bot && bot.trim() !== "") {

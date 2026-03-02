@@ -489,33 +489,33 @@
         // Función para copiar mensaje
         function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot, servicio) {
             var message = "";
+            var esSpotify = (servicio || '').toString().trim().toUpperCase() === 'SPOTIFY';
 
             // Verificar si es Spotify
-            if (servicio === 'SPOTIFY') {
+            if (esSpotify) {
                 // Mensaje especial para Spotify
                 message = "🎵 *SPOTIFY PREMIUM* 🎵\n\n";
 
-                // Si es perfil 1 (owner)
-                if (numeroper === 1) {
-                    message += "👤 *Usuario:* " + usuariocue + "\n";
-                    message += "🔑 *Contraseña:* " + contrasenacue + "\n";
-                    message += "📍 *Perfil:* Owner (Administrador)\n";
-                } else {
-                    // Perfiles invitados (2-6)
-                    // El pinper tiene formato "usuario|contraseña"
-                    if (pinper && pinper.includes('|')) {
+                // Spotify: usuario y contraseña se copian desde pinper
+                if (pinper && pinper.trim() !== '') {
+                    var usuarioSpotify = pinper;
+                    var claveSpotify = pinper;
+
+                    if (pinper.includes('|')) {
                         var credenciales = pinper.split('|');
-                        message += "👤 *Usuario:* " + credenciales[0] + "\n";
-                        message += "🔑 *Contraseña:* " + credenciales[1] + "\n";
-                        message += "📍 *Perfil:* Invitado #" + numeroper + "\n";
-                    } else {
-                        // Si no está configurado el invitado
-                        message += "⚠️ *Perfil invitado no configurado*\n";
-                        message += "Usuario: " + usuariocue + "\n";
-                        message += "Contraseña: " + contrasenacue + "\n";
-                        message += "Perfil #" + numeroper + "\n";
+                        usuarioSpotify = (credenciales[0] || '').trim();
+                        claveSpotify = (credenciales[1] || '').trim();
                     }
+
+                    message += "👤 *Usuario:* " + usuarioSpotify + "\n";
+                    message += "🔑 *Contraseña:* " + claveSpotify + "\n";
+                } else {
+                    message += "⚠️ *Perfil sin PIN configurado*\n";
+                    message += "Usuario: " + usuariocue + "\n";
+                    message += "Contraseña: " + contrasenacue + "\n";
                 }
+
+                message += "📍 *Perfil:* #" + numeroper + "\n";
 
                 message += "\n*Prohibido:* Modificar perfil o contraseña.\n";
                 message += "¡Gracias por tu confianza! 🎶";
