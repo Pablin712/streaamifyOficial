@@ -8,7 +8,7 @@
     "name": "vue.esm-bundler"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BM74qKl8.css",
+    "file": "assets/app-Bff0wib8.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -22,7 +22,7 @@
     ]
   },
   "resources/js/chat-widget-ai.js": {
-    "file": "assets/chat-widget-ai-C6PTq1bG.js",
+    "file": "assets/chat-widget-ai-CY7vJBN3.js",
     "name": "chat-widget-ai",
     "src": "resources/js/chat-widget-ai.js",
     "isEntry": true,
@@ -31,7 +31,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/chat-widget-ai-BqkcqK5R.css"
+      "assets/chat-widget-ai-BzmLWBGj.css"
     ]
   },
   "resources/js/chat-widget.js": {

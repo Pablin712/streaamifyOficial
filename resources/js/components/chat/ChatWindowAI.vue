@@ -41,7 +41,7 @@
             </svg>
           </div>
           <div class="message-content">
-            <p>{{ message.contenido }}</p>
+            <div class="message-text" v-html="formatMarkdown(message.contenido)"></div>
             <span class="message-time">{{ formatTime(message.created_at) }}</span>
           </div>
         </div>
@@ -137,6 +137,38 @@ export default {
       if (this.$refs.messagesContainer) {
         this.$refs.messagesContainer.scrollTop = this.$refs.messagesContainer.scrollHeight;
       }
+    },
+    formatMarkdown(text) {
+      if (!text) return '';
+
+      let html = text;
+
+      // Escapar HTML peligroso
+      html = html.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // Títulos (## texto)
+      html = html.replace(/^### (.+)$/gm, '<h3 class="md-h3">$1</h3>');
+      html = html.replace(/^## (.+)$/gm, '<h2 class="md-h2">$1</h2>');
+      html = html.replace(/^# (.+)$/gm, '<h1 class="md-h1">$1</h1>');
+
+      // Negritas (**texto** o __texto__)
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+      // Cursiva (*texto* o _texto_)
+      html = html.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+      html = html.replace(/_([^_]+?)_/g, '<em>$1</em>');
+
+      // Código inline (`código`)
+      html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
+      // Links [texto](url)
+      html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+      // Saltos de línea
+      html = html.replace(/\n/g, '<br>');
+
+      return html;
     },
     formatTime(timestamp) {
       const date = new Date(timestamp);
@@ -330,13 +362,6 @@ export default {
   border: 1px solid var(--border-color);
 }
 
-.message-content p {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  word-wrap: break-word;
-}
-
 .message-time {
   display: block;
   font-size: 0.7rem;
@@ -444,6 +469,77 @@ export default {
 .chat-ai-send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Estilos para contenido Markdown */
+.message-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.message-text strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.message-text em {
+  font-style: italic;
+}
+
+.message-text code {
+  background: var(--bg-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  color: var(--primary-dark);
+  border: 1px solid var(--border-color);
+}
+
+.message-text :deep(h1.md-h1),
+.message-text :deep(h2.md-h2),
+.message-text :deep(h3.md-h3) {
+  font-weight: 700;
+  margin: 0.5em 0 0.3em 0;
+  line-height: 1.3;
+}
+
+.message-text :deep(h1.md-h1) {
+  font-size: 1.3em;
+  color: var(--text-primary);
+}
+
+.message-text :deep(h2.md-h2) {
+  font-size: 1.15em;
+  color: var(--text-primary);
+}
+
+.message-text :deep(h3.md-h3) {
+  font-size: 1.05em;
+  color: var(--text-secondary);
+}
+
+.message-text :deep(a) {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.message-text :deep(a):hover {
+  color: var(--primary-dark);
+}
+
+.user-message .message-text strong,
+.user-message .message-text :deep(h1),
+.user-message .message-text :deep(h2),
+.user-message .message-text :deep(h3) {
+  color: var(--text-on-primary);
+}
+
+.user-message .message-text code {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-on-primary);
 }
 
 /* Scrollbar personalizado */
