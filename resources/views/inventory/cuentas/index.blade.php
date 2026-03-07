@@ -315,7 +315,6 @@
             $serviciosConfig = [
                 'NETFLIX' => ['color' => 'danger', 'icon' => 'logo_netflix.png'],
                 'DISNEYP' => ['color' => 'primary', 'icon' => 'espn.jpg'],
-                'DISNEYS' => ['color' => 'primary', 'icon' => 'disneyP.jpg'],
                 'MAX' => ['color' => 'info', 'icon' => 'max.jpg'],
                 'PRIME' => ['color' => 'success', 'icon' => 'fa-amazon'],
                 'PARAMOUNT' => ['color' => 'primary', 'icon' => 'paramount.jpg'],

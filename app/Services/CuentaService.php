@@ -19,7 +19,7 @@ class CuentaService
 {
     public function calcularEspaciosPorServicio()
     {
-        $servicios = ['NETFLIX', 'DISNEYP', 'DISNEYS', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'];
+        $servicios = ['NETFLIX', 'DISNEYP', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'];
         $espacios_por_servicio = [];
 
         foreach ($servicios as $servicio) {
