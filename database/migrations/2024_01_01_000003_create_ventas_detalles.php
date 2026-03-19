@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -16,10 +15,10 @@ return new class extends Migration
             $table->string('idven', 20)->primary();
             $table->unsignedBigInteger('idemp');
             $table->unsignedBigInteger('idcli');
-            $table->date('fechaven')->default(DB::raw('CURRENT_DATE'));
+            $table->date('fechaven');
             $table->decimal('totalpagoven', 8, 2)->nullable();
             $table->timestamps();
-            
+
             $table->foreign('idemp')->references('idemp')->on('empleados');
             $table->foreign('idcli')->references('idcli')->on('clientes');
         });
@@ -33,7 +32,7 @@ return new class extends Migration
             $table->decimal('montodet', 8, 2);
             $table->boolean('activodet');
             $table->timestamps();
-            
+
             $table->foreign('idven')->references('idven')->on('ventas');
             $table->foreign('idper')->references('idper')->on('perfiles')
                   ->onUpdate('cascade')->onDelete('cascade');
@@ -41,7 +40,7 @@ return new class extends Migration
 
         Schema::create('secuencia_factura', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->timestamp('fecha')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->timestamp('fecha')->useCurrent();
         });
     }
 

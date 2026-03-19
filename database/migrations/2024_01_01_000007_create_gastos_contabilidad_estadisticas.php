@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -21,18 +20,18 @@ return new class extends Migration
         Schema::create('gastos', function (Blueprint $table) {
             $table->id('idgas');
             $table->unsignedBigInteger('idtip');
-            $table->date('fechagas')->default(DB::raw('CURRENT_DATE'));
+            $table->date('fechagas');
             $table->decimal('montogas', 8, 2);
             $table->string('descripciongas', 50)->nullable();
             $table->timestamps();
-            
+
             $table->foreign('idtip')->references('idtip')->on('tipo_gasto');
         });
 
         Schema::create('contabilidad', function (Blueprint $table) {
             $table->id('idcon');
-            $table->integer('mes')->default(DB::raw('EXTRACT(MONTH FROM CURRENT_DATE)'));
-            $table->integer('año')->default(DB::raw('EXTRACT(YEAR FROM CURRENT_DATE)'));
+            $table->integer('mes');
+            $table->integer('año');
             $table->string('detalle', 20);
             $table->integer('num_cuentas');
             $table->integer('num_usuarios');
