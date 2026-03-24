@@ -22,7 +22,7 @@ class VentaSeeder extends Seeder
             ->where('c.activocue', true)
             ->orderBy('c.idcue')
             ->get();
-        
+
         if (empty($empleados) || empty($clientes) || $cuentas->isEmpty()) {
             echo "⚠️  No hay empleados, clientes o cuentas para crear ventas.\n";
             return;
