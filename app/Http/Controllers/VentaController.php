@@ -415,7 +415,6 @@ class VentaController extends Controller
             abort(404, 'Cliente no coincide con la venta.');
         }
 
-        $cuentas = Cuenta::with('perfiles')->get();
         $detalles = $venta->detalles_venta->map(function ($detalle) {
             $detalle->fechavendet_suma = Carbon::parse($detalle->fechavendet)->addMonth()->format('Y-m-d');
             return $detalle;

@@ -18,7 +18,10 @@ class PerfilController extends Controller
     */
     public function index(Request $request)
     {
-        $cuentas = Cuenta::with(['valor'])->orderBy('fechavencue')->get();
+        $cuentas = Cuenta::with(['valor'])
+            ->where('activocue', true)
+            ->orderBy('fechavencue')
+            ->get();
         $perfiles = collect();
         $idcueSeleccionado = $request->idcue;
 
