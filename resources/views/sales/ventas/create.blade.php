@@ -123,6 +123,37 @@
     @include('sales.clientes.modals.create')
     @include('shared.modals.venta-agregar-detalle')
     @include('shared.modals.venta-editar-detalle')
+
+    @if (session('mensaje_entrega'))
+        <x-modal name="mensaje-entrega-venta" :show="false" maxWidth="2xl">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">
+                    <i class="fas fa-comment-dots me-2"></i>Mensaje de Entrega
+                </h5>
+                <button type="button" class="btn-close"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-entrega-venta' }))">
+                </button>
+            </div>
+
+            <div class="modal-body bg-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    La venta fue registrada correctamente. Copia el mensaje para enviarlo al cliente.
+                </div>
+                <textarea id="mensaje_entrega_venta_text" class="form-control font-monospace bg-body-secondary text-body border" rows="10" readonly>{{ session('mensaje_entrega') }}</textarea>
+            </div>
+
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-primary" onclick="copyMensajeEntregaVenta()">
+                    <i class="fas fa-copy me-1"></i>Copiar Mensaje
+                </button>
+                <button type="button" class="btn btn-secondary"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-entrega-venta' }))">
+                    Cerrar
+                </button>
+            </div>
+        </x-modal>
+    @endif
 @endsection
 @section('pie')
     <p>¿No deseas agregar una cuenta al stock? Vuelve a la página de listado:</p>
@@ -145,6 +176,31 @@
 
     <!-- Toggle del campo Banco según checkbox "¿Se pagó?" -->
     <script>
+        function mostrarConfirmacionCopiado(tipo = 'success', mensaje = 'Mensaje copiado al portapapeles') {
+            const existing = document.getElementById('copy-confirm-toast');
+            if (existing) {
+                existing.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.id = 'copy-confirm-toast';
+            toast.className = `alert alert-${tipo} shadow-sm position-fixed top-0 end-0 m-3`;
+            toast.style.zIndex = '1080';
+            toast.style.minWidth = '260px';
+            toast.innerHTML = `<i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2"></i>${mensaje}`;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('fade');
+                toast.style.opacity = '0';
+            }, 1400);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 1800);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const sePagoCheckboxCreate = document.getElementById('se_pago_create');
             const bancoFieldCreate = document.getElementById('banco_field_create');
@@ -165,6 +221,27 @@
                 sePagoCheckboxCreate.addEventListener('change', toggleBancoFieldCreate);
                 toggleBancoFieldCreate(); // Ejecutar al cargar
             }
+
+            @if (session('mensaje_entrega'))
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensaje-entrega-venta' }));
+            @endif
         });
+
+        function copyMensajeEntregaVenta() {
+            const message = document.getElementById('mensaje_entrega_venta_text')?.value || '';
+
+            if (!message) {
+                return;
+            }
+
+            navigator.clipboard.writeText(message)
+                .then(() => {
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-entrega-venta' }));
+                    mostrarConfirmacionCopiado();
+                })
+                .catch(() => {
+                    mostrarConfirmacionCopiado('warning', 'No se pudo copiar el mensaje');
+                });
+        }
     </script>
 @endsection

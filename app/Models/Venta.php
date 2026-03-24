@@ -22,6 +22,7 @@ class Venta extends Model
         'idemp',
         'idcli',
         'fechaven',
+        'totalpagoven',
         'transaccion_id',
     ];
     public function empleado()

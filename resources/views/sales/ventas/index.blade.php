@@ -406,6 +406,38 @@
         });
     }
 
+    function copyVentaMessage(idven) {
+        const url = '{{ route("ventas.details", "__ID__") }}'.replace('__ID__', idven);
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success || !data.venta?.mensaje_entrega) {
+                throw new Error('No se pudo obtener el mensaje de entrega');
+            }
+
+            return navigator.clipboard.writeText(data.venta.mensaje_entrega);
+        })
+        .then(() => {
+            showAlert('Mensaje de entrega copiado al portapapeles', 'success');
+        })
+        .catch(error => {
+            console.error('❌ Error al copiar mensaje:', error);
+            showAlert(error.message || 'No se pudo copiar el mensaje', 'danger');
+        });
+    }
+
     // =================================================================
     // ELIMINAR VENTA
     // =================================================================

@@ -23,6 +23,7 @@
 </div>
 
 <div class="table-responsive">
+    @inject('entregaMensajeService', 'App\\Services\\EntregaMensajeService')
     <table class="table table-sm">
         <thead>
             <tr>
@@ -191,17 +192,12 @@
                                 </button>
                             @endif
                             @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+                                    @php
+                                        $mensajeEntregaPerfil = $entregaMensajeService->mensajeEntregaDesdePerfil($perfil);
+                                    @endphp
                                 <button
                                     class="btn btn-success btn-sm"
-                                    onclick="copyMessage(
-                                        {{ json_encode($perfil->cuenta->idcue) }},
-                                        {{ json_encode($perfil->cuenta->usuariocue) }},
-                                        {{ json_encode($perfil->cuenta->contrasenacue) }},
-                                        {{ json_encode($perfil->numeroper) }},
-                                        {{ json_encode($perfil->pinper) }},
-                                        {{ json_encode($perfil->cuenta->valor->bot ?? '') }},
-                                        {{ json_encode($perfil->cuenta->valor->idser ?? '') }}
-                                    )"
+                                        onclick="copyMessage({{ json_encode($mensajeEntregaPerfil) }})"
                                 >
                                     <i class="fas fa-eye"></i>
                                 </button>

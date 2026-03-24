@@ -34,6 +34,7 @@
     Cuentas de Spotify
 @endsection
 @section('descripcion')
+    @inject('entregaMensajeService', 'App\\Services\\EntregaMensajeService')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <p>Revisa las cuentas de Spotify activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario
@@ -270,16 +271,12 @@
                                     </button>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+                                    @php
+                                        $mensajeEntregaPerfil = $entregaMensajeService->mensajeEntregaDesdePerfil($perfil);
+                                    @endphp
                                     <button
                                         class="btn btn-success btn-sm"
-                                        onclick="copyMessage(
-                                            {{ json_encode($perfil->cuenta->idcue) }},
-                                            {{ json_encode($perfil->cuenta->usuariocue) }},
-                                            {{ json_encode($perfil->cuenta->contrasenacue) }},
-                                            {{ json_encode($perfil->numeroper) }},
-                                            {{ json_encode($perfil->pinper) }},
-                                            {{ json_encode($perfil->cuenta->valor->bot ?? '') }}
-                                        )"
+                                        onclick="copyMessage({{ json_encode($mensajeEntregaPerfil) }})"
                                     >
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -391,37 +388,10 @@
             });
         }
 
-        // Función para copiar mensaje
-        function copyMessage(idcue, usuariocue, contrasenacue, numeroper, pinper, bot) {
-            var message = "🎵 *SPOTIFY PREMIUM* 🎵\n\n";
-
-            if (pinper && pinper.trim() !== '') {
-                var usuarioSpotify = pinper;
-                var claveSpotify = pinper;
-
-                if (pinper.includes('|')) {
-                    var credenciales = pinper.split('|');
-                    usuarioSpotify = (credenciales[0] || '').trim();
-                    claveSpotify = (credenciales[1] || '').trim();
-                }
-
-                message += "👤 *Usuario:* " + usuarioSpotify + "\n";
-                message += "🔑 *Contraseña:* " + claveSpotify + "\n";
-            } else {
-                message += "⚠️ *Perfil sin PIN configurado*\n";
-                message += "Usuario: " + usuariocue + "\n";
-                message += "Contraseña: " + contrasenacue + "\n";
-            }
-
-            message += "📍 *Perfil:* #" + numeroper + "\n";
-            message += "\n*Prohibido:* Modificar perfiles o contraseñas.\n";
-
-            // Verificar si el bot no está vacío
-            if (bot && bot.trim() !== "") {
-                message += "\n\n*Nota importante:*\n";
-                message += "Te daré acceso al bot de códigos. Si en algún momento se te solicita un código de acceso (Hogar), puedes obtenerlo ingresando al siguiente enlace:\n";
-                message += bot + "\n";
-                message += "¡Gracias por tu confianza!";
+        // Función para copiar mensaje generado en backend
+        function copyMessage(message) {
+            if (!message) {
+                return;
             }
 
             var tempTextArea = document.createElement("textarea");

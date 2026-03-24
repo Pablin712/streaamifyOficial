@@ -15,6 +15,13 @@
                         <i class="fas fa-eye"></i>
                     </button>
 
+                    <!-- Copiar mensaje de entrega -->
+                    <button onclick="copyVentaMessage('{{ $venta->idven }}')"
+                            class="btn btn-primary btn-sm"
+                            title="Copiar mensaje de entrega">
+                        <i class="fas fa-file-invoice"></i>
+                    </button>
+
                     @if (Auth::user()->hasPermissionTo('ventas.edit'))
                         <a href="{{ route('ventas.edit', $venta->idven) }}"
                            class="btn btn-warning btn-sm"

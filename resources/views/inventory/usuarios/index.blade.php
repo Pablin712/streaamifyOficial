@@ -265,6 +265,8 @@
                         data-iddet="{{ $usuario->iddet }}"
                         data-servicio="{{ $usuario->cuenta->valor->servicio->nombreser ?? 'Servicio' }}"
                         data-cuenta="{{ $usuario->cuenta->usuariocue }}"
+                        data-contrasena="{{ $usuario->cuenta->contrasenacue }}"
+                        data-perfil="{{ $usuario->perfil }}"
                         data-pinper="{{ $pinPerfil }}"
                         data-fecha="{{ $usuario->fecha_vencimiento }}"
                         data-estado="{{ $fechaVencimiento <= $hoy ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo') }}">
@@ -329,6 +331,8 @@
                                         onclick="copiarMensaje(
                                             {{ json_encode($usuario->cuenta->valor->servicio->nombreser ?? 'Servicio') }},
                                             {{ json_encode($usuario->cuenta->usuariocue) }},
+                                            {{ json_encode($usuario->cuenta->contrasenacue) }},
+                                            {{ json_encode($usuario->perfil) }},
                                             {{ json_encode($usuario->fecha_vencimiento) }},
                                             {{ json_encode($diasRestantes <= 0 ? 'Vencida' : ($diasRestantes <= 3 ? 'Ya vence' : 'Activo')) }},
                                             {{ json_encode($pinPerfil) }}
@@ -558,12 +562,15 @@
         });
     </script>
     <script>
-        function copiarMensaje(servicio, cuenta, fecha, estado, pinper = '') {
+        function copiarMensaje(servicio, cuenta, contrasenaCuenta, perfilNumero, fecha, estado, pinper = '') {
             const servicioTexto = (servicio || '').toString().trim();
             const esSpotify = servicioTexto.toUpperCase().includes('SPOTIFY');
             let mensaje = `Hola, tu cuenta de *${servicio}* - *${cuenta}* vence el *${fecha}* y su estado es *${estado}*`;
 
             if (esSpotify) {
+                if (Number(perfilNumero) === 1) {
+                    mensaje = `Hola, tu cuenta de *${servicio}* vence el *${fecha}* y su estado es *${estado}*\n👤 Usuario: *${cuenta}*\n🔑 Clave: *${contrasenaCuenta}*`;
+                } else {
                 const pinTexto = (pinper || '').toString().trim();
 
                 if (pinTexto) {
@@ -579,6 +586,7 @@
                     mensaje = `Hola, tu cuenta de *${servicio}* vence el *${fecha}* y su estado es *${estado}*\n👤 Usuario: *${usuarioSpotify}*\n🔑 Clave: *${claveSpotify}*`;
                 } else {
                     mensaje = `Hola, tu cuenta de *${servicio}* vence el *${fecha}* y su estado es *${estado}*\n⚠️ No hay pinper configurado para este perfil.`;
+                }
                 }
             }
 
@@ -621,10 +629,12 @@
                 if (row) {
                     const servicio = row.dataset.servicio;
                     const cuenta = row.dataset.cuenta;
+                    const contrasenaCuenta = row.dataset.contrasena || '';
+                    const perfilNumero = row.dataset.perfil || '';
                     const pinper = row.dataset.pinper || '';
                     const fecha = row.dataset.fecha;
                     const estado = row.dataset.estado;
-                    copiarMensaje(servicio, cuenta, fecha, estado, pinper);
+                    copiarMensaje(servicio, cuenta, contrasenaCuenta, perfilNumero, fecha, estado, pinper);
                 }
             });
 

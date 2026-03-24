@@ -15,6 +15,7 @@ use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Banco;
 use App\Services\BancoService;
+use App\Services\EntregaMensajeService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -23,10 +24,12 @@ use Illuminate\Support\Facades\Gate;
 class VentaController extends Controller
 {
     protected $bancoService;
+    protected $entregaMensajeService;
 
-    public function __construct(BancoService $bancoService)
+    public function __construct(BancoService $bancoService, EntregaMensajeService $entregaMensajeService)
     {
         $this->bancoService = $bancoService;
+        $this->entregaMensajeService = $entregaMensajeService;
     }
 
     public function index(Request $request)
@@ -263,7 +266,13 @@ class VentaController extends Controller
             }
         }
 
-        return redirect()->route('ventas.create')->with('success', 'Venta registrada correctamente');
+        $mensajeEntrega = $this->entregaMensajeService->mensajeEntregaVenta(
+            $venta->loadMissing('detalles_venta.perfil.cuenta.valor.servicio')
+        );
+
+        return redirect()->route('ventas.create')
+            ->with('success', 'Venta registrada correctamente')
+            ->with('mensaje_entrega', $mensajeEntrega);
     }
 
     public function storeRenew(Request $request)
@@ -563,7 +572,7 @@ class VentaController extends Controller
     public function getDetails($id)
     {
         try {
-            $venta = Venta::with(['cliente', 'empleado', 'detalles_venta.perfil.cuenta', 'transaccion.banco'])
+            $venta = Venta::with(['cliente', 'empleado', 'detalles_venta.perfil.cuenta.valor.servicio', 'transaccion.banco'])
                 ->findOrFail($id);
 
             // Formatear los detalles para la respuesta
@@ -577,6 +586,8 @@ class VentaController extends Controller
                     'subtotal' => number_format($detalle->montodet, 2),
                 ];
             });
+
+            $mensajeEntrega = $this->entregaMensajeService->mensajeEntregaVenta($venta);
 
             return response()->json([
                 'success' => true,
@@ -598,6 +609,7 @@ class VentaController extends Controller
                         'idban' => $venta->transaccion && $venta->transaccion->banco ? $venta->transaccion->banco->idban : null,
                     ],
                     'detalles' => $detalles,
+                    'mensaje_entrega' => $mensajeEntrega,
                 ],
             ]);
         } catch (\Exception $e) {
