@@ -419,6 +419,10 @@
             <button class="nav-link" id="caidas-tab" data-bs-toggle="tab" data-bs-target="#mesa" type="button"
                 role="tab">Mesa de Trabajo</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="individuales-tab" data-bs-toggle="tab" data-bs-target="#individuales" type="button"
+                role="tab">Individual</button>
+        </li>
     </ul>
 
     <!-- Contenido de las pestañas -->
@@ -456,6 +460,11 @@
         <!-- Pestaña de Mesa de Trabajo -->
         <div class="tab-pane fade" id="mesa" role="tabpanel">
             @include('inventory.cuentas.tabla', ['cuentas' => $mesa, 'tableId' => 'cuentas-mesa-table'])
+        </div>
+
+        <!-- Pestaña de Cuentas Individuales -->
+        <div class="tab-pane fade" id="individuales" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasIndividuales, 'tableId' => 'cuentas-individuales-table'])
         </div>
 
     </div>

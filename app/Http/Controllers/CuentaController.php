@@ -37,6 +37,11 @@ class CuentaController extends Controller
             abort(403, 'No tienes permiso para ver las cuentas.');
         }
         $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
+
+        // Separar cuentas individuales y excluirlas de las demás pestañas
+        $cuentasIndividuales = $cuentas->filter(fn($c) => $c->tipo_cuenta === 'individual');
+        $cuentas = $cuentas->filter(fn($c) => $c->tipo_cuenta !== 'individual');
+
         //$this->cuentaService->asignarUsuarios($cuentas);
         // Filtrar las cuentas en diferentes categorías
         $cuentasColapsadas = $this->cuentaService->obtenerCuentasColapsadas($cuentas);
@@ -60,6 +65,7 @@ class CuentaController extends Controller
 
         return view('inventory.cuentas.index', compact(
             'cuentas',
+            'cuentasIndividuales',
             'cuentasDisponibles',
             'cuentasColapsadas',
             'cuentasSinOcupar',

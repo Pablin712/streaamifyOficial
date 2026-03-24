@@ -29,6 +29,7 @@ class CuentaService
                     $query->where('idser', $servicio); // Filtrar por nombre del servicio
                 })
                 ->where('activocue', true)
+                ->where('tipo_cuenta', 'completa')
                 ->where('caidacue', false)
                 ->where('fechavencue', '>', now())
                 ->orderBy('fechavencue')
