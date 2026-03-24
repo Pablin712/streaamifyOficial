@@ -29,6 +29,7 @@
 </x-modal>
 
 {{-- Modales anidados --}}
+@include('inventory.cuentas.modals.movement-results')
 @include('inventory.cuentas.modals.edit-profile')
 @include('inventory.cuentas.modals.confirm-move-user')
 @include('inventory.cuentas.modals.confirm-move-user-mesa')
@@ -132,6 +133,10 @@ function initializePerfilesEventListeners() {
         });
     });
 
+    setupMovementAjaxForm('confirm_move_user_form', 'confirm-move-user');
+    setupMovementAjaxForm('confirm_move_otro_servicio_form', 'confirm-move-user-otro-servicio');
+    setupMovementAjaxForm('confirm_move_all_disperso_form', 'confirm-move-all-disperso');
+
     // Event listeners para botones de mover usuario
     document.querySelectorAll('#perfiles-container .btn-move-user').forEach(function(button) {
         button.addEventListener('click', function() {
@@ -229,6 +234,42 @@ function initializePerfilesEventListeners() {
             });
 
             window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-user-otro-servicio' }));
+        });
+    });
+}
+
+function setupMovementAjaxForm(formId, modalName) {
+    const form = document.getElementById(formId);
+
+    if (!form || form.dataset.ajaxBound === 'true') {
+        return;
+    }
+
+    form.dataset.ajaxBound = 'true';
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: new FormData(form)
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'No se pudo completar la operación');
+            }
+            return data;
+        })
+        .then(data => {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: modalName }));
+            openMovementResultsModal(data);
+        })
+        .catch(error => {
+            showMovementToast(error.message || 'No se pudo completar la operación', 'warning');
         });
     });
 }

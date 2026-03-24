@@ -436,15 +436,43 @@ class CuentaController extends Controller
         $cuentaOrigen = Cuenta::find($request->input('cuenta_origen'));
 
         $respuesta = $this->cuentaService->mudarClientesAOtraCuenta($cuentaOrigen);
-        if ($respuesta === 'null') {
+        if (($respuesta['status'] ?? null) === 'empty') {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudieron mover los clientes a otro espacio.',
+                ], 422);
+            }
+
             return redirect()->back()->with('error', 'No se pudieron mover los clientes a otro espacio.');
-        } elseif (Str::startsWith($respuesta, 'incompleto')) {
-            return redirect()->back()->with('warning', $respuesta);
-        } elseif (Str::startsWith($respuesta, 'success')) {
-            return redirect()->back()->with('success', $respuesta);
-        } else {
-            return redirect()->back()->with('info', 'Resultado desconocido: ' . $respuesta);
         }
+
+        if (($respuesta['status'] ?? null) === 'partial') {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Algunos usuarios fueron movidos correctamente.',
+                    'movements' => $respuesta['movements'] ?? [],
+                    'partial' => true,
+                ]);
+            }
+
+            return redirect()->back()->with('warning', 'Algunos usuarios fueron movidos correctamente.');
+        }
+
+        if (($request->expectsJson() || $request->ajax()) && ($respuesta['status'] ?? null) === 'success') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Clientes movidos correctamente.',
+                'movements' => $respuesta['movements'] ?? [],
+            ]);
+        }
+
+        if (($respuesta['status'] ?? null) === 'success') {
+            return redirect()->back()->with('success', 'Clientes movidos correctamente.');
+        }
+
+        return redirect()->back()->with('info', 'Resultado desconocido.');
     }
 
     public function mensaje($perfilId)

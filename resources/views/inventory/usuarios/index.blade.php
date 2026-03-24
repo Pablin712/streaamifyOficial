@@ -404,6 +404,7 @@
 @include('inventory.usuarios.modals.change')
 @include('inventory.usuarios.modals.delete')
 @include('inventory.usuarios.modals.mover')
+@include('inventory.cuentas.modals.movement-results')
 @endsection
 @section('scripts')
     <!-- jQuery (debe cargarse primero) -->
@@ -494,6 +495,39 @@
 
             window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mover-usuario' }));
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const moveForm = document.getElementById('moverUsuarioForm');
+
+            if (moveForm) {
+                moveForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    fetch(moveForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: new FormData(moveForm)
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'No se pudo mover el usuario');
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mover-usuario' }));
+                        openMovementResultsModal(data);
+                    })
+                    .catch(error => {
+                        showMovementToast(error.message || 'No se pudo mover el usuario', 'warning');
+                    });
+                });
+            }
+        });
 
         // ========================================================================
         // FUNCIÓN DE MODAL - ELIMINAR USUARIO

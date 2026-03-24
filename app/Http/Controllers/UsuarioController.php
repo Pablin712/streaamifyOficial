@@ -89,12 +89,28 @@ class UsuarioController extends Controller
         $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
 
         $respuesta = $this->cuentaService->mudarClienteAOtraCuenta($usuario);
-        if($respuesta == 'error'){
+        if (($respuesta['status'] ?? null) === 'error') {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo mover el usuario, probablemente ya no quedan espacios',
+                ], 422);
+            }
+
             return redirect()->back()->with('error', 'No se pudo mover el usuario, probablemente ya no quedan espacios');
         }
-        else{
-            return redirect()->back()->with('success', $respuesta);
+
+        $movement = $respuesta['movement'] ?? null;
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario movido correctamente.',
+                'movements' => $movement ? [$movement] : [],
+            ]);
         }
+
+        return redirect()->back()->with('success', 'Usuario movido correctamente.');
     }
     public function moverUsuarioMesa($iddet){
         if (!Gate::allows('usuarios.update')) {
@@ -209,12 +225,36 @@ class UsuarioController extends Controller
 
         $respuesta = $this->cuentaService->mudarClienteAOtroServicio($usuario, $idserDestino);
 
-        if ($respuesta == 'error_no_disponible') {
+        if (($respuesta['status'] ?? null) === 'error_no_disponible') {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay cuentas disponibles en el servicio ' . $idserDestino,
+                ], 422);
+            }
+
             return redirect()->back()->with('error', 'No hay cuentas disponibles en el servicio ' . $idserDestino);
-        } elseif ($respuesta == 'error_sin_perfil') {
-            return redirect()->back()->with('error', 'No hay perfiles disponibles en las cuentas del servicio ' . $idserDestino);
-        } else {
-            return redirect()->back()->with('success', $respuesta);
         }
+
+        if (($respuesta['status'] ?? null) === 'error_sin_perfil') {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay perfiles disponibles en las cuentas del servicio ' . $idserDestino,
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', 'No hay perfiles disponibles en las cuentas del servicio ' . $idserDestino);
+        }
+
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario movido a otro servicio correctamente.',
+                'movements' => isset($respuesta['movement']) ? [$respuesta['movement']] : [],
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Usuario movido a otro servicio correctamente.');
     }
 }

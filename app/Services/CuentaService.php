@@ -14,9 +14,17 @@ use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Empleado;
+use App\Services\EntregaMensajeService;
 
 class CuentaService
 {
+    protected $entregaMensajeService;
+
+    public function __construct(EntregaMensajeService $entregaMensajeService)
+    {
+        $this->entregaMensajeService = $entregaMensajeService;
+    }
+
     public function calcularEspaciosPorServicio()
     {
         $servicios = ['NETFLIX', 'DISNEYP', 'MAX', 'PRIME', 'PARAMOUNT', 'CRUNCHY', 'SPOTIFY', 'MAGIS'];
@@ -417,12 +425,16 @@ class CuentaService
     public function mudarClientesAOtraCuenta($cuentaOrigen)
     {
         $idser = $cuentaOrigen->valor->idser;
-        $mensaje = '';
         // Obtener los usuarios activos de la cuenta origen
         $usuarios = ViewUsuarioActivo::where('idcue', $cuentaOrigen->idcue)->orderBy('nombre_cliente')->get();
         if ($usuarios->isEmpty()) {
-            return 'null'; // Si no hay usuarios para mover, retornar vacio
+            return [
+                'status' => 'empty',
+                'movements' => [],
+            ];
         }
+
+        $movements = [];
         foreach ($usuarios as $usuario) {
             // Buscar el perfil en la cuenta destino con el mismo número de perfil
             $cuentaDestino = $this->buscarCuentaDisponible($idser);
@@ -438,21 +450,25 @@ class CuentaService
                     'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
                     'created_at' => now(),
                 ]);
-                $mensaje .= 'Cliente ' . $usuario->nombre_cliente . ' movido a la cuenta ' .
-                 $cuentaDestino->valor->servicio->nombreser . ' Usuario: ' . $cuentaDestino->usuariocue .
-                 ' Clave: ' . $cuentaDestino->contrasenacue . ' PIN de Perfil ' . $usuario->perfil . ': ' .$usuario->profile->pinper.'\n';
+
+                $movements[] = $this->buildMovementData($usuario, $cuentaDestino, $perfilDestino, 'misma_cuenta');
             } else {
-                return 'incompleto \n' . $mensaje; // Retornar incompleto si no se pudo mover algún usuario
+                return [
+                    'status' => 'partial',
+                    'movements' => $movements,
+                ];
             }
             // Si no existe el perfil en la cuenta destino, puedes decidir ignorar o manejarlo de otra forma
         }
-        return 'sucess \n' . $mensaje; // Retornar success si se movieron todos los usuarios exitosamente
+        return [
+            'status' => 'success',
+            'movements' => $movements,
+        ];
     }
     public function mudarClienteAOtraCuenta($usuario)
     {
         $cuentaOrigen = $usuario->cuenta;
         $idser = $cuentaOrigen->valor->idser;
-        $mensaje = '';
         $cuentaDestino = $this->buscarCuentaDisponible($idser);
         $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
 
@@ -466,12 +482,15 @@ class CuentaService
                 'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
                 'created_at' => now(),
             ]);
-            $mensaje .= 'Cliente ' . $usuario->nombre_cliente . ' movido a la cuenta ' .
-                $cuentaDestino->valor->servicio->nombreser . ' Usuario: ' . $cuentaDestino->usuariocue .
-                ' Clave: ' . $cuentaDestino->contrasenacue . ' PIN de Perfil ' . $usuario->perfil . ': ' . $usuario->profile->pinper;
-            return $mensaje; // Retornar mensaje de éxito
+
+            return [
+                'status' => 'success',
+                'movement' => $this->buildMovementData($usuario, $cuentaDestino, $perfilDestino, 'misma_cuenta'),
+            ];
         } else {
-            return 'error';
+            return [
+                'status' => 'error',
+            ];
         }
     }
     public function mudarClienteAMesaDeTrabajo($usuario)
@@ -514,7 +533,9 @@ class CuentaService
         $cuentaDestino = $this->buscarCuentaDisponible($idserDestino);
 
         if (!$cuentaDestino) {
-            return 'error_no_disponible';
+            return [
+                'status' => 'error_no_disponible',
+            ];
         }
 
         $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
@@ -533,15 +554,37 @@ class CuentaService
                 'created_at' => now(),
             ]);
 
-            $mensaje = 'Cliente ' . $usuario->nombre_cliente . ' movido del servicio ' .
-                $idserOrigen . ' al servicio ' . $idserDestino .
-                ' - Cuenta: ' . $cuentaDestino->usuariocue .
-                ' - Clave: ' . $cuentaDestino->contrasenacue .
-                ' - PIN de Perfil ' . $perfilDestino->numeroper . ': ' . $perfilDestino->pinper;
-
-            return $mensaje; // Retornar mensaje de éxito
+            return [
+                'status' => 'success',
+                'movement' => $this->buildMovementData($usuario, $cuentaDestino, $perfilDestino, 'otro_servicio'),
+            ];
         } else {
-            return 'error_sin_perfil';
+            return [
+                'status' => 'error_sin_perfil',
+            ];
         }
+    }
+
+    private function buildMovementData($usuario, $cuentaDestino, $perfilDestino, string $tipo): array
+    {
+        $cuentaDestino->loadMissing('valor.servicio');
+
+        return [
+            'tipo' => $tipo,
+            'cliente' => $usuario->nombre_cliente,
+            'servicio_origen' => $usuario->cuenta->valor->idser ?? null,
+            'servicio_destino' => $cuentaDestino->valor->idser ?? null,
+            'cuenta_destino' => $cuentaDestino->idcue,
+            'usuario_destino' => $cuentaDestino->usuariocue,
+            'perfil_destino' => $perfilDestino->numeroper,
+            'mensaje_entrega' => $this->entregaMensajeService->mensajeEntregaCuenta(
+                $cuentaDestino,
+                (int) $perfilDestino->numeroper,
+                $perfilDestino->pinper,
+                $usuario->fecha_vencimiento,
+                false,
+                true
+            ),
+        ];
     }
 }
