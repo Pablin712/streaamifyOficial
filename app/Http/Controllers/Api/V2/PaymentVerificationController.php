@@ -69,6 +69,7 @@ class PaymentVerificationController extends Controller
         $fileExists = $filePath ? is_file($filePath) : false;
         $fileSize = $fileExists ? filesize($filePath) : null;
         $fileMime = $fileExists ? mime_content_type($filePath) : null;
+        $banco = $recarga->banco;
 
         return response()->json([
             'success' => true,
@@ -82,6 +83,19 @@ class PaymentVerificationController extends Controller
                 ],
                 'idban' => $recarga->idban,
                 'banco' => optional($recarga->banco)->nombreban,
+                'banco_data' => $banco ? [
+                    'idban' => $banco->idban,
+                    'nombreban' => $banco->nombreban,
+                    'propietarioban' => $banco->propietarioban,
+                    'cedulaban' => $banco->cedulaban,
+                    'numeroban' => $banco->numeroban,
+                    'tipoban' => $banco->tipoban,
+                    'detalleban' => $banco->detalleban,
+                    'foto' => $banco->foto,
+                    'monto' => isset($banco->monto) ? (float) $banco->monto : null,
+                    'created_at' => optional($banco->created_at)->toIso8601String(),
+                    'updated_at' => optional($banco->updated_at)->toIso8601String(),
+                ] : null,
                 'numcomprobante' => $recarga->numcomprobante,
                 'valor' => (float) $recarga->valor,
                 'idestado' => $recarga->idestado,
@@ -190,7 +204,7 @@ class PaymentVerificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Recarga aprobada exitosamente.',
-                'notification_text' => '✅🤖 Empleado Laravel aprobó la recarga #' . $recarga->idrec . ' por $' . number_format((float) $recarga->valor, 2),
+                'notification_text' => '✅🤖 Se aprobó la recarga de ' . $cliente->nombrecli . ' por $' . number_format((float) $recarga->valor, 2),
                 'data' => [
                     'idrec' => $recarga->idrec,
                     'idestado' => 3,
@@ -201,7 +215,7 @@ class PaymentVerificationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al aprobar recarga.',
-                'notification_text' => '❌ Error al aprobar recarga #' . $idrec,
+                'notification_text' => '❌ Error al aprobar la recarga.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -233,6 +247,8 @@ class PaymentVerificationController extends Controller
 
             $recarga->update(['idestado' => 2]);
 
+            $clienteNombre = optional($recarga->cliente)->nombrecli ?? 'cliente';
+
             Historial::create([
                 'accion' => 'Recarga-Rechazada-API',
                 'descripcion' => self::BOT_ACTOR_LABEL . ' rechazó recarga ID: ' . $recarga->idrec . '. Valor: $' . $recarga->valor
@@ -246,7 +262,7 @@ class PaymentVerificationController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Recarga rechazada exitosamente.',
-                'notification_text' => '⛔🤖 Empleado Laravel rechazó la recarga #' . $recarga->idrec . ' por $' . number_format((float) $recarga->valor, 2),
+                'notification_text' => '⛔🤖 Se rechazó la recarga de ' . $clienteNombre . ' por $' . number_format((float) $recarga->valor, 2),
                 'data' => [
                     'idrec' => $recarga->idrec,
                     'idestado' => 2,
@@ -257,7 +273,7 @@ class PaymentVerificationController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al rechazar recarga.',
-                'notification_text' => '❌ Error al rechazar recarga #' . $idrec,
+                'notification_text' => '❌ Error al rechazar la recarga.',
                 'error' => $e->getMessage(),
             ], 500);
         }

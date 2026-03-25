@@ -43,12 +43,27 @@ class TriggerRecargaVerificationJob implements ShouldQueue
             return;
         }
 
+        $banco = $recarga->banco;
+
         $payload = [
             'event' => 'recarga.created',
             'idrec' => $recarga->idrec,
             'idcli' => $recarga->idcli,
             'idban' => $recarga->idban,
             'banco_nombre' => optional($recarga->banco)->nombreban,
+            'banco' => $banco ? [
+                'idban' => $banco->idban,
+                'nombreban' => $banco->nombreban,
+                'propietarioban' => $banco->propietarioban,
+                'cedulaban' => $banco->cedulaban,
+                'numeroban' => $banco->numeroban,
+                'tipoban' => $banco->tipoban,
+                'detalleban' => $banco->detalleban,
+                'foto' => $banco->foto,
+                'monto' => isset($banco->monto) ? (float) $banco->monto : null,
+                'created_at' => optional($banco->created_at)->toIso8601String(),
+                'updated_at' => optional($banco->updated_at)->toIso8601String(),
+            ] : null,
             'numcomprobante' => $recarga->numcomprobante,
             'valor' => (float) $recarga->valor,
             'recarga_url' => url('/api/v2/payments/n8n/recargas/' . $recarga->idrec),
