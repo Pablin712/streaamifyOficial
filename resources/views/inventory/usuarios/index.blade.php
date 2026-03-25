@@ -405,6 +405,37 @@
 @include('inventory.usuarios.modals.delete')
 @include('inventory.usuarios.modals.mover')
 @include('inventory.cuentas.modals.movement-results')
+
+@if (session('mensaje_renovacion'))
+    <x-modal name="mensaje-renovacion-usuarios" :show="false" maxWidth="2xl">
+        <div class="modal-header border-bottom">
+            <h5 class="modal-title">
+                <i class="fas fa-comment-dots me-2"></i>Mensaje de Renovacion
+            </h5>
+            <button type="button" class="btn-close"
+                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-renovacion-usuarios' }))">
+            </button>
+        </div>
+
+        <div class="modal-body bg-body">
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-info-circle me-2"></i>
+                La renovacion fue registrada correctamente. Copia el mensaje para enviarlo al cliente.
+            </div>
+            <textarea id="mensaje_renovacion_usuarios_text" class="form-control font-monospace bg-body-secondary text-body border" rows="8" readonly>{{ session('mensaje_renovacion') }}</textarea>
+        </div>
+
+        <div class="modal-footer border-top">
+            <button type="button" class="btn btn-outline-primary" onclick="copyMensajeRenovacionUsuarios()">
+                <i class="fas fa-copy me-1"></i>Copiar Mensaje
+            </button>
+            <button type="button" class="btn btn-secondary"
+                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-renovacion-usuarios' }))">
+                Cerrar
+            </button>
+        </div>
+    </x-modal>
+@endif
 @endsection
 @section('scripts')
     <!-- jQuery (debe cargarse primero) -->
@@ -748,4 +779,46 @@
 
     {{-- Enhanced Table v2 --}}
     <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('mensaje_renovacion'))
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensaje-renovacion-usuarios' }));
+            @endif
+        });
+
+        function copyMensajeRenovacionUsuarios() {
+            const message = document.getElementById('mensaje_renovacion_usuarios_text')?.value || '';
+            if (!message) {
+                return;
+            }
+
+            navigator.clipboard.writeText(message)
+                .then(() => {
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-renovacion-usuarios' }));
+                    const toast = document.getElementById('toast-mensaje');
+                    toast.textContent = '✅ Mensaje de renovacion copiado';
+                    toast.style.display = 'block';
+                    toast.style.opacity = 1;
+
+                    setTimeout(() => {
+                        toast.style.transition = 'opacity 0.5s ease';
+                        toast.style.opacity = 0;
+                        setTimeout(() => toast.style.display = 'none', 500);
+                    }, 2000);
+                })
+                .catch(() => {
+                    const toast = document.getElementById('toast-mensaje');
+                    toast.textContent = '⚠️ No se pudo copiar el mensaje';
+                    toast.style.display = 'block';
+                    toast.style.opacity = 1;
+
+                    setTimeout(() => {
+                        toast.style.transition = 'opacity 0.5s ease';
+                        toast.style.opacity = 0;
+                        setTimeout(() => toast.style.display = 'none', 500);
+                    }, 2000);
+                });
+        }
+    </script>
 @endsection

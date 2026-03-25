@@ -103,6 +103,47 @@ class EntregaMensajeService
         return $mensaje;
     }
 
+    public function mensajeRenovacionVenta(Venta $venta): string
+    {
+        $venta->loadMissing('detalles_venta.perfil.cuenta.valor.servicio');
+
+        $lineas = [
+            '*RENOVACION DE SERVICIO*',
+        ];
+        foreach ($venta->detalles_venta as $detalle) {
+            if (!$detalle->perfil || !$detalle->perfil->cuenta) {
+                continue;
+            }
+
+            $nombreServicio = strtoupper((string) ($detalle->perfil->cuenta->valor->idser ?? 'SERVICIO'));
+            $fecha = $this->formatearFecha($detalle->fechavendet);
+
+            $lineas[] = '*' . $nombreServicio . '*';
+            if ($fecha !== null) {
+                $lineas[] = 'Fecha limite: ' . $fecha;
+            }
+            $lineas[] = '';
+        }
+
+        if (empty($lineas)) {
+            return '';
+        }
+
+        if (end($lineas) === '') {
+            array_pop($lineas);
+        }
+
+        $totalVenta = (float) $venta->totalpagoven;
+        if ($totalVenta <= 0) {
+            $totalVenta = (float) $venta->detalles_venta->sum('montodet');
+        }
+
+        $lineas[] = '';
+        $lineas[] = '*Total pagado:* $' . number_format($totalVenta, 2, ',', '.');
+
+        return implode("\n", $lineas);
+    }
+
     private function mensajeSpotify(Cuenta $cuenta, ?int $numeroPerfil, ?string $pinPerfil, $fechaLimite, bool $incluirAdvertencia): string
     {
         [$usuarioSpotify, $claveSpotify] = $this->credencialesSpotify($cuenta, $numeroPerfil, $pinPerfil);

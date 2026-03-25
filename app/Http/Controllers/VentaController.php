@@ -350,7 +350,13 @@ class VentaController extends Controller
             ]);
         }
 
-        return redirect()->route('usuarios')->with('success', 'Venta renovada correctamente');
+        $mensajeRenovacion = $this->entregaMensajeService->mensajeRenovacionVenta(
+            $ventaNueva->loadMissing('detalles_venta.perfil.cuenta.valor.servicio')
+        );
+
+        return redirect()->route('usuarios')
+            ->with('success', 'Venta renovada correctamente')
+            ->with('mensaje_renovacion', $mensajeRenovacion);
     }
 
     public function storeCliente(Request $request)
