@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V2\TecnicoUsuariosController;
 use App\Http\Controllers\Api\V2\TecnicoVentasController;
 use App\Http\Controllers\Api\V2\TecnicoProductosController;
 use App\Http\Controllers\Api\V2\TecnicoConfigController;
+use App\Http\Controllers\Api\V2\PaymentVerificationController;
 use App\Http\Controllers\Api\DailyStatisticsController;
 
 /*
@@ -287,6 +288,17 @@ Route::prefix('v2')->group(function () {
             Route::get('/obtener/{idpro}', 'obtenerProveedor')->name('api.tech-config.proveedores.obtener');
             Route::get('/listar', 'listarProveedores')->name('api.tech-config.proveedores.listar');
         });
+    });
+
+    // ==========================================
+    // RUTAS PARA VERIFICADOR DE PAGOS (N8N) - V2
+    // ==========================================
+    Route::prefix('payments/n8n')->controller(PaymentVerificationController::class)->group(function () {
+        Route::get('/recargas/{idrec}', 'detalleRecarga')->name('api.v2.payments.n8n.detalle');
+        Route::get('/recargas/{idrec}/comprobante', 'comprobante')->name('api.v2.payments.n8n.comprobante');
+        Route::get('/recargas/{idrec}/comprobante/download', 'descargarComprobante')->name('api.v2.payments.n8n.comprobante.download');
+        Route::post('/recargas/{idrec}/aprobar', 'aprobar')->name('api.v2.payments.n8n.aprobar');
+        Route::post('/recargas/{idrec}/rechazar', 'rechazar')->name('api.v2.payments.n8n.rechazar');
     });
 
     // Chat AI - Para empleados (proxy a n8n) - Necesita middleware web para sesiones

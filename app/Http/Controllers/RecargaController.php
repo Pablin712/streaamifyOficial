@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NotificacionNueva;
+use App\Jobs\TriggerRecargaVerificationJob;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 
@@ -160,6 +162,19 @@ class RecargaController extends Controller
             'foto' => 'comprobantes/' . $filename,
             'idestado' => 1, // Estado inicial, por ejemplo "Pendiente"
         ]);
+
+        // Disparar verificación asíncrona en n8n sin bloquear respuesta al cliente.
+        try {
+            app()->terminating(function () use ($recarga) {
+                TriggerRecargaVerificationJob::dispatchSync($recarga->idrec);
+            });
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo despachar TriggerRecargaVerificationJob', [
+                'idrec' => $recarga->idrec,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // 🔔 Notificar a los empleados
         $empleados = Empleado::all(); // Obtener empleados con el rol adecuado
         Notification::send($empleados, new NotificacionNueva($recarga));
