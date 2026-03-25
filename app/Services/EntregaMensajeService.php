@@ -51,31 +51,46 @@ class EntregaMensajeService
     {
         $venta->loadMissing('detalles_venta.perfil.cuenta.valor.servicio');
 
+        $grupos = $this->agruparDetallesPorCuenta($venta->detalles_venta);
         $bloques = [];
         $advertencias = [];
 
-        foreach ($venta->detalles_venta as $detalle) {
-            if (!$detalle->perfil || !$detalle->perfil->cuenta) {
+        foreach ($grupos as $idcue => $detallesGrupo) {
+            if (empty($detallesGrupo)) {
                 continue;
             }
 
-            $cuenta = $detalle->perfil->cuenta;
-            $numeroPerfil = (int) ($detalle->perfil->numeroper ?? 0);
-            $pinPerfil = $detalle->perfil->pinper;
+            $primerDetalle = $detallesGrupo[0];
+            if (!$primerDetalle->perfil || !$primerDetalle->perfil->cuenta) {
+                continue;
+            }
 
-            $bloques[] = $this->mensajeEntregaCuenta(
-                $cuenta,
-                $numeroPerfil,
-                $pinPerfil,
-                $detalle->fechavendet,
-                false,
-                false
-            );
-
+            $cuenta = $primerDetalle->perfil->cuenta;
             $idServicio = strtoupper((string) ($cuenta->valor->idser ?? ''));
-            if ($idServicio === 'MAGIS' || $idServicio === 'FLUJO') {
+
+            // Spotify: cada perfil es un mensaje separado (credenciales distintas)
+            if ($idServicio === 'SPOTIFY') {
+                foreach ($detallesGrupo as $detalle) {
+                    $bloques[] = $this->mensajeEntregaCuenta(
+                        $cuenta,
+                        (int) ($detalle->perfil->numeroper ?? 0),
+                        $detalle->perfil->pinper,
+                        $detalle->fechavendet,
+                        false,
+                        false
+                    );
+                }
+                $advertencias[] = '*Prohibido:* Modificar perfil o clave.';
+            }
+            // Flujo/MAGIS: una sola vez las credenciales + cantidad de dispositivos
+            elseif ($idServicio === 'MAGIS' || $idServicio === 'FLUJO') {
+                $mensajeFlujo = $this->mensajeFlujConDispositivos($cuenta, $detallesGrupo[0]->fechavendet, count($detallesGrupo), false);
+                $bloques[] = $mensajeFlujo;
                 $advertencias[] = '*Prohibido:* Modificar clave.';
-            } else {
+            }
+            // Otros servicios (Netflix, Disney, Max, Prime, Paramount, Crunchyroll): agrupar perfiles
+            else {
+                $bloques[] = $this->mensajeGeneralConPerfiles($cuenta, $detallesGrupo, false);
                 $advertencias[] = '*Prohibido:* Modificar perfiles o claves.';
             }
         }
@@ -109,23 +124,54 @@ class EntregaMensajeService
 
         $lineas = [
             '*RENOVACION DE SERVICIO*',
+            '',
         ];
-        foreach ($venta->detalles_venta as $detalle) {
-            if (!$detalle->perfil || !$detalle->perfil->cuenta) {
+
+        $grupos = $this->agruparDetallesPorCuenta($venta->detalles_venta);
+
+        foreach ($grupos as $idcue => $detallesGrupo) {
+            if (empty($detallesGrupo)) {
                 continue;
             }
 
-            $nombreServicio = strtoupper((string) ($detalle->perfil->cuenta->valor->idser ?? 'SERVICIO'));
-            $fecha = $this->formatearFecha($detalle->fechavendet);
-
-            $lineas[] = '*' . $nombreServicio . '*';
-            if ($fecha !== null) {
-                $lineas[] = 'Fecha limite: ' . $fecha;
+            $primerDetalle = $detallesGrupo[0];
+            if (!$primerDetalle->perfil || !$primerDetalle->perfil->cuenta) {
+                continue;
             }
-            $lineas[] = '';
+
+            $cuenta = $primerDetalle->perfil->cuenta;
+            $idServicio = strtoupper((string) ($cuenta->valor->idser ?? 'SERVICIO'));
+
+            // Spotify y otros: listar servicio y fecha
+            if ($idServicio === 'SPOTIFY') {
+                foreach ($detallesGrupo as $detalle) {
+                    $lineas[] = '*' . $idServicio . '*';
+                    $fecha = $this->formatearFecha($detalle->fechavendet);
+                    if ($fecha !== null) {
+                        $lineas[] = 'Fecha limite: ' . $fecha;
+                    }
+                    $lineas[] = '';
+                }
+            } else {
+                $lineas[] = '*' . $idServicio . '*';
+                $fecha = $this->formatearFecha($detallesGrupo[0]->fechavendet);
+                if ($fecha !== null) {
+                    $lineas[] = 'Fecha limite: ' . $fecha;
+                }
+                // Mostrar PINs de perfiles si hay múltiples y no es Flujo/MAGIS
+                if (count($detallesGrupo) > 1 && $idServicio !== 'MAGIS' && $idServicio !== 'FLUJO') {
+                    foreach ($detallesGrupo as $detalle) {
+                        if ($detalle->perfil && $detalle->perfil->numeroper) {
+                            $pin = (string) $detalle->perfil->pinper;
+                            $lineas[] = 'PIN de perfil Nro ' . $detalle->perfil->numeroper . ': ' . $pin;
+                        }
+                    }
+                }
+                $lineas[] = '';
+            }
         }
 
-        if (empty($lineas)) {
+        if (count($lineas) === 2) {
             return '';
         }
 
@@ -164,6 +210,91 @@ class EntregaMensajeService
             $partes[] = '';
             $partes[] = '*Prohibido:* Modificar perfil o clave.';
             $partes[] = '¡Gracias por tu confianza! 🎶';
+        }
+
+        return implode("\n", $partes);
+    }
+
+    private function agruparDetallesPorCuenta($detalles)
+    {
+        $grupos = [];
+
+        foreach ($detalles as $detalle) {
+            if (!$detalle->perfil || !$detalle->perfil->cuenta) {
+                continue;
+            }
+
+            $idcue = $detalle->perfil->cuenta->idcue;
+
+            if (!isset($grupos[$idcue])) {
+                $grupos[$idcue] = [];
+            }
+
+            $grupos[$idcue][] = $detalle;
+        }
+
+        return $grupos;
+    }
+
+    private function mensajeFlujConDispositivos(Cuenta $cuenta, $fechaLimite, int $cantidadDispositivos, bool $incluirAdvertencia): string
+    {
+        $partes = [
+            '*FLUJO*',
+            'Usuario: ' . (string) $cuenta->usuariocue,
+            'Clave: ' . (string) $cuenta->contrasenacue,
+        ];
+
+        $fecha = $this->formatearFecha($fechaLimite);
+        if ($fecha !== null) {
+            $partes[] = 'Fecha limite: ' . $fecha;
+        }
+
+        if ($cantidadDispositivos > 0) {
+            $dispositivoTexto = $cantidadDispositivos === 1 ? 'dispositivo' : 'dispositivos';
+            $partes[] = 'Dispositivos permitidos: ' . $cantidadDispositivos;
+        }
+
+        if ($incluirAdvertencia) {
+            $partes[] = '*Prohibido:* Modificar clave.';
+        }
+
+        return implode("\n", $partes);
+    }
+
+    private function mensajeGeneralConPerfiles(Cuenta $cuenta, array $detallesGrupo, bool $incluirAdvertencia): string
+    {
+        $servicio = strtoupper((string) ($cuenta->valor->idser ?? 'SERVICIO'));
+
+        $partes = [
+            '*' . $servicio . '*',
+            'Usuario: ' . (string) $cuenta->usuariocue,
+            'Clave: ' . (string) $cuenta->contrasenacue,
+        ];
+
+        // Agregar PIN de cada perfil
+        foreach ($detallesGrupo as $detalle) {
+            if ($detalle->perfil && $detalle->perfil->numeroper) {
+                $pin = (string) $detalle->perfil->pinper;
+                $partes[] = 'PIN de perfil Nro ' . $detalle->perfil->numeroper . ': ' . $pin;
+            }
+        }
+
+        // Usar la fecha del primer detalle
+        $fecha = $this->formatearFecha($detallesGrupo[0]->fechavendet);
+        if ($fecha !== null) {
+            $partes[] = 'Fecha limite: ' . $fecha;
+        }
+
+        if ($incluirAdvertencia) {
+            $partes[] = '*Prohibido:* Modificar perfiles o claves.';
+        }
+
+        $bot = (string) ($cuenta->valor->bot ?? '');
+        if (trim($bot) !== '') {
+            $partes[] = '';
+            $partes[] = '*Nota importante:*';
+            $partes[] = 'Te dare acceso al bot de codigos. Si se solicita un codigo de acceso (Hogar), puedes obtenerlo aqui:';
+            $partes[] = $bot;
         }
 
         return implode("\n", $partes);
