@@ -48,16 +48,16 @@ class ContadorService
         // Estructura: Venta → DetalleVenta → Perfil → Cuenta → Valor → Servicio
         $servicios = Venta::whereBetween('fechaven', [$fechas['inicio'], $fechas['fin']])
             ->join('detalles_venta', 'ventas.idven', '=', 'detalles_venta.idven')
-            ->join('perfiles', 'detalles_venta.idper', '=', 'perfiles.idper')
-            ->join('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
-            ->join('valores', 'cuentas.idval', '=', 'valores.idval')
-            ->join('servicios', 'valores.idser', '=', 'servicios.idser')
+            ->leftJoin('perfiles', 'detalles_venta.idper', '=', 'perfiles.idper')
+            ->leftJoin('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
+            ->leftJoin('valores', 'cuentas.idval', '=', 'valores.idval')
+            ->leftJoin('servicios', 'valores.idser', '=', 'servicios.idser')
             ->select(
-                'servicios.nombreser as servicio',
+                DB::raw("COALESCE(detalles_venta.servicio_snapshot, servicios.nombreser, 'SERVICIO ELIMINADO') as servicio"),
                 DB::raw('COUNT(DISTINCT ventas.idven) as cantidad'),
                 DB::raw('SUM(detalles_venta.montodet) as total')
             )
-            ->groupBy('servicios.nombreser')
+            ->groupBy(DB::raw("COALESCE(detalles_venta.servicio_snapshot, servicios.nombreser, 'SERVICIO ELIMINADO')"))
             ->orderByDesc('total')
             ->get();
 
@@ -853,18 +853,21 @@ class ContadorService
 
         $servicios = Venta::whereBetween('fechaven', [$fechas['inicio'], $fechas['fin']])
             ->join('detalles_venta', 'ventas.idven', '=', 'detalles_venta.idven')
-            ->join('perfiles', 'detalles_venta.idper', '=', 'perfiles.idper')
-            ->join('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
-            ->join('valores', 'cuentas.idval', '=', 'valores.idval')
-            ->join('servicios', 'valores.idser', '=', 'servicios.idser')
+            ->leftJoin('perfiles', 'detalles_venta.idper', '=', 'perfiles.idper')
+            ->leftJoin('cuentas', 'perfiles.idcue', '=', 'cuentas.idcue')
+            ->leftJoin('valores', 'cuentas.idval', '=', 'valores.idval')
+            ->leftJoin('servicios', 'valores.idser', '=', 'servicios.idser')
             ->select(
-                'servicios.idser',
-                'servicios.nombreser as servicio',
+                DB::raw("COALESCE(servicios.idser, detalles_venta.idval_snapshot, 'ELIMINADO') as idser"),
+                DB::raw("COALESCE(detalles_venta.servicio_snapshot, servicios.nombreser, 'SERVICIO ELIMINADO') as servicio"),
                 DB::raw('COUNT(DISTINCT ventas.idven) as cantidad_ventas'),
                 DB::raw('SUM(detalles_venta.montodet) as ingresos'),
                 DB::raw('COUNT(DISTINCT ventas.idcli) as clientes_unicos')
             )
-            ->groupBy('servicios.idser', 'servicios.nombreser')
+            ->groupBy(
+                DB::raw("COALESCE(servicios.idser, detalles_venta.idval_snapshot, 'ELIMINADO')"),
+                DB::raw("COALESCE(detalles_venta.servicio_snapshot, servicios.nombreser, 'SERVICIO ELIMINADO')")
+            )
             ->orderByDesc('ingresos')
             ->get();
 

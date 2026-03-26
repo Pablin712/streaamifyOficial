@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Servicio;
 use App\Models\Historial;
+use App\Models\Valor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -150,9 +151,24 @@ class ServicioController extends Controller
 
         $servicio = Servicio::where('idser', $idser)->firstOrFail();
 
+        $valoresAsociados = Valor::where('idser', $servicio->idser)->count();
+
+        if ($valoresAsociados > 0) {
+            $message = 'No se puede eliminar el servicio porque todavía tiene valores asociados. Elimina primero esos valores.';
+
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()->route('servicios')->with('error', $message);
+        }
+
         Historial::create([
             'accion' => 'Eliminación de Servicio',
-            'descripcion' => 'Datos Eliminados: ' . json_encode($servicio),
+            'descripcion' => 'Servicio eliminado físicamente: ' . json_encode($servicio),
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);

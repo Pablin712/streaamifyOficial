@@ -15,8 +15,10 @@ use App\Services\CuentaService;
 use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -766,7 +768,7 @@ class CuentaController extends Controller
         if (!Gate::allows('cuentas.destroy')) {
             abort(403, 'No tienes permiso para eliminar cuentas.');
         }
-        $cuenta = Cuenta::findOrFail($idcue);
+        $cuenta = Cuenta::with(['valor.servicio', 'perfiles'])->findOrFail($idcue);
         $cuentaInUsuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->exists();
 
         if ($cuentaInUsuariosActivos) {
@@ -780,37 +782,97 @@ class CuentaController extends Controller
             return redirect()->route('cuentas')->with('error', 'No se puede eliminar la cuenta porque uno o más clientes aun la usan');
         }
 
+        if (!$this->historicoDesacopladoDisponible()) {
+            $message = 'No se puede eliminar la cuenta todavía. Falta ejecutar la migración de desacople histórico para preservar ventas, costos y mantenimientos.';
+
+            if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 409);
+            }
+
+            return redirect()->route('cuentas')->with('error', $message);
+        }
+
         Historial::create([
-            'accion' => 'Se desactivó la cuenta con ID: ' . $cuenta->idcue,
-            'descripcion' => 'Datos inactivos: ' . json_encode($cuenta),
+            'accion' => 'Se eliminó la cuenta con ID: ' . $cuenta->idcue,
+            'descripcion' => 'Cuenta eliminada preservando histórico: ' . json_encode($cuenta),
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
 
-        $nuevoId = $this->cuentaService->generarNuevoId($cuenta->idcue);
-        $perfiles = Perfil::where('idcue', $cuenta->idcue)->get();
+        $servicioNombre = $cuenta->valor?->servicio?->nombreser ?? $cuenta->valor?->idser;
+        $perfiles = $cuenta->perfiles;
+        $idsPerfiles = $perfiles->pluck('idper')->filter()->values();
 
-        foreach ($perfiles as $perfil) {
-            $nuevoIdPer = $this->cuentaService->generarNuevoIdPerfil($perfil->idper);
-            $perfil->update([
-                'idper' => $nuevoIdPer
-            ]);
-        }
+        DB::transaction(function () use ($cuenta, $servicioNombre, $perfiles, $idsPerfiles) {
+            foreach ($perfiles as $perfil) {
+                DB::table('detalles_venta')
+                    ->where('idper', $perfil->idper)
+                    ->update([
+                        'idper_snapshot' => DB::raw("COALESCE(idper_snapshot, '" . addslashes($perfil->idper) . "')"),
+                        'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                        'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                        'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                        'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+                        'perfil_numeroper_snapshot' => DB::raw('COALESCE(perfil_numeroper_snapshot, ' . (int) $perfil->numeroper . ')'),
+                    ]);
+            }
 
-        $cuenta->update([
-            'activocue' => false,
-            'idcue' => $nuevoId
-        ]);
+            DB::table('costos')
+                ->where('idcue', $cuenta->idcue)
+                ->update([
+                    'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                    'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                    'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                    'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+                ]);
+
+            DB::table('mantenimientos')
+                ->where('idcue', $cuenta->idcue)
+                ->update([
+                    'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                    'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                    'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                    'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+                ]);
+
+            if ($idsPerfiles->isNotEmpty()) {
+                Perfil::whereIn('idper', $idsPerfiles)->delete();
+            }
+
+            $cuenta->delete();
+        });
+
         $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
 
         // Triple verificación AJAX
         if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,
-                'message' => 'Cuenta desactivada exitosamente'
+                'message' => 'Cuenta eliminada exitosamente preservando histórico'
             ]);
         }
 
-        return redirect()->route('cuentas')->with('success', 'Cuenta desactivada con éxito.');
+        return redirect()->route('cuentas')->with('success', 'Cuenta eliminada con éxito preservando histórico.');
+    }
+
+    private function historicoDesacopladoDisponible(): bool
+    {
+        return Schema::hasColumn('detalles_venta', 'idper_snapshot')
+            && Schema::hasColumn('detalles_venta', 'idcue_snapshot')
+            && Schema::hasColumn('detalles_venta', 'idval_snapshot')
+            && Schema::hasColumn('detalles_venta', 'servicio_snapshot')
+            && Schema::hasColumn('detalles_venta', 'cuenta_usuario_snapshot')
+            && Schema::hasColumn('detalles_venta', 'perfil_numeroper_snapshot')
+            && Schema::hasColumn('costos', 'idcue_snapshot')
+            && Schema::hasColumn('costos', 'idval_snapshot')
+            && Schema::hasColumn('costos', 'servicio_snapshot')
+            && Schema::hasColumn('costos', 'cuenta_usuario_snapshot')
+            && Schema::hasColumn('mantenimientos', 'idcue_snapshot')
+            && Schema::hasColumn('mantenimientos', 'idval_snapshot')
+            && Schema::hasColumn('mantenimientos', 'servicio_snapshot')
+            && Schema::hasColumn('mantenimientos', 'cuenta_usuario_snapshot');
     }
 }

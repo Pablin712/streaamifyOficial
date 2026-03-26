@@ -20,6 +20,12 @@ class DetalleVenta extends Model
     protected $fillable = [
         'idven',
         'idper',
+        'idper_snapshot',
+        'idcue_snapshot',
+        'idval_snapshot',
+        'servicio_snapshot',
+        'cuenta_usuario_snapshot',
+        'perfil_numeroper_snapshot',
         'descripciondet',
         'fechavendet',
         'montodet',

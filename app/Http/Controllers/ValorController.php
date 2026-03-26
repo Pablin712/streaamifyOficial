@@ -7,10 +7,14 @@ use App\Models\Servicio;
 use App\Models\Proveedor;
 use App\Models\Cuenta;
 use App\Models\Historial;
+use App\Models\Perfil;
+use App\Models\ViewUsuarioActivo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\CuentaService;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Services\ValorService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
@@ -204,46 +208,124 @@ class ValorController extends Controller
             // Buscar el valor
             $valor = Valor::findOrFail($idval);
 
-            $cuentasAsociadas = Cuenta::where('idval', $valor->idval)->where('activocue', true)->exists();
-            if ($cuentasAsociadas) {
+            $cuentas = Cuenta::with(['valor.servicio', 'perfiles'])
+                ->where('idval', $valor->idval)
+                ->get();
+
+            $cuentasConUsuariosActivos = $cuentas->isNotEmpty()
+                ? ViewUsuarioActivo::whereIn('idcue', $cuentas->pluck('idcue'))->exists()
+                : false;
+
+            if ($cuentasConUsuariosActivos) {
                 // Triple verificación AJAX
                 if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'No se puede eliminar porque tiene cuentas asociadas.'
+                        'message' => 'No se puede eliminar porque tiene cuentas con usuarios activos.'
                     ], 400);
                 }
-                return redirect()->back()->with('error', 'No se puede eliminar porque tiene cuentas asociadas.');
+                return redirect()->back()->with('error', 'No se puede eliminar porque tiene cuentas con usuarios activos.');
             }
 
-            // Generar nuevo ID para el valor
-            $nuevoIdVal = $this->cuentaService->generarNuevoIdValor($valor->idval);
+            if (!$this->historicoDesacopladoDisponible()) {
+                $message = 'No se puede eliminar el valor todavía. Falta ejecutar la migración de desacople histórico para preservar ventas, costos y mantenimientos.';
+
+                if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $message,
+                    ], 409);
+                }
+
+                return redirect()->route('valores')->with('error', $message);
+            }
 
             // Registrar en historial
             Historial::create([
-                'accion' => 'Se desactivó el valor con ID: ' . $valor->idval,
-                'descripcion' => 'Datos inactivos: ' . json_encode($valor),
+                'accion' => 'Se eliminó el valor con ID: ' . $valor->idval,
+                'descripcion' => 'Valor eliminado físicamente preservando histórico: ' . json_encode($valor),
                 'empleado_id' => Auth::user()->idemp,
                 'created_at' => now(),
             ]);
-            // Desactivar el valor en lugar de eliminarlo
-            $valor->update([
-                'activoval' => false,
-                'idval' => $nuevoIdVal
-            ]);
+
+            DB::transaction(function () use ($cuentas, $valor) {
+                foreach ($cuentas as $cuenta) {
+                    $this->preservarHistoricoCuenta($cuenta);
+                }
+
+                $valor->delete();
+            });
+
+            $this->cuentaService->actualizarEstadoProductos($valor->idser);
 
             // Triple verificación AJAX
             if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Valor desactivado con éxito.'
+                    'message' => 'Valor eliminado con éxito.'
                 ]);
             }
 
-            return redirect()->route('valores')->with('success', 'Valor desactivado con éxito.');
+            return redirect()->route('valores')->with('success', 'Valor eliminado con éxito.');
         } catch (\Exception $e) {
-            return redirect()->route('valores')->with('error', 'Error al desactivar el valor: ' . $e->getMessage());
+            return redirect()->route('valores')->with('error', 'Error al eliminar el valor: ' . $e->getMessage());
         }
+    }
+
+    private function preservarHistoricoCuenta(Cuenta $cuenta): void
+    {
+        $cuenta->loadMissing(['valor.servicio', 'perfiles']);
+
+        $servicioNombre = $cuenta->valor?->servicio?->nombreser ?? $cuenta->valor?->idser;
+
+        foreach ($cuenta->perfiles as $perfil) {
+            DB::table('detalles_venta')
+                ->where('idper', $perfil->idper)
+                ->update([
+                    'idper_snapshot' => DB::raw("COALESCE(idper_snapshot, '" . addslashes($perfil->idper) . "')"),
+                    'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                    'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                    'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                    'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+                    'perfil_numeroper_snapshot' => DB::raw('COALESCE(perfil_numeroper_snapshot, ' . (int) $perfil->numeroper . ')'),
+                ]);
+        }
+
+        DB::table('costos')
+            ->where('idcue', $cuenta->idcue)
+            ->update([
+                'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+            ]);
+
+        DB::table('mantenimientos')
+            ->where('idcue', $cuenta->idcue)
+            ->update([
+                'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+            ]);
+    }
+
+    private function historicoDesacopladoDisponible(): bool
+    {
+        return Schema::hasColumn('detalles_venta', 'idper_snapshot')
+            && Schema::hasColumn('detalles_venta', 'idcue_snapshot')
+            && Schema::hasColumn('detalles_venta', 'idval_snapshot')
+            && Schema::hasColumn('detalles_venta', 'servicio_snapshot')
+            && Schema::hasColumn('detalles_venta', 'cuenta_usuario_snapshot')
+            && Schema::hasColumn('detalles_venta', 'perfil_numeroper_snapshot')
+            && Schema::hasColumn('costos', 'idcue_snapshot')
+            && Schema::hasColumn('costos', 'idval_snapshot')
+            && Schema::hasColumn('costos', 'servicio_snapshot')
+            && Schema::hasColumn('costos', 'cuenta_usuario_snapshot')
+            && Schema::hasColumn('mantenimientos', 'idcue_snapshot')
+            && Schema::hasColumn('mantenimientos', 'idval_snapshot')
+            && Schema::hasColumn('mantenimientos', 'servicio_snapshot')
+            && Schema::hasColumn('mantenimientos', 'cuenta_usuario_snapshot');
     }
     public function corregir()
     {
@@ -255,42 +337,62 @@ class ValorController extends Controller
     }
     public function deletegroup()
     {
-        // Verificar permisos
         if (!Gate::allows('valores.destroy')) {
             abort(403, 'No tienes permiso para eliminar valores.');
         }
+
+        if (!$this->historicoDesacopladoDisponible()) {
+            return redirect()->route('valores')->with('error', 'No se pueden eliminar los valores todavía. Falta ejecutar la migración de desacople histórico para preservar ventas, costos y mantenimientos.');
+        }
+
         $valores = Valor::where('activoval', true)->get();
+        $eliminados = 0;
+        $omitidos = 0;
+        $serviciosActualizados = [];
+
         foreach ($valores as $valor) {
-            // Verificar si tiene cuentas activas asociadas
-            $cuentasAsociadas = Cuenta::where('idval', $valor->idval)
-                ->where('activocue', true)
-                ->exists();
-            if ($cuentasAsociadas) {
-                // Opcional: podrías registrar en historial que no se eliminó por cuentas asociadas
+            $cuentas = Cuenta::with(['valor.servicio', 'perfiles'])
+                ->where('idval', $valor->idval)
+                ->get();
+
+            $cuentasConUsuariosActivos = $cuentas->isNotEmpty()
+                ? ViewUsuarioActivo::whereIn('idcue', $cuentas->pluck('idcue'))->exists()
+                : false;
+
+            if ($cuentasConUsuariosActivos) {
+                $omitidos++;
                 continue;
             }
 
-            // Generar nuevo ID para el valor
-            if (isset($this->cuentaService)) {
-                $nuevoIdVal = $this->cuentaService->generarNuevoIdValor($valor->idval);
-            } else {
-                $nuevoIdVal = $valor->idval . '-inactivo';
-            }
-
-            // Registrar en historial
             Historial::create([
-                'accion' => 'Se desactivó el valor con ID: ' . $valor->idval,
-                'descripcion' => 'Datos inactivos: ' . json_encode($valor),
+                'accion' => 'Se eliminó el valor con ID: ' . $valor->idval,
+                'descripcion' => 'Valor eliminado físicamente desde borrado masivo preservando histórico: ' . json_encode($valor),
                 'empleado_id' => Auth::user()->idemp ?? null,
                 'created_at' => now(),
             ]);
 
-            // Desactivar el valor y actualizar idval
-            $valor->update([
-                'activoval' => false,
-                'idval' => $nuevoIdVal
-            ]);
+            DB::transaction(function () use ($cuentas, $valor) {
+                foreach ($cuentas as $cuenta) {
+                    $this->preservarHistoricoCuenta($cuenta);
+                }
+
+                $valor->delete();
+            });
+
+            $eliminados++;
+            if ($valor->idser) {
+                $serviciosActualizados[$valor->idser] = true;
+            }
         }
-        return redirect()->route('valores')->with('success', 'Valores inactivos procesados correctamente.');
+
+        foreach (array_keys($serviciosActualizados) as $idser) {
+            $this->cuentaService->actualizarEstadoProductos($idser);
+        }
+
+        if ($eliminados === 0) {
+            return redirect()->route('valores')->with('warning', 'No se eliminó ningún valor. ' . $omitidos . ' valores fueron omitidos porque aún tienen cuentas con usuarios activos.');
+        }
+
+        return redirect()->route('valores')->with('success', "Borrado masivo completado: {$eliminados} valores eliminados y {$omitidos} omitidos por usuarios activos.");
     }
 }

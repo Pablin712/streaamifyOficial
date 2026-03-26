@@ -128,39 +128,39 @@ class ProveedorController extends Controller
 
         $proveedor = Proveedor::findOrFail($idpro);
 
-        // Verificar si hay valores asociados
-        $valoresAsociados = Valor::where('idpro', $proveedor->idpro)->where('activoval', true)->exists();
-        if ($valoresAsociados) {
-            // Triple verificación AJAX
+        $valoresAsociados = Valor::where('idpro', $proveedor->idpro)->count();
+
+        if ($valoresAsociados > 0) {
+            $message = 'No se puede eliminar el proveedor porque todavía tiene valores asociados. Elimina primero esos valores.';
+
             if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se puede eliminar porque tiene valores asociados.'
+                    'message' => $message,
                 ], 400);
             }
-            return redirect()->route('proveedores')->with('error', 'No se puede eliminar porque tiene valores asociados.');
+
+            return redirect()->route('proveedores')->with('error', $message);
         }
 
         // Registrar en historial
         Historial::create([
-            'accion' => 'Se desactivó el proveedor con ID: ' . $proveedor->idpro,
-            'descripcion' => 'Datos inactivos: ' . json_encode($proveedor),
+            'accion' => 'Se eliminó el proveedor con ID: ' . $proveedor->idpro,
+            'descripcion' => 'Proveedor eliminado físicamente: ' . json_encode($proveedor),
             'empleado_id' => Auth::user()->idemp,
             'created_at' => now(),
         ]);
-        // Desactivar el proveedor
-        $proveedor->update([
-            'activopro' => false,
-        ]);
+
+        $proveedor->delete();
 
         // Triple verificación AJAX
         if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,
-                'message' => 'Proveedor desactivado con éxito.'
+                'message' => 'Proveedor eliminado con éxito.'
             ]);
         }
 
-        return redirect()->route('proveedores')->with('success', 'Proveedor desactivado con éxito.');
+        return redirect()->route('proveedores')->with('success', 'Proveedor eliminado con éxito.');
     }
 }

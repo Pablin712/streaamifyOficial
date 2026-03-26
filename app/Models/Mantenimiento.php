@@ -16,6 +16,10 @@ class Mantenimiento extends Model
 
     protected $fillable = [
         'idcue',
+        'idcue_snapshot',
+        'idval_snapshot',
+        'servicio_snapshot',
+        'cuenta_usuario_snapshot',
         'descripcionman',
         'fechaman',
     ];
