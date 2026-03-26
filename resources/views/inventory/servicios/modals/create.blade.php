@@ -5,7 +5,7 @@
         </h5>
         <button type="button" class="btn-close" onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createServicioModal' }))"></button>
     </div>
-    <form id="createServicioForm" onsubmit="submitCreate(event)">
+    <form id="createServicioForm" onsubmit="if (typeof submitCreateServicio === 'function') { submitCreateServicio(event); } else if (typeof submitCreate === 'function') { submitCreate(event); }">
         <div class="modal-body p-4">
             @csrf
 

@@ -5,7 +5,7 @@
         </h5>
         <button type="button" class="btn-close" onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'createProveedorModal' }))"></button>
     </div>
-    <form id="createProveedorForm" onsubmit="submitCreate(event)">
+    <form id="createProveedorForm" onsubmit="if (typeof submitCreateProveedor === 'function') { submitCreateProveedor(event); } else if (typeof submitCreate === 'function') { submitCreate(event); }">
         @csrf
         <div class="modal-body">
             <div class="row g-3">

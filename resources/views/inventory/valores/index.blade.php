@@ -344,7 +344,7 @@
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'createValorModal' }));
     }
 
-    async function submitCreate(event) {
+    async function submitCreateValor(event) {
         event.preventDefault();
         console.log('📤 Enviando formulario de creación');
 
@@ -376,6 +376,11 @@
             console.error('❌ Error en la petición:', error);
             showAlert('Error al procesar la solicitud', 'danger');
         }
+    }
+
+    // Compatibilidad con otros modales/vistas que aún llaman submitCreate
+    async function submitCreate(event) {
+        return submitCreateValor(event);
     }
 
     // ========================================
