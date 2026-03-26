@@ -281,7 +281,7 @@
                                             @if (Auth::user()->hasPermissionTo('valores.destroy'))
                                                 <button type="button"
                                                         class="btn btn-danger btn-sm"
-                                                        onclick="openDeleteModal('{{ $valor->idval }}', '{{ $valor->servicio->nombreser }}', '{{ $valor->proveedor->nombrepro }}', {{ $valor->costoval }}, '{{ $valor->tipoval }}')"
+                                                        onclick="openDeleteModal(@js($valor->idval), @js($valor->servicio->nombreser), @js($valor->proveedor->nombrepro), {{ (float) $valor->costoval }}, @js($valor->tipoval))"
                                                         title="Eliminar">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -491,7 +491,10 @@
                 }
             });
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
+            const data = contentType.includes('application/json')
+                ? await response.json()
+                : { success: false, message: 'Respuesta inesperada del servidor (no JSON).' };
 
             if (data.success) {
                 console.log('✅ Valor eliminado exitosamente');

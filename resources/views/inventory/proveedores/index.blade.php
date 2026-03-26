@@ -216,7 +216,7 @@
                             @if (Auth::user()->hasPermissionTo('proveedores.destroy'))
                                 <button type="button"
                                         class="btn btn-danger btn-circle"
-                                        onclick="openDeleteModal({{ $proveedor->idpro }}, '{{ $proveedor->nombrepro }}', '{{ $proveedor->telefonopro }}')">
+                                        onclick="openDeleteModal({{ (int) $proveedor->idpro }}, @js($proveedor->nombrepro), @js($proveedor->telefonopro))">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             @endif
@@ -393,7 +393,10 @@
                     }
                 });
 
-                const data = await response.json();
+                const contentType = response.headers.get('content-type') || '';
+                const data = contentType.includes('application/json')
+                    ? await response.json()
+                    : { success: false, message: 'Respuesta inesperada del servidor (no JSON).' };
 
                 if (data.success) {
                     console.log('✅ Proveedor eliminado exitosamente');
