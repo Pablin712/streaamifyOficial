@@ -121,19 +121,9 @@ class VentaController extends Controller
         }
         $clientes = Cliente::all();
         $empleados = Empleado::all();
-        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
+        $cuentas = $this->obtenerCuentasDisponiblesParaVenta();
         $bancos = Banco::all();
 
-        foreach ($cuentas as $cuenta) {
-            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
-            $cuenta->usuarios_activos = $usuarios;
-            foreach ($cuenta->perfiles as $perfil) {
-                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
-                    ->where('idcue', $cuenta->idcue)
-                    ->count();
-                $perfil->usuarios_activos = $usuariosActivos;
-            }
-        }
         return view('sales.ventas.create', compact('empleados', 'clientes', 'cuentas', 'bancos'));
     }
 
@@ -400,19 +390,9 @@ class VentaController extends Controller
         }
         $venta = Venta::with(['detalles_venta', 'transaccion'])->findOrFail($idven);
         $empleados = Empleado::all();
-        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
+        $cuentas = $this->obtenerCuentasDisponiblesParaVenta();
         $bancos = Banco::all();
 
-        foreach ($cuentas as $cuenta) {
-            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
-            $cuenta->usuarios_activos = $usuarios;
-            foreach ($cuenta->perfiles as $perfil) {
-                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
-                    ->where('idcue', $cuenta->idcue)
-                    ->count();
-                $perfil->usuarios_activos = $usuariosActivos;
-            }
-        }
         return view('sales.ventas.edit', compact('venta', 'empleados', 'cuentas', 'bancos'));
     }
 
@@ -423,7 +403,7 @@ class VentaController extends Controller
         }
         $venta = Venta::with(['detalles_venta', 'cliente', 'transaccion'])->findOrFail($idven);
         $empleados = Empleado::all();
-        $cuentas = Cuenta::with('perfiles')->where('activocue', true)->orderBy('idcue')->get();
+        $cuentas = $this->obtenerCuentasDisponiblesParaVenta();
         $bancos = Banco::all();
 
         if ($venta->idcli != $idcli) {
@@ -437,17 +417,6 @@ class VentaController extends Controller
 
         $totalVenta = $venta->detalles_venta->sum('montodet');
 
-        foreach ($cuentas as $cuenta) {
-            $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->count();
-            $cuenta->usuarios_activos = $usuarios;
-            foreach ($cuenta->perfiles as $perfil) {
-                $usuariosActivos = ViewUsuarioActivo::where('perfil', $perfil->numeroper)
-                    ->where('idcue', $cuenta->idcue)
-                    ->count();
-                $perfil->usuarios_activos = $usuariosActivos;
-            }
-        }
-
         return view('sales.ventas.renew', [
             'empleados' => $empleados,
             'cuentas' => $cuentas,
@@ -456,6 +425,61 @@ class VentaController extends Controller
             'totalVenta' => $totalVenta,
             'bancos' => $bancos
         ]);
+    }
+
+    private function obtenerCuentasDisponiblesParaVenta()
+    {
+        $hoy = Carbon::today();
+
+        $cuentas = Cuenta::with(['valor.servicio', 'perfiles'])
+            ->where('activocue', true)
+            ->where('caidacue', false)
+            ->where('idcue', 'NOT LIKE', '%Atencion%')
+            ->whereHas('valor', function ($query) {
+                $query->whereNotNull('pantmaxval');
+            })
+            ->orderBy('idcue')
+            ->get();
+
+        if ($cuentas->isEmpty()) {
+            return $cuentas;
+        }
+
+        $idsCuentas = $cuentas->pluck('idcue')->values();
+
+        $usuariosActivosPorCuenta = ViewUsuarioActivo::query()
+            ->select('idcue', DB::raw('COUNT(*) as total_activos'))
+            ->whereIn('idcue', $idsCuentas)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->groupBy('idcue')
+            ->pluck('total_activos', 'idcue');
+
+        $usuariosActivosPorPerfil = ViewUsuarioActivo::query()
+            ->select('idcue', 'perfil', DB::raw('COUNT(*) as total_activos'))
+            ->whereIn('idcue', $idsCuentas)
+            ->whereDate('fecha_vencimiento', '>', $hoy)
+            ->groupBy('idcue', 'perfil')
+            ->get()
+            ->groupBy('idcue');
+
+        return $cuentas
+            ->filter(function ($cuenta) use ($usuariosActivosPorCuenta, $usuariosActivosPorPerfil) {
+                $usuariosActivos = (int) ($usuariosActivosPorCuenta[$cuenta->idcue] ?? 0);
+                $pantMax = (int) ($cuenta->valor->pantmaxval ?? 0);
+
+                $cuenta->usuarios_activos = $usuariosActivos;
+                $cuenta->cupos_disponibles = max(0, $pantMax - $usuariosActivos);
+
+                $perfilesActivos = collect($usuariosActivosPorPerfil->get($cuenta->idcue, []))
+                    ->pluck('total_activos', 'perfil');
+
+                foreach ($cuenta->perfiles as $perfil) {
+                    $perfil->usuarios_activos = (int) ($perfilesActivos[$perfil->numeroper] ?? 0);
+                }
+
+                return $pantMax > 0 && $usuariosActivos < $pantMax;
+            })
+            ->values();
     }
 
     public function update(Request $request, $idven)

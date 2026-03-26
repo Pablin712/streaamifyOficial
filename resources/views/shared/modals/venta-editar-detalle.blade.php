@@ -19,7 +19,7 @@
                         <option value="">Buscar cuenta...</option>
                         @foreach ($cuentas as $cuenta)
                             <option value="{{ $cuenta->idcue }}">
-                                {{ $cuenta->idcue }}: Oc: {{ $cuenta->usuarios_activos }} ::
+                                {{ $cuenta->idcue }}: Oc {{ $cuenta->usuarios_activos }}/{{ $cuenta->valor->pantmaxval }} | Cupos {{ $cuenta->cupos_disponibles }} ::
                                 @foreach ($cuenta->perfiles as $perfil)
                                     P{{ $perfil->numeroper }}: {{ $perfil->usuarios_activos }}&nbsp;&nbsp;
                                 @endforeach
