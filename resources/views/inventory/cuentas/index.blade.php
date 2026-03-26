@@ -390,6 +390,57 @@
 @section('tablename', 'Cuentas')
 
 @section('table1')
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="fw-semibold text-primary">
+                    <i class="fas fa-filter me-1"></i> Filtrar por servicio:
+                </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2" id="service-filter-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-todos" value="TODOS" checked>
+                    <label class="form-check-label" for="service-todos">Todos</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-netflix" value="NETFLIX">
+                    <label class="form-check-label" for="service-netflix">Netflix</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-disneyp" value="DISNEYP">
+                    <label class="form-check-label" for="service-disneyp">Disney+</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-spotify" value="SPOTIFY">
+                    <label class="form-check-label" for="service-spotify">Spotify</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-prime" value="PRIME">
+                    <label class="form-check-label" for="service-prime">Prime</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-max" value="MAX">
+                    <label class="form-check-label" for="service-max">Max</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-crunchyroll" value="CRUNCHYROLL">
+                    <label class="form-check-label" for="service-crunchyroll">Crunchyroll</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-paramount" value="PARAMOUNT">
+                    <label class="form-check-label" for="service-paramount">Paramount</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-magis" value="MAGIS">
+                    <label class="form-check-label" for="service-magis">Magis / Flujo</label>
+                </div>
+            </div>
+
+            <div id="service-filter-status" class="small text-muted mt-2"></div>
+        </div>
+    </div>
+
     <ul class="nav nav-tabs" id="cuentasTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="todas-tab" data-bs-toggle="tab" data-bs-target="#todas" type="button"
@@ -416,7 +467,7 @@
                 role="tab">Dañadas</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="caidas-tab" data-bs-toggle="tab" data-bs-target="#mesa" type="button"
+            <button class="nav-link" id="mesa-tab" data-bs-toggle="tab" data-bs-target="#mesa" type="button"
                 role="tab">Mesa de Trabajo</button>
         </li>
         <li class="nav-item" role="presentation">
@@ -1079,6 +1130,120 @@ function mostrarToast(mensaje, tipo = 'success') {
         }, 500);
     }, 2000);
 }
+
+// ============================================================================
+// FILTRO DE SERVICIOS EN TIEMPO REAL (SIN RECARGA)
+// ============================================================================
+const SERVICE_TABLE_IDS = [
+    'cuentas-todas-table',
+    'cuentas-disponibles-table',
+    'cuentas-colapsadas-table',
+    'cuentas-sinocupar-table',
+    'cuentas-porvencer-table',
+    'cuentas-caidas-table',
+    'cuentas-mesa-table',
+    'cuentas-individuales-table'
+];
+
+const SERVICE_ALIASES = {
+    NETFLIX: ['NETFLIX'],
+    DISNEYP: ['DISNEYP', 'DISNEY'],
+    SPOTIFY: ['SPOTIFY'],
+    PRIME: ['PRIME'],
+    MAX: ['MAX'],
+    CRUNCHYROLL: ['CRUNCHYROLL', 'CRUNCHY'],
+    PARAMOUNT: ['PARAMOUNT'],
+    MAGIS: ['MAGIS', 'FLUJO']
+};
+
+function normalizeServiceCode(value) {
+    return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function getSelectedServices() {
+    const selected = document.querySelector('.service-filter-checkbox:checked');
+    return selected ? [selected.value] : ['TODOS'];
+}
+
+function rowMatchesSelectedService(row, selectedServices) {
+    if (selectedServices.includes('TODOS')) {
+        return true;
+    }
+
+    const rowService = normalizeServiceCode(row.dataset.serviceCode || '');
+
+    return selectedServices.some((service) => {
+        const aliases = SERVICE_ALIASES[service] || [service];
+        return aliases.some((alias) => rowService.includes(normalizeServiceCode(alias)));
+    });
+}
+
+function applyServiceFilterToTable(tableId, selectedServices) {
+    const table = document.getElementById(tableId);
+    if (!table || !table._config) return;
+
+    const config = table._config;
+    const accountRows = config.allRows.filter((row) => row.dataset.accountRow === '1');
+    const serviceRows = accountRows.filter((row) => rowMatchesSelectedService(row, selectedServices));
+
+    if (config.searchTerm && config.searchTerm.trim()) {
+        const tokens = typeof tokenize === 'function' ? tokenize(config.searchTerm) : [];
+
+        config.filteredRows = serviceRows.filter((row) => {
+            const normalizedText = config.normalizedCache.get(row) || normalizeText(row.innerText);
+            return tokens.length === 0 || tokens.every((token) => normalizedText.includes(token));
+        });
+    } else {
+        config.filteredRows = serviceRows;
+    }
+
+    config.currentPage = 1;
+    renderClientPage(config);
+}
+
+function updateServiceFilterStatus(selectedServices) {
+    const status = document.getElementById('service-filter-status');
+    if (!status) return;
+
+    const current = selectedServices[0] || 'TODOS';
+    status.textContent = `Filtro activo: ${current}`;
+}
+
+function applyServiceFilterRealtime() {
+    const selectedServices = getSelectedServices();
+
+    SERVICE_TABLE_IDS.forEach((tableId) => {
+        applyServiceFilterToTable(tableId, selectedServices);
+    });
+
+    updateServiceFilterStatus(selectedServices);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const filterCheckboxes = document.querySelectorAll('.service-filter-checkbox');
+    const todosCheckbox = document.getElementById('service-todos');
+
+    filterCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', function () {
+            if (checkbox.checked) {
+                filterCheckboxes.forEach((other) => {
+                    if (other !== checkbox) {
+                        other.checked = false;
+                    }
+                });
+            } else {
+                // Siempre debe quedar uno activo: volvemos a "Todos"
+                if (todosCheckbox) {
+                    todosCheckbox.checked = true;
+                }
+            }
+
+            applyServiceFilterRealtime();
+        });
+    });
+
+    setTimeout(applyServiceFilterRealtime, 0);
+});
 
 </script>
 @endsection

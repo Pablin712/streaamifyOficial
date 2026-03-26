@@ -103,7 +103,7 @@
                     $hoy = \Carbon\Carbon::today();
                     $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                 @endphp
-                <tr>
+                <tr data-account-row="1" data-service-code="{{ strtoupper((string) ($cuenta->valor->idser ?? '')) }}">
                     <td class="clickable-copy"
                         onclick="copiarInfoCuenta('{{ $cuenta->valor->servicio->nombreser ?? 'Servicio' }}', '{{ $cuenta->usuariocue }}', '{{ $cuenta->contrasenacue }}')"
                         title="Click para copiar información completa">
@@ -189,7 +189,7 @@
                     @endif
                 </tr>
             @empty
-                <tr>
+                <tr data-empty-row="1">
                     <td colspan="8" class="text-center">No hay cuentas disponibles en esta categoría.</td>
                 </tr>
             @endforelse
