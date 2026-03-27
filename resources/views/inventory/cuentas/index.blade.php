@@ -463,6 +463,10 @@
                 role="tab">Por Vencer</button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cortarusers-tab" data-bs-toggle="tab" data-bs-target="#cortarusers" type="button"
+                role="tab">Cortar Usuarios</button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link" id="caidas-tab" data-bs-toggle="tab" data-bs-target="#caidas" type="button"
                 role="tab">Dañadas</button>
         </li>
@@ -501,6 +505,11 @@
         <!-- Pestaña de Cuentas Por Vencer -->
         <div class="tab-pane fade" id="porvencer" role="tabpanel">
             @include('inventory.cuentas.tabla', ['cuentas' => $cuentasPorVencer, 'tableId' => 'cuentas-porvencer-table'])
+        </div>
+
+        <!-- Pestaña de Cortar Users (cuentas con usuarios vencidos) -->
+        <div class="tab-pane fade" id="cortarusers" role="tabpanel">
+            @include('inventory.cuentas.tabla', ['cuentas' => $cuentasConUsuariosVencidos, 'tableId' => 'cuentas-cortarusers-table'])
         </div>
 
         <!-- Pestaña de Cuentas Dañadas -->
@@ -1140,6 +1149,7 @@ const SERVICE_TABLE_IDS = [
     'cuentas-colapsadas-table',
     'cuentas-sinocupar-table',
     'cuentas-porvencer-table',
+    'cuentas-cortarusers-table',
     'cuentas-caidas-table',
     'cuentas-mesa-table',
     'cuentas-individuales-table'

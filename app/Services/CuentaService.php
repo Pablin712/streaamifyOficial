@@ -303,6 +303,20 @@ class CuentaService
             return $fechaVencimiento->lessThanOrEqualTo($cincoDiasDespues);
         });
     }
+
+    public function obtenerCuentasConUsuariosVencidos($cuentas)
+    {
+        $hoy = Carbon::today();
+        // Obtener los idcue que tienen al menos un usuario con fecha_vencimiento <= hoy
+        $idcuesConVencidos = ViewUsuarioActivo::whereDate('fecha_vencimiento', '<=', $hoy)
+            ->distinct()
+            ->pluck('idcue')
+            ->toArray();
+
+        return $cuentas->filter(function ($cuenta) use ($idcuesConVencidos) {
+            return in_array($cuenta->idcue, $idcuesConVencidos);
+        });
+    }
     public function obtenerCuentasDisponibles($cuentas)
     {
         return $cuentas->filter(function ($cuenta) {
