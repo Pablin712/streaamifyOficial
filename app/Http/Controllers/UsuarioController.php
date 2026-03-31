@@ -257,4 +257,57 @@ class UsuarioController extends Controller
 
         return redirect()->back()->with('success', 'Usuario movido a otro servicio correctamente.');
     }
+
+    public function marcarCuentaDanada($iddet)
+    {
+        if (!Gate::allows('usuarios.update') && !Gate::allows('cuentas.status')) {
+            abort(403, 'No tienes permiso para marcar cuentas como dañadas.');
+        }
+
+        $usuario = ViewUsuarioActivo::where('iddet', $iddet)->first();
+
+        if (!$usuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado.'
+            ], 404);
+        }
+
+        $cuenta = Cuenta::with('valor')->find($usuario->idcue);
+
+        if (!$cuenta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cuenta no encontrada.'
+            ], 404);
+        }
+
+        if ($cuenta->caidacue) {
+            return response()->json([
+                'success' => true,
+                'message' => 'La cuenta ya estaba marcada como dañada.',
+                'cuenta' => $cuenta->idcue
+            ]);
+        }
+
+        $cuenta->caidacue = true;
+        $cuenta->save();
+
+        Historial::create([
+            'accion' => 'Cuenta Marcada como Dañada desde Usuarios',
+            'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Usuario afectado IDDET: ' . $iddet,
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
+
+        if ($cuenta->valor && $cuenta->valor->idser) {
+            $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuenta marcada como dañada correctamente.',
+            'cuenta' => $cuenta->idcue
+        ]);
+    }
 }

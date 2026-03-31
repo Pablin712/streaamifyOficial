@@ -258,6 +258,8 @@
                         $hoy = \Carbon\Carbon::today();
                         $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                         $estadoCobro = $usuario->detalle_venta->estado ?? 'PENDIENTE';
+                        $esCuentaDanada = (bool) (optional($usuario->cuenta)->caidacue ?? false);
+                        $esMesaTrabajo = str_ends_with((string) $usuario->idcue, 'Atencion');
                         $pinPerfil = optional($usuario->profile)->pinper
                             ?? optional($usuario->cuenta->perfiles->firstWhere('numeroper', $usuario->perfil))->pinper;
                     @endphp
@@ -278,7 +280,17 @@
                         </td>
                         <td>{{ $usuario->nombre_cliente }}</td>
                         <td>{{ $usuario->cliente->telefonocli }}</td>
-                        <td>{{ $usuario->idcue }}</td>
+                        <td>
+                            <span class="fw-semibold">{{ $usuario->idcue }}</span>
+                            <div class="mt-1 d-flex flex-wrap gap-1 cuenta-flags">
+                                @if ($esCuentaDanada)
+                                    <span class="badge bg-danger cuenta-flag-danada">Dañada</span>
+                                @endif
+                                @if ($esMesaTrabajo)
+                                    <span class="badge bg-warning text-dark cuenta-flag-mesa">Mesa</span>
+                                @endif
+                            </div>
+                        </td>
                         <td>{{ $usuario->cuenta->usuariocue }}</td>
                         <td>{{ $usuario->perfil }}</td>
                         <td>{{ $usuario->fecha_vencimiento }}</td>
@@ -325,6 +337,27 @@
                                         title="Mover usuario">
                                         <i class="fas fa-random"></i>
                                     </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-danger btn-circle btn-sm btn-move-user-otro-servicio"
+                                        data-iddet="{{ $usuario->iddet }}"
+                                        data-nombre="{{ $usuario->nombre_cliente }}"
+                                        data-servicio="{{ $usuario->cuenta->valor->idser ?? '' }}"
+                                        title="Mover a otro servicio"
+                                        onclick="abrirModalMoverOtroServicio(event, this)"
+                                    >
+                                        <i class="fas fa-retweet"></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger btn-sm btn-marcar-cuenta-danada"
+                                        data-iddet="{{ $usuario->iddet }}"
+                                        {{ $esCuentaDanada ? 'disabled' : '' }}
+                                        onclick="abrirModalMarcarCuentaDanada(event, {{ $usuario->iddet }}, {{ json_encode($usuario->nombre_cliente) }}, {{ json_encode($usuario->idcue) }})"
+                                        title="{{ $esCuentaDanada ? 'La cuenta ya está marcada como dañada' : 'Marcar cuenta como dañada' }}"
+                                    >
+                                        <i class="fas fa-triangle-exclamation"></i>
+                                    </button>
                                 @endif
                                 @if ($diasRestantes <= 3)
                                     <button type="button" class="btn btn-rosa-3 btn-sm"
@@ -340,11 +373,6 @@
                                         title="Copiar mensaje">
                                         <i class="fas fa-comment-alt"></i>
                                     </button>
-                                    <button type="button" class="btn btn-info btn-sm"
-                                        onclick="event.stopPropagation(); copiarTelefono('{{ $usuario->cliente->telefonocli }}')"
-                                        title="Copiar teléfono">
-                                        <i class="fas fa-phone"></i>
-                                    </button>
                                     @if (Auth::user()->hasPermissionTo('ventas.renew'))
                                         <a href="{{ route('ventas.renew', ['idcli' => $usuario->idcli, 'idven' => $usuario->idven]) }}"
                                             class="btn btn-success btn-sm">
@@ -359,6 +387,11 @@
                                         </button>
                                     @endif
                                 @endif
+                                <button type="button" class="btn btn-info btn-sm"
+                                    onclick="event.stopPropagation(); copiarTelefono('{{ $usuario->cliente->telefonocli }}')"
+                                    title="Copiar teléfono">
+                                    <i class="fas fa-phone"></i>
+                                </button>
                             </td>
                         @endif
                     </tr>
@@ -405,6 +438,57 @@
 @include('inventory.usuarios.modals.delete')
 @include('inventory.usuarios.modals.mover')
 @include('inventory.cuentas.modals.movement-results')
+@include('inventory.cuentas.modals.confirm-move-user-otro-servicio')
+
+<x-modal name="confirmar-marcar-cuenta-danada" :show="false" maxWidth="lg">
+    <div class="modal-header border-bottom" style="background-color: #b02a37; color: #ffffff;">
+        <h5 class="modal-title">
+            <i class="fas fa-triangle-exclamation me-2"></i>Confirmar Cuenta Danada
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+            onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-marcar-cuenta-danada' }))"></button>
+    </div>
+    <div class="modal-body">
+        <div class="alert alert-warning mb-3">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Esta accion marcara la cuenta del cliente como danada.
+        </div>
+        <p class="mb-1">Cliente: <strong id="confirm_danada_nombre_cliente"></strong></p>
+        <p class="mb-0">Cuenta: <strong id="confirm_danada_idcue"></strong></p>
+        <input type="hidden" id="confirm_danada_iddet" value="">
+    </div>
+    <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary"
+            onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-marcar-cuenta-danada' }))">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" onclick="confirmarMarcarCuentaDanada()">
+            <i class="fas fa-check me-1"></i>Si, marcar danada
+        </button>
+    </div>
+</x-modal>
+
+<x-modal name="confirmar-borrar-usuarios-seleccionados" :show="false" maxWidth="lg">
+    <div class="modal-header border-bottom" style="background-color: #dc3545; color: #ffffff;">
+        <h5 class="modal-title">
+            <i class="fas fa-trash me-2"></i>Confirmar Borrado Masivo
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+            onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-borrar-usuarios-seleccionados' }))"></button>
+    </div>
+    <div class="modal-body">
+        <p class="mb-0">Se eliminaran los usuarios seleccionados. Esta accion no se puede deshacer.</p>
+    </div>
+    <div class="modal-footer border-top">
+        <button type="button" class="btn btn-secondary"
+            onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-borrar-usuarios-seleccionados' }))">
+            Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" onclick="confirmarBorradoUsuariosSeleccionados()">
+            <i class="fas fa-trash me-1"></i>Si, eliminar
+        </button>
+    </div>
+</x-modal>
 
 @if (session('mensaje_renovacion'))
     <x-modal name="mensaje-renovacion-usuarios" :show="false" maxWidth="2xl">
@@ -449,6 +533,48 @@
 
     @parent
     <script>
+        function showUsuariosToast(message, type = 'success') {
+            const toast = document.getElementById('toast-mensaje');
+            if (!toast) {
+                return;
+            }
+
+            const visualConfig = {
+                success: {
+                    backgroundColor: '#d4edda',
+                    color: '#155724',
+                    borderColor: '#c3e6cb',
+                    prefix: '✅ '
+                },
+                warning: {
+                    backgroundColor: '#fff3cd',
+                    color: '#856404',
+                    borderColor: '#ffeeba',
+                    prefix: '⚠️ '
+                },
+                danger: {
+                    backgroundColor: '#f8d7da',
+                    color: '#721c24',
+                    borderColor: '#f5c6cb',
+                    prefix: '❌ '
+                }
+            };
+
+            const style = visualConfig[type] || visualConfig.success;
+            toast.style.backgroundColor = style.backgroundColor;
+            toast.style.color = style.color;
+            toast.style.border = `1px solid ${style.borderColor}`;
+            toast.textContent = `${style.prefix}${message}`;
+            toast.style.display = 'block';
+            toast.style.opacity = 1;
+
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.5s ease';
+                toast.style.opacity = 0;
+                setTimeout(() => toast.style.display = 'none', 500);
+            }, 2200);
+        }
+
         // ========================================================================
         // FUNCIÓN DE MODAL - CAMBIAR USUARIO
         // ========================================================================
@@ -514,6 +640,96 @@
                 }
             });
         });
+
+        function abrirModalMoverOtroServicio(event, button) {
+            event.stopPropagation();
+
+            const iddet = button.getAttribute('data-iddet');
+            const nombre = button.getAttribute('data-nombre');
+            const servicio = (button.getAttribute('data-servicio') || '').toUpperCase();
+
+            document.getElementById('confirm_move_otro_servicio_user_id').value = iddet;
+            document.getElementById('confirm_move_otro_servicio_user_name').textContent = nombre;
+            document.getElementById('confirm_move_otro_servicio_actual').textContent = servicio;
+            document.getElementById('confirm_move_otro_servicio_form').action =
+                "{{ route('usuarios.moverUsuarioOtroServicio', ':id') }}".replace(':id', iddet);
+
+            const selectServicio = document.getElementById('idser_destino');
+            if (selectServicio) {
+                Array.from(selectServicio.options).forEach(option => {
+                    if (option.value === servicio) {
+                        option.disabled = true;
+                        option.textContent = option.value + ' (Servicio actual)';
+                    } else {
+                        option.disabled = false;
+                        if (option.value !== '') {
+                            option.textContent = option.value;
+                        }
+                    }
+                });
+                selectServicio.value = '';
+            }
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-user-otro-servicio' }));
+        }
+
+        function abrirModalMarcarCuentaDanada(event, iddet, nombreCliente, idcue) {
+            event.stopPropagation();
+            document.getElementById('confirm_danada_iddet').value = iddet;
+            document.getElementById('confirm_danada_nombre_cliente').textContent = nombreCliente;
+            document.getElementById('confirm_danada_idcue').textContent = idcue;
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirmar-marcar-cuenta-danada' }));
+        }
+
+        function confirmarMarcarCuentaDanada() {
+            const iddet = document.getElementById('confirm_danada_iddet').value;
+            const url = "{{ route('usuarios.marcarCuentaDanada', ':id') }}".replace(':id', iddet);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'No se pudo marcar la cuenta como danada.');
+                }
+
+                const row = document.querySelector(`tr[data-iddet="${iddet}"]`);
+                if (row) {
+                    const flagsContainer = row.querySelector('.cuenta-flags');
+                    if (flagsContainer && !flagsContainer.querySelector('.cuenta-flag-danada')) {
+                        flagsContainer.insertAdjacentHTML('afterbegin', '<span class="badge bg-danger cuenta-flag-danada">Dañada</span>');
+                    }
+
+                    const botonMarcarDanada = row.querySelector('.btn-marcar-cuenta-danada');
+                    if (botonMarcarDanada) {
+                        botonMarcarDanada.disabled = true;
+                        botonMarcarDanada.title = 'La cuenta ya está marcada como dañada';
+                        botonMarcarDanada.classList.remove('btn-outline-danger');
+                        botonMarcarDanada.classList.add('btn-danger');
+                    }
+                }
+
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-marcar-cuenta-danada' }));
+                showUsuariosToast(data.message || 'Cuenta marcada como danada.', 'success');
+            })
+            .catch(error => {
+                showUsuariosToast(error.message || 'No se pudo marcar la cuenta como danada.', 'danger');
+            });
+        }
+
+        function confirmarBorradoUsuariosSeleccionados() {
+            const form = document.getElementById('form-borrar-usuarios');
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-borrar-usuarios-seleccionados' }));
+            form.submit();
+        }
 
         // ========================================================================
         // FUNCIÓN DE MODAL - MOVER USUARIO
@@ -611,12 +827,12 @@
             form.addEventListener('submit', function(e) {
                 if (!Array.from(getCheckUsuarios()).some(chk => chk.checked)) {
                     e.preventDefault();
-                    alert('Debes seleccionar al menos un usuario para borrar.');
+                    showUsuariosToast('Debes seleccionar al menos un usuario para borrar.', 'warning');
                     return;
                 }
-                if (!confirm('¿Seguro que deseas borrar los usuarios seleccionados?')) {
-                    e.preventDefault();
-                }
+
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirmar-borrar-usuarios-seleccionados' }));
             });
 
             // Inicializar estado del botón y del check-todos al cargar
@@ -690,6 +906,10 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Manejar click en filas para copiar mensaje
             document.addEventListener('click', function(e) {
+                if (e.target.closest('button, a, input, label, .toggle-switch')) {
+                    return;
+                }
+
                 const row = e.target.closest('tr.clickable-row');
                 if (row) {
                     const servicio = row.dataset.servicio;
@@ -702,6 +922,41 @@
                     copiarMensaje(servicio, cuenta, contrasenaCuenta, perfilNumero, fecha, estado, pinper);
                 }
             });
+
+            const formMoverOtroServicio = document.getElementById('confirm_move_otro_servicio_form');
+            if (formMoverOtroServicio && formMoverOtroServicio.dataset.ajaxBound !== 'true') {
+                formMoverOtroServicio.dataset.ajaxBound = 'true';
+                formMoverOtroServicio.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    fetch(formMoverOtroServicio.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: new FormData(formMoverOtroServicio)
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'No se pudo mover el usuario a otro servicio.');
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirm-move-user-otro-servicio' }));
+                        openMovementResultsModal(data);
+                    })
+                    .catch(error => {
+                        if (typeof showMovementToast === 'function') {
+                            showMovementToast(error.message || 'No se pudo mover el usuario a otro servicio.', 'danger');
+                        } else {
+                            showUsuariosToast(error.message || 'No se pudo mover el usuario a otro servicio.', 'danger');
+                        }
+                    });
+                });
+            }
 
             // ========================================================================
             // FUNCIONALIDAD: TOGGLE ESTADO DE COBRO CON AJAX
@@ -758,14 +1013,14 @@
                         } else {
                             // Revertir el toggle si hay error
                             toggle.checked = !toggle.checked;
-                            alert('Error al actualizar el estado: ' + (data.message || 'Error desconocido'));
+                            showUsuariosToast('Error al actualizar el estado: ' + (data.message || 'Error desconocido'), 'danger');
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         // Revertir el toggle si hay error
                         toggle.checked = !toggle.checked;
-                        alert('Error al actualizar el estado. Por favor, intenta de nuevo.');
+                        showUsuariosToast('Error al actualizar el estado. Por favor, intenta de nuevo.', 'danger');
                     })
                     .finally(() => {
                         // Re-habilitar el toggle
