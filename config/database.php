@@ -57,7 +57,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'timezone' => env('DB_TIMEZONE', '+00:00'), // UTC en la BD
+            // Timezone de sesion para MySQL/MariaDB.
+            // Usar offset fijo evita depender de la zona horaria del servidor.
+            'timezone' => env('DB_TIMEZONE', '-05:00'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
@@ -78,7 +80,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'timezone' => env('DB_TIMEZONE', '+00:00'), // UTC en la BD
+            // Timezone de sesion para MySQL/MariaDB.
+            // Usar offset fijo evita depender de la zona horaria del servidor.
+            'timezone' => env('DB_TIMEZONE', '-05:00'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

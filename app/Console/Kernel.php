@@ -3,21 +3,24 @@
 namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\SaveDailyStatistics;
+use App\Console\Commands\GuardarEstadisticasDiarias;
 use App\Console\Commands\SaveMontlyStatistics;
 class Kernel extends ConsoleKernel
 {
     protected $commands = [
-        SaveDailyStatistics::class,
+        GuardarEstadisticasDiarias::class,
         SaveMontlyStatistics::class,
     ];
     protected function schedule(Schedule $schedule)
     {
         // Define las tareas aquí
-        $schedule->command('statistics:daily')->dailyAt('23:59'); // Ejecutar todos los días a la medianoche
+        $schedule->command('estadisticas:guardar')
+            ->timezone(config('app.timezone'))
+            ->dailyAt('23:59');
 
         // Tarea para el día 10, 20 y el último día del mes
         $schedule->command('statistics:monthly')
+            ->timezone(config('app.timezone'))
             ->dailyAt('23:59') // Se evalúa diariamente a las 23:50
             ->when(function () {
                 $today = now()->day;
