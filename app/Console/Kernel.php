@@ -4,11 +4,13 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use App\Console\Commands\GuardarEstadisticasDiarias;
+use App\Console\Commands\RepararActiveUsersCommand;
 use App\Console\Commands\SaveMontlyStatistics;
 class Kernel extends ConsoleKernel
 {
     protected $commands = [
         GuardarEstadisticasDiarias::class,
+        RepararActiveUsersCommand::class,
         SaveMontlyStatistics::class,
     ];
     protected function schedule(Schedule $schedule)

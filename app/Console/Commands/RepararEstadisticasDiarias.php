@@ -2,7 +2,11 @@
 
 namespace App\Console\Commands;
 
-use App\Services\DashboardService;
+use App\Models\Cliente;
+use App\Models\Costo;
+use App\Models\DailyStatistic;
+use App\Models\Gasto;
+use App\Models\Venta;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Console\Command;
@@ -16,7 +20,7 @@ class RepararEstadisticasDiarias extends Command
 
     protected $description = 'Recalcula daily_statistics para que coincida con ventas/costos/gastos';
 
-    public function __construct(private DashboardService $dashboardService)
+    public function __construct()
     {
         parent::__construct();
     }
@@ -33,7 +37,7 @@ class RepararEstadisticasDiarias extends Command
         $bar->start();
 
         foreach (CarbonPeriod::create($start, $end) as $date) {
-            $this->dashboardService->guardar($date->toDateString());
+            $this->repairFinancialForDate($date->toDateString());
             $bar->advance();
         }
 
@@ -72,5 +76,45 @@ class RepararEstadisticasDiarias extends Command
 
         $today = Carbon::today();
         return [$today->copy()->subDays(30), $today];
+    }
+
+    private function repairFinancialForDate(string $date): void
+    {
+        $financial = $this->calculateFinancials($date);
+
+        $stat = DailyStatistic::whereDate('date', $date)->first();
+        if ($stat) {
+            $stat->update($financial);
+            return;
+        }
+
+        $seed = DailyStatistic::whereDate('date', '<', $date)
+            ->orderByDesc('date')
+            ->first();
+
+        DailyStatistic::create(array_merge([
+            'date' => $date,
+            // Preservar logica operativa: no recalcular usuarios en este comando
+            'active_users' => (int) ($seed->active_users ?? 0),
+            'affected_customers' => (int) ($seed->affected_customers ?? 0),
+            'pending_payments' => (int) ($seed->pending_payments ?? 0),
+            'danger_accounts' => (int) ($seed->danger_accounts ?? 0),
+            'accounts' => (int) ($seed->accounts ?? 0),
+            'usuarios_a_cobrar' => (int) ($seed->usuarios_a_cobrar ?? 0),
+            'espacios' => (int) ($seed->espacios ?? 0),
+            'cliente_mas_facturado' => (string) ($seed->cliente_mas_facturado ?? ''),
+            'total_customers' => (int) ($seed->total_customers ?? 0),
+        ], $financial));
+    }
+
+    private function calculateFinancials(string $date): array
+    {
+        return [
+            'daily_revenue' => (float) Venta::whereDate('fechaven', $date)->sum('totalpagoven'),
+            'daily_cost' => (float) Costo::whereDate('fechacos', $date)->sum('montocos'),
+            'daily_bill' => (float) Gasto::whereDate('fechagas', $date)->sum('montogas'),
+            'daily_sales' => (int) Venta::whereDate('fechaven', $date)->count(),
+            'new_customers' => (int) Cliente::whereDate('created_at', $date)->count(),
+        ];
     }
 }

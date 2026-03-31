@@ -7,7 +7,6 @@ use App\Models\Costo;
 use App\Models\DailyStatistic;
 use App\Models\Gasto;
 use App\Models\Venta;
-use App\Services\DashboardService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Console\Command;
@@ -22,7 +21,7 @@ class AuditarEstadisticasDiarias extends Command
 
     protected $description = 'Audita daily_statistics vs ventas/costos/gastos y opcionalmente corrige diferencias';
 
-    public function __construct(private DashboardService $dashboardService)
+    public function __construct()
     {
         parent::__construct();
     }
@@ -103,7 +102,7 @@ class AuditarEstadisticasDiarias extends Command
         $bar->start();
 
         foreach ($mismatchDates as $dateStr) {
-            $this->dashboardService->guardar($dateStr);
+            $this->repairFinancialForDate($dateStr);
             $bar->advance();
         }
 
@@ -147,5 +146,40 @@ class AuditarEstadisticasDiarias extends Command
     private function isEqual(float $a, float $b): bool
     {
         return abs($a - $b) < 0.005;
+    }
+
+    private function repairFinancialForDate(string $date): void
+    {
+        $financial = [
+            'daily_revenue' => (float) Venta::whereDate('fechaven', $date)->sum('totalpagoven'),
+            'daily_cost' => (float) Costo::whereDate('fechacos', $date)->sum('montocos'),
+            'daily_bill' => (float) Gasto::whereDate('fechagas', $date)->sum('montogas'),
+            'daily_sales' => (int) Venta::whereDate('fechaven', $date)->count(),
+            'new_customers' => (int) Cliente::whereDate('created_at', $date)->count(),
+        ];
+
+        $stat = DailyStatistic::whereDate('date', $date)->first();
+        if ($stat) {
+            $stat->update($financial);
+            return;
+        }
+
+        $seed = DailyStatistic::whereDate('date', '<', $date)
+            ->orderByDesc('date')
+            ->first();
+
+        DailyStatistic::create(array_merge([
+            'date' => $date,
+            // Preservar logica operativa: no recalcular usuarios en este comando
+            'active_users' => (int) ($seed->active_users ?? 0),
+            'affected_customers' => (int) ($seed->affected_customers ?? 0),
+            'pending_payments' => (int) ($seed->pending_payments ?? 0),
+            'danger_accounts' => (int) ($seed->danger_accounts ?? 0),
+            'accounts' => (int) ($seed->accounts ?? 0),
+            'usuarios_a_cobrar' => (int) ($seed->usuarios_a_cobrar ?? 0),
+            'espacios' => (int) ($seed->espacios ?? 0),
+            'cliente_mas_facturado' => (string) ($seed->cliente_mas_facturado ?? ''),
+            'total_customers' => (int) ($seed->total_customers ?? 0),
+        ], $financial));
     }
 }
