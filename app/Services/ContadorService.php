@@ -216,10 +216,59 @@ class ContadorService
             ];
         });
 
+        $clientesAgrupados = $facturasProcesadas
+            ->groupBy(function ($factura) {
+                if (!empty($factura['id_cliente'])) {
+                    return 'idcli:' . $factura['id_cliente'];
+                }
+
+                $telefonoNormalizado = !empty($factura['telefono'])
+                    ? preg_replace('/\D+/', '', $factura['telefono'])
+                    : null;
+
+                if (!empty($telefonoNormalizado)) {
+                    return 'tel:' . $telefonoNormalizado;
+                }
+
+                return 'nom:' . strtolower(trim((string) ($factura['cliente'] ?? '')));
+            })
+            ->map(function ($facturasCliente) {
+                $principal = $facturasCliente->first();
+
+                $facturas = $facturasCliente->map(function ($factura) {
+                    return [
+                        'id_detalle' => $factura['id_detalle'],
+                        'id_venta' => $factura['id_venta'],
+                        'perfil' => $factura['perfil'],
+                        'cuenta' => $factura['cuenta'],
+                        'servicio' => $factura['servicio'],
+                        'monto' => $factura['monto'],
+                        'fecha_venta' => $factura['fecha_venta'],
+                        'fecha_vencimiento' => $factura['fecha_vencimiento'],
+                        'hora_vencimiento' => $factura['hora_vencimiento'],
+                    ];
+                })->values();
+
+                return [
+                    'id_cliente' => $principal['id_cliente'],
+                    'cliente' => $principal['cliente'],
+                    'email' => $principal['email'],
+                    'telefono' => $principal['telefono'],
+                    'total_facturas' => $facturas->count(),
+                    'monto_total' => round($facturas->sum('monto'), 2),
+                    'facturas' => $facturas,
+                ];
+            })
+            ->sortBy('cliente')
+            ->values();
+
         return [
             'fecha' => $hoy->format('Y-m-d'),
             'total_facturas' => $facturasProcesadas->count(),
+            'total_clientes' => $clientesAgrupados->count(),
             'monto_total' => round($facturasProcesadas->sum('monto'), 2),
+            'clientes' => $clientesAgrupados,
+            // Compatibilidad temporal para flujos existentes que esperan el arreglo plano.
             'facturas' => $facturasProcesadas->values()
         ];
     }
