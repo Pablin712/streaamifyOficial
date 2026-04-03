@@ -227,6 +227,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
         Route::post('/cuentas/mover-clientes', 'moverClientes')->name('cuentas.moverClientes');
         Route::post('/cuentas/dispersar-clientes', 'moverClientesDisperso')->name('cuentas.moverClientesDisperso');
+        Route::post('/cuentas/{id}/mensaje-clientes', 'enviarMensajeClientes')->name('cuentas.enviarMensajeClientes');
         Route::get('/cuentas/PerfilesSpotify', 'PerfilesSpotify')->name('cuentas.spotify');
         Route::get('/cuentas/{id}/load-perfiles', 'loadPerfiles')->name('cuentas.loadPerfiles');
         Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');

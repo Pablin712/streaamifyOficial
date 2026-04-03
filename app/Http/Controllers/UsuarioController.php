@@ -8,16 +8,19 @@ use App\Models\DetalleVenta;
 use App\Models\Cuenta;
 use App\Models\Historial;
 use App\Services\CuentaService;
+use App\Services\EntregaMensajeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class UsuarioController extends Controller
 {
     protected $cuentaService;
+    protected $entregaMensajeService;
 
-    public function __construct(CuentaService $cuentaService)
+    public function __construct(CuentaService $cuentaService, EntregaMensajeService $entregaMensajeService)
     {
         $this->cuentaService = $cuentaService;
+        $this->entregaMensajeService = $entregaMensajeService;
     }
 
     public function index()
@@ -66,7 +69,10 @@ class UsuarioController extends Controller
             'fecha_vencimiento' => 'required'
         ]);
 
-        $detalle = DetalleVenta::findOrFail($iddet);
+        $detalle = DetalleVenta::with(['venta.cliente', 'perfil.cuenta.valor.servicio'])->findOrFail($iddet);
+
+        $servicioOrigen = optional(optional(optional($detalle->perfil)->cuenta)->valor->servicio)->nombreser ?? 'Servicio';
+
         // Actualizar los campos del usuario
         $detalle->idper = $request->idcue . '.' . $request->perfil;
         $detalle->fechavendet = $request->fecha_vencimiento;
@@ -79,6 +85,38 @@ class UsuarioController extends Controller
         ]);
 
         $detalle->save();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            $detalle->load(['venta.cliente', 'perfil.cuenta.valor.servicio']);
+
+            $servicioDestino = optional(optional(optional($detalle->perfil)->cuenta)->valor->servicio)->nombreser ?? 'Servicio';
+            $usuarioDestino = optional(optional($detalle->perfil)->cuenta)->usuariocue ?? '';
+            $cuentaDestino = optional(optional($detalle->perfil)->cuenta)->idcue ?? '';
+            $perfilDestino = optional($detalle->perfil)->numeroper ?? $request->perfil;
+            $mensajeEntrega = $this->entregaMensajeService->mensajeEntregaCuenta(
+                $detalle->perfil->cuenta,
+                (int) $perfilDestino,
+                optional($detalle->perfil)->pinper,
+                $detalle->fechavendet,
+                false,
+                true
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario actualizado correctamente. Copia el mensaje para enviar al cliente.',
+                'movements' => [[
+                    'cliente' => optional($detalle->venta->cliente)->nombrecli ?? 'Cliente',
+                    'servicio_origen' => $servicioOrigen,
+                    'servicio_destino' => $servicioDestino,
+                    'usuario_destino' => $usuarioDestino,
+                    'cuenta_destino' => $cuentaDestino,
+                    'perfil_destino' => $perfilDestino,
+                    'mensaje_entrega' => $mensajeEntrega,
+                ]],
+            ]);
+        }
+
         return redirect()->route('usuarios')->with('success', 'Usuario actualizado exitosamente.');
     }
 

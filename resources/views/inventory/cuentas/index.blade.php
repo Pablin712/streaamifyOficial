@@ -537,6 +537,7 @@
     @include('inventory.cuentas.modals.delete')
     @include('inventory.cuentas.modals.renew')
     @include('inventory.cuentas.modals.view-perfiles')
+    @include('inventory.cuentas.modals.mensaje-clientes')
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
     @include('inventory.valores.modals.create')
@@ -1058,6 +1059,121 @@ async function submitRenew(event) {
     } catch (error) {
         console.error('❌ Error de red:', error);
         showTemporaryAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+    }
+}
+
+// ============================================================================
+// FUNCIONES DE MODAL - MENSAJE PERSONALIZADO A CLIENTES
+// ============================================================================
+let mensajeClientesButtonRef = null;
+
+function formatCooldownText(untilTimestamp) {
+    const nowTs = Math.floor(Date.now() / 1000);
+    const remaining = Math.max(0, Number(untilTimestamp || 0) - nowTs);
+
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function openMensajeClientesModal(button) {
+    if (!button) return;
+
+    mensajeClientesButtonRef = button;
+
+    const idcue = button.dataset.idcue || '';
+    const servicio = button.dataset.servicio || 'N/A';
+    const cuentaUsuario = button.dataset.cuentaUsuario || 'N/A';
+    const clientesActivos = button.dataset.clientesActivos || '0';
+    const cooldownUntil = Number(button.dataset.cooldownUntil || 0);
+
+    document.getElementById('mensaje_clientes_idcue').value = idcue;
+    document.getElementById('mensaje_clientes_cuenta').textContent = `${idcue} (${cuentaUsuario})`;
+    document.getElementById('mensaje_clientes_servicio').textContent = servicio;
+    document.getElementById('mensaje_clientes_total').textContent = clientesActivos;
+
+    const cooldownAlert = document.getElementById('mensaje_clientes_cooldown');
+    const submitBtn = document.getElementById('mensaje_clientes_submit_btn');
+
+    if (cooldownUntil > Math.floor(Date.now() / 1000)) {
+        cooldownAlert.classList.remove('d-none');
+        cooldownAlert.textContent = `Este envío está bloqueado temporalmente. Espera ${formatCooldownText(cooldownUntil)} minutos para volver a enviar.`;
+        submitBtn.disabled = true;
+    } else {
+        cooldownAlert.classList.add('d-none');
+        cooldownAlert.textContent = '';
+        submitBtn.disabled = false;
+    }
+
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensajeClientesModal' }));
+}
+
+function closeMensajeClientesModal() {
+    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensajeClientesModal' }));
+}
+
+async function submitMensajeClientes(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const idcue = document.getElementById('mensaje_clientes_idcue').value;
+    const submitBtn = document.getElementById('mensaje_clientes_submit_btn');
+    const formData = new FormData(form);
+    const payload = {
+        mensaje: (formData.get('mensaje') || '').toString().trim()
+    };
+
+    if (!payload.mensaje) {
+        showTemporaryAlert('Debes escribir un mensaje para enviar.', 'danger');
+        return;
+    }
+
+    submitBtn.disabled = true;
+
+    try {
+        const url = '{{ route("cuentas.enviarMensajeClientes", ":idcue") }}'.replace(':idcue', idcue);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showTemporaryAlert(data.message || 'Mensaje enviado correctamente', 'success');
+            closeMensajeClientesModal();
+
+            const cooldownUntilTs = data.cooldown_until
+                ? Math.floor(new Date(data.cooldown_until).getTime() / 1000)
+                : (Math.floor(Date.now() / 1000) + 600);
+
+            if (mensajeClientesButtonRef) {
+                mensajeClientesButtonRef.disabled = true;
+                mensajeClientesButtonRef.dataset.cooldownUntil = String(cooldownUntilTs);
+            }
+
+            form.reset();
+            return;
+        }
+
+        if (response.status === 429 && data.remaining_seconds && mensajeClientesButtonRef) {
+            const cooldownTs = Math.floor(Date.now() / 1000) + Number(data.remaining_seconds);
+            mensajeClientesButtonRef.disabled = true;
+            mensajeClientesButtonRef.dataset.cooldownUntil = String(cooldownTs);
+        }
+
+        showTemporaryAlert(data.message || 'No se pudo enviar el mensaje', 'danger');
+    } catch (error) {
+        console.error('Error enviando mensaje personalizado:', error);
+        showTemporaryAlert('Error de conexión al enviar mensaje a n8n.', 'danger');
+    } finally {
+        const cooldownUntil = Number((mensajeClientesButtonRef && mensajeClientesButtonRef.dataset.cooldownUntil) || 0);
+        submitBtn.disabled = cooldownUntil > Math.floor(Date.now() / 1000);
     }
 }
 

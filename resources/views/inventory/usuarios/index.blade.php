@@ -627,6 +627,42 @@
 
         // Event listener para botones de cambiar usuario
         document.addEventListener('DOMContentLoaded', function() {
+            const changeForm = document.getElementById('changeUsuarioForm');
+
+            if (changeForm && changeForm.dataset.ajaxBound !== 'true') {
+                changeForm.dataset.ajaxBound = 'true';
+                changeForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    fetch(changeForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: new FormData(changeForm)
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'No se pudo actualizar el usuario.');
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'cambiar-usuario' }));
+                        openMovementResultsModal(data);
+                    })
+                    .catch(error => {
+                        if (typeof showMovementToast === 'function') {
+                            showMovementToast(error.message || 'No se pudo actualizar el usuario.', 'warning');
+                        } else {
+                            showUsuariosToast(error.message || 'No se pudo actualizar el usuario.', 'danger');
+                        }
+                    });
+                });
+            }
+
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.btn-cambiar-usuario')) {
                     const btn = e.target.closest('.btn-cambiar-usuario');

@@ -15,8 +15,10 @@ use App\Services\CuentaService;
 use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -477,6 +479,162 @@ class CuentaController extends Controller
         }
 
         return redirect()->back()->with('info', 'Resultado desconocido.');
+    }
+
+    public function enviarMensajeClientes(Request $request, $idcue)
+    {
+        if (!Gate::allows('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para enviar mensajes a clientes de la cuenta.');
+        }
+
+        $validated = $request->validate([
+            'mensaje' => 'required|string|min:3|max:1200',
+        ]);
+
+        $cuenta = Cuenta::with(['valor.proveedor'])->findOrFail($idcue);
+
+        $cooldownKey = 'cuenta_msg_cooldown_' . $cuenta->idcue;
+        $nowTimestamp = now()->timestamp;
+        $cooldownUntil = (int) Cache::get($cooldownKey, 0);
+
+        if ($cooldownUntil > $nowTimestamp) {
+            $secondsRemaining = max(1, $cooldownUntil - $nowTimestamp);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Este botón está temporalmente bloqueado para evitar spam. Intenta nuevamente en unos minutos.',
+                'remaining_seconds' => $secondsRemaining,
+                'cooldown_until' => now()->addSeconds($secondsRemaining)->toIso8601String(),
+            ], 429);
+        }
+
+        $usuariosActivos = ViewUsuarioActivo::with('cliente')
+            ->where('idcue', $cuenta->idcue)
+            ->where('fecha_vencimiento', '>', now())
+            ->get();
+
+        if ($usuariosActivos->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La cuenta no tiene clientes activos para mensajear.',
+            ], 422);
+        }
+
+        $clientes = $usuariosActivos->sortByDesc('fecha_vencimiento')->map(function ($usuario) {
+            $telefono = $usuario->cliente?->telefonocli;
+            $fechaVencimiento = $usuario->fecha_vencimiento
+                ? Carbon::parse($usuario->fecha_vencimiento)->toDateString()
+                : null;
+
+            return [
+                'idcli' => $usuario->idcli,
+                'nombre' => $usuario->nombre_cliente,
+                'telefono' => $telefono,
+                'telefono_normalizado' => $telefono ? preg_replace('/\D+/', '', $telefono) : null,
+                'idven' => $usuario->idven,
+                'iddet' => $usuario->iddet,
+                'perfil' => $usuario->perfil,
+                'fecha_vencimiento' => $fechaVencimiento,
+            ];
+        })->unique(function ($cliente) {
+            if (!empty($cliente['idcli'])) {
+                return 'idcli:' . $cliente['idcli'];
+            }
+
+            if (!empty($cliente['telefono_normalizado'])) {
+                return 'tel:' . $cliente['telefono_normalizado'];
+            }
+
+            return 'nom:' . strtolower(trim((string) ($cliente['nombre'] ?? '')));
+        })->values();
+
+        $webhookUrl = config('services.n8n.account_message_webhook');
+        if (empty($webhookUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No está configurado el webhook para mensajear clientes.',
+            ], 500);
+        }
+
+        $empleado = Auth::user();
+        $payload = [
+            'event' => 'cuenta.custom_message',
+            'trace_id' => 'cuenta-msg-' . $cuenta->idcue . '-' . now()->format('Ymd-His'),
+            'mensaje_personalizado' => trim($validated['mensaje']),
+            'cuenta' => [
+                'idcue' => $cuenta->idcue,
+                'idval' => $cuenta->idval,
+                'usuario' => $cuenta->usuariocue,
+                'servicio' => $cuenta->valor->idser ?? null,
+                'proveedor' => $cuenta->valor->proveedor->nombrepro ?? null,
+                'estado_cuenta' => $cuenta->caidacue ? 'danada' : 'activa',
+                'fecha_vencimiento' => $cuenta->fechavencue
+                    ? Carbon::parse($cuenta->fechavencue)->toDateString()
+                    : null,
+            ],
+            'cliente_count' => $clientes->count(),
+            'clientes' => $clientes,
+            'empleado' => [
+                'idemp' => $empleado->idemp,
+                'nombreemp' => $empleado->nombreemp,
+                'usuarioemp' => $empleado->usuarioemp,
+            ],
+            'sent_at' => now()->toIso8601String(),
+        ];
+
+        try {
+            $requestN8n = Http::acceptJson()
+                ->timeout(10)
+                ->retry(1, 300);
+
+            $webhookSecret = config('services.n8n.payment_webhook_secret');
+            if (!empty($webhookSecret)) {
+                $requestN8n = $requestN8n->withHeaders([
+                    'X-Webhook-Secret' => $webhookSecret,
+                ]);
+            }
+
+            $response = $requestN8n->post($webhookUrl, $payload);
+
+            if (!$response->successful()) {
+                Log::warning('Webhook n8n de mensaje a clientes devolvió error', [
+                    'idcue' => $cuenta->idcue,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo enviar al webhook. Intenta nuevamente.',
+                ], 502);
+            }
+
+            $cooldownExpiresAt = now()->addMinutes(10);
+            Cache::put($cooldownKey, $cooldownExpiresAt->timestamp, $cooldownExpiresAt);
+
+            Historial::create([
+                'accion' => 'Mensaje masivo a clientes de cuenta',
+                'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Clientes: ' . $clientes->count(),
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje enviado exitosamente al webhook de n8n.',
+                'cooldown_until' => $cooldownExpiresAt->toIso8601String(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error enviando mensaje de cuenta a n8n', [
+                'idcue' => $cuenta->idcue,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al enviar el mensaje a n8n.',
+            ], 500);
+        }
     }
 
     public function mensaje($perfilId)

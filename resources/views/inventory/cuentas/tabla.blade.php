@@ -162,6 +162,26 @@
                         <td>
                             <div class="action-buttons">
                                 @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+                                    @php
+                                        $cooldownUntil = (int) \Illuminate\Support\Facades\Cache::get('cuenta_msg_cooldown_' . $cuenta->idcue, 0);
+                                        $isCooldownActive = $cooldownUntil > now()->timestamp;
+                                    @endphp
+                                    <button
+                                        type="button"
+                                        class="btn btn-success btn-xs"
+                                        title="Enviar mensaje personalizado a clientes"
+                                        data-idcue="{{ $cuenta->idcue }}"
+                                        data-servicio="{{ $cuenta->valor->idser ?? 'N/A' }}"
+                                        data-cuenta-usuario="{{ $cuenta->usuariocue }}"
+                                        data-clientes-activos="{{ $cuenta->usuarios_activos }}"
+                                        data-cooldown-until="{{ $cooldownUntil }}"
+                                        onclick="openMensajeClientesModal(this)"
+                                        @if ($isCooldownActive) disabled @endif
+                                    >
+                                        <i class="fab fa-whatsapp"></i>
+                                    </button>
+                                @endif
+                                @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
                                     <button onclick="loadPerfilesInModal('{{ $cuenta->idcue }}', '{{ $cuenta->usuariocue }}')" class="btn btn-info btn-xs" title="Ver perfiles">
                                         <i class="fas fa-eye"></i>
                                     </button>

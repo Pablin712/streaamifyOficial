@@ -38,6 +38,7 @@ return [
     'n8n' => [
         'payment_webhook' => env('N8N_PAYMENT_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/94d871f4-6485-4118-93ec-471171de71c7'),
         'payment_webhook_secret' => env('N8N_PAYMENT_WEBHOOK_SECRET'),
+        'account_message_webhook' => env('N8N_ACCOUNT_MESSAGE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/cuenta-mensajear'),
     ],
 
 ];
