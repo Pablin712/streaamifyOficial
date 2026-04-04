@@ -16,28 +16,49 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end navbar-mobile-menu shadow" aria-labelledby="navbarMenuDropdown">
                 @auth
+                    @php
+                        $unreadNotifications = Auth::user()->unreadNotifications->sortByDesc('created_at')->values();
+                        $visibleNotifications = $unreadNotifications->take(10);
+                        $hiddenNotifications = max($unreadNotifications->count() - $visibleNotifications->count(), 0);
+                    @endphp
                     <!-- Notificaciones en móvil -->
                     <li class="dropdown-header">
                         <i class="fas fa-bell me-2"></i>Notificaciones
-                        @if (Auth::user()->unreadNotifications->count() > 0)
+                        @if ($unreadNotifications->count() > 0)
                             <span class="badge bg-danger ms-2">
-                                {{ Auth::user()->unreadNotifications->count() }}
+                                {{ $unreadNotifications->count() }}
                             </span>
                         @endif
                     </li>
-                    @forelse (Auth::user()->unreadNotifications->take(3) as $notificacion)
-                        <li>
-                            <a class="dropdown-item small" href="{{ $notificacion->data['url'] ?? '#' }}">
-                                <small class="text-muted d-block">{{ $notificacion->created_at->diffForHumans() }}</small>
-                                {{ Str::limit($notificacion->data['mensaje'], 50) }}
-                            </a>
-                        </li>
-                    @empty
-                        <li><a class="dropdown-item text-muted small">No hay notificaciones</a></li>
-                    @endforelse
 
-                    @if (Auth::user()->unreadNotifications->count() > 3)
-                        <li><a class="dropdown-item text-center small text-primary" href="#" id="verTodasNotif">Ver todas...</a></li>
+                    @if ($visibleNotifications->isNotEmpty())
+                        <li>
+                            <div class="px-2 pb-2" style="max-height: 52vh; overflow-y: auto; min-width: 320px;">
+                                @foreach ($visibleNotifications as $notificacion)
+                                    <a class="dropdown-item small rounded-3 mb-1 notification-link"
+                                        href="{{ $notificacion->data['url'] ?? '#' }}"
+                                        data-notification-id="{{ $notificacion->id }}"
+                                        data-url="{{ $notificacion->data['url'] ?? '#' }}">
+                                        <small class="text-muted d-block">{{ $notificacion->created_at->diffForHumans() }}</small>
+                                        {{ Str::limit($notificacion->data['mensaje'], 90) }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </li>
+                    @else
+                        <li><span class="dropdown-item text-muted small">No hay notificaciones</span></li>
+                    @endif
+
+                    @if ($hiddenNotifications > 0)
+                        <li><span class="dropdown-item-text text-muted small">Mostrando las últimas 10. Quedan {{ $hiddenNotifications }} más.</span></li>
+                    @endif
+
+                    @if ($unreadNotifications->count() > 0)
+                        <li>
+                            <button class="dropdown-item text-center js-mark-all-notifications" type="button">
+                                Marcar todas como leídas
+                            </button>
+                        </li>
                     @endif
 
                     <li><hr class="dropdown-divider"></li>
@@ -87,40 +108,56 @@
         <div class="d-none d-lg-flex ms-auto" id="navbarContent">
             <ul class="navbar-nav ms-auto">
                 @auth
+                    @php
+                        $unreadNotifications = Auth::user()->unreadNotifications->sortByDesc('created_at')->values();
+                        $visibleNotifications = $unreadNotifications->take(10);
+                        $hiddenNotifications = max($unreadNotifications->count() - $visibleNotifications->count(), 0);
+                    @endphp
                     <!-- Notificaciones (Desktop) -->
                     <li class="nav-item dropdown">
                         <button class="nav-link navbar-icon-btn" id="notificacionesDropdown"
                             data-bs-toggle="dropdown" aria-expanded="false" title="Notificaciones">
                             <i class="fas fa-bell fa-lg"></i>
-                            @if (Auth::user()->unreadNotifications->count() > 0)
+                            @if ($unreadNotifications->count() > 0)
                                 <span id="contadorNotificaciones"
                                     class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill">
-                                    {{ Auth::user()->unreadNotifications->count() }}
+                                    {{ $unreadNotifications->count() }}
                                 </span>
                             @endif
                         </button>
 
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificacionesDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end shadow p-0 overflow-hidden" aria-labelledby="notificacionesDropdown"
+                            style="min-width: 360px;">
                             <li class="dropdown-header">Notificaciones</li>
 
-                            @forelse (Auth::user()->unreadNotifications as $notificacion)
+                            @if ($visibleNotifications->isNotEmpty())
                                 <li>
-                                    <a class="dropdown-item" href="{{ $notificacion->data['url'] ?? '#' }}">
-                                        <small class="text-muted">{{ $notificacion->created_at->diffForHumans() }}</small>
-                                        <br>
-                                        {{ $notificacion->data['mensaje'] }}
-                                    </a>
+                                    <div style="max-height: min(70vh, 460px); overflow-y: auto;">
+                                        @foreach ($visibleNotifications as $notificacion)
+                                            <a class="dropdown-item py-3 notification-link"
+                                                href="{{ $notificacion->data['url'] ?? '#' }}"
+                                                data-notification-id="{{ $notificacion->id }}"
+                                                data-url="{{ $notificacion->data['url'] ?? '#' }}">
+                                                <small class="text-muted d-block mb-1">{{ $notificacion->created_at->diffForHumans() }}</small>
+                                                {{ Str::limit($notificacion->data['mensaje'], 120) }}
+                                            </a>
+                                        @endforeach
+                                    </div>
                                 </li>
-                            @empty
-                                <li><a class="dropdown-item text-center text-muted">No hay notificaciones</a></li>
-                            @endforelse
+                            @else
+                                <li><span class="dropdown-item text-center text-muted">No hay notificaciones</span></li>
+                            @endif
 
-                            @if (Auth::user()->unreadNotifications->count() > 0)
+                            @if ($hiddenNotifications > 0)
+                                <li><span class="dropdown-item-text small text-muted">Mostrando las últimas 10. Quedan {{ $hiddenNotifications }} más.</span></li>
+                            @endif
+
+                            @if ($unreadNotifications->count() > 0)
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <button class="dropdown-item text-center" id="marcarLeidas">
+                                    <button class="dropdown-item text-center js-mark-all-notifications" type="button">
                                         Marcar todas como leídas
                                     </button>
                                 </li>

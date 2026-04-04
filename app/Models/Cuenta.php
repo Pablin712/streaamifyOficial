@@ -44,6 +44,10 @@ class Cuenta extends Model
     {
         return $this->hasOne(Mantenimiento::class, 'idcue', 'idcue');
     }
+    public function soportes()
+    {
+        return $this->hasMany(Soporte::class, 'idcue', 'idcue');
+    }
     public function usuarios() //obtiene los usuarios de la cuenta
     {
         return $this->hasMany(ViewUsuarioActivo::class, 'idcue', 'idcue');

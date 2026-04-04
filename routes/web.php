@@ -30,6 +30,7 @@ use App\Http\Controllers\TipoProductoController;
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\BancoController;
+use App\Http\Controllers\SoporteController;
 
 // === RUTAS DE DEMO CHAT ===
 Route::get('/chat/demo-widget', function () {
@@ -93,6 +94,9 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     Route::controller(HistorialClientesController::class)->group(function () {
         Route::get('/historial-cliente', 'index')->name('historial.cliente');
         Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
+    });
+    Route::controller(SoporteController::class)->group(function () {
+        Route::post('/soportes', 'storeCliente')->name('cliente.soportes.store');
     });
     Route::controller(ShopController::class)->group(function () {
         Route::post('/comprar/{id}', 'comprar')->name('comprar');
@@ -297,6 +301,11 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('/mantenimientos/{id}', 'destroy')->name('mantenimientos.destroy');
     });
 
+    Route::controller(SoporteController::class)->group(function () {
+        Route::get('/soportes', 'index')->name('soportes.index');
+        Route::post('/soportes/{id}/atender', 'atender')->name('soportes.atender');
+    });
+
     Route::prefix('gestion-productos')->group(function () {
         // Rutas para Categorías
         Route::get('/', [CategoriaController::class, 'index'])->name('gestion.index');
@@ -330,6 +339,34 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         if (Auth::check()) {
             Auth::user()->unreadNotifications->markAsRead();
         }
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'unread_count' => 0]);
     })->name('notificaciones.leer');
+
+    Route::post('/notificaciones/{id}/marcar-como-leida', function ($id) {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['success' => false], 401);
+        }
+
+        $notification = \Illuminate\Notifications\DatabaseNotification::query()
+            ->where('id', $id)
+            ->where('notifiable_type', get_class($user))
+            ->where('notifiable_id', $user->idemp)
+            ->whereNull('read_at')
+            ->first();
+
+        if ($notification) {
+            $notification->markAsRead();
+        }
+
+        return response()->json([
+            'success' => true,
+            'unread_count' => \Illuminate\Support\Facades\DB::table('notifications')
+                ->where('notifiable_type', get_class($user))
+                ->where('notifiable_id', $user->idemp)
+                ->whereNull('read_at')
+                ->count(),
+        ]);
+    })->name('notificaciones.leer.una');
 });

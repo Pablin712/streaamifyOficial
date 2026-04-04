@@ -27,6 +27,7 @@ class MigrationsSeeder extends Seeder
             '2024_01_01_000010_create_triggers',
             '2024_01_01_000011_create_perfiles_trigger',
             '2024_01_01_000012_create_views',
+            '2026_04_04_000001_create_soportes_table',
         ];
 
         $batch = 1; // Número de batch (puedes ajustarlo si ya tienes migraciones)

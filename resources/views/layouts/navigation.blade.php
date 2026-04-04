@@ -95,26 +95,92 @@
 
     @yield('scripts')
     <script>
-        $(document).ready(function() {
-            $("#marcarLeidas").click(function() {
-                $.ajax({
-                    url: "{{ route('notificaciones.leer') }}",
-                    type: "POST",
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            function updateNotificationCounter(unreadCount) {
+                const counter = document.getElementById('contadorNotificaciones');
+
+                if (!unreadCount || unreadCount <= 0) {
+                    if (counter) {
+                        counter.remove();
+                    }
+                    return;
+                }
+
+                if (counter) {
+                    counter.textContent = unreadCount;
+                    return;
+                }
+
+                const bellButton = document.getElementById('notificacionesDropdown');
+                if (!bellButton) {
+                    return;
+                }
+
+                const badge = document.createElement('span');
+                badge.id = 'contadorNotificaciones';
+                badge.className = 'badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill';
+                badge.textContent = unreadCount;
+                bellButton.appendChild(badge);
+            }
+
+            async function postNotification(url) {
+                const response = await fetch(url, {
+                    method: 'POST',
                     headers: {
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                    },
-                    success: function(response) {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                return response.json();
+            }
+
+            document.querySelectorAll('.js-mark-all-notifications').forEach(function(button) {
+                button.addEventListener('click', async function() {
+                    try {
+                        const response = await postNotification("{{ route('notificaciones.leer') }}");
                         if (response.success) {
-                            $("#contadorNotificaciones").remove(); // Ocultar contador
+                            updateNotificationCounter(response.unread_count ?? 0);
+                            document.querySelectorAll('.notification-link').forEach(link => link.remove());
+                        }
+                    } catch (error) {
+                        console.error('No se pudieron marcar las notificaciones.', error);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.notification-link').forEach(function(link) {
+                link.addEventListener('click', async function(event) {
+                    const notificationId = link.dataset.notificationId;
+                    const destinationUrl = link.dataset.url || link.getAttribute('href') || '#';
+
+                    if (!notificationId) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    try {
+                        const response = await postNotification("{{ route('notificaciones.leer.una', ':id') }}".replace(':id', notificationId));
+                        if (response.success) {
+                            updateNotificationCounter(response.unread_count ?? 0);
+                        }
+                    } catch (error) {
+                        console.error('No se pudo marcar la notificación como leída.', error);
+                    } finally {
+                        if (destinationUrl && destinationUrl !== '#') {
+                            window.location.href = destinationUrl;
                         }
                     }
                 });
             });
-        });
-        $(document).ready(function() {
+
             $('.idcue').select2({
-                placeholder: "Selecciona una cuenta",
-                allowClear: true // Permite borrar la selección
+                placeholder: 'Selecciona una cuenta',
+                allowClear: true
             });
         });
     </script>

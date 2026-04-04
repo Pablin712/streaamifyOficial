@@ -51,6 +51,10 @@ class Cliente extends Authenticatable
     {
         return $this->hasMany(ViewUsuarioActivo::class, 'idcli', 'idcli');
     }
+    public function soportes()
+    {
+        return $this->hasMany(Soporte::class, 'idcli', 'idcli');
+    }
 
     /**
      * Buscar cliente por telegram_chat_id

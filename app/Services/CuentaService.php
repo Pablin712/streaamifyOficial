@@ -383,9 +383,9 @@ class CuentaService
                     }
                 });
             });
-        $query = $query->filter(function ($cuenta) {
-            return !str_ends_with($cuenta->idcue, 'Atencion');
-        });
+
+        $query->where('idcue', 'not like', '%Atencion');
+
         return $query->orderBy('fechavencue')->get();
     }
     public function obtenerCuentaDestino($cuentaOrigen)

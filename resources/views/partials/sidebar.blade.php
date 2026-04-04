@@ -122,7 +122,7 @@
                         </div>
                     @endif
                     {{-- Reemplazamos @canany(['cuentas', 'usuarios', 'mantenimientos']) --}}
-                    @if (Auth::user()->hasAnyPermission(['cuentas', 'usuarios', 'mantenimientos']))
+                    @if (Auth::user()->hasAnyPermission(['cuentas', 'usuarios', 'mantenimientos', 'soportes']))
                         <!-- Accounts collapsible -->
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseAccounts" aria-expanded="false" aria-controls="collapseAccounts">
@@ -141,6 +141,9 @@
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('mantenimientos'))
                                     <a class="nav-link" href="{{ route('mantenimientos') }}">Mantenimientos</a>
+                                @endif
+                                @if (Auth::user()->hasPermissionTo('soportes'))
+                                    <a class="nav-link" href="{{ route('soportes.index') }}">Soportes</a>
                                 @endif
                             </nav>
                         </div>

@@ -10,158 +10,177 @@ use App\Models\Empleado;
 use Illuminate\Support\Facades\DB;
 class RoleSeeder extends Seeder
 {
+    private function syncRole(string $name): Role
+    {
+        return Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+    }
+
+    private function syncPermission(string $name, array $roles = []): Permission
+    {
+        $permission = Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+
+        if (! empty($roles)) {
+            $permission->syncRoles($roles);
+        }
+
+        return $permission;
+    }
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $admin = Role::create(['name' => 'Admin']);
-        $bodeguero = Role::create(['name' => 'Bodeguero']);
-        $tecnico = Role::create(['name' => 'Tecnico']);
-        $contador = Role::create(['name' => 'Contador']);
-        $vendedor = Role::create(['name' => 'Vendedor']);
-        $trabajador = Role::create(['name' => 'Trabajador']);
-        $gerente = Role::create(['name' => 'Gerente']);
-        $visitante = Role::create(['name' => 'Visitante']);
+        $admin = $this->syncRole('Admin');
+        $bodeguero = $this->syncRole('Bodeguero');
+        $tecnico = $this->syncRole('Tecnico');
+        $contador = $this->syncRole('Contador');
+        $vendedor = $this->syncRole('Vendedor');
+        $trabajador = $this->syncRole('Trabajador');
+        $gerente = $this->syncRole('Gerente');
+        $visitante = $this->syncRole('Visitante');
 
         //$empleado = Empleado::where('usuarioemp', 'pablinmind')->first();
         //$empleado->assignRole('Admin');
 
-        Permission::create(['name' => 'historial'])->syncRoles([$admin, $gerente, $visitante, $trabajador]);
-        Permission::create(['name' => 'tareas.destroy'])->syncRoles([$admin, $gerente, $tecnico]);
-        Permission::create(['name' => 'dashboard'])->syncRoles([$admin, $gerente, $visitante, $contador]);
-        Permission::create(['name' => 'dashboard.store'])->syncRoles([$admin, $gerente, $contador]);
+        $this->syncPermission('historial', [$admin, $gerente, $visitante, $trabajador]);
+        $this->syncPermission('tareas.destroy', [$admin, $gerente, $tecnico]);
+        $this->syncPermission('dashboard', [$admin, $gerente, $visitante, $contador]);
+        $this->syncPermission('dashboard.store', [$admin, $gerente, $contador]);
 
-        Permission::create(['name' => 'costos'])->syncRoles([$admin, $gerente, $visitante, $trabajador, $contador, $bodeguero]);
-        Permission::create(['name' => 'costos.store'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador]);
-        Permission::create(['name' => 'costos.update'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador]);
-        Permission::create(['name' => 'costos.destroy'])->syncRoles([$admin, $gerente, $contador, $bodeguero]);
+        $this->syncPermission('costos', [$admin, $gerente, $visitante, $trabajador, $contador, $bodeguero]);
+        $this->syncPermission('costos.store', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
+        $this->syncPermission('costos.update', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
+        $this->syncPermission('costos.destroy', [$admin, $gerente, $contador, $bodeguero]);
 
-        Permission::create(['name' => 'gastos'])->syncRoles([$admin, $gerente, $visitante, $trabajador, $contador, $bodeguero]);
-        Permission::create(['name' => 'gastos.store'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador]);
-        Permission::create(['name' => 'gastos.update'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador]);
-        Permission::create(['name' => 'gastos.destroy'])->syncRoles([$admin, $gerente, $contador, $bodeguero]);
+        $this->syncPermission('gastos', [$admin, $gerente, $visitante, $trabajador, $contador, $bodeguero]);
+        $this->syncPermission('gastos.store', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
+        $this->syncPermission('gastos.update', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
+        $this->syncPermission('gastos.destroy', [$admin, $gerente, $contador, $bodeguero]);
 
-        Permission::create(['name' => 'tipos.store'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador]);
-        Permission::create(['name' => 'tipos.update'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador]);
-        Permission::create(['name' => 'tipos.destroy'])->syncRoles([$admin, $gerente]);
+        $this->syncPermission('tipos.store', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
+        $this->syncPermission('tipos.update', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
+        $this->syncPermission('tipos.destroy', [$admin, $gerente]);
 
-        Permission::create(['name' => 'servicios'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'servicios.create'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'servicios.store'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
-        Permission::create(['name' => 'servicios.edit'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'servicios.update'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
-        Permission::create(['name' => 'servicios.destroy'])->syncRoles([$admin, $gerente, $bodeguero]);
+        $this->syncPermission('servicios', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('servicios.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('servicios.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
+        $this->syncPermission('servicios.edit', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('servicios.update', [$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
+        $this->syncPermission('servicios.destroy', [$admin, $gerente, $bodeguero]);
 
-        Permission::create(['name' => 'valores'])->syncRoles([$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'valores.create'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'valores.store'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'valores.edit'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'valores.update'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
-        Permission::create(['name' => 'valores.destroy'])->syncRoles([$admin, $gerente, $bodeguero]);
+        $this->syncPermission('valores', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('valores.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('valores.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('valores.edit', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('valores.update', [$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
+        $this->syncPermission('valores.destroy', [$admin, $gerente, $bodeguero]);
 
-        Permission::create(['name' => 'proveedores'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'proveedores.create'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'proveedores.store'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'proveedores.edit'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'proveedores.update'])->syncRoles([$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'proveedores.destroy'])->syncRoles([$admin, $gerente, $bodeguero]);
+        $this->syncPermission('proveedores', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('proveedores.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('proveedores.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('proveedores.edit', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('proveedores.update', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('proveedores.destroy', [$admin, $gerente, $bodeguero]);
 
-        Permission::create(['name' => 'clientes'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'clientes.create'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'clientes.store'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'clientes.storeInVenta'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'clientes.edit'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'clientes.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'clientes.destroy'])->syncRoles([$admin, $gerente]);
+        $this->syncPermission('clientes', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('clientes.create', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('clientes.store', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('clientes.storeInVenta', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('clientes.edit', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('clientes.update', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('clientes.destroy', [$admin, $gerente]);
 
-        Permission::create(['name' => 'cuentas'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $vendedor, $contador, $tecnico, $visitante]);
-        Permission::create(['name' => 'cuentas.create'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $visitante]);
-        Permission::create(['name' => 'cuentas.store'])->syncRoles([$admin, $gerente, $trabajador, $tecnico]);
-        Permission::create(['name' => 'cuentas.status'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico]);
-        Permission::create(['name' => 'cuentas.mensaje'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'cuentas.edit'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'cuentas.renew'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador]);
-        Permission::create(['name' => 'cuentas.update'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador]);
-        Permission::create(['name' => 'cuentas.destroy'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero]);
-        Permission::create(['name' => 'perfil.update'])->syncRoles([$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico]);
+        $this->syncPermission('cuentas', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $contador, $tecnico, $visitante]);
+        $this->syncPermission('cuentas.create', [$admin, $gerente, $trabajador, $bodeguero, $visitante]);
+        $this->syncPermission('cuentas.store', [$admin, $gerente, $trabajador, $tecnico]);
+        $this->syncPermission('cuentas.status', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico]);
+        $this->syncPermission('cuentas.mensaje', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('cuentas.edit', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('cuentas.renew', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador]);
+        $this->syncPermission('cuentas.update', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador]);
+        $this->syncPermission('cuentas.destroy', [$admin, $gerente, $trabajador, $bodeguero]);
+        $this->syncPermission('perfil.update', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico]);
 
-        Permission::create(['name' => 'ventas'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'ventas.create'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'ventas.store'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'ventas.storeRenew'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'ventas.storeCliente'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'ventas.status'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'ventas.edit'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'ventas.renew'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'ventas.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        Permission::create(['name' => 'ventas.destroy'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'ventas.sendInvoice'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
-        
-        Permission::create(['name' => 'usuarios'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'usuarios.change'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'usuarios.renew'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        Permission::create(['name' => 'usuarios.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'usuarios.destroy'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('ventas', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('ventas.create', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('ventas.store', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('ventas.storeRenew', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('ventas.storeCliente', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('ventas.status', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('ventas.edit', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('ventas.renew', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('ventas.update', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('ventas.destroy', [$admin, $gerente]);
+        $this->syncPermission('ventas.sendInvoice', [$admin, $gerente, $trabajador, $vendedor]);
 
-        Permission::create(['name' => 'empleados'])->syncRoles([$admin, $gerente, $visitante]);
-        Permission::create(['name' => 'empleados.create'])->syncRoles([$admin, $gerente, $visitante]);
-        Permission::create(['name' => 'empleados.store'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'empleados.edit'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $contador, $tecnico, $visitante]);
-        Permission::create(['name' => 'empleados.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $contador, $tecnico]);
-        Permission::create(['name' => 'empleados.updateRol'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'empleados.destroy'])->syncRoles([$admin]);
+        $this->syncPermission('usuarios', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('usuarios.change', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('usuarios.renew', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('usuarios.update', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('usuarios.destroy', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
 
-        Permission::create(['name' => 'mantenimientos'])->syncRoles([$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
-        Permission::create(['name' => 'mantenimientos.create'])->syncRoles([$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
-        Permission::create(['name' => 'mantenimientos.store'])->syncRoles([$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
-        Permission::create(['name' => 'mantenimientos.edit'])->syncRoles([$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
-        Permission::create(['name' => 'mantenimientos.update'])->syncRoles([$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
-        Permission::create(['name' => 'mantenimientos.destroy'])->syncRoles([$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
+        $this->syncPermission('empleados', [$admin, $gerente, $visitante]);
+        $this->syncPermission('empleados.create', [$admin, $gerente, $visitante]);
+        $this->syncPermission('empleados.store', [$admin, $gerente]);
+        $this->syncPermission('empleados.edit', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $contador, $tecnico, $visitante]);
+        $this->syncPermission('empleados.update', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $contador, $tecnico]);
+        $this->syncPermission('empleados.updateRol', [$admin, $gerente]);
+        $this->syncPermission('empleados.destroy', [$admin]);
 
-        Permission::create(['name' => 'gestion'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
-        Permission::create(['name' => 'categorias.store'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
-        Permission::create(['name' => 'categorias.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
-        Permission::create(['name' => 'categorias.destroy'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'tipos_producto.store'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
-        Permission::create(['name' => 'tipos_producto.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
-        Permission::create(['name' => 'tipos_producto.destroy'])->syncRoles([$admin, $gerente]);
+        $this->syncPermission('mantenimientos', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
+        $this->syncPermission('mantenimientos.create', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
+        $this->syncPermission('mantenimientos.store', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
+        $this->syncPermission('mantenimientos.edit', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
+        $this->syncPermission('mantenimientos.update', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
+        $this->syncPermission('mantenimientos.destroy', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
 
-        Permission::create(['name' => 'productos.index'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
-        Permission::create(['name' => 'productos.create'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
-        Permission::create(['name' => 'productos.store'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
-        Permission::create(['name' => 'productos.show'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
-        Permission::create(['name' => 'productos.edit'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
-        Permission::create(['name' => 'productos.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
-        Permission::create(['name' => 'productos.destroy'])->syncRoles([$admin, $gerente]);
+        $this->syncPermission('soportes', [$admin, $gerente, $tecnico]);
+        $this->syncPermission('soportes.update', [$admin, $gerente, $tecnico]);
 
-        Permission::create(['name' => 'empleado.recargas.index'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'empleado.recargas.updateEstado'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('gestion', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
+        $this->syncPermission('categorias.store', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
+        $this->syncPermission('categorias.update', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
+        $this->syncPermission('categorias.destroy', [$admin, $gerente]);
+        $this->syncPermission('tipos_producto.store', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
+        $this->syncPermission('tipos_producto.update', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
+        $this->syncPermission('tipos_producto.destroy', [$admin, $gerente]);
 
-        Permission::create(['name' => 'empleado.pedidos.index'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $visitante]);
-        Permission::create(['name' => 'empleado.pedidos.update'])->syncRoles([$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('productos.index', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
+        $this->syncPermission('productos.create', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
+        $this->syncPermission('productos.store', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
+        $this->syncPermission('productos.show', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
+        $this->syncPermission('productos.edit', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
+        $this->syncPermission('productos.update', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
+        $this->syncPermission('productos.destroy', [$admin, $gerente]);
 
-        Permission::create(['name' => 'roles.index'])->syncRoles([$admin]);
-        Permission::create(['name' => 'roles.store'])->syncRoles([$admin]);
-        Permission::create(['name' => 'roles.update'])->syncRoles([$admin]);
-        Permission::create(['name' => 'roles.destroy'])->syncRoles([$admin]);
+        $this->syncPermission('empleado.recargas.index', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('empleado.recargas.updateEstado', [$admin, $gerente, $trabajador, $vendedor]);
 
-        Permission::create(['name' => 'historial.clear'])->syncRoles([$admin]);
-        Permission::create(['name' => 'tareas.index'])->syncRoles([$admin]);
+        $this->syncPermission('empleado.pedidos.index', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
+        $this->syncPermission('empleado.pedidos.update', [$admin, $gerente, $trabajador, $vendedor]);
+
+        $this->syncPermission('roles.index', [$admin]);
+        $this->syncPermission('roles.store', [$admin]);
+        $this->syncPermission('roles.update', [$admin]);
+        $this->syncPermission('roles.destroy', [$admin]);
+
+        $this->syncPermission('historial.clear', [$admin]);
+        $this->syncPermission('tareas.index', [$admin]);
 
         // Permisos para mails
-        Permission::create(['name' => 'mails.index'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'mails.store'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'mails.update'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'mails.destroy'])->syncRoles([$admin, $gerente]);
+        $this->syncPermission('mails.index', [$admin, $gerente]);
+        $this->syncPermission('mails.store', [$admin, $gerente]);
+        $this->syncPermission('mails.update', [$admin, $gerente]);
+        $this->syncPermission('mails.destroy', [$admin, $gerente]);
 
         // Permisos para vista de cuentas por servicios
-        Permission::create(['name' => 'todas_las_cuentas'])->syncRoles([$admin, $gerente]);
-        Permission::create(['name' => 'netflix'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'disney'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'max'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'spotify'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'otras'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        Permission::create(['name' => 'prime'])->syncRoles([$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('todas_las_cuentas', [$admin, $gerente]);
+        $this->syncPermission('netflix', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('disney', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('max', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('spotify', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('otras', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('prime', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
     }
 }
