@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuenta;
+use App\Models\Mantenimiento;
 use App\Models\Servicio;
 use App\Models\Valor;
 use App\Models\ViewUsuarioActivo;
@@ -107,6 +108,117 @@ class TecnicoCuentasController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener cuentas por servicio',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Mantenimientos programados para hoy agrupados por proveedor.
+     * GET /api/v2/tech-accounts/mantenimientos-hoy
+     */
+    public function mantenimientosHoy(Request $request)
+    {
+        try {
+            $hoy = Carbon::today();
+
+            $query = Mantenimiento::with([
+                'cuenta.valor.proveedor',
+                'cuenta.valor.servicio',
+            ])->whereDate('fechaman', $hoy);
+
+            if ($request->filled('servicio')) {
+                $servicio = $request->input('servicio');
+
+                $query->whereHas('cuenta.valor.servicio', function ($q) use ($servicio) {
+                    $q->where('idser', $servicio);
+                });
+            }
+
+            $mantenimientos = $query->orderBy('fechaman', 'asc')->get();
+
+            $mantenimientosProcesados = $mantenimientos->map(function ($mantenimiento) {
+                $cuenta = $mantenimiento->cuenta;
+                $valor = $cuenta?->valor;
+                $proveedor = $valor?->proveedor;
+                $servicio = $valor?->servicio;
+                $telefonoProveedor = $proveedor?->telefonopro;
+
+                return [
+                    'idman' => $mantenimiento->idman,
+                    'fechaman' => $mantenimiento->fechaman
+                        ? Carbon::parse($mantenimiento->fechaman)->format('Y-m-d')
+                        : null,
+                    'descripcion' => $mantenimiento->descripcionman,
+                    'cuenta' => [
+                        'idcue' => $cuenta?->idcue ?? $mantenimiento->idcue_snapshot ?? $mantenimiento->idcue,
+                        'usuario' => $cuenta?->usuariocue ?? $mantenimiento->cuenta_usuario_snapshot,
+                        'idval' => $cuenta?->idval ?? $mantenimiento->idval_snapshot,
+                    ],
+                    'servicio' => [
+                        'idser' => $valor?->idser ?? $mantenimiento->servicio_snapshot,
+                        'nombre' => $servicio?->nombreser ?? $mantenimiento->servicio_snapshot,
+                    ],
+                    'proveedor' => [
+                        'idpro' => $proveedor?->idpro,
+                        'nombre' => $proveedor?->nombrepro,
+                        'telefono' => $telefonoProveedor,
+                        'telefono_normalizado' => $telefonoProveedor ? preg_replace('/\D+/', '', $telefonoProveedor) : null,
+                    ],
+                ];
+            });
+
+            $proveedores = $mantenimientosProcesados
+                ->groupBy(function ($item) {
+                    if (!empty($item['proveedor']['idpro'])) {
+                        return 'idpro:' . $item['proveedor']['idpro'];
+                    }
+
+                    if (!empty($item['proveedor']['telefono_normalizado'])) {
+                        return 'tel:' . $item['proveedor']['telefono_normalizado'];
+                    }
+
+                    return 'nom:' . strtolower(trim((string) ($item['proveedor']['nombre'] ?? 'sin-proveedor')));
+                })
+                ->map(function ($items) {
+                    $principal = $items->first();
+                    $mantenimientosProveedor = $items->map(function ($item) {
+                        return [
+                            'idman' => $item['idman'],
+                            'fechaman' => $item['fechaman'],
+                            'descripcion' => $item['descripcion'],
+                            'cuenta' => $item['cuenta'],
+                            'servicio' => $item['servicio'],
+                        ];
+                    })->values();
+
+                    return [
+                        'idpro' => $principal['proveedor']['idpro'],
+                        'proveedor' => $principal['proveedor']['nombre'],
+                        'telefono' => $principal['proveedor']['telefono'],
+                        'telefono_normalizado' => $principal['proveedor']['telefono_normalizado'],
+                        'total_mantenimientos' => $mantenimientosProveedor->count(),
+                        'mantenimientos' => $mantenimientosProveedor,
+                    ];
+                })
+                ->sortBy('proveedor')
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mantenimientos de hoy obtenidos correctamente',
+                'data' => [
+                    'fecha' => $hoy->format('Y-m-d'),
+                    'total_mantenimientos' => $mantenimientosProcesados->count(),
+                    'total_proveedores' => $proveedores->count(),
+                    'proveedores' => $proveedores,
+                    'mantenimientos' => $mantenimientosProcesados->values(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener mantenimientos de hoy',
                 'error' => $e->getMessage()
             ], 500);
         }

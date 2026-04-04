@@ -200,6 +200,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/estado', 'cuentasPorEstado')->name('api.tech-accounts.estado');
         Route::get('/cuenta/{id}', 'detalleCuenta')->name('api.tech-accounts.detalle');
         Route::get('/clientes-vencen-hoy', 'clientesVencenHoy')->name('api.tech-accounts.clientes-vencen-hoy');
+        Route::get('/mantenimientos-hoy', 'mantenimientosHoy')->name('api.tech-accounts.mantenimientos-hoy');
 
         // Estadísticas y Análisis
         Route::get('/estadisticas-uso', 'estadisticasUso')->name('api.tech-accounts.estadisticas-uso');
