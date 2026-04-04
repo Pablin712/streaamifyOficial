@@ -22,6 +22,7 @@
 
 <script>
     window.movementResultsNeedsReload = false;
+    window.movementResultsPayload = [];
 
     function escapeHtml(value) {
         return (value ?? '').toString()
@@ -66,6 +67,8 @@
 
         summary.textContent = summaryMessage || 'Los usuarios fueron movidos correctamente. Copia el mensaje correspondiente para entregar al cliente.';
 
+        window.movementResultsPayload = movements || [];
+
         container.innerHTML = (movements || []).map((movement, index) => `
             <div class="card border shadow-sm">
                 <div class="card-body">
@@ -79,10 +82,23 @@
                                 Cuenta destino: <strong>${escapeHtml(movement.usuario_destino || movement.cuenta_destino || '')}</strong>
                                 ${movement.perfil_destino ? ` | Perfil ${escapeHtml(movement.perfil_destino)}` : ''}
                             </div>
+                            <div class="small text-muted mt-1">
+                                ${movement.telefono_cliente ? `Tel: ${escapeHtml(movement.telefono_cliente)}` : 'Sin teléfono registrado'}
+                            </div>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyMovementDeliveryMessage(${index})">
-                            <i class="fas fa-copy me-1"></i>Copiar Mensaje
-                        </button>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyMovementDeliveryMessage(${index})">
+                                <i class="fas fa-copy me-1"></i>Copiar Mensaje
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-success btn-sm"
+                                onclick="sendMovementDeliveryMessage(${index})"
+                                ${movement.telefono_cliente ? '' : 'disabled'}
+                            >
+                                <i class="fab fa-whatsapp me-1"></i>Enviar WhatsApp
+                            </button>
+                        </div>
                     </div>
                     <textarea class="form-control font-monospace bg-body-secondary text-body border" rows="7" readonly data-movement-message-index="${index}">${escapeHtml(movement.mensaje_entrega || '')}</textarea>
                 </div>
@@ -111,6 +127,53 @@
         navigator.clipboard.writeText(textarea.value)
             .then(() => showMovementToast('Mensaje copiado al portapapeles', 'success'))
             .catch(() => showMovementToast('No se pudo copiar el mensaje', 'warning'));
+    }
+
+    async function sendMovementDeliveryMessage(index) {
+        const movement = window.movementResultsPayload[index];
+        const textarea = document.querySelector(`[data-movement-message-index="${index}"]`);
+
+        if (!movement) {
+            showMovementToast('No se encontró la información del cliente.', 'warning');
+            return;
+        }
+
+        if (!movement.telefono_cliente) {
+            showMovementToast('El cliente no tiene teléfono registrado.', 'warning');
+            return;
+        }
+
+        if (!textarea || !textarea.value) {
+            showMovementToast('No se pudo obtener el mensaje de entrega.', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch('{{ route("usuarios.enviarMensajeCliente") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id_cliente: movement.id_cliente || null,
+                    cliente: movement.cliente || 'Cliente',
+                    telefono: movement.telefono_cliente,
+                    mensaje: textarea.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'No se pudo enviar el mensaje.');
+            }
+
+            showMovementToast(data.message || 'Mensaje enviado al cliente correctamente.', 'success');
+        } catch (error) {
+            showMovementToast(error.message || 'No se pudo enviar el mensaje.', 'warning');
+        }
     }
 
     function closeMovementResultsModal() {

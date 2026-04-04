@@ -125,6 +125,7 @@
     @include('shared.modals.venta-editar-detalle')
 
     @if (session('mensaje_entrega'))
+        @php($mensajeEntregaCliente = session('mensaje_entrega_cliente', []))
         <x-modal name="mensaje-entrega-venta" :show="false" maxWidth="2xl">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title">
@@ -140,12 +141,26 @@
                     <i class="fas fa-info-circle me-2"></i>
                     La venta fue registrada correctamente. Copia el mensaje para enviarlo al cliente.
                 </div>
+                <div class="small text-muted mb-3">
+                    Cliente: {{ $mensajeEntregaCliente['cliente'] ?? 'Cliente' }}
+                    @if (!empty($mensajeEntregaCliente['telefono']))
+                        | Tel: {{ $mensajeEntregaCliente['telefono'] }}
+                    @endif
+                </div>
                 <textarea id="mensaje_entrega_venta_text" class="form-control font-monospace bg-body-secondary text-body border" rows="10" readonly>{{ session('mensaje_entrega') }}</textarea>
             </div>
 
             <div class="modal-footer border-top">
                 <button type="button" class="btn btn-outline-primary" onclick="copyMensajeEntregaVenta()">
                     <i class="fas fa-copy me-1"></i>Copiar Mensaje
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-success"
+                    onclick="sendMensajeEntregaVenta()"
+                    @if (empty($mensajeEntregaCliente['telefono'])) disabled @endif
+                >
+                    <i class="fab fa-whatsapp me-1"></i>Enviar WhatsApp
                 </button>
                 <button type="button" class="btn btn-secondary"
                     onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-entrega-venta' }))">
@@ -242,6 +257,44 @@
                 .catch(() => {
                     mostrarConfirmacionCopiado('warning', 'No se pudo copiar el mensaje');
                 });
+        }
+
+        async function sendMensajeEntregaVenta() {
+            const message = document.getElementById('mensaje_entrega_venta_text')?.value || '';
+            const cliente = @json($mensajeEntregaCliente['cliente'] ?? 'Cliente');
+            const telefono = @json($mensajeEntregaCliente['telefono'] ?? null);
+            const idCliente = @json($mensajeEntregaCliente['idcli'] ?? null);
+
+            if (!message || !telefono) {
+                mostrarConfirmacionCopiado('warning', 'No hay teléfono o mensaje para enviar');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ route("usuarios.enviarMensajeCliente") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_cliente: idCliente,
+                        cliente: cliente,
+                        telefono: telefono,
+                        mensaje: message
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo enviar el mensaje');
+                }
+
+                mostrarConfirmacionCopiado('success', data.message || 'Mensaje enviado al cliente');
+            } catch (error) {
+                mostrarConfirmacionCopiado('warning', error.message || 'No se pudo enviar el mensaje');
+            }
         }
     </script>
 @endsection

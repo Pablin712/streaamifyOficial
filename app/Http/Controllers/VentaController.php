@@ -262,7 +262,12 @@ class VentaController extends Controller
 
         return redirect()->route('ventas.create')
             ->with('success', 'Venta registrada correctamente')
-            ->with('mensaje_entrega', $mensajeEntrega);
+            ->with('mensaje_entrega', $mensajeEntrega)
+            ->with('mensaje_entrega_cliente', [
+                'idcli' => $venta->cliente->idcli,
+                'cliente' => $venta->cliente->nombrecli,
+                'telefono' => $venta->cliente->telefonocli,
+            ]);
     }
 
     public function storeRenew(Request $request)
@@ -346,7 +351,12 @@ class VentaController extends Controller
 
         return redirect()->route('usuarios')
             ->with('success', 'Venta renovada correctamente')
-            ->with('mensaje_renovacion', $mensajeRenovacion);
+            ->with('mensaje_renovacion', $mensajeRenovacion)
+            ->with('mensaje_renovacion_cliente', [
+                'idcli' => $ventaNueva->cliente->idcli,
+                'cliente' => $ventaNueva->cliente->nombrecli,
+                'telefono' => $ventaNueva->cliente->telefonocli,
+            ]);
     }
 
     public function storeCliente(Request $request)

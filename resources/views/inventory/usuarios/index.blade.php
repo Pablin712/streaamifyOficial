@@ -491,6 +491,7 @@
 </x-modal>
 
 @if (session('mensaje_renovacion'))
+    @php($mensajeRenovacionCliente = session('mensaje_renovacion_cliente', []))
     <x-modal name="mensaje-renovacion-usuarios" :show="false" maxWidth="2xl">
         <div class="modal-header border-bottom">
             <h5 class="modal-title">
@@ -506,12 +507,26 @@
                 <i class="fas fa-info-circle me-2"></i>
                 La renovacion fue registrada correctamente. Copia el mensaje para enviarlo al cliente.
             </div>
+            <div class="small text-muted mb-3">
+                Cliente: {{ $mensajeRenovacionCliente['cliente'] ?? 'Cliente' }}
+                @if (!empty($mensajeRenovacionCliente['telefono']))
+                    | Tel: {{ $mensajeRenovacionCliente['telefono'] }}
+                @endif
+            </div>
             <textarea id="mensaje_renovacion_usuarios_text" class="form-control font-monospace bg-body-secondary text-body border" rows="8" readonly>{{ session('mensaje_renovacion') }}</textarea>
         </div>
 
         <div class="modal-footer border-top">
             <button type="button" class="btn btn-outline-primary" onclick="copyMensajeRenovacionUsuarios()">
                 <i class="fas fa-copy me-1"></i>Copiar Mensaje
+            </button>
+            <button
+                type="button"
+                class="btn btn-success"
+                onclick="sendMensajeRenovacionUsuarios()"
+                @if (empty($mensajeRenovacionCliente['telefono'])) disabled @endif
+            >
+                <i class="fab fa-whatsapp me-1"></i>Enviar WhatsApp
             </button>
             <button type="button" class="btn btn-secondary"
                 onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-renovacion-usuarios' }))">
@@ -1110,6 +1125,44 @@
                         setTimeout(() => toast.style.display = 'none', 500);
                     }, 2000);
                 });
+        }
+
+        async function sendMensajeRenovacionUsuarios() {
+            const message = document.getElementById('mensaje_renovacion_usuarios_text')?.value || '';
+            const cliente = @json($mensajeRenovacionCliente['cliente'] ?? 'Cliente');
+            const telefono = @json($mensajeRenovacionCliente['telefono'] ?? null);
+            const idCliente = @json($mensajeRenovacionCliente['idcli'] ?? null);
+
+            if (!message || !telefono) {
+                showUsuariosToast('No hay teléfono o mensaje para enviar.', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ route("usuarios.enviarMensajeCliente") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_cliente: idCliente,
+                        cliente: cliente,
+                        telefono: telefono,
+                        mensaje: message
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo enviar el mensaje');
+                }
+
+                showUsuariosToast(data.message || 'Mensaje enviado al cliente.', 'success');
+            } catch (error) {
+                showUsuariosToast(error.message || 'No se pudo enviar el mensaje.', 'warning');
+            }
         }
     </script>
 @endsection

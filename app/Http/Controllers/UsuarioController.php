@@ -11,6 +11,8 @@ use App\Services\CuentaService;
 use App\Services\EntregaMensajeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UsuarioController extends Controller
 {
@@ -106,7 +108,12 @@ class UsuarioController extends Controller
                 'success' => true,
                 'message' => 'Usuario actualizado correctamente. Copia el mensaje para enviar al cliente.',
                 'movements' => [[
+                    'id_cliente' => optional($detalle->venta->cliente)->idcli,
                     'cliente' => optional($detalle->venta->cliente)->nombrecli ?? 'Cliente',
+                    'telefono_cliente' => optional($detalle->venta->cliente)->telefonocli,
+                    'telefono_normalizado' => optional($detalle->venta->cliente)->telefonocli
+                        ? preg_replace('/\D+/', '', optional($detalle->venta->cliente)->telefonocli)
+                        : null,
                     'servicio_origen' => $servicioOrigen,
                     'servicio_destino' => $servicioDestino,
                     'usuario_destino' => $usuarioDestino,
@@ -118,6 +125,105 @@ class UsuarioController extends Controller
         }
 
         return redirect()->route('usuarios')->with('success', 'Usuario actualizado exitosamente.');
+    }
+
+    public function enviarMensajeCliente(Request $request)
+    {
+        if (!Gate::allows('usuarios.update') && !Gate::allows('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para enviar mensajes a clientes.');
+        }
+
+        $validated = $request->validate([
+            'cliente' => 'nullable|string|max:255',
+            'telefono' => 'required|string|max:50',
+            'mensaje' => 'required|string|min:3|max:4000',
+            'id_cliente' => 'nullable',
+        ]);
+
+        $telefonoNormalizado = preg_replace('/\D+/', '', $validated['telefono']);
+        if (empty($telefonoNormalizado)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El cliente no tiene un teléfono válido para enviar el mensaje.',
+            ], 422);
+        }
+
+        $webhookUrl = config('services.n8n.client_message_webhook');
+        if (empty($webhookUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No está configurado el webhook de mensaje al cliente.',
+            ], 500);
+        }
+
+        $empleado = Auth::user();
+        $payload = [
+            'event' => 'cliente.delivery_message',
+            'trace_id' => 'cliente-msg-' . now()->format('Ymd-His') . '-' . substr($telefonoNormalizado, -6),
+            'cliente' => [
+                'idcli' => $validated['id_cliente'] ?? null,
+                'nombre' => $validated['cliente'] ?? 'Cliente',
+                'telefono' => $validated['telefono'],
+                'telefono_normalizado' => $telefonoNormalizado,
+            ],
+            'mensaje' => trim($validated['mensaje']),
+            'empleado' => [
+                'idemp' => $empleado->idemp,
+                'nombreemp' => $empleado->nombreemp,
+                'usuarioemp' => $empleado->usuarioemp,
+            ],
+            'sent_at' => now()->toIso8601String(),
+        ];
+
+        try {
+            $requestN8n = Http::acceptJson()
+                ->timeout(10)
+                ->retry(1, 300);
+
+            $webhookSecret = config('services.n8n.payment_webhook_secret');
+            if (!empty($webhookSecret)) {
+                $requestN8n = $requestN8n->withHeaders([
+                    'X-Webhook-Secret' => $webhookSecret,
+                ]);
+            }
+
+            $response = $requestN8n->post($webhookUrl, $payload);
+
+            if (!$response->successful()) {
+                Log::warning('Webhook n8n de mensaje individual al cliente devolvió error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'telefono' => $validated['telefono'],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo enviar el mensaje al webhook.',
+                ], 502);
+            }
+
+            Historial::create([
+                'accion' => 'Mensaje directo a cliente',
+                'descripcion' => 'Cliente: ' . ($validated['cliente'] ?? 'Cliente') . ' | Teléfono: ' . $validated['telefono'],
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje enviado correctamente al cliente por n8n.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error enviando mensaje individual a cliente vía n8n', [
+                'error' => $e->getMessage(),
+                'telefono' => $validated['telefono'],
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al enviar el mensaje al cliente.',
+            ], 500);
+        }
     }
 
     public function moverUsuario($iddet){

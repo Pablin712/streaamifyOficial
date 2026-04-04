@@ -581,11 +581,17 @@ class CuentaService
 
     private function buildMovementData($usuario, $cuentaDestino, $perfilDestino, string $tipo): array
     {
+        $usuario->loadMissing('cliente', 'cuenta.valor');
         $cuentaDestino->loadMissing('valor.servicio');
+
+        $telefonoCliente = $usuario->cliente?->telefonocli;
 
         return [
             'tipo' => $tipo,
+            'id_cliente' => $usuario->idcli,
             'cliente' => $usuario->nombre_cliente,
+            'telefono_cliente' => $telefonoCliente,
+            'telefono_normalizado' => $telefonoCliente ? preg_replace('/\D+/', '', $telefonoCliente) : null,
             'servicio_origen' => $usuario->cuenta->valor->idser ?? null,
             'servicio_destino' => $cuentaDestino->valor->idser ?? null,
             'cuenta_destino' => $cuentaDestino->idcue,

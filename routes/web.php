@@ -263,6 +263,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
     Route::controller(UsuarioController::class)->group(function () {
         Route::get('/usuarios', 'index')->name('usuarios');
+        Route::post('/usuarios/enviar-mensaje-cliente', 'enviarMensajeCliente')->name('usuarios.enviarMensajeCliente');
         Route::get('/usuarios/{id}/change', 'change')->name('usuarios.change');
         Route::get('/usuarios/{id}/renew', 'renew')->name('usuarios.renew');
         Route::put('/usuarios/{id}', 'update')->name('usuarios.update');
