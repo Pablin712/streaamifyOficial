@@ -94,6 +94,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     Route::controller(HistorialClientesController::class)->group(function () {
         Route::get('/historial-cliente', 'index')->name('historial.cliente');
         Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
+        Route::post('/suscripciones/{iddet}/pedir-codigo-netflix', 'pedirCodigoNetflix')->name('cliente.pedirCodigoNetflix');
     });
     Route::controller(SoporteController::class)->group(function () {
         Route::post('/soportes', 'storeCliente')->name('cliente.soportes.store');
@@ -234,6 +235,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/cuentas/dispersar-clientes', 'moverClientesDisperso')->name('cuentas.moverClientesDisperso');
         Route::post('/cuentas/{id}/mensaje-clientes', 'enviarMensajeClientes')->name('cuentas.enviarMensajeClientes');
         Route::post('/cuentas/{id}/mensaje-proveedor', 'enviarMensajeProveedor')->name('cuentas.enviarMensajeProveedor');
+        Route::post('/cuentas/{id}/pedir-codigo-netflix', 'pedirCodigoNetflix')->name('cuentas.pedirCodigoNetflix');
         Route::get('/cuentas/PerfilesSpotify', 'PerfilesSpotify')->name('cuentas.spotify');
         Route::get('/cuentas/{id}/load-perfiles', 'loadPerfiles')->name('cuentas.loadPerfiles');
         Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');

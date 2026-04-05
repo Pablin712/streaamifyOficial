@@ -539,6 +539,7 @@
     @include('inventory.cuentas.modals.view-perfiles')
     @include('inventory.cuentas.modals.mensaje-clientes')
     @include('inventory.cuentas.modals.mensaje-proveedor')
+    @include('inventory.cuentas.modals.netflix-codigo')
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
     @include('inventory.valores.modals.create')
@@ -1068,6 +1069,7 @@ async function submitRenew(event) {
 // ============================================================================
 let mensajeClientesButtonRef = null;
 let mensajeProveedorButtonRef = null;
+let netflixCodigoCuentaRef = null;
 
 function formatCooldownText(untilTimestamp) {
     const nowTs = Math.floor(Date.now() / 1000);
@@ -1260,6 +1262,104 @@ async function submitMensajeProveedor(event) {
     } finally {
         submitBtn.disabled = false;
     }
+}
+
+function setNetflixCodigoModalState(state, payload = {}) {
+    const requestState = document.getElementById('netflix_codigo_request_state');
+    const loadingState = document.getElementById('netflix_codigo_loading_state');
+    const resultState = document.getElementById('netflix_codigo_result_state');
+    const confirmBtn = document.getElementById('netflix_codigo_confirm_btn');
+    const copyBtn = document.getElementById('netflix_codigo_copy_btn');
+    const modalTitle = document.getElementById('netflix_codigo_modal_title');
+
+    requestState?.classList.toggle('d-none', state !== 'request');
+    loadingState?.classList.toggle('d-none', state !== 'loading');
+    resultState?.classList.toggle('d-none', state !== 'result');
+
+    if (confirmBtn) {
+        confirmBtn.classList.toggle('d-none', state === 'result');
+        confirmBtn.disabled = state === 'loading';
+    }
+
+    if (copyBtn) {
+        copyBtn.classList.toggle('d-none', state !== 'result');
+    }
+
+    if (modalTitle) {
+        modalTitle.textContent = state === 'result' ? 'Codigo de Netflix' : 'Pedir codigo de Netflix';
+    }
+
+    if (state === 'result') {
+        document.getElementById('netflix_codigo_result_code').textContent = payload.code || '0000';
+        document.getElementById('netflix_codigo_result_expiration').textContent = payload.expirationText || 'En 15 minutos vence.';
+    }
+}
+
+function openNetflixCodigoModal(button) {
+    if (!button) return;
+
+    netflixCodigoCuentaRef = button;
+    document.getElementById('netflix_codigo_cuenta').textContent = `${button.dataset.idcue || ''} (${button.dataset.cuentaUsuario || ''})`;
+    document.getElementById('netflix_codigo_proveedor').textContent = button.dataset.proveedor || 'Proveedor';
+    setNetflixCodigoModalState('request');
+
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'netflixCodigoModal' }));
+}
+
+function closeNetflixCodigoModal() {
+    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'netflixCodigoModal' }));
+}
+
+async function confirmNetflixCodeRequest() {
+    if (!netflixCodigoCuentaRef) {
+        showTemporaryAlert('No se encontro la cuenta para pedir el codigo.', 'danger');
+        return;
+    }
+
+    setNetflixCodigoModalState('loading');
+
+    try {
+        const url = '{{ route("cuentas.pedirCodigoNetflix", ":idcue") }}'.replace(':idcue', netflixCodigoCuentaRef.dataset.idcue || '');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudo obtener el codigo de Netflix.');
+        }
+
+        const expirationText = data.expires_in_minutes
+            ? `En ${data.expires_in_minutes} minutos vence.`
+            : 'En 15 minutos vence.';
+
+        setNetflixCodigoModalState('result', {
+            code: data.code,
+            expirationText,
+        });
+    } catch (error) {
+        console.error('Error pidiendo codigo Netflix:', error);
+        setNetflixCodigoModalState('request');
+        showTemporaryAlert(error.message || 'No se pudo obtener el codigo de Netflix.', 'danger');
+    }
+}
+
+function copyNetflixCodeResult() {
+    const code = document.getElementById('netflix_codigo_result_code')?.textContent || '';
+    if (!code) {
+        showTemporaryAlert('No hay codigo para copiar.', 'danger');
+        return;
+    }
+
+    navigator.clipboard.writeText(code)
+        .then(() => showTemporaryAlert('Codigo copiado al portapapeles.', 'success'))
+        .catch(() => showTemporaryAlert('No se pudo copiar el codigo.', 'danger'));
 }
 
 // 🔷 Función para abrir modal de crear valor desde cuentas

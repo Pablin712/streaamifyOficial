@@ -13,6 +13,7 @@ use App\Models\Historial;
 use App\Models\Deuda;
 use App\Services\CuentaService;
 use App\Services\BancoService;
+use App\Services\NetflixCodigoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -29,11 +30,13 @@ class CuentaController extends Controller
 {
     protected $cuentaService;
     protected $bancoService;
+    protected $netflixCodigoService;
 
-    public function __construct(CuentaService $cuentaService, BancoService $bancoService)
+    public function __construct(CuentaService $cuentaService, BancoService $bancoService, NetflixCodigoService $netflixCodigoService)
     {
         $this->cuentaService = $cuentaService;
         $this->bancoService = $bancoService;
+        $this->netflixCodigoService = $netflixCodigoService;
     }
     public function index(Request $request)
     {
@@ -742,6 +745,35 @@ class CuentaController extends Controller
                 'message' => 'Ocurrió un error al enviar el mensaje al proveedor.',
             ], 500);
         }
+    }
+
+    public function pedirCodigoNetflix(Request $request, $idcue)
+    {
+        if (!Gate::allows('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para pedir codigos de Netflix.');
+        }
+
+        $cuenta = Cuenta::with(['valor.proveedor', 'valor.servicio'])->findOrFail($idcue);
+
+        $resultado = $this->netflixCodigoService->requestCode($cuenta, [
+            'type' => 'empleado',
+            'id' => Auth::user()->idemp,
+            'name' => Auth::user()->nombreemp,
+            'username' => Auth::user()->usuarioemp,
+        ]);
+
+        if (!($resultado['success'] ?? false)) {
+            return response()->json($resultado, 422);
+        }
+
+        Historial::create([
+            'accion' => 'Solicitud de codigo Netflix',
+            'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Proveedor: ' . ($cuenta->valor->proveedor->nombrepro ?? 'N/A') . ' | Codigo obtenido',
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
+
+        return response()->json($resultado);
     }
 
     public function mensaje($perfilId)

@@ -523,7 +523,7 @@
                                                         <ul class="list-group">
                                                             @foreach ($venta->detalles_venta as $detalle)
                                                                 <li class="list-group-item">
-                                                                    <strong>{{ optional(optional(optional($detalle->perfil)->cuenta)->valor->servicio)->nombreser ?? 'Servicio' }}</strong><br>
+                                                                    <strong>{{ optional(optional(optional(optional($detalle->perfil)->cuenta)->valor)->servicio)->nombreser ?? 'Servicio' }}</strong><br>
                                                                     Fecha de vencimiento: {{ $detalle->fechavendet->format('d/m/Y') }}<br>
                                                                     Monto: ${{ number_format($detalle->montodet, 2) }}
                                                                 </li>
@@ -577,6 +577,7 @@
                                             $servicio = optional(optional(optional($usuario->cuenta)->valor)->servicio)->nombreser ?? 'Servicio';
                                             $pinPerfil = optional($usuario->profile)->pinper ?? 'N/A';
                                             $cuentaSpotifyRestringida = optional(optional($usuario->cuenta)->valor)->idser === 'SPOTIFY' && (int) $usuario->perfil !== 1;
+                                            $canRequestNetflixCode = strtoupper((string) (optional(optional($usuario->cuenta)->valor)->idser ?? '')) === strtoupper((string) config('services.netflix_code.service_id', 'NETFLIX'));
                                         @endphp
                                         <tr>
                                             <td><strong>#{{ $usuario->idven }}</strong></td>
@@ -586,10 +587,24 @@
                                             <td>{{ $usuario->perfil }} : {{ $pinPerfil }}</td>
                                             <td>{{ \Carbon\Carbon::parse($usuario->fecha_vencimiento)->format('d/m/Y') }}</td>
                                             <td>
-                                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                                    data-bs-target="#renovarModal{{ $usuario->idven }}">
-                                                    <i class="bi bi-arrow-repeat me-1"></i>Renovar
-                                                </button>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                                        data-bs-target="#renovarModal{{ $usuario->idven }}">
+                                                        <i class="bi bi-arrow-repeat me-1"></i>Renovar
+                                                    </button>
+                                                    @if ($canRequestNetflixCode)
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                            data-iddet="{{ $usuario->iddet }}"
+                                                            data-cuenta="{{ optional($usuario->cuenta)->usuariocue }}"
+                                                            data-proveedor="{{ optional(optional(optional($usuario->cuenta)->valor)->proveedor)->nombrepro ?? 'Proveedor' }}"
+                                                            onclick="openClienteNetflixCodeModal(this)"
+                                                        >
+                                                            <i class="bi bi-key me-1"></i>Pedir codigo
+                                                        </button>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
 
@@ -612,7 +627,7 @@
                                                                             <input class="form-check-input me-2" type="checkbox" name="detalles[]"
                                                                                 value="{{ $detalle->iddet }}" id="detalle-{{ $detalle->iddet }}">
                                                                             <label class="form-check-label" for="detalle-{{ $detalle->iddet }}">
-                                                                                <strong>{{ optional(optional(optional($detalle->perfil)->cuenta)->valor->servicio)->nombreser ?? 'Servicio' }}</strong><br>
+                                                                                <strong>{{ optional(optional(optional(optional($detalle->perfil)->cuenta)->valor)->servicio)->nombreser ?? 'Servicio' }}</strong><br>
                                                                                 Cuenta: <strong>{{ optional(optional($detalle->perfil)->cuenta)->usuariocue }}</strong><br>
                                                                                 Perfil: <strong>{{ optional($detalle->perfil)->numeroper }}</strong><br>
                                                                                 Nueva fecha: <strong>{{ \Carbon\Carbon::parse($detalle->fechavendet)->addMonth()->format('d/m/Y') }}</strong>
@@ -960,10 +975,58 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="clienteNetflixCodeModal" tabindex="-1" aria-labelledby="clienteNetflixCodeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="clienteNetflixCodeModalLabel">Pedir codigo de Netflix</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cliente_netflix_code_request_state">
+                        <div class="alert alert-warning">
+                            Vas a solicitar un codigo de Netflix para esta suscripcion. Espera la respuesta del sistema para ver el codigo aqui mismo.
+                        </div>
+                        <div class="small text-muted">
+                            <div><strong>Cuenta:</strong> <span id="cliente_netflix_code_cuenta">-</span></div>
+                            <div><strong>Proveedor:</strong> <span id="cliente_netflix_code_proveedor">-</span></div>
+                        </div>
+                    </div>
+
+                    <div id="cliente_netflix_code_loading_state" class="text-center py-4 d-none">
+                        <div class="spinner-border text-danger mb-3" role="status"></div>
+                        <div class="fw-semibold">Solicitando codigo de Netflix...</div>
+                        <div class="text-muted small">Espera mientras el webhook responde.</div>
+                    </div>
+
+                    <div id="cliente_netflix_code_result_state" class="text-center py-3 d-none">
+                        <div class="alert alert-success">
+                            <div class="fw-bold">Codigo de Netflix</div>
+                            <div class="small text-muted">Usalo antes de que venza.</div>
+                        </div>
+                        <div id="cliente_netflix_code_result_code" class="display-4 fw-bold text-danger mb-2">0000</div>
+                        <div id="cliente_netflix_code_result_expiration" class="text-muted">En 15 minutos vence.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="cliente_netflix_code_close_btn" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" id="cliente_netflix_code_copy_btn" class="btn btn-outline-primary d-none" onclick="copyClienteNetflixCodeResult()">
+                        <i class="bi bi-copy me-1"></i>Copiar codigo
+                    </button>
+                    <button type="button" id="cliente_netflix_code_confirm_btn" class="btn btn-danger" onclick="confirmClienteNetflixCodeRequest()">
+                        <i class="bi bi-key me-1"></i>Confirmar solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
+        let clienteNetflixCodeButtonRef = null;
+
         function cerrarRenovacionModal() {
             const modal = document.getElementById('renovacionExitosaModal');
             if (modal) {
@@ -984,6 +1047,90 @@
             document.getElementById('clientTextModalLabel').textContent = title;
             document.getElementById('clientTextModalContent').textContent = content;
             bootstrap.Modal.getOrCreateInstance(document.getElementById('clientTextModal')).show();
+        }
+
+        function setClienteNetflixCodeModalState(state, payload = {}) {
+            const requestState = document.getElementById('cliente_netflix_code_request_state');
+            const loadingState = document.getElementById('cliente_netflix_code_loading_state');
+            const resultState = document.getElementById('cliente_netflix_code_result_state');
+            const confirmBtn = document.getElementById('cliente_netflix_code_confirm_btn');
+            const copyBtn = document.getElementById('cliente_netflix_code_copy_btn');
+            const modalTitle = document.getElementById('clienteNetflixCodeModalLabel');
+
+            requestState?.classList.toggle('d-none', state !== 'request');
+            loadingState?.classList.toggle('d-none', state !== 'loading');
+            resultState?.classList.toggle('d-none', state !== 'result');
+
+            if (confirmBtn) {
+                confirmBtn.classList.toggle('d-none', state === 'result');
+                confirmBtn.disabled = state === 'loading';
+            }
+
+            if (copyBtn) {
+                copyBtn.classList.toggle('d-none', state !== 'result');
+            }
+
+            if (modalTitle) {
+                modalTitle.textContent = state === 'result' ? 'Codigo de Netflix' : 'Pedir codigo de Netflix';
+            }
+
+            if (state === 'result') {
+                document.getElementById('cliente_netflix_code_result_code').textContent = payload.code || '0000';
+                document.getElementById('cliente_netflix_code_result_expiration').textContent = payload.expirationText || 'En 15 minutos vence.';
+            }
+        }
+
+        function openClienteNetflixCodeModal(button) {
+            clienteNetflixCodeButtonRef = button;
+            document.getElementById('cliente_netflix_code_cuenta').textContent = button.dataset.cuenta || '-';
+            document.getElementById('cliente_netflix_code_proveedor').textContent = button.dataset.proveedor || 'Proveedor';
+            setClienteNetflixCodeModalState('request');
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('clienteNetflixCodeModal')).show();
+        }
+
+        async function confirmClienteNetflixCodeRequest() {
+            if (!clienteNetflixCodeButtonRef) {
+                return;
+            }
+
+            setClienteNetflixCodeModalState('loading');
+
+            try {
+                const url = '{{ route("cliente.pedirCodigoNetflix", ":iddet") }}'.replace(':iddet', clienteNetflixCodeButtonRef.dataset.iddet || '');
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo obtener el codigo de Netflix.');
+                }
+
+                setClienteNetflixCodeModalState('result', {
+                    code: data.code,
+                    expirationText: data.expires_in_minutes ? `En ${data.expires_in_minutes} minutos vence.` : 'En 15 minutos vence.',
+                });
+            } catch (error) {
+                setClienteNetflixCodeModalState('request');
+                openClientTextModal('No se pudo pedir el codigo', error.message || 'Intenta nuevamente en unos minutos.');
+            }
+        }
+
+        function copyClienteNetflixCodeResult() {
+            const code = document.getElementById('cliente_netflix_code_result_code')?.textContent || '';
+            if (!code) {
+                return;
+            }
+
+            navigator.clipboard.writeText(code)
+                .then(() => openClientTextModal('Codigo copiado', 'El codigo de Netflix fue copiado al portapapeles.'))
+                .catch(() => openClientTextModal('No se pudo copiar', 'Copia el codigo manualmente antes de cerrar el modal.'));
         }
 
         function switchToTab(target) {

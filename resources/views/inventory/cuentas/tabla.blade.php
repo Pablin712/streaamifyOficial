@@ -166,6 +166,7 @@
                                         $cooldownUntil = (int) \Illuminate\Support\Facades\Cache::get('cuenta_msg_cooldown_' . $cuenta->idcue, 0);
                                         $isCooldownActive = $cooldownUntil > now()->timestamp;
                                         $telefonoProveedor = $cuenta->valor->proveedor->telefonopro ?? null;
+                                        $canRequestNetflixCode = strtoupper((string) ($cuenta->valor->idser ?? '')) === strtoupper((string) config('services.netflix_code.service_id', 'NETFLIX'));
                                     @endphp
                                     <button
                                         type="button"
@@ -196,6 +197,19 @@
                                     >
                                         <i class="fab fa-whatsapp"></i>
                                     </button>
+                                    @if ($canRequestNetflixCode)
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger btn-xs"
+                                            title="Pedir codigo de Netflix"
+                                            data-idcue="{{ $cuenta->idcue }}"
+                                            data-cuenta-usuario="{{ $cuenta->usuariocue }}"
+                                            data-proveedor="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
+                                            onclick="openNetflixCodigoModal(this)"
+                                        >
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                    @endif
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
                                     <button onclick="loadPerfilesInModal('{{ $cuenta->idcue }}', '{{ $cuenta->usuariocue }}')" class="btn btn-info btn-xs" title="Ver perfiles">
