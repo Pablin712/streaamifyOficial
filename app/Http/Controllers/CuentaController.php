@@ -637,6 +637,113 @@ class CuentaController extends Controller
         }
     }
 
+    public function enviarMensajeProveedor(Request $request, $idcue)
+    {
+        if (!Gate::allows('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para enviar mensajes al proveedor de la cuenta.');
+        }
+
+        $validated = $request->validate([
+            'proveedor' => 'nullable|string|max:255',
+            'telefono' => 'required|string|max:50',
+            'mensaje' => 'required|string|min:3|max:4000',
+        ]);
+
+        $telefonoNormalizado = preg_replace('/\D+/', '', $validated['telefono']);
+        if (empty($telefonoNormalizado)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El proveedor no tiene un teléfono válido para enviar el mensaje.',
+            ], 422);
+        }
+
+        $cuenta = Cuenta::with(['valor.proveedor', 'valor.servicio'])->findOrFail($idcue);
+
+        $webhookUrl = config('services.n8n.client_message_webhook');
+        if (empty($webhookUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No está configurado el webhook para enviar mensajes.',
+            ], 500);
+        }
+
+        $empleado = Auth::user();
+        $payload = [
+            'event' => 'provider.account_message',
+            'trace_id' => 'proveedor-msg-' . $cuenta->idcue . '-' . now()->format('Ymd-His'),
+            'cliente' => [
+                'idcli' => null,
+                'nombre' => $validated['proveedor'] ?: ($cuenta->valor->proveedor->nombrepro ?? 'Proveedor'),
+                'telefono' => $validated['telefono'],
+                'telefono_normalizado' => $telefonoNormalizado,
+                'tipo' => 'proveedor',
+            ],
+            'cuenta' => [
+                'idcue' => $cuenta->idcue,
+                'usuario' => $cuenta->usuariocue,
+                'servicio' => $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? null),
+                'proveedor' => $cuenta->valor->proveedor->nombrepro ?? null,
+            ],
+            'mensaje' => trim($validated['mensaje']),
+            'empleado' => [
+                'idemp' => $empleado->idemp,
+                'nombreemp' => $empleado->nombreemp,
+                'usuarioemp' => $empleado->usuarioemp,
+            ],
+            'sent_at' => now()->toIso8601String(),
+        ];
+
+        try {
+            $requestN8n = Http::acceptJson()
+                ->timeout(10)
+                ->retry(1, 300);
+
+            $webhookSecret = config('services.n8n.payment_webhook_secret');
+            if (!empty($webhookSecret)) {
+                $requestN8n = $requestN8n->withHeaders([
+                    'X-Webhook-Secret' => $webhookSecret,
+                ]);
+            }
+
+            $response = $requestN8n->post($webhookUrl, $payload);
+
+            if (!$response->successful()) {
+                Log::warning('Webhook n8n de mensaje a proveedor devolvió error', [
+                    'idcue' => $cuenta->idcue,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo enviar el mensaje al webhook.',
+                ], 502);
+            }
+
+            Historial::create([
+                'accion' => 'Mensaje directo a proveedor',
+                'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Proveedor: ' . ($payload['cliente']['nombre'] ?? 'Proveedor') . ' | Teléfono: ' . $validated['telefono'],
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje enviado correctamente al proveedor por n8n.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error enviando mensaje a proveedor vía n8n', [
+                'idcue' => $cuenta->idcue,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al enviar el mensaje al proveedor.',
+            ], 500);
+        }
+    }
+
     public function mensaje($perfilId)
     {
         if (!Gate::allows('cuentas.mensaje')) {

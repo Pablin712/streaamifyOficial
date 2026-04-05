@@ -165,6 +165,7 @@
                                     @php
                                         $cooldownUntil = (int) \Illuminate\Support\Facades\Cache::get('cuenta_msg_cooldown_' . $cuenta->idcue, 0);
                                         $isCooldownActive = $cooldownUntil > now()->timestamp;
+                                        $telefonoProveedor = $cuenta->valor->proveedor->telefonopro ?? null;
                                     @endphp
                                     <button
                                         type="button"
@@ -177,6 +178,21 @@
                                         data-cooldown-until="{{ $cooldownUntil }}"
                                         onclick="openMensajeClientesModal(this)"
                                         @if ($isCooldownActive) disabled @endif
+                                    >
+                                        <i class="fab fa-whatsapp"></i>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-success btn-xs"
+                                        title="Enviar mensaje al proveedor"
+                                        data-idcue="{{ $cuenta->idcue }}"
+                                        data-servicio="{{ $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? 'Servicio') }}"
+                                        data-cuenta-usuario="{{ $cuenta->usuariocue }}"
+                                        data-cuenta-clave="{{ $cuenta->contrasenacue }}"
+                                        data-proveedor="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
+                                        data-proveedor-telefono="{{ $telefonoProveedor }}"
+                                        onclick="openMensajeProveedorModal(this)"
+                                        @if (empty($telefonoProveedor)) disabled @endif
                                     >
                                         <i class="fab fa-whatsapp"></i>
                                     </button>

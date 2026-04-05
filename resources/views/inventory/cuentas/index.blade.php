@@ -538,6 +538,7 @@
     @include('inventory.cuentas.modals.renew')
     @include('inventory.cuentas.modals.view-perfiles')
     @include('inventory.cuentas.modals.mensaje-clientes')
+    @include('inventory.cuentas.modals.mensaje-proveedor')
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
     @include('inventory.valores.modals.create')
@@ -1066,6 +1067,7 @@ async function submitRenew(event) {
 // FUNCIONES DE MODAL - MENSAJE PERSONALIZADO A CLIENTES
 // ============================================================================
 let mensajeClientesButtonRef = null;
+let mensajeProveedorButtonRef = null;
 
 function formatCooldownText(untilTimestamp) {
     const nowTs = Math.floor(Date.now() / 1000);
@@ -1174,6 +1176,89 @@ async function submitMensajeClientes(event) {
     } finally {
         const cooldownUntil = Number((mensajeClientesButtonRef && mensajeClientesButtonRef.dataset.cooldownUntil) || 0);
         submitBtn.disabled = cooldownUntil > Math.floor(Date.now() / 1000);
+    }
+}
+
+function openMensajeProveedorModal(button) {
+    if (!button) return;
+
+    mensajeProveedorButtonRef = button;
+
+    const idcue = button.dataset.idcue || '';
+    const servicio = button.dataset.servicio || 'Servicio';
+    const cuentaUsuario = button.dataset.cuentaUsuario || '';
+    const cuentaClave = button.dataset.cuentaClave || '';
+    const proveedor = button.dataset.proveedor || 'Proveedor';
+    const telefono = button.dataset.proveedorTelefono || '';
+
+    const mensajePredeterminado = [
+        'Hola bro, quiero *tu petición* con esta cuenta de',
+        servicio,
+        cuentaUsuario,
+        cuentaClave
+    ].join('\n');
+
+    document.getElementById('mensaje_proveedor_idcue').value = idcue;
+    document.getElementById('mensaje_proveedor_nombre').value = proveedor;
+    document.getElementById('mensaje_proveedor_telefono').value = telefono;
+    document.getElementById('mensaje_proveedor_nombre_display').textContent = proveedor;
+    document.getElementById('mensaje_proveedor_telefono_display').textContent = telefono || 'Sin teléfono';
+    document.getElementById('mensaje_proveedor_cuenta_display').textContent = `${idcue} (${cuentaUsuario})`;
+    document.getElementById('mensaje_proveedor_texto').value = mensajePredeterminado;
+
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensajeProveedorModal' }));
+}
+
+function closeMensajeProveedorModal() {
+    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensajeProveedorModal' }));
+}
+
+async function submitMensajeProveedor(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const idcue = document.getElementById('mensaje_proveedor_idcue').value;
+    const submitBtn = document.getElementById('mensaje_proveedor_submit_btn');
+    const formData = new FormData(form);
+    const payload = {
+        proveedor: (formData.get('proveedor') || '').toString(),
+        telefono: (formData.get('telefono') || '').toString(),
+        mensaje: (formData.get('mensaje') || '').toString().trim()
+    };
+
+    if (!payload.telefono || !payload.mensaje) {
+        showTemporaryAlert('Falta teléfono del proveedor o mensaje.', 'danger');
+        return;
+    }
+
+    submitBtn.disabled = true;
+
+    try {
+        const url = '{{ route("cuentas.enviarMensajeProveedor", ":idcue") }}'.replace(':idcue', idcue);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudo enviar el mensaje al proveedor.');
+        }
+
+        showTemporaryAlert(data.message || 'Mensaje enviado al proveedor correctamente.', 'success');
+        closeMensajeProveedorModal();
+        form.reset();
+    } catch (error) {
+        console.error('Error enviando mensaje a proveedor:', error);
+        showTemporaryAlert(error.message || 'No se pudo enviar el mensaje al proveedor.', 'danger');
+    } finally {
+        submitBtn.disabled = false;
     }
 }
 

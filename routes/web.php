@@ -232,6 +232,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/cuentas/mover-clientes', 'moverClientes')->name('cuentas.moverClientes');
         Route::post('/cuentas/dispersar-clientes', 'moverClientesDisperso')->name('cuentas.moverClientesDisperso');
         Route::post('/cuentas/{id}/mensaje-clientes', 'enviarMensajeClientes')->name('cuentas.enviarMensajeClientes');
+        Route::post('/cuentas/{id}/mensaje-proveedor', 'enviarMensajeProveedor')->name('cuentas.enviarMensajeProveedor');
         Route::get('/cuentas/PerfilesSpotify', 'PerfilesSpotify')->name('cuentas.spotify');
         Route::get('/cuentas/{id}/load-perfiles', 'loadPerfiles')->name('cuentas.loadPerfiles');
         Route::get('/cuentas/{id}/edit', 'edit')->name('cuentas.edit');

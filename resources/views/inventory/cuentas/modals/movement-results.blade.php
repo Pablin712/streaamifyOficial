@@ -57,6 +57,21 @@
         }, 1900);
     }
 
+    function buildIndividualMessageWithGreeting(message) {
+        const greeting = 'Hola, se actualizaron tus datos';
+        const normalizedMessage = (message || '').toString().trim();
+
+        if (!normalizedMessage) {
+            return greeting;
+        }
+
+        if (normalizedMessage.startsWith(greeting)) {
+            return normalizedMessage;
+        }
+
+        return `${greeting}\n\n${normalizedMessage}`;
+    }
+
     function renderMovementResults(movements, summaryMessage) {
         const container = document.getElementById('movement-results-list');
         const summary = document.getElementById('movement-results-summary');
@@ -100,7 +115,7 @@
                             </button>
                         </div>
                     </div>
-                    <textarea class="form-control font-monospace bg-body-secondary text-body border" rows="7" readonly data-movement-message-index="${index}">${escapeHtml(movement.mensaje_entrega || '')}</textarea>
+                    <textarea class="form-control font-monospace bg-body-secondary text-body border" rows="7" readonly data-movement-message-index="${index}">${escapeHtml(buildIndividualMessageWithGreeting(movement.mensaje_entrega || ''))}</textarea>
                 </div>
             </div>
         `).join('');
