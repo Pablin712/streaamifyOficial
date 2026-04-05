@@ -25,17 +25,99 @@ class UsuarioController extends Controller
         $this->entregaMensajeService = $entregaMensajeService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         if (!Gate::allows('usuarios')) {
             abort(403, 'No tienes permiso para ver los usuarios.');
         }
-        $usuarios = ViewUsuarioActivo::with(['cuenta.valor.servicio', 'cuenta.perfiles', 'cliente', 'profile'])
-            ->orderBy('fecha_vencimiento')
-            ->orderBy('nombre_cliente')
+
+        if ($request->ajax() || $request->has('ajax') || $request->wantsJson()) {
+            return $this->getUsuariosAjax($request);
+        }
+
+        $usuarios = $this->buildUsuariosIndexQuery()
+            ->orderBy('vua.fecha_vencimiento')
+            ->orderBy('vua.nombre_cliente')
+            ->limit(10)
             ->get();
+
         $cuentas = Cuenta::where('activocue', true)->orderBy('idcue')->get();
+
         return view('inventory.usuarios.index', compact('usuarios', 'cuentas'));
+    }
+
+    private function getUsuariosAjax(Request $request)
+    {
+        $perPage = max(1, (int) $request->input('per_page', 10));
+        $page = max(1, (int) $request->input('page', 1));
+        $search = trim((string) $request->input('search', ''));
+        $sortBy = (string) $request->input('sort_by', '');
+        $sortOrder = strtolower((string) $request->input('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $query = $this->buildUsuariosIndexQuery();
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('vua.nombre_cliente', 'like', "%{$search}%")
+                    ->orWhere('vua.idcue', 'like', "%{$search}%")
+                    ->orWhere('vua.idven', 'like', "%{$search}%")
+                    ->orWhere('vua.iddet', 'like', "%{$search}%")
+                    ->orWhere('vua.perfil', 'like', "%{$search}%")
+                    ->orWhere('vua.fecha_vencimiento', 'like', "%{$search}%")
+                    ->orWhere('clientes.telefonocli', 'like', "%{$search}%")
+                    ->orWhere('cuentas.usuariocue', 'like', "%{$search}%")
+                    ->orWhere('detalles_venta.estado', 'like', "%{$search}%");
+            });
+        }
+
+        $sortColumns = [
+            '1' => 'vua.nombre_cliente',
+            '2' => 'clientes.telefonocli',
+            '3' => 'vua.idcue',
+            '4' => 'cuentas.usuariocue',
+            '5' => 'vua.perfil',
+            '6' => 'vua.fecha_vencimiento',
+            '7' => 'vua.fecha_vencimiento',
+            '8' => 'detalles_venta.estado',
+            'nombre_cliente' => 'vua.nombre_cliente',
+            'telefonocli' => 'clientes.telefonocli',
+            'idcue' => 'vua.idcue',
+            'usuariocue' => 'cuentas.usuariocue',
+            'perfil' => 'vua.perfil',
+            'fecha_vencimiento' => 'vua.fecha_vencimiento',
+            'estado' => 'vua.fecha_vencimiento',
+            'cobro' => 'detalles_venta.estado',
+        ];
+
+        if (isset($sortColumns[$sortBy])) {
+            $query->orderBy($sortColumns[$sortBy], $sortOrder);
+        } else {
+            $query->orderBy('vua.fecha_vencimiento')
+                ->orderBy('vua.nombre_cliente');
+        }
+
+        $totalRecords = (clone $query)->count();
+        $usuarios = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return response()->json([
+            'html' => view('inventory.usuarios.partials.table-rows', compact('usuarios'))->render(),
+            'total_records' => $totalRecords,
+            'current_page' => $page,
+            'per_page' => $perPage,
+        ]);
+    }
+
+    private function buildUsuariosIndexQuery()
+    {
+        return ViewUsuarioActivo::query()
+            ->from('view_usuarios_activos as vua')
+            ->select('vua.*')
+            ->with(['cuenta.valor.servicio', 'cuenta.perfiles', 'cliente', 'profile', 'detalle_venta'])
+            ->leftJoin('clientes', 'clientes.idcli', '=', 'vua.idcli')
+            ->leftJoin('cuentas', 'cuentas.idcue', '=', 'vua.idcue')
+            ->leftJoin('detalles_venta', 'detalles_venta.iddet', '=', 'vua.iddet');
     }
 
     // Método para mostrar el formulario de cambio de usuario
