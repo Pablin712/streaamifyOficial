@@ -126,9 +126,6 @@
 
     @if (session('mensaje_entrega'))
         @php($mensajeEntregaCliente = session('mensaje_entrega_cliente', []))
-        @php($mensajeEntregaTexto = session('mensaje_entrega'))
-        @php($saludoMensajeIndividual = 'Hola, se actualizaron tus datos')
-        @php($mensajeEntregaModal = \Illuminate\Support\Str::startsWith(trim((string) $mensajeEntregaTexto), $saludoMensajeIndividual) ? $mensajeEntregaTexto : $saludoMensajeIndividual . "\n\n" . $mensajeEntregaTexto)
         <x-modal name="mensaje-entrega-venta" :show="false" maxWidth="2xl">
             <div class="modal-header border-bottom">
                 <h5 class="modal-title">
@@ -150,7 +147,7 @@
                         | Tel: {{ $mensajeEntregaCliente['telefono'] }}
                     @endif
                 </div>
-                <textarea id="mensaje_entrega_venta_text" class="form-control font-monospace bg-body-secondary text-body border" rows="10" readonly>{{ $mensajeEntregaModal }}</textarea>
+                <textarea id="mensaje_entrega_venta_text" class="form-control font-monospace bg-body-secondary text-body border" rows="10" readonly>{{ session('mensaje_entrega') }}</textarea>
             </div>
 
             <div class="modal-footer border-top">

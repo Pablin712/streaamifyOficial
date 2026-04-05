@@ -5,14 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\ViewClientesUsuarios;
 use App\Models\Historial;
+use App\Services\ClienteMensajeMasivoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClienteController extends Controller
 {
+    public function __construct(private ClienteMensajeMasivoService $clienteMensajeMasivoService)
+    {
+    }
+
     /*
     // Constructor original con middlewares, mantenido comentado para referencia:
     public function __construct() {
@@ -42,7 +49,9 @@ class ClienteController extends Controller
             ->whereNotNull('password')
             ->count();
 
-        return view('sales.clientes.index', compact('autenticados'));
+        $segmentosMensajeMasivo = $this->clienteMensajeMasivoService->getSegmentSummary();
+
+        return view('sales.clientes.index', compact('autenticados', 'segmentosMensajeMasivo'));
     }
 
     /**
@@ -272,6 +281,87 @@ class ClienteController extends Controller
         $response->headers->set('Content-Disposition', 'attachment; filename="clientes.csv"');
 
         return $response;
+    }
+
+    public function enviarMensajeMasivo(Request $request)
+    {
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        if (!$user->hasPermissionTo('clientes')) {
+            abort(403, 'No tienes permiso para enviar mensajes masivos a clientes.');
+        }
+
+        $validated = $request->validate([
+            'segmento' => 'required|string|in:sin_web,con_web',
+            'mensaje' => 'required|string|min:20|max:4000',
+        ]);
+
+        $payload = $this->clienteMensajeMasivoService->buildWebhookPayload($validated['segmento'], $validated['mensaje'], $user);
+
+        if (empty($payload['clientes'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron clientes activos con telefono valido para enviar el mensaje.',
+            ], 422);
+        }
+
+        $webhookUrl = config('services.n8n.mass_client_message_webhook');
+        if (empty($webhookUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No esta configurado el webhook de mensajes masivos.',
+            ], 500);
+        }
+
+        try {
+            $requestN8n = Http::acceptJson()
+                ->timeout(15)
+                ->retry(1, 300);
+
+            $webhookSecret = config('services.n8n.payment_webhook_secret');
+            if (!empty($webhookSecret)) {
+                $requestN8n = $requestN8n->withHeaders([
+                    'X-Webhook-Secret' => $webhookSecret,
+                ]);
+            }
+
+            $response = $requestN8n->post($webhookUrl, $payload);
+
+            if (!$response->successful()) {
+                Log::warning('Webhook n8n de mensaje masivo a clientes devolvio error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'clientes_count' => $payload['clientes_count'],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo enviar el mensaje masivo al webhook.',
+                ], 502);
+            }
+
+            Historial::create([
+                'accion' => 'Mensaje masivo a clientes activos',
+                'descripcion' => 'Clientes: ' . $payload['clientes_count'] . ' | Segmento: ' . ($payload['segment'] ?? 'general') . ' | Tipo: ' . ($payload['message_type'] ?? 'masivo'),
+                'empleado_id' => $user->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje masivo enviado correctamente.',
+                'clientes_count' => $payload['clientes_count'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error enviando mensaje masivo a clientes activos', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrio un error al enviar el mensaje masivo.',
+            ], 500);
+        }
     }
 
     // Eliminar un cliente

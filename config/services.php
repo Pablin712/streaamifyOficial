@@ -40,6 +40,11 @@ return [
         'payment_webhook_secret' => env('N8N_PAYMENT_WEBHOOK_SECRET'),
         'account_message_webhook' => env('N8N_ACCOUNT_MESSAGE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/cuenta-mensajear'),
         'client_message_webhook' => env('N8N_CLIENT_MESSAGE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/mensaje-cliente'),
+        'mass_client_message_webhook' => env('N8N_MASS_CLIENT_MESSAGE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/masivo'),
+    ],
+
+    'streamify' => [
+        'public_site_url' => env('STREAMIFY_PUBLIC_SITE_URL', 'https://streamify.aaronsoft.es/public/'),
     ],
 
 ];

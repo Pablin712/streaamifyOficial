@@ -58,6 +58,20 @@
         </div>
     @endif
 
+    @php($segmentosMensajeMasivoMap = collect($segmentosMensajeMasivo)->keyBy('key'))
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <button type="button" onclick="openMensajeMasivoClientesModal('sin_web')" class="btn btn-success">
+            <i class="fab fa-whatsapp"></i>
+            Invitar clientes sin web
+            <span class="badge bg-light text-dark ms-1">{{ $segmentosMensajeMasivoMap['sin_web']['count'] ?? 0 }}</span>
+        </button>
+        <button type="button" onclick="openMensajeMasivoClientesModal('con_web')" class="btn btn-outline-success">
+            <i class="fab fa-whatsapp"></i>
+            Impulsar uso web
+            <span class="badge bg-success ms-1">{{ $segmentosMensajeMasivoMap['con_web']['count'] ?? 0 }}</span>
+        </button>
+    </div>
+
     <!-- Tabla Enhanced v2 -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -196,6 +210,7 @@
 @include('sales.clientes.modals.create')
 @include('sales.clientes.modals.edit')
 @include('sales.clientes.modals.delete')
+@include('sales.clientes.modals.mensaje-masivo')
 @endsection
 
 @section('scripts')
@@ -204,6 +219,7 @@
 
 <script>
     console.log('Vista de clientes cargada con Enhanced Table v2.0 Server-side');
+    const segmentosMensajeMasivo = @json($segmentosMensajeMasivo);
 
     // ============================================================================
     // FUNCIONES DE MODAL - CREAR
@@ -354,6 +370,107 @@
 
     function closeDeleteModal() {
         window.dispatchEvent(new CustomEvent('close-modal', { detail: 'deleteClienteModal' }));
+    }
+
+    function getSegmentoMensajeMasivo(segmento) {
+        const items = Array.isArray(segmentosMensajeMasivo)
+            ? segmentosMensajeMasivo
+            : Object.values(segmentosMensajeMasivo || {});
+
+        return items.find(item => item.key === segmento) || null;
+    }
+
+    function openMensajeMasivoClientesModal(segmento) {
+        const segmentoData = getSegmentoMensajeMasivo(segmento);
+        const textarea = document.getElementById('mensaje_masivo_clientes_texto');
+        const segmentoInput = document.getElementById('mensaje_masivo_clientes_segmento');
+        const totalElement = document.getElementById('mensaje_masivo_clientes_total');
+        const destinoElement = document.getElementById('mensaje_masivo_clientes_destino');
+        const tituloElement = document.getElementById('mensaje_masivo_clientes_titulo');
+        const submitBtn = document.getElementById('mensaje_masivo_clientes_submit');
+
+        if (!segmentoData) {
+            showAlert('No se pudo cargar la configuracion del mensaje masivo.', 'danger');
+            return;
+        }
+
+        if (textarea) {
+            textarea.value = segmentoData.template || '';
+        }
+        if (segmentoInput) {
+            segmentoInput.value = segmentoData.key;
+        }
+        if (totalElement) {
+            totalElement.textContent = segmentoData.count ?? 0;
+        }
+        if (destinoElement) {
+            destinoElement.textContent = segmentoData.label || 'Clientes activos';
+        }
+        if (tituloElement) {
+            tituloElement.textContent = segmentoData.key === 'con_web'
+                ? 'Mensaje Masivo a Clientes con Sitio Web'
+                : 'Mensaje Masivo a Clientes sin Sitio Web';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = Number(segmentoData.count || 0) === 0;
+        }
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensajeMasivoClientesModal' }));
+    }
+
+    function closeMensajeMasivoClientesModal() {
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensajeMasivoClientesModal' }));
+    }
+
+    function restaurarPlantillaMensajeMasivo() {
+        const textarea = document.getElementById('mensaje_masivo_clientes_texto');
+        const segmento = document.getElementById('mensaje_masivo_clientes_segmento')?.value || 'sin_web';
+        const segmentoData = getSegmentoMensajeMasivo(segmento);
+        if (textarea) {
+            textarea.value = segmentoData?.template || '';
+        }
+    }
+
+    async function submitMensajeMasivoClientes(event) {
+        event.preventDefault();
+
+        const textarea = document.getElementById('mensaje_masivo_clientes_texto');
+        const submitBtn = document.getElementById('mensaje_masivo_clientes_submit');
+        const segmento = document.getElementById('mensaje_masivo_clientes_segmento')?.value || 'sin_web';
+        const mensaje = (textarea?.value || '').trim();
+
+        if (!mensaje) {
+            showAlert('Debes escribir un mensaje para enviar.', 'danger');
+            return;
+        }
+
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('{{ route("clientes.enviarMensajeMasivo") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ segmento, mensaje })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'No se pudo enviar el mensaje masivo.');
+            }
+
+            showAlert(`${data.message} Destinatarios: ${data.clientes_count}.`, 'success');
+            closeMensajeMasivoClientesModal();
+        } catch (error) {
+            console.error('Error enviando mensaje masivo:', error);
+            showAlert(error.message || 'No se pudo enviar el mensaje masivo.', 'danger');
+        } finally {
+            submitBtn.disabled = false;
+        }
     }
 
     async function submitDelete(event) {

@@ -492,9 +492,6 @@
 
 @if (session('mensaje_renovacion'))
     @php($mensajeRenovacionCliente = session('mensaje_renovacion_cliente', []))
-    @php($mensajeRenovacionTexto = session('mensaje_renovacion'))
-    @php($saludoMensajeIndividual = 'Hola, se actualizaron tus datos')
-    @php($mensajeRenovacionModal = \Illuminate\Support\Str::startsWith(trim((string) $mensajeRenovacionTexto), $saludoMensajeIndividual) ? $mensajeRenovacionTexto : $saludoMensajeIndividual . "\n\n" . $mensajeRenovacionTexto)
     <x-modal name="mensaje-renovacion-usuarios" :show="false" maxWidth="2xl">
         <div class="modal-header border-bottom">
             <h5 class="modal-title">
@@ -516,7 +513,7 @@
                     | Tel: {{ $mensajeRenovacionCliente['telefono'] }}
                 @endif
             </div>
-            <textarea id="mensaje_renovacion_usuarios_text" class="form-control font-monospace bg-body-secondary text-body border" rows="8" readonly>{{ $mensajeRenovacionModal }}</textarea>
+            <textarea id="mensaje_renovacion_usuarios_text" class="form-control font-monospace bg-body-secondary text-body border" rows="8" readonly>{{ session('mensaje_renovacion') }}</textarea>
         </div>
 
         <div class="modal-footer border-top">

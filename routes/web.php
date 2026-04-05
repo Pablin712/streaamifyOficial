@@ -215,6 +215,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(ClienteController::class)->group(function () {
         Route::get('/clientes', 'index')->name('clientes');
         Route::get('/clientes/create', 'create')->name('clientes.create');
+        Route::post('/clientes/mensaje-masivo', 'enviarMensajeMasivo')->name('clientes.enviarMensajeMasivo');
         Route::post('/clientes/createstore', 'store')->name('clientes.store');
         Route::post('/clientes/storeInVenta', 'storeInVenta')->name('clientes.storeInVenta');
         Route::get('/clientes/{id}/edit', 'edit')->name('clientes.edit');
