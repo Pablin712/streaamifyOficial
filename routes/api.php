@@ -158,6 +158,7 @@ Route::prefix('v2')->group(function () {
 
     Route::controller(CodigoVerificationController::class)->group(function () {
         Route::match(['get', 'post'], '/verificar-cliente-cuenta', 'verificarClienteCuenta')->name('api.v2.verificar-cliente-cuenta');
+        Route::match(['get', 'post'], '/registrar-codigo-entregado', 'registrarCodigoEntregado')->name('api.v2.registrar-codigo-entregado');
     });
 
     // Información y Precios - Público (con prefijo 'info' - legacy)

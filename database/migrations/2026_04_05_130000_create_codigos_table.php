@@ -15,9 +15,20 @@ return new class extends Migration
             $table->id();
             $table->string('codigo', 6)->nullable();
             $table->text('mensaje')->nullable();
-            $table->string('telefono', 15)->nullable();
+            $table->string('telefono', 20)->nullable();
+            $table->unsignedBigInteger('idcli')->nullable();
+            $table->string('idcue', 50)->nullable();
+            $table->string('usuariocue', 191)->nullable();
+            $table->string('idser', 20)->nullable();
+            $table->string('instance', 50)->nullable();
+            $table->string('apikey', 50)->nullable();
+            $table->unsignedInteger('usuarios_habilitados')->default(0);
             $table->enum('estado', ['esperando', 'enviado'])->default('esperando');
             $table->timestamp('created_at')->useCurrent();
+
+            $table->index(['telefono', 'usuariocue', 'idser', 'estado', 'created_at'], 'codigos_lookup_idx');
+            $table->index(['idcli', 'created_at'], 'codigos_cliente_idx');
+            $table->index(['idcue', 'created_at'], 'codigos_cuenta_idx');
         });
     }
 
