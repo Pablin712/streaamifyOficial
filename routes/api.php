@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V2\TecnicoVentasController;
 use App\Http\Controllers\Api\V2\TecnicoProductosController;
 use App\Http\Controllers\Api\V2\TecnicoConfigController;
 use App\Http\Controllers\Api\V2\PaymentVerificationController;
+use App\Http\Controllers\Api\V2\CodigoVerificationController;
 use App\Http\Controllers\Api\DailyStatisticsController;
 
 /*
@@ -153,6 +154,10 @@ Route::prefix('v2')->group(function () {
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago.public');
         Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco.public');
         Route::get('/tareas-hoy', 'getTareasHoy')->name('api.v2.tareas-hoy.public');
+    });
+
+    Route::controller(CodigoVerificationController::class)->group(function () {
+        Route::match(['get', 'post'], '/verificar-cliente-cuenta', 'verificarClienteCuenta')->name('api.v2.verificar-cliente-cuenta');
     });
 
     // Información y Precios - Público (con prefijo 'info' - legacy)
