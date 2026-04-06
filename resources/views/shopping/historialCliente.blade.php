@@ -986,7 +986,7 @@
                 <div class="modal-body">
                     <div id="cliente_netflix_code_request_state">
                         <div class="alert alert-warning">
-                            Vas a solicitar un codigo de Netflix para esta suscripcion. Espera la respuesta del sistema para ver el codigo aqui mismo.
+                            Vas a solicitar un codigo de Netflix para esta suscripcion. Si el pedido se procesa correctamente, recibiras la confirmacion aqui y el codigo llegara por WhatsApp.
                         </div>
                         <div class="small text-muted">
                             <div><strong>Cuenta:</strong> <span id="cliente_netflix_code_cuenta">-</span></div>
@@ -1002,18 +1002,13 @@
 
                     <div id="cliente_netflix_code_result_state" class="text-center py-3 d-none">
                         <div class="alert alert-success">
-                            <div class="fw-bold">Codigo de Netflix</div>
-                            <div class="small text-muted">Usalo antes de que venza.</div>
+                            <div class="fw-bold" id="cliente_netflix_code_result_message">listo, te llegará un código al whatsapp</div>
+                            <div class="small text-muted" id="cliente_netflix_code_result_expiration">En 15 minutos vence.</div>
                         </div>
-                        <div id="cliente_netflix_code_result_code" class="display-4 fw-bold text-danger mb-2">0000</div>
-                        <div id="cliente_netflix_code_result_expiration" class="text-muted">En 15 minutos vence.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="cliente_netflix_code_close_btn" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" id="cliente_netflix_code_copy_btn" class="btn btn-outline-primary d-none" onclick="copyClienteNetflixCodeResult()">
-                        <i class="bi bi-copy me-1"></i>Copiar codigo
-                    </button>
                     <button type="button" id="cliente_netflix_code_confirm_btn" class="btn btn-danger" onclick="confirmClienteNetflixCodeRequest()">
                         <i class="bi bi-key me-1"></i>Confirmar solicitud
                     </button>
@@ -1054,7 +1049,6 @@
             const loadingState = document.getElementById('cliente_netflix_code_loading_state');
             const resultState = document.getElementById('cliente_netflix_code_result_state');
             const confirmBtn = document.getElementById('cliente_netflix_code_confirm_btn');
-            const copyBtn = document.getElementById('cliente_netflix_code_copy_btn');
             const modalTitle = document.getElementById('clienteNetflixCodeModalLabel');
 
             requestState?.classList.toggle('d-none', state !== 'request');
@@ -1066,16 +1060,12 @@
                 confirmBtn.disabled = state === 'loading';
             }
 
-            if (copyBtn) {
-                copyBtn.classList.toggle('d-none', state !== 'result');
-            }
-
             if (modalTitle) {
-                modalTitle.textContent = state === 'result' ? 'Codigo de Netflix' : 'Pedir codigo de Netflix';
+                modalTitle.textContent = state === 'result' ? 'Solicitud enviada' : 'Pedir codigo de Netflix';
             }
 
             if (state === 'result') {
-                document.getElementById('cliente_netflix_code_result_code').textContent = payload.code || '0000';
+                document.getElementById('cliente_netflix_code_result_message').textContent = payload.message || 'listo, te llegará un código al whatsapp';
                 document.getElementById('cliente_netflix_code_result_expiration').textContent = payload.expirationText || 'En 15 minutos vence.';
             }
         }
@@ -1113,24 +1103,13 @@
                 }
 
                 setClienteNetflixCodeModalState('result', {
-                    code: data.code,
+                    message: data.message,
                     expirationText: data.expires_in_minutes ? `En ${data.expires_in_minutes} minutos vence.` : 'En 15 minutos vence.',
                 });
             } catch (error) {
                 setClienteNetflixCodeModalState('request');
                 openClientTextModal('No se pudo pedir el codigo', error.message || 'Intenta nuevamente en unos minutos.');
             }
-        }
-
-        function copyClienteNetflixCodeResult() {
-            const code = document.getElementById('cliente_netflix_code_result_code')?.textContent || '';
-            if (!code) {
-                return;
-            }
-
-            navigator.clipboard.writeText(code)
-                .then(() => openClientTextModal('Codigo copiado', 'El codigo de Netflix fue copiado al portapapeles.'))
-                .catch(() => openClientTextModal('No se pudo copiar', 'Copia el codigo manualmente antes de cerrar el modal.'));
         }
 
         function switchToTab(target) {

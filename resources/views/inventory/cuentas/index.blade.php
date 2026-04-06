@@ -400,39 +400,39 @@
 
             <div class="d-flex flex-wrap gap-2" id="service-filter-group">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-todos" value="TODOS" checked>
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-todos" value="TODOS" checked>
                     <label class="form-check-label" for="service-todos">Todos</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-netflix" value="NETFLIX">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-netflix" value="NETFLIX">
                     <label class="form-check-label" for="service-netflix">Netflix</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-disneyp" value="DISNEYP">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-disneyp" value="DISNEYP">
                     <label class="form-check-label" for="service-disneyp">Disney+</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-spotify" value="SPOTIFY">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-spotify" value="SPOTIFY">
                     <label class="form-check-label" for="service-spotify">Spotify</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-prime" value="PRIME">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-prime" value="PRIME">
                     <label class="form-check-label" for="service-prime">Prime</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-max" value="MAX">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-max" value="MAX">
                     <label class="form-check-label" for="service-max">Max</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-crunchyroll" value="CRUNCHYROLL">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-crunchyroll" value="CRUNCHYROLL">
                     <label class="form-check-label" for="service-crunchyroll">Crunchyroll</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-paramount" value="PARAMOUNT">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-paramount" value="PARAMOUNT">
                     <label class="form-check-label" for="service-paramount">Paramount</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input service-filter-checkbox" type="checkbox" id="service-magis" value="MAGIS">
+                    <input class="form-check-input service-filter-input" type="radio" name="service_filter" id="service-magis" value="MAGIS">
                     <label class="form-check-label" for="service-magis">Magis / Flujo</label>
                 </div>
             </div>
@@ -1269,7 +1269,6 @@ function setNetflixCodigoModalState(state, payload = {}) {
     const loadingState = document.getElementById('netflix_codigo_loading_state');
     const resultState = document.getElementById('netflix_codigo_result_state');
     const confirmBtn = document.getElementById('netflix_codigo_confirm_btn');
-    const copyBtn = document.getElementById('netflix_codigo_copy_btn');
     const modalTitle = document.getElementById('netflix_codigo_modal_title');
 
     requestState?.classList.toggle('d-none', state !== 'request');
@@ -1281,16 +1280,12 @@ function setNetflixCodigoModalState(state, payload = {}) {
         confirmBtn.disabled = state === 'loading';
     }
 
-    if (copyBtn) {
-        copyBtn.classList.toggle('d-none', state !== 'result');
-    }
-
     if (modalTitle) {
-        modalTitle.textContent = state === 'result' ? 'Codigo de Netflix' : 'Pedir codigo de Netflix';
+        modalTitle.textContent = state === 'result' ? 'Solicitud enviada' : 'Pedir codigo de Netflix';
     }
 
     if (state === 'result') {
-        document.getElementById('netflix_codigo_result_code').textContent = payload.code || '0000';
+        document.getElementById('netflix_codigo_result_message').textContent = payload.message || 'listo, te llegará un código al whatsapp';
         document.getElementById('netflix_codigo_result_expiration').textContent = payload.expirationText || 'En 15 minutos vence.';
     }
 }
@@ -1331,35 +1326,20 @@ async function confirmNetflixCodeRequest() {
         });
 
         const data = await response.json();
+
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'No se pudo obtener el codigo de Netflix.');
         }
 
-        const expirationText = data.expires_in_minutes
-            ? `En ${data.expires_in_minutes} minutos vence.`
-            : 'En 15 minutos vence.';
-
         setNetflixCodigoModalState('result', {
-            code: data.code,
-            expirationText,
+            message: data.message,
+            expirationText: data.expires_in_minutes ? `En ${data.expires_in_minutes} minutos vence.` : 'En 15 minutos vence.',
         });
     } catch (error) {
         console.error('Error pidiendo codigo Netflix:', error);
         setNetflixCodigoModalState('request');
         showTemporaryAlert(error.message || 'No se pudo obtener el codigo de Netflix.', 'danger');
     }
-}
-
-function copyNetflixCodeResult() {
-    const code = document.getElementById('netflix_codigo_result_code')?.textContent || '';
-    if (!code) {
-        showTemporaryAlert('No hay codigo para copiar.', 'danger');
-        return;
-    }
-
-    navigator.clipboard.writeText(code)
-        .then(() => showTemporaryAlert('Codigo copiado al portapapeles.', 'success'))
-        .catch(() => showTemporaryAlert('No se pudo copiar el codigo.', 'danger'));
 }
 
 // 🔷 Función para abrir modal de crear valor desde cuentas
@@ -1471,31 +1451,34 @@ function normalizeServiceCode(value) {
     return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 }
 
-function getSelectedServices() {
-    const selected = document.querySelector('.service-filter-checkbox:checked');
-    return selected ? [selected.value] : ['TODOS'];
+function getSelectedService() {
+    const selected = document.querySelector('.service-filter-input:checked');
+    return selected ? selected.value : 'TODOS';
 }
 
-function rowMatchesSelectedService(row, selectedServices) {
-    if (selectedServices.includes('TODOS')) {
+function getServiceFilteredRows(config, selectedService) {
+    const accountRows = config.allRows.filter((row) => row.dataset.accountRow === '1');
+
+    return accountRows.filter((row) => rowMatchesSelectedService(row, selectedService));
+}
+
+function rowMatchesSelectedService(row, selectedService) {
+    if (selectedService === 'TODOS') {
         return true;
     }
 
     const rowService = normalizeServiceCode(row.dataset.serviceCode || '');
+    const aliases = SERVICE_ALIASES[selectedService] || [selectedService];
 
-    return selectedServices.some((service) => {
-        const aliases = SERVICE_ALIASES[service] || [service];
-        return aliases.some((alias) => rowService.includes(normalizeServiceCode(alias)));
-    });
+    return aliases.some((alias) => rowService.includes(normalizeServiceCode(alias)));
 }
 
-function applyServiceFilterToTable(tableId, selectedServices) {
+function applyServiceFilterToTable(tableId, selectedService) {
     const table = document.getElementById(tableId);
     if (!table || !table._config) return;
 
     const config = table._config;
-    const accountRows = config.allRows.filter((row) => row.dataset.accountRow === '1');
-    const serviceRows = accountRows.filter((row) => rowMatchesSelectedService(row, selectedServices));
+    const serviceRows = getServiceFilteredRows(config, selectedService);
 
     if (config.searchTerm && config.searchTerm.trim()) {
         const tokens = typeof tokenize === 'function' ? tokenize(config.searchTerm) : [];
@@ -1512,43 +1495,42 @@ function applyServiceFilterToTable(tableId, selectedServices) {
     renderClientPage(config);
 }
 
-function updateServiceFilterStatus(selectedServices) {
+function syncServiceFilterIntoTableConfigs() {
+    const selectedService = getSelectedService();
+
+    SERVICE_TABLE_IDS.forEach((tableId) => {
+        const table = document.getElementById(tableId);
+
+        if (table && table._config) {
+            table._config.baseRows = getServiceFilteredRows(table._config, selectedService);
+        }
+    });
+}
+
+function updateServiceFilterStatus(selectedService) {
     const status = document.getElementById('service-filter-status');
     if (!status) return;
 
-    const current = selectedServices[0] || 'TODOS';
+    const current = selectedService || 'TODOS';
     status.textContent = `Filtro activo: ${current}`;
 }
 
 function applyServiceFilterRealtime() {
-    const selectedServices = getSelectedServices();
+    const selectedService = getSelectedService();
+    syncServiceFilterIntoTableConfigs();
 
     SERVICE_TABLE_IDS.forEach((tableId) => {
-        applyServiceFilterToTable(tableId, selectedServices);
+        applyServiceFilterToTable(tableId, selectedService);
     });
 
-    updateServiceFilterStatus(selectedServices);
+    updateServiceFilterStatus(selectedService);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const filterCheckboxes = document.querySelectorAll('.service-filter-checkbox');
-    const todosCheckbox = document.getElementById('service-todos');
+    const filterInputs = document.querySelectorAll('.service-filter-input');
 
-    filterCheckboxes.forEach((checkbox) => {
-        checkbox.addEventListener('change', function () {
-            if (checkbox.checked) {
-                filterCheckboxes.forEach((other) => {
-                    if (other !== checkbox) {
-                        other.checked = false;
-                    }
-                });
-            } else {
-                // Siempre debe quedar uno activo: volvemos a "Todos"
-                if (todosCheckbox) {
-                    todosCheckbox.checked = true;
-                }
-            }
-
+    filterInputs.forEach((input) => {
+        input.addEventListener('change', function () {
             applyServiceFilterRealtime();
         });
     });

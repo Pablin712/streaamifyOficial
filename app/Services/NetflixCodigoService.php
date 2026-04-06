@@ -66,6 +66,7 @@ class NetflixCodigoService
         $payload = [
             'event' => 'netflix.request_code',
             'trace_id' => 'netflix-code-' . $cuenta->idcue . '-' . now()->format('Ymd-His'),
+            'telefono' => $normalizedPhone,
             'cuenta' => [
                 'idcue' => $cuenta->idcue,
                 'usuario' => $cuenta->usuariocue,
@@ -149,14 +150,17 @@ class NetflixCodigoService
 
         if (!$code) {
             return [
-                'success' => false,
-                'message' => $data['message'] ?? $data['mensaje'] ?? 'El webhook respondio pero no devolvio un codigo valido.',
+                'success' => true,
+                'message' => 'listo, te llegará un código al whatsapp',
+                'code' => null,
+                'expires_in_minutes' => $expiresMinutes,
+                'expires_at' => $expiresAt,
             ];
         }
 
         return [
             'success' => true,
-            'message' => $data['message'] ?? $data['mensaje'] ?? 'Codigo de Netflix obtenido correctamente.',
+            'message' => 'listo, te llegará un código al whatsapp',
             'code' => (string) $code,
             'expires_in_minutes' => $expiresMinutes,
             'expires_at' => $expiresAt,

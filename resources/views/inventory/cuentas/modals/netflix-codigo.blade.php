@@ -10,7 +10,7 @@
     <div class="modal-body bg-body">
         <div id="netflix_codigo_request_state">
             <div class="alert alert-warning mb-3">
-                Vas a solicitar un codigo de Netflix para esta cuenta. El sistema esperara la respuesta del webhook y, cuando llegue, mostrara el codigo aqui mismo.
+                Vas a solicitar un codigo de Netflix para esta cuenta. Si el pedido se procesa correctamente, recibiras la confirmacion aqui y el codigo llegara por WhatsApp.
             </div>
             <div class="small text-muted mb-3">
                 <div><strong>Cuenta:</strong> <span id="netflix_codigo_cuenta">-</span></div>
@@ -26,20 +26,15 @@
 
         <div id="netflix_codigo_result_state" class="d-none text-center py-2">
             <div class="alert alert-success mb-3">
-                <div class="fw-bold">Codigo de Netflix</div>
-                <div class="small text-muted">Usalo antes de que venza.</div>
+                <div class="fw-bold" id="netflix_codigo_result_message">listo, te llegará un código al whatsapp</div>
+                <div class="small text-muted" id="netflix_codigo_result_expiration">En 15 minutos vence.</div>
             </div>
-            <div id="netflix_codigo_result_code" class="display-4 fw-bold text-danger mb-2">0000</div>
-            <div id="netflix_codigo_result_expiration" class="text-muted mb-3">En 15 minutos vence.</div>
         </div>
     </div>
 
     <div class="modal-footer border-top">
         <button type="button" id="netflix_codigo_cancel_btn" class="btn btn-secondary" onclick="closeNetflixCodigoModal()">
             Cerrar
-        </button>
-        <button type="button" id="netflix_codigo_copy_btn" class="btn btn-outline-primary d-none" onclick="copyNetflixCodeResult()">
-            <i class="fas fa-copy me-1"></i>Copiar codigo
         </button>
         <button type="button" id="netflix_codigo_confirm_btn" class="btn btn-danger" onclick="confirmNetflixCodeRequest()">
             <i class="fas fa-key me-1"></i>Confirmar solicitud

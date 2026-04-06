@@ -760,6 +760,7 @@ class CuentaController extends Controller
             'id' => Auth::user()->idemp,
             'name' => Auth::user()->nombreemp,
             'username' => Auth::user()->usuarioemp,
+            'phone' => Auth::user()->telefonoemp,
         ]);
 
         if (!($resultado['success'] ?? false)) {

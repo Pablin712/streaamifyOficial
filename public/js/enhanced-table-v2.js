@@ -295,6 +295,7 @@ function initEnhancedTable(table) {
 
         // Client-side data
         allRows: allRows,
+        baseRows: allRows.slice(),
         filteredRows: allRows.slice(),
 
         // Cache de textos normalizados para mejor performance
@@ -453,10 +454,11 @@ function initTableEvents(config) {
  */
 function filterClientTableImproved(config) {
     const searchTerm = config.searchTerm.trim();
+    const sourceRows = Array.isArray(config.baseRows) ? config.baseRows : config.allRows;
 
     // Si no hay término de búsqueda, mostrar todo
     if (!searchTerm) {
-        config.filteredRows = config.allRows.slice();
+        config.filteredRows = sourceRows.slice();
         removeHighlights(config);
         return;
     }
@@ -465,13 +467,13 @@ function filterClientTableImproved(config) {
     const tokens = tokenize(searchTerm);
 
     if (tokens.length === 0) {
-        config.filteredRows = config.allRows.slice();
+        config.filteredRows = sourceRows.slice();
         removeHighlights(config);
         return;
     }
 
     // Filtrar filas que coincidan con TODOS los tokens (AND lógico)
-    config.filteredRows = config.allRows.filter((row) => {
+    config.filteredRows = sourceRows.filter((row) => {
         const normalizedText = config.normalizedCache.get(row);
 
         // Verificar que todos los tokens estén presentes
