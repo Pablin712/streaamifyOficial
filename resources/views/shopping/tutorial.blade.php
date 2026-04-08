@@ -169,7 +169,7 @@
 
                         <!-- Botones de Acción -->
                         <div class="d-flex justify-content-center gap-3">
-                            <a href="{{ route('cliente.register') }}" class="btn btn-primary">Registrarse</a>
+                            <a href="{{ route('register') }}" class="btn btn-primary">Registrarse</a>
                             <a href="{{ route('cliente.login') }}" class="btn btn-success">Iniciar Sesión</a>
                         </div>
                     </div>

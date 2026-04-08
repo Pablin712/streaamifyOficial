@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ClienteAuth;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
@@ -78,5 +79,19 @@ class Cliente extends Authenticatable
     public function tieneTelegramVinculado(): bool
     {
         return !is_null($this->telegram_chat_id);
+    }
+
+    public static function buscarPorTelefonoNormalizado(?string $telefono): ?self
+    {
+        $telefonoNormalizado = ClienteAuth::phoneDigits($telefono);
+
+        if ($telefonoNormalizado === '') {
+            return null;
+        }
+
+        return static::query()
+            ->whereNotNull('telefonocli')
+            ->get()
+            ->first(fn (self $cliente) => ClienteAuth::phoneDigits($cliente->telefonocli) === $telefonoNormalizado);
     }
 }

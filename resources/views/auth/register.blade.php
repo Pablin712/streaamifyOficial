@@ -133,14 +133,14 @@
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="text" class="form-control" name="first_name" id="firstName"
-                            placeholder="Nombres" required>
+                            placeholder="Nombres" value="{{ old('first_name') }}" required>
                         <label for="firstName">Nombres</label>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-floating">
                         <input type="text" class="form-control" name="last_name" id="lastName"
-                            placeholder="Apellidos" required>
+                            placeholder="Apellidos" value="{{ old('last_name') }}" required>
                         <label for="lastName">Apellidos</label>
                     </div>
                 </div>
@@ -148,7 +148,7 @@
             <div class="mb-3">
                 <div class="form-floating">
                     <input type="email" class="form-control" name="email" id="email" placeholder="Email"
-                        required>
+                        value="{{ old('email') }}" required>
                     <label for="email">Email</label>
                 </div>
             </div>
@@ -180,11 +180,11 @@
                     </select>
                     <!-- Input para número de teléfono -->
                     <input type="text" class="form-control" name="telefonocli" id="phone"
-                        placeholder="Teléfono">
+                        placeholder="Teléfono" value="{{ old('telefonocli') }}">
                 </div>
             </div>
             <!-- Input oculto para almacenar el país -->
-            <input type="hidden" name="pais" id="pais">
+            <input type="hidden" name="pais" id="pais" value="{{ old('pais') }}">
             <div class="row mb-3">
                 <small class="text-muted d-block mb-1">
                     La contraseña debe tener al menos un número y un símbolo.
@@ -206,16 +206,16 @@
             </div>
             <div class="mb-3">
                 <div class="form-floating">
-                    <input type="text" 
-                           class="form-control" 
-                           name="codigo_referidor" 
-                           id="codigoReferidor" 
-                           placeholder="Código Referidor" 
-                           value="{{ request('codigo_referidor') }}" 
+                    <input type="text"
+                           class="form-control"
+                           name="codigo_referidor"
+                           id="codigoReferidor"
+                           placeholder="Código Referidor"
+                           value="{{ request('codigo_referidor') }}"
                            {{ request('codigo_referidor') ? 'readonly' : '' }}>
                     <label for="codigoReferidor">Código Referidor (opcional)</label>
                 </div>
-            </div>           
+            </div>
             <button type="submit" class="btn btn-primary w-100">Registrar Cuenta</button>
         </form>
         <div class="extra-links">
@@ -270,7 +270,7 @@
                 }
             });
 
-            document.getElementById("password_confirmation").addEventListener("input", function() {
+            document.getElementById("confirmPassword").addEventListener("input", function() {
                 let password = document.getElementById("password").value;
                 if (this.value !== password) {
                     this.setCustomValidity("Las contraseñas no coinciden.");
@@ -287,6 +287,13 @@
             const phoneInput = document.querySelector("#phone");
             const countryCodeSelect = document.querySelector("#countryCode");
             const countryInput = document.querySelector("#pais");
+
+            if (countryInput.value) {
+                const selectedOption = Array.from(countryCodeSelect.options).find(option => option.dataset.country === countryInput.value);
+                if (selectedOption) {
+                    countryCodeSelect.value = selectedOption.value;
+                }
+            }
 
             // Función para actualizar el campo oculto con el país seleccionado
             function updateCountry() {
@@ -343,6 +350,14 @@
                 let fullPhoneNumber = countryCodeSelect.value + " " + phoneInput.value;
                 phoneInput.value = fullPhoneNumber; // Guardar en formato "+593 96 177 8319"
             });
+
+            if (phoneInput.value.startsWith('+')) {
+                const parts = phoneInput.value.split(' ');
+                if (parts.length > 1) {
+                    countryCodeSelect.value = parts[0];
+                    phoneInput.value = parts.slice(1).join(' ');
+                }
+            }
         });
     </script>
 </body>

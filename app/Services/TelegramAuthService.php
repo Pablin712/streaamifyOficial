@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cliente;
 use App\Models\TelegramAuthSession;
+use App\Support\ClienteAuth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -99,12 +100,13 @@ class TelegramAuthService
     {
         $validator = Validator::make(
             ['password' => $password],
-            ['password' => 'required|min:6']
+            ['password' => ClienteAuth::passwordRules(false)],
+            ClienteAuth::passwordMessages()
         );
 
         return [
             'valido' => !$validator->fails(),
-            'mensaje' => $validator->fails() ? 'La contraseña debe tener al menos 6 caracteres' : 'Contraseña válida',
+            'mensaje' => $validator->fails() ? $validator->errors()->first('password') : 'Contraseña válida',
         ];
     }
 
@@ -128,13 +130,22 @@ class TelegramAuthService
     public function crearCliente(array $datos, int $chatId): array
     {
         try {
+            $nombre = ClienteAuth::buildFullName(fullName: $datos['nombre'] ?? null);
+            $telefono = ClienteAuth::normalizePhone($datos['telefono'] ?? null);
+
             // Validar datos
             $validator = Validator::make($datos, [
-                'nombre' => 'required|string|max:50',
+                'nombre' => 'required|string|max:' . ClienteAuth::MAX_FULL_NAME_LENGTH,
                 'email' => 'required|email|unique:clientes,email',
-                'telefono' => 'required|string|max:50',
-                'password' => 'required|string|min:6',
-            ]);
+                'telefono' => 'required|string|max:' . ClienteAuth::MAX_PHONE_LENGTH,
+                'password' => ClienteAuth::passwordRules(false),
+            ], ClienteAuth::passwordMessages());
+
+            $validator->after(function ($validator) use ($nombre) {
+                if (mb_strlen($nombre) > ClienteAuth::MAX_FULL_NAME_LENGTH) {
+                    $validator->errors()->add('nombre', ClienteAuth::fullNameTooLongMessage());
+                }
+            });
 
             if ($validator->fails()) {
                 return [
@@ -146,12 +157,12 @@ class TelegramAuthService
 
             // Crear cliente
             $cliente = Cliente::create([
-                'nombrecli' => $datos['nombre'],
+                'nombrecli' => $nombre,
                 'email' => $datos['email'],
-                'telefonocli' => $datos['telefono'],
+                'telefonocli' => $telefono,
                 'password' => $datos['password'], // Se encripta automáticamente en el modelo
                 'telegram_chat_id' => $chatId,
-                'pais' => $datos['pais'] ?? 'Ecuador',
+                'pais' => ClienteAuth::normalizeName($datos['pais'] ?? 'Ecuador'),
                 'saldo' => 0.00,
             ]);
 
@@ -209,6 +220,9 @@ class TelegramAuthService
 
             case 'registro_email':
                 return $this->procesarRegistroEmail($session, $entrada);
+
+            case 'registro_email_existe':
+                return $this->procesarRegistroEmailExiste($session, $entrada);
 
             case 'registro_telefono':
                 return $this->procesarRegistroTelefono($session, $entrada);
@@ -332,7 +346,9 @@ class TelegramAuthService
 
     private function procesarRegistroNombre(TelegramAuthSession $session, string $entrada): array
     {
-        if (strlen($entrada) < 3) {
+        $nombre = ClienteAuth::buildFullName(fullName: $entrada);
+
+        if (mb_strlen($nombre) < 3) {
             return [
                 'exito' => false,
                 'mensaje' => '❌ El nombre debe tener al menos 3 caracteres. Por favor ingresa tu nombre completo:',
@@ -340,7 +356,15 @@ class TelegramAuthService
             ];
         }
 
-        $session->actualizarDatos(['nombre' => $entrada]);
+        if (mb_strlen($nombre) > ClienteAuth::MAX_FULL_NAME_LENGTH) {
+            return [
+                'exito' => false,
+                'mensaje' => '❌ ' . ClienteAuth::fullNameTooLongMessage() . ' Por favor ingresa un nombre más corto:',
+                'paso_siguiente' => 'registro_nombre',
+            ];
+        }
+
+        $session->actualizarDatos(['nombre' => $nombre]);
         $session->actualizarEstado('registro_email', 'registro', $session->datos);
 
         return [
@@ -363,6 +387,8 @@ class TelegramAuthService
         }
 
         if ($this->emailExiste($entrada)) {
+            $session->actualizarDatos(['email' => $entrada]);
+
             return [
                 'exito' => false,
                 'mensaje' => "❌ Este email ya está registrado. ¿Quieres hacer login en su lugar?\n\nResponde SI para iniciar sesión o NO para usar otro email.",
@@ -380,6 +406,39 @@ class TelegramAuthService
         ];
     }
 
+    private function procesarRegistroEmailExiste(TelegramAuthSession $session, string $entrada): array
+    {
+        $entrada = strtoupper(trim($entrada));
+
+        if (in_array($entrada, ['SI', 'SÍ', 'S', 'YES', 'Y'])) {
+            $session->actualizarEstado('login_password', 'login', $session->datos);
+
+            return [
+                'exito' => true,
+                'mensaje' => '🔐 Perfecto. Ingresa tu contraseña para iniciar sesión:',
+                'paso_siguiente' => 'login_password',
+            ];
+        }
+
+        if (in_array($entrada, ['NO', 'N'])) {
+            $datos = $session->datos ?? [];
+            unset($datos['email']);
+            $session->actualizarEstado('registro_email', 'registro', $datos);
+
+            return [
+                'exito' => true,
+                'mensaje' => '📧 De acuerdo. Ingresa otro email para continuar con el registro:',
+                'paso_siguiente' => 'registro_email',
+            ];
+        }
+
+        return [
+            'exito' => false,
+            'mensaje' => 'Por favor responde SI o NO',
+            'paso_siguiente' => 'registro_email_existe',
+        ];
+    }
+
     private function procesarRegistroTelefono(TelegramAuthSession $session, string $entrada): array
     {
         $validacion = $this->validarTelefono($entrada);
@@ -392,7 +451,7 @@ class TelegramAuthService
             ];
         }
 
-        $session->actualizarDatos(['telefono' => $entrada]);
+        $session->actualizarDatos(['telefono' => ClienteAuth::normalizePhone($entrada)]);
         $session->actualizarEstado('registro_password', 'registro', $session->datos);
 
         return [

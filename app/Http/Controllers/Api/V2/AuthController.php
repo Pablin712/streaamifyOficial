@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Cliente;
+use App\Support\ClienteAuth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -72,26 +74,25 @@ class AuthController extends Controller
 
     public function crearCliente(Request $request)
     {
+        $payload = array_merge($request->all(), [
+            'password_confirmation' => $request->input('confirm'),
+        ]);
+
         // Validar datos de entrada con Validator manual
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+        $validator = \Illuminate\Support\Facades\Validator::make($payload, [
+            'name' => 'required|string|max:' . ClienteAuth::MAX_FULL_NAME_LENGTH,
             'email' => 'required|email|unique:clientes,email',
-            'password' => 'required|string|min:6',
-            'confirm' => 'required|string|min:6',
-            'telefono' => 'required|string|max:50',
+            'password' => ClienteAuth::passwordRules(),
+            'telefono' => 'required|string|max:' . ClienteAuth::MAX_PHONE_LENGTH,
             'codigo_referidor' => 'nullable|string|max:50|exists:clientes,codigo_referidor',
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'El correo electrónico debe ser válido.',
             'email.unique' => 'Este correo electrónico ya está registrado.',
-            'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            'confirm.required' => 'La confirmación de contraseña es obligatoria.',
-            'confirm.min' => 'La confirmación debe tener al menos 6 caracteres.',
             'telefono.required' => 'El teléfono es obligatorio.',
             'codigo_referidor.exists' => 'El código de referido no existe.',
-        ]);
+        ] + ClienteAuth::passwordMessages());
 
         if ($validator->fails()) {
             return response()->json([
@@ -101,25 +102,9 @@ class AuthController extends Controller
             ], 200);
         }
 
-        // Verificar que las contraseñas coincidan
-        if ($request->password !== $request->confirm) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Las contraseñas no coinciden.'
-            ], 200);
-        }
-
-        // Normalizar teléfono (quitar espacios, guiones, paréntesis)
-        $telefonoNormalizado = preg_replace('/[\s\-\(\)]/', '', $request->telefono);
-
-        // Formatear teléfono para guardar: +593 96 177 8319
-        $telefonoFormateado = $this->formatearTelefono($telefonoNormalizado);
-
-        // Buscar cliente por teléfono (comparando versiones normalizadas)
-        $clienteExistente = Cliente::all()->first(function ($cliente) use ($telefonoNormalizado) {
-            $telefonoBD = preg_replace('/[\s\-\(\)]/', '', $cliente->telefonocli);
-            return $telefonoBD === $telefonoNormalizado;
-        });
+        $nombre = ClienteAuth::buildFullName(fullName: $request->name);
+        $telefonoFormateado = ClienteAuth::normalizePhone($request->telefono);
+        $clienteExistente = Cliente::buscarPorTelefonoNormalizado($telefonoFormateado);
 
         if ($clienteExistente) {
             // Si el cliente ya tiene email registrado, no puede registrarse de nuevo
@@ -140,7 +125,7 @@ class AuthController extends Controller
             }
 
             $clienteExistente->update([
-                'nombrecli' => ucwords($request->name),
+                'nombrecli' => $nombre,
                 'email' => $request->email,
                 'password' => $request->password,
                 'referido_por' => $referidoPor,
@@ -168,15 +153,27 @@ class AuthController extends Controller
             }
         }
 
-        // Crear nuevo cliente
-        $cliente = Cliente::create([
-            'nombrecli' => ucwords($request->name),
-            'email' => $request->email,
-            'password' => $request->password,
-            'telefonocli' => $telefonoFormateado,
-            'saldo' => 0,
-            'referido_por' => $referidoPor,
-        ]);
+        try {
+            $cliente = Cliente::create([
+                'nombrecli' => $nombre,
+                'email' => $request->email,
+                'password' => $request->password,
+                'telefonocli' => $telefonoFormateado,
+                'saldo' => 0,
+                'referido_por' => $referidoPor,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error creando cliente desde API v2 auth', [
+                'email' => $request->email,
+                'telefono' => $request->telefono,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo completar el registro en este momento.'
+            ], 200);
+        }
 
         return response()->json([
             'success' => true,
@@ -191,23 +188,4 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Formatear teléfono al formato de BD: +593 96 177 8319
-     */
-    private function formatearTelefono($telefono)
-    {
-        // Si ya tiene espacios, retornar tal cual
-        if (strpos($telefono, ' ') !== false) {
-            return $telefono;
-        }
-
-        // Formato esperado: +593961778319
-        // Resultado: +593 96 177 8319
-        if (preg_match('/^(\+\d{1,4})(\d{2})(\d{3})(\d{4})$/', $telefono, $matches)) {
-            return $matches[1] . ' ' . $matches[2] . ' ' . $matches[3] . ' ' . $matches[4];
-        }
-
-        // Si no coincide con el patrón, retornar sin cambios
-        return $telefono;
-    }
 }

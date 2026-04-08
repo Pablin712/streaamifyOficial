@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\TelegramAuthService;
+use App\Support\ClienteAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -210,11 +211,11 @@ class TelegramAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'chat_id' => 'required|integer',
-            'nombre' => 'required|string|max:50',
+            'nombre' => 'required|string|max:' . ClienteAuth::MAX_FULL_NAME_LENGTH,
             'email' => 'required|email',
-            'telefono' => 'required|string|max:50',
-            'password' => 'required|string|min:6',
-        ]);
+            'telefono' => 'required|string|max:' . ClienteAuth::MAX_PHONE_LENGTH,
+            'password' => ClienteAuth::passwordRules(false),
+        ], ClienteAuth::passwordMessages());
 
         if ($validator->fails()) {
             return response()->json([

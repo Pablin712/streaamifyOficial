@@ -112,7 +112,7 @@
                 </div>
             @endif
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="floatingInput" name="email" placeholder="Correo">
+                <input type="text" class="form-control" id="floatingInput" name="email" placeholder="Correo" value="{{ old('email') }}">
                 <label for="floatingInput">Correo</label>
             </div>
             <div class="form-floating mb-3">
@@ -125,7 +125,7 @@
 
             <div class="extra-links mt-3">
                 <a href="{{ route('cliente.recover') }}">¿Olvidaste tu contraseña?</a> <br>
-                <a href="{{ route('cliente.register') }}">¿No tienes cuenta? Regístrate</a>
+                <a href="{{ route('register') }}">¿No tienes cuenta? Regístrate</a>
             </div>
         </form>
     </div>

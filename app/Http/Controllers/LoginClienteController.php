@@ -1,10 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Models\Historial;
+use App\Support\ClienteAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use App\Models\Historial;
+
 class LoginClienteController extends Controller
 {
     public function showLoginForm()
@@ -18,30 +20,30 @@ class LoginClienteController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|string',
-            'password' => 'required|min:3',
+            'email' => 'required|email',
+            'password' => 'required|string',
         ]);
 
-        // Buscar al usuario por usuarioemp
-        $cliente = \App\Models\Cliente::where('email', $request->email)->first();
-
-        if (!$cliente) {
-            // Retorna un mensaje de error si el usuario no existe
+        if (!Auth::guard('cliente')->attempt([
+            'email' => ClienteAuth::normalizeText($credentials['email']),
+            'password' => $credentials['password'],
+        ])) {
             return back()->withErrors([
-                'usuarioemp' => 'El usuario de cliente no existe.',
-            ])->withInput($request->except('passwordemp'));
+                'email' => 'Las credenciales ingresadas no son válidas.',
+            ])->withInput($request->only('email'));
         }
 
-        // Verificar la contraseña
-        if (!Hash::check($request->password, $cliente->password)) {
-            return back()->withErrors([
-                'password' => 'La contraseña de cliente es incorrecta.',
-            ])->withInput($request->except('password'));
-        }
+        $request->session()->regenerate();
 
-        // Autenticar al usuario manualmente
-        Auth::guard('cliente')->login($cliente);
-        // Redirigir al dashboard o ruta protegida
+        $cliente = Auth::guard('cliente')->user();
+
+        Historial::create([
+            'accion' => 'Login-Cliente',
+            'descripcion' => 'Autenticación de cliente con email: ' . $cliente->email,
+            'empleado_id' => null,
+            'created_at' => now(),
+        ]);
+
         return redirect()->route('shop')->with('success', 'Inicio de sesión exitoso.');
     }
 

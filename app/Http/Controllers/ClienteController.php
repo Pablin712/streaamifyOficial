@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\ViewClientesUsuarios;
 use App\Models\Historial;
+use App\Support\ClienteAuth;
 use App\Services\ClienteMensajeMasivoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -396,30 +397,38 @@ class ClienteController extends Controller
     {
         // Registro de cliente desde vista pública (sin protección de permisos)
         try {
-            $request->validate(
+            $validator = Validator::make(
+                $request->all(),
                 [
-                    'first_name' => ['required', 'regex:/^\S+\s+\S+$/'],
-                    'last_name' => ['required', 'regex:/^\S+(?:\s+\S+)*$/'],
+                    'first_name' => ['required', 'string', 'regex:/^\S+\s+\S+(?:\s+\S+)*$/'],
+                    'last_name' => ['required', 'string', 'regex:/^\S+(?:\s+\S+)*$/'],
                     'email' => 'required|email|unique:clientes,email',
-                    'telefonocli' => 'required',
-                    'pais' => 'required',
-                    'password' => [
-                        'required',
-                        'confirmed',
-                        'min:6',
-                        'regex:/[0-9]/',
-                        'regex:/[@$!%*?&]/'
-                    ],
+                    'telefonocli' => 'required|string|max:' . ClienteAuth::MAX_PHONE_LENGTH,
+                    'pais' => 'required|string|max:' . ClienteAuth::MAX_COUNTRY_LENGTH,
+                    'password' => ClienteAuth::passwordRules(),
                     'codigo_referidor' => 'nullable|string|max:50|exists:clientes,codigo_referidor',
                 ],
-                [
+                array_merge([
                     'first_name.regex' => 'Debe ingresar al menos dos nombres.',
                     'last_name.regex' => 'Debe ingresar al menos un apellido.',
-                    'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-                    'password.regex' => 'La contraseña debe contener al menos un número y un símbolo especial (@$!%*?&).',
-                    'password.confirmed' => 'Las contraseñas no coinciden.',
-                ]
+                ], ClienteAuth::passwordMessages())
             );
+
+            $nombreCompleto = ClienteAuth::buildFullName($request->first_name, $request->last_name);
+
+            $validator->after(function ($validator) use ($nombreCompleto) {
+                if (mb_strlen($nombreCompleto) > ClienteAuth::MAX_FULL_NAME_LENGTH) {
+                    $validator->errors()->add('first_name', ClienteAuth::fullNameTooLongMessage());
+                }
+            });
+
+            if ($validator->fails()) {
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('error', 'Por favor, corrige los errores en el formulario.');
+            }
+
             // Buscar el cliente que refirió (si se ingresó un código válido)
             $referidoPor = null;
             if ($request->filled('codigo_referidor')) {
@@ -428,41 +437,56 @@ class ClienteController extends Controller
                     $referidoPor = $referidor->idcli;
                 }
             }
-            $request->merge([
-                'first_name' => ucwords($request->first_name),
-                'last_name' => ucwords($request->last_name),
-                'pais' => ucwords($request->pais)
-            ]);
-            $cliente = Cliente::where('telefonocli', $request->telefonocli)->first();
+            $telefono = ClienteAuth::normalizePhone($request->telefonocli);
+            $pais = ClienteAuth::normalizeName($request->pais);
+            $cliente = Cliente::buscarPorTelefonoNormalizado($telefono);
+
             if ($cliente) {
                 if ($cliente->email) {
-                    return redirect()->back()->with('error', 'Este número de teléfono ya está registrado.');
+                    return redirect()->back()
+                        ->withErrors(['telefonocli' => 'Este número de teléfono ya está registrado.'])
+                        ->withInput()
+                        ->with('error', 'Este número de teléfono ya está registrado.');
                 }
+
                 $cliente->update([
-                    'nombrecli' => $request->first_name . ' ' . $request->last_name,
+                    'nombrecli' => $nombreCompleto,
                     'email' => $request->email,
                     'password' => $request->password,
-                    'pais' => $request->pais,
+                    'telefonocli' => $telefono,
+                    'pais' => $pais,
                     'referido_por' => $referidoPor,
                 ]);
+
                 return redirect()->route('cliente.login')->with('success', '¡Tu cuenta ha sido registrada exitosamente!');
-            } else {
-                $cliente = Cliente::create([
-                    'nombrecli' => $request->first_name . ' ' . $request->last_name,
-                    'email' => $request->email,
-                    'password' => $request->password,
-                    'telefonocli' => $request->telefonocli,
-                    'pais' => $request->pais,
-                    'saldo' => 0,
-                    'referido_por' => $referidoPor,
-                ]);
-                return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
             }
+
+            Cliente::create([
+                'nombrecli' => $nombreCompleto,
+                'email' => $request->email,
+                'password' => $request->password,
+                'telefonocli' => $telefono,
+                'pais' => $pais,
+                'saldo' => 0,
+                'referido_por' => $referidoPor,
+            ]);
+
+            return redirect()->route('cliente.login')->with('success', '¡Cuenta creada exitosamente!');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
                 ->withInput()
                 ->with('error', 'Por favor, corrige los errores en el formulario.');
+        } catch (\Throwable $e) {
+            Log::error('Error en registro de cliente', [
+                'email' => $request->email,
+                'telefono' => $request->telefonocli,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->withInput($request->except('password', 'password_confirmation'))
+                ->with('error', 'No se pudo completar el registro. Verifica los datos e intenta nuevamente.');
         }
     }
 
@@ -477,20 +501,19 @@ class ClienteController extends Controller
         $idCliente = Auth::guard('cliente')->user()->idcli;
         $cliente = Cliente::findOrFail($idCliente);
         $validator = Validator::make($request->all(), [
-            'nombrecli' => ['required', 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ]+(?: [A-Za-zÁÉÍÓÚáéíóúñÑ]+){3,}$/'],
-            'telefonocli' => ['required', 'digits:10'],
+            'nombrecli' => ['required', 'string', 'max:' . ClienteAuth::MAX_FULL_NAME_LENGTH, 'regex:/^[A-Za-zÁÉÍÓÚáéíóúñÑ]+(?: [A-Za-zÁÉÍÓÚáéíóúñÑ]+){3,}$/'],
+            'telefonocli' => ['required', 'string', 'max:' . ClienteAuth::MAX_PHONE_LENGTH],
             'email' => ['required', 'email', 'unique:clientes,email,' . $cliente->idcli . ',idcli'],
         ], [
             'nombrecli.regex' => 'Debe ingresar sus dos nombres y apellidos correctamente.',
-            'telefonocli.digits' => 'Ingrese un número de teléfono válido de 10 dígitos.',
             'email.unique' => 'El correo electrónico ya está en uso.',
         ]);
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
         $cliente->update([
-            'nombrecli' => $request->nombrecli,
-            'telefonocli' => $request->telefonocli,
+            'nombrecli' => ClienteAuth::normalizeName($request->nombrecli),
+            'telefonocli' => ClienteAuth::normalizePhone($request->telefonocli),
             'email' => $request->email,
         ]);
         return back()->with('success', 'Perfil actualizado correctamente.');
@@ -500,13 +523,7 @@ class ClienteController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'new_password' => [
-                'required',
-                'confirmed',
-                'min:6',
-                'regex:/[0-9]/',
-                'regex:/[@$!%*?&]/'
-            ],
+            'new_password' => ClienteAuth::passwordRules(),
         ], [
             'new_password.regex' => 'La nueva contraseña debe contener al menos un número y un símbolo especial (@$!%*?&).',
             'new_password.min' => 'La nueva contraseña debe tener al menos 6 caracteres.',

@@ -196,7 +196,7 @@
                 <div class="col-lg-6">
                     <h2 class="fw-bold">¡Forma parte de Streamify!</h2>
                     <p class="lead">Regístrate gratis y accede a suscripciones premium, recargas y más.</p>
-                    <a href="{{ route('cliente.register') }}" class="btn btn-light btn-lg">Registrarse Ahora</a>
+                    <a href="{{ route('register') }}" class="btn btn-light btn-lg">Registrarse Ahora</a>
                 </div>
                 <div class="col-lg-6 d-flex justify-content-center">
                     <img src="{{ asset('images/shopweb.png') }}" class="rounded shadow-lg img-fluid"
