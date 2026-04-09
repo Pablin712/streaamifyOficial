@@ -712,6 +712,614 @@ El sistema correcto es:
 
 Ese enfoque te permite luego conectar también Messenger, Telegram o webchat sin rehacer toda la lógica.
 
+## Subagentes reales para este proyecto
+
+Aquí sí conviene usar subagentes, pero no como sistemas totalmente separados ni con bases aisladas.
+
+La forma correcta es:
+
+- un router central decide;
+- un subagente queda activo por conversación;
+- todos leen la misma base de memoria y las mismas APIs;
+- cada subagente cambia tono, objetivo y tools permitidas.
+
+### Subagentes iniciales recomendados
+
+Estos son los que dejé preparados como base de datos inicial:
+
+- `router_general`: clasifica el caso y deriva;
+- `espera_humano`: silencia al bot y deja la conversación para una persona;
+- `asistente_no_registrado`: atiende leads nuevos y preguntas frecuentes;
+- `vendedor_cierre`: cotiza, orienta y lleva a pago;
+- `soporte_cliente`: atiende clientes con problemas o dudas de servicio;
+- `cobranzas_pago`: gestiona métodos de pago y comprobantes;
+- `postventa_reciente`: acompaña a quien acaba de comprar.
+
+### Regla práctica
+
+No necesitas un modelo distinto para cada subagente.
+
+Lo que necesitas es que cada subagente tenga:
+
+- `prompt_base`;
+- criterios de entrada;
+- lista de tools permitidas;
+- prioridad;
+- estado activo.
+
+Eso ya quedó modelado en la tabla `chat_subagentes`.
+
+## Tablas que ya quedaron preparadas
+
+La base que conviene para arrancar ya quedó definida así:
+
+### `chat_contactos_canal`
+
+Para mapear el contacto externo con tu sistema.
+
+Guarda:
+
+- canal;
+- identificador externo;
+- teléfono normalizado;
+- nombre del canal;
+- posible `idcli`;
+- estado de relación (`lead`, `vinculado`, `cliente`, `bloqueado`).
+
+### `chat_mensajes_canal`
+
+Para guardar el mapping entre mensaje interno y mensaje externo.
+
+Guarda:
+
+- `external_message_id`;
+- dirección de mensaje (`inbound`, `outbound`, `status`);
+- estado entregado/leído/fallido;
+- media y payload.
+
+### `chat_subagentes`
+
+Para registrar los subagentes activos y su comportamiento.
+
+Guarda:
+
+- código;
+- tipo;
+- descripción;
+- prompt base;
+- criterios;
+- tools;
+- prioridad.
+
+### `chat_memoria_negocio`
+
+Esta es tu memoria general del negocio.
+
+Aquí debe ir todo lo que el agente puede usar como conocimiento general y reusable.
+
+Tipos ya contemplados:
+
+- `faq`
+- `servicio`
+- `metodo_pago`
+- `politica_venta`
+- `politica_descuento`
+- `confianza`
+- `marca`
+- `objecion`
+- `guion`
+
+### Qué meter aquí
+
+La memoria general debe incluir principalmente información visible o utilizable del lado del cliente, por ejemplo:
+
+- qué servicios vendes;
+- cómo funcionan los planes;
+- métodos de pago;
+- tiempos de entrega;
+- políticas de soporte;
+- cómo responder objeciones comunes;
+- frases cortas de confianza y autoridad;
+- diferencias entre combos y planes individuales;
+- qué pedir para validar una compra;
+- reglas de escalación.
+
+Aquí también cabe un poco de labia comercial, pero controlada.
+
+No para manipular, sino para sostener un tono:
+
+- seguro;
+- profesional;
+- directo;
+- breve;
+- confiable.
+
+### `chat_memoria_contactos`
+
+Esta es la memoria estructurada por persona.
+
+Sirve para guardar hechos puntuales como:
+
+- presupuesto aproximado;
+- servicio de interés;
+- objeción recurrente;
+- método de pago preferido;
+- tipo de cliente;
+- si ya pidió descuento;
+- si ya envió comprobante.
+
+### `chat_memoria_resumenes`
+
+Esta es la memoria temporal o resumida.
+
+Sirve para guardar:
+
+- resumen de conversación;
+- resumen cliente;
+- handoff a humano;
+- follow-up.
+
+Aquí es donde encaja tu idea de conservar contexto corto, por ejemplo últimas 24-48 horas o un resumen operativo que expira.
+
+## Cómo se usarían las dos memorias
+
+Tu idea de doble memoria es correcta. La forma limpia de usarla sería así:
+
+### Memoria 1. General del negocio
+
+Fuente principal:
+
+- `chat_memoria_negocio`
+- APIs del sistema
+
+Uso:
+
+- responder preguntas repetidas;
+- mantener tono y confianza;
+- no inventar datos del negocio;
+- unificar el discurso comercial.
+
+### Memoria 2. Chat y cliente
+
+Fuente principal:
+
+- `chat_memoria_contactos`
+- `chat_memoria_resumenes`
+- historial reciente de `mensajes`
+- datos vivos de Laravel por API.
+
+Uso:
+
+- recordar qué pidió ese cliente;
+- retomar conversaciones;
+- detectar si es soporte, venta o postventa;
+- evitar repetir preguntas.
+
+## Lo que haría el router
+
+El router no responde mucho. Decide.
+
+## Cómo clasificar los chats de los clientes
+
+La clasificación no debería depender de una sola condición. Lo correcto es construir un bloque de variables derivadas por cada mensaje entrante y con eso decidir el subagente.
+
+La idea es esta:
+
+1. entra mensaje nuevo;
+2. se lee el contacto, conversación, cliente y memoria;
+3. se calculan variables de clasificación;
+4. se aplica prioridad de reglas;
+5. se asigna `subagente_codigo`.
+
+## Variables base que debes calcular
+
+Estas variables son las más útiles para tu router.
+
+### 1. Variables del canal
+
+- `canal`: `whatsapp`, `messenger`, `telegram`, `webchat`
+- `canal_user_id`: identificador externo del cliente
+- `tipo_contenido`: `texto`, `imagen`, `audio`, `archivo`, `sistema`
+- `es_media`: `true/false`
+- `origen`: `whatsapp_directo`, `whatsapp_ads`, `messenger`, `webchat`
+
+### 2. Variables del contacto
+
+- `contacto_canal_id`
+- `estado_relacion`: `lead`, `vinculado`, `cliente`, `bloqueado`
+- `idcli`: nullable
+- `cliente_existe`: `true/false`
+- `telefono_normalizado`
+
+### 3. Variables de conversación
+
+- `idconv`
+- `estado_conversacion`: `abierta`, `en_atencion`, `en_espera`, `cerrada`, `bot_activo`
+- `subagente_actual`
+- `requiere_humano`
+- `ultima_actividad`
+- `ultimo_mensaje_empleado_at`
+- `mensajes_no_leidos`
+
+### 4. Variables del mensaje actual
+
+- `mensaje_texto`
+- `mensaje_normalizado`
+- `longitud_mensaje`
+- `intencion_principal`
+- `intenciones_detectadas`
+- `sentimiento`: opcional
+- `urgencia`: `alta`, `media`, `baja`
+
+### 5. Variables del cliente
+
+- `ya_compro`
+- `tiene_compra_reciente`
+- `horas_desde_ultima_compra`
+- `tiene_ventas`
+- `tiene_soporte_abierto`
+- `servicio_activo`
+- `mora_o_pago_pendiente`: si luego lo conectas a ventas o cobranzas
+
+### 6. Variables de memoria del contacto
+
+- `servicio_interes`
+- `presupuesto_detectado`
+- `objecion_detectada`
+- `pidio_descuento`
+- `metodo_pago_preferido`
+- `ya_envio_comprobante`
+- `pidio_humano`
+- `mensajes_cliente_post_handoff`
+
+## Variables derivadas de clasificación
+
+Con las variables base, el router debería producir flags simples. Estos flags son los que realmente redirigen.
+
+### Flags recomendados
+
+- `flag_solicitud_humano`
+- `flag_espera_humano_activa`
+- `flag_reactivar_ia_por_insistencia`
+- `flag_nuevo_lead`
+- `flag_cliente_registrado`
+- `flag_compra_reciente`
+- `flag_necesita_soporte`
+- `flag_quiere_comprar`
+- `flag_quiere_pagar`
+- `flag_envio_comprobante`
+- `flag_solo_consulta_general`
+- `flag_bloqueado`
+
+## Cómo obtener cada flag
+
+### `flag_solicitud_humano`
+
+`true` si detectas frases como:
+
+- humano
+- asesor
+- persona
+- operador
+- agente real
+- no quiero bot
+
+También puedes apoyarte en memoria previa si ya había pedido humano hace poco.
+
+### `flag_espera_humano_activa`
+
+`true` si:
+
+- `requiere_humano = true`
+- o `subagente_actual = espera_humano`
+
+### `flag_reactivar_ia_por_insistencia`
+
+`true` si:
+
+- `flag_espera_humano_activa = true`
+- el cliente envió 3 o más mensajes adicionales
+- dentro de la ventana definida, por ejemplo 10 minutos
+- y no hubo mensaje humano en ese intervalo
+
+### `flag_nuevo_lead`
+
+`true` si:
+
+- no hay `idcli`
+- o `estado_relacion = lead`
+- y no existe historial de compra real
+
+### `flag_cliente_registrado`
+
+`true` si:
+
+- hay `idcli`
+- o `estado_relacion = cliente`
+
+### `flag_compra_reciente`
+
+`true` si:
+
+- `horas_desde_ultima_compra <= 48`
+
+Puedes ajustar esa ventana luego.
+
+### `flag_necesita_soporte`
+
+`true` si detectas frases como:
+
+- no entra
+- no sirve
+- contraseña
+- pantalla
+- error
+- se cayó
+- no funciona
+
+Y además hay señales de cliente real o compra previa.
+
+### `flag_quiere_comprar`
+
+`true` si el mensaje contiene intención comercial como:
+
+- precio
+- plan
+- combo
+- comprar
+- promoción
+- cuánto cuesta
+- descuento
+
+### `flag_quiere_pagar`
+
+`true` si detectas:
+
+- pagar
+- transferencia
+- cuenta bancaria
+- banco
+- depósito
+- paypal
+- binance
+
+### `flag_envio_comprobante`
+
+`true` si:
+
+- `tipo_contenido = imagen` o `archivo`
+- y el texto o contexto sugiere pago
+
+### `flag_solo_consulta_general`
+
+`true` si:
+
+- no es soporte
+- no es pago
+- no es compra inmediata
+- y solo pregunta cosas generales del negocio
+
+### `flag_bloqueado`
+
+`true` si:
+
+- `estado_relacion = bloqueado`
+- o la conversación quedó administrativamente bloqueada
+
+## Prioridad de clasificación
+
+No todas las reglas pesan igual. Debes aplicar prioridad, no coincidencia simple.
+
+Orden recomendado:
+
+1. `flag_bloqueado`
+2. `flag_solicitud_humano`
+3. `flag_espera_humano_activa` sin reactivación
+4. `flag_reactivar_ia_por_insistencia`
+5. `flag_envio_comprobante`
+6. `flag_quiere_pagar`
+7. `flag_compra_reciente`
+8. `flag_necesita_soporte`
+9. `flag_quiere_comprar`
+10. `flag_nuevo_lead`
+11. `flag_cliente_registrado`
+12. `flag_solo_consulta_general`
+
+## Mapeo de variables a subagente
+
+Usa una tabla lógica como esta:
+
+| Condición dominante | Subagente |
+| --- | --- |
+| `flag_solicitud_humano = true` | `espera_humano` |
+| `flag_espera_humano_activa = true` y `flag_reactivar_ia_por_insistencia = false` | `espera_humano` |
+| `flag_envio_comprobante = true` | `cobranzas_pago` |
+| `flag_quiere_pagar = true` | `cobranzas_pago` |
+| `flag_compra_reciente = true` | `postventa_reciente` |
+| `flag_necesita_soporte = true` | `soporte_cliente` |
+| `flag_quiere_comprar = true` | `vendedor_cierre` |
+| `flag_nuevo_lead = true` | `asistente_no_registrado` |
+| `flag_cliente_registrado = true` sin otra intención fuerte | `soporte_cliente` o `postventa_reciente` según contexto |
+| `flag_solo_consulta_general = true` | `asistente_no_registrado` |
+
+## Payload recomendado del router
+
+Para que luego lo uses en n8n o Laravel, conviene que el router devuelva algo así:
+
+```json
+{
+	"idconv": 123,
+	"contacto_canal_id": 55,
+	"idcli": 900,
+	"subagente_codigo": "vendedor_cierre",
+	"requiere_humano": false,
+	"debe_responder_ia": true,
+	"motivo_router": "intencion_compra_detectada",
+	"flags": {
+		"flag_solicitud_humano": false,
+		"flag_espera_humano_activa": false,
+		"flag_reactivar_ia_por_insistencia": false,
+		"flag_nuevo_lead": false,
+		"flag_cliente_registrado": true,
+		"flag_compra_reciente": false,
+		"flag_necesita_soporte": false,
+		"flag_quiere_comprar": true,
+		"flag_quiere_pagar": false,
+		"flag_envio_comprobante": false,
+		"flag_solo_consulta_general": false,
+		"flag_bloqueado": false
+	},
+	"variables": {
+		"estado_relacion": "cliente",
+		"tipo_contenido": "texto",
+		"intencion_principal": "precio",
+		"horas_desde_ultima_compra": 120,
+		"mensajes_cliente_post_handoff": 0
+	}
+}
+```
+
+## Variables mínimas que te conviene persistir
+
+Si no quieres recalcular todo desde cero en cada mensaje, estas son las más valiosas para guardar:
+
+- `subagente_codigo`
+- `requiere_humano`
+- `estado_relacion`
+- `intencion_principal`
+- `servicio_interes`
+- `pidio_humano`
+- `mensajes_cliente_post_handoff`
+- `horas_desde_ultima_compra`
+- `ultimo_mensaje_empleado_at`
+
+## Recomendación práctica
+
+No intentes hacer la clasificación con un único prompt libre.
+
+Hazla por capas:
+
+1. reglas duras por palabras clave y estado;
+2. apoyo de memoria estructurada;
+3. si hace falta, clasificador IA solo para casos ambiguos.
+
+Así el router será predecible y no cambiará de subagente por respuestas inestables del modelo.
+
+Reglas base recomendadas:
+
+1. Si pide explícitamente hablar con una persona: `espera_humano`.
+2. Si no hay cliente vinculado y pregunta general: `asistente_no_registrado`.
+3. Si pregunta precio, combo, plan o descuento: `vendedor_cierre`.
+4. Si menciona pago o manda comprobante: `cobranzas_pago`.
+5. Si ya es cliente y reporta problema: `soporte_cliente`.
+6. Si compró recientemente y vuelve a escribir: `postventa_reciente`.
+
+## Caso especial: humano sin respuesta del bot
+
+Este caso sí conviene modelarlo como estado real del router.
+
+### Cuándo entra en `espera_humano`
+
+Si el cliente dice cosas como:
+
+- "quiero hablar con una persona";
+- "pasame con un asesor";
+- "quiero que me atienda alguien real";
+- "no quiero bot".
+
+Entonces el router debe hacer esto:
+
+1. marcar `requiere_humano = true`;
+2. poner `subagente_codigo = espera_humano`;
+3. dejar la conversación en estado `en_espera` o `abierta` según tu flujo interno;
+4. no responder absolutamente nada desde IA.
+
+### Comportamiento deseado
+
+Mientras la conversación esté en `espera_humano`:
+
+- la IA no responde;
+- solo se guarda el mensaje;
+- se espera respuesta de empleado;
+- el router reevalúa cada nuevo mensaje entrante.
+
+### Cuándo volver de humano a IA
+
+Aquí sí conviene una excepción para no dejar al cliente abandonado.
+
+Si el cliente sigue escribiendo y no hubo intervención humana, el router puede devolver la conversación a IA.
+
+Regla recomendada inicial:
+
+- si el cliente manda 3 mensajes o más;
+- dentro de 10 minutos;
+- y no existe mensaje de empleado en ese intervalo;
+
+entonces:
+
+1. quitar `requiere_humano`;
+2. sacar `subagente_codigo` de `espera_humano`;
+3. volver a clasificar la conversación;
+4. permitir que IA responda.
+
+### Respuesta sugerida cuando vuelve a IA
+
+No conviene responder como si nada. Conviene una frase corta como:
+
+- "Mientras te toma una persona, te adelanto esto:";
+- "Te sigo ayudando por aquí mientras te revisan.";
+- "Voy avanzando contigo mientras entra un asesor.".
+
+### Metadata sugerida para este caso
+
+Este caso conviene guardarlo en `conversaciones.metadata`, por ejemplo:
+
+```json
+{
+	"handoff_humano": true,
+	"handoff_requested_at": "2026-04-08T18:00:00Z",
+	"handoff_reason": "cliente_pidio_persona",
+	"mensajes_cliente_post_handoff": 2,
+	"ultimo_mensaje_empleado_at": null,
+	"reactivar_ia_si_supera_mensajes": 3,
+	"reactivar_ia_ventana_minutos": 10
+}
+```
+
+### Regla importante
+
+Si un humano ya respondió, la IA no debe reactivarse sola por insistencia del cliente.
+
+La reactivación automática solo tiene sentido si:
+
+- el cliente pidió humano;
+- nadie humano contestó;
+- el cliente sigue insistiendo;
+- conviene evitar silencio total.
+
+## Implementación base ya hecha
+
+Ya quedó creada la base para empezar a desarrollar esto:
+
+- migraciones de contactos de canal;
+- migraciones de mensajes externos;
+- migraciones de subagentes;
+- migraciones de memoria general;
+- migraciones de memoria por contacto;
+- migraciones de resúmenes temporales;
+- ajuste de `conversaciones` para aceptar leads de WhatsApp sin `idcli` obligatorio;
+- modelos Eloquent para todas esas tablas;
+- seeder inicial de subagentes.
+
+## Qué sigue inmediatamente
+
+Con esta base, el siguiente paso técnico correcto ya no es seguir pensando tablas. Es construir dos piezas:
+
+1. `WhatsAppWebhookController` + `WhatsAppChannelService`
+2. `ChatRouterService` para elegir subagente y contexto
+
+Después de eso ya puedes conectar n8n o incluso mover parte de la orquestación a Laravel.
+
 ## Riesgos principales
 
 ### 1. El agente habla demasiado

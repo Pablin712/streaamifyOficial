@@ -14,6 +14,10 @@ class Conversacion extends Model
 
     protected $fillable = [
         'idcli',
+        'canal_principal',
+        'canal_contacto_id',
+        'origen',
+        'subagente_codigo',
         'estado',
         'ultimo_idemp',
         'ultima_actividad',
@@ -34,6 +38,11 @@ class Conversacion extends Model
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'idcli', 'idcli');
+    }
+
+    public function contactoCanal()
+    {
+        return $this->belongsTo(ChatContactoCanal::class, 'canal_contacto_id');
     }
 
     /**

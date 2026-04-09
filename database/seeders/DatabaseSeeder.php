@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             //DailyStatisticSeeder::class,
             MailSeeder::class,
             ChatPermisosSeeder::class,
+            ChatSubagenteSeeder::class,
             BancosPermisosSeeder::class,
         ]);
     }
