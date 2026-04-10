@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V2;
 use App\Http\Controllers\Controller;
 use App\Models\Codigo;
 use App\Models\Cuenta;
+use App\Models\Empleado;
 use App\Models\ViewUsuarioActivo;
 use App\Services\NetflixCodigoService;
 use Carbon\Carbon;
@@ -13,6 +14,13 @@ use Illuminate\Support\Str;
 
 class CodigoVerificationController extends Controller
 {
+    private const COMPANY_PHONE_NUMBERS = [
+        '593961778319',
+        '593996464991',
+        '593961412826',
+        '593961702129',
+    ];
+
     public function __construct(private NetflixCodigoService $netflixCodigoService)
     {
         request()->headers->set('Accept', 'application/json');
@@ -219,7 +227,7 @@ class CodigoVerificationController extends Controller
             ->whereRaw('LOWER(TRIM(usuariocue)) = ?', [$usuarioCueNormalizado])
             ->first();
 
-        $usuariosActivos = ViewUsuarioActivo::with([
+        $usuariosActivosCuenta = ViewUsuarioActivo::with([
             'cliente:idcli,nombrecli,telefonocli,email,pais',
             'cuenta.valor.servicio',
             'cuenta.valor.proveedor',
@@ -228,17 +236,25 @@ class CodigoVerificationController extends Controller
                 $query->whereRaw('LOWER(TRIM(usuariocue)) = ?', [$usuarioCueNormalizado])
                     ->where('activocue', true);
             })
-            ->get()
+            ->get();
+
+        $usuariosActivos = $usuariosActivosCuenta
             ->filter(function ($usuario) use ($telefono) {
                 return $this->phonesMatch($usuario->cliente->telefonocli ?? null, $telefono);
             })
             ->values();
 
         $usuarioActivo = $usuariosActivos->first();
+        $esNumeroEmpresa = $this->isCompanyPhone($telefono);
+        $empleadoAutorizado = $this->findAuthorizedEmployeeByPhone($telefono);
+        $solicitanteInternoAutorizado = $esNumeroEmpresa || $empleadoAutorizado !== null;
         $clienteActivoEnCuenta = (bool) $usuarioActivo;
-        $cuentaElegible = $usuarioActivo ? $this->netflixCodigoService->isEligibleCuenta($usuarioActivo->cuenta) : false;
+        $cuentaReferencia = $usuarioActivo->cuenta ?? $cuenta;
+        $cuentaElegible = $cuentaReferencia ? $this->netflixCodigoService->isEligibleCuenta($cuentaReferencia) : false;
 
-        $usuariosHabilitados = $cuentaElegible ? $usuariosActivos->count() : 0;
+        $usuariosHabilitados = $cuentaElegible
+            ? ($solicitanteInternoAutorizado ? $usuariosActivosCuenta->count() : $usuariosActivos->count())
+            : 0;
         $fechaLimite = Carbon::now()->subDays(10);
         $codigosSolicitadosUltimos10Dias = Codigo::query()
             ->where('telefono', $telefono)
@@ -250,16 +266,19 @@ class CodigoVerificationController extends Controller
             ->count();
 
         $codigosRestantes = max($usuariosHabilitados - $codigosSolicitadosUltimos10Dias, 0);
-        $puedePedirCodigo = $clienteActivoEnCuenta && $cuentaElegible && $codigosRestantes > 0;
+        $solicitanteAutorizado = $clienteActivoEnCuenta || $solicitanteInternoAutorizado;
+        $puedePedirCodigo = $solicitanteAutorizado && $cuentaElegible && ($solicitanteInternoAutorizado || $codigosRestantes > 0);
 
         if (!$cuenta) {
             $motivo = 'No existe una cuenta con ese usuario.';
-        } elseif (!$clienteActivoEnCuenta) {
+        } elseif (!$solicitanteAutorizado) {
             $motivo = 'El numero no pertenece a un cliente activo de esta cuenta.';
         } elseif (!$cuentaElegible) {
-            $motivo = 'Cliente activo encontrado, pero la cuenta no es elegible para pedir codigo.';
-        } elseif ($codigosRestantes <= 0) {
+            $motivo = 'La cuenta no es elegible para pedir codigo.';
+        } elseif (!$solicitanteInternoAutorizado && $codigosRestantes <= 0) {
             $motivo = 'El cliente ya agotó sus solicitudes permitidas para esta cuenta en los ultimos 10 dias.';
+        } elseif ($solicitanteInternoAutorizado) {
+            $motivo = 'Numero interno autorizado para validar esta cuenta.';
         } else {
             $motivo = 'Cliente activo y cuenta elegible para pedir codigo.';
         }
@@ -270,6 +289,13 @@ class CodigoVerificationController extends Controller
             'usuario_cue_normalizado' => $usuarioCueNormalizado,
             'cuenta_encontrada' => (bool) $cuenta,
             'cliente_activo_en_cuenta' => $clienteActivoEnCuenta,
+            'solicitante_interno_autorizado' => $solicitanteInternoAutorizado,
+            'es_numero_empresa' => $esNumeroEmpresa,
+            'empleado_autorizado' => $empleadoAutorizado ? [
+                'idemp' => $empleadoAutorizado->idemp,
+                'nombre' => $empleadoAutorizado->nombreemp,
+                'telefono' => $this->normalizePhone($empleadoAutorizado->telefonoemp),
+            ] : null,
             'puede_pedir_codigo' => $puedePedirCodigo,
             'ya_pidio_en_ultimos_10_dias' => $codigosSolicitadosUltimos10Dias > 0,
             'usuarios_habilitados' => $usuariosHabilitados,
@@ -302,6 +328,9 @@ class CodigoVerificationController extends Controller
             'usuario_cue' => $context['usuario_cue'],
             'cuenta_encontrada' => $context['cuenta_encontrada'],
             'cliente_activo_en_cuenta' => $context['cliente_activo_en_cuenta'],
+            'solicitante_interno_autorizado' => $context['solicitante_interno_autorizado'] ?? false,
+            'es_numero_empresa' => $context['es_numero_empresa'] ?? false,
+            'empleado_autorizado' => $context['empleado_autorizado'] ?? null,
             'puede_pedir_codigo' => $context['puede_pedir_codigo'],
             'ya_pidio_en_ultimos_10_dias' => $context['ya_pidio_en_ultimos_10_dias'],
             'usuarios_habilitados' => $context['usuarios_habilitados'],
@@ -422,6 +451,24 @@ class CodigoVerificationController extends Controller
         $normalized = trim((string) $value);
 
         return $normalized !== '' ? $normalized : null;
+    }
+
+    private function isCompanyPhone(string $telefono): bool
+    {
+        return in_array($telefono, self::COMPANY_PHONE_NUMBERS, true);
+    }
+
+    private function findAuthorizedEmployeeByPhone(string $telefono): ?Empleado
+    {
+        return Empleado::query()
+            ->with('roles')
+            ->whereHas('roles', function ($query) {
+                $query->whereIn('name', ['Tecnico', 'Trabajador']);
+            })
+            ->get()
+            ->first(function (Empleado $empleado) use ($telefono) {
+                return $this->phonesMatch($empleado->telefonoemp, $telefono);
+            });
     }
 
     private function phonesMatch(?string $databasePhone, string $incomingPhone): bool
