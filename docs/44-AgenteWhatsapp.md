@@ -1205,6 +1205,285 @@ Hazla por capas:
 
 Así el router será predecible y no cambiará de subagente por respuestas inestables del modelo.
 
+## Adaptación a tu diagrama real
+
+Tu diagrama sí se adapta bastante bien a la base que ya quedó creada, pero con una precisión importante:
+
+- las migraciones y seeders actuales cubren bien el nivel de `router -> subagente principal`;
+- todavía no implementan por sí solas toda la lógica fina de cambios de estado entre compra, entrega, soporte y retorno;
+- esa parte debe vivir en un `ChatRouterService` con reglas y variables derivadas.
+
+## Qué sí coincide ya con tu visión
+
+### 1. Memoria global + historial de chat
+
+Esto sí encaja directamente con lo modelado:
+
+- `chat_memoria_negocio` = memoria global del negocio;
+- `chat_memoria_contactos` = memoria estructurada por contacto;
+- `chat_memoria_resumenes` = memoria temporal y resumen operativo;
+- `mensajes` + `chat_mensajes_canal` = historial real del chat.
+
+### 2. Clasificación inicial por tipo de persona
+
+Tu idea de distinguir:
+
+- persona nueva;
+- cliente sin usuarios activos;
+- cliente activo;
+- cliente con soporte;
+- persona que quiere humano;
+
+sí se adapta al diseño actual.
+
+Lo que faltaba era expresarlo como variables, y eso ya quedó documentado.
+
+### 3. Handoff a humano
+
+Tu caso de:
+
+- no responder si pide humano;
+- esperar persona real;
+- volver a IA si insiste demasiado;
+
+también encaja con el subagente `espera_humano` que ya quedó definido.
+
+## Qué no está completo todavía
+
+Aquí está la diferencia entre tu diagrama y lo que hoy quedó implementado.
+
+### 1. No existe aún el motor que ejecute las transiciones
+
+Hoy existe la estructura para guardar:
+
+- contacto;
+- conversación;
+- subagente actual;
+- memoria;
+- criterios de subagente.
+
+Pero todavía no existe el servicio que haga automáticamente cosas como:
+
+- pasar de `asistente` a `vendedor`;
+- pasar de `vendedor` a `soporte` después de entregar cuenta;
+- pasar de `vendedor` a `asistente` si no paga o se arrepiente;
+- pasar de `soporte` a `vendedor` si en realidad quiere renovar.
+
+Eso debe hacerlo `ChatRouterService`.
+
+### 2. No están persistidas todas las variables que tu diagrama usa implícitamente
+
+Tu flujo usa variables de negocio que todavía no están formalizadas como cálculo del router, por ejemplo:
+
+- `cliente_tiene_usuarios_activos`
+- `cliente_tiene_cuentas_activas`
+- `transferencia_aprobada`
+- `venta_anotada`
+- `cuenta_entregada`
+- `cliente_quiere_renovar`
+- `cliente_se_arrepintio`
+- `cliente_no_pago`
+
+La base actual sí permite guardar estas señales, pero todavía no hay código que las calcule de forma central.
+
+### 3. Tus “subagentes para delegar” aún no existen como segundo nivel
+
+En tu diagrama aparece algo más avanzado:
+
+- subagente principal;
+- APIs permitidas;
+- subagentes internos de delegación;
+- posible paso a trabajador humano o router.
+
+Hoy la base solo modela el primer nivel de subagente principal. El segundo nivel todavía habría que implementarlo como:
+
+- tools con acciones internas;
+- o `accion_sugerida` dentro del resultado del router;
+- o cola de trabajo para empleados.
+
+## Cómo usar la base actual para comportarse como tu diagrama
+
+La mejor forma de usar lo que ya tienes es pensar en dos capas.
+
+### Capa 1. Subagente principal
+
+Solo decide el modo de atención dominante:
+
+- `asistente_no_registrado`
+- `vendedor_cierre`
+- `soporte_cliente`
+- `cobranzas_pago`
+- `postventa_reciente`
+- `espera_humano`
+
+### Capa 2. Acción o transición
+
+Además del subagente, el router debería devolver una acción sugerida.
+
+Ejemplos:
+
+- `accion = cotizar`
+- `accion = pedir_comprobante`
+- `accion = verificar_pago`
+- `accion = registrar_soporte`
+- `accion = entregar_cuenta`
+- `accion = derivar_humano`
+- `accion = reactivar_ia`
+- `accion = renovar_venta`
+
+Con eso consigues el comportamiento fino de tu diagrama sin crear 20 subagentes distintos.
+
+## Variables adicionales que te conviene crear para seguir tu flujo
+
+Si quieres que tu diagrama funcione tal como lo dibujaste, te recomiendo añadir al cálculo del router estas variables derivadas:
+
+- `cliente_tiene_usuarios_activos`
+- `cliente_tiene_soporte_pendiente`
+- `cliente_tiene_pago_pendiente`
+- `cliente_tiene_compra_reciente`
+- `cliente_tiene_entrega_reciente`
+- `cliente_quiere_renovar`
+- `cliente_quiere_otra_compra`
+- `cliente_pidio_confirmacion_pago`
+- `cliente_pago_aprobado`
+- `cliente_pago_rechazado`
+- `cliente_recibio_cuenta`
+
+## Qué piezas reales del proyecto ya te sirven para eso
+
+Ya hay varias piezas del proyecto que sí ayudan a acercarte a tu diagrama:
+
+- `ViewUsuarioActivo` para detectar usuarios activos del cliente;
+- `AIAssistantController` para cliente, ventas, servicios y precios;
+- `InformationController` para precios y bancos;
+- `PaymentVerificationController` para flujo de comprobantes y aprobación/rechazo;
+- `TecnicoCuentasController` para cuentas, mantenimientos y estado de cuentas;
+- `Soporte` y `soportes` para registrar incidencias.
+
+## Cómo se traducen tus casos 1 al 5
+
+### Caso 1
+
+Tu flujo:
+
+- mensaje como nuevo -> asistente
+- quiere comprar -> vendedor
+- pagó aprobado -> vendedor
+- recibe cuenta -> vendedor
+- después de recibir cuenta -> soporte
+
+Esto sí se adapta muy bien.
+
+Implementación recomendada:
+
+- subagente inicial: `asistente_no_registrado`
+- si detecta intención de compra: `vendedor_cierre`
+- si llega pago aprobado: `cobranzas_pago` y luego `vendedor_cierre`
+- cuando venta y entrega quedan registradas: `postventa_reciente`
+- si luego reporta problema: `soporte_cliente`
+
+Observación:
+
+Aquí yo no lo dejaría en `vendedor` después de entrega; lo más limpio es pasarlo a `postventa_reciente`, y de ahí a `soporte_cliente` si aparece incidencia.
+
+### Caso 2
+
+Tu flujo:
+
+- mensaje como cliente sin usuarios activos -> asistente
+- quiere comprar -> vendedor
+- pagó aprobado -> vendedor
+- recibe cuenta -> vendedor
+- después de recibir cuenta -> soporte
+
+Esto también encaja.
+
+La clave es usar una variable como:
+
+- `cliente_tiene_usuarios_activos = false`
+
+Si existe cliente pero no tiene usuarios activos, puede comportarse casi como lead comercial.
+
+### Caso 3
+
+Tu flujo:
+
+- mensaje como cliente con usuarios activos -> soporte
+- quiere comprar o renovar -> vendedor
+- pagó aprobado -> vendedor
+- recibe cuenta -> vendedor
+- después de recibir cuenta -> soporte
+
+Esto encaja, pero requiere una prioridad contextual.
+
+Regla correcta:
+
+- por defecto cliente activo -> `soporte_cliente`
+- si detecta intención fuerte de nueva compra o renovación -> `vendedor_cierre`
+
+O sea: el estado base es soporte, pero la intención actual puede moverlo temporalmente a ventas.
+
+### Caso 4
+
+Tu flujo:
+
+- mensaje como caso 1, 2 o 3 -> asistente
+- quiere comprar -> vendedor
+- no pagó o se rechazó pago -> vendedor
+- pide de nuevo pago o confirmación -> vendedor
+- no paga -> asistente
+
+Esto se adapta, pero aquí conviene ajustar una cosa.
+
+Si no paga o el pago es rechazado, yo no volvería automáticamente a `asistente`. Haría esto:
+
+- `cobranzas_pago` si aún está intentando pagar;
+- `vendedor_cierre` si sigue negociando o pidiendo confirmación;
+- `asistente_no_registrado` solo si realmente se enfría la compra o deja de ser un caso comercial activo.
+
+Es decir: en tu diagrama ese regreso a asistente es válido, pero debería ocurrir por enfriamiento, no solo por rechazo puntual.
+
+### Caso 5
+
+Tu flujo:
+
+- mensaje como cliente activo -> soporte
+- quiere soporte con cuenta -> soporte
+- recibe solución o mensaje de seguimiento -> soporte
+- no quiere IA, quiere humano -> router
+
+Esto encaja muy bien con lo actual.
+
+Regla recomendada:
+
+- cliente activo + problema = `soporte_cliente`
+- si pide humano = `espera_humano`
+- si humano no responde y cliente insiste = volver a `soporte_cliente`
+
+## Veredicto sobre tu diseño
+
+Tu diseño sí es compatible con las últimas migraciones y con la lógica que se ha documentado.
+
+Pero hay que entenderlo así:
+
+- la base actual sí soporta tu arquitectura;
+- todavía no ejecuta sola los cambios de caso;
+- para que funcione como en tu dibujo falta implementar el router de transición.
+
+## Cómo te recomiendo usarlo ya
+
+Si lo quieres usar sin rehacer la base, te recomiendo esta estrategia:
+
+1. Mantén solo 6 subagentes principales.
+2. Haz que el router calcule variables y flags.
+3. Además del subagente, devuelve `accion_sugerida`.
+4. Usa `conversaciones.subagente_codigo` para el modo actual.
+5. Usa `conversaciones.metadata` para estado transitorio del caso.
+6. Usa `chat_memoria_contactos` para hechos del cliente.
+7. Usa `chat_memoria_resumenes` para contexto temporal y handoff.
+
+Así tu diagrama no solo encaja: se vuelve implementable sin inflar demasiado la arquitectura.
+
 Reglas base recomendadas:
 
 1. Si pide explícitamente hablar con una persona: `espera_humano`.

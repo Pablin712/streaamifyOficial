@@ -16,9 +16,18 @@ class Recarga extends Model
         'numcomprobante',
         'valor',
         'foto',
+        'comprobante_hash',
         'idestado',
         'idban',
+        'origen',
+        'external_reference',
+        'metadata',
         'transaccion_id', // FK to transacciones
+    ];
+
+    protected $casts = [
+        'valor' => 'decimal:2',
+        'metadata' => 'array',
     ];
 
     // Relación con Cliente (una recarga pertenece a un cliente)

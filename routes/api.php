@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\V2\TecnicoProductosController;
 use App\Http\Controllers\Api\V2\TecnicoConfigController;
 use App\Http\Controllers\Api\V2\PaymentVerificationController;
 use App\Http\Controllers\Api\V2\CodigoVerificationController;
+use App\Http\Controllers\Api\V2\ChatRouterController;
+use App\Http\Controllers\Api\V2\WhatsAppPaymentController;
 use App\Http\Controllers\Api\DailyStatisticsController;
 
 /*
@@ -161,6 +163,15 @@ Route::prefix('v2')->group(function () {
         Route::match(['get', 'post'], '/registrar-codigo-entregado', 'registrarCodigoEntregado')->name('api.v2.registrar-codigo-entregado');
     });
 
+    Route::prefix('chat/router')->controller(ChatRouterController::class)->group(function () {
+        Route::post('/ingest', 'recibirMensaje')->name('api.v2.chat.router.ingest');
+        Route::match(['get', 'post'], '/context', 'contextoConversacion')->name('api.v2.chat.router.context');
+        Route::post('/respond', 'responderAgente')->name('api.v2.chat.router.respond');
+        Route::post('/handoff', 'derivarHumano')->name('api.v2.chat.router.handoff');
+        Route::post('/memory/summary', 'guardarResumen')->name('api.v2.chat.router.memory.summary');
+        Route::post('/memory/contact', 'guardarMemoriaContacto')->name('api.v2.chat.router.memory.contact');
+    });
+
     // Información y Precios - Público (con prefijo 'info' - legacy)
     Route::controller(InformationController::class)->prefix('info')->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios');
@@ -300,12 +311,18 @@ Route::prefix('v2')->group(function () {
     // ==========================================
     // RUTAS PARA VERIFICADOR DE PAGOS (N8N) - V2
     // ==========================================
-    Route::prefix('payments/n8n')->controller(PaymentVerificationController::class)->group(function () {
+    Route::prefix('payments/n8n')->group(function () {
+        Route::controller(WhatsAppPaymentController::class)->group(function () {
+            Route::post('/receipt-checkout', 'receiptCheckout')->name('api.v2.payments.n8n.receipt-checkout');
+        });
+
+        Route::controller(PaymentVerificationController::class)->group(function () {
         Route::get('/recargas/{idrec}', 'detalleRecarga')->name('api.v2.payments.n8n.detalle');
         Route::get('/recargas/{idrec}/comprobante', 'comprobante')->name('api.v2.payments.n8n.comprobante');
         Route::get('/recargas/{idrec}/comprobante/download', 'descargarComprobante')->name('api.v2.payments.n8n.comprobante.download');
         Route::post('/recargas/{idrec}/aprobar', 'aprobar')->name('api.v2.payments.n8n.aprobar');
         Route::post('/recargas/{idrec}/rechazar', 'rechazar')->name('api.v2.payments.n8n.rechazar');
+        });
     });
 
     // Chat AI - Para empleados (proxy a n8n) - Necesita middleware web para sesiones

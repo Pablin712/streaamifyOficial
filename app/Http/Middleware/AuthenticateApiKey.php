@@ -18,7 +18,9 @@ class AuthenticateApiKey
     public function handle(Request $request, Closure $next, ?string $permission = null): Response
     {
         // Obtener API Key del header o query parameter
-        $apiKeyValue = $request->header('X-API-Key') ?? $request->input('api_key');
+        $apiKeyValue = $request->header('X-API-Key')
+            ?? $request->input('api_key')
+            ?? $request->input('apikey');
 
         // Validar que se proporcionó la API Key
         if (!$apiKeyValue) {

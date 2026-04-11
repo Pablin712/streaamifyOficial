@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Models\Empleado;
 use App\Support\ClienteAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -69,6 +70,44 @@ class AuthController extends Controller
                 'email' => $cliente->email,
                 'telefono' => $cliente->telefonocli,
             ]
+        ], 200);
+    }
+
+    public function validarEmpleado(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'usuario' => 'required|email',
+            'password' => 'required|string'
+        ], [
+            'usuario.required' => 'El correo electrónico es obligatorio.',
+            'password.required' => 'La contraseña es obligatoria.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'valid' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 200);
+        }
+
+        $empleado = Empleado::where('usuarioemp', $request->usuario)->firstOrFail();
+        $valid = \Illuminate\Support\Facades\Hash::check($request->password, $empleado->passwordemp);
+
+        if (!$valid) {
+            return response()->json([
+                'success' => false,
+                'valid' => false,
+                'message' => 'Contraseña incorrecta'
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => true,
+            'valid' => true,
+            'message' => 'Credenciales de empleado válidas',
+            // Puedes incluir información adicional del empleado si es necesario
         ], 200);
     }
 
