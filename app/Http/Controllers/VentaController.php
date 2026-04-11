@@ -285,6 +285,27 @@ class VentaController extends Controller
         $idvenPasado = $request->idvenPasado;
         \App\Models\DetalleVenta::where('idven', $idvenPasado)->update(['activodet' => false]);
         $detalles = json_decode($request->detalles_venta, true);
+
+        if (!is_array($detalles) || empty($detalles)) {
+            return redirect()->back()->with('error', 'No hay detalles válidos para renovar la venta.');
+        }
+
+        foreach ($detalles as $detalle) {
+            $idcue = $detalle['cuenta'] ?? null;
+            $numeroper = $detalle['perfil'] ?? null;
+
+            if (empty($idcue) || empty($numeroper)) {
+                return redirect()->back()->with('error', 'Se detectó un detalle incompleto en la renovación.');
+            }
+
+            $idper = $idcue . '.' . $numeroper;
+            $perfilExiste = DB::table('perfiles')->where('idper', $idper)->exists();
+
+            if (!$perfilExiste) {
+                return redirect()->back()->with('error', 'Uno o más perfiles de la renovación ya no existen. Actualiza los detalles antes de guardar.');
+            }
+        }
+
         $total_venta = collect($detalles)->sum('monto');
         $fecha = Carbon::today()->toDateString();
 

@@ -6,14 +6,20 @@ use Illuminate\Http\Request;
 use App\Mail\RecoverMail;
 use App\Mail\RecoverClienteMail;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\Empleado;
 use App\Models\Cliente;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class EmailController extends Controller
 {
     public function sendRecoverEmail(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
         // Obtener el email del request
         $email = $request->input('email');
 
@@ -30,20 +36,44 @@ class EmailController extends Controller
             return redirect()->route('recover')->with('error', 'No employee found or invalid email');
         }
 
-        // Generar una nueva contraseña
-        $password = $this->generarContrasenia(); // Aquí usas tu método o lógica para generar la contraseña
+        // Guardar hash anterior para poder revertir si falla el envío
+        $hashAnterior = $empleado->passwordemp;
 
-        // Actualizar la contraseña en la base de datos
+        // Generar nueva contraseña y actualizar
+        $password = $this->generarContrasenia();
         $empleado->passwordemp = $password;
         $empleado->save();
 
-        // Enviar el correo con la nueva contraseña
-        Mail::to($email)->send(new RecoverMail($empleado, $password));
+        try {
+            Mail::to($email)->send(new RecoverMail($empleado, $password));
+        } catch (TransportExceptionInterface $e) {
+            DB::table('empleados')->where('idemp', $empleado->idemp)->update(['passwordemp' => $hashAnterior]);
+
+            Log::warning('Fallo SMTP en recuperación admin', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('recover')->with('error', 'No se pudo enviar el correo de recuperación. Verifica la configuración del buzón en hosting.');
+        } catch (\Throwable $e) {
+            DB::table('empleados')->where('idemp', $empleado->idemp)->update(['passwordemp' => $hashAnterior]);
+
+            Log::error('Error inesperado en recuperación admin', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('recover')->with('error', 'Ocurrió un error al procesar la recuperación.');
+        }
 
         // Redirigir con un mensaje de éxito
         return redirect()->route('recover')->with('success', 'Email sent successfully. Please check your inbox.');
     }
     public function sendRecoverClienteEmail(Request $request){
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
         // Obtener el email del request
         $email = $request->input('email');
 
@@ -52,26 +82,46 @@ class EmailController extends Controller
 
         // Verificar si el cliente existe
         if (!$cliente) {
-            return redirect()->route('recover')->with('error', 'No client found with this email');
+            return redirect()->route('cliente.recover')->with('error', 'No se encontró una cuenta de cliente con ese correo.');
         }
 
         // Verificar si el cliente existe y tiene un email válido
         if (!$cliente || empty($cliente->email)) {
-            return redirect()->route('recover')->with('error', 'No client found or invalid email');
+            return redirect()->route('cliente.recover')->with('error', 'Cliente no encontrado o correo inválido.');
         }
 
-        // Generar una nueva contraseña
-        $password = $this->generarContrasenia(); // Aquí usas tu método o lógica para generar la contraseña
+        // Guardar hash anterior para poder revertir si falla el envío
+        $hashAnterior = $cliente->password;
 
-        // Actualizar la contraseña en la base de datos
+        // Generar nueva contraseña y actualizar
+        $password = $this->generarContrasenia();
         $cliente->password = $password;
         $cliente->save();
 
-        // Enviar el correo con la nueva contraseña
-        Mail::to($email)->send(new RecoverClienteMail($cliente, $password));
+        try {
+            Mail::to($email)->send(new RecoverClienteMail($cliente, $password));
+        } catch (TransportExceptionInterface $e) {
+            DB::table('clientes')->where('idcli', $cliente->idcli)->update(['password' => $hashAnterior]);
+
+            Log::warning('Fallo SMTP en recuperación cliente', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('cliente.recover')->with('error', 'No se pudo enviar el correo de recuperación. Intenta más tarde o contacta soporte.');
+        } catch (\Throwable $e) {
+            DB::table('clientes')->where('idcli', $cliente->idcli)->update(['password' => $hashAnterior]);
+
+            Log::error('Error inesperado en recuperación cliente', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('cliente.recover')->with('error', 'Ocurrió un error al procesar la recuperación.');
+        }
 
         // Redirigir con un mensaje de éxito
-        return redirect()->route('cliente.recover')->with('success', 'Email sent successfully. Please check your inbox.');
+        return redirect()->route('cliente.recover')->with('success', 'Correo enviado correctamente. Revisa tu bandeja de entrada.');
     }
     protected function generarContrasenia($longitud = 8)
     {

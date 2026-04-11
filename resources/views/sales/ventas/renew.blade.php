@@ -86,21 +86,30 @@
                     </thead>
                     <tbody id="tabla-detalles">
                         @foreach ($detalles as $detalle)
+                            @php
+                                $cuentaId = $detalle->perfil?->cuenta?->idcue;
+                                $perfilNumero = $detalle->perfil?->numeroper;
+                                $detalleValido = !empty($cuentaId) && !empty($perfilNumero);
+                            @endphp
                             <tr>
-                                <td>{{ $detalle->perfil->cuenta->idcue }}</td>
-                                <td>{{ $detalle->perfil->numeroper }}</td>
+                                <td>{{ $cuentaId ?? 'Cuenta eliminada' }}</td>
+                                <td>{{ $perfilNumero ?? 'Perfil eliminado' }}</td>
                                 <td>Renovacion Cuenta</td>
                                 <td>{{ $detalle->fechavendet_suma }}</td>
                                 <td>${{ number_format($detalle->montodet, 2) }}</td>
-                                <td>
-                                    <button type="button" class="btn btn-warning btn-sm editarDetalleBtn"
-                                        data-cuenta="{{ $detalle->perfil->cuenta->idcue }}"
-                                        data-perfil="{{ $detalle->perfil->numeroper }}"
-                                        data-descripcion="Renovacion Cuenta"
-                                        data-fechavencimiento="{{ $detalle->fechavendet_suma }}"
-                                        data-monto="{{ $detalle->montodet }}" data-id="{{ $detalle->iddet }}">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                <td data-detalle-valido="{{ $detalleValido ? 1 : 0 }}">
+                                    @if ($detalleValido)
+                                        <button type="button" class="btn btn-warning btn-sm editarDetalleBtn"
+                                            data-cuenta="{{ $cuentaId }}"
+                                            data-perfil="{{ $perfilNumero }}"
+                                            data-descripcion="Renovacion Cuenta"
+                                            data-fechavencimiento="{{ $detalle->fechavendet_suma }}"
+                                            data-monto="{{ $detalle->montodet }}" data-id="{{ $detalle->iddet }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Detalle incompleto</span>
+                                    @endif
                                     <button type="button" class="btn btn-danger btn-sm eliminarDetalleBtn">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -266,6 +275,11 @@
         $('#form-venta').on('submit', function(event) {
             const detalles = [];
             $('#tabla-detalles tr').each(function() {
+                const detalleValido = parseInt($(this).find('td').eq(5).attr('data-detalle-valido') || '1', 10) === 1;
+                if (!detalleValido) {
+                    return;
+                }
+
                 const cuenta = $(this).find('td').eq(0).text();
                 const perfil = $(this).find('td').eq(1).text();
                 const descripcion = $(this).find('td').eq(2).text();
@@ -282,6 +296,12 @@
                     });
                 }
             });
+
+            if (detalles.length === 0) {
+                event.preventDefault();
+                alert('No hay detalles válidos para renovar. Elimina los incompletos y agrega nuevos detalles.');
+                return;
+            }
 
             $('#detalles_venta').val(JSON.stringify(detalles));
             this.submit();
