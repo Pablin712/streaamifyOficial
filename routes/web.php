@@ -93,7 +93,6 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     });
     Route::controller(HistorialClientesController::class)->group(function () {
         Route::get('/historial-cliente', 'index')->name('historial.cliente');
-        Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
         Route::post('/suscripciones/{iddet}/pedir-codigo-netflix', 'pedirCodigoNetflix')->name('cliente.pedirCodigoNetflix');
     });
     Route::controller(SoporteController::class)->group(function () {
@@ -101,6 +100,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     });
     Route::controller(ShopController::class)->group(function () {
         Route::post('/comprar/{id}', 'comprar')->name('comprar');
+        Route::post('/renovar-preview/{id}', 'renovarPreview')->name('cliente.renovar.preview');
         Route::post('/renovar/{id}', 'renovar')->name('cliente.renovar');
     });
     Route::controller(ClienteController::class)->group(function () {

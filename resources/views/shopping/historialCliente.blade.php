@@ -376,12 +376,52 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
                             onclick="cerrarRenovacionModal()"></button>
                     </div>
-                    <div class="modal-body text-center">
+                    <div class="modal-body">
                         <i class="bi bi-arrow-repeat text-primary" style="font-size: 3rem;"></i>
-                        <h5 class="mt-3">Tu suscripción a <b>{{ session('renovacion_exitosa')['nombre'] }}</b> ha sido renovada</h5>
-                        <p class="text-muted">Nueva fecha de vencimiento:
-                            <b>{{ session('renovacion_exitosa')['fecha_vencimiento'] }}</b>
-                        </p>
+                        <h5 class="mt-3 text-center">Renovación completada para <b>{{ session('renovacion_exitosa')['nombre'] }}</b></h5>
+
+                        <div class="alert alert-success mt-3 mb-3">
+                            <div><strong>Meses renovados:</strong> {{ session('renovacion_exitosa')['meses'] ?? 1 }}</div>
+                            <div><strong>Total descontado:</strong> ${{ number_format(session('renovacion_exitosa')['total_descontado'] ?? 0, 2) }}</div>
+                            <div><strong>Saldo actual:</strong> ${{ number_format(session('renovacion_exitosa')['saldo_actual'] ?? 0, 2) }}</div>
+                            <div><strong>Próximo vencimiento:</strong> {{ session('renovacion_exitosa')['fecha_vencimiento'] }}</div>
+                            @if (!empty(session('renovacion_exitosa')['pricing_description']))
+                                <div><strong>Cálculo aplicado:</strong> {{ session('renovacion_exitosa')['pricing_description'] }}</div>
+                            @endif
+                            @if (!empty(session('renovacion_exitosa')['combo_producto']))
+                                <div><strong>Combo aplicado:</strong> {{ session('renovacion_exitosa')['combo_producto']['nombre'] ?? 'Producto combo' }}</div>
+                            @endif
+                        </div>
+
+                        @if (!empty(session('renovacion_exitosa')['detalles']))
+                            <h6 class="mb-2">Cuentas/perfiles renovados</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-soft align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Servicio</th>
+                                            <th>Cuenta</th>
+                                            <th>Perfil</th>
+                                            <th>Vencía</th>
+                                            <th>Ahora vence</th>
+                                            <th>Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (session('renovacion_exitosa')['detalles'] as $detalleRenovado)
+                                            <tr>
+                                                <td>{{ $detalleRenovado['servicio'] ?? 'Servicio' }}</td>
+                                                <td>{{ $detalleRenovado['cuenta'] ?? 'No disponible' }}</td>
+                                                <td>{{ $detalleRenovado['perfil'] ?? 'N/A' }}</td>
+                                                <td>{{ $detalleRenovado['fecha_anterior'] ?? 'N/A' }}</td>
+                                                <td>{{ $detalleRenovado['fecha_nueva'] ?? 'N/A' }}</td>
+                                                <td>${{ number_format((float) ($detalleRenovado['monto'] ?? 0), 2) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" onclick="cerrarRenovacionModal()">Aceptar</button>
@@ -589,7 +629,7 @@
                                             <td>
                                                 <div class="d-flex flex-wrap gap-2">
                                                     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                                        data-bs-target="#renovarModal{{ $usuario->idven }}">
+                                                        data-bs-target="#renovarModal{{ $usuario->iddet }}">
                                                         <i class="bi bi-arrow-repeat me-1"></i>Renovar
                                                     </button>
                                                     @if ($canRequestNetflixCode)
@@ -608,29 +648,51 @@
                                             </td>
                                         </tr>
 
-                                        <div class="modal fade" id="renovarModal{{ $usuario->idven }}" tabindex="-1"
-                                            aria-labelledby="renovarModalLabel{{ $usuario->idven }}" aria-hidden="true">
+                                        <div class="modal fade" id="renovarModal{{ $usuario->iddet }}" tabindex="-1"
+                                            aria-labelledby="renovarModalLabel{{ $usuario->iddet }}" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-lg">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="renovarModalLabel{{ $usuario->idven }}">Confirmar renovación</h5>
+                                                        <h5 class="modal-title" id="renovarModalLabel{{ $usuario->iddet }}">Confirmar renovación</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <form action="{{ route('cliente.renovar', $usuario->idven) }}" method="POST">
                                                         @csrf
                                                         <div class="modal-body">
+                                                            <h6 class="mb-2">Resumen de compra #{{ $usuario->idven }}</h6>
+                                                            <div class="alert alert-light border small mb-3">
+                                                                <div><strong>Total original de la compra:</strong> ${{ number_format((float) ($usuario->venta->totalpagoven ?? 0), 2) }}</div>
+                                                                <div><strong>Saldo actual:</strong> ${{ number_format((float) auth()->guard('cliente')->user()->saldo, 2) }}</div>
+                                                                <div><strong>Total a descontar por selección:</strong> <span class="fw-bold text-primary js-renov-total" data-modal="{{ $usuario->iddet }}">$0.00</span></div>
+                                                                <div><strong>Estrategia de precio:</strong> <span class="js-renov-strategy" data-modal="{{ $usuario->iddet }}">Pendiente de cálculo</span></div>
+                                                                <div class="text-muted js-renov-description" data-modal="{{ $usuario->iddet }}"></div>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold" for="renov-meses-{{ $usuario->iddet }}">Meses de renovación</label>
+                                                                <select class="form-select js-renov-meses" id="renov-meses-{{ $usuario->iddet }}" name="meses" data-modal="{{ $usuario->iddet }}" data-venta="{{ $usuario->idven }}">
+                                                                    @for ($mes = 1; $mes <= 12; $mes++)
+                                                                        <option value="{{ $mes }}" @selected($mes === 1)>{{ $mes }} {{ $mes === 1 ? 'mes' : 'meses' }}</option>
+                                                                    @endfor
+                                                                </select>
+                                                                <small class="text-muted">Máximo 12 meses. Si existe combo para los servicios y meses seleccionados, se aplicará ese precio.</small>
+                                                            </div>
+
                                                             <h6 class="mb-3">Selecciona los perfiles a renovar</h6>
                                                             <ul class="list-group">
                                                                 @foreach ($usuario->venta->detalles_venta as $detalle)
                                                                     <li class="list-group-item d-flex justify-content-between align-items-center gap-3">
                                                                         <div>
                                                                             <input class="form-check-input me-2" type="checkbox" name="detalles[]"
-                                                                                value="{{ $detalle->iddet }}" id="detalle-{{ $detalle->iddet }}">
-                                                                            <label class="form-check-label" for="detalle-{{ $detalle->iddet }}">
+                                                                                value="{{ $detalle->iddet }}" id="detalle-{{ $usuario->iddet }}-{{ $detalle->iddet }}"
+                                                                                data-renov-modal="{{ $usuario->iddet }}" data-monto="{{ (float) $detalle->montodet }}" data-iddet="{{ $detalle->iddet }}">
+                                                                            <label class="form-check-label" for="detalle-{{ $usuario->iddet }}-{{ $detalle->iddet }}">
                                                                                 <strong>{{ optional(optional(optional(optional($detalle->perfil)->cuenta)->valor)->servicio)->nombreser ?? 'Servicio' }}</strong><br>
                                                                                 Cuenta: <strong>{{ optional(optional($detalle->perfil)->cuenta)->usuariocue }}</strong><br>
                                                                                 Perfil: <strong>{{ optional($detalle->perfil)->numeroper }}</strong><br>
-                                                                                Nueva fecha: <strong>{{ \Carbon\Carbon::parse($detalle->fechavendet)->addMonth()->format('d/m/Y') }}</strong>
+                                                                                Vencía: <strong>{{ \Carbon\Carbon::parse($detalle->fechavendet)->format('d/m/Y') }}</strong><br>
+                                                                                Nueva fecha estimada: <strong class="js-fecha-nueva" data-fecha-base="{{ \Carbon\Carbon::parse($detalle->fechavendet)->format('Y-m-d') }}" data-modal="{{ $usuario->iddet }}">{{ \Carbon\Carbon::parse($detalle->fechavendet)->addMonth()->format('d/m/Y') }}</strong><br>
+                                                                                Monto base (1 mes): <strong>${{ number_format((float) $detalle->montodet, 2) }}</strong>
                                                                             </label>
                                                                         </div>
                                                                     </li>
@@ -1123,6 +1185,99 @@
             window.scrollTo({ top: document.getElementById('historialTabs').offsetTop - 90, behavior: 'smooth' });
         }
 
+        function formatMoney(value) {
+            const amount = Number(value || 0);
+            return `$${amount.toFixed(2)}`;
+        }
+
+        function addMonthsToDate(dateBase, months) {
+            const date = new Date(`${dateBase}T00:00:00`);
+            if (Number.isNaN(date.getTime())) {
+                return '';
+            }
+
+            date.setMonth(date.getMonth() + Number(months || 1));
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+
+            return `${day}/${month}/${year}`;
+        }
+
+        function updateRenewDates(modalId, meses) {
+            document.querySelectorAll(`.js-fecha-nueva[data-modal="${modalId}"]`).forEach(function(el) {
+                el.textContent = addMonthsToDate(el.dataset.fechaBase, meses) || el.textContent;
+            });
+        }
+
+        async function refreshRenovPreview(modalId) {
+            const mesesSelect = document.querySelector(`.js-renov-meses[data-modal="${modalId}"]`);
+            if (!mesesSelect) {
+                return;
+            }
+
+            const ventaId = mesesSelect.dataset.venta;
+            const meses = Number(mesesSelect.value || 1);
+            const selected = Array.from(document.querySelectorAll(`input[data-renov-modal="${modalId}"]:checked`));
+            const totalEl = document.querySelector(`.js-renov-total[data-modal="${modalId}"]`);
+            const strategyEl = document.querySelector(`.js-renov-strategy[data-modal="${modalId}"]`);
+            const descriptionEl = document.querySelector(`.js-renov-description[data-modal="${modalId}"]`);
+            const submitBtn = document.querySelector(`#renovarModal${modalId} button[type="submit"]`);
+
+            updateRenewDates(modalId, meses);
+
+            if (selected.length === 0) {
+                if (totalEl) totalEl.textContent = '$0.00';
+                if (strategyEl) strategyEl.textContent = 'Selecciona perfiles';
+                if (descriptionEl) descriptionEl.textContent = '';
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+
+            if (submitBtn) submitBtn.disabled = false;
+
+            const payload = {
+                meses,
+                detalles: selected.map((el) => Number(el.value)),
+            };
+
+            try {
+                const url = '{{ route("cliente.renovar.preview", ":id") }}'.replace(':id', ventaId);
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo calcular el precio de renovación.');
+                }
+
+                const info = data.data || {};
+                if (totalEl) totalEl.textContent = formatMoney(info.total || 0);
+                if (strategyEl) {
+                    strategyEl.textContent = info.estrategia === 'combo_producto'
+                        ? `Combo (${info.producto_aplicado?.nombre || 'aplicado'})`
+                        : info.estrategia === 'mayoreo_descuento'
+                            ? 'Mayoreo con descuento'
+                            : 'Precio normal';
+                }
+
+                if (descriptionEl) {
+                    descriptionEl.textContent = info.descripcion || '';
+                }
+            } catch (error) {
+                if (strategyEl) strategyEl.textContent = 'Error de cálculo';
+                if (descriptionEl) descriptionEl.textContent = error.message || 'Intenta nuevamente.';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const forcedTab = @json(session('active_tab'));
             const rememberedTab = localStorage.getItem('activeTab');
@@ -1145,6 +1300,22 @@
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('crearSoporteModal')).show();
                 switchToTab('#soportes');
             @endif
+
+            document.querySelectorAll('input[data-renov-modal]').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    refreshRenovPreview(this.dataset.renovModal);
+                });
+            });
+
+            document.querySelectorAll('.js-renov-meses').forEach(function(select) {
+                select.addEventListener('change', function() {
+                    refreshRenovPreview(this.dataset.modal);
+                });
+            });
+
+            document.querySelectorAll('.js-renov-meses').forEach(function(select) {
+                refreshRenovPreview(select.dataset.modal);
+            });
         });
     </script>
 @endsection

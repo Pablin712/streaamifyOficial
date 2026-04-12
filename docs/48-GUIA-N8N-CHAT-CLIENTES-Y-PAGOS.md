@@ -928,3 +928,9 @@ Si después quieres, la siguiente guía la hago para estas dos adicionales del m
 
 - `POST /api/v2/chat/router/memory/summary`
 - `POST /api/v2/chat/router/memory/contact`
+
+## Guía complementaria
+
+La arquitectura recomendada de `router + switch + subagentes + memoria` quedó documentada aparte en:
+
+- `docs/49-GUIA-N8N-ROUTER-Y-SUBAGENTES.md`

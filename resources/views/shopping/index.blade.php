@@ -140,7 +140,11 @@
                     <div class="modal-body text-center">
                         <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
                         <h5 class="mt-3">{{ session('compra_exitosa')['nombre'] }}</h5>
-                        <p class="text-muted">Precio: ${{ number_format(session('compra_exitosa')['precio'], 2) }}</p>
+                        <p class="text-muted">Total cobrado: ${{ number_format(session('compra_exitosa')['precio'], 2) }}</p>
+                        @if (!empty(session('compra_exitosa')['descuento']))
+                            <p class="mb-1">Subtotal: ${{ number_format(session('compra_exitosa')['subtotal'] ?? session('compra_exitosa')['precio'], 2) }}</p>
+                            <p class="text-success">Descuento aplicado: -${{ number_format(session('compra_exitosa')['descuento'], 2) }}</p>
+                        @endif
                         <p>Tu compra ha sido procesada con éxito.</p>
 
                         <!-- Mostrar los servicios adquiridos -->
@@ -1019,6 +1023,7 @@
 @section('scripts')
     <script>
         let cart = @json($cart); // Inicializar el carrito con los datos de la sesión
+        const assetBaseUrl = @json(asset(''));
 
         // Guardar el carrito en localStorage
         localStorage.setItem('cart', JSON.stringify(cart));
@@ -1035,18 +1040,23 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        cart = data.cart;
-                        localStorage.setItem('cart', JSON.stringify(cart));
-                        updateCartUI();
-                        showToast('success', data.message);
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'No se pudo añadir al carrito.');
                     }
+
+                    return data;
+                })
+                .then(data => {
+                    cart = data.cart;
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    updateCartUI();
+                    showToast('success', data.message);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showToast('error', 'Error al añadir al carrito');
+                    showToast('danger', error.message || 'Error al añadir al carrito');
                 });
         }
 
@@ -1092,7 +1102,7 @@
                 totalItems += item.cantidad;
                 subtotal += item.precio * item.cantidad;
 
-                let imageUrl = "{{ asset('public/') }}" + "/" + item.foto;
+                let imageUrl = `${assetBaseUrl}${item.foto}`;
 
                 let listItem = document.createElement('li');
                 listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
@@ -1168,7 +1178,14 @@
         }
 
         // Llamar a updateCartUI cuando la página se cargue
-        document.addEventListener('DOMContentLoaded', updateCartUI);
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('compra_exitosa'))
+                cart = {};
+                localStorage.removeItem('cart');
+            @endif
+
+            updateCartUI();
+        });
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -1,0 +1,40 @@
+{
+  "defaults": {
+    "type": "Inmediata",
+    "months": [1, 2, 3, 6, 12],
+    "devices": [1, 2, 3],
+    "discount": 10,
+    "stars": 4,
+    "active": 1
+  },
+  "individuals": [
+    {
+      "service": "NETFLIX",
+      "photo": "storage/fotos/netflix.jpg"
+    },
+    {
+      "service": "DISNEYP",
+      "photo": "storage/fotos/disney.jpg"
+    },
+    {
+      "service": "SPOTIFY",
+      "months": [1, 3, 6, 12],
+      "devices": [1, 2],
+      "photo": "storage/fotos/spotify.jpg"
+    }
+  ],
+  "combos": [
+    {
+      "services": ["NETFLIX", "DISNEYP", "SPOTIFY"],
+      "months": [1, 3, 6, 12],
+      "devices": [1, 2],
+      "name": "Combo NDS"
+    },
+    {
+      "services": ["NETFLIX", "MAX"],
+      "months": [1, 2, 3, 6],
+      "devices": [1],
+      "name": "Combo Netflix + Max"
+    }
+  ]
+}

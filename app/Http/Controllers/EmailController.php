@@ -54,7 +54,11 @@ class EmailController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('recover')->with('error', 'No se pudo enviar el correo de recuperación. Verifica la configuración del buzón en hosting.');
+            $mensajeError = str_contains(strtolower($e->getMessage()), 'disabled by user')
+                ? 'El buzón remitente está suspendido en hPanel. Actívalo o usa un buzón SMTP activo.'
+                : 'No se pudo enviar el correo de recuperación. Verifica la configuración del buzón en hosting.';
+
+            return redirect()->route('recover')->with('error', $mensajeError);
         } catch (\Throwable $e) {
             DB::table('empleados')->where('idemp', $empleado->idemp)->update(['passwordemp' => $hashAnterior]);
 
@@ -108,7 +112,11 @@ class EmailController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('cliente.recover')->with('error', 'No se pudo enviar el correo de recuperación. Intenta más tarde o contacta soporte.');
+            $mensajeError = str_contains(strtolower($e->getMessage()), 'disabled by user')
+                ? 'El buzón remitente está suspendido en hPanel. Actívalo o cambia MAIL_USERNAME a un buzón activo.'
+                : 'No se pudo enviar el correo de recuperación. Intenta más tarde o contacta soporte.';
+
+            return redirect()->route('cliente.recover')->with('error', $mensajeError);
         } catch (\Throwable $e) {
             DB::table('clientes')->where('idcli', $cliente->idcli)->update(['password' => $hashAnterior]);
 
