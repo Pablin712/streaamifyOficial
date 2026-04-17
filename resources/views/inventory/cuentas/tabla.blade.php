@@ -1,6 +1,13 @@
 @php
     // Generar ID único para la tabla basado en el contexto o usar uno por defecto
     $tableId = $tableId ?? 'cuentas-table-' . uniqid();
+    $emptyColspan = 7;
+    if (Auth::user()->hasPermissionTo('cuentas.mensaje')) {
+        $emptyColspan++;
+    }
+    if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'cuentas.edit', 'cuentas.renew', 'cuentas.destroy'])) {
+        $emptyColspan++;
+    }
 @endphp
 
 <!-- Encabezado: Búsqueda y Registros por página -->
@@ -90,7 +97,17 @@
                         </svg>
                     </span>
                 </th>
-                @if (Auth::user()->hasAnyPermission(['cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
+                @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+                    <th class="text-center" data-type="actions" style="width: 70px;">
+                        <input
+                            type="checkbox"
+                            class="form-check-input provider-inventory-select-all"
+                            data-table-id="{{ $tableId }}"
+                            title="Seleccionar todas las cuentas visibles de esta tabla"
+                        >
+                    </th>
+                @endif
+                @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
                     <th data-type="actions">Acciones</th>
                 @endif
             </tr>
@@ -103,7 +120,18 @@
                     $hoy = \Carbon\Carbon::today();
                     $diasRestantes = $hoy->diffInDays($fechaVencimiento, false);
                 @endphp
-                <tr data-account-row="1" data-service-code="{{ strtoupper((string) ($cuenta->valor->idser ?? '')) }}">
+                <tr
+                    data-account-row="1"
+                    data-service-code="{{ strtoupper((string) ($cuenta->valor->idser ?? '')) }}"
+                    data-idcue="{{ $cuenta->idcue }}"
+                    data-usuario="{{ $cuenta->usuariocue }}"
+                    data-fechavencue="{{ $cuenta->fechavencue }}"
+                    data-servicio-id="{{ strtoupper((string) ($cuenta->valor->idser ?? '')) }}"
+                    data-servicio-nombre="{{ $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? 'Servicio') }}"
+                    data-proveedor-id="{{ $cuenta->valor->proveedor->idpro ?? '' }}"
+                    data-proveedor-nombre="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
+                    data-proveedor-telefono="{{ $cuenta->valor->proveedor->telefonopro ?? '' }}"
+                >
                     <td class="clickable-copy"
                         onclick="copiarInfoCuenta('{{ $cuenta->valor->servicio->nombreser ?? 'Servicio' }}', '{{ $cuenta->usuariocue }}', '{{ $cuenta->contrasenacue }}')"
                         title="Click para copiar información completa">
@@ -158,6 +186,24 @@
                             </button>
                         @endif
                     </td>
+                    @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+                        <td class="text-center align-middle">
+                            <input
+                                type="checkbox"
+                                class="form-check-input provider-inventory-checkbox"
+                                data-table-id="{{ $tableId }}"
+                                data-idcue="{{ $cuenta->idcue }}"
+                                data-usuario="{{ $cuenta->usuariocue }}"
+                                data-fechavencue="{{ $cuenta->fechavencue }}"
+                                data-servicio-id="{{ strtoupper((string) ($cuenta->valor->idser ?? '')) }}"
+                                data-servicio-nombre="{{ $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? 'Servicio') }}"
+                                data-proveedor-id="{{ $cuenta->valor->proveedor->idpro ?? '' }}"
+                                data-proveedor-nombre="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
+                                data-proveedor-telefono="{{ $cuenta->valor->proveedor->telefonopro ?? '' }}"
+                                title="Seleccionar cuenta para envío de inventario"
+                            >
+                        </td>
+                    @endif
                     @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
                         <td>
                             <div class="action-buttons">
@@ -240,7 +286,7 @@
                 </tr>
             @empty
                 <tr data-empty-row="1">
-                    <td colspan="8" class="text-center">No hay cuentas disponibles en esta categoría.</td>
+                    <td colspan="{{ $emptyColspan }}" class="text-center">No hay cuentas disponibles en esta categoría.</td>
                 </tr>
             @endforelse
         </tbody>

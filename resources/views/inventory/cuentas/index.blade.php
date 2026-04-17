@@ -384,6 +384,11 @@
                 <i class="fab fa-spotify"></i> Revisar Spotify
             </a>
         @endif
+        @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+            <button type="button" id="btn-enviar-inventario-proveedor" class="btn btn-success" onclick="openMensajeProveedorInventarioModal()" disabled>
+                <i class="fab fa-whatsapp"></i> Enviar inventario proveedor (0)
+            </button>
+        @endif
     </div>
 @endsection
 
@@ -436,6 +441,29 @@
                     <label class="form-check-label" for="service-magis">Magis / Flujo</label>
                 </div>
             </div>
+
+            @if (Auth::user()->hasPermissionTo('cuentas.mensaje'))
+                <div class="row g-2 mt-2 align-items-end">
+                    <div class="col-md-6 col-lg-4">
+                        <label for="provider-filter-select" class="form-label mb-1 fw-semibold text-primary">
+                            <i class="fas fa-truck me-1"></i>Proveedor:
+                        </label>
+                        <select id="provider-filter-select" class="form-select form-select-sm">
+                            <option value="TODOS">Todos los proveedores</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 col-lg-8">
+                        <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="selectFilteredAccountsFromActiveTab()">
+                                <i class="fas fa-check-square me-1"></i>Seleccionar filtradas visibles
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearInventorySelection()">
+                                <i class="fas fa-eraser me-1"></i>Limpiar selección
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div id="service-filter-status" class="small text-muted mt-2"></div>
         </div>
@@ -539,6 +567,7 @@
     @include('inventory.cuentas.modals.view-perfiles')
     @include('inventory.cuentas.modals.mensaje-clientes')
     @include('inventory.cuentas.modals.mensaje-proveedor')
+    @include('inventory.cuentas.modals.mensaje-proveedor-inventario')
     @include('inventory.cuentas.modals.netflix-codigo')
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
@@ -1071,6 +1100,170 @@ let mensajeClientesButtonRef = null;
 let mensajeProveedorButtonRef = null;
 let netflixCodigoCuentaRef = null;
 
+function getSelectedInventoryAccounts() {
+    return Array.from(document.querySelectorAll('.provider-inventory-checkbox:checked')).map((checkbox) => ({
+        idcue: (checkbox.dataset.idcue || '').toString().trim(),
+        usuario: (checkbox.dataset.usuario || '').toString().trim(),
+        fechavencue: (checkbox.dataset.fechavencue || '').toString().trim(),
+        servicioId: (checkbox.dataset.servicioId || '').toString().trim().toUpperCase(),
+        servicioNombre: (checkbox.dataset.servicioNombre || '').toString().trim(),
+        proveedorId: (checkbox.dataset.proveedorId || '').toString().trim(),
+        proveedorNombre: (checkbox.dataset.proveedorNombre || '').toString().trim(),
+        proveedorTelefono: (checkbox.dataset.proveedorTelefono || '').toString().trim(),
+        tableId: (checkbox.dataset.tableId || '').toString().trim(),
+        checkbox,
+    }));
+}
+
+function getSelectedProviderFilter() {
+    const providerSelect = document.getElementById('provider-filter-select');
+    return providerSelect ? (providerSelect.value || 'TODOS') : 'TODOS';
+}
+
+function rowMatchesSelectedProvider(row, selectedProvider) {
+    if (selectedProvider === 'TODOS') {
+        return true;
+    }
+
+    const providerId = String(row?.dataset?.proveedorId || '').trim();
+    return providerId === String(selectedProvider).trim();
+}
+
+function rowMatchesAllFilters(row, selectedService = null, selectedProvider = null) {
+    const serviceToCheck = selectedService || getSelectedService();
+    const providerToCheck = selectedProvider || getSelectedProviderFilter();
+
+    return rowMatchesSelectedService(row, serviceToCheck) && rowMatchesSelectedProvider(row, providerToCheck);
+}
+
+function isRowVisible(row) {
+    if (!row || row.dataset.emptyRow === '1') return false;
+    return row.offsetParent !== null;
+}
+
+function getActiveTableId() {
+    const activePane = document.querySelector('.tab-pane.show.active');
+    const table = activePane ? activePane.querySelector('table[data-table]') : null;
+    return table ? table.getAttribute('data-table') : null;
+}
+
+function getSelectableRowsForTable(tableId) {
+    const table = tableId ? document.getElementById(tableId) : null;
+    if (!table) return [];
+
+    const selectedService = getSelectedService();
+    const selectedProvider = getSelectedProviderFilter();
+    const rows = Array.from(table.querySelectorAll('tbody tr[data-account-row="1"]'));
+
+    return rows.filter((row) => isRowVisible(row) && rowMatchesAllFilters(row, selectedService, selectedProvider));
+}
+
+function selectFilteredAccountsFromActiveTab() {
+    const activeTableId = getActiveTableId();
+    if (!activeTableId) {
+        showTemporaryAlert('No se pudo detectar la tabla activa.', 'danger');
+        return;
+    }
+
+    const rowsToSelect = getSelectableRowsForTable(activeTableId);
+    if (rowsToSelect.length === 0) {
+        showTemporaryAlert('No hay cuentas visibles con los filtros actuales.', 'danger');
+        return;
+    }
+
+    rowsToSelect.forEach((row) => {
+        const checkbox = row.querySelector('.provider-inventory-checkbox');
+        if (checkbox) {
+            checkbox.checked = true;
+            row.classList.add('table-warning');
+        }
+    });
+
+    refreshSelectAllStateForTable(activeTableId);
+    updateInventoryButtonState();
+    showTemporaryAlert(`Se seleccionaron ${rowsToSelect.length} cuentas filtradas visibles.`, 'success');
+}
+
+function clearInventorySelection() {
+    document.querySelectorAll('.provider-inventory-checkbox:checked').forEach((checkbox) => {
+        checkbox.checked = false;
+        const row = checkbox.closest('tr');
+        if (row) {
+            row.classList.remove('table-warning');
+        }
+    });
+
+    document.querySelectorAll('.provider-inventory-select-all').forEach((selectAll) => {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    });
+
+    updateInventoryButtonState();
+}
+
+function updateInventoryButtonState() {
+    const selectedAccounts = getSelectedInventoryAccounts();
+    const button = document.getElementById('btn-enviar-inventario-proveedor');
+    if (!button) return;
+
+    const count = selectedAccounts.length;
+    button.disabled = count === 0;
+    button.innerHTML = `<i class="fab fa-whatsapp"></i> Enviar inventario proveedor (${count})`;
+}
+
+function refreshSelectAllStateForTable(tableId) {
+    if (!tableId) return;
+
+    const tableCheckboxes = getSelectableRowsForTable(tableId)
+        .map((row) => row.querySelector('.provider-inventory-checkbox'))
+        .filter(Boolean);
+
+    const selectAll = document.querySelector(`.provider-inventory-select-all[data-table-id="${tableId}"]`);
+    if (!selectAll) return;
+
+    if (tableCheckboxes.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+    }
+
+    const checkedCount = tableCheckboxes.filter((cb) => cb.checked).length;
+    selectAll.checked = checkedCount > 0 && checkedCount === tableCheckboxes.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < tableCheckboxes.length;
+}
+
+function bindInventorySelectionEvents() {
+    document.querySelectorAll('.provider-inventory-select-all').forEach((selectAll) => {
+        selectAll.addEventListener('change', function () {
+            const tableId = this.dataset.tableId || '';
+            const shouldCheck = this.checked;
+
+            const rowsToToggle = getSelectableRowsForTable(tableId);
+            rowsToToggle.forEach((row) => {
+                const checkbox = row.querySelector('.provider-inventory-checkbox');
+                if (!checkbox) return;
+                checkbox.checked = shouldCheck;
+                row.classList.toggle('table-warning', shouldCheck);
+            });
+
+            refreshSelectAllStateForTable(tableId);
+            updateInventoryButtonState();
+        });
+    });
+
+    document.querySelectorAll('.provider-inventory-checkbox').forEach((checkbox) => {
+        checkbox.addEventListener('change', function () {
+            const row = this.closest('tr');
+            if (row) {
+                row.classList.toggle('table-warning', this.checked);
+            }
+
+            refreshSelectAllStateForTable(this.dataset.tableId || '');
+            updateInventoryButtonState();
+        });
+    });
+}
+
 function formatCooldownText(untilTimestamp) {
     const nowTs = Math.floor(Date.now() / 1000);
     const remaining = Math.max(0, Number(untilTimestamp || 0) - nowTs);
@@ -1213,6 +1406,144 @@ function openMensajeProveedorModal(button) {
 
 function closeMensajeProveedorModal() {
     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensajeProveedorModal' }));
+}
+
+function openMensajeProveedorInventarioModal() {
+    const selectedAccounts = getSelectedInventoryAccounts();
+    if (selectedAccounts.length === 0) {
+        showTemporaryAlert('Selecciona al menos una cuenta para enviar inventario.', 'danger');
+        return;
+    }
+
+    const providerIds = [...new Set(selectedAccounts.map((account) => account.proveedorId).filter(Boolean))];
+    if (providerIds.length !== 1) {
+        showTemporaryAlert('Las cuentas seleccionadas deben pertenecer al mismo proveedor.', 'danger');
+        return;
+    }
+
+    const provider = selectedAccounts[0];
+    if (!provider.proveedorTelefono) {
+        showTemporaryAlert('El proveedor seleccionado no tiene teléfono registrado.', 'danger');
+        return;
+    }
+
+    document.getElementById('inventario_proveedor_id').value = provider.proveedorId;
+    document.getElementById('inventario_proveedor_nombre').textContent = provider.proveedorNombre || 'Proveedor';
+    document.getElementById('inventario_proveedor_telefono').textContent = provider.proveedorTelefono;
+    document.getElementById('inventario_total_cuentas').textContent = String(selectedAccounts.length);
+
+    const serviciosMap = new Map();
+    selectedAccounts.forEach((account) => {
+        const serviceKey = account.servicioId || 'SERVICIO';
+        if (!serviciosMap.has(serviceKey)) {
+            serviciosMap.set(serviceKey, {
+                id: serviceKey,
+                nombre: account.servicioNombre || serviceKey,
+                total: 0,
+            });
+        }
+
+        serviciosMap.get(serviceKey).total += 1;
+    });
+
+    const serviciosContainer = document.getElementById('inventario_servicios_container');
+    const serviciosHtml = Array.from(serviciosMap.values())
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((servicio, index) => `
+            <div class="form-check mb-2">
+                <input
+                    class="form-check-input inventario-servicio-checkbox"
+                    type="checkbox"
+                    value="${servicio.id}"
+                    id="inventario_servicio_${index}"
+                    checked
+                >
+                <label class="form-check-label" for="inventario_servicio_${index}">
+                    <strong>${servicio.nombre}</strong> (${servicio.total} cuentas)
+                </label>
+            </div>
+        `)
+        .join('');
+
+    serviciosContainer.innerHTML = serviciosHtml || '<div class="text-muted small">No hay servicios disponibles.</div>';
+
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensajeProveedorInventarioModal' }));
+}
+
+function closeMensajeProveedorInventarioModal() {
+    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensajeProveedorInventarioModal' }));
+}
+
+async function submitMensajeProveedorInventario(event) {
+    event.preventDefault();
+
+    const submitBtn = document.getElementById('inventario_submit_btn');
+    const selectedAccounts = getSelectedInventoryAccounts();
+    const providerId = (document.getElementById('inventario_proveedor_id').value || '').toString().trim();
+    const selectedServices = Array.from(document.querySelectorAll('.inventario-servicio-checkbox:checked'))
+        .map((checkbox) => (checkbox.value || '').toString().trim().toUpperCase())
+        .filter(Boolean);
+
+    if (!providerId || selectedAccounts.length === 0) {
+        showTemporaryAlert('No hay cuentas seleccionadas para enviar inventario.', 'danger');
+        return;
+    }
+
+    if (selectedServices.length === 0) {
+        showTemporaryAlert('Selecciona al menos un servicio.', 'danger');
+        return;
+    }
+
+    submitBtn.disabled = true;
+
+    try {
+        const payload = {
+            proveedor_id: providerId,
+            cuentas: selectedAccounts.map((account) => account.idcue),
+            servicios: selectedServices,
+        };
+
+        const response = await fetch('{{ route("cuentas.enviarInventarioProveedor") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'No se pudo enviar el inventario al proveedor.');
+        }
+
+        showTemporaryAlert(data.message || 'Inventario enviado correctamente.', 'success');
+        closeMensajeProveedorInventarioModal();
+
+        selectedAccounts.forEach((account) => {
+            if (account.checkbox) {
+                account.checkbox.checked = false;
+                const row = account.checkbox.closest('tr');
+                if (row) {
+                    row.classList.remove('table-warning');
+                }
+            }
+        });
+
+        document.querySelectorAll('.provider-inventory-select-all').forEach((selectAll) => {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        });
+
+        updateInventoryButtonState();
+    } catch (error) {
+        console.error('Error enviando inventario al proveedor:', error);
+        showTemporaryAlert(error.message || 'No se pudo enviar el inventario al proveedor.', 'danger');
+    } finally {
+        submitBtn.disabled = false;
+    }
 }
 
 async function submitMensajeProveedor(event) {
@@ -1456,10 +1787,10 @@ function getSelectedService() {
     return selected ? selected.value : 'TODOS';
 }
 
-function getServiceFilteredRows(config, selectedService) {
+function getServiceFilteredRows(config, selectedService, selectedProvider) {
     const accountRows = config.allRows.filter((row) => row.dataset.accountRow === '1');
 
-    return accountRows.filter((row) => rowMatchesSelectedService(row, selectedService));
+    return accountRows.filter((row) => rowMatchesAllFilters(row, selectedService, selectedProvider));
 }
 
 function rowMatchesSelectedService(row, selectedService) {
@@ -1473,12 +1804,12 @@ function rowMatchesSelectedService(row, selectedService) {
     return aliases.some((alias) => rowService.includes(normalizeServiceCode(alias)));
 }
 
-function applyServiceFilterToTable(tableId, selectedService) {
+function applyServiceFilterToTable(tableId, selectedService, selectedProvider) {
     const table = document.getElementById(tableId);
     if (!table || !table._config) return;
 
     const config = table._config;
-    const serviceRows = getServiceFilteredRows(config, selectedService);
+    const serviceRows = getServiceFilteredRows(config, selectedService, selectedProvider);
 
     if (config.searchTerm && config.searchTerm.trim()) {
         const tokens = typeof tokenize === 'function' ? tokenize(config.searchTerm) : [];
@@ -1497,12 +1828,13 @@ function applyServiceFilterToTable(tableId, selectedService) {
 
 function syncServiceFilterIntoTableConfigs() {
     const selectedService = getSelectedService();
+    const selectedProvider = getSelectedProviderFilter();
 
     SERVICE_TABLE_IDS.forEach((tableId) => {
         const table = document.getElementById(tableId);
 
         if (table && table._config) {
-            table._config.baseRows = getServiceFilteredRows(table._config, selectedService);
+            table._config.baseRows = getServiceFilteredRows(table._config, selectedService, selectedProvider);
         }
     });
 }
@@ -1512,26 +1844,78 @@ function updateServiceFilterStatus(selectedService) {
     if (!status) return;
 
     const current = selectedService || 'TODOS';
-    status.textContent = `Filtro activo: ${current}`;
+    const providerSelect = document.getElementById('provider-filter-select');
+    const providerLabel = providerSelect
+        ? providerSelect.options[providerSelect.selectedIndex]?.text || 'Todos los proveedores'
+        : 'Todos los proveedores';
+
+    status.textContent = `Filtros activos: Servicio = ${current} | Proveedor = ${providerLabel}`;
 }
 
 function applyServiceFilterRealtime() {
     const selectedService = getSelectedService();
+    const selectedProvider = getSelectedProviderFilter();
     syncServiceFilterIntoTableConfigs();
 
     SERVICE_TABLE_IDS.forEach((tableId) => {
-        applyServiceFilterToTable(tableId, selectedService);
+        applyServiceFilterToTable(tableId, selectedService, selectedProvider);
     });
 
     updateServiceFilterStatus(selectedService);
+
+    SERVICE_TABLE_IDS.forEach((tableId) => {
+        refreshSelectAllStateForTable(tableId);
+    });
+}
+
+function initializeProviderFilterOptions() {
+    const providerSelect = document.getElementById('provider-filter-select');
+    if (!providerSelect) return;
+
+    const providersMap = new Map();
+    document.querySelectorAll('.provider-inventory-checkbox').forEach((checkbox) => {
+        const providerId = String(checkbox.dataset.proveedorId || '').trim();
+        const providerName = String(checkbox.dataset.proveedorNombre || '').trim();
+
+        if (!providerId || !providerName || providersMap.has(providerId)) return;
+        providersMap.set(providerId, providerName);
+    });
+
+    const optionsHtml = ['<option value="TODOS">Todos los proveedores</option>']
+        .concat(Array.from(providersMap.entries())
+            .sort((a, b) => a[1].localeCompare(b[1]))
+            .map(([id, name]) => `<option value="${id}">${name}</option>`));
+
+    providerSelect.innerHTML = optionsHtml.join('');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    bindInventorySelectionEvents();
+    initializeProviderFilterOptions();
+    updateInventoryButtonState();
+
     const filterInputs = document.querySelectorAll('.service-filter-input');
 
     filterInputs.forEach((input) => {
         input.addEventListener('change', function () {
             applyServiceFilterRealtime();
+        });
+    });
+
+    const providerFilterSelect = document.getElementById('provider-filter-select');
+    if (providerFilterSelect) {
+        providerFilterSelect.addEventListener('change', function () {
+            applyServiceFilterRealtime();
+        });
+    }
+
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach((tabButton) => {
+        tabButton.addEventListener('shown.bs.tab', function () {
+            updateInventoryButtonState();
+            const activeTableId = getActiveTableId();
+            if (activeTableId) {
+                refreshSelectAllStateForTable(activeTableId);
+            }
         });
     });
 

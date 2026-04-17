@@ -747,6 +747,204 @@ class CuentaController extends Controller
         }
     }
 
+    public function enviarInventarioProveedor(Request $request)
+    {
+        if (!Gate::allows('cuentas.mensaje')) {
+            abort(403, 'No tienes permiso para enviar inventario al proveedor.');
+        }
+
+        $validated = $request->validate([
+            'proveedor_id' => 'required|exists:proveedores,idpro',
+            'cuentas' => 'required|array|min:1',
+            'cuentas.*' => 'required|string|exists:cuentas,idcue',
+            'servicios' => 'required|array|min:1',
+            'servicios.*' => 'required|string|max:50',
+        ]);
+
+        $idsCuentas = collect($validated['cuentas'])
+            ->filter(fn($id) => !empty($id))
+            ->map(fn($id) => strtoupper(trim((string) $id)))
+            ->unique()
+            ->values();
+
+        if ($idsCuentas->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se recibieron cuentas válidas para enviar inventario.',
+            ], 422);
+        }
+
+        $serviciosSeleccionados = collect($validated['servicios'])
+            ->filter(fn($servicio) => !empty($servicio))
+            ->map(fn($servicio) => strtoupper(trim((string) $servicio)))
+            ->unique()
+            ->values();
+
+        if ($serviciosSeleccionados->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes seleccionar al menos un servicio para enviar.',
+            ], 422);
+        }
+
+        $cuentas = Cuenta::with(['valor.servicio', 'valor.proveedor'])
+            ->whereIn('idcue', $idsCuentas)
+            ->where('activocue', true)
+            ->get();
+
+        if ($cuentas->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontraron cuentas activas para el inventario.',
+            ], 422);
+        }
+
+        $cuentasProveedor = $cuentas->filter(function ($cuenta) use ($validated) {
+            return (int) ($cuenta->valor->proveedor->idpro ?? 0) === (int) $validated['proveedor_id'];
+        })->values();
+
+        if ($cuentasProveedor->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Las cuentas seleccionadas no pertenecen al proveedor indicado.',
+            ], 422);
+        }
+
+        $cuentasPorServicio = $cuentasProveedor->filter(function ($cuenta) use ($serviciosSeleccionados) {
+            $idServicio = strtoupper((string) ($cuenta->valor->idser ?? ''));
+            return $serviciosSeleccionados->contains($idServicio);
+        })->values();
+
+        if ($cuentasPorServicio->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay cuentas del proveedor en los servicios seleccionados.',
+            ], 422);
+        }
+
+        $proveedor = $cuentasPorServicio->first()->valor->proveedor;
+        $telefonoProveedor = (string) ($proveedor->telefonopro ?? '');
+        $telefonoNormalizado = preg_replace('/\D+/', '', $telefonoProveedor);
+
+        if (empty($telefonoNormalizado)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El proveedor no tiene un teléfono válido para enviar el inventario.',
+            ], 422);
+        }
+
+        $mensaje = $cuentasPorServicio
+            ->sortBy([
+                fn($cuenta) => strtoupper((string) ($cuenta->valor->idser ?? '')),
+                fn($cuenta) => strtoupper((string) ($cuenta->usuariocue ?? '')),
+            ])
+            ->groupBy(fn($cuenta) => strtoupper((string) ($cuenta->valor->idser ?? 'SERVICIO')))
+            ->map(function ($cuentasServicio) {
+                $primeraCuenta = $cuentasServicio->first();
+                $tituloServicio = $primeraCuenta->valor->servicio->nombreser
+                    ?? $primeraCuenta->valor->idser
+                    ?? 'SERVICIO';
+
+                $lineas = [$tituloServicio];
+
+                foreach ($cuentasServicio as $cuenta) {
+                    $fecha = $cuenta->fechavencue
+                        ? Carbon::parse($cuenta->fechavencue)->toDateString()
+                        : '-';
+
+                    $lineas[] = trim(($cuenta->usuariocue ?? '') . '  ' . $fecha);
+                }
+
+                return implode("\n", $lineas);
+            })
+            ->implode("\n\n");
+
+        $webhookUrl = config('services.n8n.client_message_webhook');
+        if (empty($webhookUrl)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No está configurado el webhook para enviar mensajes.',
+            ], 500);
+        }
+
+        $empleado = Auth::user();
+        $payload = [
+            'event' => 'provider.inventory_message',
+            'trace_id' => 'proveedor-inventario-' . $proveedor->idpro . '-' . now()->format('Ymd-His'),
+            'cliente' => [
+                'idcli' => null,
+                'nombre' => $proveedor->nombrepro,
+                'telefono' => $telefonoProveedor,
+                'telefono_normalizado' => $telefonoNormalizado,
+                'tipo' => 'proveedor',
+            ],
+            'mensaje' => $mensaje,
+            'inventario' => [
+                'proveedor_id' => $proveedor->idpro,
+                'proveedor_nombre' => $proveedor->nombrepro,
+                'servicios' => $serviciosSeleccionados->values(),
+                'cuentas_ids' => $cuentasPorServicio->pluck('idcue')->values(),
+                'total_cuentas' => $cuentasPorServicio->count(),
+            ],
+            'empleado' => [
+                'idemp' => $empleado->idemp,
+                'nombreemp' => $empleado->nombreemp,
+                'usuarioemp' => $empleado->usuarioemp,
+            ],
+            'sent_at' => now()->toIso8601String(),
+        ];
+
+        try {
+            $requestN8n = Http::acceptJson()
+                ->timeout(12)
+                ->retry(1, 300);
+
+            $webhookSecret = config('services.n8n.payment_webhook_secret');
+            if (!empty($webhookSecret)) {
+                $requestN8n = $requestN8n->withHeaders([
+                    'X-Webhook-Secret' => $webhookSecret,
+                ]);
+            }
+
+            $response = $requestN8n->post($webhookUrl, $payload);
+
+            if (!$response->successful()) {
+                Log::warning('Webhook n8n de inventario a proveedor devolvió error', [
+                    'proveedor_id' => $proveedor->idpro,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo enviar el inventario al webhook.',
+                ], 502);
+            }
+
+            Historial::create([
+                'accion' => 'Inventario enviado a proveedor',
+                'descripcion' => 'Proveedor: ' . $proveedor->nombrepro . ' | Servicios: ' . $serviciosSeleccionados->implode(', ') . ' | Cuentas: ' . $cuentasPorServicio->count(),
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inventario enviado correctamente al proveedor.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error enviando inventario a proveedor vía n8n', [
+                'proveedor_id' => $proveedor->idpro,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al enviar el inventario al proveedor.',
+            ], 500);
+        }
+    }
+
     public function pedirCodigoNetflix(Request $request, $idcue)
     {
         if (!Gate::allows('cuentas.mensaje')) {
