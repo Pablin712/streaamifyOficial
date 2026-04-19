@@ -19,6 +19,7 @@ class CodigoVerificationController extends Controller
         '593996464991',
         '593961412826',
         '593961702129',
+        '593986740052',
     ];
 
     public function __construct(private NetflixCodigoService $netflixCodigoService)
