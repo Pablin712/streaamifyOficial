@@ -8,12 +8,12 @@
     "name": "vue.esm-bundler"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Bff0wib8.css",
+    "file": "assets/app-D39ZzeCx.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BT_kUz3A.js",
+    "file": "assets/app-DlayLGih.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

@@ -1,11 +1,18 @@
-<div>
+<div class="chat-streamify-shell">
     <div class="chat-panel-container" wire:poll.5s="actualizarMensajes">
         <!-- Lista de conversaciones -->
         <div class="chat-sidebar" data-vista-mobile="{{ $vistaMobile }}">
         <!-- Header -->
         <div class="chat-header">
-            <h2 class="chat-title">Chat Streamify</h2>
-            <p class="chat-subtitle">Panel de Conversaciones</p>
+            <div class="chat-header-top">
+                <h2 class="chat-title">Chat Streamify</h2>
+                <p class="chat-subtitle">Panel de Conversaciones</p>
+            </div>
+
+            <div class="chat-header-kpi">
+                <span class="chat-kpi-chip">{{ $conversaciones->total() }} conversaciones</span>
+                <span class="chat-kpi-chip chat-kpi-unread">{{ $conversaciones->sum('mensajes_no_leidos') }} no leídas</span>
+            </div>
         </div>
 
         <!-- Filtros -->
@@ -25,16 +32,10 @@
                     Todas
                 </button>
                 <button
-                    wire:click="$set('filtroEstado', 'abierta')"
-                    class="chat-filter-btn {{ $filtroEstado === 'abierta' ? 'active' : '' }}"
+                    wire:click="$set('filtroEstado', 'no_leidas')"
+                    class="chat-filter-btn {{ $filtroEstado === 'no_leidas' ? 'active' : '' }}"
                 >
-                    Abiertas
-                </button>
-                <button
-                    wire:click="$set('filtroEstado', 'cerrada')"
-                    class="chat-filter-btn {{ $filtroEstado === 'cerrada' ? 'active' : '' }}"
-                >
-                    Cerradas
+                    No leídas
                 </button>
             </div>
         </div>
@@ -46,40 +47,47 @@
                     wire:click="seleccionarConversacion({{ $conv->idconv }})"
                     class="chat-conversation-item {{ $conversacionActiva?->idconv == $conv->idconv ? 'active' : '' }}"
                 >
-                    <div class="chat-conversation-header">
-                        <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                <span class="chat-conversation-name">
-                                    {{ $conv->cliente->nombrecli ?? 'Anónimo #' . substr($conv->metadata['session_id'] ?? 'N/A', 0, 8) }}
-                                </span>
+                    <div class="chat-conversation-body">
+                        <div class="chat-conversation-avatar">
+                            {{ mb_strtoupper(mb_substr($this->nombreConversacion($conv), 0, 1)) }}
+                        </div>
 
-                                @if($conv->mensajes_no_leidos > 0)
-                                    <span class="chat-badge unread">
-                                        {{ $conv->mensajes_no_leidos }}
+                        <div class="chat-conversation-content">
+                            <div class="chat-conversation-row">
+                                <div class="chat-conversation-title-wrap">
+                                    <span class="canal-dot {{ $this->canalClaseColor($conv) }}"></span>
+                                    <span class="chat-conversation-name">
+                                        {{ $this->nombreConversacion($conv) }}
                                     </span>
-                                @endif
-                            </div>
-
-                            <p class="chat-conversation-preview">
-                                {{ $conv->ultimoMensaje?->contenido ?? 'Sin mensajes' }}
-                            </p>
-
-                            <div class="chat-conversation-meta">
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <span class="chat-badge {{ $conv->estado === 'abierta' ? 'success' : ($conv->estado === 'en_atencion' ? 'warning' : 'secondary') }}">
-                                        {{ ucfirst(str_replace('_', ' ', $conv->estado)) }}
-                                    </span>
-
-                                    @if($conv->requiere_humano)
-                                        <span class="chat-badge unread">
-                                            🚨 Urgente
-                                        </span>
-                                    @endif
                                 </div>
 
                                 <span class="chat-timestamp">
                                     {{ $conv->ultima_actividad->diffForHumans() }}
                                 </span>
+                            </div>
+
+                            <p class="chat-conversation-preview">
+                                {{ $this->vistaPreviaMensaje($conv) }}
+                            </p>
+
+                            <div class="chat-conversation-meta">
+                                <div class="chat-conversation-tags">
+                                    <span class="chat-badge secondary">
+                                        {{ strtoupper($conv->canal_principal ?? 'CHAT') }}
+                                    </span>
+
+                                    @if($conv->requiere_humano)
+                                        <span class="chat-badge unread">
+                                            Urgente
+                                        </span>
+                                    @endif
+                                </div>
+
+                                @if($conv->mensajes_no_leidos > 0)
+                                    <span class="chat-badge unread chat-unread-pill">
+                                        {{ $conv->mensajes_no_leidos }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -95,7 +103,7 @@
         <!-- Paginación -->
         @if($conversaciones->hasPages())
             <div class="chat-pagination">
-                {{ $conversaciones->links() }}
+                {{ $conversaciones->links('vendor.pagination.chat-numbers-only') }}
             </div>
         @endif
     </div>
@@ -105,7 +113,7 @@
         @if($conversacionActiva)
             <!-- Header del chat -->
             <div class="chat-main-header">
-                <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                <div class="chat-main-header-content">
                     <!-- Botón volver (solo móvil) -->
                     <button wire:click="volverALista" class="chat-back-btn">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -113,21 +121,18 @@
                         </svg>
                     </button>
 
-                    <div>
-                        <h3 class="chat-main-title">
-                            {{ $conversacionActiva->cliente->nombrecli ?? 'Cliente Anónimo' }}
-                        </h3>
+                    <div class="chat-main-heading">
+                        <div class="chat-main-title-row">
+                            <span class="canal-dot {{ $this->canalClaseColor($conversacionActiva) }}"></span>
+                            <h3 class="chat-main-title">
+                                {{ $this->nombreConversacion($conversacionActiva) }}
+                            </h3>
+                        </div>
                         <p class="chat-main-subtitle">
-                            {{ $conversacionActiva->cliente->telefonocli ?? 'Sesión: ' . substr($conversacionActiva->metadata['session_id'] ?? 'N/A', 0, 20) }}
+                            {{ $this->subtituloConversacion($conversacionActiva) }}
                         </p>
                     </div>
                 </div>
-
-                @if($conversacionActiva->estado !== 'cerrada')
-                    <button wire:click="cerrarConversacion" class="chat-close-btn">
-                        Cerrar
-                    </button>
-                @endif
             </div>
 
             <!-- Mensajes -->
@@ -152,7 +157,36 @@
                             @if($nombreRemitente)
                                 <p class="chat-message-sender">{{ $nombreRemitente }}</p>
                             @endif
-                            <p class="chat-message-content">{{ $contenido }}</p>
+
+                            @if(($msgData['tipo_contenido'] ?? 'texto') === 'imagen' && !empty($msgData['archivo_url']))
+                                <div class="chat-media-wrapper">
+                                    <img src="{{ $msgData['archivo_url'] }}" alt="Imagen" class="chat-media-image">
+                                </div>
+                            @elseif(($msgData['tipo_contenido'] ?? 'texto') === 'audio' && !empty($msgData['archivo_url']))
+                                <div class="chat-media-wrapper">
+                                    <audio controls class="chat-media-audio">
+                                        <source src="{{ $msgData['archivo_url'] }}">
+                                        Tu navegador no soporta audio.
+                                    </audio>
+                                </div>
+                            @elseif(($msgData['tipo_contenido'] ?? 'texto') === 'video' && !empty($msgData['archivo_url']))
+                                <div class="chat-media-wrapper">
+                                    <video controls class="chat-media-video">
+                                        <source src="{{ $msgData['archivo_url'] }}">
+                                        Tu navegador no soporta video.
+                                    </video>
+                                </div>
+                            @elseif(in_array(($msgData['tipo_contenido'] ?? 'texto'), ['archivo', 'documento']) && !empty($msgData['archivo_url']))
+                                <div class="chat-media-wrapper">
+                                    <a href="{{ $msgData['archivo_url'] }}" target="_blank" class="chat-media-file-link" rel="noopener noreferrer">
+                                        Abrir archivo adjunto
+                                    </a>
+                                </div>
+                            @endif
+
+                            @if($contenido !== '')
+                                <p class="chat-message-content">{{ $contenido }}</p>
+                            @endif
                             <p class="chat-message-time">{{ $createdAt->format('H:i') }}</p>
                         </div>
                     </div>
@@ -161,27 +195,25 @@
 
             <!-- Input -->
             <div class="chat-input-area">
-                @if($conversacionActiva->estado !== 'cerrada')
-                    <form wire:submit.prevent="enviarMensaje" class="chat-input-form">
-                        <input
-                            wire:model="nuevoMensaje"
-                            type="text"
-                            placeholder="Escribe un mensaje..."
-                            class="chat-input-field"
-                        />
-                        <button type="submit" class="chat-send-btn">
-                            Enviar
-                        </button>
-                    </form>
+                <form wire:submit.prevent="enviarMensaje" class="chat-input-form">
+                    <input
+                        wire:model="nuevoMensaje"
+                        type="text"
+                        placeholder="Escribe un mensaje..."
+                        class="chat-input-field"
+                    />
+                    <button type="submit" class="chat-send-btn">
+                        <span>Enviar</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13" />
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+                        </svg>
+                    </button>
+                </form>
 
-                    @error('mensaje')
-                        <p style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">{{ $message }}</p>
-                    @enderror
-                @else
-                    <div style="text-align: center; color: var(--text-muted); padding: 1rem;">
-                        <p>Esta conversación está cerrada</p>
-                    </div>
-                @endif
+                @error('mensaje')
+                    <p style="color: var(--danger-color); font-size: 0.875rem; margin-top: 0.5rem;">{{ $message }}</p>
+                @enderror
             </div>
         @else
             <div class="chat-empty-state">
@@ -190,7 +222,6 @@
             </div>
         @endif
     </div>
-</div>
 
 <!-- Notificación flotante -->
 <div id="chat-notification" class="chat-notification-bubble" style="display: none;">

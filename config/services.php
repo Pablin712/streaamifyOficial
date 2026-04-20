@@ -48,6 +48,15 @@ return [
         'public_site_url' => env('STREAMIFY_PUBLIC_SITE_URL', 'https://streamify.aaronsoft.es/public/'),
     ],
 
+    'evoapi' => [
+        'base_url' => env('EVOAPI_BASE_URL', 'https://evoapi.abigailsoft.com'),
+        'timeout_seconds' => env('EVOAPI_TIMEOUT_SECONDS', 20),
+        'instance_aliases' => [
+            // Alias operativo para el canal azul cuando llega "default" desde n8n.
+            'default' => 'Streamify Azul',
+        ],
+    ],
+
     'netflix_code' => [
         'provider_name' => env('NETFLIX_CODE_PROVIDER_NAME', 'Alejandro Guevara'),
         'service_id' => env('NETFLIX_CODE_SERVICE_ID', 'NETFLIX'),

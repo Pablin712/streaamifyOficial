@@ -250,175 +250,360 @@ Entonces recién llamas al router IA o dejas un default:
 
 ---
 
-## 8. Arquitectura recomendada del router
+## 8. Router simple y corto
 
-La forma práctica de implementarlo es así:
+Si quieres simplicidad, haz el router como un solo agente.
 
-### Opción recomendada: reglas duras + router IA de respaldo
-
-1. `Code` o `IF` con reglas duras
-2. si no hay match, llamar a un nodo IA de router
-3. ese nodo devuelve solo clasificación, no respuesta larga
-
-### Entonces, ¿qué es el router en la práctica?
-
-No es un `Switch` simple por sí solo.
-
-Tampoco conviene que sea un agente grande que haga todo.
-
-En la práctica, el router es una capa de decisión.
-
-Esa capa la puedes implementar de tres formas:
-
-#### Forma 1. Solo reglas + `Switch`
-
-Funciona así:
-
-1. nodo `Code` o varios `IF`
-2. asignas `subagente_codigo`
-3. `Switch` por `subagente_codigo`
-
-Sirve si tus casos son muy obvios y repetitivos.
-
-Ventajas:
-
-- más simple;
-- más barato;
-- más estable;
-- más fácil de depurar.
-
-Desventaja:
-
-- se queda corto cuando el mensaje es ambiguo.
-
-#### Forma 2. Solo agente router
-
-Funciona así:
+Flujo:
 
 1. `get context`
-2. nodo IA router
-3. `Switch` por `subagente_codigo`
+2. `AI Router`
+3. `Parse JSON`
+4. `IF requiere_humano o silencio_bot`
+5. `handoff`
+6. `Switch subagente_codigo`
 
-Ventaja:
+Regla importante:
 
-- entiende mejor mensajes ambiguos o mezclados.
+- el router decide;
+- el parser convierte el texto JSON a campos usables;
+- el `Switch` solo enruta.
 
-Desventajas:
+### Qué APIs necesita el router
 
-- más riesgo de clasificar mal;
-- menos control;
-- más costo;
-- más difícil de depurar.
+Solo estas:
 
-#### Forma 3. Híbrido: reglas duras + agente router de respaldo
+- `GET|POST /api/v2/chat/router/context`
+- `POST /api/v2/chat/router/handoff`
+- `POST /api/v2/chat/router/memory/summary` opcional
+- `POST /api/v2/chat/router/memory/contact` opcional
 
-Esta es la mejor para tu caso.
+No le des precios, pagos, soporte ni ventas. Eso es de los subagentes.
 
-Funciona así:
+### Tool única si quieres dejar solo una
 
-1. `get context`
-2. `Code` con reglas duras
-3. si no hubo match, llamar al router IA
-4. salida final: `subagente_codigo`
-5. `Switch`
+Si vas a parsear el output del agente y luego hacer ramas normales en n8n, no necesitas ninguna tool dentro del agente router.
 
-Ventajas:
+Si aun así quieres dejar una sola, que sea solo `handoff`.
 
-- controlas los casos claros;
-- la IA solo decide lo ambiguo;
-- reduces errores;
-- mantienes flexibilidad.
+Pero la recomendación más simple es esta:
 
-### Recomendación concreta para ti
+- router sin tools;
+- parser después del agente;
+- nodo `HTTP Request` aparte para `handoff`.
 
-Hoy no te conviene un `Switch` solo y tampoco un router 100% IA.
+Así tienes más control y menos errores.
 
-Te conviene esto:
+### Cómo debe quedar la tool `handoff`
 
-- reglas duras para:
-  - comprobante
-  - humano
-  - soporte muy claro
-  - venta muy clara
-- router IA solo para lo ambiguo
-- `Switch` al final para ejecutar el subagente
+Si decides dejar esa única tool al agente, la descripción debe ser corta y operativa:
 
-Traducción práctica:
+```text
+Usa esta tool solo cuando la clasificación final sea espera_humano o cuando requiere_humano=true.
+No la uses para responder al cliente.
+Solo deriva la conversación a humano.
+```
 
-- el router sí existe como concepto;
-- pero en n8n no tiene que ser un solo nodo;
-- el router puede ser un bloque compuesto por reglas + IA;
-- el `Switch` no reemplaza al router, solo ejecuta la decisión del router.
+Pero incluso así, sigue siendo mejor disparar `handoff` fuera del agente, después del parser.
 
-### Cómo construir el router en n8n
+### Prompt final recomendado para un router 100% agente
 
-Implementación mínima recomendada:
+```text
+Eres el router conversacional de Streamify.
 
-1. `get context`
-2. `If debe_responder`
-3. nodo `Code` llamado por ejemplo `pre-router`
-4. `IF subagente_forzado existe`
-5. si existe, pasar directo al `Switch`
-6. si no existe, llamar a `AI Router`
-7. normalizar salida JSON del router
-8. `Switch` por `subagente_codigo`
+Tu única función es decidir qué subagente debe atender el turno actual del cliente.
 
-### Qué hace el nodo `pre-router`
+No debes responderle al cliente.
+No debes vender.
+No debes dar soporte.
+No debes validar pagos.
+No debes hacer postventa.
+No debes consultar APIs de negocio de subagentes.
+Solo debes clasificar.
 
-El `pre-router` no responde al cliente.
+Tu trabajo consiste en analizar el contexto actual de la conversación y devolver una decisión estructurada.
 
-Solo mira señales obvias y devuelve algo como esto:
+Subagentes válidos:
+- espera_humano
+- asistente_no_registrado
+- vendedor_cierre
+- soporte_cliente
+- cobranzas_pago
+- postventa_reciente
 
-```json
+Debes priorizar esta lógica:
+1. Si el cliente pide humano, asesor, operador o persona real, elige espera_humano.
+2. Si el turno trata de pago, comprobante, transferencia, depósito, validación de pago o ya pagó, elige cobranzas_pago.
+3. Si el turno trata de acceso, error, contraseña, pantalla, falla, cuenta dañada o problema de uso, elige soporte_cliente.
+4. Si el turno trata de precio, plan, combo, descuento, servicio o intención de compra, elige vendedor_cierre.
+5. Si hay señales de compra reciente y la conversación es de seguimiento o duda posterior, elige postventa_reciente.
+6. Si no hay coincidencia fuerte, elige asistente_no_registrado.
+
+Debes usar como fuente principal el contexto de conversación.
+Debes considerar:
+- mensaje_agrupado
+- mensajes_pendientes
+- historial_reciente
+- memorias_contacto
+- resumenes
+- memoria_negocio
+- contacto
+- conversacion
+
+Si detectas conflicto, molestia alta, riesgo de mala experiencia o petición explícita de humano, marca requiere_humano=true.
+
+Si eliges espera_humano, también debes marcar silencio_bot=true.
+
+Devuelve solo JSON válido con esta estructura exacta:
 {
-  "subagente_forzado": "cobranzas_pago",
-  "motivo": "imagen detectada como comprobante"
+  "subagente_codigo": "espera_humano|asistente_no_registrado|vendedor_cierre|soporte_cliente|cobranzas_pago|postventa_reciente",
+  "motivo": "frase corta y concreta",
+  "requiere_humano": true,
+  "silencio_bot": true,
+  "confianza": 0,
+  "guardar_resumen": false,
+  "resumen_sugerido": null,
+  "guardar_memoria_contacto": false,
+  "memoria_contacto": null
+}
+
+Reglas de salida:
+- No devuelvas Markdown.
+- No expliques tu razonamiento.
+- No devuelvas varias opciones.
+- No incluyas texto antes ni después del JSON.
+- confianza debe ser un entero entre 0 y 100.
+- resumen_sugerido solo debe llenarse si guardar_resumen=true.
+- memoria_contacto solo debe llenarse si guardar_memoria_contacto=true.
+
+Formato de memoria_contacto cuando aplique:
+{
+  "tipo": "perfil|preferencia|objecion|seguimiento|venta|pago|incidencia|contexto",
+  "clave": "texto_corto",
+  "valor_texto": "texto corto útil",
+  "confianza": 0
 }
 ```
 
-O si no encuentra nada claro:
+### Qué poner en `System Message`
 
-```json
+Si usas un nodo `AI Agent` de n8n, el `System Message` debe contener las reglas estables del router.
+
+Pega esto en `System Message`:
+
+```text
+Eres el router conversacional de Streamify.
+
+Tu única función es decidir qué subagente debe atender el turno actual del cliente.
+
+No debes responderle al cliente.
+No debes vender.
+No debes dar soporte.
+No debes validar pagos.
+No debes hacer postventa.
+No debes consultar APIs de negocio de subagentes.
+Solo debes clasificar.
+
+Subagentes válidos:
+- espera_humano
+- asistente_no_registrado
+- vendedor_cierre
+- soporte_cliente
+- cobranzas_pago
+- postventa_reciente
+
+Debes priorizar esta lógica:
+1. Si el cliente pide humano, asesor, operador o persona real, elige espera_humano.
+2. Si el turno trata de pago, comprobante, transferencia, depósito, validación de pago o ya pagó, elige cobranzas_pago.
+3. Si el turno trata de acceso, error, contraseña, pantalla, falla, cuenta dañada o problema de uso, elige soporte_cliente.
+4. Si el turno trata de precio, plan, combo, descuento, servicio o intención de compra, elige vendedor_cierre.
+5. Si hay señales de compra reciente y la conversación es de seguimiento o duda posterior, elige postventa_reciente.
+6. Si no hay coincidencia fuerte, elige asistente_no_registrado.
+
+Si detectas conflicto, molestia alta, riesgo de mala experiencia o petición explícita de humano, marca requiere_humano=true.
+
+Si eliges espera_humano, también debes marcar silencio_bot=true.
+
+Devuelve solo JSON válido.
+No devuelvas Markdown.
+No expliques tu razonamiento.
+No devuelvas varias opciones.
+No incluyas texto antes ni después del JSON.
+confianza debe ser un entero entre 0 y 100.
+resumen_sugerido solo debe llenarse si guardar_resumen=true.
+memoria_contacto solo debe llenarse si guardar_memoria_contacto=true.
+
+La salida exacta debe tener esta estructura:
 {
-  "subagente_forzado": null,
-  "motivo": null
+  "subagente_codigo": "espera_humano|asistente_no_registrado|vendedor_cierre|soporte_cliente|cobranzas_pago|postventa_reciente",
+  "motivo": "frase corta y concreta",
+  "requiere_humano": true,
+  "silencio_bot": true,
+  "confianza": 0,
+  "guardar_resumen": false,
+  "resumen_sugerido": null,
+  "guardar_memoria_contacto": false,
+  "memoria_contacto": null
+}
+
+Formato de memoria_contacto cuando aplique:
+{
+  "tipo": "perfil|preferencia|objecion|seguimiento|venta|pago|incidencia|contexto",
+  "clave": "texto_corto",
+  "valor_texto": "texto corto útil",
+  "confianza": 0
 }
 ```
 
-### Qué hace el nodo `AI Router`
+### Qué poner en `Prompt` o `User Message`
 
-Solo corre cuando `subagente_forzado` es `null`.
+El `Prompt` o `User Message` debe llevar solo el contexto dinámico del turno actual.
 
-Su trabajo es devolver:
+Pega esto en `Prompt` o `User Message`:
+
+```text
+Clasifica este turno de conversación usando únicamente el contexto entregado.
+
+mensaje_agrupado:
+{{ $json.data.mensaje_agrupado }}
+
+mensajes_pendientes:
+{{ JSON.stringify($json.data.mensajes_pendientes) }}
+
+historial_reciente:
+{{ JSON.stringify($json.data.historial_reciente) }}
+
+memorias_contacto:
+{{ JSON.stringify($json.data.memorias_contacto) }}
+
+resumenes:
+{{ JSON.stringify($json.data.resumenes) }}
+
+memoria_negocio:
+{{ JSON.stringify($json.data.memoria_negocio) }}
+
+contacto:
+{{ JSON.stringify($json.data.contacto) }}
+
+conversacion:
+{{ JSON.stringify($json.data.conversacion) }}
+
+subagentes_disponibles:
+{{ JSON.stringify($json.data.subagentes) }}
+
+Devuelve únicamente el JSON final de clasificación.
+```
+
+### Cómo dividirlo bien en n8n
+
+Regla simple:
+
+- `System Message`: identidad, reglas y formato de salida.
+- `Prompt` o `User Message`: datos del turno actual.
+
+No mezcles todo en un solo campo si quieres que sea más estable.
+
+### Versión corta del `Prompt`
+
+Si quieres un prompt más liviano, puedes usar esta versión:
+
+```text
+Clasifica este turno.
+
+mensaje_agrupado:
+{{ $json.data.mensaje_agrupado }}
+
+contacto:
+{{ JSON.stringify($json.data.contacto) }}
+
+conversacion:
+{{ JSON.stringify($json.data.conversacion) }}
+
+historial_reciente:
+{{ JSON.stringify($json.data.historial_reciente) }}
+
+memorias_contacto:
+{{ JSON.stringify($json.data.memorias_contacto) }}
+
+resumenes:
+{{ JSON.stringify($json.data.resumenes) }}
+
+Devuelve solo el JSON de clasificación.
+```
+
+### Qué no poner en el `Prompt`
+
+No conviene meter aquí:
+
+- reglas largas del router;
+- definición de subagentes repetida;
+- instrucciones de formato repetidas;
+- ejemplos extensos en cada ejecución.
+
+Eso debe vivir en `System Message`.
+
+### Output recomendado del router 100% agente
+
+Caso venta:
 
 ```json
 {
-  "subagente_codigo": "asistente_no_registrado",
-  "motivo": "lead general sin intención fuerte todavía",
+  "subagente_codigo": "vendedor_cierre",
+  "motivo": "cliente pide precio de un servicio",
   "requiere_humano": false,
   "silencio_bot": false,
-  "confianza": 78
+  "confianza": 93,
+  "guardar_resumen": false,
+  "resumen_sugerido": null,
+  "guardar_memoria_contacto": true,
+  "memoria_contacto": {
+    "tipo": "preferencia",
+    "clave": "servicio_interes",
+    "valor_texto": "NETFLIX",
+    "confianza": 88
+  }
 }
 ```
 
-### Qué hace el `Switch`
+Caso humano:
 
-El `Switch` no decide.
+```json
+{
+  "subagente_codigo": "espera_humano",
+  "motivo": "cliente pidió asesor humano",
+  "requiere_humano": true,
+  "silencio_bot": true,
+  "confianza": 98,
+  "guardar_resumen": true,
+  "resumen_sugerido": "Cliente solicita atención humana directa para continuar la conversación.",
+  "guardar_memoria_contacto": false,
+  "memoria_contacto": null
+}
+```
 
-Solo enruta según el valor final ya decidido:
+### Cómo montarlo en n8n
 
-- `espera_humano`
-- `asistente_no_registrado`
-- `vendedor_cierre`
-- `soporte_cliente`
-- `cobranzas_pago`
-- `postventa_reciente`
+Implementación recomendada:
 
-En resumen:
+1. `ingest msg`
+2. `Wait 35s`
+3. `get context`
+4. `If debe_responder`
+5. `AI Router`
+6. `IF guardar_memoria_contacto`
+7. `memory/contact` si aplica
+8. `IF guardar_resumen`
+9. `memory/summary` si aplica
+10. `IF requiere_humano o silencio_bot`
+11. `handoff` si aplica
+12. `Switch subagente_codigo`
+13. subagente especialista
 
-- router = lógica de decisión
-- switch = enrutador técnico en n8n
-- subagente = ejecutor especializado
+La simplificación importante es esta:
+
+- el agente router decide todo;
+- el switch solo separa ramas;
+- las APIs de negocio quedan exclusivamente en los subagentes.
 
 ### Entonces, ¿el router es un agente?
 

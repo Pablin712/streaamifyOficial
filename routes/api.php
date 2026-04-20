@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V2\TecnicoConfigController;
 use App\Http\Controllers\Api\V2\PaymentVerificationController;
 use App\Http\Controllers\Api\V2\CodigoVerificationController;
 use App\Http\Controllers\Api\V2\ChatRouterController;
+use App\Http\Controllers\Api\V2\ChatWhatsappChannelController;
 use App\Http\Controllers\Api\V2\WhatsAppPaymentController;
 use App\Http\Controllers\Api\DailyStatisticsController;
 
@@ -170,6 +171,12 @@ Route::prefix('v2')->group(function () {
         Route::post('/handoff', 'derivarHumano')->name('api.v2.chat.router.handoff');
         Route::post('/memory/summary', 'guardarResumen')->name('api.v2.chat.router.memory.summary');
         Route::post('/memory/contact', 'guardarMemoriaContacto')->name('api.v2.chat.router.memory.contact');
+    });
+
+    Route::prefix('chat/router/whatsapp-channels')->middleware('api.key')->controller(ChatWhatsappChannelController::class)->group(function () {
+        Route::get('/', 'index')->name('api.v2.chat.router.whatsapp-channels.index');
+        Route::post('/upsert', 'upsert')->name('api.v2.chat.router.whatsapp-channels.upsert');
+        Route::delete('/{id}', 'destroy')->name('api.v2.chat.router.whatsapp-channels.destroy');
     });
 
     // Información y Precios - Público (con prefijo 'info' - legacy)

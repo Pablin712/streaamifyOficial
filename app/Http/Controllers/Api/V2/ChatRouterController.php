@@ -12,6 +12,7 @@ use App\Models\ChatSubagente;
 use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
+use App\Services\Chat\WhatsAppOutboundService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -32,6 +33,10 @@ class ChatRouterController extends Controller
         'postventa' => 'postventa_reciente',
     ];
 
+    public function __construct(private readonly WhatsAppOutboundService $whatsAppOutboundService)
+    {
+    }
+
     public function recibirMensaje(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -39,7 +44,7 @@ class ChatRouterController extends Controller
             'canal_user_id' => 'required|string|max:120',
             'mensaje' => 'nullable|string',
             'contenido' => 'nullable|string',
-            'tipo_contenido' => 'nullable|in:texto,imagen,archivo,audio,video,documento',
+            'tipo_contenido' => 'nullable|in:texto,imagen,archivo,audio,video,documento,sticker',
             'external_message_id' => 'nullable|string|max:191',
             'external_thread_id' => 'nullable|string|max:191',
             'telefono' => 'nullable|string|max:40',
@@ -55,6 +60,7 @@ class ChatRouterController extends Controller
             'debounce_seconds' => 'nullable|integer|min:1|max:300',
             'instance' => 'nullable|string|max:120',
             'apikey' => 'nullable|string|max:191',
+            'server_url' => 'nullable|string|max:191',
         ]);
 
         if ($validator->fails()) {
@@ -79,9 +85,13 @@ class ChatRouterController extends Controller
                 $canalUserId = trim((string) $request->input('canal_user_id'));
                 $telefono = $this->normalizePhone($request->input('telefono') ?? $request->input('numero') ?? $canalUserId);
                 $cliente = $this->resolveCliente($request->input('idcli'), $telefono);
+                $whatsappChannel = $this->resolveWhatsappChannel($request->input('instance'));
+                $whatsappColor = $whatsappChannel?->color ?? $this->resolveWhatsappColorByInstance($request->input('instance'));
 
                 $subagenteCodigo = $this->normalizeSubagentCode($request->input('subagente_codigo'))
                     ?? self::SUBAGENTE_POR_DEFECTO;
+
+                $tipoContenido = $this->normalizeContentType($request->input('tipo_contenido', 'texto'));
 
                 $contacto = ChatContactoCanal::query()->firstOrCreate(
                     [
@@ -129,7 +139,11 @@ class ChatRouterController extends Controller
                         'requiere_humano' => false,
                         'metadata' => [
                             'canal_user_id' => $canalUserId,
-                            'instance' => $request->input('instance'),
+                            'instance' => $request->input('instance') ?: $whatsappChannel?->instance_name,
+                            'apikey' => $request->input('apikey') ?: $whatsappChannel?->api_key,
+                            'server_url' => $request->input('server_url') ?: $whatsappChannel?->server_url,
+                            'whatsapp_channel_id' => $whatsappChannel?->id,
+                            'whatsapp_color' => $whatsappColor,
                         ],
                     ]);
                 } else {
@@ -139,7 +153,11 @@ class ChatRouterController extends Controller
                         'ultima_actividad' => now(),
                         'metadata' => array_merge($conversacion->metadata ?? [], [
                             'canal_user_id' => $canalUserId,
-                            'instance' => $request->input('instance', data_get($conversacion->metadata, 'instance')),
+                            'instance' => $request->input('instance', data_get($conversacion->metadata, 'instance') ?: $whatsappChannel?->instance_name),
+                            'apikey' => $request->input('apikey', data_get($conversacion->metadata, 'apikey') ?: $whatsappChannel?->api_key),
+                            'server_url' => $request->input('server_url', data_get($conversacion->metadata, 'server_url') ?: $whatsappChannel?->server_url),
+                            'whatsapp_channel_id' => data_get($conversacion->metadata, 'whatsapp_channel_id') ?: $whatsappChannel?->id,
+                            'whatsapp_color' => data_get($conversacion->metadata, 'whatsapp_color') ?: $whatsappColor,
                         ]),
                     ]);
                     $conversacion->save();
@@ -167,12 +185,13 @@ class ChatRouterController extends Controller
                     'tipo_remitente' => 'cliente',
                     'idcli' => $cliente?->idcli,
                     'contenido' => $contenido,
-                    'tipo_contenido' => $request->input('tipo_contenido', 'texto'),
+                    'tipo_contenido' => $tipoContenido,
                     'archivo_url' => $request->input('media_url'),
                     'leido' => false,
                     'respondido_por_ai' => false,
                     'metadata' => [
                         'origen' => 'router',
+                        'tipo_contenido_original' => $request->input('tipo_contenido', 'texto'),
                         'external_message_id' => $request->input('external_message_id'),
                         'instance' => $request->input('instance'),
                         'payload' => $request->input('payload'),
@@ -192,7 +211,11 @@ class ChatRouterController extends Controller
                     'media_url' => $request->input('media_url'),
                     'media_mime_type' => $request->input('media_mime_type'),
                     'payload' => array_merge($request->input('payload', []), [
-                        'instance' => $request->input('instance'),
+                        'instance' => $request->input('instance') ?: $whatsappChannel?->instance_name,
+                        'apikey' => $request->input('apikey') ?: $whatsappChannel?->api_key,
+                        'server_url' => $request->input('server_url') ?: $whatsappChannel?->server_url,
+                        'whatsapp_channel_id' => $whatsappChannel?->id,
+                        'whatsapp_color' => $whatsappColor,
                     ]),
                 ]);
 
@@ -375,6 +398,10 @@ class ChatRouterController extends Controller
             'canal' => 'nullable|in:' . implode(',', self::CANALES),
             'canal_user_id' => 'nullable|string|max:120',
             'contenido' => 'required|string',
+            'tipo_contenido' => 'nullable|in:texto,imagen,archivo,audio,video,documento,sticker',
+            'media_url' => 'nullable|string',
+            'media_mime_type' => 'nullable|string|max:120',
+            'media_id' => 'nullable|string|max:191',
             'subagente_codigo' => 'nullable|string|max:50',
             'metadata' => 'nullable|array',
             'external_message_id' => 'nullable|string|max:191',
@@ -423,16 +450,20 @@ class ChatRouterController extends Controller
                     ?? $conversacion->subagente_codigo
                     ?? self::SUBAGENTE_POR_DEFECTO;
 
+                $tipoContenido = $this->normalizeContentType($request->input('tipo_contenido', 'texto'));
+
                 $mensaje = Mensaje::create([
                     'idconv' => $conversacion->idconv,
                     'tipo_remitente' => 'ia',
                     'contenido' => $request->input('contenido'),
-                    'tipo_contenido' => 'texto',
+                    'tipo_contenido' => $tipoContenido,
+                    'archivo_url' => $request->input('media_url'),
                     'leido' => true,
                     'respondido_por_ai' => true,
                     'metadata' => array_merge($request->input('metadata', []), [
                         'subagente_codigo' => $subagenteCodigo,
                         'instance' => $request->input('instance'),
+                        'tipo_contenido_original' => $request->input('tipo_contenido', 'texto'),
                         'respondio_pendientes' => $pendientes->pluck('idmsg')->values(),
                     ]),
                 ]);
@@ -450,8 +481,13 @@ class ChatRouterController extends Controller
                         'external_message_id' => $request->input('external_message_id'),
                         'external_thread_id' => $request->input('external_thread_id'),
                         'external_status' => $request->input('external_message_id') ? 'sent' : 'accepted',
+                        'media_id' => $request->input('media_id'),
+                        'media_url' => $request->input('media_url'),
+                        'media_mime_type' => $request->input('media_mime_type'),
                         'payload' => array_merge($request->input('metadata', []), [
                             'instance' => $request->input('instance'),
+                            'apikey' => $request->input('apikey'),
+                            'server_url' => $request->input('server_url'),
                         ]),
                     ]);
                 }
@@ -464,20 +500,64 @@ class ChatRouterController extends Controller
                     'requiere_humano' => false,
                 ]);
 
-                return [$conversacion->fresh(), $mensaje, $canalMensaje, $pendientes->count()];
+                return [
+                    'conversacion' => $conversacion->fresh(),
+                    'mensaje' => $mensaje,
+                    'canal_mensaje' => $canalMensaje,
+                    'pendientes_cerrados' => $pendientes->count(),
+                ];
             });
+
+            $whatsappDispatchOk = true;
+
+            if (($resultado['conversacion']->canal_principal ?? null) === 'whatsapp') {
+                [$instance, $apiKey, $serverUrl] = $this->resolveWhatsappCredentials($resultado['conversacion'], $request);
+
+                if ($instance && $apiKey && $resultado['canal_mensaje']) {
+                    $dispatch = $this->whatsAppOutboundService->sendText(
+                        (string) ($resultado['conversacion']->contactoCanal?->canal_user_id ?? ''),
+                        (string) $request->input('contenido'),
+                        $instance,
+                        $apiKey,
+                        $serverUrl,
+                        [
+                            'tipo_contenido' => $request->input('tipo_contenido', 'texto'),
+                            'media_url' => $request->input('media_url'),
+                            'media_mime_type' => $request->input('media_mime_type'),
+                        ]
+                    );
+
+                    $resultado['canal_mensaje']->update([
+                        'external_status' => $dispatch['ok'] ? 'sent' : 'failed',
+                        'external_message_id' => $dispatch['external_message_id'] ?? $resultado['canal_mensaje']->external_message_id,
+                        'payload' => array_merge($resultado['canal_mensaje']->payload ?? [], [
+                            'dispatch' => [
+                                'ok' => $dispatch['ok'],
+                                'status' => $dispatch['status'],
+                                'error' => $dispatch['error'],
+                                'response' => $dispatch['payload'],
+                            ],
+                        ]),
+                    ]);
+
+                    $whatsappDispatchOk = (bool) $dispatch['ok'];
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Respuesta del agente registrada correctamente.',
+                'message' => $whatsappDispatchOk
+                    ? 'Respuesta del agente registrada correctamente.'
+                    : 'Respuesta registrada, pero WhatsApp reporto fallo al enviar.',
                 'data' => [
-                    'idconv' => $resultado[0]->idconv,
-                    'idmsg' => $resultado[1]->idmsg,
-                    'chat_mensaje_canal_id' => $resultado[2]?->id,
-                    'pendientes_cerrados' => $resultado[3],
-                    'estado_conversacion' => $resultado[0]->estado,
+                    'idconv' => $resultado['conversacion']->idconv,
+                    'idmsg' => $resultado['mensaje']->idmsg,
+                    'chat_mensaje_canal_id' => $resultado['canal_mensaje']?->id,
+                    'pendientes_cerrados' => $resultado['pendientes_cerrados'],
+                    'estado_conversacion' => $resultado['conversacion']->estado,
+                    'whatsapp_enviado' => $whatsappDispatchOk,
                 ],
-            ], 201);
+            ], $whatsappDispatchOk ? 201 : 207);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -759,10 +839,25 @@ class ChatRouterController extends Controller
 
     private function buildChannelMetadata(Request $request): array
     {
+        $whatsappChannel = $this->resolveWhatsappChannel($request->input('instance'));
+
         return array_filter([
-            'instance' => $request->input('instance'),
+            'instance' => $request->input('instance') ?: $whatsappChannel?->instance_name,
+            'apikey' => $request->input('apikey') ?: $whatsappChannel?->api_key,
+            'server_url' => $request->input('server_url') ?: $whatsappChannel?->server_url,
+            'whatsapp_channel_id' => $whatsappChannel?->id,
+            'whatsapp_color' => $whatsappChannel?->color ?: $this->resolveWhatsappColorByInstance($request->input('instance')),
             'nombre' => $request->input('nombre'),
         ], fn ($value) => $value !== null && $value !== '');
+    }
+
+    private function normalizeContentType(?string $tipo): string
+    {
+        return match ($tipo) {
+            'sticker' => 'imagen',
+            'texto', 'imagen', 'archivo', 'audio', 'video', 'documento' => $tipo,
+            default => 'texto',
+        };
     }
 
     private function normalizeSubagentCode(?string $codigo): ?string
@@ -781,5 +876,50 @@ class ChatRouterController extends Controller
         $digits = preg_replace('/\D+/', '', (string) $value);
 
         return $digits !== '' ? $digits : null;
+    }
+
+    private function resolveWhatsappCredentials(Conversacion $conversacion, Request $request): array
+    {
+        $metadata = $conversacion->metadata ?? [];
+        $contactMetadata = $conversacion->contactoCanal?->metadata ?? [];
+        $channelConfigId = data_get($metadata, 'whatsapp_channel_id') ?: data_get($contactMetadata, 'whatsapp_channel_id');
+
+        $instance = $request->input('instance')
+            ?? data_get($metadata, 'instance')
+            ?? data_get($contactMetadata, 'instance');
+
+        $whatsappChannel = $channelConfigId
+            ? \App\Models\ChatWhatsappChannel::query()->availableForOutbound()->find($channelConfigId)
+            : $this->resolveWhatsappChannel($instance);
+
+        if (!$instance) {
+            $instance = $whatsappChannel?->instance_name;
+        }
+
+        $apiKey = $request->input('apikey')
+            ?? data_get($metadata, 'apikey')
+            ?? data_get($contactMetadata, 'apikey')
+            ?? $whatsappChannel?->api_key;
+
+        $serverUrl = $request->input('server_url')
+            ?? data_get($metadata, 'server_url')
+            ?? data_get($contactMetadata, 'server_url')
+            ?? $whatsappChannel?->server_url;
+
+        return [$instance, $apiKey, $serverUrl];
+    }
+
+    private function resolveWhatsappChannel(?string $instance): ?\App\Models\ChatWhatsappChannel
+    {
+        return $this->whatsAppOutboundService->resolveChannelByInstance($instance);
+    }
+
+    private function resolveWhatsappColorByInstance(?string $instance): ?string
+    {
+        if (!$instance) {
+            return null;
+        }
+
+        return strtolower(trim((string) $instance)) === 'bot-pagos' ? 'verde' : 'azul';
     }
 }

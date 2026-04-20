@@ -3,8 +3,10 @@
 namespace App\Livewire\Chat;
 
 use Livewire\Component;
+use App\Models\ChatMensajeCanal;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
+use App\Services\Chat\WhatsAppOutboundService;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -32,25 +34,26 @@ class PanelConversaciones extends Component
 
     public function render()
     {
-        $query = Conversacion::with(['cliente', 'ultimoMensaje', 'ultimoEmpleado'])
+        $query = Conversacion::with(['cliente', 'contactoCanal', 'ultimoMensaje', 'ultimoEmpleado'])
             ->orderBy('ultima_actividad', 'desc');
 
-        // Filtro por estado
-        if ($this->filtroEstado !== 'todas') {
-            $query->where('estado', $this->filtroEstado);
-        } else {
-            // Por defecto, solo conversaciones no cerradas
-            $query->whereIn('estado', ['abierta', 'en_atencion', 'en_espera']);
+        // Filtro por no leídos (vista tipo WhatsApp, sin abiertos/cerrados)
+        if ($this->filtroEstado === 'no_leidas') {
+            $query->where('mensajes_no_leidos', '>', 0);
         }
 
-        // Búsqueda por cliente
+        // Búsqueda por cliente y por número de canal
         if ($this->busqueda) {
             $query->where(function ($q) {
                 $q->whereHas('cliente', function ($subQ) {
                     $subQ->where('nombrecli', 'like', "%{$this->busqueda}%")
                          ->orWhere('telefonocli', 'like', "%{$this->busqueda}%");
                 })
-                ->orWhere('metadata->session_id', 'like', "%{$this->busqueda}%");
+                ->orWhereHas('contactoCanal', function ($subQ) {
+                    $subQ->where('canal_user_id', 'like', "%{$this->busqueda}%")
+                        ->orWhere('telefono_normalizado', 'like', "%{$this->busqueda}%")
+                        ->orWhere('nombre_canal', 'like', "%{$this->busqueda}%");
+                });
             });
         }
 
@@ -63,7 +66,7 @@ class PanelConversaciones extends Component
 
     public function seleccionarConversacion($idconv)
     {
-        $this->conversacionActiva = Conversacion::with('cliente')->find($idconv);
+        $this->conversacionActiva = Conversacion::with(['cliente', 'contactoCanal'])->find($idconv);
         $this->mensajes = $this->conversacionActiva->mensajes()->with(['empleado', 'cliente'])->get()->toArray();
 
         // Marcar como leída
@@ -86,7 +89,7 @@ class PanelConversaciones extends Component
     public function actualizarMensajes()
     {
         // Verificar mensajes nuevos en todas las conversaciones
-        $totalMensajesNoLeidos = Conversacion::abiertas()->sum('mensajes_no_leidos');
+        $totalMensajesNoLeidos = Conversacion::query()->sum('mensajes_no_leidos');
 
         if ($totalMensajesNoLeidos > $this->ultimoConteoMensajes) {
             $this->dispatch('nuevoMensajeRecibido', [
@@ -115,7 +118,9 @@ class PanelConversaciones extends Component
 
     public function enviarMensaje()
     {
-        if (empty($this->nuevoMensaje)) {
+        $contenido = trim((string) $this->nuevoMensaje);
+
+        if ($contenido === '') {
             return;
         }
 
@@ -124,16 +129,110 @@ class PanelConversaciones extends Component
             return;
         }
 
+        $empleado = Auth::guard('empleado')->user() ?? Auth::user();
+        $empleadoId = $empleado?->idemp;
+
         $mensaje = Mensaje::create([
             'idconv' => $this->conversacionActiva->idconv,
             'tipo_remitente' => 'empleado',
-            'idemp' => Auth::id(),
-            'contenido' => $this->nuevoMensaje,
+            'idemp' => $empleadoId,
+            'contenido' => $contenido,
             'tipo_contenido' => 'texto',
+            'leido' => true,
         ]);
 
+        $canalMensaje = null;
+        $dispatchOk = true;
+
+        if ($this->conversacionActiva->canal_principal === 'whatsapp' && $this->conversacionActiva->canal_contacto_id) {
+            $canalMensaje = ChatMensajeCanal::create([
+                'idmsg' => $mensaje->idmsg,
+                'idconv' => $this->conversacionActiva->idconv,
+                'contacto_canal_id' => $this->conversacionActiva->canal_contacto_id,
+                'canal' => 'whatsapp',
+                'direccion' => 'outbound',
+                'external_status' => 'accepted',
+                'payload' => [
+                    'origen' => 'panel-empleado',
+                ],
+            ]);
+
+            $metadata = $this->conversacionActiva->metadata ?? [];
+            $contactMetadata = $this->conversacionActiva->contactoCanal?->metadata ?? [];
+
+            $instance = data_get($metadata, 'instance') ?? data_get($contactMetadata, 'instance');
+            $apiKey = data_get($metadata, 'apikey') ?? data_get($contactMetadata, 'apikey');
+            $serverUrl = data_get($metadata, 'server_url') ?? data_get($contactMetadata, 'server_url');
+
+            /** @var WhatsAppOutboundService $outbound */
+            $outbound = app(WhatsAppOutboundService::class);
+            $whatsappChannel = null;
+
+            if (!$apiKey || !$serverUrl) {
+                $channelConfigId = data_get($metadata, 'whatsapp_channel_id') ?? data_get($contactMetadata, 'whatsapp_channel_id');
+
+                if ($channelConfigId) {
+                    $whatsappChannel = \App\Models\ChatWhatsappChannel::query()->availableForOutbound()->find($channelConfigId);
+                }
+
+                if (!$whatsappChannel && $instance) {
+                    $whatsappChannel = $outbound->resolveChannelByInstance($instance);
+                }
+
+                if ($whatsappChannel) {
+                    $instance = $instance ?: $whatsappChannel->instance_name;
+                    $apiKey = $apiKey ?: $whatsappChannel->api_key;
+                    $serverUrl = $serverUrl ?: $whatsappChannel->server_url;
+                }
+            }
+
+            if ($instance && $apiKey) {
+                $dispatch = $outbound->sendText(
+                    (string) ($this->conversacionActiva->contactoCanal?->canal_user_id ?? ''),
+                    $contenido,
+                    $instance,
+                    $apiKey,
+                    $serverUrl,
+                    [
+                        'tipo_contenido' => 'texto',
+                    ]
+                );
+
+                $canalMensaje->update([
+                    'external_status' => $dispatch['ok'] ? 'sent' : 'failed',
+                    'external_message_id' => $dispatch['external_message_id'] ?? null,
+                    'payload' => array_merge($canalMensaje->payload ?? [], [
+                        'dispatch' => [
+                            'ok' => $dispatch['ok'],
+                            'status' => $dispatch['status'],
+                            'error' => $dispatch['error'],
+                        ],
+                    ]),
+                ]);
+
+                $dispatchOk = (bool) $dispatch['ok'];
+            } else {
+                $canalMensaje->update([
+                    'external_status' => 'failed',
+                    'payload' => array_merge($canalMensaje->payload ?? [], [
+                        'dispatch' => [
+                            'ok' => false,
+                            'status' => 0,
+                            'error' => 'Faltan credenciales de instancia o apiKey para este contacto.',
+                        ],
+                    ]),
+                ]);
+
+                $dispatchOk = false;
+            }
+        }
+
         // Actualizar estado de conversación
-        $this->conversacionActiva->cambiarEstado('en_atencion', Auth::id());
+        $this->conversacionActiva->cambiarEstado('en_atencion', $empleadoId);
+
+        if (!$dispatchOk) {
+            $this->addError('mensaje', 'El mensaje se guardó pero falló el envío a WhatsApp.');
+        }
 
         $this->mensajes[] = $mensaje->load('empleado')->toArray();
 
@@ -142,6 +241,81 @@ class PanelConversaciones extends Component
 
         $this->dispatch('mensajesActualizados');
         $this->dispatch('mensaje-enviado');
+    }
+
+    public function nombreConversacion(Conversacion $conversacion): string
+    {
+        if ($conversacion->cliente?->nombrecli) {
+            return $conversacion->cliente->nombrecli;
+        }
+
+        return $conversacion->contactoCanal?->telefono_normalizado
+            ?: $conversacion->contactoCanal?->canal_user_id
+            ?: 'Sin número';
+    }
+
+    public function subtituloConversacion(Conversacion $conversacion): string
+    {
+        if ($conversacion->cliente?->telefonocli) {
+            return $conversacion->cliente->telefonocli;
+        }
+
+        return $conversacion->contactoCanal?->telefono_normalizado
+            ?: $conversacion->contactoCanal?->canal_user_id
+            ?: 'Contacto sin teléfono';
+    }
+
+    public function canalClaseColor(Conversacion $conversacion): string
+    {
+        if ($conversacion->canal_principal !== 'whatsapp') {
+            return 'canal-dot-default';
+        }
+
+        $declaredColor = data_get($conversacion->metadata, 'whatsapp_color')
+            ?? data_get($conversacion->contactoCanal?->metadata, 'whatsapp_color');
+
+        if ($declaredColor === 'verde') {
+            return 'canal-dot-green';
+        }
+
+        if ($declaredColor === 'azul') {
+            return 'canal-dot-blue';
+        }
+
+        $instance = strtolower((string) (
+            data_get($conversacion->metadata, 'instance')
+            ?? data_get($conversacion->contactoCanal?->metadata, 'instance')
+            ?? ''
+        ));
+
+        // Regla operativa del proyecto: bot-pagos = verde, cualquier otra instancia = azul.
+        if ($instance !== '') {
+            return $instance === 'bot-pagos' ? 'canal-dot-green' : 'canal-dot-blue';
+        }
+
+        return 'canal-dot-green';
+    }
+
+    public function vistaPreviaMensaje(Conversacion $conversacion): string
+    {
+        $mensaje = $conversacion->ultimoMensaje;
+
+        if (!$mensaje) {
+            return 'Sin mensajes';
+        }
+
+        $contenido = trim((string) $mensaje->contenido);
+        if ($contenido !== '') {
+            return $contenido;
+        }
+
+        return match ($mensaje->tipo_contenido) {
+            'imagen' => '📷 Imagen',
+            'audio' => '🎙️ Audio',
+            'video' => '🎬 Video',
+            'archivo', 'documento' => '📎 Archivo',
+            default => 'Mensaje',
+        };
     }
 
     public function cerrarConversacion()
