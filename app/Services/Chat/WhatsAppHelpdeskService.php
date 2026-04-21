@@ -23,21 +23,20 @@ class WhatsAppHelpdeskService
     public function __construct(
         private readonly ChatSettingsService $settings,
         private readonly WhatsAppOutboundService $outbound
-    ) {
-    }
+    ) {}
 
     public function ingestInbound(array $payload): array
     {
         $type = $this->normalizeType($payload['tipo'] ?? $payload['tipo_contenido'] ?? 'texto');
 
-        if (!$this->settings->isTypeAllowed($type)) {
+        if (! $this->settings->isTypeAllowed($type)) {
             throw new \InvalidArgumentException("El tipo de mensaje {$type} no esta habilitado.");
         }
 
         $content = trim((string) ($payload['mensaje'] ?? $payload['contenido'] ?? ''));
         $mediaUrl = $payload['media_url'] ?? $payload['archivo_url'] ?? null;
 
-        if ($content === '' && !$mediaUrl) {
+        if ($content === '' && ! $mediaUrl) {
             throw new \InvalidArgumentException('Debes enviar contenido o media_url.');
         }
 
@@ -86,7 +85,7 @@ class WhatsAppHelpdeskService
                 ->latest('ultima_actividad')
                 ->first();
 
-            if (!$conversation) {
+            if (! $conversation) {
                 $conversation = Conversacion::query()
                     ->where('canal_principal', 'whatsapp')
                     ->where('canal_contacto_id', $contact->id)
@@ -97,7 +96,7 @@ class WhatsAppHelpdeskService
                     ->first();
             }
 
-            if (!$conversation) {
+            if (! $conversation) {
                 $conversation = Conversacion::create([
                     'idcli' => $cliente?->idcli,
                     'canal_principal' => 'whatsapp',
@@ -119,7 +118,7 @@ class WhatsAppHelpdeskService
                 ]);
             }
 
-            if (!empty($payload['external_message_id'])) {
+            if (! empty($payload['external_message_id'])) {
                 $duplicate = ChatMensajeCanal::query()
                     ->where('canal', 'whatsapp')
                     ->where('external_message_id', $payload['external_message_id'])
@@ -198,7 +197,7 @@ class WhatsAppHelpdeskService
     {
         $type = $this->normalizeType($type);
 
-        if (!$this->settings->isTypeAllowed($type)) {
+        if (! $this->settings->isTypeAllowed($type)) {
             throw new \InvalidArgumentException("El tipo de mensaje {$type} no esta habilitado.");
         }
 
@@ -219,7 +218,7 @@ class WhatsAppHelpdeskService
 
         $content = $this->sanitizeText($content);
 
-        if ($content === '' && !$storedUrl) {
+        if ($content === '' && ! $storedUrl) {
             throw new \InvalidArgumentException('No hay contenido para enviar.');
         }
 
@@ -299,7 +298,7 @@ class WhatsAppHelpdeskService
             'ultima_actividad' => now(),
         ]);
 
-        $this->systemMessage($conversation, 'Conversacion asignada a operador #' . $assignedTo, $operator);
+        $this->systemMessage($conversation, 'Conversacion asignada a operador #'.$assignedTo, $operator);
     }
 
     public function close(Conversacion $conversation, Empleado $operator): void
@@ -311,7 +310,7 @@ class WhatsAppHelpdeskService
             'ultima_actividad' => now(),
         ]);
 
-        $this->systemMessage($conversation, 'Conversacion cerrada por ' . $operator->nombreemp, $operator);
+        $this->systemMessage($conversation, 'Conversacion cerrada por '.$operator->nombreemp, $operator);
     }
 
     public function reopen(Conversacion $conversation, Empleado $operator): void
@@ -323,7 +322,7 @@ class WhatsAppHelpdeskService
             'ultima_actividad' => now(),
         ]);
 
-        $this->systemMessage($conversation, 'Conversacion reabierta por ' . $operator->nombreemp, $operator);
+        $this->systemMessage($conversation, 'Conversacion reabierta por '.$operator->nombreemp, $operator);
     }
 
     public function systemMessage(Conversacion $conversation, string $content, ?Empleado $operator = null): Mensaje
@@ -376,7 +375,7 @@ class WhatsAppHelpdeskService
             ]);
         }
 
-        $webhookUrl = (string) config('services.n8n.client_message_webhook');
+        $webhookUrl = (string) $this->settings->get('n8n_webhook_url', config('services.n8n.client_message_webhook'));
 
         if ($webhookUrl === '') {
             return [
@@ -433,7 +432,7 @@ class WhatsAppHelpdeskService
         }
 
         return Cliente::query()
-            ->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(telefonocli, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ['%' . $digits])
+            ->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(telefonocli, ' ', ''), '-', ''), '+', ''), '(', '') LIKE ?", ['%'.$digits])
             ->first();
     }
 

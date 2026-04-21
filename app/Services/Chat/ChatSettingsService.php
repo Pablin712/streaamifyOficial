@@ -18,12 +18,16 @@ class ChatSettingsService
         'chat_realtime_enabled' => true,
         'chat_auto_assign' => false,
         'chat_max_upload_mb' => 10,
+        'chat_webhook_token' => '',
+        'n8n_webhook_url' => '',
+        'evoapi_base_url' => '',
+        'evoapi_api_key' => '',
     ];
 
     public function all(): array
     {
         return Cache::remember('chat.settings', 60, function () {
-            if (!Schema::hasTable('chat_settings')) {
+            if (! Schema::hasTable('chat_settings')) {
                 return self::DEFAULTS;
             }
 
@@ -33,7 +37,7 @@ class ChatSettingsService
                 ->mapWithKeys(function ($default, string $key) use ($settings) {
                     $setting = $settings->get($key);
 
-                    if (!$setting) {
+                    if (! $setting) {
                         return [$key => $default];
                     }
 
@@ -80,4 +84,3 @@ class ChatSettingsService
         };
     }
 }
-

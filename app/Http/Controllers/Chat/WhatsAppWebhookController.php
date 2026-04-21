@@ -3,22 +3,21 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class WhatsAppWebhookController extends Controller
 {
-    public function __construct(private readonly WhatsAppHelpdeskService $helpdesk)
-    {
-    }
+    public function __construct(private readonly WhatsAppHelpdeskService $helpdesk) {}
 
     public function inbound(Request $request)
     {
-        $expectedToken = (string) config('services.n8n.chat_webhook_token');
+        $expectedToken = (string) app(ChatSettingsService::class)->get('chat_webhook_token', config('services.n8n.chat_webhook_token'));
         $providedToken = (string) ($request->header('X-Chat-Webhook-Token') ?: $request->input('token'));
 
-        if ($expectedToken === '' || !hash_equals($expectedToken, $providedToken)) {
+        if ($expectedToken === '' || ! hash_equals($expectedToken, $providedToken)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Token de webhook invalido.',
@@ -85,4 +84,3 @@ class WhatsAppWebhookController extends Controller
         }
     }
 }
-

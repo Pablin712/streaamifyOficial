@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Chat;
 
+use App\Models\Chat\ChatSetting;
 use App\Models\Conversacion;
 use App\Models\Empleado;
 use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -19,12 +21,20 @@ class WhatsAppHelpdesk extends Component
     use WithPagination;
 
     public string $filter = 'nuevas';
+
     public string $search = '';
+
     public ?int $activeConversationId = null;
+
     public string $messageText = '';
+
     public ?TemporaryUploadedFile $imageUpload = null;
+
     public ?TemporaryUploadedFile $audioUpload = null;
+
     public string $mobilePane = 'list';
+
+    public bool $showSettingsModal = false;
 
     public function mount(): void
     {
@@ -76,7 +86,7 @@ class WhatsAppHelpdesk extends Component
         $conversation = $this->activeConversation();
         $operator = $this->operator();
 
-        if (!$conversation || !$operator) {
+        if (! $conversation || ! $operator) {
             return;
         }
 
@@ -119,6 +129,18 @@ class WhatsAppHelpdesk extends Component
         app(WhatsAppHelpdeskService::class)->reopen($this->activeConversation(), $this->operator());
     }
 
+    public function saveSetting(string $key, mixed $value): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para modificar ajustes.');
+
+        ChatSetting::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value, 'type' => is_bool($value) ? 'bool' : (is_numeric($value) ? 'int' : 'string')]
+        );
+
+        Cache::forget('chat.settings');
+    }
+
     public function sendText(): void
     {
         $this->sendMessage('texto');
@@ -144,13 +166,13 @@ class WhatsAppHelpdesk extends Component
 
         if ($type === 'imagen') {
             $this->validate([
-                'imageUpload' => ['required', 'image', 'max:' . $maxKb],
+                'imageUpload' => ['required', 'image', 'max:'.$maxKb],
             ]);
         }
 
         if ($type === 'audio') {
             $this->validate([
-                'audioUpload' => ['required', 'file', 'mimetypes:audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4', 'max:' . $maxKb],
+                'audioUpload' => ['required', 'file', 'mimetypes:audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4', 'max:'.$maxKb],
             ]);
         }
 
@@ -197,7 +219,7 @@ class WhatsAppHelpdesk extends Component
         };
 
         if ($this->search !== '') {
-            $search = '%' . trim($this->search) . '%';
+            $search = '%'.trim($this->search).'%';
             $query->where(function ($q) use ($search) {
                 $q->whereHas('cliente', function ($client) use ($search) {
                     $client->where('nombrecli', 'like', $search)
@@ -215,7 +237,7 @@ class WhatsAppHelpdesk extends Component
 
     private function activeConversation(): ?Conversacion
     {
-        if (!$this->activeConversationId) {
+        if (! $this->activeConversationId) {
             return null;
         }
 
@@ -226,7 +248,7 @@ class WhatsAppHelpdesk extends Component
 
     private function requireConversation(): void
     {
-        abort_if(!$this->activeConversation(), 404, 'Selecciona una conversacion.');
+        abort_if(! $this->activeConversation(), 404, 'Selecciona una conversacion.');
     }
 
     private function operator(): ?Empleado

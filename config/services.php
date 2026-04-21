@@ -42,7 +42,7 @@ return [
         'client_message_webhook' => env('N8N_CLIENT_MESSAGE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/mensaje-cliente'),
         'mass_client_message_webhook' => env('N8N_MASS_CLIENT_MESSAGE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/masivo'),
         'netflix_code_webhook' => env('N8N_NETFLIX_CODE_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/pedir-codigo'),
-        'chat_webhook_token' => env('CHAT_WEBHOOK_TOKEN', env('N8N_PAYMENT_WEBHOOK_SECRET')),
+        'chat_webhook_token' => env('CHAT_WEBHOOK_TOKEN'),
         'webhook_token' => env('N8N_WEBHOOK_TOKEN', 'laravel_token_123'),
         'outbound_webhook' => env('N8N_OUTBOUND_WEBHOOK', 'https://autobot.aaronsoft.es/webhook/laravel-outbound'),
     ],
@@ -68,4 +68,5 @@ return [
     ],
 
 ];
+
 

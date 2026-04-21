@@ -275,11 +275,14 @@
     </style>
 
     <aside class="wa-column">
-        <div class="wa-toolbar">
-            <div class="wa-item-row">
-                <h1 class="wa-title">WhatsApp</h1>
-                <span class="wa-badge green">helpdesk</span>
-            </div>
+         <div class="wa-toolbar">
+             <div class="wa-item-row">
+                 <h1 class="wa-title">WhatsApp</h1>
+                 <div style="display: flex; gap: 8px; align-items: center;">
+                     <span class="wa-badge green">helpdesk</span>
+                     <button wire:click="$toggle('showSettingsModal')" class="wa-icon-btn" title="Configuracion">⚙️</button>
+                 </div>
+             </div>
 
             <input wire:model.live.debounce.300ms="search" class="wa-search" type="search" placeholder="Buscar por nombre o numero">
 
@@ -340,12 +343,17 @@
             @endforelse
         </div>
 
-        @if($conversations->hasPages())
-            <div class="wa-toolbar">
-                {{ $conversations->links() }}
-            </div>
-        @endif
-    </aside>
+         @if($conversations->hasPages())
+             <div class="wa-toolbar">
+                 {{ $conversations->links() }}
+             </div>
+         @endif
+
+         <!-- Boton Configuracion -->
+         <div class="wa-toolbar" style="border-top: 1px solid var(--wa-border);">
+             <button wire:click="$toggle('showSettingsModal')" class="wa-action" style="width: 100%;">⚙️ Configuracion Chat</button>
+         </div>
+     </aside>
 
     <main class="wa-chat">
         @if($activeConversation)
@@ -489,66 +497,142 @@
         @endif
     </main>
 
-    <aside class="wa-column wa-right">
-        @if($activeConversation)
-            @php
-                $client = $activeConversation->cliente;
-                $firstContact = data_get($activeConversation->metadata, 'primer_contacto_at') ?: optional($activeConversation->created_at)->toIso8601String();
-            @endphp
-            <div class="wa-client-card">
-                <h2 class="wa-title">Ficha cliente</h2>
-            </div>
-            <div class="wa-panel-scroll">
-                <section class="wa-card">
-                    <strong>{{ $client?->nombrecli ?: $activeName }}</strong>
-                    <span class="wa-small">{{ $client?->telefonocli ?: $activeNumber }}</span>
-                    <span class="wa-small">Primer contacto: {{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</span>
-                </section>
+     <aside class="wa-column wa-right">
+         @if($activeConversation)
+             @php
+                 $client = $activeConversation->cliente;
+                 $firstContact = data_get($activeConversation->metadata, 'primer_contacto_at') ?: optional($activeConversation->created_at)->toIso8601String();
+             @endphp
+             <div class="wa-client-card">
+                 <h2 class="wa-title">Ficha cliente</h2>
+             </div>
+             <div class="wa-panel-scroll">
+                 <section class="wa-card">
+                     <strong>{{ $client?->nombrecli ?: $activeName }}</strong>
+                     <span class="wa-small">{{ $client?->telefonocli ?: $activeNumber }}</span>
+                     <span class="wa-small">Primer contacto: {{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</span>
+                 </section>
 
-                <section class="wa-card">
-                    <strong>Historial compras</strong>
-                    @forelse($client?->ventas?->take(6) ?? [] as $sale)
-                        <div class="wa-meta-row">
-                            <span class="wa-small">{{ optional($sale->fechaven)->format('d/m/Y') ?: $sale->idven }}</span>
-                            <span class="wa-badge">${{ number_format((float) $sale->totalpagoven, 2) }}</span>
-                        </div>
-                    @empty
-                        <span class="wa-small">Sin compras registradas.</span>
-                    @endforelse
-                </section>
+                 <section class="wa-card">
+                     <strong>Historial compras</strong>
+                     @forelse($client?->ventas?->take(6) ?? [] as $sale)
+                         <div class="wa-meta-row">
+                             <span class="wa-small">{{ optional($sale->fechaven)->format('d/m/Y') ?: $sale->idven }}</span>
+                             <span class="wa-badge">${{ number_format((float) $sale->totalpagoven, 2) }}</span>
+                         </div>
+                     @empty
+                         <span class="wa-small">Sin compras registradas.</span>
+                     @endforelse
+                 </section>
 
-                <section class="wa-card">
-                    <strong>Notas internas</strong>
-                    <span class="wa-small">{{ data_get($activeConversation->metadata, 'notas') ?: 'Sin notas.' }}</span>
-                </section>
+                 <section class="wa-card">
+                     <strong>Notas internas</strong>
+                     <span class="wa-small">{{ data_get($activeConversation->metadata, 'notas') ?: 'Sin notas.' }}</span>
+                 </section>
 
-                <section class="wa-card">
-                    <strong>Tags</strong>
-                    <div class="wa-filters">
-                        @forelse((array) data_get($activeConversation->metadata, 'tags', []) as $tag)
-                            <span class="wa-badge">{{ $tag }}</span>
-                        @empty
-                            <span class="wa-small">Sin tags.</span>
-                        @endforelse
-                    </div>
-                </section>
-            </div>
-        @else
-            <div class="wa-empty">Sin conversacion activa.</div>
-        @endif
-    </aside>
+                 <section class="wa-card">
+                     <strong>Tags</strong>
+                     <div class="wa-filters">
+                         @forelse((array) data_get($activeConversation->metadata, 'tags', []) as $tag)
+                             <span class="wa-badge">{{ $tag }}</span>
+                         @empty
+                             <span class="wa-small">Sin tags.</span>
+                         @endforelse
+                     </div>
+                 </section>
+             </div>
+         @else
+             <div class="wa-empty">Sin conversacion activa.</div>
+         @endif
+     </aside>
 
-    <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('chat-scroll-bottom', () => {
-                setTimeout(() => {
-                    const container = document.getElementById('wa-messages');
-                    if (container) {
-                        container.scrollTop = container.scrollHeight;
-                    }
-                }, 80);
-            });
-        });
-    </script>
-</div>
+     <!-- Modal Configuracion -->
+     @if($showSettingsModal)
+     <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+         <div style="background: white; border-radius: 8px; padding: 24px; width: 500px; max-width: 90%; max-height: 80vh; overflow-y: auto;">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                 <h2 style="margin: 0; font-size: 18px; font-weight: 700;">⚙️ Configuracion Chat WhatsApp</h2>
+                 <button wire:click="$toggle('showSettingsModal')" style="background: none; border: 0; cursor: pointer; font-size: 20px; padding: 4px 8px;">×</button>
+             </div>
+
+             <div style="display: grid; gap: 16px;">
+                 <div style="border: 1px solid #d9e1e8; border-radius: 6px; padding: 12px;">
+                     <strong>CHAT_WEBHOOK_TOKEN</strong>
+                     <input type="text" class="wa-search" style="margin-top: 8px;" wire:model.blur="settings.chat_webhook_token" wire:change="saveSetting('chat_webhook_token', $event.target.value)" placeholder="Token de seguridad webhook">
+                 </div>
+
+                 <div style="border: 1px solid #d9e1e8; border-radius: 6px; padding: 12px;">
+                     <strong>N8N_WEBHOOK_URL</strong>
+                     <input type="text" class="wa-search" style="margin-top: 8px;" wire:model.blur="settings.n8n_webhook_url" wire:change="saveSetting('n8n_webhook_url', $event.target.value)" placeholder="URL webhook n8n para salidas">
+                 </div>
+
+                 <div style="border: 1px solid #d9e1e8; border-radius: 6px; padding: 12px;">
+                     <strong>Evolution API URL</strong>
+                     <input type="text" class="wa-search" style="margin-top: 8px;" wire:model.blur="settings.evoapi_base_url" wire:change="saveSetting('evoapi_base_url', $event.target.value)" placeholder="https://evoapi.tudominio.com">
+                 </div>
+
+                 <div style="border: 1px solid #d9e1e8; border-radius: 6px; padding: 12px;">
+                     <strong>Evolution API Key</strong>
+                     <input type="password" class="wa-search" style="margin-top: 8px;" wire:model.blur="settings.evoapi_api_key" wire:change="saveSetting('evoapi_api_key', $event.target.value)" placeholder="API Key de Evolution">
+                 </div>
+
+                 <hr style="border: 0; border-top: 1px solid #d9e1e8; margin: 4px 0;">
+
+                 <h3 style="margin: 0; font-size: 16px;">Tipos de mensaje permitidos:</h3>
+                 <div style="border: 1px solid #d9e1e8; border-radius: 6px; padding: 12px;">
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Permitir texto</span>
+                         <input type="checkbox" wire:change="saveSetting('chat_allow_text', $event.target.checked)" {{ $settings['chat_allow_text'] ? 'checked' : '' }}>
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Permitir imagen</span>
+                         <input type="checkbox" wire:change="saveSetting('chat_allow_image', $event.target.checked)" {{ $settings['chat_allow_image'] ? 'checked' : '' }}>
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Permitir audio</span>
+                         <input type="checkbox" wire:change="saveSetting('chat_allow_audio', $event.target.checked)" {{ $settings['chat_allow_audio'] ? 'checked' : '' }}>
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                         <span>Limite upload (MB)</span>
+                         <input type="number" class="wa-search" style="width: 80px;" wire:model.blur="settings.chat_max_upload_mb" wire:change="saveSetting('chat_max_upload_mb', $event.target.value)" min="1" max="100">
+                     </div>
+                 </div>
+
+                 <hr style="border: 0; border-top: 1px solid #d9e1e8; margin: 4px 0;">
+
+                 <h3 style="margin: 0; font-size: 16px;">Endpoints listos:</h3>
+                 <div style="border: 1px solid #d9e1e8; border-radius: 6px; padding: 12px;">
+                     <div style="display: grid; gap: 8px;">
+                         <div>
+                             <span class="wa-small">Webhook Inbound:</span>
+                             <code style="background: var(--wa-bg); padding: 4px 6px; border-radius: 4px; font-size: 11px; display: block; word-break: break-all;">{{ route('api.chat.whatsapp.inbound') }}</code>
+                         </div>
+                         <div>
+                             <span class="wa-small">Webhook Token Header:</span>
+                             <code style="background: var(--wa-bg); padding: 4px 6px; border-radius: 4px; font-size: 11px; display: block;">X-Chat-Webhook-Token</code>
+                         </div>
+                     </div>
+                 </div>
+
+                 <div style="margin-top: 16px;">
+                     <button wire:click="$toggle('showSettingsModal')" class="wa-send" style="width: 100%;">Guardar y cerrar</button>
+                 </div>
+             </div>
+         </div>
+     </div>
+     @endif
+
+     <script>
+         document.addEventListener('livewire:init', () => {
+             Livewire.on('chat-scroll-bottom', () => {
+                 setTimeout(() => {
+                     const container = document.getElementById('wa-messages');
+                     if (container) {
+                         container.scrollTop = container.scrollHeight;
+                     }
+                 }, 80);
+             });
+         });
+     </script>
+ </div>
 

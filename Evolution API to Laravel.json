@@ -1,0 +1,113 @@
+{
+  "name": "Evolution API to Laravel",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "whatsapp-azul",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        144
+      ],
+      "id": "f2f40cef-8f2b-40e2-8717-a25283f00fff",
+      "name": "Whatsapp Azul",
+      "webhookId": "ba86e70e-e3aa-45a6-ab4a-4ace23ba6c8c"
+    },
+    {
+      "parameters": {
+        "path": "asistente-pablin",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -80
+      ],
+      "id": "1c786edc-2546-4d3e-8f61-cfcb924d71d9",
+      "name": "Whatsapp verde",
+      "webhookId": "0bea97f8-b082-4d71-98e7-30d0839eae27"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 🔹 base\nconst input = $input.first().json;\nconst body = input.body || {};\nconst data = body.data || {};\nconst msg = data.message || {};\nconst key = data.key || {};\nconst server_url = body.server_url || {};\n\n// 📱 número\nconst raw = input.numero || key.remoteJid || \"\";\nconst numero = raw.split('@')[0].replace(/\\D/g, '');\n\n// 🧠 detectar tipo de mensaje (SIN sobreescribir)\nlet messageType = \"unknown\";\nif (msg.conversation) messageType = \"texto\";\nelse if (msg.extendedTextMessage) messageType = \"texto\";\nelse if (msg.audioMessage) messageType = \"audio\";\nelse if (msg.imageMessage) messageType = \"imagen\";\n\n// 💬 contenido (prioridad correcta)\nlet content = \"\";\nif (msg.conversation) content = msg.conversation;\nelse if (msg.extendedTextMessage) content = msg.extendedTextMessage.text;\nelse if (msg.imageMessage){\n  content = msg.imageMessage.caption;\n}\n\n// 🆔 IDs\nconst messageID = key.id || \"\";\nconst chatID = body.sender || raw;\n// ❌ ignorar grupos\nif (chatID.endsWith('@g.us')) {\n  messageType = \"grupo\";\n  return [{}];\n}\n\n// 🟢🔵 instancia\nconst instanceName = body.instance || \"\";\n\n// 🔐 APIKEY dinámica\nconst apikeys = {\n  \"bot-pagos\": \"68E6084D0489-44B9-909A-632E54ACDD64\",\n  \"default\": \"040E38A519FF-405D-9860-D083DFE9754F\"\n};\n\nconst apikey = apikeys[instanceName] || apikeys[\"default\"];\n\n// 👨‍💼 empleados\nconst empleados = [\n  \"593961778319\",\n  \"593996464991\",\n  \"593961412826\",\n  \"593961702129\",\n  \"593986740052\",\n];\n\nconst esEmpleado = empleados.includes(numero);\nconst tipo = esEmpleado ? \"empleado\" : \"cliente\";\n\nlet color=\"azul\";\nif (instanceName == \"bot-pagos\") {\n  color=\"verde\";\n}\n// 🚀 OUTPUT ORDENADO\nreturn [\n  {\n    json: {\n      content,\n      instance: {\n        name: instanceName,\n        apikey,\n        server_url,\n        color,\n      },\n      message: {\n        id: messageID,\n        chat_id: chatID,\n        from: numero,\n        type: messageType,\n        content,\n      },\n      contact: {\n        numero,\n        tipo,\n        esEmpleado\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        32
+      ],
+      "id": "6a99571f-a62a-486a-a39c-6fbab046f26d",
+      "name": "Normalizar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO CODE - VERSIÓN PARA LARAVEL LOCAL\n// ============================================\n// 1. Obtener datos del nodo \"Normalizar\"\nconst datos = $input.item.json;\n\n// 2. DEBUG: Ver qué tenemos\nconsole.log(\"📱 Datos de Normalizar recibidos:\");\nconsole.log(\"- Teléfono:\", datos.contact?.numero);\nconsole.log(\"- Instancia:\", datos.instance?.name);\nconsole.log(\"- Color:\", datos.instance?.color);\nconsole.log(\"- Mensaje:\", datos.message?.content);\n\n// 3. Si no hay teléfono, salir\nif (!datos.contact?.numero) {\n  console.log(\"❌ No hay teléfono, saliendo\");\n  return [];\n}\n\n// 4. Configuración para Laravel LOCAL\nconst URL = \"http://localhost:8000/api/chat/n8n/webhook\";  // ← CAMBIADO\nconst TOKEN = \"laravel_token_123\";  // ← CAMBIADO\n\n// 5. Preparar payload para Laravel (formato más simple)\nconst payload = {\n  telefono: datos.contact.numero,\n  mensaje: datos.message?.content || \"\",\n  tipo: datos.message?.type || \"texto\",\n  instance: datos.instance?.name || \"Streamify Azul\",\n  color: datos.instance?.color || \"azul\",\n  es_empleado: datos.contact?.esEmpleado || false,\n  \n  // Campos opcionales que tu Laravel puede manejar\n  nombre: datos.contact?.tipo === 'empleado' ? 'Empleado' : 'Cliente',\n  external_message_id: datos.message?.id || `n8n_${Date.now()}`,\n  canal_user_id: datos.message?.chat_id || `${datos.contact.numero}@s.whatsapp.net`\n};\n\n// 6. DEBUG: Ver payload\nconsole.log(\"📦 Payload a enviar a Laravel:\");\nconsole.log(JSON.stringify(payload, null, 2));\n\n// 7. ENVIAR a Laravel usando $http\ntry {\n  console.log(`🚀 Enviando a Laravel local: ${URL}`);\n  \n  const response = await $http.post(URL, {\n    headers: {\n      'X-N8N-Token': TOKEN,  // ← CAMBIADO (header correcto)\n      'Content-Type': 'application/json'\n    },\n    body: payload\n  });\n  \n  console.log(`✅ Éxito! Status: ${response.status}`);\n  console.log(\"Respuesta de Laravel:\", response.body);\n  \n} catch (error) {\n  console.log(`❌ Error al enviar a Laravel: ${error.message}`);\n  console.log(\"Error completo:\", error);\n}\n\n// 8. Este nodo es terminal\nreturn [];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        32
+      ],
+      "id": "dcc3691c-4497-4f27-ac1d-c7ca18d71583",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Whatsapp Azul": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whatsapp verde": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "availableInMCP": false
+  },
+  "versionId": "90a9bcbd-0060-4421-be1e-48a642390a6d",
+  "meta": {
+    "instanceId": "380cbb769d46098d25c58ef4e5b471d13168e179dcdaab1b72d5505ed3b404d7"
+  },
+  "id": "FaMyVZZnuOtL6ifQ",
+  "tags": []
+}
