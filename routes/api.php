@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V2\ChatRouterController;
 use App\Http\Controllers\Api\V2\ChatWhatsappChannelController;
 use App\Http\Controllers\Api\V2\WhatsAppPaymentController;
 use App\Http\Controllers\Api\DailyStatisticsController;
+use App\Http\Controllers\Chat\WhatsAppWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -336,5 +337,19 @@ Route::prefix('v2')->group(function () {
     Route::middleware('web')->post('/chat/ai/send', [\App\Http\Controllers\Api\ChatAIController::class, 'sendMessage'])->name('api.v2.chat.ai.send');
 });
 
-//Route::middleware('auth:api')->post('ventas', [VentaController::class, 'storeApi']);
+// ===== CHAT MODULE START =====
+Route::prefix('chat')->group(function () {
+    // CHAT MODULE
+    Route::post('/whatsapp/inbound', [WhatsAppWebhookController::class, 'inbound'])
+        ->name('api.chat.whatsapp.inbound');
 
+    // N8N WEBHOOK (para recibir mensajes de n8n)
+    Route::post('/n8n/webhook', [\App\Http\Controllers\N8nWebhookController::class, 'handle'])
+        ->name('api.chat.n8n.webhook');
+});
+// ===== CHAT MODULE END =====
+
+// === N8N WEBHOOK (NUEVO) ===
+Route::post('n8n/webhook', [\App\Http\Controllers\N8nWebhookController::class, 'handle']);
+
+//Route::middleware('auth:api')->post('ventas', [VentaController::class, 'storeApi']);

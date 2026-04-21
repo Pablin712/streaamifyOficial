@@ -19,16 +19,26 @@ class Conversacion extends Model
         'origen',
         'subagente_codigo',
         'estado',
+        'assigned_to',
+        'operator_typing_id',
+        'operator_typing_at',
         'ultimo_idemp',
         'ultima_actividad',
+        'last_message_at',
         'mensajes_no_leidos',
+        'unread_count',
+        'prioridad',
         'requiere_humano',
+        'closed_at',
         'metadata',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'ultima_actividad' => 'datetime',
+        'last_message_at' => 'datetime',
+        'operator_typing_at' => 'datetime',
+        'closed_at' => 'datetime',
         'requiere_humano' => 'boolean',
     ];
 
@@ -51,6 +61,16 @@ class Conversacion extends Model
     public function ultimoEmpleado()
     {
         return $this->belongsTo(Empleado::class, 'ultimo_idemp', 'idemp');
+    }
+
+    public function operadorAsignado()
+    {
+        return $this->belongsTo(Empleado::class, 'assigned_to', 'idemp');
+    }
+
+    public function operadorEscribiendo()
+    {
+        return $this->belongsTo(Empleado::class, 'operator_typing_id', 'idemp');
     }
 
     /**
@@ -76,7 +96,10 @@ class Conversacion extends Model
      */
     public function marcarComoLeida()
     {
-        $this->update(['mensajes_no_leidos' => 0]);
+        $this->update([
+            'mensajes_no_leidos' => 0,
+            'unread_count' => 0,
+        ]);
     }
 
     /**
@@ -84,11 +107,21 @@ class Conversacion extends Model
      */
     public function cambiarEstado(string $nuevoEstado, ?int $empleadoId = null)
     {
-        $this->update([
+        $data = [
             'estado' => $nuevoEstado,
             'ultimo_idemp' => $empleadoId,
             'ultima_actividad' => now(),
-        ]);
+        ];
+
+        if (in_array($nuevoEstado, ['cerrado', 'cerrada'], true)) {
+            $data['closed_at'] = now();
+        }
+
+        if (in_array($nuevoEstado, ['nuevo', 'nueva', 'abierto', 'abierta', 'asignado', 'atendiendo', 'pausado'], true)) {
+            $data['closed_at'] = null;
+        }
+
+        $this->update($data);
     }
 
     /**

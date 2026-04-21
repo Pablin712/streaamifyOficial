@@ -16,6 +16,7 @@ class ChatPermisosSeeder extends Seeder
             'chat.responder',
             'chat.cerrar',
             'chat.transferir',
+            'chat.supervisor',
             'chat.admin',
             'chat.ver_estadisticas',
         ];
@@ -31,6 +32,7 @@ class ChatPermisosSeeder extends Seeder
             'chat.responder',
             'chat.cerrar',
             'chat.transferir',
+            'chat.supervisor',
             'chat.admin',
             'chat.ver_estadisticas',
         ]);

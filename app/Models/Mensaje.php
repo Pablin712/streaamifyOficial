@@ -19,7 +19,14 @@ class Mensaje extends Model
         'idemp',
         'contenido',
         'tipo_contenido',
+        'tipo',
         'archivo_url',
+        'media_url',
+        'mime_type',
+        'external_id',
+        'delivered_at',
+        'read_at',
+        'error_message',
         'leido',
         'leido_at',
         'respondido_por_ai',
@@ -31,6 +38,8 @@ class Mensaje extends Model
         'leido' => 'boolean',
         'respondido_por_ai' => 'boolean',
         'leido_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'read_at' => 'datetime',
     ];
 
     /**

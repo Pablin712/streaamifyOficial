@@ -29,12 +29,9 @@
                         </a>
                     @endif
                     @if (Auth::user()->hasPermissionTo('chat.ver'))
-                        <a class="nav-link" href="{{ route('chat.panel') }}">
+                        <a class="nav-link" href="{{ url('/chat/whatsapp') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>
-                            Chat
-                            @if(\App\Models\Conversacion::abiertas()->conMensajesNoLeidos()->count() > 0)
-                                <span class="badge bg-danger ms-2">{{ \App\Models\Conversacion::abiertas()->conMensajesNoLeidos()->count() }}</span>
-                            @endif
+                            Chat WhatsApp
                         </a>
                     @endif
                     <div class="sb-sidenav-menu-heading">Negocio</div>

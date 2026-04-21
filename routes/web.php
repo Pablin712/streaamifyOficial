@@ -41,6 +41,12 @@ Route::get('/chat/panel', function () {
     return view('chat.panel-empleados');
 })->name('chat.panel')->middleware('auth');
 // === FIN RUTAS DEMO ===
+
+// ===== CHAT MODULE START =====
+Route::get('/chat/whatsapp', function () {
+    return view('chat.whatsapp');
+})->name('chat.whatsapp')->middleware('auth');
+// ===== CHAT MODULE END =====
 use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\HistorialClientesController;

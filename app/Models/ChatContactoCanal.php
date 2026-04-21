@@ -21,6 +21,9 @@ class ChatContactoCanal extends Model
         'origen',
         'metadata',
         'last_seen_at',
+        'id_agente_asignado',
+        'telefono',
+        'nombre',
     ];
 
     protected $casts = [
@@ -46,5 +49,22 @@ class ChatContactoCanal extends Model
     public function resumenes()
     {
         return $this->hasMany(ChatMemoriaResumen::class, 'contacto_canal_id');
+    }
+
+    // NUEVAS RELACIONES
+    public function mensajes()
+    {
+        return $this->hasMany(ChatMensajeCanal::class, 'id_contacto_canal');
+    }
+
+    public function ultimoMensaje()
+    {
+        return $this->hasOne(ChatMensajeCanal::class, 'id_contacto_canal')
+            ->latest();
+    }
+
+    public function agenteAsignado()
+    {
+        return $this->belongsTo(User::class, 'id_agente_asignado');
     }
 }

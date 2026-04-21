@@ -1,16 +1,3 @@
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class ChatMensajeCanal extends Model
-{
-    use HasFactory;
-
-    protected $table = 'chat_mensajes_canal';
-
     protected $fillable = [
         'idmsg',
         'idconv',
@@ -43,5 +30,28 @@ class ChatMensajeCanal extends Model
     public function contacto()
     {
         return $this->belongsTo(ChatContactoCanal::class, 'contacto_canal_id');
+    }
+
+    // Métodos de acceso para los datos en payload
+    public function getMensajeAttribute()
+    {
+        return $this->payload['mensaje_texto'] ?? $this->payload['mensaje'] ?? null;
+    }
+
+    public function getTipoContenidoAttribute()
+    {
+        return $this->payload['tipo_contenido'] ?? $this->payload['tipo'] ?? 'texto';
+    }
+
+    public function getLeidoAttribute()
+    {
+        return $this->payload['leido'] ?? false;
+    }
+
+    public function setLeidoAttribute($value)
+    {
+        $payload = $this->payload ?? [];
+        $payload['leido'] = (bool) $value;
+        $this->payload = $payload;
     }
 }
