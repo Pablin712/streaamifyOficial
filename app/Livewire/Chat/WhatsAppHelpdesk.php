@@ -46,7 +46,7 @@ class WhatsAppHelpdesk extends Component
         $settings = app(ChatSettingsService::class)->all();
 
         return view('livewire.chat.whatsapp-helpdesk', [
-            'conversations' => $this->conversationQuery()->paginate(20),
+            'conversations' => $this->conversationQuery()->simplePaginate(20),
             'activeConversation' => $this->activeConversation(),
             'messages' => $this->activeConversation()
                 ? $this->activeConversation()->mensajes()->with(['empleado', 'cliente'])->get()
