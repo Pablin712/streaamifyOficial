@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Servicio simplificado para manejo de chat WhatsApp
@@ -225,7 +226,7 @@ class WhatsAppHelpdeskService
             };
 
             $path = $file->store($folder, 'public');
-            $storedUrl = asset(Storage::disk('public')->url($path));
+            $storedUrl = URL::asset(Storage::disk('public')->url($path));
             $mimeType = $file->getMimeType();
         }
 

@@ -1,0 +1,77 @@
+{
+  "name": "WhatsApp Meta Outbound",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-outbound",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-outbound",
+      "name": "Webhook Outbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "whatsapp-outbound"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/{{ $json.phone_number_id }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $json.access_token }}",
+              "type": "string"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json",
+              "type": "string"
+            }
+          ]
+        },
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp",
+              "type": "string"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.telefono }}",
+              "type": "string"
+            },
+            {
+              "name": "type",
+              "value": "text",
+              "type": "string"
+            },
+            {
+              "name": "text",
+              "value": "{\"body\": \"{{ $json.mensaje }}\"}",
+              "type": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-meta",
+      "name": "Enviar a Meta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Outbound": {
+      "main": [[
+        { "node": "Enviar a Meta", "type": "main", "index": 0 }
+      ]]
+    }
+  }
+}

@@ -8,6 +8,7 @@ use App\Models\Venta;
 use App\Observers\CostoObserver;
 use App\Observers\GastoObserver;
 use App\Observers\VentaObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,5 +29,10 @@ class AppServiceProvider extends ServiceProvider
         Venta::observe(VentaObserver::class);
         Costo::observe(CostoObserver::class);
         Gasto::observe(GastoObserver::class);
+
+        // Forzar HTTPS para ngrok y proxies
+        if (request()->header('X-Forwarded-Proto') === 'https') {
+            URL::forceScheme('https');
+        }
     }
 }

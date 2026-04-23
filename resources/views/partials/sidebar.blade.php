@@ -33,6 +33,10 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>
                             Chat WhatsApp
                         </a>
+                        <a class="nav-link" href="{{ route('chat.panel') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-headset"></i></div>
+                            Panel Chat
+                        </a>
                     @endif
                     <div class="sb-sidenav-menu-heading">Negocio</div>
                     {{-- Reemplazamos @canany(['empleados', 'roles.index']) --}}

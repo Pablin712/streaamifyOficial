@@ -1,0 +1,123 @@
+{
+  "name": "WhatsApp Meta Inbound",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-meta",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "id": "webhook-inbound",
+      "name": "Webhook Meta",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "whatsapp-meta"
+    },
+    {
+      "parameters": {
+        "values": {
+          "telefono": {
+            "value": "={{ $json.entry[0].changes[0].value.messages[0].from }}",
+            "mode": "expression"
+          },
+          "nombre": {
+            "value": "={{ $json.entry[0].changes[0].value.metadata.display_phone_number }}",
+            "mode": "expression"
+          },
+          "mensaje": {
+            "value": "={{ $json.entry[0].changes[0].value.messages[0].text.body }}",
+            "mode": "expression"
+          },
+          "tipo": {
+            "value": "={{ $json.entry[0].changes[0].value.messages[0].type }}",
+            "mode": "expression"
+          },
+          "message_id": {
+            "value": "={{ $json.entry[0].changes[0].value.messages[0].id }}",
+            "mode": "expression"
+          },
+          "timestamp": {
+            "value": "={{ $json.entry[0].changes[0].value.messages[0].timestamp }}",
+            "mode": "expression"
+          }
+        },
+        "options": {}
+      },
+      "id": "set-datos",
+      "name": "Set Datos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://TU-NGROK.ngrok-free.app/api/chat/whatsapp/inbound",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json",
+              "type": "string"
+            }
+          ]
+        },
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "test_token_123",
+              "type": "string"
+            },
+            {
+              "name": "telefono",
+              "value": "={{ $json.telefono }}",
+              "type": "string"
+            },
+            {
+              "name": "nombre",
+              "value": "={{ $json.nombre }}",
+              "type": "string"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "name": "tipo",
+              "value": "={{ $json.tipo }}",
+              "type": "string"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $json.message_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-laravel",
+      "name": "Enviar a Laravel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Meta": {
+      "main": [[
+        { "node": "Set Datos", "type": "main", "index": 0 }
+      ]]
+    },
+    "Set Datos": {
+      "main": [[
+        { "node": "Enviar a Laravel", "type": "main", "index": 0 }
+      ]]
+    }
+  }
+}
