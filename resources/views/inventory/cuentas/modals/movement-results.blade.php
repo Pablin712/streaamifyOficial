@@ -108,10 +108,18 @@
                             <button
                                 type="button"
                                 class="btn btn-success btn-sm"
-                                onclick="sendMovementDeliveryMessage(${index})"
+                                onclick="sendMovementDeliveryMessage(${index}, 'verde')"
                                 ${movement.telefono_cliente ? '' : 'disabled'}
                             >
-                                <i class="fab fa-whatsapp me-1"></i>Enviar WhatsApp
+                                <i class="fab fa-whatsapp me-1"></i>WhatsApp verde
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-outline-success btn-sm"
+                                onclick="sendMovementDeliveryMessage(${index}, 'alterno')"
+                                ${movement.telefono_cliente ? '' : 'disabled'}
+                            >
+                                <i class="fab fa-whatsapp me-1"></i>WhatsApp alterno
                             </button>
                         </div>
                     </div>
@@ -144,7 +152,7 @@
             .catch(() => showMovementToast('No se pudo copiar el mensaje', 'warning'));
     }
 
-    async function sendMovementDeliveryMessage(index) {
+    async function sendMovementDeliveryMessage(index, channelPreference = 'verde') {
         const movement = window.movementResultsPayload[index];
         const textarea = document.querySelector(`[data-movement-message-index="${index}"]`);
 
@@ -175,7 +183,8 @@
                     id_cliente: movement.id_cliente || null,
                     cliente: movement.cliente || 'Cliente',
                     telefono: movement.telefono_cliente,
-                    mensaje: textarea.value
+                    mensaje: textarea.value,
+                    channel_preference: channelPreference
                 })
             });
 

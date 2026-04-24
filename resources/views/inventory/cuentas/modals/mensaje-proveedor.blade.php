@@ -32,7 +32,7 @@
                     maxlength="4000"
                     required
                 ></textarea>
-                <small class="text-muted">Puedes editar el texto antes de enviarlo por n8n.</small>
+                <small class="text-muted">Puedes editar el texto antes de enviarlo.</small>
             </div>
         </div>
 

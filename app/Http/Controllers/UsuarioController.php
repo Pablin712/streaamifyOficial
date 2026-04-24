@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatContactoCanal;
+use App\Models\ChatMensajeCanal;
+use App\Models\ChatWhatsappChannel;
+use App\Models\Conversacion;
 use Illuminate\Http\Request;
 use App\Models\ViewUsuarioActivo;
 use App\Models\DetalleVenta;
 use App\Models\Cuenta;
 use App\Models\Historial;
+use App\Models\Mensaje;
 use App\Services\CuentaService;
 use App\Services\EntregaMensajeService;
+use App\Services\Chat\WhatsAppOutboundService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,11 +25,17 @@ class UsuarioController extends Controller
 {
     protected $cuentaService;
     protected $entregaMensajeService;
+    protected $whatsAppOutboundService;
 
-    public function __construct(CuentaService $cuentaService, EntregaMensajeService $entregaMensajeService)
+    public function __construct(
+        CuentaService $cuentaService,
+        EntregaMensajeService $entregaMensajeService,
+        WhatsAppOutboundService $whatsAppOutboundService
+    )
     {
         $this->cuentaService = $cuentaService;
         $this->entregaMensajeService = $entregaMensajeService;
+        $this->whatsAppOutboundService = $whatsAppOutboundService;
     }
 
     public function index(Request $request)
@@ -220,6 +233,7 @@ class UsuarioController extends Controller
             'telefono' => 'required|string|max:50',
             'mensaje' => 'required|string|min:3|max:4000',
             'id_cliente' => 'nullable',
+            'channel_preference' => 'nullable|in:verde,alterno',
         ]);
 
         $telefonoNormalizado = preg_replace('/\D+/', '', $validated['telefono']);
@@ -230,82 +244,248 @@ class UsuarioController extends Controller
             ], 422);
         }
 
-        $webhookUrl = config('services.n8n.client_message_webhook');
-        if (empty($webhookUrl)) {
+        $channelPreference = $validated['channel_preference'] ?? 'verde';
+        $channel = $this->resolveDeliveryChannel($channelPreference);
+
+        if (! $channel) {
             return response()->json([
                 'success' => false,
-                'message' => 'No está configurado el webhook de mensaje al cliente.',
-            ], 500);
+                'message' => $channelPreference === 'alterno'
+                    ? 'No hay un canal WhatsApp alterno configurado para salida.'
+                    : 'No hay un canal WhatsApp verde configurado para salida.',
+            ], 422);
         }
 
         $empleado = Auth::user();
-        $payload = [
-            'event' => 'cliente.delivery_message',
-            'trace_id' => 'cliente-msg-' . now()->format('Ymd-His') . '-' . substr($telefonoNormalizado, -6),
-            'cliente' => [
-                'idcli' => $validated['id_cliente'] ?? null,
-                'nombre' => $validated['cliente'] ?? 'Cliente',
-                'telefono' => $validated['telefono'],
-                'telefono_normalizado' => $telefonoNormalizado,
-            ],
-            'mensaje' => trim($validated['mensaje']),
-            'empleado' => [
-                'idemp' => $empleado->idemp,
-                'nombreemp' => $empleado->nombreemp,
-                'usuarioemp' => $empleado->usuarioemp,
-            ],
-            'sent_at' => now()->toIso8601String(),
-        ];
+        $mensaje = trim($validated['mensaje']);
 
+        // 1. Enviar por Evolution API (si falla aquí, el mensaje no salió)
         try {
-            $requestN8n = Http::acceptJson()
-                ->timeout(10)
-                ->retry(1, 300);
-
-            $webhookSecret = config('services.n8n.payment_webhook_secret');
-            if (!empty($webhookSecret)) {
-                $requestN8n = $requestN8n->withHeaders([
-                    'X-Webhook-Secret' => $webhookSecret,
-                ]);
-            }
-
-            $response = $requestN8n->post($webhookUrl, $payload);
-
-            if (!$response->successful()) {
-                Log::warning('Webhook n8n de mensaje individual al cliente devolvió error', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                    'telefono' => $validated['telefono'],
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se pudo enviar el mensaje al webhook.',
-                ], 502);
-            }
-
-            Historial::create([
-                'accion' => 'Mensaje directo a cliente',
-                'descripcion' => 'Cliente: ' . ($validated['cliente'] ?? 'Cliente') . ' | Teléfono: ' . $validated['telefono'],
-                'empleado_id' => $empleado->idemp,
-                'created_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Mensaje enviado correctamente al cliente por n8n.',
-            ]);
+            $dispatch = $this->whatsAppOutboundService->sendText(
+                $telefonoNormalizado,
+                $mensaje,
+                $channel->instance_name,
+                $channel->api_key,
+                $channel->server_url,
+            );
         } catch (\Throwable $e) {
-            Log::error('Error enviando mensaje individual a cliente vía n8n', [
+            Log::error('Excepción al enviar mensaje por Evolution API', [
                 'error' => $e->getMessage(),
                 'telefono' => $validated['telefono'],
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ocurrió un error al enviar el mensaje al cliente.',
+                'message' => 'Ocurrió un error al conectar con WhatsApp.',
             ], 500);
         }
+
+        if (!($dispatch['ok'] ?? false)) {
+            Log::warning('Evolution API no confirmó envío de mensaje al cliente', [
+                'telefono' => $validated['telefono'],
+                'channel_id' => $channel->id,
+                'instance' => $channel->instance_name,
+                'error' => $dispatch['error'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'WhatsApp no confirmó el envío del mensaje.',
+            ], 422);
+        }
+
+        // 2. Persistir en BD (si falla, el mensaje ya llegó — loguear y seguir)
+        $registro = null;
+        try {
+            $registro = $this->persistDeliveryOutbound(
+                telefonoNormalizado: $telefonoNormalizado,
+                telefonoOriginal: $validated['telefono'],
+                mensaje: $mensaje,
+                empleado: $empleado,
+                channel: $channel,
+                clienteId: $validated['id_cliente'] ?? null,
+                clienteNombre: $validated['cliente'] ?? 'Cliente',
+                dispatch: $dispatch,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Error persistiendo mensaje enviado en BD (mensaje WA ya entregado)', [
+                'error' => $e->getMessage(),
+                'telefono' => $validated['telefono'],
+            ]);
+        }
+
+        try {
+            Historial::create([
+                'accion' => 'Mensaje directo a cliente',
+                'descripcion' => 'Cliente: ' . ($validated['cliente'] ?? 'Cliente') . ' | Teléfono: ' . $validated['telefono'] . ' | Canal: ' . ($channel->display_name ?: $channel->instance_name),
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo registrar historial de mensaje enviado', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mensaje enviado correctamente al cliente por ' . ($channel->display_name ?: $channel->instance_name) . '.',
+            'data' => [
+                'idconv' => $registro['conversacion']->idconv ?? null,
+                'idmsg' => $registro['mensaje']->idmsg ?? null,
+                'channel' => $channel->display_name ?: $channel->instance_name,
+            ],
+        ]);
+    }
+
+    private function resolveDeliveryChannel(string $preference): ?ChatWhatsappChannel
+    {
+        $query = ChatWhatsappChannel::query()->availableForOutbound();
+
+        if ($preference === 'alterno') {
+            return $query
+                ->where('color', '!=', 'verde')
+                ->orderByRaw("CASE WHEN color = 'azul' THEN 0 ELSE 1 END")
+                ->orderBy('id')
+                ->first();
+        }
+
+        return $query
+            ->where('color', 'verde')
+            ->orderBy('id')
+            ->first();
+    }
+
+    private function persistDeliveryOutbound(
+        string $telefonoNormalizado,
+        string $telefonoOriginal,
+        string $mensaje,
+        $empleado,
+        ChatWhatsappChannel $channel,
+        $clienteId,
+        string $clienteNombre,
+        array $dispatch
+    ): array {
+        return DB::transaction(function () use (
+            $telefonoNormalizado,
+            $telefonoOriginal,
+            $mensaje,
+            $empleado,
+            $channel,
+            $clienteId,
+            $clienteNombre,
+            $dispatch
+        ) {
+            $contacto = ChatContactoCanal::query()->firstOrCreate(
+                [
+                    'canal' => 'whatsapp',
+                    'canal_user_id' => $telefonoNormalizado,
+                ],
+                [
+                    'telefono_normalizado' => $telefonoNormalizado,
+                    'telefono' => $telefonoOriginal,
+                    'nombre' => $clienteNombre,
+                    'idcli' => $clienteId,
+                    'estado_relacion' => $clienteId ? 'cliente' : 'lead',
+                    'origen' => 'delivery-modal',
+                    'metadata' => [
+                        'instance' => $channel->instance_name,
+                        'server_url' => $channel->server_url,
+                        'whatsapp_channel_id' => $channel->id,
+                    ],
+                    'last_seen_at' => now(),
+                ]
+            );
+
+            $contactMetadata = array_merge($contacto->metadata ?? [], [
+                'instance' => $channel->instance_name,
+                'server_url' => $channel->server_url,
+                'whatsapp_channel_id' => $channel->id,
+            ]);
+
+            $contacto->fill([
+                'telefono_normalizado' => $telefonoNormalizado,
+                'telefono' => $telefonoOriginal,
+                'nombre' => $clienteNombre,
+                'idcli' => $clienteId ?: $contacto->idcli,
+                'estado_relacion' => ($clienteId ?: $contacto->idcli) ? 'cliente' : 'lead',
+                'metadata' => $contactMetadata,
+                'last_seen_at' => now(),
+            ])->save();
+
+            $conversacion = Conversacion::query()->firstOrCreate(
+                ['canal_contacto_id' => $contacto->id],
+                [
+                    'idcli' => $clienteId,
+                    'canal_principal' => 'whatsapp',
+                    'origen' => 'delivery-modal',
+                    'estado' => 'atendiendo',
+                    'ultima_actividad' => now(),
+                    'last_message_at' => now(),
+                    'mensajes_no_leidos' => 0,
+                    'unread_count' => 0,
+                    'requiere_humano' => false,
+                ]
+            );
+
+            $conversationMetadata = array_merge($conversacion->metadata ?? [], [
+                'instance' => $channel->instance_name,
+                'server_url' => $channel->server_url,
+                'whatsapp_channel_id' => $channel->id,
+            ]);
+
+            $conversacion->fill([
+                'idcli' => $clienteId ?: $conversacion->idcli,
+                'estado' => 'atendiendo',
+                'ultimo_idemp' => $empleado->idemp,
+                'ultima_actividad' => now(),
+                'last_message_at' => now(),
+                'metadata' => $conversationMetadata,
+            ])->save();
+
+            $mensajeModel = Mensaje::create([
+                'idconv' => $conversacion->idconv,
+                'tipo_remitente' => 'empleado',
+                'idemp' => $empleado->idemp,
+                'contenido' => $mensaje,
+                'tipo_contenido' => 'texto',
+                'leido' => true,
+                'delivered_at' => ($dispatch['ok'] ?? false) ? now() : null,
+                'error_message' => ($dispatch['ok'] ?? false) ? null : ($dispatch['error'] ?? 'No se pudo enviar a WhatsApp'),
+                'metadata' => [
+                    'source' => 'delivery-modal',
+                    'channel_id' => $channel->id,
+                    'channel_color' => $channel->color,
+                    'channel_instance' => $channel->instance_name,
+                ],
+            ]);
+
+            $canalMensaje = ChatMensajeCanal::create([
+                'idmsg' => $mensajeModel->idmsg,
+                'idconv' => $conversacion->idconv,
+                'contacto_canal_id' => $contacto->id,
+                'canal' => 'whatsapp',
+                'direccion' => 'outbound',
+                'external_message_id' => $dispatch['external_message_id'] ?? null,
+                'external_status' => ($dispatch['ok'] ?? false) ? 'sent' : 'failed',
+                'payload' => [
+                    'source' => 'delivery-modal',
+                    'instance' => $channel->instance_name,
+                    'server_url' => $channel->server_url,
+                    'whatsapp_channel_id' => $channel->id,
+                    'dispatch' => [
+                        'ok' => $dispatch['ok'] ?? false,
+                        'error' => $dispatch['error'] ?? null,
+                        'external_message_id' => $dispatch['external_message_id'] ?? null,
+                    ],
+                ],
+            ]);
+
+            return [
+                'contacto' => $contacto,
+                'conversacion' => $conversacion,
+                'mensaje' => $mensajeModel,
+                'canal_mensaje' => $canalMensaje,
+            ];
+        });
     }
 
     public function moverUsuario($iddet){

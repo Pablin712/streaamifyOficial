@@ -157,10 +157,18 @@
                 <button
                     type="button"
                     class="btn btn-success"
-                    onclick="sendMensajeEntregaVenta()"
+                    onclick="sendMensajeEntregaVenta('verde')"
                     @if (empty($mensajeEntregaCliente['telefono'])) disabled @endif
                 >
-                    <i class="fab fa-whatsapp me-1"></i>Enviar WhatsApp
+                    <i class="fab fa-whatsapp me-1"></i>WhatsApp verde
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-outline-success"
+                    onclick="sendMensajeEntregaVenta('alterno')"
+                    @if (empty($mensajeEntregaCliente['telefono'])) disabled @endif
+                >
+                    <i class="fab fa-whatsapp me-1"></i>WhatsApp alterno
                 </button>
                 <button type="button" class="btn btn-secondary"
                     onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-entrega-venta' }))">
@@ -259,7 +267,7 @@
                 });
         }
 
-        async function sendMensajeEntregaVenta() {
+        async function sendMensajeEntregaVenta(channelPreference = 'verde') {
             const message = document.getElementById('mensaje_entrega_venta_text')?.value || '';
             const cliente = @json($mensajeEntregaCliente['cliente'] ?? 'Cliente');
             const telefono = @json($mensajeEntregaCliente['telefono'] ?? null);
@@ -282,7 +290,8 @@
                         id_cliente: idCliente,
                         cliente: cliente,
                         telefono: telefono,
-                        mensaje: message
+                        mensaje: message,
+                        channel_preference: channelPreference
                     })
                 });
 

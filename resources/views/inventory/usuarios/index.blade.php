@@ -380,10 +380,18 @@
             <button
                 type="button"
                 class="btn btn-success"
-                onclick="sendMensajeRenovacionUsuarios()"
+                onclick="sendMensajeRenovacionUsuarios('verde')"
                 @if (empty($mensajeRenovacionCliente['telefono'])) disabled @endif
             >
-                <i class="fab fa-whatsapp me-1"></i>Enviar WhatsApp
+                <i class="fab fa-whatsapp me-1"></i>WhatsApp verde
+            </button>
+            <button
+                type="button"
+                class="btn btn-outline-success"
+                onclick="sendMensajeRenovacionUsuarios('alterno')"
+                @if (empty($mensajeRenovacionCliente['telefono'])) disabled @endif
+            >
+                <i class="fab fa-whatsapp me-1"></i>WhatsApp alterno
             </button>
             <button type="button" class="btn btn-secondary"
                 onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'mensaje-renovacion-usuarios' }))">
@@ -984,7 +992,7 @@
                 });
         }
 
-        async function sendMensajeRenovacionUsuarios() {
+        async function sendMensajeRenovacionUsuarios(channelPreference = 'verde') {
             const message = document.getElementById('mensaje_renovacion_usuarios_text')?.value || '';
             const cliente = @json($mensajeRenovacionCliente['cliente'] ?? 'Cliente');
             const telefono = @json($mensajeRenovacionCliente['telefono'] ?? null);
@@ -1007,7 +1015,8 @@
                         id_cliente: idCliente,
                         cliente: cliente,
                         telefono: telefono,
-                        mensaje: message
+                        mensaje: message,
+                        channel_preference: channelPreference
                     })
                 });
 

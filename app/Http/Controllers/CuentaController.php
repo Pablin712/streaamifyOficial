@@ -11,9 +11,11 @@ use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use App\Models\Historial;
 use App\Models\Deuda;
+use App\Models\ChatWhatsappChannel;
 use App\Services\CuentaService;
 use App\Services\BancoService;
 use App\Services\NetflixCodigoService;
+use App\Services\Chat\WhatsAppOutboundService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -31,12 +33,14 @@ class CuentaController extends Controller
     protected $cuentaService;
     protected $bancoService;
     protected $netflixCodigoService;
+    protected $whatsAppOutboundService;
 
-    public function __construct(CuentaService $cuentaService, BancoService $bancoService, NetflixCodigoService $netflixCodigoService)
+    public function __construct(CuentaService $cuentaService, BancoService $bancoService, NetflixCodigoService $netflixCodigoService, WhatsAppOutboundService $whatsAppOutboundService)
     {
         $this->cuentaService = $cuentaService;
         $this->bancoService = $bancoService;
         $this->netflixCodigoService = $netflixCodigoService;
+        $this->whatsAppOutboundService = $whatsAppOutboundService;
     }
     public function index(Request $request)
     {
@@ -662,89 +666,70 @@ class CuentaController extends Controller
 
         $cuenta = Cuenta::with(['valor.proveedor', 'valor.servicio'])->findOrFail($idcue);
 
-        $webhookUrl = config('services.n8n.client_message_webhook');
-        if (empty($webhookUrl)) {
+        $channel = ChatWhatsappChannel::query()
+            ->availableForOutbound()
+            ->whereRaw('LOWER(instance_name) = ?', ['bot-pagos'])
+            ->first();
+
+        if (! $channel) {
             return response()->json([
                 'success' => false,
-                'message' => 'No está configurado el webhook para enviar mensajes.',
-            ], 500);
+                'message' => 'No se encontró el canal WhatsApp bot-pagos para enviar el mensaje.',
+            ], 422);
         }
 
         $empleado = Auth::user();
-        $payload = [
-            'event' => 'provider.account_message',
-            'trace_id' => 'proveedor-msg-' . $cuenta->idcue . '-' . now()->format('Ymd-His'),
-            'cliente' => [
-                'idcli' => null,
-                'nombre' => $validated['proveedor'] ?: ($cuenta->valor->proveedor->nombrepro ?? 'Proveedor'),
-                'telefono' => $validated['telefono'],
-                'telefono_normalizado' => $telefonoNormalizado,
-                'tipo' => 'proveedor',
-            ],
-            'cuenta' => [
-                'idcue' => $cuenta->idcue,
-                'usuario' => $cuenta->usuariocue,
-                'servicio' => $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? null),
-                'proveedor' => $cuenta->valor->proveedor->nombrepro ?? null,
-            ],
-            'mensaje' => trim($validated['mensaje']),
-            'empleado' => [
-                'idemp' => $empleado->idemp,
-                'nombreemp' => $empleado->nombreemp,
-                'usuarioemp' => $empleado->usuarioemp,
-            ],
-            'sent_at' => now()->toIso8601String(),
-        ];
 
+        // 1. Enviar por Evolution API
         try {
-            $requestN8n = Http::acceptJson()
-                ->timeout(10)
-                ->retry(1, 300);
-
-            $webhookSecret = config('services.n8n.payment_webhook_secret');
-            if (!empty($webhookSecret)) {
-                $requestN8n = $requestN8n->withHeaders([
-                    'X-Webhook-Secret' => $webhookSecret,
-                ]);
-            }
-
-            $response = $requestN8n->post($webhookUrl, $payload);
-
-            if (!$response->successful()) {
-                Log::warning('Webhook n8n de mensaje a proveedor devolvió error', [
-                    'idcue' => $cuenta->idcue,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se pudo enviar el mensaje al webhook.',
-                ], 502);
-            }
-
-            Historial::create([
-                'accion' => 'Mensaje directo a proveedor',
-                'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Proveedor: ' . ($payload['cliente']['nombre'] ?? 'Proveedor') . ' | Teléfono: ' . $validated['telefono'],
-                'empleado_id' => $empleado->idemp,
-                'created_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Mensaje enviado correctamente al proveedor por n8n.',
-            ]);
+            $dispatch = $this->whatsAppOutboundService->sendText(
+                $telefonoNormalizado,
+                trim($validated['mensaje']),
+                $channel->instance_name,
+                $channel->api_key,
+                $channel->server_url,
+            );
         } catch (\Throwable $e) {
-            Log::error('Error enviando mensaje a proveedor vía n8n', [
-                'idcue' => $cuenta->idcue,
+            Log::error('Excepción al enviar mensaje a proveedor por Evolution API', [
                 'error' => $e->getMessage(),
+                'idcue' => $cuenta->idcue,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ocurrió un error al enviar el mensaje al proveedor.',
+                'message' => 'Ocurrió un error al conectar con WhatsApp.',
             ], 500);
         }
+
+        if (!($dispatch['ok'] ?? false)) {
+            Log::warning('Evolution API no confirmó envío de mensaje a proveedor', [
+                'idcue' => $cuenta->idcue,
+                'instance' => $channel->instance_name,
+                'error' => $dispatch['error'] ?? null,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'WhatsApp no confirmó el envío del mensaje al proveedor.',
+            ], 422);
+        }
+
+        // 2. Historial (sin bloquear la respuesta si falla)
+        try {
+            Historial::create([
+                'accion' => 'Mensaje directo a proveedor',
+                'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Proveedor: ' . ($validated['proveedor'] ?: ($cuenta->valor->proveedor->nombrepro ?? 'Proveedor')) . ' | Teléfono: ' . $validated['telefono'],
+                'empleado_id' => $empleado->idemp,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo registrar historial de mensaje a proveedor', ['error' => $e->getMessage()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mensaje enviado correctamente al proveedor por ' . ($channel->display_name ?: $channel->instance_name) . '.',
+        ]);
     }
 
     public function enviarInventarioProveedor(Request $request)
@@ -859,90 +844,70 @@ class CuentaController extends Controller
             })
             ->implode("\n\n");
 
-        $webhookUrl = config('services.n8n.client_message_webhook');
-        if (empty($webhookUrl)) {
+        $channel = ChatWhatsappChannel::query()
+            ->availableForOutbound()
+            ->whereRaw('LOWER(instance_name) = ?', ['bot-pagos'])
+            ->first();
+
+        if (! $channel) {
             return response()->json([
                 'success' => false,
-                'message' => 'No está configurado el webhook para enviar mensajes.',
-            ], 500);
+                'message' => 'No se encontró el canal WhatsApp bot-pagos para enviar el inventario.',
+            ], 422);
         }
 
         $empleado = Auth::user();
-        $payload = [
-            'event' => 'provider.inventory_message',
-            'trace_id' => 'proveedor-inventario-' . $proveedor->idpro . '-' . now()->format('Ymd-His'),
-            'cliente' => [
-                'idcli' => null,
-                'nombre' => $proveedor->nombrepro,
-                'telefono' => $telefonoProveedor,
-                'telefono_normalizado' => $telefonoNormalizado,
-                'tipo' => 'proveedor',
-            ],
-            'mensaje' => $mensaje,
-            'inventario' => [
-                'proveedor_id' => $proveedor->idpro,
-                'proveedor_nombre' => $proveedor->nombrepro,
-                'servicios' => $serviciosSeleccionados->values(),
-                'cuentas_ids' => $cuentasPorServicio->pluck('idcue')->values(),
-                'total_cuentas' => $cuentasPorServicio->count(),
-            ],
-            'empleado' => [
-                'idemp' => $empleado->idemp,
-                'nombreemp' => $empleado->nombreemp,
-                'usuarioemp' => $empleado->usuarioemp,
-            ],
-            'sent_at' => now()->toIso8601String(),
-        ];
 
+        // 1. Enviar por Evolution API
         try {
-            $requestN8n = Http::acceptJson()
-                ->timeout(12)
-                ->retry(1, 300);
+            $dispatch = $this->whatsAppOutboundService->sendText(
+                $telefonoNormalizado,
+                $mensaje,
+                $channel->instance_name,
+                $channel->api_key,
+                $channel->server_url,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Excepción al enviar inventario a proveedor por Evolution API', [
+                'error' => $e->getMessage(),
+                'proveedor_id' => $proveedor->idpro,
+            ]);
 
-            $webhookSecret = config('services.n8n.payment_webhook_secret');
-            if (!empty($webhookSecret)) {
-                $requestN8n = $requestN8n->withHeaders([
-                    'X-Webhook-Secret' => $webhookSecret,
-                ]);
-            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al conectar con WhatsApp.',
+            ], 500);
+        }
 
-            $response = $requestN8n->post($webhookUrl, $payload);
+        if (!($dispatch['ok'] ?? false)) {
+            Log::warning('Evolution API no confirmó envío de inventario a proveedor', [
+                'proveedor_id' => $proveedor->idpro,
+                'instance' => $channel->instance_name,
+                'error' => $dispatch['error'] ?? null,
+            ]);
 
-            if (!$response->successful()) {
-                Log::warning('Webhook n8n de inventario a proveedor devolvió error', [
-                    'proveedor_id' => $proveedor->idpro,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'WhatsApp no confirmó el envío del inventario al proveedor.',
+            ], 422);
+        }
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se pudo enviar el inventario al webhook.',
-                ], 502);
-            }
-
+        // 2. Historial
+        try {
             Historial::create([
                 'accion' => 'Inventario enviado a proveedor',
                 'descripcion' => 'Proveedor: ' . $proveedor->nombrepro . ' | Servicios: ' . $serviciosSeleccionados->implode(', ') . ' | Cuentas: ' . $cuentasPorServicio->count(),
                 'empleado_id' => $empleado->idemp,
                 'created_at' => now(),
             ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Inventario enviado correctamente al proveedor.',
-            ]);
         } catch (\Throwable $e) {
-            Log::error('Error enviando inventario a proveedor vía n8n', [
-                'proveedor_id' => $proveedor->idpro,
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Ocurrió un error al enviar el inventario al proveedor.',
-            ], 500);
+            Log::warning('No se pudo registrar historial de inventario a proveedor', ['error' => $e->getMessage()]);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Inventario enviado correctamente al proveedor por ' . ($channel->display_name ?: $channel->instance_name) . '.',
+        ]);
     }
 
     public function pedirCodigoNetflix(Request $request, $idcue)
