@@ -42,6 +42,8 @@ class WhatsAppWebhookController extends Controller
             'tipo_contenido' => 'nullable|string|max:30',
             'media_url' => 'nullable|url',
             'archivo_url' => 'nullable|url',
+            'media_base64' => 'nullable|string',
+            'media_file_name' => 'nullable|string|max:191',
             'mime_type' => 'nullable|string|max:120',
             'media_mime_type' => 'nullable|string|max:120',
             'external_message_id' => 'nullable|string|max:191',

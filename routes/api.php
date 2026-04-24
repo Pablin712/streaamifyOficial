@@ -167,6 +167,7 @@ Route::prefix('v2')->group(function () {
 
     Route::prefix('chat/router')->controller(ChatRouterController::class)->group(function () {
         Route::post('/ingest', 'recibirMensaje')->name('api.v2.chat.router.ingest');
+        Route::post('/save-respond', 'saveRespond')->name('api.v2.chat.router.save-respond');
         Route::match(['get', 'post'], '/context', 'contextoConversacion')->name('api.v2.chat.router.context');
         Route::post('/respond', 'responderAgente')->name('api.v2.chat.router.respond');
         Route::post('/handoff', 'derivarHumano')->name('api.v2.chat.router.handoff');

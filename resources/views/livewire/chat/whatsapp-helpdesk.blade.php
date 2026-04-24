@@ -983,7 +983,9 @@
                                  {{ $lastMessage?->contenido ?: match($lastMessage?->tipo_contenido) {
                                      'imagen' => '📷 Imagen',
                                      'audio' => '🎤 Audio',
+                                     'sticker' => '🧩 Sticker',
                                      'documento', 'archivo' => '📄 Documento',
+                                     'video' => '🎬 Video',
                                      default => 'Sin mensajes',
                                  } }}
                              </div>
@@ -1105,7 +1107,7 @@
                     @php
                         $dateKey = optional($message->created_at)->format('Y-m-d');
                         $type = $message->tipo ?: $message->tipo_contenido;
-                        $mediaUrl = $message->media_url ?: $message->archivo_url;
+                        $mediaUrl = $message->media_playable_url;
                     @endphp
                     @if($dateKey !== $lastDate)
                         <div class="wa-date-divider">{{ optional($message->created_at)->format('d/m/Y') }}</div>
@@ -1115,8 +1117,15 @@
                         <div class="wa-bubble">
                             @if($type === 'imagen' && $mediaUrl)
                                 <img src="{{ $mediaUrl }}" class="wa-media" alt="Imagen recibida">
+                            @elseif($type === 'sticker' && $mediaUrl)
+                                <img src="{{ $mediaUrl }}" class="wa-media" style="max-width: 180px;" alt="Sticker recibido">
                             @elseif($type === 'audio' && $mediaUrl)
-                                <audio controls src="{{ $mediaUrl }}"></audio>
+                                <audio controls preload="metadata">
+                                    <source src="{{ $mediaUrl }}" type="{{ str_contains((string) $message->mime_type, 'audio/') ? strtok((string) $message->mime_type, ';') : 'audio/ogg' }}">
+                                    Tu navegador no soporta este audio.
+                                </audio>
+                            @elseif($type === 'video' && $mediaUrl)
+                                <a href="{{ $mediaUrl }}" target="_blank" rel="noopener noreferrer" style="color: inherit;">🎬 Abrir video</a>
                             @elseif(in_array($type, ['documento', 'archivo'], true) && $mediaUrl)
                                 <a href="{{ $mediaUrl }}" target="_blank" rel="noopener noreferrer" style="color: inherit;">📄 Abrir documento</a>
                             @endif

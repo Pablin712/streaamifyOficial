@@ -15,8 +15,11 @@ use App\Models\Conversacion;
 use App\Models\Mensaje;
 use App\Services\Chat\WhatsAppOutboundService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ChatRouterController extends Controller
 {
@@ -40,11 +43,38 @@ class ChatRouterController extends Controller
 
     public function recibirMensaje(Request $request)
     {
+        $payloadInput = $request->input('payload');
+        $payloadData = is_array($payloadInput) ? $payloadInput : [];
+
         $request->merge([
             'instance' => $request->input('instance') ?: $request->input('instance_name'),
             'apikey' => $request->input('apikey') ?: $request->input('instance_apikey'),
             'numero' => $request->input('numero') ?: $request->input('numero_persona'),
+            'tipo_contenido' => $request->input('tipo_contenido')
+                ?: data_get($payloadData, 'message.type')
+                ?: data_get($payloadData, 'type'),
+            'media_url' => $request->input('media_url') ?: $this->resolveInboundMediaUrlFromPayload($payloadData),
+            'media_mime_type' => $request->input('media_mime_type')
+                ?: $request->input('mime_type')
+                ?: $this->resolveInboundMediaMimeTypeFromPayload($payloadData),
+            'mensaje' => $request->input('mensaje')
+                ?: $request->input('contenido')
+                ?: $this->resolveInboundCaptionFromPayload($payloadData),
+            'from_me' => $request->input('from_me')
+                ?? $request->input('fromMe')
+                ?? data_get($payloadData, 'message.fromMe')
+                ?? data_get($payloadData, 'fromMe')
+                ?? false,
         ]);
+
+        $isFromMe = filter_var($request->input('from_me'), FILTER_VALIDATE_BOOLEAN);
+
+        if ($isFromMe) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mensaje fromMe detectado. Usa /api/v2/chat/router/save-respond para registrar outbound.',
+            ], 422);
+        }
 
         $validator = Validator::make($request->all(), [
             'canal' => 'required|in:' . implode(',', self::CANALES),
@@ -62,6 +92,8 @@ class ChatRouterController extends Controller
             'payload' => 'nullable|array',
             'media_url' => 'nullable|string',
             'media_mime_type' => 'nullable|string|max:120',
+            'media_base64' => 'nullable|string',
+            'media_file_name' => 'nullable|string|max:191',
             'media_id' => 'nullable|string|max:191',
             'subagente_codigo' => 'nullable|string|max:50',
             'debounce_seconds' => 'nullable|integer|min:1|max:300',
@@ -79,10 +111,10 @@ class ChatRouterController extends Controller
 
         $contenido = trim((string) ($request->input('mensaje') ?? $request->input('contenido') ?? ''));
 
-        if ($contenido === '' && !$request->filled('media_url')) {
+        if ($contenido === '' && !$request->filled('media_url') && !$request->filled('media_base64')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Debes enviar mensaje o media_url.',
+                'message' => 'Debes enviar mensaje, media_url o media_base64.',
             ], 422);
         }
 
@@ -132,21 +164,16 @@ class ChatRouterController extends Controller
                 ]);
                 $contacto->save();
 
-                $conversacion = Conversacion::query()
-                    ->where('canal_contacto_id', $contacto->id)
-                    ->whereIn('estado', self::ESTADOS_ABIERTOS)
-                    ->latest('ultima_actividad')
-                    ->first();
-
-                if (!$conversacion) {
-                    $conversacion = Conversacion::create([
+                $conversacion = Conversacion::query()->firstOrCreate(
+                    ['canal_contacto_id' => $contacto->id],
+                    [
                         'idcli' => $cliente?->idcli,
                         'canal_principal' => $canal,
-                        'canal_contacto_id' => $contacto->id,
                         'origen' => $request->input('origen', 'n8n'),
                         'subagente_codigo' => $subagenteCodigo,
                         'estado' => 'abierta',
                         'ultima_actividad' => now(),
+                        'last_message_at' => now(),
                         'mensajes_no_leidos' => 0,
                         'requiere_humano' => false,
                         'metadata' => [
@@ -157,23 +184,38 @@ class ChatRouterController extends Controller
                             'whatsapp_channel_id' => $whatsappChannel?->id,
                             'whatsapp_color' => $whatsappColor,
                         ],
-                    ]);
-                } else {
-                    $conversacion->fill([
-                        'idcli' => $cliente?->idcli ?? $conversacion->idcli,
-                        'subagente_codigo' => $subagenteCodigo ?: $conversacion->subagente_codigo,
-                        'ultima_actividad' => now(),
-                        'metadata' => array_merge($conversacion->metadata ?? [], [
-                            'canal_user_id' => $canalUserId,
-                            'instance' => $request->input('instance', data_get($conversacion->metadata, 'instance') ?: $whatsappChannel?->instance_name),
-                            'apikey' => $request->input('apikey', data_get($conversacion->metadata, 'apikey') ?: $whatsappChannel?->api_key),
-                            'server_url' => $request->input('server_url', data_get($conversacion->metadata, 'server_url') ?: $whatsappChannel?->server_url),
-                            'whatsapp_channel_id' => data_get($conversacion->metadata, 'whatsapp_channel_id') ?: $whatsappChannel?->id,
-                            'whatsapp_color' => data_get($conversacion->metadata, 'whatsapp_color') ?: $whatsappColor,
-                        ]),
-                    ]);
-                    $conversacion->save();
+                    ]
+                );
+
+                $conversacion->fill([
+                    'idcli' => $cliente?->idcli ?? $conversacion->idcli,
+                    'subagente_codigo' => $subagenteCodigo ?: $conversacion->subagente_codigo,
+                    'ultima_actividad' => now(),
+                    'last_message_at' => now(),
+                    'metadata' => array_merge($conversacion->metadata ?? [], [
+                        'canal_user_id' => $canalUserId,
+                        'instance' => $request->input('instance', data_get($conversacion->metadata, 'instance') ?: $whatsappChannel?->instance_name),
+                        'apikey' => $request->input('apikey', data_get($conversacion->metadata, 'apikey') ?: $whatsappChannel?->api_key),
+                        'server_url' => $request->input('server_url', data_get($conversacion->metadata, 'server_url') ?: $whatsappChannel?->server_url),
+                        'whatsapp_channel_id' => data_get($conversacion->metadata, 'whatsapp_channel_id') ?: $whatsappChannel?->id,
+                        'whatsapp_color' => data_get($conversacion->metadata, 'whatsapp_color') ?: $whatsappColor,
+                    ]),
+                ]);
+
+                if (in_array($conversacion->estado, ['cerrado', 'cerrada', 'resuelto'], true)) {
+                    $conversacion->estado = 'abierta';
+                    $conversacion->closed_at = null;
                 }
+
+                $conversacion->save();
+
+                [$storedMediaUrl, $resolvedMediaMimeType] = $this->persistInboundMedia(
+                    $request->input('media_url'),
+                    $tipoContenido,
+                    $request->input('media_mime_type'),
+                    $request->input('media_base64'),
+                    $request->input('media_file_name')
+                );
 
                 if ($request->filled('external_message_id')) {
                     $chatMensajeExistente = ChatMensajeCanal::query()
@@ -198,7 +240,9 @@ class ChatRouterController extends Controller
                     'idcli' => $cliente?->idcli,
                     'contenido' => $contenido,
                     'tipo_contenido' => $tipoContenido,
-                    'archivo_url' => $request->input('media_url'),
+                    'archivo_url' => $storedMediaUrl,
+                    'media_url' => $storedMediaUrl,
+                    'mime_type' => $resolvedMediaMimeType,
                     'leido' => false,
                     'respondido_por_ai' => false,
                     'metadata' => [
@@ -206,6 +250,8 @@ class ChatRouterController extends Controller
                         'tipo_contenido_original' => $request->input('tipo_contenido', 'texto'),
                         'external_message_id' => $request->input('external_message_id'),
                         'instance' => $request->input('instance'),
+                        'media_original_url' => $request->input('media_url'),
+                        'media_file_name' => $request->input('media_file_name'),
                         'payload' => $request->input('payload'),
                     ],
                 ]);
@@ -220,14 +266,15 @@ class ChatRouterController extends Controller
                     'external_thread_id' => $request->input('external_thread_id'),
                     'external_status' => 'received',
                     'media_id' => $request->input('media_id'),
-                    'media_url' => $request->input('media_url'),
-                    'media_mime_type' => $request->input('media_mime_type'),
+                    'media_url' => $storedMediaUrl,
+                    'media_mime_type' => $resolvedMediaMimeType,
                     'payload' => array_merge($request->input('payload', []), [
                         'instance' => $request->input('instance') ?: $whatsappChannel?->instance_name,
                         'apikey' => $request->input('apikey') ?: $whatsappChannel?->api_key,
                         'server_url' => $request->input('server_url') ?: $whatsappChannel?->server_url,
                         'whatsapp_channel_id' => $whatsappChannel?->id,
                         'whatsapp_color' => $whatsappColor,
+                        'media_original_url' => $request->input('media_url'),
                     ]),
                 ]);
 
@@ -584,6 +631,240 @@ class ChatRouterController extends Controller
         }
     }
 
+    public function saveRespond(Request $request)
+    {
+        $payloadInput = $request->input('payload');
+        $payloadData = is_array($payloadInput) ? $payloadInput : [];
+
+        $rawFromMe = $request->input('from_me')
+            ?? $request->input('fromMe')
+            ?? data_get($payloadData, 'message.fromMe')
+            ?? data_get($payloadData, 'fromMe')
+            ?? true;
+
+        $normalizedFromMe = filter_var($rawFromMe, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($normalizedFromMe === null) {
+            $normalizedFromMe = true;
+        }
+
+        $rawTipoRemitente = strtolower(trim((string) ($request->input('tipo_remitente') ?? 'empleado')));
+        $normalizedTipoRemitente = in_array($rawTipoRemitente, ['empleado', 'ia', 'sistema'], true)
+            ? $rawTipoRemitente
+            : 'empleado';
+
+        $request->merge([
+            'instance' => $request->input('instance') ?: $request->input('instance_name'),
+            'apikey' => $request->input('apikey') ?: $request->input('instance_apikey'),
+            'canal' => $request->input('canal') ?: 'whatsapp',
+            'canal_user_id' => $request->input('canal_user_id')
+                ?: $request->input('numero')
+                ?: data_get($payloadData, 'contact.numero')
+                ?: data_get($payloadData, 'message.from')
+                ?: $this->resolveCanalUserIdFromChatId(data_get($payloadData, 'message.chat_id')),
+            'contenido' => $request->input('contenido')
+                ?: $request->input('mensaje')
+                ?: data_get($payloadData, 'message.caption')
+                ?: data_get($payloadData, 'content')
+                ?: data_get($payloadData, 'message.text')
+                ?: '',
+            'tipo_contenido' => $request->input('tipo_contenido')
+                ?: data_get($payloadData, 'message.type')
+                ?: 'texto',
+            'media_mime_type' => $request->input('media_mime_type')
+                ?: $request->input('mime_type')
+                ?: data_get($payloadData, 'mimetype')
+                ?: data_get($payloadData, 'message.mimetype')
+                ?: data_get($payloadData, 'message.mime_type'),
+            'external_message_id' => $request->input('external_message_id') ?: data_get($payloadData, 'message.id'),
+            'external_thread_id' => $request->input('external_thread_id')
+                ?: data_get($payloadData, 'message.chat_id')
+                ?: data_get($payloadData, 'chat_id'),
+            'numero' => $request->input('numero')
+                ?: data_get($payloadData, 'contact.numero')
+                ?: data_get($payloadData, 'message.from'),
+            'from_me' => $normalizedFromMe,
+            'tipo_remitente' => $normalizedTipoRemitente,
+        ]);
+
+        $validator = Validator::make($request->all(), [
+            'idconv' => 'nullable|exists:conversaciones,idconv',
+            'canal' => 'nullable|in:' . implode(',', self::CANALES),
+            'canal_user_id' => 'nullable|string|max:120',
+            'mensaje' => 'nullable|string',
+            'contenido' => 'nullable|string',
+            'tipo_contenido' => 'nullable|in:texto,imagen,archivo,audio,video,documento,sticker',
+            'media_url' => 'nullable|string',
+            'media_base64' => 'nullable|string',
+            'media_file_name' => 'nullable|string|max:191',
+            'media_mime_type' => 'nullable|string|max:120',
+            'media_id' => 'nullable|string|max:191',
+            'external_message_id' => 'nullable|string|max:191',
+            'external_thread_id' => 'nullable|string|max:191',
+            'metadata' => 'nullable|array',
+            'tipo_remitente' => 'nullable|in:empleado,ia,sistema',
+            'idemp' => 'nullable|integer|exists:empleados,idemp',
+            'instance' => 'nullable|string|max:120',
+            'apikey' => 'nullable|string|max:191',
+            'server_url' => 'nullable|string|max:191',
+            'from_me' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $contenido = trim((string) ($request->input('contenido') ?? ''));
+
+        if ($contenido === '' && !$request->filled('media_url') && !$request->filled('media_base64')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes enviar contenido, media_url o media_base64.',
+            ], 422);
+        }
+
+        try {
+            $resultado = DB::transaction(function () use ($request, $contenido) {
+                $conversacion = $this->resolveConversation($request);
+
+                if (!$conversacion) {
+                    $canal = $request->input('canal', 'whatsapp');
+                    $canalUserId = trim((string) $request->input('canal_user_id'));
+
+                    if ($canalUserId === '') {
+                        throw new \RuntimeException('Conversación no encontrada y canal_user_id vacío.');
+                    }
+
+                    $telefono = $this->normalizePhone($request->input('numero') ?? $canalUserId);
+                    $cliente = $this->resolveCliente($request->input('idcli'), $telefono);
+
+                    if ($canal === 'whatsapp') {
+                        $this->upsertWhatsappChannelFromRequest($request);
+                    }
+
+                    $contacto = ChatContactoCanal::query()->firstOrCreate(
+                        [
+                            'canal' => $canal,
+                            'canal_user_id' => $canalUserId,
+                        ],
+                        [
+                            'telefono_normalizado' => $telefono,
+                            'idcli' => $cliente?->idcli,
+                            'estado_relacion' => $cliente ? 'cliente' : 'lead',
+                            'origen' => $request->input('origen', 'n8n'),
+                            'metadata' => $this->buildChannelMetadata($request),
+                            'last_seen_at' => now(),
+                        ]
+                    );
+
+                    $conversacion = Conversacion::query()->firstOrCreate(
+                        ['canal_contacto_id' => $contacto->id],
+                        [
+                            'idcli' => $cliente?->idcli,
+                            'canal_principal' => $canal,
+                            'origen' => $request->input('origen', 'n8n'),
+                            'estado' => 'abierta',
+                            'ultima_actividad' => now(),
+                            'last_message_at' => now(),
+                            'mensajes_no_leidos' => 0,
+                            'requiere_humano' => false,
+                        ]
+                    );
+                    $conversacion->load('contactoCanal');
+                }
+
+                $tipoContenido = $this->normalizeContentType($request->input('tipo_contenido', 'texto'));
+
+                [$storedMediaUrl, $resolvedMediaMimeType] = $this->persistInboundMedia(
+                    $request->input('media_url'),
+                    $tipoContenido,
+                    $request->input('media_mime_type'),
+                    $request->input('media_base64'),
+                    $request->input('media_file_name')
+                );
+
+                $tipoRemitente = $request->input('tipo_remitente', 'empleado');
+
+                $mensaje = Mensaje::create([
+                    'idconv' => $conversacion->idconv,
+                    'tipo_remitente' => $tipoRemitente,
+                    'idemp' => $request->input('idemp'),
+                    'contenido' => $contenido,
+                    'tipo_contenido' => $tipoContenido,
+                    'archivo_url' => $storedMediaUrl,
+                    'media_url' => $storedMediaUrl,
+                    'mime_type' => $resolvedMediaMimeType,
+                    'leido' => true,
+                    'respondido_por_ai' => $tipoRemitente === 'ia',
+                    'metadata' => array_merge($request->input('metadata', []), [
+                        'source' => 'save-respond',
+                        'from_me' => filter_var($request->input('from_me', true), FILTER_VALIDATE_BOOLEAN),
+                        'tipo_contenido_original' => $request->input('tipo_contenido', 'texto'),
+                        'instance' => $request->input('instance'),
+                        'media_original_url' => $request->input('media_url'),
+                        'media_file_name' => $request->input('media_file_name'),
+                    ]),
+                ]);
+
+                $contacto = $conversacion->contactoCanal;
+
+                $canalMensaje = null;
+                if ($contacto && $conversacion->canal_principal) {
+                    $canalMensaje = ChatMensajeCanal::create([
+                        'idmsg' => $mensaje->idmsg,
+                        'idconv' => $conversacion->idconv,
+                        'contacto_canal_id' => $contacto->id,
+                        'canal' => $conversacion->canal_principal,
+                        'direccion' => 'outbound',
+                        'external_message_id' => $request->input('external_message_id'),
+                        'external_thread_id' => $request->input('external_thread_id'),
+                        'external_status' => $request->input('external_message_id') ? 'sent' : 'accepted',
+                        'media_id' => $request->input('media_id'),
+                        'media_url' => $storedMediaUrl,
+                        'media_mime_type' => $resolvedMediaMimeType,
+                        'payload' => array_merge($request->input('metadata', []), [
+                            'instance' => $request->input('instance'),
+                            'apikey' => $request->input('apikey'),
+                            'server_url' => $request->input('server_url'),
+                            'from_me' => filter_var($request->input('from_me', true), FILTER_VALIDATE_BOOLEAN),
+                        ]),
+                    ]);
+                }
+
+                $conversacion->update([
+                    'estado' => $tipoRemitente === 'ia' ? 'bot_activo' : 'atendiendo',
+                    'ultima_actividad' => now(),
+                    'last_message_at' => now(),
+                ]);
+
+                return [
+                    'conversacion' => $conversacion->fresh(),
+                    'mensaje' => $mensaje,
+                    'canal_mensaje' => $canalMensaje,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Mensaje outbound guardado correctamente (fromMe).',
+                'data' => [
+                    'idconv' => $resultado['conversacion']->idconv,
+                    'idmsg' => $resultado['mensaje']->idmsg,
+                    'chat_mensaje_canal_id' => $resultado['canal_mensaje']?->id,
+                    'estado_conversacion' => $resultado['conversacion']->estado,
+                ],
+            ], 201);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al guardar mensaje outbound (fromMe).',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function derivarHumano(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -847,6 +1128,7 @@ class ChatRouterController extends Controller
         return match ($mensaje->tipo_contenido) {
             'imagen' => '[imagen] ' . ($mensaje->archivo_url ?: 'sin_url'),
             'audio' => '[audio] ' . ($mensaje->archivo_url ?: 'sin_url'),
+            'sticker' => '[sticker] ' . ($mensaje->archivo_url ?: 'sin_url'),
             'archivo' => '[archivo] ' . ($mensaje->archivo_url ?: 'sin_url'),
             'video' => '[video] ' . ($mensaje->archivo_url ?: 'sin_url'),
             'documento' => '[documento] ' . ($mensaje->archivo_url ?: 'sin_url'),
@@ -870,11 +1152,207 @@ class ChatRouterController extends Controller
 
     private function normalizeContentType(?string $tipo): string
     {
-        return match ($tipo) {
-            'sticker' => 'imagen',
-            'texto', 'imagen', 'archivo', 'audio', 'video', 'documento' => $tipo,
+        $normalized = strtolower(trim((string) $tipo));
+
+        return match ($normalized) {
+            'text', 'conversation', 'texto' => 'texto',
+            'image', 'imagemessage', 'imagen' => 'imagen',
+            'audio', 'voice', 'ptt', 'audiomessage' => 'audio',
+            'sticker', 'stickermessage' => 'sticker',
+            'video', 'videomessage' => 'video',
+            'document', 'documentmessage', 'documento' => 'documento',
+            'archivo', 'file' => 'archivo',
             default => 'texto',
         };
+    }
+
+    private function persistInboundMedia(?string $mediaUrl, string $tipoContenido, ?string $mediaMimeType, ?string $mediaBase64 = null, ?string $mediaFileName = null): array
+    {
+        $base64 = trim((string) $mediaBase64);
+
+        if ($base64 !== '') {
+            return $this->storeInboundMediaFromBase64($base64, $tipoContenido, $mediaMimeType, $mediaFileName);
+        }
+
+        $url = trim((string) $mediaUrl);
+
+        if ($url === '') {
+            return [null, $mediaMimeType];
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return [$url, $mediaMimeType];
+        }
+
+        try {
+            $response = Http::timeout(20)->get($url);
+
+            if (! $response->successful()) {
+                return [$url, $mediaMimeType];
+            }
+
+            $resolvedMimeType = $this->normalizeInboundMimeType($mediaMimeType ?: (string) $response->header('Content-Type'));
+            $extension = $this->resolveInboundMediaExtension($resolvedMimeType, $url, $tipoContenido);
+            $folder = match ($tipoContenido) {
+                'imagen' => 'chat/inbound/images',
+                'audio' => 'chat/inbound/audio',
+                'sticker' => 'chat/inbound/stickers',
+                default => 'chat/inbound/files',
+            };
+
+            $filename = now()->format('YmdHis') . '_' . Str::random(10) . '.' . $extension;
+            $path = $folder . '/' . $filename;
+
+            Storage::disk('public')->put($path, $response->body());
+
+            return [Storage::url($path), $resolvedMimeType];
+        } catch (\Throwable) {
+            return [$url, $mediaMimeType];
+        }
+    }
+
+    private function resolveInboundMediaExtension(?string $mimeType, string $sourceUrl, string $tipoContenido): string
+    {
+        $lowerMime = strtolower((string) $mimeType);
+
+        if ($lowerMime !== '') {
+            if (str_contains($lowerMime, 'image/webp')) {
+                return 'webp';
+            }
+
+            if (str_contains($lowerMime, 'image/')) {
+                return 'jpg';
+            }
+
+            if (str_contains($lowerMime, 'audio/ogg')) {
+                return 'ogg';
+            }
+
+            if (str_contains($lowerMime, 'audio/mpeg')) {
+                return 'mp3';
+            }
+
+            if (str_contains($lowerMime, 'audio/')) {
+                return 'mp3';
+            }
+        }
+
+        $path = parse_url($sourceUrl, PHP_URL_PATH);
+        $extension = strtolower((string) pathinfo((string) $path, PATHINFO_EXTENSION));
+
+        if ($extension !== '') {
+            return $extension;
+        }
+
+        return match ($tipoContenido) {
+            'imagen', 'sticker' => 'jpg',
+            'audio' => 'mp3',
+            default => 'bin',
+        };
+    }
+
+    private function storeInboundMediaFromBase64(string $base64, string $tipoContenido, ?string $mimeType, ?string $fileName = null): array
+    {
+        $normalized = preg_replace('/^data:[^;]+;base64,/', '', trim($base64));
+        // n8n/form-urlencoded puede convertir '+' en espacios y agregar saltos de linea.
+        $normalized = str_replace(' ', '+', (string) $normalized);
+        $normalized = preg_replace('/\s+/', '', (string) $normalized);
+        if (str_contains((string) $normalized, '%2B') || str_contains((string) $normalized, '%2F') || str_contains((string) $normalized, '%3D')) {
+            $normalized = urldecode((string) $normalized);
+            $normalized = preg_replace('/\s+/', '', (string) $normalized);
+        }
+        $binary = base64_decode($normalized, true);
+
+        if ($binary === false) {
+            return [null, $mimeType];
+        }
+
+        $extension = $this->resolveBase64MediaExtension($mimeType, $fileName, $tipoContenido);
+        $folder = match ($tipoContenido) {
+            'imagen' => 'chat/inbound/images',
+            'audio' => 'chat/inbound/audio',
+            'sticker' => 'chat/inbound/stickers',
+            default => 'chat/inbound/files',
+        };
+
+        $filename = now()->format('YmdHis') . '_' . Str::random(10) . '.' . $extension;
+        $path = $folder . '/' . $filename;
+        Storage::disk('public')->put($path, $binary);
+
+        return [Storage::url($path), $this->normalizeInboundMimeType($mimeType)];
+    }
+
+    private function resolveBase64MediaExtension(?string $mimeType, ?string $fileName, string $tipoContenido): string
+    {
+        $nameExtension = strtolower((string) pathinfo((string) $fileName, PATHINFO_EXTENSION));
+
+        if ($nameExtension !== '') {
+            return match ($nameExtension) {
+                'oga', 'opus' => 'ogg',
+                default => $nameExtension,
+            };
+        }
+
+        return $this->resolveInboundMediaExtension($mimeType, (string) $fileName, $tipoContenido);
+    }
+
+    private function normalizeInboundMimeType(?string $mimeType): ?string
+    {
+        $normalized = strtolower(trim((string) $mimeType));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        $baseMimeType = trim(strtok($normalized, ';'));
+
+        return match ($baseMimeType) {
+            'audio/ogg', 'audio/opus', 'application/ogg' => 'audio/ogg',
+            default => $baseMimeType,
+        };
+    }
+
+    private function resolveInboundMediaUrlFromPayload(array $payload): ?string
+    {
+        return data_get($payload, 'media_url')
+            ?: data_get($payload, 'message.media_url')
+            ?: data_get($payload, 'message.mediaUrl')
+            ?: data_get($payload, 'message.url')
+            ?: data_get($payload, 'message.image.url')
+            ?: data_get($payload, 'message.audio.url')
+            ?: data_get($payload, 'message.sticker.url')
+            ?: data_get($payload, 'content.media_url')
+            ?: null;
+    }
+
+    private function resolveInboundMediaMimeTypeFromPayload(array $payload): ?string
+    {
+        return data_get($payload, 'media_mime_type')
+            ?: data_get($payload, 'mime_type')
+            ?: data_get($payload, 'message.mime_type')
+            ?: data_get($payload, 'message.mimetype')
+            ?: data_get($payload, 'message.mimeType')
+            ?: null;
+    }
+
+    private function resolveInboundCaptionFromPayload(array $payload): ?string
+    {
+        return data_get($payload, 'message.caption')
+            ?: data_get($payload, 'message.text')
+            ?: data_get($payload, 'content.text')
+            ?: data_get($payload, 'content')
+            ?: null;
+    }
+
+    private function resolveCanalUserIdFromChatId(?string $chatId): ?string
+    {
+        $value = trim((string) $chatId);
+
+        if ($value === '') {
+            return null;
+        }
+
+        return preg_replace('/@.+$/', '', $value) ?: null;
     }
 
     private function normalizeSubagentCode(?string $codigo): ?string

@@ -46,6 +46,10 @@ Route::get('/chat/panel', function () {
 Route::get('/chat/whatsapp', function () {
     return view('chat.whatsapp');
 })->name('chat.whatsapp')->middleware('auth');
+
+Route::get('/chat/media/{mensaje}', [\App\Http\Controllers\Chat\ChatMediaController::class, 'show'])
+    ->name('chat.media')
+    ->middleware('auth');
 // ===== CHAT MODULE END =====
 use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;

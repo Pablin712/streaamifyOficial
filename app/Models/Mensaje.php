@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Mensaje extends Model
 {
@@ -96,5 +98,24 @@ class Mensaje extends Model
             default:
                 return 'Desconocido';
         }
+    }
+
+    /**
+     * URL reproducible para media, compatible con despliegues en subcarpeta (/public).
+     */
+    public function getMediaPlayableUrlAttribute(): ?string
+    {
+        $raw = $this->media_url ?: $this->archivo_url;
+
+        if (! $raw) {
+            return null;
+        }
+
+        if (Str::startsWith($raw, ['data:', 'blob:'])) {
+            return $raw;
+        }
+
+        // Forzamos route() para evitar problemas de /public en producción
+        return route('chat.media', ['mensaje' => $this->idmsg]);
     }
 }
