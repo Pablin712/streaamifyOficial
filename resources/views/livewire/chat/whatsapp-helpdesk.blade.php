@@ -1149,6 +1149,24 @@
                 @error('imageUpload') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
                 @error('audioUpload') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
 
+                @if($quickResponseSuggestions->isNotEmpty() && str_starts_with(trim((string) $messageText), '/'))
+                    <div class="wa-quick-suggestions" style="margin-bottom: 8px; border: 1px solid var(--wa-border); border-radius: 10px; background: #fff; max-height: 220px; overflow-y: auto;">
+                        @foreach($quickResponseSuggestions as $quick)
+                            <button
+                                type="button"
+                                data-quick-response-id="{{ $quick->id }}"
+                                data-quick-response-content="{{ e($quick->contenido) }}"
+                                style="display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--wa-border); background: transparent; padding: 10px 12px; cursor: pointer;"
+                            >
+                                <div style="font-weight: 600; color: var(--wa-text);">/{{ $quick->comando }} · {{ $quick->titulo }}</div>
+                                <div style="font-size: 12px; color: var(--wa-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ \Illuminate\Support\Str::limit($quick->contenido, 110) }}
+                                </div>
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+
                 <div class="wa-compose-row">
                     @if($settings['chat_allow_image'])
                         <label class="wa-attach-btn" title="Adjuntar imagen">
@@ -1165,8 +1183,8 @@
                     @endif
 
                     @if($settings['chat_allow_text'])
-                        <textarea wire:model.defer="messageText" wire:keydown="markTyping" class="wa-textarea" placeholder="Escribe un mensaje..." rows="1"></textarea>
-                        <button wire:click="sendText" class="wa-send" type="button">Enviar</button>
+                        <textarea wire:model.live="messageText" wire:keydown="markTyping" class="wa-textarea" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                        <button wire:click="sendText" class="wa-send" type="button" data-chat-send>Enviar</button>
                     @endif
                 </div>
 
@@ -1380,6 +1398,60 @@
 
                  <hr style="border: 0; border-top: 1px solid var(--wa-border); margin: 4px 0;">
 
+                 <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Respuestas rápidas</h3>
+                 <div class="wa-card">
+                     <div style="display: grid; gap: 10px;">
+                         <div style="display: grid; gap: 8px; grid-template-columns: 1fr 1fr;">
+                             <input type="text" class="wa-search" wire:model.defer="quickResponseCommand" placeholder="comando (ej: saludo)">
+                             <input type="text" class="wa-search" wire:model.defer="quickResponseTitle" placeholder="Título visible">
+                         </div>
+
+                         <textarea class="wa-textarea" wire:model.defer="quickResponseContent" rows="3" placeholder="Contenido de la respuesta rápida"></textarea>
+
+                         <div style="display: grid; gap: 8px; grid-template-columns: 120px 1fr; align-items: center;">
+                             <input type="number" class="wa-search" wire:model.defer="quickResponseOrder" min="0" max="9999" placeholder="Orden">
+                             <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--wa-text-secondary);">
+                                 <input type="checkbox" wire:model.defer="quickResponseActive" style="width: 16px; height: 16px;"> Activa
+                             </label>
+                         </div>
+
+                         @error('quickResponseCommand')<span style="color: var(--wa-danger); font-size: 12px;">{{ $message }}</span>@enderror
+                         @error('quickResponseTitle')<span style="color: var(--wa-danger); font-size: 12px;">{{ $message }}</span>@enderror
+                         @error('quickResponseContent')<span style="color: var(--wa-danger); font-size: 12px;">{{ $message }}</span>@enderror
+
+                         <div style="display: flex; gap: 8px;">
+                             <button wire:click="saveQuickResponse" class="wa-send" style="flex: 1;">
+                                 {{ $editingQuickResponseId ? 'Actualizar respuesta' : 'Guardar respuesta' }}
+                             </button>
+                             <button wire:click="resetQuickResponseForm" class="wa-action" style="flex: 1;">Nueva</button>
+                         </div>
+                     </div>
+
+                     <div style="margin-top: 14px; display: grid; gap: 8px; max-height: 220px; overflow-y: auto;">
+                         @forelse($quickResponses as $quick)
+                             <div style="display: grid; gap: 6px; padding: 10px; border: 1px solid var(--wa-border); border-radius: 8px; background: {{ $quick->activo ? '#fff' : '#f8fafc' }};">
+                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                     <div style="min-width: 0;">
+                                         <strong style="font-size: 13px;">/{{ $quick->comando }}</strong>
+                                         <span style="font-size: 12px; color: var(--wa-text-secondary);"> · {{ $quick->titulo }}</span>
+                                     </div>
+                                     <div style="display: flex; gap: 6px;">
+                                         <button wire:click="editQuickResponse({{ $quick->id }})" class="wa-action" style="padding: 6px 8px;">Editar</button>
+                                         <button wire:click="deleteQuickResponse({{ $quick->id }})" class="wa-action" style="padding: 6px 8px; border-color: #fecaca; color: #dc2626;">Eliminar</button>
+                                     </div>
+                                 </div>
+                                 <div style="font-size: 12px; color: var(--wa-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                     {{ $quick->contenido }}
+                                 </div>
+                             </div>
+                         @empty
+                             <div style="font-size: 13px; color: var(--wa-text-secondary);">No hay respuestas rápidas registradas.</div>
+                         @endforelse
+                     </div>
+                 </div>
+
+                 <hr style="border: 0; border-top: 1px solid var(--wa-border); margin: 4px 0;">
+
                  <div class="wa-card">
                      <div class="wa-card-title">Endpoints listos:</div>
                      <div style="display: grid; gap: 12px; margin-top: 8px;">
@@ -1420,6 +1492,27 @@
 
     <script>
         document.addEventListener('livewire:init', () => {
+            const applySuggestionToComposer = (button) => {
+                if (!(button instanceof HTMLButtonElement)) {
+                    return;
+                }
+
+                const content = button.getAttribute('data-quick-response-content') || '';
+                const textarea = document.querySelector('.wa-textarea');
+
+                if (!(textarea instanceof HTMLTextAreaElement)) {
+                    return;
+                }
+
+                textarea.value = content;
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.dispatchEvent(new Event('change', { bubbles: true }));
+                textarea.focus();
+
+                const end = textarea.value.length;
+                textarea.setSelectionRange(end, end);
+            };
+
             Livewire.on('chat-scroll-bottom', () => {
                 setTimeout(() => {
                     const container = document.getElementById('wa-messages');
@@ -1433,6 +1526,15 @@
                 const textarea = document.querySelector('.wa-textarea');
                 if (textarea) {
                     textarea.value = '';
+                }
+            });
+
+            Livewire.on('chat-focus-composer', () => {
+                const textarea = document.querySelector('.wa-textarea');
+                if (textarea instanceof HTMLTextAreaElement) {
+                    textarea.focus();
+                    const end = textarea.value.length;
+                    textarea.setSelectionRange(end, end);
                 }
             });
 
@@ -1460,6 +1562,66 @@
                     // Ignorar si el navegador bloquea audio sin interacción previa.
                 }
             });
+
+            if (!window.__waComposerHotkeysBound) {
+                window.__waComposerHotkeysBound = true;
+
+                document.addEventListener('keydown', (event) => {
+                    const target = event.target;
+                    if (!(target instanceof HTMLTextAreaElement)) return;
+                    if (!target.classList.contains('wa-textarea')) return;
+                    if (event.isComposing) return;
+
+                    if (event.key === 'Tab') {
+                        const composer = target.closest('.wa-composer');
+                        const suggestionList = composer?.querySelector('.wa-quick-suggestions');
+                        const selectedButton = document.activeElement instanceof HTMLButtonElement
+                            ? document.activeElement
+                            : null;
+
+                        const firstButton = suggestionList?.querySelector('[data-quick-response-id]');
+                        const selectedInList = selectedButton && suggestionList?.contains(selectedButton)
+                            ? selectedButton
+                            : null;
+                        const quickResponseButton = selectedInList || (firstButton instanceof HTMLButtonElement ? firstButton : null);
+
+                        if (quickResponseButton) {
+                            event.preventDefault();
+                            applySuggestionToComposer(quickResponseButton);
+                        }
+
+                        return;
+                    }
+
+                    if (event.key !== 'Enter') return;
+
+                    // Ctrl/Cmd + Enter: salto de linea.
+                    if (event.ctrlKey || event.metaKey) return;
+
+                    // Shift + Enter: salto de linea.
+                    if (event.shiftKey) return;
+
+                    event.preventDefault();
+
+                    const sendButton = document.querySelector('[data-chat-send]');
+                    if (sendButton instanceof HTMLButtonElement && !sendButton.disabled) {
+                        sendButton.click();
+                    }
+                });
+
+                document.addEventListener('mousedown', (event) => {
+                    const button = event.target instanceof Element
+                        ? event.target.closest('[data-quick-response-id]')
+                        : null;
+
+                    if (!(button instanceof HTMLButtonElement)) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    applySuggestionToComposer(button);
+                });
+            }
 
             // Cerrar sidebar al clickear el overlay
             document.querySelector('.wa-helpdesk')?.addEventListener('click', (e) => {

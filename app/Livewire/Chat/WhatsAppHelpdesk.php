@@ -12,6 +12,7 @@ use App\Models\ChatWhatsappChannel;
 use App\Models\Conversacion;
 use App\Models\Empleado;
 use App\Models\Mensaje;
+use App\Models\QuickResponse;
 use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
 use Illuminate\Support\Facades\Auth;
@@ -65,6 +66,18 @@ class WhatsAppHelpdesk extends Component
 
     public ?string $settingsNotice = null;
 
+    public ?int $editingQuickResponseId = null;
+
+    public string $quickResponseCommand = '';
+
+    public string $quickResponseTitle = '';
+
+    public string $quickResponseContent = '';
+
+    public int $quickResponseOrder = 0;
+
+    public bool $quickResponseActive = true;
+
     public function mount(): void
     {
         abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para acceder al chat.');
@@ -76,11 +89,13 @@ class WhatsAppHelpdesk extends Component
         $settings = app(ChatSettingsService::class)->all();
 
         return view('livewire.chat.whatsapp-helpdesk', [
-            'conversations' => $this->conversationQuery()->simplePaginate(20),
+            'conversations' => $this->conversationQuery()->paginate(20),
             'activeConversation' => $this->activeConversation(),
             'messages' => $this->activeConversation()
                 ? $this->activeConversation()->mensajes()->with(['empleado', 'cliente'])->get()
                 : collect(),
+            'quickResponseSuggestions' => $this->quickResponseSuggestions(),
+            'quickResponses' => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
             'operators' => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
             'settings' => $settings,
             'whatsappChannels' => ChatWhatsappChannel::query()
@@ -315,6 +330,105 @@ class WhatsAppHelpdesk extends Component
         $this->sendMessage('texto');
     }
 
+    public function applyQuickResponse(int $quickResponseId): void
+    {
+        abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para usar respuestas rápidas.');
+
+        $quickResponse = QuickResponse::query()
+            ->activas()
+            ->tipo('empleado')
+            ->findOrFail($quickResponseId);
+
+        $this->messageText = (string) $quickResponse->contenido;
+        $this->dispatch('chat-focus-composer');
+    }
+
+    public function applyFirstQuickResponse(): void
+    {
+        abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para usar respuestas rápidas.');
+
+        $firstSuggestion = $this->quickResponseSuggestions()->first();
+
+        if (! $firstSuggestion) {
+            return;
+        }
+
+        $this->applyQuickResponse((int) $firstSuggestion->id);
+    }
+
+    public function saveQuickResponse(): void
+    {
+        abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para administrar respuestas rápidas.');
+
+        $data = $this->validate([
+            'quickResponseCommand' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('quick_responses', 'comando')->ignore($this->editingQuickResponseId),
+            ],
+            'quickResponseTitle' => ['required', 'string', 'max:200'],
+            'quickResponseContent' => ['required', 'string', 'max:4000'],
+            'quickResponseOrder' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'quickResponseActive' => ['boolean'],
+        ]);
+
+        $payload = [
+            'comando' => ltrim(strtolower(trim($data['quickResponseCommand'])), '/'),
+            'titulo' => trim($data['quickResponseTitle']),
+            'contenido' => trim($data['quickResponseContent']),
+            'tipo' => 'empleado',
+            'activo' => (bool) $data['quickResponseActive'],
+            'orden' => (int) ($data['quickResponseOrder'] ?? 0),
+        ];
+
+        if ($this->editingQuickResponseId) {
+            QuickResponse::query()->findOrFail($this->editingQuickResponseId)->update($payload);
+            $this->settingsNotice = 'Respuesta rápida actualizada correctamente.';
+        } else {
+            QuickResponse::query()->create($payload);
+            $this->settingsNotice = 'Respuesta rápida creada correctamente.';
+        }
+
+        $this->resetQuickResponseForm();
+    }
+
+    public function editQuickResponse(int $quickResponseId): void
+    {
+        abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para administrar respuestas rápidas.');
+
+        $quickResponse = QuickResponse::query()->findOrFail($quickResponseId);
+
+        $this->editingQuickResponseId = $quickResponse->id;
+        $this->quickResponseCommand = (string) $quickResponse->comando;
+        $this->quickResponseTitle = (string) $quickResponse->titulo;
+        $this->quickResponseContent = (string) $quickResponse->contenido;
+        $this->quickResponseOrder = (int) $quickResponse->orden;
+        $this->quickResponseActive = (bool) $quickResponse->activo;
+    }
+
+    public function deleteQuickResponse(int $quickResponseId): void
+    {
+        abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para administrar respuestas rápidas.');
+
+        QuickResponse::query()->whereKey($quickResponseId)->delete();
+        $this->settingsNotice = 'Respuesta rápida eliminada.';
+
+        if ($this->editingQuickResponseId === $quickResponseId) {
+            $this->resetQuickResponseForm();
+        }
+    }
+
+    public function resetQuickResponseForm(): void
+    {
+        $this->editingQuickResponseId = null;
+        $this->quickResponseCommand = '';
+        $this->quickResponseTitle = '';
+        $this->quickResponseContent = '';
+        $this->quickResponseOrder = 0;
+        $this->quickResponseActive = true;
+    }
+
     public function sendImage(): void
     {
         $this->sendMessage('imagen');
@@ -346,6 +460,8 @@ class WhatsAppHelpdesk extends Component
         }
 
         if ($type === 'texto') {
+            $this->messageText = $this->expandQuickResponseText($this->messageText);
+
             $this->validate([
                 'messageText' => ['required', 'string', 'max:4000'],
             ]);
@@ -438,5 +554,59 @@ class WhatsAppHelpdesk extends Component
                     ->orWhere('mensajes_no_leidos', '>', 0);
             })
             ->count();
+    }
+
+    private function quickResponseSuggestions()
+    {
+        $text = trim((string) $this->messageText);
+
+        if (!str_starts_with($text, '/')) {
+            return collect();
+        }
+
+        $term = ltrim($text, '/');
+
+        return QuickResponse::query()
+            ->activas()
+            ->tipo('empleado')
+            ->when($term !== '', function ($query) use ($term) {
+                $query->buscar($term);
+            })
+            ->orderBy('orden')
+            ->orderBy('comando')
+            ->limit(8)
+            ->get(['id', 'comando', 'titulo', 'contenido']);
+    }
+
+    private function expandQuickResponseText(string $text): string
+    {
+        $trimmed = trim($text);
+
+        if (!str_starts_with($trimmed, '/')) {
+            return $text;
+        }
+
+        if (!preg_match('/^\/([a-zA-Z0-9_\-]+)(\s+(.*))?$/u', $trimmed, $matches)) {
+            return $text;
+        }
+
+        $command = strtolower(trim($matches[1] ?? ''));
+        $suffix = trim((string) ($matches[3] ?? ''));
+
+        if ($command === '') {
+            return $text;
+        }
+
+        $quickResponse = QuickResponse::query()
+            ->activas()
+            ->tipo('empleado')
+            ->porComando($command)
+            ->first();
+
+        if (!$quickResponse) {
+            return $text;
+        }
+
+        return trim($quickResponse->contenido . ($suffix !== '' ? PHP_EOL . $suffix : ''));
     }
 }
