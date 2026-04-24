@@ -769,6 +769,113 @@
             border-bottom: 0;
         }
 
+        .wa-account-card {
+            border: 1px solid var(--wa-border);
+            border-radius: var(--wa-radius-md);
+            background: linear-gradient(165deg, #ffffff 0%, #f8fbff 100%);
+            padding: 10px;
+            display: grid;
+            gap: 8px;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .wa-account-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+        }
+
+        .wa-account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wa-account-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--wa-text);
+            letter-spacing: .02em;
+        }
+
+        .wa-status-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 3px 9px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .wa-status-pill.success {
+            background: #ecfdf5;
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+
+        .wa-status-pill.warning {
+            background: #fffbeb;
+            color: #b45309;
+            border-color: #fde68a;
+        }
+
+        .wa-status-pill.danger {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        .wa-status-pill.muted {
+            background: #f8fafc;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .wa-account-meta {
+            display: grid;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--wa-text-secondary);
+        }
+
+        .wa-copy-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wa-copy-chip {
+            border: 1px solid #bfdbfe;
+            background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1d4ed8;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+        }
+
+        .wa-copy-chip:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 6px 14px rgba(29, 78, 216, 0.2);
+        }
+
+        .wa-copy-chip.is-copied {
+            background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+            border-color: #86efac;
+            color: #166534;
+            animation: waCopiedPulse .45s ease;
+        }
+
+        @keyframes waCopiedPulse {
+            0% { transform: scale(.94); }
+            60% { transform: scale(1.04); }
+            100% { transform: scale(1); }
+        }
+
         .wa-empty {
             margin: auto;
             text-align: center;
@@ -1229,6 +1336,66 @@
                  </section>
 
                  <section class="wa-card">
+                     <div class="wa-card-title">Usuarios activos del cliente ({{ $clientActiveUsers->count() }})</div>
+
+                     @forelse($clientActiveUsers as $activeUser)
+                         <div class="wa-account-card">
+                             <div class="wa-account-header">
+                                 <div class="wa-account-title">{{ $activeUser['service_name'] ?: $activeUser['service_code'] }}</div>
+                                 <span class="wa-status-pill {{ $activeUser['status']['tone'] }}">{{ $activeUser['status']['label'] }}</span>
+                             </div>
+
+                             <div class="wa-account-meta">
+                                 @if($activeUser['service_code'] === 'SPOTIFY')
+                                     <div>Spotify</div>
+                                     <div class="wa-copy-row">
+                                         <span>Cuenta Admin: {{ $activeUser['account_user'] ?: '-' }} | Clave: {{ $activeUser['account_pass'] ?: '-' }}</span>
+                                         @if($activeUser['account_user'])
+                                             <button type="button" class="wa-copy-chip" data-copy-value="{{ $activeUser['account_user'] }}" data-copy-label-default="Copiar admin" data-copy-label-copied="Admin copiado">Copiar admin</button>
+                                         @endif
+                                         @if($activeUser['account_pass'])
+                                             <button type="button" class="wa-copy-chip" data-copy-value="{{ $activeUser['account_pass'] }}" data-copy-label-default="Copiar clave admin" data-copy-label-copied="Clave copiada">Copiar clave admin</button>
+                                         @endif
+                                     </div>
+                                     <div class="wa-copy-row">
+                                         <span>Cuenta de usuario: {{ $activeUser['spotify_user'] ?: '-' }} | Clave: {{ $activeUser['spotify_pass'] ?: '-' }}</span>
+                                         @if($activeUser['spotify_user'])
+                                             <button type="button" class="wa-copy-chip" data-copy-value="{{ $activeUser['spotify_user'] }}" data-copy-label-default="Copiar usuario" data-copy-label-copied="Usuario copiado">Copiar usuario</button>
+                                         @endif
+                                         @if($activeUser['spotify_pass'])
+                                             <button type="button" class="wa-copy-chip" data-copy-value="{{ $activeUser['spotify_pass'] }}" data-copy-label-default="Copiar clave" data-copy-label-copied="Clave copiada">Copiar clave</button>
+                                         @endif
+                                     </div>
+                                 @else
+                                     <div>Servicio: {{ $activeUser['service_name'] ?: $activeUser['service_code'] }}</div>
+                                     <div>Cuenta: {{ $activeUser['account_id'] ?: '-' }}</div>
+                                     <div class="wa-copy-row">
+                                         <span>Usuario: {{ $activeUser['account_user'] ?: '-' }}</span>
+                                         @if($activeUser['account_user'])
+                                             <button type="button" class="wa-copy-chip" data-copy-value="{{ $activeUser['account_user'] }}" data-copy-label-default="Copiar usuario" data-copy-label-copied="Usuario copiado">Copiar usuario</button>
+                                         @endif
+                                     </div>
+                                     <div class="wa-copy-row">
+                                         <span>Contrasena: {{ $activeUser['account_pass'] ?: '-' }}</span>
+                                         @if($activeUser['account_pass'])
+                                             <button type="button" class="wa-copy-chip" data-copy-value="{{ $activeUser['account_pass'] }}" data-copy-label-default="Copiar clave" data-copy-label-copied="Clave copiada">Copiar clave</button>
+                                         @endif
+                                     </div>
+                                     @if(!in_array($activeUser['service_code'], ['MAGIS', 'FLUJO'], true))
+                                         <div>Perfil: {{ $activeUser['profile'] ?: '-' }}</div>
+                                         <div>PIN de perfil: {{ $activeUser['profile_pin'] ?: '-' }}</div>
+                                     @endif
+                                 @endif
+
+                                 <div>Vence: {{ $activeUser['expires_at'] ? \Carbon\Carbon::parse($activeUser['expires_at'])->format('d/m/Y') : '-' }}</div>
+                             </div>
+                         </div>
+                     @empty
+                         <span style="color: var(--wa-text-secondary); font-size: 13px;">No tiene usuarios activos registrados.</span>
+                     @endforelse
+                 </section>
+
+                 <section class="wa-card">
                      <div class="wa-card-title">Historial de compras</div>
                      @forelse($client?->ventas?->take(6) ?? [] as $sale)
                          <div class="wa-purchase-item">
@@ -1620,6 +1787,61 @@
 
                     event.preventDefault();
                     applySuggestionToComposer(button);
+                });
+            }
+
+            if (!window.__waCopyButtonsBound) {
+                window.__waCopyButtonsBound = true;
+
+                const copyToClipboard = async (text) => {
+                    if (!text) return false;
+
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        return true;
+                    } catch (error) {
+                        const temp = document.createElement('textarea');
+                        temp.value = text;
+                        temp.style.position = 'fixed';
+                        temp.style.opacity = '0';
+                        document.body.appendChild(temp);
+                        temp.focus();
+                        temp.select();
+                        const copied = document.execCommand('copy');
+                        document.body.removeChild(temp);
+                        return copied;
+                    }
+                };
+
+                document.addEventListener('click', async (event) => {
+                    const button = event.target instanceof Element
+                        ? event.target.closest('.wa-copy-chip[data-copy-value]')
+                        : null;
+
+                    if (!(button instanceof HTMLButtonElement)) {
+                        return;
+                    }
+
+                    const value = button.getAttribute('data-copy-value') || '';
+                    if (!value) {
+                        return;
+                    }
+
+                    const original = button.getAttribute('data-copy-label-default') || button.textContent || 'Copiar';
+                    const copiedLabel = button.getAttribute('data-copy-label-copied') || 'Copiado';
+                    const success = await copyToClipboard(value);
+
+                    if (!success) {
+                        return;
+                    }
+
+                    button.classList.add('is-copied');
+                    button.textContent = copiedLabel;
+
+                    setTimeout(() => {
+                        button.classList.remove('is-copied');
+                        button.textContent = original;
+                    }, 1300);
                 });
             }
 

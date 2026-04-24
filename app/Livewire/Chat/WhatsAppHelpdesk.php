@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Chat;
 
+use Carbon\Carbon;
 use App\Models\Chat\ChatSetting;
 use App\Models\ChatMemoriaContacto;
 use App\Models\ChatMemoriaNegocio;
@@ -87,13 +88,15 @@ class WhatsAppHelpdesk extends Component
     public function render()
     {
         $settings = app(ChatSettingsService::class)->all();
+        $activeConversation = $this->activeConversation();
 
         return view('livewire.chat.whatsapp-helpdesk', [
             'conversations' => $this->conversationQuery()->paginate(20),
-            'activeConversation' => $this->activeConversation(),
-            'messages' => $this->activeConversation()
-                ? $this->activeConversation()->mensajes()->with(['empleado', 'cliente'])->get()
+            'activeConversation' => $activeConversation,
+            'messages' => $activeConversation
+                ? $activeConversation->mensajes()->with(['empleado', 'cliente'])->get()
                 : collect(),
+            'clientActiveUsers' => $this->clientActiveUsersForConversation($activeConversation),
             'quickResponseSuggestions' => $this->quickResponseSuggestions(),
             'quickResponses' => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
             'operators' => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
@@ -531,7 +534,14 @@ class WhatsAppHelpdesk extends Component
         }
 
         return Conversacion::query()
-            ->with(['cliente.ventas', 'contactoCanal', 'operadorAsignado', 'operadorEscribiendo'])
+            ->with([
+                'cliente.ventas',
+                'cliente.usuarios.cuenta.valor.servicio',
+                'cliente.usuarios.detalle_venta.perfil',
+                'contactoCanal',
+                'operadorAsignado',
+                'operadorEscribiendo',
+            ])
             ->find($this->activeConversationId);
     }
 
@@ -608,5 +618,93 @@ class WhatsAppHelpdesk extends Component
         }
 
         return trim($quickResponse->contenido . ($suffix !== '' ? PHP_EOL . $suffix : ''));
+    }
+
+    private function clientActiveUsersForConversation(?Conversacion $conversation)
+    {
+        $client = $conversation?->cliente;
+
+        if (! $client) {
+            return collect();
+        }
+
+        return $client->usuarios
+            ->sortBy('fecha_vencimiento')
+            ->values()
+            ->map(function ($user) {
+                $account = $user->cuenta;
+                $serviceCode = strtoupper((string) ($account?->valor?->idser ?? 'SERVICIO'));
+                $serviceName = (string) ($account?->valor?->servicio?->nombreser ?? $serviceCode);
+                $accountUser = trim((string) ($account?->usuariocue ?? ''));
+                $accountPass = trim((string) ($account?->contrasenacue ?? ''));
+                $pin = trim((string) (data_get($user, 'detalle_venta.perfil.pinper') ?? ''));
+                $profileNumber = (int) ($user->perfil ?? 0);
+
+                $displayProfile = $profileNumber > 0 && ! in_array($serviceCode, ['MAGIS', 'FLUJO'], true)
+                    ? (string) $profileNumber
+                    : null;
+
+                $displayPin = $pin !== '' && ! in_array($serviceCode, ['MAGIS', 'FLUJO'], true)
+                    ? $pin
+                    : null;
+
+                $spotifyUser = null;
+                $spotifyPass = null;
+                if ($serviceCode === 'SPOTIFY') {
+                    if ($profileNumber <= 1 || $pin === '') {
+                        $spotifyUser = $accountUser;
+                        $spotifyPass = $accountPass;
+                    } elseif (str_contains($pin, '|')) {
+                        [$spotifyUserPart, $spotifyPassPart] = array_pad(explode('|', $pin, 2), 2, '');
+                        $spotifyUser = trim((string) $spotifyUserPart) !== '' ? trim((string) $spotifyUserPart) : $accountUser;
+                        $spotifyPass = trim((string) $spotifyPassPart) !== '' ? trim((string) $spotifyPassPart) : $accountPass;
+                    } else {
+                        $spotifyUser = $pin;
+                        $spotifyPass = $pin;
+                    }
+                }
+
+                return [
+                    'service_code' => $serviceCode,
+                    'service_name' => $serviceName,
+                    'account_id' => (string) ($account?->idcue ?? ''),
+                    'account_user' => $accountUser,
+                    'account_pass' => $accountPass,
+                    'profile' => $displayProfile,
+                    'profile_pin' => $displayPin,
+                    'spotify_user' => $spotifyUser,
+                    'spotify_pass' => $spotifyPass,
+                    'expires_at' => $user->fecha_vencimiento,
+                    'status' => $this->resolveAccountStatus($account?->caidacue, $account?->activocue, $account?->fechavencue),
+                ];
+            });
+    }
+
+    private function resolveAccountStatus($isDown, $isActive, $expiresAt): array
+    {
+        if ($isActive === false) {
+            return ['label' => 'Inactiva', 'tone' => 'muted'];
+        }
+
+        if ((bool) $isDown) {
+            return ['label' => 'Danada', 'tone' => 'danger'];
+        }
+
+        if (! $expiresAt) {
+            return ['label' => 'Activa', 'tone' => 'success'];
+        }
+
+        $expiration = Carbon::parse($expiresAt)->startOfDay();
+        $today = now()->startOfDay();
+
+        if ($expiration->lessThan($today)) {
+            return ['label' => 'Vencida', 'tone' => 'danger'];
+        }
+
+        if ($expiration->lessThanOrEqualTo($today->copy()->addDays(5))) {
+            return ['label' => 'Por vencer', 'tone' => 'warning'];
+        }
+
+        return ['label' => 'Activa', 'tone' => 'success'];
     }
 }
