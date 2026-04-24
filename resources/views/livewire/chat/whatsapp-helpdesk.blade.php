@@ -3,7 +3,7 @@
         /* ================================================
            DESIGN SYSTEM PREMIUM - INTERCOM / ZENDESK STYLE
            ================================================ */
-        
+
         :root {
             --wa-space-0: 0px;
             --wa-space-1: 4px;
@@ -13,19 +13,19 @@
             --wa-space-5: 20px;
             --wa-space-6: 24px;
             --wa-space-7: 32px;
-            
+
             --wa-radius-sm: 6px;
             --wa-radius-md: 10px;
             --wa-radius-lg: 14px;
             --wa-radius-xl: 20px;
             --wa-radius-full: 9999px;
-            
+
             --wa-shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
             --wa-shadow-md: 0 2px 8px rgba(0,0,0,0.06);
             --wa-shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
-            
+
             --wa-transition: 160ms cubic-bezier(0.2, 0, 0.38, 0.9);
-            
+
             --wa-bg: #f8fafc;
             --wa-panel: #ffffff;
             --wa-border: #e2e8f0;
@@ -44,11 +44,11 @@
             --wa-whatsapp: #128c7e;
             --wa-whatsapp-soft: #dcfce7;
         }
-        
+
         * {
             box-sizing: border-box;
         }
-        
+
         .wa-helpdesk {
             height: calc(100vh - 74px);
             min-height: 620px;
@@ -61,7 +61,7 @@
             line-height: 1.4;
             -webkit-font-smoothing: antialiased;
         }
-        
+
         .wa-column {
             min-height: 0;
             background: var(--wa-panel);
@@ -69,12 +69,12 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .wa-right {
             border-right: 0;
             background: var(--wa-bg);
         }
-        
+
         .wa-toolbar {
             padding: var(--wa-space-4);
             border-bottom: 1px solid var(--wa-border);
@@ -86,18 +86,18 @@
             top: 0;
             z-index: 10;
         }
-        
+
         /* ================================================
            HEADER WHATSAPP PREMIUM
            ================================================ */
-        
+
         .wa-header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: var(--wa-space-1);
         }
-        
+
         .wa-title {
             margin: 0;
             font-size: 18px;
@@ -107,7 +107,7 @@
             align-items: center;
             gap: var(--wa-space-2);
         }
-        
+
         .wa-channel-badge {
             display: inline-flex;
             align-items: center;
@@ -119,13 +119,64 @@
             font-size: 12px;
             font-weight: 600;
         }
-        
+
         .wa-header-actions {
             display: flex;
             gap: var(--wa-space-2);
             align-items: center;
         }
-        
+
+        .wa-pager {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .wa-pager-meta {
+            font-size: 12px;
+            color: var(--wa-text-secondary);
+            font-weight: 500;
+        }
+
+        .wa-pager-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .wa-page-btn {
+            min-width: 34px;
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid var(--wa-border);
+            border-radius: var(--wa-radius-sm);
+            background: #fff;
+            color: var(--wa-text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--wa-transition);
+        }
+
+        .wa-page-btn:hover {
+            border-color: var(--wa-accent);
+            color: var(--wa-accent);
+        }
+
+        .wa-page-btn.active {
+            background: var(--wa-accent);
+            border-color: var(--wa-accent);
+            color: #fff;
+        }
+
+        .wa-page-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
         .wa-icon-btn {
             width: 36px;
             height: 36px;
@@ -140,16 +191,16 @@
             transition: var(--wa-transition);
             font-size: 16px;
         }
-        
+
         .wa-icon-btn:hover {
             background: var(--wa-bg);
             color: var(--wa-text);
         }
-        
+
         /* ================================================
            BUSCADOR Y FILTROS MODERNO
            ================================================ */
-        
+
         .wa-search {
             width: 100%;
             border: 1px solid var(--wa-border);
@@ -164,18 +215,18 @@
             background-position: 12px center;
             background-size: 18px;
         }
-        
+
         .wa-search:focus {
             outline: none;
             border-color: var(--wa-accent);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
             background-color: var(--wa-panel);
         }
-        
+
         .wa-search::placeholder {
             color: var(--wa-text-tertiary);
         }
-        
+
         .wa-filters {
             display: flex;
             gap: var(--wa-space-1);
@@ -185,11 +236,11 @@
             overflow-x: auto;
             scrollbar-width: none;
         }
-        
+
         .wa-filters::-webkit-scrollbar {
             display: none;
         }
-        
+
         .wa-filter {
             padding: 7px 12px;
             border-radius: var(--wa-radius-sm);
@@ -202,29 +253,29 @@
             transition: var(--wa-transition);
             white-space: nowrap;
         }
-        
+
         .wa-filter:hover {
             color: var(--wa-text);
             background: rgba(0,0,0,0.03);
         }
-        
+
         .wa-filter.active {
             background: var(--wa-panel);
             color: var(--wa-accent);
             font-weight: 600;
             box-shadow: var(--wa-shadow-sm);
         }
-        
+
         /* ================================================
            LISTA CONVERSACIONES INBOX
            ================================================ */
-        
+
         .wa-list {
             overflow-y: auto;
             min-height: 0;
             flex: 1;
         }
-        
+
         .wa-item {
             width: 100%;
             text-align: left;
@@ -236,23 +287,23 @@
             transition: var(--wa-transition);
             position: relative;
         }
-        
+
         .wa-item:hover {
             background: var(--wa-bg);
         }
-        
+
         .wa-item.active {
             background: var(--wa-accent-soft);
             border-left: 3px solid var(--wa-accent);
         }
-        
+
         .wa-item-row {
             display: flex;
             justify-content: space-between;
             gap: var(--wa-space-2);
             align-items: flex-start;
         }
-        
+
         .wa-avatar {
             width: 40px;
             height: 40px;
@@ -266,7 +317,7 @@
             color: var(--wa-text-secondary);
             flex-shrink: 0;
         }
-        
+
         .wa-conversation-content {
             flex: 1;
             min-width: 0;
@@ -274,7 +325,7 @@
             flex-direction: column;
             gap: 2px;
         }
-        
+
         .wa-name {
             font-weight: 600;
             color: var(--wa-text);
@@ -283,12 +334,12 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        
+
         .wa-number {
             color: var(--wa-text-tertiary);
             font-size: 12px;
         }
-        
+
         .wa-preview {
             color: var(--wa-text-secondary);
             font-size: 13px;
@@ -297,14 +348,14 @@
             white-space: nowrap;
             margin-top: 2px;
         }
-        
+
         .wa-time {
             color: var(--wa-text-tertiary);
             font-size: 11px;
             white-space: nowrap;
             flex-shrink: 0;
         }
-        
+
         .wa-meta-row {
             display: flex;
             justify-content: space-between;
@@ -312,7 +363,7 @@
             margin-top: var(--wa-space-2);
             gap: var(--wa-space-2);
         }
-        
+
         .wa-badge {
             display: inline-flex;
             align-items: center;
@@ -325,34 +376,34 @@
             font-weight: 600;
             line-height: 1;
         }
-        
+
         .wa-badge.success { background: var(--wa-success-soft); color: #065f46; }
         .wa-badge.danger { background: var(--wa-danger); color: white; }
         .wa-badge.info { background: var(--wa-accent-soft); color: #1e40af; }
-        
+
         .wa-item-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-top: 6px;
         }
-        
+
         .wa-operator {
             font-size: 11px;
             color: var(--wa-text-tertiary);
         }
-        
+
         /* ================================================
            CHAT CENTRAL
            ================================================ */
-        
+
         .wa-chat {
             min-height: 0;
             display: flex;
             flex-direction: column;
             background: var(--wa-bg);
         }
-        
+
         .wa-chat-header {
             background: var(--wa-panel);
             border-bottom: 1px solid var(--wa-border);
@@ -361,38 +412,38 @@
             top: 0;
             z-index: 10;
         }
-        
+
         .wa-chat-title-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             gap: var(--wa-space-3);
         }
-        
+
         .wa-chat-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-        
+
         .wa-chat-title {
             margin: 0;
             font-size: 16px;
             font-weight: 600;
             color: var(--wa-text);
         }
-        
+
         .wa-chat-subtitle {
             font-size: 13px;
             color: var(--wa-text-secondary);
         }
-        
+
         .wa-chat-actions {
             display: flex;
             gap: var(--wa-space-2);
             flex-wrap: wrap;
         }
-        
+
         .wa-action {
             padding: 8px 14px;
             border-radius: var(--wa-radius-md);
@@ -404,23 +455,23 @@
             color: var(--wa-text);
             transition: var(--wa-transition);
         }
-        
+
         .wa-action:hover {
             border-color: var(--wa-border-hover);
             background: var(--wa-bg);
         }
-        
+
         .wa-action.primary {
             background: var(--wa-accent);
             border-color: var(--wa-accent);
             color: white;
         }
-        
+
         .wa-action.primary:hover {
             background: var(--wa-accent-hover);
             border-color: var(--wa-accent-hover);
         }
-        
+
         .wa-select {
             padding: 8px 12px;
             border-radius: var(--wa-radius-md);
@@ -430,11 +481,11 @@
             font-size: 13px;
             min-width: 160px;
         }
-        
+
         /* ================================================
            MENSAJES Y BURBUJAS
            ================================================ */
-        
+
         .wa-messages {
             flex: 1;
             overflow-y: auto;
@@ -443,27 +494,27 @@
             flex-direction: column;
             gap: var(--wa-space-3);
         }
-        
+
         .wa-message {
             max-width: 65%;
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-        
-        .wa-message.cliente { 
+
+        .wa-message.cliente {
             align-self: flex-start;
         }
-        
-        .wa-message.empleado { 
+
+        .wa-message.empleado {
             align-self: flex-end;
         }
-        
+
         .wa-message.sistema {
             align-self: center;
             max-width: 85%;
         }
-        
+
         .wa-bubble {
             border-radius: var(--wa-radius-lg);
             padding: 10px 14px;
@@ -472,17 +523,17 @@
             max-width: 100%;
             word-wrap: break-word;
         }
-        
+
         .wa-message.cliente .wa-bubble {
             border-bottom-left-radius: 4px;
         }
-        
+
         .wa-message.empleado .wa-bubble {
             background: var(--wa-accent);
             color: white;
             border-bottom-right-radius: 4px;
         }
-        
+
         .wa-message.sistema .wa-bubble {
             background: rgba(0,0,0,0.05);
             color: var(--wa-text-secondary);
@@ -490,32 +541,32 @@
             font-size: 12px;
             padding: 6px 14px;
         }
-        
+
         .wa-media {
             max-width: 320px;
             border-radius: var(--wa-radius-md);
             display: block;
             margin-bottom: 6px;
         }
-        
+
         .wa-message audio {
             width: 280px;
             max-width: 100%;
             height: 44px;
             margin-top: 4px;
         }
-        
+
         .wa-message-time {
             font-size: 11px;
             color: var(--wa-text-tertiary);
             align-self: flex-end;
             margin-top: 2px;
         }
-        
+
         .wa-message.empleado .wa-message-time {
             color: rgba(255,255,255,0.7);
         }
-        
+
         .wa-date-divider {
             align-self: center;
             padding: 4px 12px;
@@ -527,23 +578,23 @@
             box-shadow: var(--wa-shadow-sm);
             margin: 8px 0;
         }
-        
+
         /* ================================================
            INPUT COMPOSER PREMIUM
            ================================================ */
-        
+
         .wa-composer {
             border-top: 1px solid var(--wa-border);
             background: var(--wa-panel);
             padding: var(--wa-space-4);
         }
-        
+
         .wa-compose-row {
             display: flex;
             gap: var(--wa-space-2);
             align-items: flex-end;
         }
-        
+
         .wa-textarea {
             flex: 1;
             min-height: 44px;
@@ -559,18 +610,18 @@
             line-height: 1.5;
             transition: var(--wa-transition);
         }
-        
+
         .wa-textarea:focus {
             outline: none;
             border-color: var(--wa-accent);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
             background: var(--wa-panel);
         }
-        
+
         .wa-textarea::placeholder {
             color: var(--wa-text-tertiary);
         }
-        
+
         .wa-send {
             height: 44px;
             min-width: 80px;
@@ -587,15 +638,15 @@
             justify-content: center;
             gap: 6px;
         }
-        
+
         .wa-send:hover {
             background: var(--wa-accent-hover);
         }
-        
+
         .wa-file-input {
             display: none;
         }
-        
+
         .wa-attach-btn {
             height: 44px;
             width: 44px;
@@ -611,13 +662,13 @@
             font-size: 18px;
             flex-shrink: 0;
         }
-        
+
         .wa-attach-btn:hover {
             border-color: var(--wa-border-hover);
             background: var(--wa-panel);
             color: var(--wa-accent);
         }
-        
+
         .wa-attach-preview {
             display: flex;
             align-items: center;
@@ -627,18 +678,18 @@
             background: var(--wa-bg);
             border-radius: var(--wa-radius-md);
         }
-        
+
         /* ================================================
            PANEL DERECHO FICHA CLIENTE
            ================================================ */
-        
+
         .wa-client-header {
             padding: var(--wa-space-5) var(--wa-space-4);
             background: var(--wa-panel);
             border-bottom: 1px solid var(--wa-border);
             text-align: center;
         }
-        
+
         .wa-client-avatar {
             width: 64px;
             height: 64px;
@@ -652,18 +703,18 @@
             color: var(--wa-accent);
             margin: 0 auto 12px;
         }
-        
+
         .wa-client-name {
             font-size: 18px;
             font-weight: 600;
             margin: 0 0 4px;
         }
-        
+
         .wa-client-phone {
             color: var(--wa-text-secondary);
             font-size: 13px;
         }
-        
+
         .wa-panel-scroll {
             overflow-y: auto;
             min-height: 0;
@@ -673,7 +724,7 @@
             flex-direction: column;
             gap: var(--wa-space-3);
         }
-        
+
         .wa-card {
             background: var(--wa-panel);
             border-radius: var(--wa-radius-md);
@@ -683,19 +734,19 @@
             flex-direction: column;
             gap: 6px;
         }
-        
+
         .wa-card-title {
             font-weight: 600;
             font-size: 13px;
             color: var(--wa-text);
             margin: 0;
         }
-        
+
         .wa-card-value {
             color: var(--wa-text-secondary);
             font-size: 14px;
         }
-        
+
         .wa-tag {
             display: inline-flex;
             padding: 4px 8px;
@@ -705,7 +756,7 @@
             font-size: 12px;
             font-weight: 500;
         }
-        
+
         .wa-purchase-item {
             display: flex;
             justify-content: space-between;
@@ -713,26 +764,26 @@
             padding: 6px 0;
             border-bottom: 1px solid var(--wa-border);
         }
-        
+
         .wa-purchase-item:last-child {
             border-bottom: 0;
         }
-        
+
         .wa-empty {
             margin: auto;
             text-align: center;
             color: var(--wa-text-tertiary);
             padding: var(--wa-space-6);
         }
-        
+
         .wa-back {
             display: none;
         }
-        
+
         /* ================================================
            MODAL CONFIGURACION
            ================================================ */
-        
+
         .wa-modal-overlay {
             position: fixed;
             inset: 0;
@@ -743,7 +794,7 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .wa-modal {
             background: var(--wa-panel);
             border-radius: var(--wa-radius-xl);
@@ -755,25 +806,25 @@
             box-shadow: var(--wa-shadow-lg);
             animation: wa-fadeIn 0.18s ease;
         }
-        
+
         @keyframes wa-fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .wa-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: var(--wa-space-4);
         }
-        
+
         .wa-modal-title {
             font-size: 18px;
             font-weight: 600;
             margin: 0;
         }
-        
+
         .wa-modal-close {
             width: 36px;
             height: 36px;
@@ -785,16 +836,16 @@
             color: var(--wa-text-secondary);
             transition: var(--wa-transition);
         }
-        
+
         .wa-modal-close:hover {
             background: var(--wa-bg);
             color: var(--wa-text);
         }
-        
+
         /* ================================================
            RESPONSIVE
            ================================================ */
-        
+
         @media (max-width: 1180px) {
             .wa-helpdesk {
                 grid-template-columns: 340px 1fr;
@@ -803,14 +854,14 @@
                 display: none;
             }
         }
-        
+
         @media (max-width: 768px) {
             .wa-helpdesk {
                 position: relative;
                 height: calc(100vh - 58px);
                 min-height: 0;
             }
-            
+
             .wa-column:first-child {
                 position: fixed;
                 top: 0;
@@ -823,11 +874,11 @@
                 transition: transform 220ms cubic-bezier(0.2, 0, 0.38, 0.9);
                 box-shadow: 4px 0 24px rgba(0,0,0,0.12);
             }
-            
+
             .wa-helpdesk.wa-sidebar-open .wa-column:first-child {
                 transform: translateX(0);
             }
-            
+
             .wa-helpdesk::after {
                 content: '';
                 position: fixed;
@@ -839,30 +890,30 @@
                 opacity: 0;
                 transition: opacity 180ms ease;
             }
-            
+
             .wa-helpdesk.wa-sidebar-open::after {
                 pointer-events: auto;
                 opacity: 1;
             }
-            
+
             .wa-chat {
                 position: absolute;
                 inset: 0;
                 display: flex;
             }
-            
+
             .wa-back {
                 display: inline-flex;
             }
-            
+
             .wa-messages {
                 padding: var(--wa-space-4);
             }
-            
+
             .wa-message {
                 max-width: 80%;
             }
-            
+
             .wa-toolbar {
                 padding-top: 66px;
             }
@@ -919,7 +970,7 @@
                      $unread = (int) ($conversation->unread_count ?: $conversation->mensajes_no_leidos);
                      $initial = strtoupper(substr($displayName, 0, 1));
                  @endphp
-                 <button wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
+                 <button type="button" wire:key="conversation-{{ $conversation->idconv }}" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
                      <div class="wa-item-row">
                          <div class="wa-avatar">{{ $initial }}</div>
                          <div class="wa-conversation-content">
@@ -954,7 +1005,36 @@
 
          @if($conversations->hasPages())
              <div class="wa-toolbar">
-                 {{ $conversations->links() }}
+                 <div class="wa-pager">
+                     <span class="wa-pager-meta">
+                         Mostrando {{ $conversations->firstItem() }} a {{ $conversations->lastItem() }} de {{ $conversations->total() }}
+                     </span>
+                     <div class="wa-pager-actions">
+                         <button class="wa-page-btn" wire:click="previousConversationsPage" @disabled($conversations->onFirstPage())>
+                             Anterior
+                         </button>
+
+                         @php
+                             $currentPage = $conversations->currentPage();
+                             $lastPage = $conversations->lastPage();
+                             $startPage = max(1, $currentPage - 1);
+                             $endPage = min($lastPage, $currentPage + 1);
+                         @endphp
+
+                         @for($page = $startPage; $page <= $endPage; $page++)
+                             <button
+                                 class="wa-page-btn {{ $page === $currentPage ? 'active' : '' }}"
+                                 wire:click="gotoConversationsPage({{ $page }})"
+                             >
+                                 {{ $page }}
+                             </button>
+                         @endfor
+
+                         <button class="wa-page-btn" wire:click="nextConversationsPage" @disabled(! $conversations->hasMorePages())>
+                             Siguiente
+                         </button>
+                     </div>
+                 </div>
              </div>
          @endif
 
@@ -1114,7 +1194,7 @@
                  <div class="wa-client-name">{{ $client?->nombrecli ?: $activeName }}</div>
                  <div class="wa-client-phone">{{ $client?->telefonocli ?: $activeNumber }}</div>
              </div>
-             
+
              <div class="wa-panel-scroll">
                  <section class="wa-card">
                      <div class="wa-card-title">Información</div>
@@ -1167,6 +1247,12 @@
              </div>
 
              <div style="display: grid; gap: 16px;">
+                 @if($settingsNotice)
+                     <div class="wa-card" style="border: 1px solid #bbf7d0; background: #f0fdf4; color: #166534;">
+                         <div style="font-size: 13px; font-weight: 600;">{{ $settingsNotice }}</div>
+                     </div>
+                 @endif
+
                  <div class="wa-card">
                      <div class="wa-card-title">CHAT_WEBHOOK_TOKEN</div>
                      <input type="text" class="wa-search" style="margin-top: 8px;" wire:model.blur="settings.chat_webhook_token" wire:change="saveSetting('chat_webhook_token', $event.target.value)" placeholder="test_token_123 (desarrollo)">
@@ -1194,6 +1280,71 @@
                  <div class="wa-card">
                      <div class="wa-card-title">Evolution API Key</div>
                      <input type="password" class="wa-search" style="margin-top: 8px;" wire:model.blur="settings.evoapi_api_key" wire:change="saveSetting('evoapi_api_key', $event.target.value)" placeholder="API Key de Evolution">
+                 </div>
+
+                 <hr style="border: 0; border-top: 1px solid var(--wa-border); margin: 4px 0;">
+
+                 <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Instancias WhatsApp</h3>
+                 <div class="wa-card">
+                     <div style="display: grid; gap: 10px;">
+                         <div style="display: grid; gap: 8px; grid-template-columns: 1fr 1fr;">
+                             <input type="text" class="wa-search" wire:model.defer="channelInstanceName" placeholder="instance_name (ej. bot-pagos)">
+                             <input type="text" class="wa-search" wire:model.defer="channelDisplayName" placeholder="Nombre visible">
+                         </div>
+
+                         <div style="display: grid; gap: 8px; grid-template-columns: 1fr 1fr;">
+                             <input type="password" class="wa-search" wire:model.defer="channelApiKey" placeholder="API Key de la instancia">
+                             <input type="text" class="wa-search" wire:model.defer="channelServerUrl" placeholder="https://evoapi.abigailsoft.com">
+                         </div>
+
+                         <div style="display: grid; gap: 8px; grid-template-columns: 1fr 1fr 1fr; align-items: center;">
+                             <select class="wa-search" wire:model.defer="channelColor">
+                                 <option value="verde">Verde</option>
+                                 <option value="azul">Azul</option>
+                                 <option value="otro">Otro</option>
+                             </select>
+                             <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--wa-text-secondary);">
+                                 <input type="checkbox" wire:model.defer="channelIsActive" style="width: 16px; height: 16px;"> Activa
+                             </label>
+                             <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--wa-text-secondary);">
+                                 <input type="checkbox" wire:model.defer="channelOutboundEnabled" style="width: 16px; height: 16px;"> Salida habilitada
+                             </label>
+                         </div>
+
+                         @error('channelInstanceName')<span style="color: var(--wa-danger); font-size: 12px;">{{ $message }}</span>@enderror
+                         @error('channelApiKey')<span style="color: var(--wa-danger); font-size: 12px;">{{ $message }}</span>@enderror
+                         @error('channelServerUrl')<span style="color: var(--wa-danger); font-size: 12px;">{{ $message }}</span>@enderror
+
+                         <div style="display: flex; gap: 8px;">
+                             <button wire:click="saveChannel" class="wa-send" style="flex: 1;">
+                                 {{ $editingChannelId ? 'Actualizar instancia' : 'Guardar instancia' }}
+                             </button>
+                             <button wire:click="resetChannelForm" class="wa-action" style="flex: 1;">Nueva</button>
+                         </div>
+                     </div>
+
+                     <div style="margin-top: 14px; display: grid; gap: 8px; max-height: 220px; overflow-y: auto;">
+                         @forelse($whatsappChannels as $channel)
+                             <div style="display: grid; gap: 6px; padding: 10px; border: 1px solid var(--wa-border); border-radius: 8px;">
+                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                     <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                                         <span style="width: 10px; height: 10px; border-radius: 9999px; display: inline-block; background: {{ $channel->color === 'verde' ? '#10b981' : ($channel->color === 'azul' ? '#2563eb' : '#64748b') }};"></span>
+                                         <strong style="font-size: 13px;">{{ $channel->display_name ?: $channel->instance_name }}</strong>
+                                     </div>
+                                     <div style="display: flex; gap: 6px;">
+                                         <button wire:click="editChannel({{ $channel->id }})" class="wa-action" style="padding: 6px 8px;">Editar</button>
+                                         <button wire:click="deleteChannel({{ $channel->id }})" class="wa-action" style="padding: 6px 8px; border-color: #fecaca; color: #dc2626;">Eliminar</button>
+                                     </div>
+                                 </div>
+                                 <div style="font-size: 12px; color: var(--wa-text-secondary);">
+                                     <div><strong>Instancia:</strong> {{ $channel->instance_name }}</div>
+                                     <div><strong>Estado:</strong> {{ $channel->is_active ? 'Activa' : 'Inactiva' }} | {{ $channel->outbound_enabled ? 'Salida ON' : 'Salida OFF' }}</div>
+                                 </div>
+                             </div>
+                         @empty
+                             <div style="font-size: 13px; color: var(--wa-text-secondary);">No hay instancias registradas todavía.</div>
+                         @endforelse
+                     </div>
                  </div>
 
                  <hr style="border: 0; border-top: 1px solid var(--wa-border); margin: 4px 0;">
@@ -1234,6 +1385,22 @@
                      </div>
                  </div>
 
+                 <div class="wa-card" style="border: 1px solid #fecaca; background: #fef2f2;">
+                     <div class="wa-card-title" style="color: #b91c1c;">Zona de Riesgo</div>
+                     <div style="font-size: 12px; color: #7f1d1d; line-height: 1.5;">
+                         Esto borra solo historial interno de Streamify (conversaciones, mensajes, contactos y memoria).
+                         No elimina mensajes ni historial en WhatsApp/Evolution API.
+                     </div>
+                     <button
+                         wire:click="clearInternalChatHistory"
+                         wire:confirm="¿Seguro que deseas borrar todo el historial interno de chats? Esta acción no se puede deshacer."
+                         class="wa-action"
+                         style="margin-top: 10px; border-color: #fca5a5; color: #b91c1c;"
+                     >
+                         🗑️ Borrar historial interno
+                     </button>
+                 </div>
+
                  <div style="margin-top: 8px;">
                      <button wire:click="$toggle('showSettingsModal')" class="wa-send" style="width: 100%;">Cerrar</button>
                  </div>
@@ -1252,7 +1419,39 @@
                     }
                 }, 100);
             });
-            
+
+            Livewire.on('chat-clear-composer', () => {
+                const textarea = document.querySelector('.wa-textarea');
+                if (textarea) {
+                    textarea.value = '';
+                }
+            });
+
+            Livewire.on('chat-notification-sound', () => {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) return;
+                    const context = new AudioContext();
+                    const oscillator = context.createOscillator();
+                    const gain = context.createGain();
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 840;
+                    gain.gain.value = 0.04;
+
+                    oscillator.connect(gain);
+                    gain.connect(context.destination);
+
+                    oscillator.start();
+                    setTimeout(() => {
+                        oscillator.stop();
+                        context.close();
+                    }, 150);
+                } catch (e) {
+                    // Ignorar si el navegador bloquea audio sin interacción previa.
+                }
+            });
+
             // Cerrar sidebar al clickear el overlay
             document.querySelector('.wa-helpdesk')?.addEventListener('click', (e) => {
                 if (e.target.classList.contains('wa-helpdesk') && e.target.classList.contains('wa-sidebar-open')) {

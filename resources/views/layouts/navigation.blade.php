@@ -38,7 +38,6 @@
     <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}?v={{ filemtime(public_path('css/enhanced-table-global.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}?v={{ filemtime(public_path('css/modal-system.css')) }}">
 
-
     @yield('styles')
     @livewireStyles
 </head>

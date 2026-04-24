@@ -3,13 +3,22 @@
 namespace App\Livewire\Chat;
 
 use App\Models\Chat\ChatSetting;
+use App\Models\ChatMemoriaContacto;
+use App\Models\ChatMemoriaNegocio;
+use App\Models\ChatMemoriaResumen;
+use App\Models\ChatMensajeCanal;
+use App\Models\ChatContactoCanal;
+use App\Models\ChatWhatsappChannel;
 use App\Models\Conversacion;
 use App\Models\Empleado;
+use App\Models\Mensaje;
 use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -36,9 +45,30 @@ class WhatsAppHelpdesk extends Component
 
     public bool $showSettingsModal = false;
 
+    public ?int $editingChannelId = null;
+
+    public string $channelInstanceName = '';
+
+    public string $channelDisplayName = '';
+
+    public string $channelApiKey = '';
+
+    public string $channelServerUrl = '';
+
+    public string $channelColor = 'otro';
+
+    public bool $channelIsActive = true;
+
+    public bool $channelOutboundEnabled = true;
+
+    public int $lastUnreadConversations = 0;
+
+    public ?string $settingsNotice = null;
+
     public function mount(): void
     {
         abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para acceder al chat.');
+        $this->lastUnreadConversations = $this->unreadConversationsCount();
     }
 
     public function render()
@@ -53,7 +83,36 @@ class WhatsAppHelpdesk extends Component
                 : collect(),
             'operators' => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
             'settings' => $settings,
+            'whatsappChannels' => ChatWhatsappChannel::query()
+                ->orderByDesc('is_active')
+                ->orderBy('instance_name')
+                ->get(),
         ]);
+    }
+
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function previousConversationsPage(): void
+    {
+        $this->previousPage();
+    }
+
+    public function nextConversationsPage(): void
+    {
+        $this->nextPage();
+    }
+
+    public function gotoConversationsPage(int $page): void
+    {
+        $this->gotoPage($page);
     }
 
     public function selectConversation(int $conversationId): void
@@ -66,6 +125,7 @@ class WhatsAppHelpdesk extends Component
 
         $this->activeConversationId = $conversation->idconv;
         $this->mobilePane = 'chat';
+        $this->lastUnreadConversations = $this->unreadConversationsCount();
         $this->dispatch('chat-scroll-bottom');
     }
 
@@ -76,6 +136,14 @@ class WhatsAppHelpdesk extends Component
 
     public function refreshChat(): void
     {
+        $currentUnread = $this->unreadConversationsCount();
+
+        if ($currentUnread > $this->lastUnreadConversations) {
+            $this->dispatch('chat-notification-sound');
+        }
+
+        $this->lastUnreadConversations = $currentUnread;
+
         if ($this->activeConversationId) {
             $this->dispatch('chat-scroll-bottom');
         }
@@ -141,6 +209,107 @@ class WhatsAppHelpdesk extends Component
         Cache::forget('chat.settings');
     }
 
+    public function saveChannel(): void
+    {
+        abort_if(Gate::denies('chat.supervisor') && Gate::denies('chat.responder'), 403, 'No tienes permiso para administrar instancias.');
+
+        $data = $this->validate([
+            'channelInstanceName' => [
+                'required',
+                'string',
+                'max:120',
+                Rule::unique('chat_whatsapp_channels', 'instance_name')->ignore($this->editingChannelId),
+            ],
+            'channelDisplayName' => ['nullable', 'string', 'max:120'],
+            'channelApiKey' => ['required', 'string', 'max:191'],
+            'channelServerUrl' => ['nullable', 'string', 'max:191'],
+            'channelColor' => ['required', Rule::in(['verde', 'azul', 'otro'])],
+            'channelIsActive' => ['boolean'],
+            'channelOutboundEnabled' => ['boolean'],
+        ]);
+
+        $channel = $this->editingChannelId
+            ? ChatWhatsappChannel::query()->findOrFail($this->editingChannelId)
+            : new ChatWhatsappChannel();
+
+        $channel->instance_name = trim($data['channelInstanceName']);
+        $channel->display_name = trim((string) $data['channelDisplayName']) !== ''
+            ? trim((string) $data['channelDisplayName'])
+            : trim($data['channelInstanceName']);
+        $channel->api_key = $data['channelApiKey'];
+        $channel->server_url = trim((string) $data['channelServerUrl']) !== ''
+            ? trim((string) $data['channelServerUrl'])
+            : (string) config('services.evoapi.base_url');
+        $channel->color = $data['channelColor'];
+        $channel->is_active = (bool) $data['channelIsActive'];
+        $channel->outbound_enabled = (bool) $data['channelOutboundEnabled'];
+        $channel->save();
+
+        $this->resetChannelForm();
+    }
+
+    public function editChannel(int $channelId): void
+    {
+        abort_if(Gate::denies('chat.supervisor') && Gate::denies('chat.responder'), 403, 'No tienes permiso para administrar instancias.');
+
+        $channel = ChatWhatsappChannel::query()->findOrFail($channelId);
+
+        $this->editingChannelId = $channel->id;
+        $this->channelInstanceName = (string) $channel->instance_name;
+        $this->channelDisplayName = (string) ($channel->display_name ?? '');
+        $this->channelApiKey = (string) $channel->api_key;
+        $this->channelServerUrl = (string) $channel->server_url;
+        $this->channelColor = (string) $channel->color;
+        $this->channelIsActive = (bool) $channel->is_active;
+        $this->channelOutboundEnabled = (bool) $channel->outbound_enabled;
+    }
+
+    public function deleteChannel(int $channelId): void
+    {
+        abort_if(Gate::denies('chat.supervisor') && Gate::denies('chat.responder'), 403, 'No tienes permiso para administrar instancias.');
+
+        ChatWhatsappChannel::query()->whereKey($channelId)->delete();
+
+        if ($this->editingChannelId === $channelId) {
+            $this->resetChannelForm();
+        }
+    }
+
+    public function resetChannelForm(): void
+    {
+        $this->editingChannelId = null;
+        $this->channelInstanceName = '';
+        $this->channelDisplayName = '';
+        $this->channelApiKey = '';
+        $this->channelServerUrl = '';
+        $this->channelColor = 'otro';
+        $this->channelIsActive = true;
+        $this->channelOutboundEnabled = true;
+    }
+
+    public function clearInternalChatHistory(): void
+    {
+        abort_if(Gate::denies('chat.supervisor') && Gate::denies('chat.responder'), 403, 'No tienes permiso para limpiar historial.');
+
+        DB::transaction(function () {
+            ChatMensajeCanal::query()->delete();
+            Mensaje::query()->delete();
+            ChatMemoriaResumen::query()->delete();
+            ChatMemoriaContacto::query()->delete();
+            ChatMemoriaNegocio::query()->delete();
+            Conversacion::query()->delete();
+            ChatContactoCanal::query()->delete();
+        });
+
+        $this->activeConversationId = null;
+        $this->mobilePane = 'list';
+        $this->messageText = '';
+        $this->imageUpload = null;
+        $this->audioUpload = null;
+        $this->lastUnreadConversations = 0;
+        $this->settingsNotice = 'Historial interno de chats limpiado correctamente.';
+    }
+
     public function sendText(): void
     {
         $this->sendMessage('texto');
@@ -196,7 +365,11 @@ class WhatsAppHelpdesk extends Component
             $file
         );
 
-        $this->reset(['messageText', 'imageUpload', 'audioUpload']);
+        $this->messageText = '';
+        $this->imageUpload = null;
+        $this->audioUpload = null;
+
+        $this->dispatch('chat-clear-composer');
         $this->dispatch('chat-scroll-bottom');
     }
 
@@ -254,5 +427,16 @@ class WhatsAppHelpdesk extends Component
     private function operator(): ?Empleado
     {
         return Auth::guard('empleado')->user() ?? Auth::user();
+    }
+
+    private function unreadConversationsCount(): int
+    {
+        return (int) Conversacion::query()
+            ->where('canal_principal', 'whatsapp')
+            ->where(function ($q) {
+                $q->where('unread_count', '>', 0)
+                    ->orWhere('mensajes_no_leidos', '>', 0);
+            })
+            ->count();
     }
 }

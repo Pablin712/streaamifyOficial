@@ -89,3 +89,29 @@ Streamify envía:
 - `tipo_contenido` (cuando aplique)
 - `media_url` (cuando aplique)
 - `media_mime_type` (cuando aplique)
+
+## Tabla recomendada a agregar
+tabla whatsapp
+| id | instance_name | api_key | server_url | color |
+
+por el momento hay dos números de whatsApp
+1. | id: 1 | instance_name: bot-pagos | api_key: 68E6084D0489-44B9-909A-632E54ACDD64 | server_url: https://evoapi.abigailsoft.com | color: verde |
+2. | id: 2 | instance_name: "Streamify Azul" | api_key: 040E38A519FF-405D-9860-D083DFE9754F | server_url: https://evoapi.abigailsoft.com | color: azul |
+
+Para enviar mensajes usemos directamente la api de evo api aquí mismo, sin pasar por n8n
+POST https://evoapi.abigailsoft.com/message/sendText/{instance_name}
+Headers:
+- apiKey: {api_key}
+Body:
+```json
+{
+  "number": "{numero}",
+  "text": "{mensaje}"
+}
+```
+entonces cuando se responde mensaje a un usuario, además de guardar el mensaje en la base de datos Streamify, también envía en la api de evo api el mensaje al cliente en el whatsapp donde escribió.
+
+
+Entonces para recibir mensajes de clientes, si usamos n8n, n8n se encarga de guardar los mensajes en la base de datos, del cliente y del whatsapp de donde escribió (la nueva tabla de whatsapp tendría relación con los channels o chats, no sé como está estructuradas esas tablas tendrás que acomodar y explicarme como hiciste).
+
+Y para responder al cliente, se escribe desde chat Streamify, se guarda la respuesta, y se manda ese mensaje al evo api para que el cliente lo pueda ver, de esa forma mientras los clientes chatean por WhatsApp, los empleados chatean por Messenger Streamify, y todo quedaría hecho y listo

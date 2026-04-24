@@ -11,20 +11,10 @@ use Illuminate\Support\Facades\Http;
 class WhatsAppOutboundService
 {
     /**
-     * Envía mensaje de texto - intenta primero n8n, luego Evolution API
+     * Envía mensaje de texto directo por Evolution API
      */
     public function sendText(string $number, string $message, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
     {
-        // 1. Intentar n8n primero
-        $webhookUrl = config('services.n8n.client_message_webhook');
-        if ($webhookUrl) {
-            $result = $this->sendViaN8n($webhookUrl, $instance, $apiKey, $number, $message);
-            if ($result['ok']) {
-                return $result;
-            }
-        }
-
-        // 2. Fallback a Evolution API
         if (! $apiKey || ! $instance) {
             return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
         }
@@ -47,22 +37,6 @@ class WhatsAppOutboundService
     }
 
     // --- Métodos privados simples ---
-
-    private function sendViaN8n(string $url, ?string $instance, ?string $apiKey, string $number, string $message): array
-    {
-        try {
-            $response = Http::timeout(20)->post($url, [
-                'instance_name' => $instance,
-                'instance_apikey' => $apiKey,
-                'numero' => $this->formatNumber($number),
-                'mensaje' => $message,
-            ]);
-
-            return ['ok' => $response->successful(), 'external_message_id' => $response->json('key.id')];
-        } catch (\Throwable $e) {
-            return ['ok' => false, 'error' => $e->getMessage()];
-        }
-    }
 
     private function sendViaEvolution(string $number, string $message, string $instance, string $apiKey, ?string $serverUrl): array
     {

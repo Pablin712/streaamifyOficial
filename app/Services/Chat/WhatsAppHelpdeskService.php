@@ -6,13 +6,13 @@ use App\Events\Chat\ChatMessageReceived;
 use App\Events\Chat\ChatMessageSent;
 use App\Models\ChatContactoCanal;
 use App\Models\ChatMensajeCanal;
+use App\Models\ChatWhatsappChannel;
 use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Empleado;
 use App\Models\Mensaje;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -93,6 +93,8 @@ class WhatsAppHelpdeskService
     {
         $phone = $this->normalizePhone($payload['telefono'] ?? $payload['numero'] ?? $channelUserId);
         $cliente = $this->findClienteByPhone($phone, $payload['idcli'] ?? null);
+        $channel = $this->resolveChannelFromPayload($payload);
+        $metadata = $this->buildChannelMetadata($payload, $channel);
 
         $contact = ChatContactoCanal::firstOrCreate(
             ['canal' => 'whatsapp', 'canal_user_id' => $channelUserId],
@@ -101,6 +103,7 @@ class WhatsAppHelpdeskService
                 'nombre_canal' => $payload['nombre'] ?? null,
                 'idcli' => $cliente?->idcli,
                 'estado_relacion' => $cliente ? 'cliente' : 'lead',
+                'metadata' => $metadata,
                 'last_seen_at' => now(),
             ]
         );
@@ -111,6 +114,7 @@ class WhatsAppHelpdeskService
             'nombre_canal' => $payload['nombre'] ?? $contact->nombre_canal,
             'idcli' => $cliente?->idcli ?? $contact->idcli,
             'estado_relacion' => $cliente ? 'cliente' : $contact->estado_relacion,
+            'metadata' => array_merge($contact->metadata ?? [], $metadata),
             'last_seen_at' => now(),
         ]);
 
@@ -215,7 +219,7 @@ class WhatsAppHelpdeskService
 
         // Manejar archivos
         $storedUrl = null;
-        $mimeType = null;
+            $mimeType = null;
 
         if ($file) {
             $folder = match ($type) {
@@ -376,6 +380,46 @@ class WhatsAppHelpdeskService
         return preg_replace('/@.+$/', '', trim($phone));
     }
 
+    private function resolveChannelFromPayload(array $payload): ?ChatWhatsappChannel
+    {
+        $instance = trim((string) ($payload['instance'] ?? $payload['instance_name'] ?? ''));
+        $apiKey = trim((string) ($payload['apikey'] ?? $payload['instance_apikey'] ?? ''));
+        $serverUrl = trim((string) ($payload['server_url'] ?? config('services.evoapi.base_url')));
+
+        if ($instance !== '' && $apiKey !== '') {
+            ChatWhatsappChannel::query()->updateOrCreate(
+                ['instance_name' => $instance],
+                [
+                    'display_name' => $payload['display_name'] ?? $instance,
+                    'api_key' => $apiKey,
+                    'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
+                    'color' => in_array(($payload['color'] ?? null), ['verde', 'azul', 'otro'], true)
+                        ? $payload['color']
+                        : (strtolower($instance) === 'bot-pagos' ? 'verde' : 'azul'),
+                    'is_active' => true,
+                    'outbound_enabled' => true,
+                    'metadata' => [
+                        'source' => 'helpdesk-auto-sync',
+                        'last_seen_at' => now()->toIso8601String(),
+                    ],
+                ]
+            );
+        }
+
+        return $this->outbound->resolveChannelByInstance($instance !== '' ? $instance : null);
+    }
+
+    private function buildChannelMetadata(array $payload, ?ChatWhatsappChannel $channel): array
+    {
+        return array_filter([
+            'instance' => $payload['instance'] ?? $payload['instance_name'] ?? $channel?->instance_name,
+            'apikey' => $payload['apikey'] ?? $payload['instance_apikey'] ?? $channel?->api_key,
+            'server_url' => $payload['server_url'] ?? $channel?->server_url,
+            'whatsapp_channel_id' => $channel?->id,
+            'whatsapp_color' => $payload['color'] ?? $channel?->color,
+        ], fn ($value) => $value !== null && $value !== '');
+    }
+
     /**
      * Envía mensaje a WhatsApp vía Evolution o n8n
      */
@@ -387,41 +431,48 @@ class WhatsAppHelpdeskService
             return ['ok' => false, 'error' => 'Conversación sin contacto asociado'];
         }
 
-        $number = $contacto->canal_user_id;
-        $instance = $contacto->metadata['instance'] ?? null;
-        $apiKey = $contacto->metadata['apikey'] ?? null;
-        $serverUrl = $contacto->metadata['server_url'] ?? null;
+            $contactMetadata = is_array($contacto->metadata) ? $contacto->metadata : [];
+            $conversationMetadata = is_array($conversation->metadata) ? $conversation->metadata : [];
 
-        // Si es texto, usar servicio directo
+            $number = (string) ($contacto->canal_user_id ?: $contacto->telefono_normalizado ?: '');
+            $instance = $contactMetadata['instance']
+                ?? $conversationMetadata['instance']
+                ?? null;
+            $apiKey = $contactMetadata['apikey']
+                ?? $conversationMetadata['apikey']
+                ?? null;
+            $serverUrl = $contactMetadata['server_url']
+                ?? $conversationMetadata['server_url']
+                ?? null;
+
+            $channelId = $contactMetadata['whatsapp_channel_id']
+                ?? $conversationMetadata['whatsapp_channel_id']
+                ?? null;
+
+            $channel = null;
+            if ($channelId) {
+                $channel = ChatWhatsappChannel::query()->find($channelId);
+            }
+
+            if (! $channel && $instance) {
+                $channel = $this->outbound->resolveChannelByInstance((string) $instance);
+            }
+
+            $instance = $instance ?: $channel?->instance_name;
+            $apiKey = $apiKey ?: $channel?->api_key;
+            $serverUrl = $serverUrl ?: $channel?->server_url;
+
+            if ($number === '') {
+                return ['ok' => false, 'error' => 'No hay número destino en el contacto.'];
+            }
+
+            // Si es texto, enviar directo por Evo API
         if ($type === 'texto') {
             return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl);
         }
 
-        // Para media usar n8n
-        $webhookUrl = $this->settings->get('n8n_webhook_url', config('services.n8n.client_message_webhook'));
-
-        if (empty($webhookUrl)) {
-            return ['ok' => false, 'error' => 'No configurado webhook n8n'];
-        }
-
-        try {
-            $response = Http::timeout(20)->post($webhookUrl, [
-                'numero' => $number,
-                'mensaje' => $content,
-                'tipo_contenido' => $type,
-                'media_url' => $mediaUrl,
-                'instance_name' => $instance,
-                'instance_apikey' => $apiKey,
-            ]);
-
-            return [
-                'ok' => $response->successful(),
-                'external_message_id' => $response->json('key.id'),
-                'error' => $response->successful() ? null : 'Error envío',
-            ];
-        } catch (\Throwable $e) {
-            return ['ok' => false, 'error' => $e->getMessage()];
-        }
+            // Media: por ahora también se procesa como texto/dispatch directo
+            return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl);
     }
 
     /**

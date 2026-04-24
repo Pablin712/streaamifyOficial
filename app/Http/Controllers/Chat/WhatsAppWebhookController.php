@@ -14,6 +14,12 @@ class WhatsAppWebhookController extends Controller
 
     public function inbound(Request $request)
     {
+        $request->merge([
+            'instance' => $request->input('instance') ?: $request->input('instance_name'),
+            'apikey' => $request->input('apikey') ?: $request->input('instance_apikey'),
+            'numero' => $request->input('numero') ?: $request->input('numero_persona'),
+        ]);
+
         $expectedToken = (string) app(ChatSettingsService::class)->get('chat_webhook_token', config('services.n8n.chat_webhook_token'));
         $providedToken = (string) ($request->header('X-Chat-Webhook-Token') ?: $request->input('token'));
 

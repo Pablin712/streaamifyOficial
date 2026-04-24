@@ -9,6 +9,7 @@ use App\Models\ChatMemoriaNegocio;
 use App\Models\ChatMemoriaResumen;
 use App\Models\ChatMensajeCanal;
 use App\Models\ChatSubagente;
+use App\Models\ChatWhatsappChannel;
 use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
@@ -39,6 +40,12 @@ class ChatRouterController extends Controller
 
     public function recibirMensaje(Request $request)
     {
+        $request->merge([
+            'instance' => $request->input('instance') ?: $request->input('instance_name'),
+            'apikey' => $request->input('apikey') ?: $request->input('instance_apikey'),
+            'numero' => $request->input('numero') ?: $request->input('numero_persona'),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'canal' => 'required|in:' . implode(',', self::CANALES),
             'canal_user_id' => 'required|string|max:120',
@@ -85,6 +92,11 @@ class ChatRouterController extends Controller
                 $canalUserId = trim((string) $request->input('canal_user_id'));
                 $telefono = $this->normalizePhone($request->input('telefono') ?? $request->input('numero') ?? $canalUserId);
                 $cliente = $this->resolveCliente($request->input('idcli'), $telefono);
+
+                if ($canal === 'whatsapp') {
+                    $this->upsertWhatsappChannelFromRequest($request);
+                }
+
                 $whatsappChannel = $this->resolveWhatsappChannel($request->input('instance'));
                 $whatsappColor = $whatsappChannel?->color ?? $this->resolveWhatsappColorByInstance($request->input('instance'));
 
@@ -393,6 +405,11 @@ class ChatRouterController extends Controller
 
     public function responderAgente(Request $request)
     {
+        $request->merge([
+            'instance' => $request->input('instance') ?: $request->input('instance_name'),
+            'apikey' => $request->input('apikey') ?: $request->input('instance_apikey'),
+        ]);
+
         $validator = Validator::make($request->all(), [
             'idconv' => 'nullable|exists:conversaciones,idconv',
             'canal' => 'nullable|in:' . implode(',', self::CANALES),
@@ -921,5 +938,37 @@ class ChatRouterController extends Controller
         }
 
         return strtolower(trim((string) $instance)) === 'bot-pagos' ? 'verde' : 'azul';
+    }
+
+    private function upsertWhatsappChannelFromRequest(Request $request): ?ChatWhatsappChannel
+    {
+        $instance = trim((string) $request->input('instance'));
+        $apiKey = trim((string) $request->input('apikey'));
+
+        if ($instance === '' || $apiKey === '') {
+            return null;
+        }
+
+        $serverUrl = trim((string) $request->input('server_url', config('services.evoapi.base_url')));
+        $color = $request->input('color')
+            ?: $request->input('whatsapp_color')
+            ?: $this->resolveWhatsappColorByInstance($instance)
+            ?: 'otro';
+
+        return ChatWhatsappChannel::query()->updateOrCreate(
+            ['instance_name' => $instance],
+            [
+                'display_name' => $request->input('display_name') ?: $instance,
+                'api_key' => $apiKey,
+                'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
+                'color' => in_array($color, ['verde', 'azul', 'otro'], true) ? $color : 'otro',
+                'is_active' => true,
+                'outbound_enabled' => true,
+                'metadata' => array_filter([
+                    'source' => 'router-auto-sync',
+                    'last_seen_at' => now()->toIso8601String(),
+                ]),
+            ]
+        );
     }
 }
