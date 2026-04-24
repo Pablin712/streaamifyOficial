@@ -123,34 +123,31 @@ class WhatsAppHelpdeskService
 
     /**
      * Obtiene o crea una conversación
+     * Garantiza UN SOLO registro por canal_contacto_id (evita duplicados)
      */
     private function getOrCreateConversation(ChatContactoCanal $contact, array $payload): Conversacion
     {
-        // Primero buscar conversación abierta
-        $conversation = Conversacion::where('canal_contacto_id', $contact->id)
-            ->whereIn('estado', ['nueva', 'abierto', 'asignado', 'atendiendo', 'en_espera'])
-            ->latest('last_message_at')
-            ->first();
-
-        // Si no, buscar última cerrada
-        if (! $conversation) {
-            $conversation = Conversacion::where('canal_contacto_id', $contact->id)
-                ->whereIn('estado', ['cerrado', 'cerrada'])
-                ->latest('closed_at')
-                ->first();
-        }
-
-        // Si ninguna, crear nueva
-        if (! $conversation) {
-            $conversation = Conversacion::create([
+        // Usar firstOrCreate para garantizar unicidad: UN solo registro por contacto
+        $conversation = Conversacion::firstOrCreate(
+            ['canal_contacto_id' => $contact->id],
+            [
                 'idcli' => $contact->idcli,
                 'canal_principal' => 'whatsapp',
-                'canal_contacto_id' => $contact->id,
                 'origen' => $payload['origen'] ?? 'n8n',
                 'estado' => 'nueva',
                 'mensajes_no_leidos' => 0,
                 'ultima_actividad' => now(),
                 'last_message_at' => now(),
+            ]
+        );
+
+        // Si la conversación estaba cerrada y recibe un nuevo mensaje, reabrir
+        if (in_array($conversation->estado, ['cerrado', 'cerrada', 'resuelto'])) {
+            $conversation->update([
+                'estado' => 'abierto',
+                'ultima_actividad' => now(),
+                'last_message_at' => now(),
+                'closed_at' => null,
             ]);
         }
 
