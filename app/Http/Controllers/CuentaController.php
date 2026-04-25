@@ -11,7 +11,11 @@ use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use App\Models\Historial;
 use App\Models\Deuda;
+use App\Models\ChatContactoCanal;
+use App\Models\ChatMensajeCanal;
 use App\Models\ChatWhatsappChannel;
+use App\Models\Conversacion;
+use App\Models\Mensaje;
 use App\Services\CuentaService;
 use App\Services\BancoService;
 use App\Services\NetflixCodigoService;
@@ -666,10 +670,7 @@ class CuentaController extends Controller
 
         $cuenta = Cuenta::with(['valor.proveedor', 'valor.servicio'])->findOrFail($idcue);
 
-        $channel = ChatWhatsappChannel::query()
-            ->availableForOutbound()
-            ->whereRaw('LOWER(instance_name) = ?', ['bot-pagos'])
-            ->first();
+        $channel = $this->resolveProviderOutboundChannel();
 
         if (! $channel) {
             return response()->json([
@@ -714,6 +715,25 @@ class CuentaController extends Controller
             ], 422);
         }
 
+        $registro = null;
+        try {
+            $registro = $this->persistProviderOutbound(
+                telefonoNormalizado: $telefonoNormalizado,
+                telefonoOriginal: $validated['telefono'],
+                mensaje: trim($validated['mensaje']),
+                empleado: $empleado,
+                channel: $channel,
+                proveedorNombre: $validated['proveedor'] ?: ($cuenta->valor->proveedor->nombrepro ?? 'Proveedor'),
+                source: 'provider-modal',
+                dispatch: $dispatch,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Error persistiendo mensaje enviado a proveedor en chat', [
+                'idcue' => $cuenta->idcue,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // 2. Historial (sin bloquear la respuesta si falla)
         try {
             Historial::create([
@@ -729,6 +749,10 @@ class CuentaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Mensaje enviado correctamente al proveedor por ' . ($channel->display_name ?: $channel->instance_name) . '.',
+            'data' => [
+                'idconv' => $registro['conversacion']->idconv ?? null,
+                'idmsg' => $registro['mensaje']->idmsg ?? null,
+            ],
         ]);
     }
 
@@ -844,10 +868,7 @@ class CuentaController extends Controller
             })
             ->implode("\n\n");
 
-        $channel = ChatWhatsappChannel::query()
-            ->availableForOutbound()
-            ->whereRaw('LOWER(instance_name) = ?', ['bot-pagos'])
-            ->first();
+        $channel = $this->resolveProviderOutboundChannel();
 
         if (! $channel) {
             return response()->json([
@@ -892,6 +913,25 @@ class CuentaController extends Controller
             ], 422);
         }
 
+        $registro = null;
+        try {
+            $registro = $this->persistProviderOutbound(
+                telefonoNormalizado: $telefonoNormalizado,
+                telefonoOriginal: $telefonoProveedor,
+                mensaje: $mensaje,
+                empleado: $empleado,
+                channel: $channel,
+                proveedorNombre: $proveedor->nombrepro ?? 'Proveedor',
+                source: 'provider-inventory-modal',
+                dispatch: $dispatch,
+            );
+        } catch (\Throwable $e) {
+            Log::error('Error persistiendo inventario enviado a proveedor en chat', [
+                'proveedor_id' => $proveedor->idpro,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // 2. Historial
         try {
             Historial::create([
@@ -907,7 +947,155 @@ class CuentaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Inventario enviado correctamente al proveedor por ' . ($channel->display_name ?: $channel->instance_name) . '.',
+            'data' => [
+                'idconv' => $registro['conversacion']->idconv ?? null,
+                'idmsg' => $registro['mensaje']->idmsg ?? null,
+            ],
         ]);
+    }
+
+    private function resolveProviderOutboundChannel(): ?ChatWhatsappChannel
+    {
+        return ChatWhatsappChannel::query()
+            ->availableForOutbound()
+            ->whereRaw('LOWER(instance_name) = ?', ['bot-pagos'])
+            ->first();
+    }
+
+    private function persistProviderOutbound(
+        string $telefonoNormalizado,
+        string $telefonoOriginal,
+        string $mensaje,
+        $empleado,
+        ChatWhatsappChannel $channel,
+        string $proveedorNombre,
+        string $source,
+        array $dispatch
+    ): array {
+        return DB::transaction(function () use (
+            $telefonoNormalizado,
+            $telefonoOriginal,
+            $mensaje,
+            $empleado,
+            $channel,
+            $proveedorNombre,
+            $source,
+            $dispatch
+        ) {
+            $contacto = ChatContactoCanal::query()->firstOrCreate(
+                [
+                    'canal' => 'whatsapp',
+                    'canal_user_id' => $telefonoNormalizado,
+                ],
+                [
+                    'telefono_normalizado' => $telefonoNormalizado,
+                    'telefono' => $telefonoOriginal,
+                    'nombre' => $proveedorNombre,
+                    'idcli' => null,
+                    'estado_relacion' => 'lead',
+                    'origen' => $source,
+                    'metadata' => [
+                        'instance' => $channel->instance_name,
+                        'server_url' => $channel->server_url,
+                        'whatsapp_channel_id' => $channel->id,
+                        'contact_type' => 'provider',
+                    ],
+                    'last_seen_at' => now(),
+                ]
+            );
+
+            $contactMetadata = array_merge($contacto->metadata ?? [], [
+                'instance' => $channel->instance_name,
+                'server_url' => $channel->server_url,
+                'whatsapp_channel_id' => $channel->id,
+                'contact_type' => 'provider',
+            ]);
+
+            $contacto->fill([
+                'telefono_normalizado' => $telefonoNormalizado,
+                'telefono' => $telefonoOriginal,
+                'nombre' => $proveedorNombre,
+                'metadata' => $contactMetadata,
+                'last_seen_at' => now(),
+            ])->save();
+
+            $conversacion = Conversacion::query()->firstOrCreate(
+                ['canal_contacto_id' => $contacto->id],
+                [
+                    'idcli' => null,
+                    'canal_principal' => 'whatsapp',
+                    'origen' => $source,
+                    'estado' => 'atendiendo',
+                    'ultima_actividad' => now(),
+                    'last_message_at' => now(),
+                    'mensajes_no_leidos' => 0,
+                    'unread_count' => 0,
+                    'requiere_humano' => false,
+                ]
+            );
+
+            $conversationMetadata = array_merge($conversacion->metadata ?? [], [
+                'instance' => $channel->instance_name,
+                'server_url' => $channel->server_url,
+                'whatsapp_channel_id' => $channel->id,
+                'contact_type' => 'provider',
+            ]);
+
+            $conversacion->fill([
+                'estado' => 'atendiendo',
+                'ultimo_idemp' => $empleado->idemp,
+                'ultima_actividad' => now(),
+                'last_message_at' => now(),
+                'metadata' => $conversationMetadata,
+            ])->save();
+
+            $mensajeModel = Mensaje::create([
+                'idconv' => $conversacion->idconv,
+                'tipo_remitente' => 'empleado',
+                'idemp' => $empleado->idemp,
+                'contenido' => $mensaje,
+                'tipo_contenido' => 'texto',
+                'leido' => true,
+                'delivered_at' => ($dispatch['ok'] ?? false) ? now() : null,
+                'error_message' => ($dispatch['ok'] ?? false) ? null : ($dispatch['error'] ?? 'No se pudo enviar a WhatsApp'),
+                'metadata' => [
+                    'source' => $source,
+                    'channel_id' => $channel->id,
+                    'channel_color' => $channel->color,
+                    'channel_instance' => $channel->instance_name,
+                    'contact_type' => 'provider',
+                ],
+            ]);
+
+            $canalMensaje = ChatMensajeCanal::create([
+                'idmsg' => $mensajeModel->idmsg,
+                'idconv' => $conversacion->idconv,
+                'contacto_canal_id' => $contacto->id,
+                'canal' => 'whatsapp',
+                'direccion' => 'outbound',
+                'external_message_id' => $dispatch['external_message_id'] ?? null,
+                'external_status' => ($dispatch['ok'] ?? false) ? 'sent' : 'failed',
+                'payload' => [
+                    'source' => $source,
+                    'instance' => $channel->instance_name,
+                    'server_url' => $channel->server_url,
+                    'whatsapp_channel_id' => $channel->id,
+                    'contact_type' => 'provider',
+                    'dispatch' => [
+                        'ok' => $dispatch['ok'] ?? false,
+                        'error' => $dispatch['error'] ?? null,
+                        'external_message_id' => $dispatch['external_message_id'] ?? null,
+                    ],
+                ],
+            ]);
+
+            return [
+                'contacto' => $contacto,
+                'conversacion' => $conversacion,
+                'mensaje' => $mensajeModel,
+                'canal_mensaje' => $canalMensaje,
+            ];
+        });
     }
 
     public function pedirCodigoNetflix(Request $request, $idcue)
