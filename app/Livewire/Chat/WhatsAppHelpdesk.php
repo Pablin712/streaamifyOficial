@@ -65,6 +65,8 @@ class WhatsAppHelpdesk extends Component
 
     public int $lastUnreadConversations = 0;
 
+    public ?string $lastActiveMessageFingerprint = null;
+
     public ?string $settingsNotice = null;
 
     public ?int $editingQuickResponseId = null;
@@ -83,6 +85,7 @@ class WhatsAppHelpdesk extends Component
     {
         abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para acceder al chat.');
         $this->lastUnreadConversations = $this->unreadConversationsCount();
+        $this->lastActiveMessageFingerprint = $this->activeConversationMessageFingerprint();
     }
 
     public function render()
@@ -144,6 +147,7 @@ class WhatsAppHelpdesk extends Component
         $this->activeConversationId = $conversation->idconv;
         $this->mobilePane = 'chat';
         $this->lastUnreadConversations = $this->unreadConversationsCount();
+        $this->lastActiveMessageFingerprint = $this->conversationMessageFingerprint($conversation);
         $this->dispatch('chat-scroll-bottom');
     }
 
@@ -163,8 +167,45 @@ class WhatsAppHelpdesk extends Component
         $this->lastUnreadConversations = $currentUnread;
 
         if ($this->activeConversationId) {
-            $this->dispatch('chat-scroll-bottom');
+            $currentFingerprint = $this->activeConversationMessageFingerprint();
+
+            if ($currentFingerprint !== $this->lastActiveMessageFingerprint) {
+                $this->lastActiveMessageFingerprint = $currentFingerprint;
+                $this->dispatch('chat-scroll-bottom');
+            }
         }
+    }
+
+    private function activeConversationMessageFingerprint(): ?string
+    {
+        $conversation = $this->activeConversation();
+
+        if (! $conversation) {
+            return null;
+        }
+
+        return $this->conversationMessageFingerprint($conversation);
+    }
+
+    private function conversationMessageFingerprint(Conversacion $conversation): ?string
+    {
+        $latestMessage = $conversation->mensajes()
+            ->select(['idmsg', 'updated_at', 'created_at'])
+            ->latest('idmsg')
+            ->first();
+
+        if (! $latestMessage) {
+            return 'conversation:'.$conversation->idconv.':empty';
+        }
+
+        $timestamp = $latestMessage->updated_at ?? $latestMessage->created_at;
+
+        return implode(':', [
+            'conversation',
+            $conversation->idconv,
+            $latestMessage->idmsg,
+            optional($timestamp)->toISOString(),
+        ]);
     }
 
     public function markTyping(): void

@@ -266,6 +266,48 @@
             box-shadow: var(--wa-shadow-sm);
         }
 
+        .wa-channel-meta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .wa-channel-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            flex: 0 0 auto;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.04);
+        }
+
+        .wa-channel-dot.verde {
+            background: #10b981;
+        }
+
+        .wa-channel-dot.azul {
+            background: #2563eb;
+        }
+
+        .wa-channel-dot.otro {
+            background: #94a3b8;
+        }
+
+        .wa-channel-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: var(--wa-text-secondary);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
         /* ================================================
            LISTA CONVERSACIONES INBOX
            ================================================ */
@@ -1076,6 +1118,14 @@
                      $lastMessage = $conversation->ultimoMensaje;
                      $unread = (int) ($conversation->unread_count ?: $conversation->mensajes_no_leidos);
                      $initial = strtoupper(substr($displayName, 0, 1));
+                     $channelColor = data_get($conversation->metadata, 'whatsapp_color')
+                         ?? data_get($conversation->contactoCanal?->metadata, 'whatsapp_color')
+                         ?? 'otro';
+                     $channelLabel = match ($channelColor) {
+                         'verde' => 'WA Verde',
+                         'azul' => 'WA Azul',
+                         default => 'WhatsApp',
+                     };
                  @endphp
                  <button type="button" wire:key="conversation-{{ $conversation->idconv }}" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
                      <div class="wa-item-row">
@@ -1085,7 +1135,13 @@
                                  <span class="wa-name">{{ $displayName }}</span>
                                  <span class="wa-time">{{ optional($conversation->last_message_at ?: $conversation->ultima_actividad)->format('H:i') }}</span>
                              </div>
-                             <span class="wa-number">{{ $number }}</span>
+                            <div class="wa-channel-meta">
+                                <span class="wa-number">{{ $number }}</span>
+                                <span class="wa-channel-label">
+                                    <span class="wa-channel-dot {{ $channelColor }}"></span>
+                                    {{ $channelLabel }}
+                                </span>
+                            </div>
                              <div class="wa-preview">
                                  {{ $lastMessage?->contenido ?: match($lastMessage?->tipo_contenido) {
                                      'imagen' => '📷 Imagen',
@@ -1169,6 +1225,14 @@
                     && $activeConversation->operator_typing_at->gt(now()->subSeconds(8))
                     && $typingOperator->idemp !== auth()->user()?->idemp;
                 $clientInitial = strtoupper(substr($activeName, 0, 1));
+                $activeChannelColor = data_get($activeConversation->metadata, 'whatsapp_color')
+                    ?? data_get($activeConversation->contactoCanal?->metadata, 'whatsapp_color')
+                    ?? 'otro';
+                $activeChannelLabel = match ($activeChannelColor) {
+                    'verde' => 'WA Verde',
+                    'azul' => 'WA Azul',
+                    default => 'WhatsApp',
+                };
             @endphp
 
             <header class="wa-chat-header">
@@ -1178,7 +1242,13 @@
                             <button wire:click="backToList" class="wa-icon-btn wa-back" type="button">←</button>
                             <div>
                                 <h2 class="wa-chat-title">{{ $activeName }}</h2>
-                                <div class="wa-chat-subtitle">{{ $activeNumber }}</div>
+                                <div class="wa-chat-subtitle wa-channel-meta">
+                                    <span>{{ $activeNumber }}</span>
+                                    <span class="wa-channel-label">
+                                        <span class="wa-channel-dot {{ $activeChannelColor }}"></span>
+                                        {{ $activeChannelLabel }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
