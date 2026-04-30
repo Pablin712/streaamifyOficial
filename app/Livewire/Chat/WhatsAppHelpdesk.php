@@ -16,6 +16,7 @@ use App\Models\Mensaje;
 use App\Models\QuickResponse;
 use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -24,14 +25,12 @@ use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
-use Livewire\WithPagination;
 
 class WhatsAppHelpdesk extends Component
 {
     use WithFileUploads;
-    use WithPagination;
 
-    public string $filter = 'nuevas';
+    public string $filter = 'todos';
 
     public string $search = '';
 
@@ -81,6 +80,14 @@ class WhatsAppHelpdesk extends Component
 
     public bool $quickResponseActive = true;
 
+    public array $paginators = [];
+
+    public int $conversationsLimit = 25;
+
+    public int $messagesLimit = 80;
+
+    public string $activeMessageSearch = '';
+
     public function mount(): void
     {
         abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para acceder al chat.');
@@ -92,13 +99,19 @@ class WhatsAppHelpdesk extends Component
     {
         $settings = app(ChatSettingsService::class)->all();
         $activeConversation = $this->activeConversation();
+        $activeMessages = $this->conversationMessages($activeConversation);
+        $activeContactIdentity = $this->contactIdentity($activeConversation);
+        $conversationsData = $this->conversationList();
 
         return view('livewire.chat.whatsapp-helpdesk', [
-            'conversations' => $this->conversationQuery()->paginate(20),
+            'conversations' => $conversationsData['items'],
+            'conversationsHasMore' => $conversationsData['has_more'],
+            'conversationsLoaded' => $conversationsData['loaded'],
             'activeConversation' => $activeConversation,
-            'messages' => $activeConversation
-                ? $activeConversation->mensajes()->with(['empleado', 'cliente'])->get()
-                : collect(),
+            'messages' => $activeMessages['items'],
+            'messagesHasMore' => $activeMessages['has_more'],
+            'messagesLoaded' => $activeMessages['loaded'],
+            'activeContactIdentity' => $activeContactIdentity,
             'clientActiveUsers' => $this->clientActiveUsersForConversation($activeConversation),
             'quickResponseSuggestions' => $this->quickResponseSuggestions(),
             'quickResponses' => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
@@ -113,27 +126,12 @@ class WhatsAppHelpdesk extends Component
 
     public function updatingSearch(): void
     {
-        $this->resetPage();
+        $this->conversationsLimit = 25;
     }
 
     public function updatingFilter(): void
     {
-        $this->resetPage();
-    }
-
-    public function previousConversationsPage(): void
-    {
-        $this->previousPage();
-    }
-
-    public function nextConversationsPage(): void
-    {
-        $this->nextPage();
-    }
-
-    public function gotoConversationsPage(int $page): void
-    {
-        $this->gotoPage($page);
+        $this->conversationsLimit = 25;
     }
 
     public function selectConversation(int $conversationId): void
@@ -145,10 +143,150 @@ class WhatsAppHelpdesk extends Component
         $conversation->marcarComoLeida();
 
         $this->activeConversationId = $conversation->idconv;
+        $this->messagesLimit = 80;
+        $this->activeMessageSearch = '';
         $this->mobilePane = 'chat';
         $this->lastUnreadConversations = $this->unreadConversationsCount();
         $this->lastActiveMessageFingerprint = $this->conversationMessageFingerprint($conversation);
         $this->dispatch('chat-scroll-bottom');
+    }
+
+    public function updatingActiveMessageSearch(): void
+    {
+        $this->messagesLimit = 120;
+    }
+
+    public function loadOlderMessages(): void
+    {
+        $this->requireConversation();
+        $this->messagesLimit = min(600, $this->messagesLimit + 80);
+    }
+
+    public function loadMoreConversations(): void
+    {
+        $this->conversationsLimit = min(500, $this->conversationsLimit + 25);
+    }
+
+    public function contactIdentity(?Conversacion $conversation): array
+    {
+        if (! $conversation) {
+            return [
+                'type' => 'desconocido',
+                'label' => 'Desconocido',
+                'tone' => 'muted',
+            ];
+        }
+
+        $contact = $conversation->contactoCanal;
+        $conversationMeta = (array) ($conversation->metadata ?? []);
+        $contactMeta = (array) ($contact?->metadata ?? []);
+
+        if ($conversation->idcli || $contact?->idcli) {
+            return [
+                'type' => 'cliente',
+                'label' => 'Cliente',
+                'tone' => 'success',
+            ];
+        }
+
+        $declaredType = strtolower(trim((string) (
+            $conversationMeta['tipo_contacto']
+            ?? $contactMeta['tipo_contacto']
+            ?? $conversationMeta['contact_type']
+            ?? $contactMeta['contact_type']
+            ?? $conversationMeta['role']
+            ?? $contactMeta['role']
+            ?? ''
+        )));
+
+        if (str_contains($declaredType, 'proveedor') || str_contains($declaredType, 'provider')) {
+            return [
+                'type' => 'proveedor',
+                'label' => 'Proveedor',
+                'tone' => 'warning',
+            ];
+        }
+
+        $channelUserId = strtolower(trim((string) ($contact?->canal_user_id ?? '')));
+        if (str_ends_with($channelUserId, '@g.us') || str_contains($declaredType, 'grupo') || str_contains($declaredType, 'group')) {
+            return [
+                'type' => 'grupo',
+                'label' => 'Grupo',
+                'tone' => 'info',
+            ];
+        }
+
+        $origin = strtolower(trim((string) ($conversation->origen ?? $contact?->origen ?? '')));
+        $isBot = (bool) ($conversationMeta['is_bot'] ?? $contactMeta['is_bot'] ?? false);
+        if ($isBot || str_contains($declaredType, 'bot') || str_contains($origin, 'bot')) {
+            return [
+                'type' => 'bot',
+                'label' => 'Bot',
+                'tone' => 'bot',
+            ];
+        }
+
+        return [
+            'type' => 'desconocido',
+            'label' => 'No clasificado',
+            'tone' => 'muted',
+        ];
+    }
+
+    public function setContactType(string $type): void
+    {
+        abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para clasificar contactos.');
+        $this->requireConversation();
+
+        abort_unless(in_array($type, ['cliente', 'proveedor', 'grupo', 'bot', 'desconocido'], true), 422, 'Tipo de contacto no valido.');
+
+        $conversation = $this->activeConversation();
+        $contact = $conversation?->contactoCanal;
+
+        if (! $conversation) {
+            return;
+        }
+
+        $conversationMetadata = array_merge((array) ($conversation->metadata ?? []), [
+            'tipo_contacto' => $type,
+        ]);
+
+        $conversation->update([
+            'metadata' => $conversationMetadata,
+        ]);
+
+        if ($contact) {
+            $contactMetadata = array_merge((array) ($contact->metadata ?? []), [
+                'tipo_contacto' => $type,
+            ]);
+
+            $contact->update([
+                'metadata' => $contactMetadata,
+            ]);
+        }
+
+        $identity = $this->contactIdentity($conversation->fresh(['contactoCanal']));
+        $this->settingsNotice = 'Contacto clasificado como '.$identity['label'].'.';
+    }
+
+    public function highlightMessageContent(?string $content): string
+    {
+        $value = (string) $content;
+
+        if ($value === '') {
+            return '';
+        }
+
+        $escaped = e($value);
+        $term = trim($this->activeMessageSearch);
+
+        if ($term === '') {
+            return nl2br($escaped);
+        }
+
+        $pattern = '/('.preg_quote($term, '/').')/iu';
+
+        return nl2br((string) preg_replace($pattern, '<mark class="wa-highlight">$1</mark>', $escaped));
     }
 
     public function backToList(): void
@@ -541,6 +679,7 @@ class WhatsAppHelpdesk extends Component
             ->orderByRaw('COALESCE(last_message_at, ultima_actividad, updated_at) DESC');
 
         match ($this->filter) {
+            'todos' => null,
             'nuevas' => $query->whereIn('estado', ['nueva', 'nuevo', 'abierta', 'abierto']),
             'no_leidas' => $query->where(function ($q) {
                 $q->where('unread_count', '>', 0)->orWhere('mensajes_no_leidos', '>', 0);
@@ -568,6 +707,27 @@ class WhatsAppHelpdesk extends Component
         return $query;
     }
 
+    private function conversationList(): array
+    {
+        $query = $this->conversationQuery();
+
+        $conversations = $query
+            ->limit($this->conversationsLimit + 1)
+            ->get();
+
+        $hasMore = $conversations->count() > $this->conversationsLimit;
+
+        if ($hasMore) {
+            $conversations = $conversations->take($this->conversationsLimit);
+        }
+
+        return [
+            'items' => $conversations->values(),
+            'has_more' => $hasMore,
+            'loaded' => $conversations->count(),
+        ];
+    }
+
     private function activeConversation(): ?Conversacion
     {
         if (! $this->activeConversationId) {
@@ -584,6 +744,45 @@ class WhatsAppHelpdesk extends Component
                 'operadorEscribiendo',
             ])
             ->find($this->activeConversationId);
+    }
+
+    private function conversationMessages(?Conversacion $conversation): array
+    {
+        if (! $conversation) {
+            return [
+                'items' => collect(),
+                'has_more' => false,
+                'loaded' => 0,
+            ];
+        }
+
+        $messagesQuery = Mensaje::query()
+            ->where('idconv', $conversation->idconv)
+            ->with(['empleado', 'cliente'])
+            ->orderByDesc('idmsg');
+
+        if (trim($this->activeMessageSearch) !== '') {
+            $search = '%'.trim($this->activeMessageSearch).'%';
+            $messagesQuery->where('contenido', 'like', $search);
+        }
+
+        $messages = $messagesQuery
+            ->limit($this->messagesLimit + 1)
+            ->get();
+
+        $hasMore = $messages->count() > $this->messagesLimit;
+
+        if ($hasMore) {
+            $messages = $messages->take($this->messagesLimit);
+        }
+
+        $messages = $messages->reverse()->values();
+
+        return [
+            'items' => $messages,
+            'has_more' => $hasMore,
+            'loaded' => $messages->count(),
+        ];
     }
 
     private function requireConversation(): void

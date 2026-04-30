@@ -233,7 +233,7 @@ class UsuarioController extends Controller
             'telefono' => 'required|string|max:50',
             'mensaje' => 'required|string|min:3|max:4000',
             'id_cliente' => 'nullable',
-            'channel_preference' => 'nullable|in:verde,alterno',
+            'channel_preference' => 'nullable|in:verde,azul,alterno',
         ]);
 
         $telefonoNormalizado = preg_replace('/\D+/', '', $validated['telefono']);
@@ -245,6 +245,9 @@ class UsuarioController extends Controller
         }
 
         $channelPreference = $validated['channel_preference'] ?? 'verde';
+        if ($channelPreference === 'azul') {
+            $channelPreference = 'alterno';
+        }
         $channel = $this->resolveDeliveryChannel($channelPreference);
 
         if (! $channel) {

@@ -50,8 +50,9 @@
         }
 
         .wa-helpdesk {
-            height: calc(100vh - 74px);
-            min-height: 620px;
+            height: calc(100dvh - 64px);
+            max-height: calc(100dvh - 64px);
+            min-height: 0;
             display: grid;
             grid-template-columns: minmax(320px, 380px) minmax(480px, 1fr) minmax(280px, 360px);
             background: var(--wa-bg);
@@ -60,6 +61,7 @@
             font-size: 14px;
             line-height: 1.4;
             -webkit-font-smoothing: antialiased;
+            overflow: hidden;
         }
 
         .wa-column {
@@ -76,11 +78,11 @@
         }
 
         .wa-toolbar {
-            padding: var(--wa-space-4);
+            padding: 12px;
             border-bottom: 1px solid var(--wa-border);
             display: flex;
             flex-direction: column;
-            gap: var(--wa-space-3);
+            gap: 8px;
             background: var(--wa-panel);
             position: sticky;
             top: 0;
@@ -124,57 +126,6 @@
             display: flex;
             gap: var(--wa-space-2);
             align-items: center;
-        }
-
-        .wa-pager {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .wa-pager-meta {
-            font-size: 12px;
-            color: var(--wa-text-secondary);
-            font-weight: 500;
-        }
-
-        .wa-pager-actions {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .wa-page-btn {
-            min-width: 34px;
-            height: 32px;
-            padding: 0 10px;
-            border: 1px solid var(--wa-border);
-            border-radius: var(--wa-radius-sm);
-            background: #fff;
-            color: var(--wa-text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--wa-transition);
-        }
-
-        .wa-page-btn:hover {
-            border-color: var(--wa-accent);
-            color: var(--wa-accent);
-        }
-
-        .wa-page-btn.active {
-            background: var(--wa-accent);
-            border-color: var(--wa-accent);
-            color: #fff;
-        }
-
-        .wa-page-btn:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
         }
 
         .wa-icon-btn {
@@ -324,7 +275,7 @@
             border: 0;
             border-bottom: 1px solid var(--wa-border);
             background: var(--wa-panel);
-            padding: var(--wa-space-4);
+            padding: 10px 12px;
             cursor: pointer;
             transition: var(--wa-transition);
             position: relative;
@@ -347,15 +298,15 @@
         }
 
         .wa-avatar {
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
             border-radius: var(--wa-radius-full);
             background: var(--wa-bg);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 15px;
+            font-size: 13px;
             color: var(--wa-text-secondary);
             flex-shrink: 0;
         }
@@ -371,7 +322,7 @@
         .wa-name {
             font-weight: 600;
             color: var(--wa-text);
-            font-size: 14px;
+            font-size: 13px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -384,11 +335,11 @@
 
         .wa-preview {
             color: var(--wa-text-secondary);
-            font-size: 13px;
+            font-size: 12px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .wa-time {
@@ -422,17 +373,42 @@
         .wa-badge.success { background: var(--wa-success-soft); color: #065f46; }
         .wa-badge.danger { background: var(--wa-danger); color: white; }
         .wa-badge.info { background: var(--wa-accent-soft); color: #1e40af; }
+        .wa-badge.warning { background: #fef3c7; color: #92400e; }
+        .wa-badge.muted { background: #e2e8f0; color: #334155; }
+        .wa-badge.bot { background: #f3e8ff; color: #7e22ce; }
+        .wa-badge.outline { background: transparent; border: 1px solid var(--wa-border); color: var(--wa-text-secondary); }
 
         .wa-item-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
-        .wa-operator {
+        .wa-operator-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--wa-border);
+            background: #f8fafc;
+            color: #334155;
             font-size: 11px;
-            color: var(--wa-text-tertiary);
+            font-weight: 700;
+            max-width: 65%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wa-operator-chip::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #94a3b8;
+            flex: 0 0 auto;
         }
 
         /* ================================================
@@ -484,6 +460,80 @@
             display: flex;
             gap: var(--wa-space-2);
             flex-wrap: wrap;
+        }
+
+        .wa-chat-search {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .wa-chat-search-meta {
+            font-size: 11px;
+            color: var(--wa-text-tertiary);
+            font-weight: 700;
+        }
+
+        .wa-operator-panel {
+            margin-top: var(--wa-space-3);
+            padding: 12px;
+            border-radius: var(--wa-radius-md);
+            border: 1px solid var(--wa-border);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .wa-operator-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--wa-text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .wa-operator-value {
+            color: var(--wa-text);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .wa-load-older {
+            align-self: center;
+            border: 1px solid var(--wa-border);
+            background: #fff;
+            color: var(--wa-text-secondary);
+            border-radius: var(--wa-radius-full);
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--wa-transition);
+        }
+
+        .wa-load-older:hover {
+            border-color: var(--wa-accent);
+            color: var(--wa-accent);
+        }
+
+        .wa-messages-meta {
+            align-self: center;
+            color: var(--wa-text-tertiary);
+            font-size: 11px;
+            margin-top: -4px;
+        }
+
+        .wa-highlight {
+            background: #fde68a;
+            color: #78350f;
+            padding: 0 2px;
+            border-radius: 4px;
         }
 
         .wa-action {
@@ -789,6 +839,103 @@
             font-size: 14px;
         }
 
+        .wa-profile-card {
+            padding: 16px;
+            border-radius: 18px;
+            background: radial-gradient(circle at top left, #ffffff 0%, #eef4ff 45%, #f8fafc 100%);
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            box-shadow: 0 18px 40px rgba(37, 99, 235, 0.08);
+            display: grid;
+            gap: 14px;
+            text-align: left;
+        }
+
+        .wa-profile-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wa-profile-stack {
+            display: grid;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .wa-profile-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--wa-text);
+            line-height: 1.1;
+        }
+
+        .wa-profile-subtitle {
+            font-size: 12px;
+            color: var(--wa-text-secondary);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .wa-profile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .wa-profile-stat {
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.76);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        .wa-profile-stat-label {
+            font-size: 11px;
+            color: var(--wa-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 700;
+        }
+
+        .wa-profile-stat-value {
+            margin-top: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--wa-text);
+            word-break: break-word;
+        }
+
+        .wa-type-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .wa-type-btn {
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--wa-border);
+            background: rgba(255,255,255,0.72);
+            color: var(--wa-text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--wa-transition);
+        }
+
+        .wa-type-btn:hover {
+            border-color: var(--wa-accent);
+            color: var(--wa-accent);
+        }
+
+        .wa-type-btn.active.success { background: var(--wa-success-soft); border-color: #a7f3d0; color: #065f46; }
+        .wa-type-btn.active.warning { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+        .wa-type-btn.active.info { background: var(--wa-accent-soft); border-color: #bfdbfe; color: #1d4ed8; }
+        .wa-type-btn.active.bot { background: #f3e8ff; border-color: #d8b4fe; color: #7e22ce; }
+        .wa-type-btn.active.muted { background: #e2e8f0; border-color: #cbd5e1; color: #334155; }
+
         .wa-tag {
             display: inline-flex;
             padding: 4px 8px;
@@ -1007,7 +1154,7 @@
         @media (max-width: 768px) {
             .wa-helpdesk {
                 position: relative;
-                height: calc(100vh - 58px);
+                height: calc(100dvh - 58px);
                 min-height: 0;
             }
 
@@ -1090,6 +1237,7 @@
 
              <div class="wa-filters">
                  @foreach([
+                     'todos' => 'Todos',
                      'nuevas' => 'Nuevas',
                      'no_leidas' => 'No leídas',
                      'asignadas_mi' => 'Mías',
@@ -1103,7 +1251,7 @@
              </div>
          </div>
 
-         <div class="wa-list">
+         <div class="wa-list" id="wa-conversations-list">
              @forelse($conversations as $conversation)
                  @php
                      $displayName = $conversation->cliente?->nombrecli
@@ -1126,6 +1274,7 @@
                          'azul' => 'WA Azul',
                          default => 'WhatsApp',
                      };
+                     $contactIdentity = $this->contactIdentity($conversation);
                  @endphp
                  <button type="button" wire:key="conversation-{{ $conversation->idconv }}" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
                      <div class="wa-item-row">
@@ -1155,8 +1304,11 @@
                          </div>
                      </div>
                      <div class="wa-item-footer">
-                         <span class="wa-small">{{ $conversation->operadorAsignado?->nombreemp ?: 'Sin asignar' }}</span>
+                         <span class="wa-operator-chip" title="{{ $conversation->operadorAsignado?->nombreemp ?: 'Sin asignar' }}">
+                             {{ $conversation->operadorAsignado?->nombreemp ?: 'Sin asignar' }}
+                         </span>
                          <div style="display: flex; gap: 6px; align-items: center;">
+                             <span class="wa-badge {{ $contactIdentity['tone'] }}">{{ $contactIdentity['label'] }}</span>
                              @if($unread > 0)
                                  <span class="wa-badge danger">{{ $unread }}</span>
                              @endif
@@ -1166,45 +1318,6 @@
              @empty
                  <div class="wa-empty">No hay conversaciones.</div>
              @endforelse
-         </div>
-
-         @if($conversations->hasPages())
-             <div class="wa-toolbar">
-                 <div class="wa-pager">
-                     <span class="wa-pager-meta">
-                         Mostrando {{ $conversations->firstItem() }} a {{ $conversations->lastItem() }} de {{ $conversations->total() }}
-                     </span>
-                     <div class="wa-pager-actions">
-                         <button class="wa-page-btn" wire:click="previousConversationsPage" @disabled($conversations->onFirstPage())>
-                             Anterior
-                         </button>
-
-                         @php
-                             $currentPage = $conversations->currentPage();
-                             $lastPage = $conversations->lastPage();
-                             $startPage = max(1, $currentPage - 1);
-                             $endPage = min($lastPage, $currentPage + 1);
-                         @endphp
-
-                         @for($page = $startPage; $page <= $endPage; $page++)
-                             <button
-                                 class="wa-page-btn {{ $page === $currentPage ? 'active' : '' }}"
-                                 wire:click="gotoConversationsPage({{ $page }})"
-                             >
-                                 {{ $page }}
-                             </button>
-                         @endfor
-
-                         <button class="wa-page-btn" wire:click="nextConversationsPage" @disabled(! $conversations->hasMorePages())>
-                             Siguiente
-                         </button>
-                     </div>
-                 </div>
-             </div>
-         @endif
-
-         <div class="wa-toolbar" style="border-top: 1px solid var(--wa-border);">
-             <button wire:click="$toggle('showSettingsModal')" class="wa-action" style="width: 100%;">⚙️ Configuración Chat</button>
          </div>
      </aside>
 
@@ -1224,7 +1337,6 @@
                     && $activeConversation->operator_typing_at
                     && $activeConversation->operator_typing_at->gt(now()->subSeconds(8))
                     && $typingOperator->idemp !== auth()->user()?->idemp;
-                $clientInitial = strtoupper(substr($activeName, 0, 1));
                 $activeChannelColor = data_get($activeConversation->metadata, 'whatsapp_color')
                     ?? data_get($activeConversation->contactoCanal?->metadata, 'whatsapp_color')
                     ?? 'otro';
@@ -1233,6 +1345,9 @@
                     'azul' => 'WA Azul',
                     default => 'WhatsApp',
                 };
+                $assignedOperatorName = $activeConversation->operadorAsignado?->nombreemp ?? 'Sin asignar';
+                $typingLabel = $isTyping ? ($typingOperator->nombreemp.' escribiendo...') : 'Sin actividad de escritura';
+                $clientInitial = strtoupper(substr($activeName, 0, 1));
             @endphp
 
             <header class="wa-chat-header">
@@ -1253,6 +1368,7 @@
                         </div>
                     </div>
                     <div class="wa-chat-actions">
+                        <span class="wa-badge {{ $activeContactIdentity['tone'] }}">{{ $activeContactIdentity['label'] }}</span>
                         <span class="wa-badge info">{{ $activeConversation->estado }}</span>
                         <button wire:click="takeConversation" class="wa-action" type="button">Tomar</button>
                         @can('chat.supervisor')
@@ -1271,14 +1387,28 @@
                     </div>
                 </div>
 
-                @if($isTyping)
-                    <div style="margin-top: 8px; color: var(--wa-text-secondary); font-size: 12px;">{{ $typingOperator->nombreemp }} está escribiendo...</div>
-                @elseif($activeConversation->operadorAsignado && $activeConversation->operadorAsignado->idemp !== auth()->user()?->idemp)
-                    <div style="margin-top: 8px; color: var(--wa-text-secondary); font-size: 12px;">Atendido por {{ $activeConversation->operadorAsignado->nombreemp }}</div>
-                @endif
+                <div class="wa-operator-panel">
+                    <div class="wa-operator-main">
+                        Operador
+                        <span class="wa-operator-value">{{ $assignedOperatorName }}</span>
+                    </div>
+                    <div style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <span class="wa-badge {{ $isTyping ? 'success' : 'muted' }}">{{ $typingLabel }}</span>
+                        <span class="wa-badge muted">{{ $messagesLoaded }} mensajes cargados</span>
+                    </div>
+                </div>
+
+                <div class="wa-chat-search">
+                    <input wire:model.live.debounce.300ms="activeMessageSearch" class="wa-search" type="search" placeholder="Buscar dentro de esta conversación">
+                    <span class="wa-chat-search-meta">{{ trim($activeMessageSearch) !== '' ? 'Filtro activo' : 'Sin filtro' }}</span>
+                </div>
             </header>
 
             <section class="wa-messages" id="wa-messages">
+                @if($messagesHasMore)
+                    <button class="wa-load-older" type="button" wire:click="loadOlderMessages">Cargar mensajes anteriores</button>
+                @endif
+                <div class="wa-messages-meta">Mostrando últimos {{ $messagesLoaded }} mensajes</div>
                 @php $lastDate = null; @endphp
                 @foreach($messages as $message)
                     @php
@@ -1308,7 +1438,7 @@
                             @endif
 
                             @if($message->contenido !== '')
-                                <div>{{ $message->contenido }}</div>
+                                <div>{!! $this->highlightMessageContent($message->contenido) !!}</div>
                             @endif
                         </div>
                         <div class="wa-message-time">
@@ -1392,17 +1522,57 @@
              @php
                  $client = $activeConversation->cliente;
                  $firstContact = data_get($activeConversation->metadata, 'primer_contacto_at') ?: optional($activeConversation->created_at)->toIso8601String();
+                 $contactTypeOptions = [
+                     'cliente' => ['label' => 'Cliente', 'tone' => 'success'],
+                     'proveedor' => ['label' => 'Proveedor', 'tone' => 'warning'],
+                     'grupo' => ['label' => 'Grupo', 'tone' => 'info'],
+                     'bot' => ['label' => 'Bot', 'tone' => 'bot'],
+                     'desconocido' => ['label' => 'No clasificado', 'tone' => 'muted'],
+                 ];
              @endphp
-             <div class="wa-client-header">
-                 <div class="wa-client-avatar">{{ $clientInitial }}</div>
-                 <div class="wa-client-name">{{ $client?->nombrecli ?: $activeName }}</div>
-                 <div class="wa-client-phone">{{ $client?->telefonocli ?: $activeNumber }}</div>
+             <div class="wa-client-header wa-profile-card">
+                 <div class="wa-profile-top">
+                     <div class="wa-client-avatar">{{ $clientInitial }}</div>
+                     <div class="wa-profile-stack">
+                         <div class="wa-profile-title">{{ $client?->nombrecli ?: $activeName }}</div>
+                         <div class="wa-profile-subtitle">
+                             <span>{{ $client?->telefonocli ?: $activeNumber }}</span>
+                             <span class="wa-badge {{ $activeContactIdentity['tone'] }}">{{ $activeContactIdentity['label'] }}</span>
+                             <span class="wa-badge outline">{{ $activeChannelLabel }}</span>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="wa-profile-grid">
+                     <div class="wa-profile-stat">
+                         <div class="wa-profile-stat-label">Primer contacto</div>
+                         <div class="wa-profile-stat-value">{{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</div>
+                     </div>
+                     <div class="wa-profile-stat">
+                         <div class="wa-profile-stat-label">Asignación</div>
+                         <div class="wa-profile-stat-value">{{ $assignedOperatorName }}</div>
+                     </div>
+                 </div>
+                 <div>
+                     <div class="wa-card-title" style="margin-bottom: 8px;">Clasificación del contacto</div>
+                     <div class="wa-type-actions">
+                         @foreach($contactTypeOptions as $typeKey => $typeOption)
+                             <button
+                                 type="button"
+                                 wire:click="setContactType('{{ $typeKey }}')"
+                                 class="wa-type-btn {{ $activeContactIdentity['type'] === $typeKey ? 'active '.$typeOption['tone'] : '' }}"
+                             >
+                                 {{ $typeOption['label'] }}
+                             </button>
+                         @endforeach
+                     </div>
+                 </div>
              </div>
 
              <div class="wa-panel-scroll">
                  <section class="wa-card">
                      <div class="wa-card-title">Información</div>
-                     <div class="wa-card-value">Primer contacto: {{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</div>
+                     <div class="wa-card-value">Origen: {{ $activeConversation->origen ?: 'WhatsApp' }}</div>
+                     <div style="font-size: 12px; color: var(--wa-text-secondary); margin-top: 8px;">ID canal: {{ $activeConversation->contactoCanal?->canal_user_id ?: 'Sin dato' }}</div>
                  </section>
 
                  <section class="wa-card">
@@ -1798,6 +1968,44 @@
                 } catch (e) {
                     // Ignorar si el navegador bloquea audio sin interacción previa.
                 }
+            });
+
+            const bindConversationInfiniteScroll = () => {
+                const list = document.getElementById('wa-conversations-list');
+
+                if (!(list instanceof HTMLElement) || list.dataset.infiniteBound === 'true') {
+                    return;
+                }
+
+                list.dataset.infiniteBound = 'true';
+
+                let isLoading = false;
+
+                list.addEventListener('scroll', () => {
+                    if (isLoading) {
+                        return;
+                    }
+
+                    const remaining = list.scrollHeight - list.scrollTop - list.clientHeight;
+
+                    if (remaining > 120) {
+                        return;
+                    }
+
+                    isLoading = true;
+                    @this.call('loadMoreConversations')
+                        .finally(() => {
+                            setTimeout(() => {
+                                isLoading = false;
+                            }, 120);
+                        });
+                }, { passive: true });
+            };
+
+            bindConversationInfiniteScroll();
+
+            Livewire.hook('morphed', () => {
+                bindConversationInfiniteScroll();
             });
 
             if (!window.__waComposerHotkeysBound) {

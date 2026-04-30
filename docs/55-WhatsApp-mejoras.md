@@ -34,16 +34,16 @@ Resultado aplicado:
 - Se muestra el indicador del canal en el encabezado del chat activo.
 
 ### 3. Rediseño del bloque de operador y estado de atención
-Estado: pendiente.
+Estado: implementado (fase 1).
 
 Objetivo:
 - Hacer más atractivo y claro quién atiende la conversación.
 - Diferenciar mejor los estados: sin asignar, atendido por otro operador, en escritura, cerrado, reabierto.
 
-Alcance sugerido:
-- Reemplazar texto plano por chips o tarjetas visuales.
-- Resaltar operador asignado, última actividad y estado del turno.
-- Mejorar contraste, jerarquía tipográfica y espaciado.
+Resultado aplicado:
+- Se reemplazó el texto plano por un panel visual de operador.
+- Se muestran chips de estado de escritura y contador de mensajes cargados.
+- Se mejoró jerarquía visual del encabezado del chat.
 
 Archivos probables:
 - `resources/views/livewire/chat/whatsapp-helpdesk.blade.php`
@@ -84,7 +84,7 @@ Opciones sugeridas:
 - Preferencia de auto-scroll configurable.
 
 ### 6. Rendimiento del panel de mensajería
-Estado: pendiente.
+Estado: implementado (fase 1).
 
 Problemas observados:
 - El módulo usa `wire:poll.3s`, lo que fuerza refrescos completos frecuentes.
@@ -95,11 +95,13 @@ Objetivos:
 - Reducir costo de render y consultas repetidas.
 - Mejorar percepción de inmediatez al enviar.
 
-Líneas de trabajo sugeridas:
-- Reemplazar polling general por eventos o refrescos parciales.
-- Cargar mensajes por bloques al subir en el historial.
-- Mantener cacheados conteos y configuraciones estables.
-- Optimizar consultas del listado y del chat activo.
+Resultado aplicado:
+- La conversación activa ahora carga mensajes por bloques (límite incremental) en vez de traer todo el historial siempre.
+- Se agregó acción "Cargar mensajes anteriores" para aumentar lote sin saturar el render inicial.
+
+Pendiente de fase 2:
+- Reemplazar o reducir polling general por eventos o refrescos parciales.
+- Mantener cacheados más fragmentos de datos estables.
 
 ### 7. Notificaciones en tiempo real más livianas
 Estado: parcial.
@@ -114,7 +116,7 @@ Pendiente:
 ## Prioridad funcional
 
 ### 8. Identificación de contactos por tipo
-Estado: pendiente.
+Estado: implementado (fase 1).
 
 Objetivo:
 - Diferenciar clientes, proveedores, grupos, bots de código y contactos desconocidos.
@@ -123,10 +125,14 @@ Necesidad funcional:
 - Poder registrar un número desconocido como contacto relevante.
 - Soportar contactos que no son clientes pero sí operativos para el negocio.
 
-Diseño propuesto:
-- Campo `tipo_contacto` en la capa de contacto canal.
-- Etiquetas visuales por tipo.
-- Acciones rápidas: guardar como cliente, proveedor o grupo.
+Resultado aplicado:
+- Se agregó clasificación automática de identidad con heurísticas y metadata.
+- Tipos visibles en UI: cliente, proveedor, grupo, bot y no clasificado.
+- Se muestran etiquetas de tipo en la lista de conversaciones y en el header del chat activo.
+
+Pendiente de fase 2:
+- Persistir campo formal `tipo_contacto` en base de datos para clasificación manual explícita.
+- Agregar acciones rápidas para reclasificar contacto desde la interfaz.
 
 ### 9. Registro outbound desde modales operativos
 Estado: parcial.

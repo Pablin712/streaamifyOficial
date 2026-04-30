@@ -137,6 +137,26 @@
                     title="Copiar teléfono">
                     <i class="fas fa-phone"></i>
                 </button>
+                <button type="button" class="btn btn-whatsapp-green btn-sm"
+                    onclick="event.stopPropagation(); enviarWhatsAppUsuario({
+                        idCliente: {{ json_encode($usuario->idcli) }},
+                        cliente: {{ json_encode($usuario->nombre_cliente) }},
+                        telefono: {{ json_encode($usuario->cliente->telefonocli) }},
+                        channelPreference: 'verde'
+                    })"
+                    title="Enviar WhatsApp verde">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
+                <button type="button" class="btn btn-whatsapp-blue btn-sm"
+                    onclick="event.stopPropagation(); enviarWhatsAppUsuario({
+                        idCliente: {{ json_encode($usuario->idcli) }},
+                        cliente: {{ json_encode($usuario->nombre_cliente) }},
+                        telefono: {{ json_encode($usuario->cliente->telefonocli) }},
+                        channelPreference: 'azul'
+                    })"
+                    title="Enviar WhatsApp azul">
+                    <i class="fab fa-whatsapp"></i>
+                </button>
             </td>
         @endif
     </tr>

@@ -114,6 +114,206 @@
         tbody tr.clickable-row input[type="checkbox"] {
             pointer-events: auto;
         }
+
+        .btn-whatsapp-green {
+            background: linear-gradient(135deg, #1fbf63, #128c7e);
+            border-color: #128c7e;
+            color: #ffffff;
+        }
+
+        .btn-whatsapp-green:hover,
+        .btn-whatsapp-green:focus {
+            background: linear-gradient(135deg, #22d06d, #0f7a6e);
+            border-color: #0f7a6e;
+            color: #ffffff;
+        }
+
+        .btn-whatsapp-blue {
+            background: linear-gradient(135deg, #1b7cff, #0d5bd7);
+            border-color: #0d5bd7;
+            color: #ffffff;
+            box-shadow: 0 10px 22px rgba(13, 91, 215, 0.18);
+        }
+
+        .btn-whatsapp-blue:hover,
+        .btn-whatsapp-blue:focus {
+            background: linear-gradient(135deg, #2a89ff, #0a4db8);
+            border-color: #0a4db8;
+            color: #ffffff;
+        }
+
+        .wa-compose-modal {
+            background:
+                radial-gradient(circle at top right, rgba(17, 163, 127, 0.16), transparent 32%),
+                radial-gradient(circle at bottom left, rgba(27, 124, 255, 0.14), transparent 30%),
+                #ffffff;
+        }
+
+        .wa-compose-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.35rem 1.5rem 1rem;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+        }
+
+        .wa-compose-hero-copy {
+            min-width: 0;
+        }
+
+        .wa-compose-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .wa-compose-title {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #f8fafc !important;
+        }
+
+        .wa-compose-subtitle {
+            margin: 0.4rem 0 0;
+            color: rgba(248, 250, 252, 0.8) !important;
+            font-size: 0.92rem;
+        }
+
+        .wa-compose-channel {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 0.9rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .wa-compose-channel-dot {
+            width: 0.7rem;
+            height: 0.7rem;
+            border-radius: 50%;
+            background: #25d366;
+            box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.18);
+        }
+
+        .wa-compose-channel-dot.is-blue {
+            background: #1b7cff;
+            box-shadow: 0 0 0 4px rgba(27, 124, 255, 0.18);
+        }
+
+        .wa-compose-body {
+            padding: 1.35rem 1.5rem 1.5rem;
+        }
+
+        .wa-compose-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .wa-compose-card {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 1rem;
+            background: rgba(248, 250, 252, 0.92);
+            padding: 0.95rem 1rem;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        .wa-compose-label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+        }
+
+        .wa-compose-value {
+            margin: 0;
+            color: #0f172a;
+            font-weight: 600;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .wa-compose-panel {
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 1.1rem;
+            background: #ffffff;
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .wa-compose-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.95rem 1rem;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            background: rgba(248, 250, 252, 0.92);
+        }
+
+        .wa-compose-panel-title {
+            margin: 0;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .wa-compose-counter {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .wa-compose-textarea {
+            min-height: 220px;
+            border: 0;
+            border-radius: 0;
+            resize: vertical;
+            padding: 1rem;
+            font-size: 0.96rem;
+            line-height: 1.6;
+            box-shadow: none !important;
+        }
+
+        .wa-compose-help {
+            margin: 0;
+            padding: 0.85rem 1rem 1rem;
+            font-size: 0.84rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 767.98px) {
+            .wa-compose-hero {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .wa-compose-body {
+                padding: 1rem;
+            }
+        }
     </style>
 @endsection
 @section('h1')
@@ -400,6 +600,70 @@
         </div>
     </x-modal>
 @endif
+
+<x-modal name="enviar-whatsapp-usuario" :show="false" maxWidth="2xl">
+    <div class="wa-compose-modal">
+        <div class="wa-compose-hero">
+            <div class="wa-compose-hero-copy">
+                <div class="wa-compose-kicker">
+                    <i class="fab fa-whatsapp"></i>
+                    Mensajeria directa
+                </div>
+                <h5 class="wa-compose-title">Enviar WhatsApp al cliente</h5>
+                <p class="wa-compose-subtitle">Redacta un mensaje claro y envialo desde el canal correcto sin salir de la tabla.</p>
+            </div>
+            <div class="wa-compose-channel" id="wa_usuario_channel_badge">
+                <span class="wa-compose-channel-dot" id="wa_usuario_channel_dot"></span>
+                <span id="wa_usuario_channel_label">WhatsApp verde</span>
+            </div>
+        </div>
+
+        <div class="wa-compose-body">
+            <div class="wa-compose-meta">
+                <div class="wa-compose-card">
+                    <span class="wa-compose-label">Cliente</span>
+                    <p class="wa-compose-value" id="wa_usuario_cliente">Cliente</p>
+                </div>
+                <div class="wa-compose-card">
+                    <span class="wa-compose-label">Telefono</span>
+                    <p class="wa-compose-value" id="wa_usuario_telefono">Sin telefono</p>
+                </div>
+            </div>
+
+            <div class="wa-compose-panel">
+                <div class="wa-compose-panel-head">
+                    <h6 class="wa-compose-panel-title">Mensaje</h6>
+                    <span class="wa-compose-counter" id="wa_usuario_counter">0 caracteres</span>
+                </div>
+                <textarea
+                    id="wa_usuario_mensaje"
+                    class="form-control wa-compose-textarea"
+                    placeholder="Escribe un mensaje breve, claro y profesional..."
+                ></textarea>
+                <p class="wa-compose-help">Tip: usa un mensaje corto, orientado a accion y con contexto suficiente para el cliente.</p>
+            </div>
+        </div>
+
+        <div class="modal-footer border-top px-4 pb-4 pt-0">
+            <button
+                type="button"
+                class="btn btn-light border"
+                onclick="cerrarModalWhatsAppUsuario()"
+            >
+                Cancelar
+            </button>
+            <button
+                type="button"
+                class="btn btn-whatsapp-green"
+                id="wa_usuario_send_button"
+                onclick="confirmarEnvioWhatsAppUsuario()"
+            >
+                <i class="fab fa-whatsapp me-1"></i>
+                <span id="wa_usuario_send_label">Enviar por WhatsApp verde</span>
+            </button>
+        </div>
+    </div>
+</x-modal>
 @endsection
 @section('scripts')
     <!-- jQuery (debe cargarse primero) -->
@@ -413,6 +677,13 @@
 
     @parent
     <script>
+        const whatsappUsuarioState = {
+            idCliente: null,
+            cliente: 'Cliente',
+            telefono: '',
+            channelPreference: 'verde'
+        };
+
         function showUsuariosToast(message, type = 'success') {
             const toast = document.getElementById('toast-mensaje');
             if (!toast) {
@@ -454,6 +725,164 @@
                 setTimeout(() => toast.style.display = 'none', 500);
             }, 2200);
         }
+
+        function actualizarContadorWhatsAppUsuario() {
+            const textarea = document.getElementById('wa_usuario_mensaje');
+            const counter = document.getElementById('wa_usuario_counter');
+
+            if (!textarea || !counter) {
+                return;
+            }
+
+            const total = textarea.value.trim().length;
+            counter.textContent = `${total} ${total === 1 ? 'caracter' : 'caracteres'}`;
+        }
+
+        function cerrarModalWhatsAppUsuario() {
+            const textarea = document.getElementById('wa_usuario_mensaje');
+            const sendButton = document.getElementById('wa_usuario_send_button');
+
+            if (textarea) {
+                textarea.value = '';
+            }
+
+            if (sendButton) {
+                sendButton.disabled = false;
+            }
+
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'enviar-whatsapp-usuario' }));
+            actualizarContadorWhatsAppUsuario();
+        }
+
+        function enviarWhatsAppUsuario({ idCliente = null, cliente = 'Cliente', telefono = '', channelPreference = 'verde' }) {
+            if (!telefono) {
+                showUsuariosToast('El usuario no tiene un teléfono válido.', 'warning');
+                return;
+            }
+
+            const channelLabel = channelPreference === 'azul' ? 'WhatsApp azul' : 'WhatsApp verde';
+            const channelBadge = document.getElementById('wa_usuario_channel_badge');
+            const channelDot = document.getElementById('wa_usuario_channel_dot');
+            const channelText = document.getElementById('wa_usuario_channel_label');
+            const clienteText = document.getElementById('wa_usuario_cliente');
+            const telefonoText = document.getElementById('wa_usuario_telefono');
+            const textarea = document.getElementById('wa_usuario_mensaje');
+            const sendButton = document.getElementById('wa_usuario_send_button');
+            const sendLabel = document.getElementById('wa_usuario_send_label');
+
+            whatsappUsuarioState.idCliente = idCliente;
+            whatsappUsuarioState.cliente = cliente;
+            whatsappUsuarioState.telefono = telefono;
+            whatsappUsuarioState.channelPreference = channelPreference;
+
+            if (channelText) {
+                channelText.textContent = channelLabel;
+            }
+
+            if (clienteText) {
+                clienteText.textContent = cliente;
+            }
+
+            if (telefonoText) {
+                telefonoText.textContent = telefono;
+            }
+
+            if (textarea) {
+                textarea.value = '';
+            }
+
+            if (sendButton) {
+                sendButton.disabled = false;
+                sendButton.classList.remove('btn-whatsapp-green', 'btn-whatsapp-blue');
+                sendButton.classList.add(channelPreference === 'azul' ? 'btn-whatsapp-blue' : 'btn-whatsapp-green');
+            }
+
+            if (sendLabel) {
+                sendLabel.textContent = `Enviar por ${channelLabel}`;
+            }
+
+            if (channelBadge) {
+                channelBadge.style.background = channelPreference === 'azul'
+                    ? 'rgba(27, 124, 255, 0.14)'
+                    : 'rgba(37, 211, 102, 0.14)';
+            }
+
+            if (channelDot) {
+                channelDot.classList.toggle('is-blue', channelPreference === 'azul');
+            }
+
+            actualizarContadorWhatsAppUsuario();
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'enviar-whatsapp-usuario' }));
+
+            setTimeout(() => {
+                textarea?.focus();
+            }, 120);
+        }
+
+        async function confirmarEnvioWhatsAppUsuario() {
+            const channelLabel = whatsappUsuarioState.channelPreference === 'azul' ? 'WhatsApp azul' : 'WhatsApp verde';
+            const textarea = document.getElementById('wa_usuario_mensaje');
+            const sendButton = document.getElementById('wa_usuario_send_button');
+            const sendLabel = document.getElementById('wa_usuario_send_label');
+            const contenido = textarea?.value.trim() || '';
+
+            if (contenido.length < 3) {
+                showUsuariosToast('El mensaje debe tener al menos 3 caracteres.', 'warning');
+                return;
+            }
+
+            if (sendButton) {
+                sendButton.disabled = true;
+            }
+
+            if (sendLabel) {
+                sendLabel.textContent = 'Enviando...';
+            }
+
+            try {
+                const response = await fetch('{{ route("usuarios.enviarMensajeCliente") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_cliente: whatsappUsuarioState.idCliente,
+                        cliente: whatsappUsuarioState.cliente,
+                        telefono: whatsappUsuarioState.telefono,
+                        mensaje: contenido,
+                        channel_preference: whatsappUsuarioState.channelPreference
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'No se pudo enviar el mensaje.');
+                }
+
+                cerrarModalWhatsAppUsuario();
+                showUsuariosToast(data.message || `Mensaje enviado por ${channelLabel}.`, 'success');
+            } catch (error) {
+                showUsuariosToast(error.message || 'No se pudo enviar el mensaje.', 'warning');
+            } finally {
+                if (sendButton) {
+                    sendButton.disabled = false;
+                }
+
+                if (sendLabel) {
+                    sendLabel.textContent = `Enviar por ${channelLabel}`;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const textarea = document.getElementById('wa_usuario_mensaje');
+
+            if (textarea) {
+                textarea.addEventListener('input', actualizarContadorWhatsAppUsuario);
+            }
+        });
 
         // ========================================================================
         // FUNCIÓN DE MODAL - CAMBIAR USUARIO
