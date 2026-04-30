@@ -785,6 +785,22 @@ class ChatRouterController extends Controller
                     $request->input('media_file_name')
                 );
 
+                if ($request->filled('external_message_id')) {
+                    $chatMensajeExistente = ChatMensajeCanal::query()
+                        ->where('canal', $conversacion->canal_principal)
+                        ->where('external_message_id', $request->input('external_message_id'))
+                        ->first();
+
+                    if ($chatMensajeExistente) {
+                        return [
+                            'conversacion' => $conversacion,
+                            'mensaje' => $chatMensajeExistente->mensaje,
+                            'canal_mensaje' => $chatMensajeExistente,
+                            'duplicado' => true,
+                        ];
+                    }
+                }
+
                 $tipoRemitente = $request->input('tipo_remitente', 'empleado');
 
                 $mensaje = Mensaje::create([
@@ -843,19 +859,23 @@ class ChatRouterController extends Controller
                     'conversacion' => $conversacion->fresh(),
                     'mensaje' => $mensaje,
                     'canal_mensaje' => $canalMensaje,
+                    'duplicado' => false,
                 ];
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Mensaje outbound guardado correctamente (fromMe).',
+                'message' => $resultado['duplicado']
+                    ? 'Mensaje outbound ya estaba registrado (fromMe).'
+                    : 'Mensaje outbound guardado correctamente (fromMe).',
                 'data' => [
                     'idconv' => $resultado['conversacion']->idconv,
                     'idmsg' => $resultado['mensaje']->idmsg,
                     'chat_mensaje_canal_id' => $resultado['canal_mensaje']?->id,
                     'estado_conversacion' => $resultado['conversacion']->estado,
+                    'duplicado' => $resultado['duplicado'],
                 ],
-            ], 201);
+            ], $resultado['duplicado'] ? 200 : 201);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
