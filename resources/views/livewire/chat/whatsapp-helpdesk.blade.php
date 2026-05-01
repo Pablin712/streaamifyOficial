@@ -602,6 +602,10 @@
             align-self: flex-end;
         }
 
+        .wa-message.ia {
+            align-self: flex-end;
+        }
+
         .wa-message.sistema {
             align-self: center;
             max-width: 85%;
@@ -621,6 +625,12 @@
         }
 
         .wa-message.empleado .wa-bubble {
+            background: var(--wa-accent);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .wa-message.ia .wa-bubble {
             background: var(--wa-accent);
             color: white;
             border-bottom-right-radius: 4px;
@@ -656,6 +666,10 @@
         }
 
         .wa-message.empleado .wa-message-time {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .wa-message.ia .wa-message-time {
             color: rgba(255,255,255,0.7);
         }
 
@@ -1443,7 +1457,7 @@
                         </div>
                         <div class="wa-message-time">
                             {{ optional($message->created_at)->format('H:i') }}
-                            @if($message->tipo_remitente === 'empleado')
+                            @if(in_array($message->tipo_remitente, ['empleado', 'ia'], true))
                                 · {{ $message->error_message ? '⚠️ Error' : ($message->delivered_at ? '✓✓ Enviado' : '✓ Pendiente') }}
                             @endif
                         </div>

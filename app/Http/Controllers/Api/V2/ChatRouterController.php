@@ -591,20 +591,22 @@ class ChatRouterController extends Controller
                         ]
                     );
 
+                    $dispatchOk = (bool) ($dispatch['ok'] ?? false);
+
                     $resultado['canal_mensaje']->update([
-                        'external_status' => $dispatch['ok'] ? 'sent' : 'failed',
+                        'external_status' => $dispatchOk ? 'sent' : 'failed',
                         'external_message_id' => $dispatch['external_message_id'] ?? $resultado['canal_mensaje']->external_message_id,
                         'payload' => array_merge($resultado['canal_mensaje']->payload ?? [], [
                             'dispatch' => [
-                                'ok' => $dispatch['ok'],
-                                'status' => $dispatch['status'],
-                                'error' => $dispatch['error'],
-                                'response' => $dispatch['payload'],
+                                'ok' => $dispatchOk,
+                                'status' => $dispatch['status'] ?? null,
+                                'error' => $dispatch['error'] ?? null,
+                                'response' => $dispatch['payload'] ?? ($dispatch['response'] ?? null),
                             ],
                         ]),
                     ]);
 
-                    $whatsappDispatchOk = (bool) $dispatch['ok'];
+                    $whatsappDispatchOk = $dispatchOk;
                 }
             }
 
@@ -647,7 +649,21 @@ class ChatRouterController extends Controller
             $normalizedFromMe = true;
         }
 
-        $rawTipoRemitente = strtolower(trim((string) ($request->input('tipo_remitente') ?? 'empleado')));
+        $rawTipoRemitenteInput = $request->input('tipo_remitente');
+        $hasExplicitTipoRemitente = is_string($rawTipoRemitenteInput) && trim($rawTipoRemitenteInput) !== '';
+
+        $looksLikeAiMessage = (bool) (
+            $request->filled('subagente_codigo')
+            || data_get($payloadData, 'subagente_codigo')
+            || data_get($request->input('metadata', []), 'subagente_codigo')
+            || data_get($request->input('metadata', []), 'origen') === 'ai'
+            || data_get($payloadData, 'metadata.subagente_codigo')
+            || data_get($payloadData, 'metadata.origen') === 'ai'
+        );
+
+        $defaultTipoRemitente = ($normalizedFromMe === true && $looksLikeAiMessage) ? 'ia' : 'empleado';
+
+        $rawTipoRemitente = strtolower(trim((string) ($hasExplicitTipoRemitente ? $rawTipoRemitenteInput : $defaultTipoRemitente)));
         $normalizedTipoRemitente = in_array($rawTipoRemitente, ['empleado', 'ia', 'sistema'], true)
             ? $rawTipoRemitente
             : 'empleado';

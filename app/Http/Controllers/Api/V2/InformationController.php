@@ -129,6 +129,131 @@ class InformationController extends Controller
         }
     }
 
+    public function getPlanesServicio(string $servicio)
+    {
+        try {
+            $servicioModel = Servicio::query()
+                ->where('idser', $servicio)
+                ->orWhere('nombreser', 'LIKE', '%' . $servicio . '%')
+                ->first();
+
+            if (!$servicioModel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Servicio no encontrado',
+                ], 404);
+            }
+
+            $productos = Producto::with(['detalles.servicio', 'categoria'])
+                ->where('activo', true)
+                ->whereHas('detalles', function ($query) use ($servicioModel) {
+                    $query->where('idser', $servicioModel->idser);
+                })
+                ->orderBy('preciopro')
+                ->get();
+
+            $planes = $productos->map(function (Producto $producto) use ($servicioModel) {
+                $detalles = $producto->detalles
+                    ->where('idser', $servicioModel->idser)
+                    ->map(function ($detalle) {
+                        return [
+                            'meses' => (int) $detalle->meses,
+                            'descripcion' => $detalle->descripcion,
+                        ];
+                    })
+                    ->values();
+
+                return [
+                    'producto_id' => $producto->id,
+                    'nombre' => $producto->nombrepro,
+                    'precio' => (float) $producto->preciopro,
+                    'categoria' => $producto->categoria?->nombre,
+                    'detalles' => $detalles,
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'servicio' => [
+                        'idser' => $servicioModel->idser,
+                        'nombre' => $servicioModel->nombreser,
+                    ],
+                    'planes' => $planes,
+                    'mensaje' => $this->generarMensajeServicio($servicioModel->idser),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener planes del servicio',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getCatalogo(Request $request)
+    {
+        try {
+            $servicioFiltro = $request->input('servicio');
+            $categoriaFiltro = $request->input('categoria');
+
+            $query = Producto::with(['detalles.servicio', 'categoria'])
+                ->where('activo', true);
+
+            if ($categoriaFiltro) {
+                $query->whereHas('categoria', function ($categoriaQuery) use ($categoriaFiltro) {
+                    $categoriaQuery->where('nombre', 'LIKE', '%' . $categoriaFiltro . '%');
+                });
+            }
+
+            if ($servicioFiltro) {
+                $query->whereHas('detalles.servicio', function ($servicioQuery) use ($servicioFiltro) {
+                    $servicioQuery->where('idser', $servicioFiltro)
+                        ->orWhere('nombreser', 'LIKE', '%' . $servicioFiltro . '%');
+                });
+            }
+
+            $productos = $query
+                ->orderBy('categoria_id')
+                ->orderBy('preciopro')
+                ->get();
+
+            $catalogo = $productos->map(function (Producto $producto) {
+                return [
+                    'producto_id' => $producto->id,
+                    'nombre' => $producto->nombrepro,
+                    'precio' => (float) $producto->preciopro,
+                    'categoria' => $producto->categoria?->nombre,
+                    'servicios' => $producto->detalles
+                        ->map(fn ($detalle) => [
+                            'idser' => $detalle->idser,
+                            'servicio' => $detalle->servicio?->nombreser,
+                            'meses' => (int) $detalle->meses,
+                            'descripcion' => $detalle->descripcion,
+                        ])
+                        ->values(),
+                    'url_catalogo' => 'https://streamify.aaronsoft.es',
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'count' => $catalogo->count(),
+                    'catalogo' => $catalogo,
+                    'sitio_web' => 'https://streamify.aaronsoft.es',
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener catalogo',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     /**
      * Obtiene resumen de tareas diarias (para WhatsApp)
      * GET /api/v2/info/tareas-hoy

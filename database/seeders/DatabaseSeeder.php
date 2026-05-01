@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
             MailSeeder::class,
             ChatPermisosSeeder::class,
             ChatSubagenteSeeder::class,
+            ChatMemoriaNegocioSeeder::class,
             BancosPermisosSeeder::class,
         ]);
     }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Banco;
+use App\Models\Gasto;
+use App\Models\TipoGasto;
 use App\Services\BancoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -149,19 +151,17 @@ class BancoController extends Controller
                     'Fees de transferencia'
                 );
 
-                // Buscar el tipo de gasto "OTRO"
-                $tipoGastoOtro = \App\Models\TipoGasto::where('detalletip', 'OTRO')->first();
+                $tipoGastoOtro = TipoGasto::firstOrCreate([
+                    'detalletip' => 'OTRO',
+                ]);
 
-                if ($tipoGastoOtro) {
-                    // Registrar fees como gasto
-                    \App\Models\Gasto::create([
-                        'idtip' => $tipoGastoOtro->idtip,
-                        'fechagas' => now(),
-                        'montogas' => $fees,
-                        'descripciongas' => 'Fees - Transferencia entre bancos',
-                        'transaccion_id' => $transaccionFees->id,
-                    ]);
-                }
+                Gasto::create([
+                    'idtip' => $tipoGastoOtro->idtip,
+                    'fechagas' => now()->toDateString(),
+                    'montogas' => $fees,
+                    'descripciongas' => 'Fees - Transferencia entre bancos',
+                    'transaccion_id' => $transaccionFees->id,
+                ]);
             }
 
             $mensaje = 'Fondos transferidos correctamente.';

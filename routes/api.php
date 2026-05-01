@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V2\TecnicoProductosController;
 use App\Http\Controllers\Api\V2\TecnicoConfigController;
 use App\Http\Controllers\Api\V2\PaymentVerificationController;
 use App\Http\Controllers\Api\V2\CodigoVerificationController;
+use App\Http\Controllers\Api\V2\ChatAssistantController;
 use App\Http\Controllers\Api\V2\ChatRouterController;
 use App\Http\Controllers\Api\V2\ChatWhatsappChannelController;
 use App\Http\Controllers\Api\V2\WhatsAppPaymentController;
@@ -155,6 +156,8 @@ Route::prefix('v2')->group(function () {
     // Rutas públicas de información (sin prefijo 'info')
     Route::controller(InformationController::class)->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios.public');
+        Route::get('/precios/servicio/{servicio}', 'getPlanesServicio')->name('api.v2.precios.servicio.public');
+        Route::get('/catalogo', 'getCatalogo')->name('api.v2.catalogo.public');
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago.public');
         Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco.public');
         Route::get('/tareas-hoy', 'getTareasHoy')->name('api.v2.tareas-hoy.public');
@@ -175,6 +178,11 @@ Route::prefix('v2')->group(function () {
         Route::post('/memory/contact', 'guardarMemoriaContacto')->name('api.v2.chat.router.memory.contact');
     });
 
+    Route::prefix('chat/assistant')->controller(ChatAssistantController::class)->group(function () {
+        Route::get('/cliente', 'clientePorTelefono')->name('api.v2.chat.assistant.cliente');
+        Route::post('/cliente/create', 'crearCliente')->name('api.v2.chat.assistant.cliente.create');
+    });
+
     Route::prefix('chat/router/whatsapp-channels')->middleware('api.key')->controller(ChatWhatsappChannelController::class)->group(function () {
         Route::get('/', 'index')->name('api.v2.chat.router.whatsapp-channels.index');
         Route::post('/upsert', 'upsert')->name('api.v2.chat.router.whatsapp-channels.upsert');
@@ -184,6 +192,8 @@ Route::prefix('v2')->group(function () {
     // Información y Precios - Público (con prefijo 'info' - legacy)
     Route::controller(InformationController::class)->prefix('info')->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios');
+        Route::get('/precios/servicio/{servicio}', 'getPlanesServicio')->name('api.v2.precios.servicio');
+        Route::get('/catalogo', 'getCatalogo')->name('api.v2.catalogo');
         Route::get('/metodos-pago', 'getMetodosPago')->name('api.v2.metodos-pago');
         Route::get('/banco/{nombrebanco}', 'getBanco')->name('api.v2.banco');
         Route::get('/tareas-hoy', 'getTareasHoy')->name('api.v2.tareas-hoy');
