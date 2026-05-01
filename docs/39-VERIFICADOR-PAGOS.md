@@ -70,6 +70,21 @@ No es obligatorio usar nodo Respond to Webhook. Puede configurarse el Webhook no
 
 ## API mínima para n8n (por recarga específica)
 
+### Endpoint recomendado de entrada para comprobantes desde n8n/chat
+
+`POST /api/v2/payments/n8n/receipt-intake`
+
+Este endpoint ya aplica la logica operativa para intake de comprobantes:
+
+1. busca cliente primero por telefono;
+2. si no existe, lo crea;
+3. si viene titular (`cliente_nombre`) lo usa como nombre;
+4. si no viene titular, genera nombre secuencial (`Cliente WhatsApp N`);
+5. crea la recarga pendiente;
+6. dispara verificacion automaticamente por defecto (`disparar_verificacion = true`).
+
+Con esto puedes resolver de forma directa la rama "si es comprobante" en n8n sin depender de autenticacion del cliente.
+
 ### 0) Obtener detalle completo de recarga
 GET /api/v2/payments/n8n/recargas/{idrec}
 
@@ -162,6 +177,158 @@ Body sugerido:
 3. Detección de banco/emisor esperado.
 4. Validación de número de comprobante cuando sea extraíble.
 5. Detección básica de imagen inválida (vacía, recortada, repetida, borrosa extrema).
+
+## Ajuste recomendado en n8n para alias de banco y multiples comprobantes
+
+Si el nodo `Analyze image` devuelve `Banco del Barrio`, pero en Streamify el banco registrado es `Banco Guayaquil`, no debes comparar solo contra `banco.nombreban` como string fijo.
+
+El webhook de verificacion ya envia estos campos:
+
+```json
+{
+  "banco_nombre": "Banco Guayaquil",
+  "banco_aliases": ["banco guayaquil", "guayaquil", "banco del barrio", "del barrio"],
+  "verification_hints": {
+    "allow_bank_alias_match": true,
+    "allow_multiple_receipts_total_match": true,
+    "expected_total_amount": 4.5,
+    "bank_match_terms": ["banco guayaquil", "guayaquil", "banco del barrio", "del barrio"]
+  }
+}
+```
+
+### Prompt sugerido para el nodo Analyze image
+
+Reemplaza el prompt del verificador por una version que soporte mas de un comprobante visible en la misma foto.
+
+```text
+Analiza este comprobante o conjunto de comprobantes de pago visibles en una sola imagen.
+
+1. Detecta si hay uno o varios comprobantes.
+2. Extrae cada comprobante por separado si existen multiples.
+3. Para cada comprobante extrae:
+- numero de comprobante
+- monto
+- banco
+- fecha
+- titular o beneficiario
+- emisor si aparece
+
+4. Devuelve tambien un resumen general:
+- total_comprobantes
+- monto_total_detectado
+- banco_principal
+- fechas_detectadas
+
+5. Evalua calidad y antifraude:
+- legible
+- borroso
+- editado
+- realista
+- confianza
+
+Reglas:
+- no inventes datos
+- si algo no se ve devuelve null
+- si hay multiples comprobantes suma sus montos en monto_total_detectado
+- devuelve SOLO JSON valido
+
+Formato de salida:
+{
+  "total_comprobantes": 1,
+  "monto_total_detectado": number|null,
+  "banco_principal": "string|null",
+  "fechas_detectadas": ["YYYY-MM-DD"],
+  "comprobantes": [
+    {
+      "comprobante": "string|null",
+      "monto": number|null,
+      "banco": "string|null",
+      "fecha": "YYYY-MM-DD|null",
+      "titular": "string|null",
+      "emisor": "string|null"
+    }
+  ],
+  "legible": true/false,
+  "borroso": true/false,
+  "editado": true/false,
+  "realista": true/false,
+  "confianza": 0-100
+}
+```
+
+### Regla sugerida en el nodo Parsear
+
+1. Para banco:
+   compara `banco_principal` y los bancos de `comprobantes[]` contra `body.banco_aliases`.
+
+2. Para monto:
+   si `verification_hints.allow_multiple_receipts_total_match = true`, compara contra `monto_total_detectado`.
+
+3. Para comprobante:
+   acepta coincidencia si el `numcomprobante` del webhook aparece en cualquiera de `comprobantes[]`.
+
+### Logica minima de banco en Parsear
+
+```javascript
+const normalize = (str) =>
+  str?.toLowerCase()
+    ?.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim() || null;
+
+const aliases = (webhook.banco_aliases || webhook.verification_hints?.bank_match_terms || [])
+  .map(normalize)
+  .filter(Boolean);
+
+const bancosDetectados = [
+  parsed.banco_principal,
+  ...(parsed.comprobantes || []).map(item => item.banco)
+]
+  .map(normalize)
+  .filter(Boolean);
+
+const bankMatches = bancosDetectados.some(bancoDetectado =>
+  aliases.some(alias =>
+    bancoDetectado === alias || bancoDetectado.includes(alias) || alias.includes(bancoDetectado)
+  )
+);
+
+if (!bankMatches) {
+  aprobado = false;
+  errores.push('Banco no coincide');
+}
+```
+
+### Logica minima de monto total en Parsear
+
+```javascript
+const expectedAmount = Number(webhook.verification_hints?.expected_total_amount ?? webhook.valor ?? 0);
+const detectedTotal = Number(parsed.monto_total_detectado ?? 0);
+
+if (!detectedTotal || Math.abs(detectedTotal - expectedAmount) > 0.01) {
+  aprobado = false;
+  errores.push('Monto total no coincide');
+}
+```
+
+### Caso de ejemplo
+
+Si una foto trae dos depositos de `1.00` y `3.50`, el OCR debe devolver:
+
+```json
+{
+  "total_comprobantes": 2,
+  "monto_total_detectado": 4.5,
+  "banco_principal": "Banco del Barrio",
+  "comprobantes": [
+    { "monto": 1.0, "comprobante": "00642453" },
+    { "monto": 3.5, "comprobante": "00642453" }
+  ]
+}
+```
+
+Y el parser debe aprobar si el total coincide con `webhook.valor = 4.5` y el alias de banco coincide con `Banco Guayaquil`.
 
 ## Implementación recomendada en Laravel
 

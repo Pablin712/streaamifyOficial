@@ -848,9 +848,131 @@ La recarga se guardó, pero el disparo a verificación falló.
 - `order_pending`: informar que quedó pedido para atención manual
 - `verification_dispatch_failed`: dejar alerta interna o reintento
 
+### Importante para este endpoint
+
+`receipt-checkout` intenta completar compra automatica de producto tras la verificacion del pago.
+
+Si tu flujo actual solo necesita registrar la recarga desde comprobante y despues continuar en el verificador n8n, usa el endpoint de intake de la seccion siguiente.
+
 ---
 
-## 9. Errores comunes
+## 9. API de intake de comprobante (primero cliente, luego recarga)
+
+### Endpoint
+
+`POST /api/v2/payments/n8n/receipt-intake`
+
+### Orden real de la logica
+
+Este endpoint sigue este orden exacto:
+
+1. primero intenta identificar cliente por `cliente_telefono` (misma idea del modulo chat);
+2. si no encuentra por telefono, intenta con `idcli` si fue enviado;
+3. si no existe cliente, crea un cliente nuevo;
+4. para cliente nuevo usa `cliente_nombre` (titular) si viene en request;
+5. si no viene `cliente_nombre`, crea nombre secuencial: `Cliente WhatsApp 1`, `Cliente WhatsApp 2`, etc;
+6. finalmente registra la recarga en estado pendiente (`idestado = 1`).
+
+### Cliente sin autenticacion
+
+Si no existe cliente y no envias email ni password, igual se crea y permite subir recarga.
+
+En otras palabras: este flujo soporta clientes no autenticados para intake por WhatsApp.
+
+### Verificacion automatica
+
+`disparar_verificacion` esta activa por defecto (`true`).
+
+Eso significa:
+
+- si no envias ese campo, el verificador se dispara igual;
+- si quieres desactivarlo temporalmente, envia `disparar_verificacion = false`.
+
+### Formatos de imagen soportados
+
+Puedes enviar el comprobante de cualquiera de estas formas:
+
+1. `foto` como multipart;
+2. `media_base64`;
+3. `media_url`.
+
+### Campos recomendados para tu flujo de comprobantes IA
+
+- `cliente_telefono`
+- `cliente_nombre` (titular OCR, opcional)
+- `banco_nombre` o `idban`
+- `valor`
+- `numcomprobante` (si OCR lo detecta)
+- `media_base64` o `foto`
+- `media_mime_type`
+- `external_reference`
+- `ocr`
+- `validacion`
+- `qr`
+
+### Ejemplo JSON listo para probar en n8n
+
+```json
+{
+  "cliente_telefono": "+593998887777",
+  "cliente_nombre": "Carlos Mena",
+  "banco_nombre": "Pichincha",
+  "valor": 10.5,
+  "numcomprobante": "TRX-984343",
+  "media_base64": "<BASE64_AQUI>",
+  "media_mime_type": "image/jpeg",
+  "media_file_name": "comprobante.jpg",
+  "canal": "whatsapp",
+  "external_reference": "wamid.HBgLN...",
+  "ocr": {
+    "comprobante": "TRX-984343",
+    "monto": 10.5,
+    "banco": "Pichincha",
+    "fecha": "2026-04-30",
+    "titular": "Carlos Mena"
+  },
+  "validacion": {
+    "legible": true,
+    "borroso": false,
+    "editado": false,
+    "realista": true,
+    "confianza": 92
+  },
+  "qr": {
+    "detectado": true,
+    "valido": true,
+    "contenido": null
+  },
+  "disparar_verificacion": true
+}
+```
+
+### Respuesta esperada al crear recarga
+
+```json
+{
+  "success": true,
+  "status": "recarga_created_verification_dispatched",
+  "data": {
+    "cliente_creado": true,
+    "verificacion_disparada": true,
+    "cliente": {
+      "idcli": 321,
+      "nombrecli": "Carlos Mena",
+      "telefonocli": "+593998887777"
+    },
+    "recarga": {
+      "idrec": 998,
+      "idestado": 1,
+      "numcomprobante": "TRX-984343"
+    }
+  }
+}
+```
+
+---
+
+## 10. Errores comunes
 
 ### 422 en `ingest`
 
@@ -890,9 +1012,18 @@ Causas comunes:
 - no mandaste `idcli` ni `cliente_telefono`
 - `foto` no fue enviada como binario multipart
 
+### 422 en `receipt-intake`
+
+Causas comunes:
+
+- no mandaste `idcli` ni `cliente_telefono`
+- no mandaste `idban` ni `banco_nombre`
+- no mandaste `foto`, `media_base64` ni `media_url`
+- `media_base64` invalido
+
 ---
 
-## 10. Recomendación final para tu flujo actual
+## 11. Recomendación final para tu flujo actual
 
 Si quieres replicar exactamente tu patrón viejo de varios mensajes seguidos tipo:
 
@@ -916,13 +1047,14 @@ Ese es el reemplazo correcto y completo de tu viejo MySQL `insert + select + che
 
 ---
 
-## 11. APIs cubiertas en esta guía
+## 12. APIs cubiertas en esta guía
 
 - `POST /api/v2/chat/router/ingest`
 - `GET|POST /api/v2/chat/router/context`
 - `POST /api/v2/chat/router/respond`
 - `POST /api/v2/chat/router/handoff`
 - `POST /api/v2/payments/n8n/receipt-checkout`
+- `POST /api/v2/payments/n8n/receipt-intake`
 
 Si después quieres, la siguiente guía la hago para estas dos adicionales del mismo bloque:
 

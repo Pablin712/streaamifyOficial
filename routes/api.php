@@ -323,6 +323,7 @@ Route::prefix('v2')->group(function () {
     Route::prefix('payments/n8n')->group(function () {
         Route::controller(WhatsAppPaymentController::class)->group(function () {
             Route::post('/receipt-checkout', 'receiptCheckout')->name('api.v2.payments.n8n.receipt-checkout');
+            Route::post('/receipt-intake', 'receiptIntake')->name('api.v2.payments.n8n.receipt-intake');
         });
 
         Route::controller(PaymentVerificationController::class)->group(function () {

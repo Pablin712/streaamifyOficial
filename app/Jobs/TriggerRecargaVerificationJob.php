@@ -44,6 +44,7 @@ class TriggerRecargaVerificationJob implements ShouldQueue
         }
 
         $banco = $recarga->banco;
+        $bankAliases = $this->resolveBankAliases($banco?->nombreban);
 
         $payload = [
             'event' => 'recarga.created',
@@ -51,9 +52,11 @@ class TriggerRecargaVerificationJob implements ShouldQueue
             'idcli' => $recarga->idcli,
             'idban' => $recarga->idban,
             'banco_nombre' => optional($recarga->banco)->nombreban,
+            'banco_aliases' => $bankAliases,
             'banco' => $banco ? [
                 'idban' => $banco->idban,
                 'nombreban' => $banco->nombreban,
+                'alias' => $bankAliases,
                 'propietarioban' => $banco->propietarioban,
                 'cedulaban' => $banco->cedulaban,
                 'numeroban' => $banco->numeroban,
@@ -66,6 +69,12 @@ class TriggerRecargaVerificationJob implements ShouldQueue
             ] : null,
             'numcomprobante' => $recarga->numcomprobante,
             'valor' => (float) $recarga->valor,
+            'verification_hints' => [
+                'allow_bank_alias_match' => true,
+                'allow_multiple_receipts_total_match' => true,
+                'expected_total_amount' => (float) $recarga->valor,
+                'bank_match_terms' => $bankAliases,
+            ],
             'recarga_url' => url('/api/v2/payments/n8n/recargas/' . $recarga->idrec),
             'foto_url' => url('/api/v2/payments/n8n/recargas/' . $recarga->idrec . '/comprobante'),
             'created_at' => optional($recarga->created_at)->toIso8601String(),
@@ -125,5 +134,20 @@ class TriggerRecargaVerificationJob implements ShouldQueue
 
             throw new \RuntimeException('Webhook n8n fallo con status ' . $response->status());
         }
+    }
+
+    private function resolveBankAliases(?string $bankName): array
+    {
+        $normalized = str()->of((string) $bankName)
+            ->lower()
+            ->ascii()
+            ->replaceMatches('/\s+/', ' ')
+            ->trim()
+            ->value();
+
+        return match ($normalized) {
+            'banco guayaquil' => ['banco guayaquil', 'guayaquil', 'banco del barrio', 'del barrio'],
+            default => array_values(array_filter([$bankName])),
+        };
     }
 }

@@ -70,6 +70,7 @@ class PaymentVerificationController extends Controller
         $fileSize = $fileExists ? filesize($filePath) : null;
         $fileMime = $fileExists ? mime_content_type($filePath) : null;
         $banco = $recarga->banco;
+        $bankAliases = $this->resolveBankAliases($banco?->nombreban);
 
         return response()->json([
             'success' => true,
@@ -83,9 +84,11 @@ class PaymentVerificationController extends Controller
                 ],
                 'idban' => $recarga->idban,
                 'banco' => optional($recarga->banco)->nombreban,
+                'banco_aliases' => $bankAliases,
                 'banco_data' => $banco ? [
                     'idban' => $banco->idban,
                     'nombreban' => $banco->nombreban,
+                    'alias' => $bankAliases,
                     'propietarioban' => $banco->propietarioban,
                     'cedulaban' => $banco->cedulaban,
                     'numeroban' => $banco->numeroban,
@@ -98,6 +101,12 @@ class PaymentVerificationController extends Controller
                 ] : null,
                 'numcomprobante' => $recarga->numcomprobante,
                 'valor' => (float) $recarga->valor,
+                'verification_hints' => [
+                    'allow_bank_alias_match' => true,
+                    'allow_multiple_receipts_total_match' => true,
+                    'expected_total_amount' => (float) $recarga->valor,
+                    'bank_match_terms' => $bankAliases,
+                ],
                 'idestado' => $recarga->idestado,
                 'estado' => optional($recarga->estado)->nombre,
                 'foto' => [
@@ -143,6 +152,21 @@ class PaymentVerificationController extends Controller
         }
 
         return response()->download($filePath, basename($filePath));
+    }
+
+    private function resolveBankAliases(?string $bankName): array
+    {
+        $normalized = str()->of((string) $bankName)
+            ->lower()
+            ->ascii()
+            ->replaceMatches('/\s+/', ' ')
+            ->trim()
+            ->value();
+
+        return match ($normalized) {
+            'banco guayaquil' => ['banco guayaquil', 'guayaquil', 'banco del barrio', 'del barrio'],
+            default => array_values(array_filter([$bankName])),
+        };
     }
 
     public function aprobar(Request $request, int $idrec)
