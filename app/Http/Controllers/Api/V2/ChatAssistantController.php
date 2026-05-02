@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V2;
 use Carbon\Carbon;
 use App\Notifications\NuevoSoporteCliente;
 use App\Http\Controllers\Controller;
+use App\Models\Banco;
 use App\Models\Cuenta;
 use App\Models\Cliente;
 use App\Models\DetalleVenta;
@@ -196,6 +197,7 @@ class ChatAssistantController extends Controller
             'activos' => 0,
             'por_vencer' => 0,
             'vencidos' => 0,
+            'cuentas_caidas' => 0,
         ];
 
         $usuarios = $detalles->map(function (DetalleVenta $detalle) use ($hoy, &$resumen, $cliente) {
@@ -218,6 +220,11 @@ class ChatAssistantController extends Controller
                 $resumen['vencidos']++;
             }
 
+            $cuentaCaida = (bool) ($detalle->perfil?->cuenta?->caidacue ?? false);
+            if ($cuentaCaida) {
+                $resumen['cuentas_caidas']++;
+            }
+
             return [
                 'iddet' => $detalle->iddet,
                 'idven' => $detalle->idven,
@@ -232,6 +239,8 @@ class ChatAssistantController extends Controller
                 'fecha_vencimiento' => $fechaVencimiento?->toDateString(),
                 'dias_restantes' => $diasRestantes,
                 'estado' => $estado,
+                'cuenta_caidacue' => $cuentaCaida,
+                'cuenta_activa' => (bool) ($detalle->perfil?->cuenta?->activocue ?? false),
                 'soporte_ref' => [
                     'idcli' => $cliente->idcli,
                     'idcue' => $detalle->perfil?->cuenta?->idcue,
@@ -303,6 +312,292 @@ class ChatAssistantController extends Controller
                         'created_at' => optional($recarga->created_at)?->toDateTimeString(),
                     ];
                 })->values(),
+            ],
+        ]);
+    }
+
+    public function soportesPorCliente(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'idcli' => 'nullable|string|exists:clientes,idcli',
+            'telefono' => 'nullable|string|max:50',
+            'limit' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $idcliInput = $request->input('idcli');
+        $telefono = ClienteAuth::normalizePhone($request->input('telefono'));
+
+        if (!$idcliInput && !$telefono) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes enviar idcli o telefono para identificar al cliente.',
+            ], 422);
+        }
+
+        $cliente = $idcliInput
+            ? Cliente::findOrFail($idcliInput)
+            : Cliente::buscarPorTelefonoNormalizado($telefono);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => true,
+                'found' => false,
+                'message' => 'Cliente no encontrado para consultar soportes.',
+                'data' => [
+                    'soportes' => [],
+                    'resumen' => [
+                        'total' => 0,
+                        'pendientes' => 0,
+                        'atendidos' => 0,
+                    ],
+                ],
+            ]);
+        }
+
+        $limit = (int) $request->query('limit', 10);
+
+        $soportes = Soporte::query()
+            ->with(['cuenta.valor.servicio'])
+            ->where('idcli', $cliente->idcli)
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+
+        $resumen = [
+            'total' => $soportes->count(),
+            'pendientes' => $soportes->where('estado', 'pendiente')->count(),
+            'atendidos' => $soportes->where('estado', 'atendido')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'found' => true,
+            'message' => 'Soportes del cliente obtenidos correctamente.',
+            'data' => [
+                'cliente' => [
+                    'idcli' => $cliente->idcli,
+                    'nombrecli' => $cliente->nombrecli,
+                    'telefonocli' => $cliente->telefonocli,
+                ],
+                'soportes' => $soportes->map(function (Soporte $soporte) {
+                    return [
+                        'idsop' => $soporte->idsop,
+                        'idcue' => $soporte->idcue,
+                        'servicio' => $soporte->cuenta?->valor?->servicio?->nombreser,
+                        'tipo' => $soporte->tipo,
+                        'descripcion' => $soporte->descripcion,
+                        'solucion' => $soporte->solucion,
+                        'estado' => $soporte->estado,
+                        'cuenta_caidacue' => (bool) ($soporte->cuenta?->caidacue ?? false),
+                        'created_at' => optional($soporte->created_at)?->toDateTimeString(),
+                        'updated_at' => optional($soporte->updated_at)?->toDateTimeString(),
+                    ];
+                })->values(),
+                'resumen' => $resumen,
+            ],
+        ]);
+    }
+
+    public function contextoPostventaPorTelefono(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'telefono' => 'required|string|max:50',
+            'soportes_limit' => 'nullable|integer|min:1|max:20',
+            'recargas_limit' => 'nullable|integer|min:1|max:20',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $telefono = ClienteAuth::normalizePhone($request->input('telefono'));
+        $cliente = Cliente::buscarPorTelefonoNormalizado($telefono);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => true,
+                'found' => false,
+                'message' => 'Cliente no encontrado por telefono.',
+                'data' => [
+                    'telefono_consultado' => $telefono,
+                    'usuarios' => [],
+                    'soportes_recientes' => [],
+                    'recargas_recientes' => [],
+                ],
+            ]);
+        }
+
+        $hoy = Carbon::today();
+        $usuarios = DetalleVenta::query()
+            ->with(['perfil.cuenta.valor.servicio'])
+            ->where('activodet', true)
+            ->whereHas('venta', function ($query) use ($cliente) {
+                $query->where('idcli', $cliente->idcli);
+            })
+            ->orderByDesc('fechavendet')
+            ->get()
+            ->map(function (DetalleVenta $detalle) use ($hoy) {
+                $fechaVencimiento = $detalle->fechavendet ? Carbon::parse($detalle->fechavendet)->startOfDay() : null;
+                $diasRestantes = $fechaVencimiento ? $hoy->diffInDays($fechaVencimiento, false) : null;
+
+                $estado = 'activo';
+                if ($diasRestantes !== null && $diasRestantes < 0) {
+                    $estado = 'vencido';
+                } elseif ($diasRestantes !== null && $diasRestantes <= 3) {
+                    $estado = 'por_vencer';
+                }
+
+                return [
+                    'iddet' => $detalle->iddet,
+                    'idcue' => $detalle->perfil?->cuenta?->idcue,
+                    'servicio' => $detalle->perfil?->cuenta?->valor?->servicio?->nombreser,
+                    'perfil' => $detalle->perfil?->numeroper,
+                    'fecha_vencimiento' => $fechaVencimiento?->toDateString(),
+                    'dias_restantes' => $diasRestantes,
+                    'estado' => $estado,
+                    'cuenta_caidacue' => (bool) ($detalle->perfil?->cuenta?->caidacue ?? false),
+                    'cuenta_activa' => (bool) ($detalle->perfil?->cuenta?->activocue ?? false),
+                ];
+            })
+            ->values();
+
+        $soportesLimit = (int) $request->query('soportes_limit', 5);
+        $soportesRecientes = Soporte::query()
+            ->with(['cuenta.valor.servicio'])
+            ->where('idcli', $cliente->idcli)
+            ->orderByDesc('created_at')
+            ->limit($soportesLimit)
+            ->get()
+            ->map(function (Soporte $soporte) {
+                return [
+                    'idsop' => $soporte->idsop,
+                    'idcue' => $soporte->idcue,
+                    'servicio' => $soporte->cuenta?->valor?->servicio?->nombreser,
+                    'tipo' => $soporte->tipo,
+                    'estado' => $soporte->estado,
+                    'created_at' => optional($soporte->created_at)?->toDateTimeString(),
+                ];
+            })
+            ->values();
+
+        $recargasLimit = (int) $request->query('recargas_limit', 5);
+        $recargasRecientes = Recarga::query()
+            ->with(['estado:idestado,nombreest', 'banco:idban,nombreban'])
+            ->where('idcli', $cliente->idcli)
+            ->orderByDesc('created_at')
+            ->limit($recargasLimit)
+            ->get()
+            ->map(function (Recarga $recarga) {
+                return [
+                    'idrec' => $recarga->idrec,
+                    'numcomprobante' => $recarga->numcomprobante,
+                    'valor' => (float) $recarga->valor,
+                    'estado' => $recarga->estado->nombreest ?? null,
+                    'banco' => $recarga->banco->nombreban ?? null,
+                    'created_at' => optional($recarga->created_at)?->toDateTimeString(),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'found' => true,
+            'message' => 'Contexto postventa obtenido correctamente.',
+            'data' => [
+                'cliente' => [
+                    'idcli' => $cliente->idcli,
+                    'nombrecli' => $cliente->nombrecli,
+                    'telefonocli' => $cliente->telefonocli,
+                ],
+                'usuarios' => $usuarios,
+                'soportes_recientes' => $soportesRecientes,
+                'recargas_recientes' => $recargasRecientes,
+                'resumen' => [
+                    'usuarios_total' => $usuarios->count(),
+                    'usuarios_activos' => $usuarios->where('estado', 'activo')->count(),
+                    'usuarios_por_vencer' => $usuarios->where('estado', 'por_vencer')->count(),
+                    'usuarios_vencidos' => $usuarios->where('estado', 'vencido')->count(),
+                    'cuentas_caidas' => $usuarios->where('cuenta_caidacue', true)->count(),
+                    'soportes_pendientes' => $soportesRecientes->where('estado', 'pendiente')->count(),
+                ],
+            ],
+        ]);
+    }
+
+    public function cobranzasMetodosPago()
+    {
+        $bancosDisponibles = Banco::query()
+            ->orderBy('nombreban')
+            ->get(['idban', 'nombreban', 'tipoban']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Metodos de pago de cobranzas obtenidos correctamente.',
+            'data' => [
+                'metodos' => [
+                    [
+                        'codigo' => 'transferencia_bancaria',
+                        'nombre' => 'Transferencia bancaria',
+                        'requiere_comprobante' => true,
+                        'tiempo_validacion' => 'manual',
+                        'consulta_bancos_endpoint' => '/api/v2/chat/assistant/cobranzas/bancos',
+                    ],
+                ],
+                'bancos_disponibles' => $bancosDisponibles,
+            ],
+        ]);
+    }
+
+    public function cobranzasBancos(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'filtro' => 'nullable|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $filtro = trim((string) $request->input('filtro', ''));
+
+        $query = Banco::query()->orderBy('nombreban');
+        if ($filtro !== '') {
+            $query->where(function ($q) use ($filtro) {
+                $q->where('nombreban', 'like', '%' . $filtro . '%')
+                    ->orWhere('propietarioban', 'like', '%' . $filtro . '%')
+                    ->orWhere('numeroban', 'like', '%' . $filtro . '%');
+            });
+        }
+
+        $bancos = $query->get([
+            'idban',
+            'nombreban',
+            'propietarioban',
+            'cedulaban',
+            'numeroban',
+            'tipoban',
+            'detalleban',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Bancos de cobranzas obtenidos correctamente.',
+            'data' => [
+                'total' => $bancos->count(),
+                'bancos' => $bancos,
             ],
         ]);
     }
@@ -762,6 +1057,67 @@ class ChatAssistantController extends Controller
             'total_playbooks' => $playbooks->count(),
             'total_reglas' => $reglasComunicacion->count(),
             'resumen' => 'Utiliza estos playbooks en orden: primero diagnostica (criterios), luego aplica el prompt correspondiente. Las reglas de comunicación son vinculantes.',
+        ], 200);
+    }
+
+    public function consultarMemoriaGeneral(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'tipo' => 'nullable|string|in:soporte,vendedor,cobranzas,postventa',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $tipoSubagente = $request->input('tipo');
+
+        $memoriaGeneral = \App\Models\ChatMemoriaNegocio::query()
+            ->where('codigo', 'like', 'general_%')
+            ->orderBy('codigo')
+            ->get(['codigo', 'nombre', 'tipo', 'descripcion', 'prompt_base', 'criterios', 'contenido'])
+            ->map(function ($item) {
+                return [
+                    'codigo' => $item->codigo,
+                    'nombre' => $item->nombre,
+                    'tipo' => $item->tipo,
+                    'descripcion' => $item->descripcion,
+                    'prompt' => $item->prompt_base,
+                    'criterios' => json_decode($item->criterios ?? '{}', true),
+                    'contenido' => $item->contenido,
+                ];
+            });
+
+        $memoriaEspecifica = collect();
+        if ($tipoSubagente) {
+            $memoriaEspecifica = \App\Models\ChatMemoriaNegocio::query()
+                ->where('codigo', 'like', $tipoSubagente . '%')
+                ->orderBy('codigo')
+                ->get(['codigo', 'nombre', 'tipo', 'descripcion', 'prompt_base', 'criterios', 'contenido'])
+                ->map(function ($item) {
+                    return [
+                        'codigo' => $item->codigo,
+                        'nombre' => $item->nombre,
+                        'tipo' => $item->tipo,
+                        'descripcion' => $item->descripcion,
+                        'prompt' => $item->prompt_base,
+                        'criterios' => json_decode($item->criterios ?? '{}', true),
+                        'contenido' => $item->contenido,
+                    ];
+                });
+        }
+
+        return response()->json([
+            'success' => true,
+            'tipo_subagente' => $tipoSubagente,
+            'memoria_general' => $memoriaGeneral,
+            'memoria_especifica' => $memoriaEspecifica,
+            'total_general' => $memoriaGeneral->count(),
+            'total_especifica' => $memoriaEspecifica->count(),
+            'resumen' => 'Primero usa memoria_general para reglas globales. Luego aplica memoria_especifica del subagente cuando exista.',
         ], 200);
     }
 

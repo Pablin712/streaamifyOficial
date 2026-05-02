@@ -183,10 +183,14 @@ Route::prefix('v2')->group(function () {
         Route::get('/cliente/usuarios-activos', 'usuariosActivosPorTelefono')->name('api.v2.chat.assistant.cliente.usuarios-activos');
         Route::post('/cliente/create', 'crearCliente')->name('api.v2.chat.assistant.cliente.create');
         Route::get('/cliente/{idcli}/recargas', 'recargasCliente')->name('api.v2.chat.assistant.cliente.recargas');
+        Route::get('/postventa/contexto', 'contextoPostventaPorTelefono')->name('api.v2.chat.assistant.postventa.contexto');
+        Route::get('/cobranzas/metodos-pago', 'cobranzasMetodosPago')->name('api.v2.chat.assistant.cobranzas.metodos-pago');
+        Route::get('/cobranzas/bancos', 'cobranzasBancos')->name('api.v2.chat.assistant.cobranzas.bancos');
         Route::post('/venta', 'crearVenta')->name('api.v2.chat.assistant.venta.create');
         Route::post('/pedido', 'crearPedido')->name('api.v2.chat.assistant.pedido.create');
         Route::post('/soporte', 'crearSoporte')->name('api.v2.chat.assistant.soporte.create');
         Route::get('/memoria-negocio', 'consultarMemoria')->name('api.v2.chat.assistant.memoria-negocio');
+        Route::get('/memoria-general', 'consultarMemoriaGeneral')->name('api.v2.chat.assistant.memoria-general');
     });
 
     Route::prefix('chat/router/whatsapp-channels')->middleware('api.key')->controller(ChatWhatsappChannelController::class)->group(function () {

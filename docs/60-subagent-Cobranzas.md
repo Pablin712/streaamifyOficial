@@ -2,7 +2,7 @@
 
 **Tipo:** `cobranzas`  
 **Prioridad:** 40  
-**Estado:** En definición  
+**Estado:** Operativo ligero (solo metodos de pago + bancos)  
 **Responsable:** Router general → Detecta intención de pago/comprobante
 
 ---
@@ -30,14 +30,14 @@ El subagente **cobranzas_pago** gestiona todo lo relacionado con métodos de pag
 ### Flujo típico
 
 1. **Cliente expresa intención de pago** → Router lo detecta → Envía a cobranzas_pago
-2. **Subagent consulta métodos disponibles** → GET `/api/v2/cobranzas/metodos-pago`
+2. **Subagent consulta métodos disponibles** → GET `/api/v2/chat/assistant/cobranzas/metodos-pago`
 3. **Subagent enruta según método**:
    - **Transferencia bancaria** → Solicita comprobante, valida después
    - **Tarjeta de crédito** → Link de pago directo (si existe)
    - **Billetera virtual** → Link directo o instrucciones
    - **Efectivo en agencia** → Dirección y códigos de verificación
-4. **Cliente envía comprobante** (si es transferencia) → Subagent lo registra y espera validación
-5. **Empleado valida** en panel → Confirma acreditación al cliente
+4. **Cliente envía comprobante** (si es transferencia) → Subagent deriva al flujo existente de subidor/verificador
+5. **Empleado valida** en panel (payments/n8n) → Confirma acreditación al cliente
 6. **Cierre de flujo** → Mensaje de éxito + siguiente paso (acceso a servicio, entrega de credenciales, etc.)
 
 ### Escenarios comunes
@@ -46,8 +46,8 @@ El subagente **cobranzas_pago** gestiona todo lo relacionado con métodos de pag
 |-----------|-------------------|
 | Cliente pide métodos | Consulta `/metodos-pago` y presenta opciones claras |
 | Cliente pide datos bancarios | Consulta `/bancos` (nombre, número, titular, email) |
-| Cliente envía foto de comprobante | Registra con `/registrar-comprobante` |
-| Subagent sospecha comprobante falso | Sólo registra; empleado valida después |
+| Cliente envía foto de comprobante | Deriva al subidor/verificador de pagos existente |
+| Subagent sospecha comprobante falso | No valida; deriva al flujo verificador |
 | Cliente pregunta "ya se acreditó?" | Consulta estado de pago (si existe endpoint) |
 | Cliente dice "no sé transferir" | Handoff a humano o sugerencia de tarjeta/billetera |
 
@@ -58,7 +58,7 @@ El subagente **cobranzas_pago** gestiona todo lo relacionado con métodos de pag
 ### Métodos de pago disponibles
 
 ```
-GET /api/v2/cobranzas/metodos-pago
+GET /api/v2/chat/assistant/cobranzas/metodos-pago
 Response:
 {
   "metodos": [
@@ -95,7 +95,7 @@ Response:
 ### Bancos y datos de transferencia
 
 ```
-GET /api/v2/cobranzas/bancos?filtro=nombre
+GET /api/v2/chat/assistant/cobranzas/bancos?filtro=nombre
 Response:
 {
   "bancos": [
@@ -113,41 +113,22 @@ Response:
 }
 ```
 
-### Registrar comprobante de pago
+### Comprobantes (flujo existente)
 
-```
-POST /api/v2/cobranzas/registrar-comprobante
-Body:
-{
-  "idcli": "integer",
-  "iddet": "integer",
-  "metodo_pago": "string (id o nombre)",
-  "monto": "decimal",
-  "comprobante_url": "string (ruta descargada)",
-  "referencia_banco": "string (opcional)",
-  "notas": "string (opcional)"
-}
+La recepcion y validacion de comprobantes NO se maneja desde este subagente.
 
-Response:
-{
-  "success": true,
-  "created": true,
-  "data": {
-    "id": "comprobante_123",
-    "estado": "pendiente_validacion",
-    "mensaje_cliente": "Comprobante recibido. Nuestro equipo lo validará en los próximos 30 minutos."
-  }
-}
-```
+Se reutiliza el flujo existente de pagos:
+
+- Subidor: `POST /api/v2/payments/n8n/receipt-intake`
+- Verificador: `POST /api/v2/payments/n8n/recargas/{idrec}/aprobar` o `/rechazar`
 
 ### Validar comprobante (empleado)
 
 ```
-POST /api/v2/cobranzas/validar-comprobante
+POST /api/v2/payments/n8n/recargas/{idrec}/aprobar (flujo empleado)
 Body:
 {
-  "id_comprobante": "string",
-  "acreditado": boolean,
+  "referencia_externa": "string (opcional)",
   "notas_validacion": "string"
 }
 
@@ -157,9 +138,8 @@ Response:
   "notificacion_enviada": true,
   "datos": {
     "idcli": "integer",
-    "iddet": "integer",
-    "monto": "decimal",
-    "estado": "acreditado|rechazado",
+    "idrec": "integer",
+    "estado": "aprobado|rechazado",
     "proximos_pasos": "string"
   }
 }
@@ -177,8 +157,8 @@ Eres un especialista en cobranzas amable pero profesional.
 Tu rol es:
 1. Presentar métodos de pago de forma clara y sin presión
 2. Guiar al cliente a través del método que elige
-3. Recibir comprobantes de forma profesional
-4. Registrar información sin juzgar
+3. Derivar comprobantes al flujo ya existente de subidor/verificador
+4. Evitar duplicar procesos de validación
 
 Estilo:
 - Mensajes cortos (máx 3-4 líneas)
@@ -191,12 +171,12 @@ Flujo de pensamiento:
 1. ¿Cliente pregunta método? → Consulta GET /metodos-pago y presenta opciones
 2. ¿Cliente elige transferencia? → Consulta GET /bancos y muestra datos (número, titular, CCI)
 3. ¿Cliente elige tarjeta? → Envía link de pago directo
-4. ¿Cliente envía comprobante? → POST /registrar-comprobante y confirma recepción
+4. ¿Cliente envía comprobante? → Deriva al flujo /payments/n8n/receipt-intake
 5. ¿Cliente inseguro? → Ofrece tarjeta como alternativa; si rechaza → handoff a humano
 
-Comunicación al registrar comprobante:
-- Confirma: "Recibimos tu comprobante ✓"
-- Informa: "Nuestro equipo lo validará en 30 minutos máximo"
+Comunicación al gestionar comprobante:
+- Confirma: "Te ayudo a enviarlo por el canal de verificación ✓"
+- Informa: "Luego el equipo lo valida"
 - Nunca digas: "Base de datos", "sistema", "procesamiento", detalles técnicos
 - Siempre cierra con: "¿Hay algo más en lo que te pueda ayudar?"
 
@@ -205,10 +185,33 @@ Escalado a humano:
 - Ofrece: "Te conecto con un asesor que te puede guiar mejor"
 - NO dejes al cliente confundido; handoff inmediato
 
-Validación de comprobante (nota: TÚ NO VALIDAS, el empleado lo hace):
-- Tu rol es RECIBIR, no juzgar
-- Registra el comprobante tal cual
-- El empleado después valida
+Validación de comprobante:
+- Tu rol es DERIVAR, no validar
+- El flujo payments/n8n recibe y el empleado valida
+
+SALIDA OBLIGATORIA:
+- Devuelve SIEMPRE solo JSON valido.
+- No devuelvas markdown, explicaciones ni texto fuera del JSON.
+- Usa exactamente la estructura minima definida abajo.
+
+Estructura JSON minima obligatoria:
+{
+  "subagente_codigo": "cobranzas_pago",
+  "reply_text": "texto final para cliente",
+  "accion_tipo": "ninguna|mostrar_metodos|mostrar_bancos|enviar_link_pago|derivar_comprobante|handoff",
+  "accion_requerida": false,
+  "accion_payload": null,
+  "escalar_humano": false,
+  "motivo_humano": null,
+  "confianza": 0.9
+}
+
+Reglas para el JSON:
+- reply_text: siempre obligatorio y listo para enviar al cliente.
+- accion_requerida: true cuando n8n debe ejecutar una accion.
+- accion_payload: objeto cuando accion_requerida=true, null en caso contrario.
+- escalar_humano: true solo cuando accion_tipo=handoff.
+- confianza: numero entre 0 y 1.
 ```
 
 ### Criterios de activación
@@ -247,27 +250,20 @@ no_activar_si:
     {
       "name": "consultar_metodos_pago",
       "description": "Obtiene la lista de métodos de pago disponibles",
-      "endpoint": "GET /api/v2/cobranzas/metodos-pago"
+      "endpoint": "GET /api/v2/chat/assistant/cobranzas/metodos-pago"
     },
     {
       "name": "consultar_bancos",
       "description": "Obtiene datos bancarios para transferencia (CCI, número, titular)",
-      "endpoint": "GET /api/v2/cobranzas/bancos",
+      "endpoint": "GET /api/v2/chat/assistant/cobranzas/bancos",
       "params": {
         "filtro": "string (opcional: nombre del banco)"
       }
     },
     {
-      "name": "registrar_comprobante",
-      "description": "Registra el comprobante de pago enviado por el cliente",
-      "endpoint": "POST /api/v2/cobranzas/registrar-comprobante",
-      "requiere": ["idcli", "metodo_pago", "monto", "comprobante_url"],
-      "opcionales": ["referencia_banco", "notas"]
-    },
-    {
       "name": "handoff_humano",
       "description": "Escala la conversación a un empleado de cobranzas o atención al cliente",
-      "endpoint": "POST /api/v2/chat/handoff",
+      "endpoint": "POST /api/v2/chat/router/handoff",
       "params": {
         "razon": "string (ej: cliente_confundido, metodo_no_disponible)",
         "notas": "string (contexto para el empleado)"
@@ -284,8 +280,8 @@ no_activar_si:
 | **mostrar_metodos** | Cliente pregunta "cómo pago?" | Resultado de GET /metodos-pago + opciones claras |
 | **mostrar_bancos** | Cliente elige "transferencia" | Datos de CCI, número, titular, instrucciones |
 | **enviar_link_pago** | Cliente elige "tarjeta" | Link directo a checkout (si existe) |
-| **registrar_comprobante** | Cliente envía foto/número comprobante | POST a /registrar-comprobante |
-| **confirmar_recepcion** | Comprobante registrado exitosamente | Mensaje: "Recibido ✓. Validación en 30 min." |
+| **derivar_comprobante** | Cliente envía foto/número comprobante | Redirigir a flujo existente /payments/n8n/receipt-intake |
+| **confirmar_derivacion** | Derivación exitosa | Mensaje: "Perfecto, ya te guié por el canal de verificación." |
 | **handoff_humano** | Cliente confundido o método no disponible | Escala a empleado de cobranzas |
 
 ---
@@ -316,6 +312,34 @@ En n8n, crear nodo con:
 [Sistema base de cobranzas_pago (ver 4. System message)]
 ```
 
+### Prompt recomendado (listo para copiar en n8n)
+
+```text
+Atiende este caso de cobranzas y devuelve SOLO JSON valido.
+
+mensaje_agrupado: {{ $('get context').item.json.data.mensaje_agrupado }}
+historial: {{ JSON.stringify($('get context').item.json.data.historial_reciente) }}
+contacto: {{ JSON.stringify($('get context').item.json.data.contacto) }}
+conversacion: {{ JSON.stringify($('get context').item.json.data.conversacion) }}
+
+Contexto operativo:
+- Este subagente SOLO cubre metodos de pago y consulta de bancos.
+- No registra ni valida comprobantes dentro de chat assistant.
+- Si cliente envia comprobante, orientar y derivar al flujo existente: /api/v2/payments/n8n/receipt-intake.
+
+Devuelve exclusivamente este JSON minimo:
+{
+  "subagente_codigo": "cobranzas_pago",
+  "reply_text": "texto final para cliente",
+  "accion_tipo": "ninguna|mostrar_metodos|mostrar_bancos|enviar_link_pago|derivar_comprobante|handoff",
+  "accion_requerida": false,
+  "accion_payload": null,
+  "escalar_humano": false,
+  "motivo_humano": null,
+  "confianza": 0.9
+}
+```
+
 **Paso 1: Detectar intención específica**
 ```
 Pregunta al modelo:
@@ -324,8 +348,8 @@ Pregunta al modelo:
 ```
 
 **Paso 2: Ejecutar acción según intención**
-- Si `metodos` → GET /api/v2/cobranzas/metodos-pago → Presentar
-- Si `comprobante` → POST /api/v2/cobranzas/registrar-comprobante → Confirmar recepción
+- Si `metodos` → GET /api/v2/chat/assistant/cobranzas/metodos-pago → Presentar
+- Si `comprobante` → Derivar a flujo existente POST /api/v2/payments/n8n/receipt-intake
 - Si `estado_pago` → Handoff (no hay endpoint de estado en v2 aún)
 - Si `otro` → Consultar memoria de negocio → Responder o handoff
 
@@ -333,13 +357,18 @@ Pregunta al modelo:
 - Mensaje natural basado en resultado de API
 - Si error → Handoff a humano
 
+**Paso 3.1: Formato de salida (obligatorio)**
+- El modelo debe responder solo con el JSON minimo.
+- n8n parsea reply_text y lo envia al cliente.
+- Nunca enviar texto libre fuera del JSON.
+
 **Paso 4: Registrar en base de datos**
 ```
 POST /api/v2/chat/save-respond
 {
   "idconv": "...",
   "subagente": "cobranzas_pago",
-  "accion": "mostrar_metodos | registrar_comprobante | handoff",
+  "accion": "mostrar_metodos | derivar_comprobante | handoff",
   "datos_guardados": {...}
 }
 ```
@@ -539,15 +568,13 @@ $this->call([
 
 ## 11. Checklist de implementación
 
-- [ ] Crear endpoints en `ChatAssistantController`:
-  - [ ] `metodospago()` → GET /api/v2/cobranzas/metodos-pago
-  - [ ] `bancos()` → GET /api/v2/cobranzas/bancos
-  - [ ] `registrarComprobante()` → POST /api/v2/cobranzas/registrar-comprobante
-  - [ ] `validarComprobante()` → POST /api/v2/cobranzas/validar-comprobante (empleado)
-- [ ] Registrar rutas en `routes/api.php` bajo `/api/v2/cobranzas/`
-- [ ] Crear modelos/migraciones si es necesario:
-  - [ ] `Comprobante` model (si no existe)
-  - [ ] Tabla `comprobantes` con campos: id, idcli, iddet, metodo_pago, monto, comprobante_url, referencia_banco, estado, created_at, updated_at
+- [x] Endpoints de cobranzas en `ChatAssistantController` (alcance ligero):
+  - [x] `cobranzasMetodosPago()` → GET /api/v2/chat/assistant/cobranzas/metodos-pago
+  - [x] `cobranzasBancos()` → GET /api/v2/chat/assistant/cobranzas/bancos
+- [x] Comprobantes delegados al flujo existente:
+  - [x] `POST /api/v2/payments/n8n/receipt-intake`
+  - [x] `POST /api/v2/payments/n8n/recargas/{idrec}/aprobar|rechazar`
+- [x] No crear endpoints duplicados de registro/validación en subagente cobranzas
 - [ ] Crear `ChatCobranzasPlaybooksSeeder.php` con 8 playbooks
 - [ ] Ejecutar seeder: `php artisan db:seed --class=ChatCobranzasPlaybooksSeeder`
 - [ ] Crear nodo n8n `cobranzas_pago` con system message del documento
