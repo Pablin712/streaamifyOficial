@@ -180,7 +180,13 @@ Route::prefix('v2')->group(function () {
 
     Route::prefix('chat/assistant')->controller(ChatAssistantController::class)->group(function () {
         Route::get('/cliente', 'clientePorTelefono')->name('api.v2.chat.assistant.cliente');
+        Route::get('/cliente/usuarios-activos', 'usuariosActivosPorTelefono')->name('api.v2.chat.assistant.cliente.usuarios-activos');
         Route::post('/cliente/create', 'crearCliente')->name('api.v2.chat.assistant.cliente.create');
+        Route::get('/cliente/{idcli}/recargas', 'recargasCliente')->name('api.v2.chat.assistant.cliente.recargas');
+        Route::post('/venta', 'crearVenta')->name('api.v2.chat.assistant.venta.create');
+        Route::post('/pedido', 'crearPedido')->name('api.v2.chat.assistant.pedido.create');
+        Route::post('/soporte', 'crearSoporte')->name('api.v2.chat.assistant.soporte.create');
+        Route::get('/memoria-negocio', 'consultarMemoria')->name('api.v2.chat.assistant.memoria-negocio');
     });
 
     Route::prefix('chat/router/whatsapp-channels')->middleware('api.key')->controller(ChatWhatsappChannelController::class)->group(function () {

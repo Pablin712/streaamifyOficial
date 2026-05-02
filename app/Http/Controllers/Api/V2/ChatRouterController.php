@@ -455,6 +455,11 @@ class ChatRouterController extends Controller
         $request->merge([
             'instance' => $request->input('instance') ?: $request->input('instance_name'),
             'apikey' => $request->input('apikey') ?: $request->input('instance_apikey'),
+            'canal' => $request->input('canal') ?: 'whatsapp',
+            'canal_user_id' => $request->input('canal_user_id')
+                ?: $request->input('numero')
+                ?: $this->resolveCanalUserIdFromChatId($request->input('external_thread_id'))
+                ?: $this->resolveCanalUserIdFromChatId($request->input('chat_id')),
         ]);
 
         $validator = Validator::make($request->all(), [
@@ -676,7 +681,10 @@ class ChatRouterController extends Controller
                 ?: $request->input('numero')
                 ?: data_get($payloadData, 'contact.numero')
                 ?: data_get($payloadData, 'message.from')
-                ?: $this->resolveCanalUserIdFromChatId(data_get($payloadData, 'message.chat_id')),
+                ?: $this->resolveCanalUserIdFromChatId($request->input('external_thread_id'))
+                ?: $this->resolveCanalUserIdFromChatId($request->input('chat_id'))
+                ?: $this->resolveCanalUserIdFromChatId(data_get($payloadData, 'message.chat_id'))
+                ?: $this->resolveCanalUserIdFromChatId(data_get($payloadData, 'chat_id')),
             'contenido' => $request->input('contenido')
                 ?: $request->input('mensaje')
                 ?: data_get($payloadData, 'message.caption')
@@ -697,7 +705,9 @@ class ChatRouterController extends Controller
                 ?: data_get($payloadData, 'chat_id'),
             'numero' => $request->input('numero')
                 ?: data_get($payloadData, 'contact.numero')
-                ?: data_get($payloadData, 'message.from'),
+                ?: data_get($payloadData, 'message.from')
+                ?: $this->resolveCanalUserIdFromChatId($request->input('external_thread_id'))
+                ?: $this->resolveCanalUserIdFromChatId($request->input('chat_id')),
             'from_me' => $normalizedFromMe,
             'tipo_remitente' => $normalizedTipoRemitente,
         ]);
