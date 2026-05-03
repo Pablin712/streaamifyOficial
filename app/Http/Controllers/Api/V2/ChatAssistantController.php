@@ -1019,33 +1019,49 @@ class ChatAssistantController extends Controller
         }
 
         $tipoSubagente = $request->input('tipo');
+        $prefijo = $tipoSubagente . '_';
 
         $playbooks = \App\Models\ChatMemoriaNegocio::query()
-            ->where('tipo', 'playbook')
-            ->where('codigo', 'like', $tipoSubagente . '%')
-            ->orderBy('codigo')
-            ->get(['codigo', 'nombre', 'descripcion', 'prompt_base', 'criterios', 'contenido'])
+            ->where('activo', true)
+            ->where('clave', 'like', $prefijo . '%')
+            ->whereIn('tipo', ['faq', 'guion'])
+            ->orderBy('prioridad')
+            ->orderBy('clave')
+            ->get(['tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
             ->map(function ($playbook) {
                 return [
-                    'codigo' => $playbook->codigo,
-                    'nombre' => $playbook->nombre,
-                    'descripcion' => $playbook->descripcion,
-                    'prompt' => $playbook->prompt_base,
-                    'criterios' => json_decode($playbook->criterios ?? '{}', true),
+                    // Compatibilidad para nodos n8n existentes
+                    'codigo' => $playbook->clave,
+                    'nombre' => $playbook->titulo,
+                    'descripcion' => $playbook->resumen,
+                    'prompt' => $playbook->contenido,
+                    'criterios' => $playbook->tags ?? [],
                     'contenido' => $playbook->contenido,
+                    // Campos canonicos del nuevo esquema
+                    'clave' => $playbook->clave,
+                    'titulo' => $playbook->titulo,
+                    'tipo' => $playbook->tipo,
+                    'tags' => $playbook->tags ?? [],
+                    'fuente' => $playbook->fuente,
+                    'prioridad' => $playbook->prioridad,
+                    'visibilidad' => $playbook->visibilidad,
                 ];
             });
 
         $reglasComunicacion = \App\Models\ChatMemoriaNegocio::query()
-            ->where('tipo', 'regla')
-            ->where('codigo', 'like', $tipoSubagente . '%')
-            ->orderBy('codigo')
-            ->get(['codigo', 'nombre', 'contenido'])
+            ->where('activo', true)
+            ->where('tipo', 'guion')
+            ->where('clave', 'like', $prefijo . '%')
+            ->orderBy('prioridad')
+            ->orderBy('clave')
+            ->get(['clave', 'titulo', 'contenido', 'tags', 'prioridad'])
             ->map(function ($regla) {
                 return [
-                    'codigo' => $regla->codigo,
-                    'nombre' => $regla->nombre,
+                    'codigo' => $regla->clave,
+                    'nombre' => $regla->titulo,
                     'contenido' => $regla->contenido,
+                    'tags' => $regla->tags ?? [],
+                    'prioridad' => $regla->prioridad,
                 ];
             });
 
@@ -1076,36 +1092,58 @@ class ChatAssistantController extends Controller
         $tipoSubagente = $request->input('tipo');
 
         $memoriaGeneral = \App\Models\ChatMemoriaNegocio::query()
-            ->where('codigo', 'like', 'general_%')
-            ->orderBy('codigo')
-            ->get(['codigo', 'nombre', 'tipo', 'descripcion', 'prompt_base', 'criterios', 'contenido'])
+            ->where('activo', true)
+            ->where('clave', 'like', 'general_%')
+            ->orderBy('prioridad')
+            ->orderBy('clave')
+            ->get(['tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
             ->map(function ($item) {
                 return [
-                    'codigo' => $item->codigo,
-                    'nombre' => $item->nombre,
+                    // Compatibilidad para nodos n8n existentes
+                    'codigo' => $item->clave,
+                    'nombre' => $item->titulo,
                     'tipo' => $item->tipo,
-                    'descripcion' => $item->descripcion,
-                    'prompt' => $item->prompt_base,
-                    'criterios' => json_decode($item->criterios ?? '{}', true),
+                    'descripcion' => $item->resumen,
+                    'prompt' => $item->contenido,
+                    'criterios' => $item->tags ?? [],
                     'contenido' => $item->contenido,
+                    // Campos canonicos del nuevo esquema
+                    'clave' => $item->clave,
+                    'titulo' => $item->titulo,
+                    'resumen' => $item->resumen,
+                    'tags' => $item->tags ?? [],
+                    'fuente' => $item->fuente,
+                    'prioridad' => $item->prioridad,
+                    'visibilidad' => $item->visibilidad,
                 ];
             });
 
         $memoriaEspecifica = collect();
         if ($tipoSubagente) {
             $memoriaEspecifica = \App\Models\ChatMemoriaNegocio::query()
-                ->where('codigo', 'like', $tipoSubagente . '%')
-                ->orderBy('codigo')
-                ->get(['codigo', 'nombre', 'tipo', 'descripcion', 'prompt_base', 'criterios', 'contenido'])
+                ->where('activo', true)
+                ->where('clave', 'like', $tipoSubagente . '_%')
+                ->orderBy('prioridad')
+                ->orderBy('clave')
+                ->get(['tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
                 ->map(function ($item) {
                     return [
-                        'codigo' => $item->codigo,
-                        'nombre' => $item->nombre,
+                        // Compatibilidad para nodos n8n existentes
+                        'codigo' => $item->clave,
+                        'nombre' => $item->titulo,
                         'tipo' => $item->tipo,
-                        'descripcion' => $item->descripcion,
-                        'prompt' => $item->prompt_base,
-                        'criterios' => json_decode($item->criterios ?? '{}', true),
+                        'descripcion' => $item->resumen,
+                        'prompt' => $item->contenido,
+                        'criterios' => $item->tags ?? [],
                         'contenido' => $item->contenido,
+                        // Campos canonicos del nuevo esquema
+                        'clave' => $item->clave,
+                        'titulo' => $item->titulo,
+                        'resumen' => $item->resumen,
+                        'tags' => $item->tags ?? [],
+                        'fuente' => $item->fuente,
+                        'prioridad' => $item->prioridad,
+                        'visibilidad' => $item->visibilidad,
                     ];
                 });
         }

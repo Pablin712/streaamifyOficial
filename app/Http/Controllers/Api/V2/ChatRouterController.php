@@ -492,7 +492,60 @@ class ChatRouterController extends Controller
                 $conversacion = $this->resolveConversation($request);
 
                 if (!$conversacion) {
-                    throw new \RuntimeException('Conversación no encontrada.');
+                    $canal = (string) $request->input('canal', 'whatsapp');
+                    $canalUserId = trim((string) $request->input('canal_user_id'));
+
+                    if ($canalUserId === '') {
+                        throw new \RuntimeException('Conversación no encontrada.');
+                    }
+
+                    $telefono = $this->normalizePhone($request->input('numero') ?? $canalUserId);
+                    $cliente = $this->resolveCliente($request->input('idcli'), $telefono);
+
+                    if ($canal === 'whatsapp') {
+                        $this->upsertWhatsappChannelFromRequest($request);
+                    }
+
+                    $contacto = ChatContactoCanal::query()->firstOrCreate(
+                        [
+                            'canal' => $canal,
+                            'canal_user_id' => $canalUserId,
+                        ],
+                        [
+                            'telefono_normalizado' => $telefono,
+                            'idcli' => $cliente?->idcli,
+                            'estado_relacion' => $cliente ? 'cliente' : 'lead',
+                            'origen' => $request->input('origen', 'n8n'),
+                            'metadata' => $this->buildChannelMetadata($request),
+                            'last_seen_at' => now(),
+                        ]
+                    );
+
+                    $contacto->fill([
+                        'telefono_normalizado' => $telefono ?: $contacto->telefono_normalizado,
+                        'idcli' => $cliente?->idcli ?? $contacto->idcli,
+                        'estado_relacion' => $cliente ? 'cliente' : $contacto->estado_relacion,
+                        'origen' => $request->input('origen', $contacto->origen),
+                        'metadata' => array_merge($contacto->metadata ?? [], $this->buildChannelMetadata($request)),
+                        'last_seen_at' => now(),
+                    ]);
+                    $contacto->save();
+
+                    $conversacion = Conversacion::query()->firstOrCreate(
+                        ['canal_contacto_id' => $contacto->id],
+                        [
+                            'idcli' => $cliente?->idcli,
+                            'canal_principal' => $canal,
+                            'origen' => $request->input('origen', 'n8n'),
+                            'estado' => 'abierta',
+                            'ultima_actividad' => now(),
+                            'last_message_at' => now(),
+                            'mensajes_no_leidos' => 0,
+                            'requiere_humano' => false,
+                        ]
+                    );
+
+                    $conversacion->load('contactoCanal');
                 }
 
                 $pendientes = Mensaje::query()
@@ -577,12 +630,16 @@ class ChatRouterController extends Controller
                 ];
             });
 
-            $whatsappDispatchOk = true;
+            $isWhatsappConversation = (($resultado['conversacion']->canal_principal ?? null) === 'whatsapp');
+            $whatsappDispatchOk = !$isWhatsappConversation;
+            $whatsappDispatchAttempted = false;
+            $whatsappDispatchSkipReason = null;
 
-            if (($resultado['conversacion']->canal_principal ?? null) === 'whatsapp') {
+            if ($isWhatsappConversation) {
                 [$instance, $apiKey, $serverUrl] = $this->resolveWhatsappCredentials($resultado['conversacion'], $request);
 
                 if ($instance && $apiKey && $resultado['canal_mensaje']) {
+                    $whatsappDispatchAttempted = true;
                     $dispatch = $this->whatsAppOutboundService->sendText(
                         (string) ($resultado['conversacion']->contactoCanal?->canal_user_id ?? ''),
                         (string) $request->input('contenido'),
@@ -612,6 +669,18 @@ class ChatRouterController extends Controller
                     ]);
 
                     $whatsappDispatchOk = $dispatchOk;
+                } else {
+                    $whatsappDispatchOk = false;
+
+                    if (!$resultado['canal_mensaje']) {
+                        $whatsappDispatchSkipReason = 'canal_mensaje_no_registrado';
+                    } elseif (!$instance) {
+                        $whatsappDispatchSkipReason = 'instance_no_resuelta';
+                    } elseif (!$apiKey) {
+                        $whatsappDispatchSkipReason = 'apikey_no_resuelta';
+                    } else {
+                        $whatsappDispatchSkipReason = 'credenciales_incompletas';
+                    }
                 }
             }
 
@@ -619,7 +688,7 @@ class ChatRouterController extends Controller
                 'success' => true,
                 'message' => $whatsappDispatchOk
                     ? 'Respuesta del agente registrada correctamente.'
-                    : 'Respuesta registrada, pero WhatsApp reporto fallo al enviar.',
+                    : 'Respuesta registrada, pero WhatsApp no pudo enviarse.',
                 'data' => [
                     'idconv' => $resultado['conversacion']->idconv,
                     'idmsg' => $resultado['mensaje']->idmsg,
@@ -627,6 +696,8 @@ class ChatRouterController extends Controller
                     'pendientes_cerrados' => $resultado['pendientes_cerrados'],
                     'estado_conversacion' => $resultado['conversacion']->estado,
                     'whatsapp_enviado' => $whatsappDispatchOk,
+                    'whatsapp_dispatch_intentado' => $whatsappDispatchAttempted,
+                    'whatsapp_dispatch_omitido_motivo' => $whatsappDispatchSkipReason,
                 ],
             ], $whatsappDispatchOk ? 201 : 207);
         } catch (\Throwable $e) {
@@ -1094,13 +1165,40 @@ class ChatRouterController extends Controller
             return Conversacion::query()->with('contactoCanal')->find($request->input('idconv'));
         }
 
-        if (!$request->filled('canal') || !$request->filled('canal_user_id')) {
+        if (!$request->filled('canal')) {
+            return null;
+        }
+
+        $canal = (string) $request->input('canal');
+        $rawCanalUserId = trim((string) $request->input('canal_user_id'));
+        $threadFromExternal = trim((string) $request->input('external_thread_id'));
+        $threadFromChat = trim((string) $request->input('chat_id'));
+
+        $candidates = array_values(array_unique(array_filter([
+            $rawCanalUserId,
+            $this->resolveCanalUserIdFromChatId($rawCanalUserId),
+            $this->resolveCanalUserIdFromChatId($threadFromExternal),
+            $this->resolveCanalUserIdFromChatId($threadFromChat),
+            $this->normalizePhone($rawCanalUserId),
+            $this->normalizePhone($threadFromExternal),
+            $this->normalizePhone($threadFromChat),
+        ], fn ($value) => is_string($value) && trim($value) !== '')));
+
+        if (empty($candidates)) {
             return null;
         }
 
         $contacto = ChatContactoCanal::query()
-            ->where('canal', $request->input('canal'))
-            ->where('canal_user_id', $request->input('canal_user_id'))
+            ->where('canal', $canal)
+            ->where(function ($query) use ($candidates) {
+                $query->whereIn('canal_user_id', $candidates);
+
+                foreach ($candidates as $candidate) {
+                    if (preg_match('/^\d+$/', (string) $candidate)) {
+                        $query->orWhere('canal_user_id', 'like', $candidate . '@%');
+                    }
+                }
+            })
             ->first();
 
         if (!$contacto) {
