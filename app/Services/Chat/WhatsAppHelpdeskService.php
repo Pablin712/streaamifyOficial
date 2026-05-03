@@ -311,7 +311,7 @@ class WhatsAppHelpdeskService
                 'contacto_canal_id' => $conversation->canal_contacto_id,
                 'canal' => 'whatsapp',
                 'direccion' => 'outbound',
-                'external_status' => 'queued',
+                'external_status' => 'accepted',
                 'media_url' => $storedUrl,
                 'payload' => [
                     'dispatch' => [

@@ -640,7 +640,7 @@ class ChatRouterController extends Controller
 
                 if ($resultado['canal_mensaje']) {
                     $resultado['canal_mensaje']->update([
-                        'external_status' => 'queued',
+                        'external_status' => 'accepted',
                         'payload' => array_merge($resultado['canal_mensaje']->payload ?? [], [
                             'dispatch' => [
                                 'queued_at' => now()->toIso8601String(),
@@ -869,6 +869,7 @@ class ChatRouterController extends Controller
                 if ($request->filled('external_message_id')) {
                     $chatMensajeExistente = ChatMensajeCanal::query()
                         ->where('canal', $conversacion->canal_principal)
+                        ->where('direccion', 'outbound')
                         ->where('external_message_id', $request->input('external_message_id'))
                         ->first();
 
@@ -964,7 +965,7 @@ class ChatRouterController extends Controller
                     [$instance, $apiKey, $serverUrl] = $this->resolveWhatsappCredentials($resultado['conversacion'], $request);
 
                     $resultado['canal_mensaje']->update([
-                        'external_status' => 'queued',
+                        'external_status' => 'accepted',
                         'payload' => array_merge($resultado['canal_mensaje']->payload ?? [], [
                             'dispatch' => [
                                 'queued_at' => now()->toIso8601String(),

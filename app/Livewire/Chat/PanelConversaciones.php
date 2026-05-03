@@ -151,7 +151,7 @@ class PanelConversaciones extends Component
                 'contacto_canal_id' => $this->conversacionActiva->canal_contacto_id,
                 'canal' => 'whatsapp',
                 'direccion' => 'outbound',
-                'external_status' => 'queued',
+                'external_status' => 'accepted',
                 'payload' => [
                     'origen' => 'panel-empleado',
                     'dispatch' => [
