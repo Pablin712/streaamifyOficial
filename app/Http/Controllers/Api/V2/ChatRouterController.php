@@ -14,6 +14,7 @@ use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
 use App\Services\Chat\WhatsAppOutboundService;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
@@ -631,75 +632,57 @@ class ChatRouterController extends Controller
             });
 
             $isWhatsappConversation = (($resultado['conversacion']->canal_principal ?? null) === 'whatsapp');
-            $whatsappDispatchOk = !$isWhatsappConversation;
-            $whatsappDispatchAttempted = false;
+            $whatsappDispatchQueued = false;
             $whatsappDispatchSkipReason = null;
 
             if ($isWhatsappConversation) {
                 [$instance, $apiKey, $serverUrl] = $this->resolveWhatsappCredentials($resultado['conversacion'], $request);
 
-                if ($instance && $apiKey && $resultado['canal_mensaje']) {
-                    $whatsappDispatchAttempted = true;
-                    $dispatch = $this->whatsAppOutboundService->sendText(
-                        (string) ($resultado['conversacion']->contactoCanal?->canal_user_id ?? ''),
-                        (string) $request->input('contenido'),
-                        $instance,
-                        $apiKey,
-                        $serverUrl,
-                        [
-                            'tipo_contenido' => $request->input('tipo_contenido', 'texto'),
-                            'media_url' => $request->input('media_url'),
-                            'media_mime_type' => $request->input('media_mime_type'),
-                        ]
-                    );
-
-                    $dispatchOk = (bool) ($dispatch['ok'] ?? false);
-
+                if ($resultado['canal_mensaje']) {
                     $resultado['canal_mensaje']->update([
-                        'external_status' => $dispatchOk ? 'sent' : 'failed',
-                        'external_message_id' => $dispatch['external_message_id'] ?? $resultado['canal_mensaje']->external_message_id,
+                        'external_status' => 'queued',
                         'payload' => array_merge($resultado['canal_mensaje']->payload ?? [], [
                             'dispatch' => [
-                                'ok' => $dispatchOk,
-                                'status' => $dispatch['status'] ?? null,
-                                'error' => $dispatch['error'] ?? null,
-                                'response' => $dispatch['payload'] ?? ($dispatch['response'] ?? null),
+                                'queued_at' => now()->toIso8601String(),
                             ],
                         ]),
                     ]);
 
-                    $whatsappDispatchOk = $dispatchOk;
-                } else {
-                    $whatsappDispatchOk = false;
+                    $this->scheduleWhatsappDispatch(
+                        (int) $resultado['conversacion']->idconv,
+                        (int) $resultado['canal_mensaje']->id,
+                        (string) $request->input('contenido'),
+                        [
+                            'tipo_contenido' => $request->input('tipo_contenido', 'texto'),
+                            'media_url' => $request->input('media_url'),
+                            'media_mime_type' => $request->input('media_mime_type'),
+                        ],
+                        $instance,
+                        $apiKey,
+                        $serverUrl
+                    );
 
-                    if (!$resultado['canal_mensaje']) {
-                        $whatsappDispatchSkipReason = 'canal_mensaje_no_registrado';
-                    } elseif (!$instance) {
-                        $whatsappDispatchSkipReason = 'instance_no_resuelta';
-                    } elseif (!$apiKey) {
-                        $whatsappDispatchSkipReason = 'apikey_no_resuelta';
-                    } else {
-                        $whatsappDispatchSkipReason = 'credenciales_incompletas';
-                    }
+                    $whatsappDispatchQueued = true;
+                } else {
+                    $whatsappDispatchSkipReason = 'canal_mensaje_no_registrado';
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => $whatsappDispatchOk
-                    ? 'Respuesta del agente registrada correctamente.'
-                    : 'Respuesta registrada, pero WhatsApp no pudo enviarse.',
+                'message' => $whatsappDispatchQueued
+                    ? 'Respuesta del agente registrada y envio WhatsApp programado.'
+                    : 'Respuesta del agente registrada correctamente.',
                 'data' => [
                     'idconv' => $resultado['conversacion']->idconv,
                     'idmsg' => $resultado['mensaje']->idmsg,
                     'chat_mensaje_canal_id' => $resultado['canal_mensaje']?->id,
                     'pendientes_cerrados' => $resultado['pendientes_cerrados'],
                     'estado_conversacion' => $resultado['conversacion']->estado,
-                    'whatsapp_enviado' => $whatsappDispatchOk,
-                    'whatsapp_dispatch_intentado' => $whatsappDispatchAttempted,
+                    'whatsapp_dispatch_programado' => $whatsappDispatchQueued,
                     'whatsapp_dispatch_omitido_motivo' => $whatsappDispatchSkipReason,
                 ],
-            ], $whatsappDispatchOk ? 201 : 207);
+            ], 201);
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -804,6 +787,7 @@ class ChatRouterController extends Controller
             'apikey' => 'nullable|string|max:191',
             'server_url' => 'nullable|string|max:191',
             'from_me' => 'nullable|boolean',
+            'enviar_whatsapp' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -960,17 +944,67 @@ class ChatRouterController extends Controller
                 ];
             });
 
+            $isWhatsappConversation = (($resultado['conversacion']->canal_principal ?? null) === 'whatsapp');
+            $whatsappDispatchQueued = false;
+            $whatsappDispatchSkipReason = null;
+
+            if ($isWhatsappConversation) {
+                $debeEnviarWhatsapp = filter_var($request->input('enviar_whatsapp', true), FILTER_VALIDATE_BOOLEAN);
+                $tieneExternalMessageId = $request->filled('external_message_id');
+
+                if ($resultado['duplicado']) {
+                    $whatsappDispatchSkipReason = 'mensaje_duplicado';
+                } elseif (!$resultado['canal_mensaje']) {
+                    $whatsappDispatchSkipReason = 'canal_mensaje_no_registrado';
+                } elseif (!$debeEnviarWhatsapp) {
+                    $whatsappDispatchSkipReason = 'envio_whatsapp_deshabilitado';
+                } elseif ($tieneExternalMessageId) {
+                    $whatsappDispatchSkipReason = 'external_message_id_presente';
+                } else {
+                    [$instance, $apiKey, $serverUrl] = $this->resolveWhatsappCredentials($resultado['conversacion'], $request);
+
+                    $resultado['canal_mensaje']->update([
+                        'external_status' => 'queued',
+                        'payload' => array_merge($resultado['canal_mensaje']->payload ?? [], [
+                            'dispatch' => [
+                                'queued_at' => now()->toIso8601String(),
+                            ],
+                        ]),
+                    ]);
+
+                    $this->scheduleWhatsappDispatch(
+                        (int) $resultado['conversacion']->idconv,
+                        (int) $resultado['canal_mensaje']->id,
+                        (string) $resultado['mensaje']->contenido,
+                        [
+                            'tipo_contenido' => $resultado['mensaje']->tipo_contenido,
+                            'media_url' => $resultado['mensaje']->media_url,
+                            'media_mime_type' => $resultado['mensaje']->mime_type,
+                        ],
+                        $instance,
+                        $apiKey,
+                        $serverUrl
+                    );
+
+                    $whatsappDispatchQueued = true;
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => $resultado['duplicado']
                     ? 'Mensaje outbound ya estaba registrado (fromMe).'
-                    : 'Mensaje outbound guardado correctamente (fromMe).',
+                    : ($whatsappDispatchQueued
+                        ? 'Mensaje outbound guardado y envio WhatsApp programado.'
+                        : 'Mensaje outbound guardado correctamente (fromMe).'),
                 'data' => [
                     'idconv' => $resultado['conversacion']->idconv,
                     'idmsg' => $resultado['mensaje']->idmsg,
                     'chat_mensaje_canal_id' => $resultado['canal_mensaje']?->id,
                     'estado_conversacion' => $resultado['conversacion']->estado,
                     'duplicado' => $resultado['duplicado'],
+                    'whatsapp_dispatch_programado' => $whatsappDispatchQueued,
+                    'whatsapp_dispatch_omitido_motivo' => $whatsappDispatchSkipReason,
                 ],
             ], $resultado['duplicado'] ? 200 : 201);
         } catch (\Throwable $e) {
@@ -1512,9 +1546,124 @@ class ChatRouterController extends Controller
 
     private function normalizePhone(?string $value): ?string
     {
-        $digits = preg_replace('/\D+/', '', (string) $value);
+        return PhoneNumber::canonicalEc($value);
+    }
 
-        return $digits !== '' ? $digits : null;
+    private function scheduleWhatsappDispatch(
+        int $conversationId,
+        int $chatMensajeCanalId,
+        string $contenido,
+        array $options = [],
+        ?string $instance = null,
+        ?string $apiKey = null,
+        ?string $serverUrl = null
+    ): void {
+        app()->terminating(function () use ($conversationId, $chatMensajeCanalId, $contenido, $options, $instance, $apiKey, $serverUrl) {
+            $canalMensaje = ChatMensajeCanal::query()->find($chatMensajeCanalId);
+
+            try {
+                $conversacion = Conversacion::query()->with('contactoCanal')->find($conversationId);
+
+                if (!$conversacion || !$canalMensaje) {
+                    return;
+                }
+
+                $credentialsRequest = new Request(array_filter([
+                    'instance' => $instance,
+                    'apikey' => $apiKey,
+                    'server_url' => $serverUrl,
+                ], fn ($value) => $value !== null && $value !== ''));
+
+                [$resolvedInstance, $resolvedApiKey, $resolvedServerUrl] = $this->resolveWhatsappCredentials($conversacion, $credentialsRequest);
+
+                if (!$resolvedInstance || !$resolvedApiKey) {
+                    $canalMensaje->update([
+                        'external_status' => 'failed',
+                        'payload' => array_merge($canalMensaje->payload ?? [], [
+                            'dispatch' => [
+                                'ok' => false,
+                                'error' => 'Credenciales de WhatsApp incompletas.',
+                            ],
+                        ]),
+                    ]);
+
+                    return;
+                }
+
+                $destino = (string) ($conversacion->contactoCanal?->canal_user_id
+                    ?: $conversacion->contactoCanal?->telefono_normalizado
+                    ?: '');
+
+                if ($destino === '') {
+                    $canalMensaje->update([
+                        'external_status' => 'failed',
+                        'payload' => array_merge($canalMensaje->payload ?? [], [
+                            'dispatch' => [
+                                'ok' => false,
+                                'error' => 'No se pudo resolver el numero destino.',
+                            ],
+                        ]),
+                    ]);
+
+                    return;
+                }
+
+                $dispatch = $this->whatsAppOutboundService->sendText(
+                    $destino,
+                    $this->resolveOutboundTextContent($contenido, $options),
+                    $resolvedInstance,
+                    $resolvedApiKey,
+                    $resolvedServerUrl,
+                    $options
+                );
+
+                $dispatchOk = (bool) ($dispatch['ok'] ?? false);
+
+                $canalMensaje->update([
+                    'external_status' => $dispatchOk ? 'sent' : 'failed',
+                    'external_message_id' => $dispatch['external_message_id'] ?? $canalMensaje->external_message_id,
+                    'payload' => array_merge($canalMensaje->payload ?? [], [
+                        'dispatch' => [
+                            'ok' => $dispatchOk,
+                            'status' => $dispatch['status'] ?? null,
+                            'error' => $dispatch['error'] ?? null,
+                            'response' => $dispatch['payload'] ?? ($dispatch['response'] ?? null),
+                            'sent_at' => now()->toIso8601String(),
+                        ],
+                    ]),
+                ]);
+            } catch (\Throwable $e) {
+                if ($canalMensaje) {
+                    $canalMensaje->update([
+                        'external_status' => 'failed',
+                        'payload' => array_merge($canalMensaje->payload ?? [], [
+                            'dispatch' => [
+                                'ok' => false,
+                                'error' => $e->getMessage(),
+                            ],
+                        ]),
+                    ]);
+                }
+            }
+        });
+    }
+
+    private function resolveOutboundTextContent(string $contenido, array $options = []): string
+    {
+        $text = trim($contenido);
+
+        if ($text !== '') {
+            return $text;
+        }
+
+        return match ((string) ($options['tipo_contenido'] ?? 'texto')) {
+            'imagen' => '[imagen enviada]',
+            'audio' => '[audio enviado]',
+            'video' => '[video enviado]',
+            'documento', 'archivo' => '[archivo enviado]',
+            'sticker' => '[sticker enviado]',
+            default => '[mensaje enviado]',
+        };
     }
 
     private function resolveWhatsappCredentials(Conversacion $conversacion, Request $request): array

@@ -3,6 +3,7 @@
 namespace App\Services\Chat;
 
 use App\Models\ChatWhatsappChannel;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -13,7 +14,7 @@ class WhatsAppOutboundService
     /**
      * Envía mensaje de texto directo por Evolution API
      */
-    public function sendText(string $number, string $message, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    public function sendText(string $number, string $message, ?string $instance, ?string $apiKey, ?string $serverUrl = null, array $options = []): array
     {
         if (! $apiKey || ! $instance) {
             return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
@@ -61,12 +62,6 @@ class WhatsAppOutboundService
 
     private function formatNumber(string $number): string
     {
-        $number = trim($number);
-
-        if (str_contains($number, '@')) {
-            return $number;
-        }
-
-        return preg_replace('/\D/', '', $number).'@s.whatsapp.net';
+        return PhoneNumber::toWhatsappJid($number);
     }
 }

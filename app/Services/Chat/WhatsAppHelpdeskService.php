@@ -11,6 +11,7 @@ use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Empleado;
 use App\Models\Mensaje;
+use App\Support\PhoneNumber;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -289,7 +290,7 @@ class WhatsAppHelpdeskService
             throw new \InvalidArgumentException('Mensaje vacío');
         }
 
-        return DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType) {
+        $result = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType) {
             // 1. Crear mensaje
             $message = Mensaje::create([
                 'idconv' => $conversation->idconv,
@@ -304,26 +305,22 @@ class WhatsAppHelpdeskService
             ]);
 
             // 2. Crear registro de canal
-            ChatMensajeCanal::create([
+            $canalMensaje = ChatMensajeCanal::create([
                 'idmsg' => $message->idmsg,
                 'idconv' => $conversation->idconv,
                 'contacto_canal_id' => $conversation->canal_contacto_id,
                 'canal' => 'whatsapp',
                 'direccion' => 'outbound',
-                'external_status' => 'accepted',
+                'external_status' => 'queued',
                 'media_url' => $storedUrl,
+                'payload' => [
+                    'dispatch' => [
+                        'queued_at' => now()->toIso8601String(),
+                    ],
+                ],
             ]);
 
-            // 3. Enviar
-            $dispatch = $this->sendMessageToWhatsApp($conversation, $type, $content, $storedUrl);
-
-            // 4. Actualizar estado
-            $message->update([
-                'external_id' => $dispatch['external_message_id'] ?? null,
-                'error_message' => $dispatch['ok'] ? null : $dispatch['error'],
-            ]);
-
-            // 5. Actualizar conversación
+            // 3. Actualizar conversación
             $conversation->update([
                 'estado' => 'atendiendo',
                 'assigned_to' => $conversation->assigned_to ?: $operator->idemp,
@@ -334,8 +331,53 @@ class WhatsAppHelpdeskService
 
             event(new ChatMessageSent($conversation, $message));
 
-            return $message;
+            return [
+                'message' => $message,
+                'conversation_id' => (int) $conversation->idconv,
+                'canal_mensaje_id' => (int) $canalMensaje->id,
+                'type' => $type,
+                'content' => $content,
+                'media_url' => $storedUrl,
+            ];
         });
+
+        app()->terminating(function () use ($result) {
+            $conversation = Conversacion::query()->with('contactoCanal')->find($result['conversation_id']);
+            $canalMensaje = ChatMensajeCanal::query()->find($result['canal_mensaje_id']);
+
+            if (!$conversation || !$canalMensaje) {
+                return;
+            }
+
+            $dispatch = $this->sendMessageToWhatsApp(
+                $conversation,
+                $result['type'],
+                $result['content'],
+                $result['media_url']
+            );
+
+            $dispatchOk = (bool) ($dispatch['ok'] ?? false);
+
+            $canalMensaje->update([
+                'external_status' => $dispatchOk ? 'sent' : 'failed',
+                'external_message_id' => $dispatch['external_message_id'] ?? $canalMensaje->external_message_id,
+                'payload' => array_merge($canalMensaje->payload ?? [], [
+                    'dispatch' => [
+                        'ok' => $dispatchOk,
+                        'status' => $dispatch['status'] ?? null,
+                        'error' => $dispatch['error'] ?? null,
+                        'sent_at' => now()->toIso8601String(),
+                    ],
+                ]),
+            ]);
+
+            $result['message']->update([
+                'external_id' => $dispatch['external_message_id'] ?? null,
+                'error_message' => $dispatchOk ? null : ($dispatch['error'] ?? 'Error enviando WhatsApp.'),
+            ]);
+        });
+
+        return $result['message'];
     }
 
     /**
@@ -557,14 +599,7 @@ class WhatsAppHelpdeskService
             return Cliente::find($idcli);
         }
 
-        $digits = preg_replace('/\D/', '', (string) $phone);
-
-        if (empty($digits)) {
-            return null;
-        }
-
-        return Cliente::whereRaw("REPLACE(REPLACE(REPLACE(telefonocli, ' ', ''), '-', ''), '+', '') LIKE ?", ["%$digits"])
-            ->first();
+        return Cliente::buscarPorTelefonoNormalizado($phone);
     }
 
     /**
@@ -572,11 +607,7 @@ class WhatsAppHelpdeskService
      */
     private function normalizePhone(?string $phone): ?string
     {
-        if (empty($phone)) {
-            return null;
-        }
-
-        return preg_replace('/@.+$/', '', trim($phone));
+        return PhoneNumber::canonicalEc($phone);
     }
 
     private function resolveChannelFromPayload(array $payload): ?ChatWhatsappChannel

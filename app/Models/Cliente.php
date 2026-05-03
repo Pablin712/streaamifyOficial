@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\ClienteAuth;
+use App\Support\PhoneNumber;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +41,12 @@ class Cliente extends Authenticatable
     {
         $this->attributes['password'] = bcrypt($value);
     }
+
+    public function setTelefonocliAttribute($value)
+    {
+        $this->attributes['telefonocli'] = PhoneNumber::formatForStorage($value);
+    }
+
     public function ventas()
     {
         return $this->hasMany(Venta::class, 'idcli', 'idcli');

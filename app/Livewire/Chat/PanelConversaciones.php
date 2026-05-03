@@ -142,7 +142,7 @@ class PanelConversaciones extends Component
         ]);
 
         $canalMensaje = null;
-        $dispatchOk = true;
+        $dispatchQueued = false;
 
         if ($this->conversacionActiva->canal_principal === 'whatsapp' && $this->conversacionActiva->canal_contacto_id) {
             $canalMensaje = ChatMensajeCanal::create([
@@ -151,9 +151,12 @@ class PanelConversaciones extends Component
                 'contacto_canal_id' => $this->conversacionActiva->canal_contacto_id,
                 'canal' => 'whatsapp',
                 'direccion' => 'outbound',
-                'external_status' => 'accepted',
+                'external_status' => 'queued',
                 'payload' => [
                     'origen' => 'panel-empleado',
+                    'dispatch' => [
+                        'queued_at' => now()->toIso8601String(),
+                    ],
                 ],
             ]);
 
@@ -186,9 +189,26 @@ class PanelConversaciones extends Component
                 }
             }
 
-            if ($instance && $apiKey) {
+            $destino = (string) ($this->conversacionActiva->contactoCanal?->canal_user_id ?? '');
+
+            app()->terminating(function () use ($outbound, $canalMensaje, $destino, $contenido, $instance, $apiKey, $serverUrl) {
+                if (!$instance || !$apiKey) {
+                    $canalMensaje->update([
+                        'external_status' => 'failed',
+                        'payload' => array_merge($canalMensaje->payload ?? [], [
+                            'dispatch' => [
+                                'ok' => false,
+                                'status' => 0,
+                                'error' => 'Faltan credenciales de instancia o apiKey para este contacto.',
+                            ],
+                        ]),
+                    ]);
+
+                    return;
+                }
+
                 $dispatch = $outbound->sendText(
-                    (string) ($this->conversacionActiva->contactoCanal?->canal_user_id ?? ''),
+                    $destino,
                     $contenido,
                     $instance,
                     $apiKey,
@@ -204,34 +224,21 @@ class PanelConversaciones extends Component
                     'payload' => array_merge($canalMensaje->payload ?? [], [
                         'dispatch' => [
                             'ok' => $dispatch['ok'],
-                            'status' => $dispatch['status'],
-                            'error' => $dispatch['error'],
+                            'status' => $dispatch['status'] ?? null,
+                            'error' => $dispatch['error'] ?? null,
                         ],
                     ]),
                 ]);
+            });
 
-                $dispatchOk = (bool) $dispatch['ok'];
-            } else {
-                $canalMensaje->update([
-                    'external_status' => 'failed',
-                    'payload' => array_merge($canalMensaje->payload ?? [], [
-                        'dispatch' => [
-                            'ok' => false,
-                            'status' => 0,
-                            'error' => 'Faltan credenciales de instancia o apiKey para este contacto.',
-                        ],
-                    ]),
-                ]);
-
-                $dispatchOk = false;
-            }
+            $dispatchQueued = true;
         }
 
         // Actualizar estado de conversación
         $this->conversacionActiva->cambiarEstado('en_atencion', $empleadoId);
 
-        if (!$dispatchOk) {
-            $this->addError('mensaje', 'El mensaje se guardó pero falló el envío a WhatsApp.');
+        if ($canalMensaje && !$dispatchQueued) {
+            $this->addError('mensaje', 'El mensaje se guardó, pero el envio WhatsApp no se pudo programar.');
         }
 
         $this->mensajes[] = $mensaje->load('empleado')->toArray();

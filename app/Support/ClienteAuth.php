@@ -35,12 +35,12 @@ class ClienteAuth
 
     public static function normalizePhone(?string $phone): string
     {
-        return self::normalizeText($phone);
+        return PhoneNumber::formatForStorage($phone);
     }
 
     public static function phoneDigits(?string $phone): string
     {
-        return preg_replace('/\D+/', '', (string) $phone) ?? '';
+        return PhoneNumber::canonicalEc($phone) ?? '';
     }
 
     public static function passwordRules(bool $confirmed = true): array
