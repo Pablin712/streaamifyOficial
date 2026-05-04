@@ -1,7 +1,7 @@
 @php
     // Generar ID único para la tabla basado en el contexto o usar uno por defecto
     $tableId = $tableId ?? 'cuentas-table-' . uniqid();
-    $emptyColspan = 7;
+    $emptyColspan = 8;
     if (Auth::user()->hasPermissionTo('cuentas.mensaje')) {
         $emptyColspan++;
     }
@@ -81,7 +81,15 @@
                         </svg>
                     </span>
                 </th>
-                <th class="sortable" data-type="number" data-col="5">
+                <th class="sortable" data-type="string" data-col="5">
+                    Última actualización
+                    <span class="sort-arrow">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M7 11l5-5 5 5M7 13l5 5 5-5"/>
+                        </svg>
+                    </span>
+                </th>
+                <th class="sortable" data-type="number" data-col="6">
                     Clientes
                     <span class="sort-arrow">
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -89,7 +97,7 @@
                         </svg>
                     </span>
                 </th>
-                <th class="sortable" data-type="string" data-col="6">
+                <th class="sortable" data-type="string" data-col="7">
                     Estado
                     <span class="sort-arrow">
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -149,6 +157,7 @@
                         {{ $cuenta->contrasenacue }}
                     </td>
                     <td>{{ $cuenta->fechavencue }}</td>
+                    <td>{{ optional($cuenta->updated_at)->format('d/m/Y H:i') ?? 'N/A' }}</td>
                     <td>
                         @php
                             $users = $cuenta->usuarios_activos;

@@ -153,6 +153,16 @@ Route::prefix('v2')->group(function () {
         Route::post('/auth/validate-credentials', 'validarCredenciales')->name('api.auth.validate');
     });
 
+    // Clientes (CRUD completo) - pensado para consumo desde apps móviles
+    Route::middleware('api.key')->group(function () {
+        Route::get('/clientes', [ClienteApiController::class, 'index'])->name('api.v2.clientes.index');
+        Route::post('/clientes', [ClienteApiController::class, 'store'])->name('api.v2.clientes.store');
+        Route::get('/clientes/{id}', [ClienteApiController::class, 'show'])->name('api.v2.clientes.show');
+        Route::match(['put', 'patch'], '/clientes/{id}', [ClienteApiController::class, 'update'])->name('api.v2.clientes.update');
+        Route::delete('/clientes/{id}', [ClienteApiController::class, 'destroy'])->name('api.v2.clientes.destroy');
+        Route::get('/clientes/{id}/ventas', [ClienteApiController::class, 'ventas'])->name('api.v2.clientes.ventas');
+    });
+
     // Rutas públicas de información (sin prefijo 'info')
     Route::controller(InformationController::class)->group(function () {
         Route::get('/precios', 'getPrecios')->name('api.v2.precios.public');
