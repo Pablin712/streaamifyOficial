@@ -1398,6 +1398,15 @@
                         @else
                             <button wire:click="closeConversation" class="wa-action" type="button">Cerrar</button>
                         @endif
+                        <button
+                            wire:click="clearActiveConversationHistory"
+                            wire:confirm="¿Seguro que deseas borrar solo el historial del chat seleccionado? Esta acción no se puede deshacer."
+                            class="wa-action"
+                            type="button"
+                            style="border-color: #fca5a5; color: #b91c1c;"
+                        >
+                            Limpiar chat
+                        </button>
                     </div>
                 </div>
 

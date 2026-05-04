@@ -507,6 +507,50 @@ class WhatsAppHelpdesk extends Component
         $this->settingsNotice = 'Historial interno de chats limpiado correctamente.';
     }
 
+    public function clearActiveConversationHistory(): void
+    {
+        abort_if(Gate::denies('chat.supervisor') && Gate::denies('chat.responder'), 403, 'No tienes permiso para limpiar historial.');
+        $this->requireConversation();
+
+        $conversation = $this->activeConversation();
+
+        if (! $conversation) {
+            return;
+        }
+
+        DB::transaction(function () use ($conversation) {
+            ChatMensajeCanal::query()
+                ->where('idconv', $conversation->idconv)
+                ->delete();
+
+            Mensaje::query()
+                ->where('idconv', $conversation->idconv)
+                ->delete();
+
+            ChatMemoriaResumen::query()
+                ->where('idconv', $conversation->idconv)
+                ->delete();
+
+            $conversation->update([
+                'mensajes_no_leidos' => 0,
+                'operator_typing_id' => null,
+                'operator_typing_at' => null,
+                'last_message_at' => null,
+                'ultima_actividad' => now(),
+            ]);
+        });
+
+        $this->messagesLimit = 80;
+        $this->activeMessageSearch = '';
+        $this->messageText = '';
+        $this->imageUpload = null;
+        $this->audioUpload = null;
+        $this->lastUnreadConversations = $this->unreadConversationsCount();
+        $this->lastActiveMessageFingerprint = $this->activeConversationMessageFingerprint();
+        $this->settingsNotice = 'Historial del chat seleccionado limpiado correctamente.';
+        $this->dispatch('chat-scroll-bottom');
+    }
+
     public function sendText(): void
     {
         $this->sendMessage('texto');
