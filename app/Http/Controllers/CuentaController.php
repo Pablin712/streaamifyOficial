@@ -1482,12 +1482,7 @@ class CuentaController extends Controller
 
             DB::table('mantenimientos')
                 ->where('idcue', $cuenta->idcue)
-                ->update([
-                    'idcue_snapshot' => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
-                    'idval_snapshot' => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
-                    'servicio_snapshot' => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
-                    'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
-                ]);
+                ->delete();
 
             if ($idsPerfiles->isNotEmpty()) {
                 Perfil::whereIn('idper', $idsPerfiles)->delete();

@@ -121,9 +121,9 @@
                     <tbody>
                         @foreach ($mantenimientos as $mantenimiento)
                             <tr data-id="{{ $mantenimiento->idman }}">
-                                <td>{{ $mantenimiento->idcue }}</td>
-                                <td>{{ $mantenimiento->cuenta->usuariocue }}</td>
-                                <td>{{ $mantenimiento->cuenta->contrasenacue }}</td>
+                                <td>{{ $mantenimiento->idcue ?? 'N/A' }}</td>
+                                <td>{{ optional($mantenimiento->cuenta)->usuariocue ?? $mantenimiento->cuenta_usuario_snapshot ?? 'Cuenta eliminada' }}</td>
+                                <td>{{ optional($mantenimiento->cuenta)->contrasenacue ?? 'N/A' }}</td>
                                 <td>{{ $mantenimiento->fechaman }}</td>
                                 <td>{{ $mantenimiento->descripcionman }}</td>
                                 @if (Auth::user()->hasAnyPermission(['mantenimientos.update', 'mantenimientos.destroy']))
@@ -217,7 +217,10 @@ function openEditModal(id) {
             if (data.mantenimiento) {
                 const m = data.mantenimiento;
                 document.getElementById('edit-idman').value = m.idman;
-                document.getElementById('edit-cuenta-info').value = `${m.idcue} - ${m.cuenta.usuariocue}`;
+                const cuentaUsuario = (m.cuenta && m.cuenta.usuariocue)
+                    ? m.cuenta.usuariocue
+                    : (m.cuenta_usuario_snapshot || 'Cuenta eliminada');
+                document.getElementById('edit-cuenta-info').value = `${m.idcue || m.idcue_snapshot || 'N/A'} - ${cuentaUsuario}`;
                 document.getElementById('edit-fechaman').value = m.fechaman;
                 document.getElementById('edit-descripcionman').value = m.descripcionman;
                 window.dispatchEvent(new CustomEvent('open-modal', { detail: 'edit-mantenimiento' }));
