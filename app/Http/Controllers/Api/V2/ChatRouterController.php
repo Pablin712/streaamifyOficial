@@ -1209,6 +1209,35 @@ class ChatRouterController extends Controller
         $threadFromExternal = trim((string) $request->input('external_thread_id'));
         $threadFromChat = trim((string) $request->input('chat_id'));
 
+        $preferredCandidates = array_values(array_unique(array_filter([
+            $rawCanalUserId,
+            $this->resolveCanalUserIdFromChatId($rawCanalUserId),
+            $this->normalizePhone($rawCanalUserId),
+        ], fn ($value) => is_string($value) && trim($value) !== '')));
+
+        if (!empty($preferredCandidates)) {
+            $contactoPreferido = ChatContactoCanal::query()
+                ->where('canal', $canal)
+                ->where(function ($query) use ($preferredCandidates) {
+                    $query->whereIn('canal_user_id', $preferredCandidates);
+
+                    foreach ($preferredCandidates as $candidate) {
+                        if (preg_match('/^\d+$/', (string) $candidate)) {
+                            $query->orWhere('canal_user_id', 'like', $candidate . '@%');
+                        }
+                    }
+                })
+                ->first();
+
+            if ($contactoPreferido) {
+                return Conversacion::query()
+                    ->with('contactoCanal')
+                    ->where('canal_contacto_id', $contactoPreferido->id)
+                    ->latest('ultima_actividad')
+                    ->first();
+            }
+        }
+
         $candidates = array_values(array_unique(array_filter([
             $rawCanalUserId,
             $this->resolveCanalUserIdFromChatId($rawCanalUserId),
