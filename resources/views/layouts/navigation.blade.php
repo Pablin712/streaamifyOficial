@@ -18,6 +18,9 @@
                 const theme = localStorage.getItem('streamify_theme');
                 if (darkMode === 'true') {
                     document.documentElement.setAttribute('data-dark-mode', 'true');
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-bs-theme', 'light');
                 }
                 if (theme) {
                     document.documentElement.setAttribute('data-theme', theme);
@@ -30,8 +33,8 @@
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
     <link rel="icon" href="{{ asset('images/Icono.png') }}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}?v={{ filemtime(public_path('css/sidebar.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/navbar.css') }}?v={{ filemtime(public_path('css/navbar.css')) }}">
 
     <!-- Sistema de Temas Dinámicos -->
     <link rel="stylesheet" href="{{ asset('css/themes.css') }}?v={{ filemtime(public_path('css/themes.css')) }}">

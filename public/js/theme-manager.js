@@ -12,7 +12,10 @@
         const savedDarkMode = localStorage.getItem('streamify_dark_mode');
         if (savedDarkMode === 'true') {
             document.documentElement.setAttribute('data-dark-mode', 'true');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
             console.log('[ThemeManager] Dark mode aplicado inmediatamente (pre-init)');
+        } else {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
     } catch (e) {
         console.warn('[ThemeManager] Error aplicando dark mode temprano:', e);
@@ -227,9 +230,11 @@ const ThemeManager = {
         if (enabled) {
             // Aplicar dark mode SIN cambiar el tema base
             document.documentElement.setAttribute('data-dark-mode', 'true');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
         } else {
             // Remover dark mode, volver al tema base
             document.documentElement.removeAttribute('data-dark-mode');
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         }
 
         // Guardar preferencia

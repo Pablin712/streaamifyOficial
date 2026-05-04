@@ -97,6 +97,8 @@
    DARK MODE COMO OVERLAY (FUNCIONA CON CUALQUIER TEMA)
    ======================================== */
 [data-dark-mode="true"] {
+    color-scheme: dark;
+
     --bg-body: #121212 !important;
     --bg-card: #1e1e1e !important;
     --bg-light: #2a2a2a !important;
@@ -113,6 +115,110 @@
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
     --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
     --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+
+    /* Integracion con Bootstrap para todo el sistema */
+    --bs-body-bg: #121212 !important;
+    --bs-body-bg-rgb: 18, 18, 18 !important;
+    --bs-body-color: #f3f4f6 !important;
+    --bs-body-color-rgb: 243, 244, 246 !important;
+    --bs-border-color: #3b3b3b !important;
+    --bs-border-color-translucent: rgba(255, 255, 255, 0.14) !important;
+    --bs-light: #232323 !important;
+    --bs-light-rgb: 35, 35, 35 !important;
+    --bs-dark: #f3f4f6 !important;
+    --bs-dark-rgb: 243, 244, 246 !important;
+    --bs-warning: #a16207 !important;
+    --bs-warning-rgb: 161, 98, 7 !important;
+    --bs-link-color: #93c5fd !important;
+    --bs-link-hover-color: #bfdbfe !important;
+}
+
+/* Superficie base en modo oscuro */
+[data-dark-mode="true"] body,
+[data-dark-mode="true"] #layoutSidenav_content,
+[data-dark-mode="true"] main {
+    background-color: var(--bg-body) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-dark-mode="true"] .card,
+[data-dark-mode="true"] .modal-content,
+[data-dark-mode="true"] .dropdown-menu,
+[data-dark-mode="true"] .list-group-item,
+[data-dark-mode="true"] .offcanvas,
+[data-dark-mode="true"] .table,
+[data-dark-mode="true"] .accordion-item {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-dark-mode="true"] .table th,
+[data-dark-mode="true"] .table td,
+[data-dark-mode="true"] .table thead th,
+[data-dark-mode="true"] .dropdown-item,
+[data-dark-mode="true"] .dropdown-header,
+[data-dark-mode="true"] .form-label,
+[data-dark-mode="true"] .nav-link,
+[data-dark-mode="true"] .navbar-brand,
+[data-dark-mode="true"] .small,
+[data-dark-mode="true"] p,
+[data-dark-mode="true"] span,
+[data-dark-mode="true"] label,
+[data-dark-mode="true"] h1,
+[data-dark-mode="true"] h2,
+[data-dark-mode="true"] h3,
+[data-dark-mode="true"] h4,
+[data-dark-mode="true"] h5,
+[data-dark-mode="true"] h6 {
+    color: var(--text-primary);
+}
+
+[data-dark-mode="true"] .text-dark,
+[data-dark-mode="true"] .text-body,
+[data-dark-mode="true"] .text-black,
+[data-dark-mode="true"] .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+[data-dark-mode="true"] .form-control,
+[data-dark-mode="true"] .form-select,
+[data-dark-mode="true"] .input-group-text {
+    background-color: #222 !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-dark-mode="true"] .form-control::placeholder,
+[data-dark-mode="true"] .form-select::placeholder {
+    color: #8f8f8f !important;
+}
+
+[data-dark-mode="true"] .btn-light,
+[data-dark-mode="true"] .bg-light {
+    background-color: #262626 !important;
+    color: var(--text-primary) !important;
+    border-color: #3b3b3b !important;
+}
+
+/* Neutralizar amarillos estridentes en dark mode */
+[data-dark-mode="true"] .bg-warning,
+[data-dark-mode="true"] .badge.bg-warning,
+[data-dark-mode="true"] .alert-warning {
+    background-color: #3a2f12 !important;
+    color: #f8e7b0 !important;
+    border-color: #5b4717 !important;
+}
+
+[data-dark-mode="true"] .text-warning,
+[data-dark-mode="true"] .btn-warning,
+[data-dark-mode="true"] .border-warning {
+    color: #d6a83f !important;
+    border-color: #6b5218 !important;
+}
+
+[data-dark-mode="true"] .btn-warning {
+    background-color: #3a2f12 !important;
 }
 
 /* TEMA AÑO NUEVO (Dorado y Negro) */

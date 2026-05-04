@@ -45,6 +45,30 @@
             --wa-whatsapp-soft: #dcfce7;
         }
 
+        :root[data-dark-mode="true"] {
+            --wa-bg: #0f131a;
+            --wa-panel: #171c24;
+            --wa-border: #2a3240;
+            --wa-border-hover: #3a4658;
+            --wa-text: #edf2f7;
+            --wa-text-secondary: #b7c2d0;
+            --wa-text-tertiary: #8ea0b8;
+            --wa-accent: #60a5fa;
+            --wa-accent-hover: #3b82f6;
+            --wa-accent-soft: #1e293b;
+            --wa-success: #34d399;
+            --wa-success-soft: #13302a;
+            --wa-warning: #d6a83f;
+            --wa-danger: #f87171;
+            --wa-danger-soft: #3b1f24;
+            --wa-whatsapp: #2dd4bf;
+            --wa-whatsapp-soft: #12382f;
+
+            --wa-shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
+            --wa-shadow-md: 0 2px 8px rgba(0,0,0,0.45);
+            --wa-shadow-lg: 0 8px 20px rgba(0,0,0,0.6);
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -120,6 +144,10 @@
             border-radius: var(--wa-radius-full);
             font-size: 12px;
             font-weight: 600;
+        }
+
+        :root[data-dark-mode="true"] .wa-channel-badge {
+            color: #9ff3d7;
         }
 
         .wa-header-actions {
@@ -210,6 +238,10 @@
             background: rgba(0,0,0,0.03);
         }
 
+        :root[data-dark-mode="true"] .wa-filter:hover {
+            background: rgba(148,163,184,0.14);
+        }
+
         .wa-filter.active {
             background: var(--wa-panel);
             color: var(--wa-accent);
@@ -257,6 +289,11 @@
             letter-spacing: 0.02em;
             text-transform: uppercase;
             white-space: nowrap;
+        }
+
+        :root[data-dark-mode="true"] .wa-channel-label {
+            background: #243041;
+            color: #d4deea;
         }
 
         /* ================================================
@@ -1150,6 +1187,134 @@
         .wa-modal-close:hover {
             background: var(--wa-bg);
             color: var(--wa-text);
+        }
+
+        /* ================================================
+           AJUSTES EXTRA DARK MODE (ALTO CONTRASTE)
+           ================================================ */
+        :root[data-dark-mode="true"] .wa-item.active {
+            background: #1e2b3f;
+            border-left-color: #60a5fa;
+        }
+
+        :root[data-dark-mode="true"] .wa-operator-panel {
+            background: linear-gradient(180deg, #1a2331 0%, #151d2a 100%);
+            border-color: #2a3240;
+        }
+
+        :root[data-dark-mode="true"] .wa-load-older {
+            background: #1a2331;
+            border-color: #334155;
+            color: #d1d9e6;
+        }
+
+        :root[data-dark-mode="true"] .wa-load-older:hover {
+            border-color: #60a5fa;
+            color: #eff6ff;
+            background: #223148;
+        }
+
+        :root[data-dark-mode="true"] .wa-message.sistema .wa-bubble {
+            background: #1e293b;
+            color: #d1d9e6;
+        }
+
+        :root[data-dark-mode="true"] .wa-date-divider {
+            background: #1a2331;
+            color: #c8d4e4;
+        }
+
+        :root[data-dark-mode="true"] .wa-profile-card {
+            background: radial-gradient(circle at top left, #1b2432 0%, #151e2a 48%, #121a24 100%);
+            border-color: #2c3a4d;
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45);
+        }
+
+        :root[data-dark-mode="true"] .wa-profile-stat {
+            background: rgba(23, 31, 44, 0.92);
+            border-color: #2e3d52;
+        }
+
+        :root[data-dark-mode="true"] .wa-type-btn {
+            background: #182231;
+            border-color: #334155;
+            color: #c7d2e2;
+        }
+
+        :root[data-dark-mode="true"] .wa-type-btn:hover {
+            background: #223248;
+            color: #f1f5f9;
+        }
+
+        :root[data-dark-mode="true"] .wa-type-btn.active.success { background: #17352e; border-color: #1f725b; color: #8be7c6; }
+        :root[data-dark-mode="true"] .wa-type-btn.active.warning { background: #3b2c14; border-color: #6b4f1f; color: #f5d187; }
+        :root[data-dark-mode="true"] .wa-type-btn.active.info { background: #1c2f4a; border-color: #274f86; color: #a4c9ff; }
+        :root[data-dark-mode="true"] .wa-type-btn.active.bot { background: #332045; border-color: #5c3a7a; color: #dbbcff; }
+        :root[data-dark-mode="true"] .wa-type-btn.active.muted { background: #1f2836; border-color: #344154; color: #c5cfdb; }
+
+        :root[data-dark-mode="true"] .wa-account-card {
+            background: linear-gradient(165deg, #1a2331 0%, #131c28 100%);
+            border-color: #2c3a4d;
+        }
+
+        :root[data-dark-mode="true"] .wa-account-card:hover {
+            box-shadow: 0 10px 18px rgba(0, 0, 0, 0.4);
+        }
+
+        :root[data-dark-mode="true"] .wa-status-pill.success {
+            background: #163b31;
+            color: #8be7c6;
+            border-color: #1f725b;
+        }
+
+        :root[data-dark-mode="true"] .wa-status-pill.warning {
+            background: #3b2c14;
+            color: #f5d187;
+            border-color: #6b4f1f;
+        }
+
+        :root[data-dark-mode="true"] .wa-status-pill.danger {
+            background: #432126;
+            color: #ffb3be;
+            border-color: #7a3542;
+        }
+
+        :root[data-dark-mode="true"] .wa-status-pill.muted {
+            background: #1f2836;
+            color: #c5cfdb;
+            border-color: #344154;
+        }
+
+        :root[data-dark-mode="true"] .wa-copy-chip {
+            border-color: #3d5c85;
+            background: linear-gradient(145deg, #1f3047 0%, #1a2739 100%);
+            color: #b9d6ff;
+        }
+
+        :root[data-dark-mode="true"] .wa-copy-chip:hover {
+            box-shadow: 0 6px 14px rgba(40, 110, 214, 0.28);
+        }
+
+        :root[data-dark-mode="true"] .wa-copy-chip.is-copied {
+            background: linear-gradient(145deg, #1b3d35 0%, #123329 100%);
+            border-color: #2f7c67;
+            color: #8be7c6;
+        }
+
+        :root[data-dark-mode="true"] .wa-badge.success { background: #17352e; color: #8be7c6; }
+        :root[data-dark-mode="true"] .wa-badge.info { background: #1d2e47; color: #a4c9ff; }
+        :root[data-dark-mode="true"] .wa-badge.warning { background: #3b2c14; color: #f5d187; }
+        :root[data-dark-mode="true"] .wa-badge.muted { background: #1f2836; color: #c5cfdb; }
+        :root[data-dark-mode="true"] .wa-badge.bot { background: #322046; color: #dbbcff; }
+
+        :root[data-dark-mode="true"] .wa-operator-chip {
+            background: #1f2836;
+            color: #d8e2ef;
+            border-color: #344154;
+        }
+
+        :root[data-dark-mode="true"] .wa-operator-chip::before {
+            background: #7f95b3;
         }
 
         /* ================================================

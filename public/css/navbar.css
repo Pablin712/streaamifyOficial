@@ -331,7 +331,8 @@
 /* Ajustes específicos de dark mode para el navbar */
 [data-dark-mode="true"] .navbar,
 [data-dark-mode="true"] .sb-topnav {
-    border-bottom-color: var(--border-color);
+    background: linear-gradient(135deg, #111827 0%, #0b1220 100%) !important;
+    border-bottom-color: #243244 !important;
 }
 
 /* Mejorar contraste en dark mode */
@@ -339,14 +340,42 @@
 [data-dark-mode="true"] .navbar-user-btn,
 [data-dark-mode="true"] #sidebarToggle,
 [data-dark-mode="true"] .btn-navbar-menu {
-    background-color: var(--bg-card) !important;
-    border-color: var(--border-color) !important;
+    background-color: #1f2937 !important;
+    border-color: #334155 !important;
+    color: #e5edf7 !important;
 }
 
 [data-dark-mode="true"] .navbar-icon-btn:hover,
 [data-dark-mode="true"] .navbar-user-btn:hover,
 [data-dark-mode="true"] #sidebarToggle:hover,
 [data-dark-mode="true"] .btn-navbar-menu:hover {
-    background-color: var(--bg-hover) !important;
-    border-color: var(--primary-color) !important;
+    background-color: #273449 !important;
+    border-color: #4b6584 !important;
+    color: #ffffff !important;
+}
+
+[data-dark-mode="true"] .navbar .nav-link,
+[data-dark-mode="true"] .navbar-brand,
+[data-dark-mode="true"] .navbar .dropdown-item,
+[data-dark-mode="true"] .navbar .dropdown-header,
+[data-dark-mode="true"] .navbar-user-btn,
+[data-dark-mode="true"] .navbar-user-btn span,
+[data-dark-mode="true"] .btn-navbar-menu {
+    color: #e5edf7 !important;
+}
+
+[data-dark-mode="true"] .navbar .dropdown-menu,
+[data-dark-mode="true"] .navbar-mobile-menu {
+    background: #111827 !important;
+    border-color: #2a3a4f !important;
+}
+
+[data-dark-mode="true"] .navbar .dropdown-item:hover,
+[data-dark-mode="true"] .navbar-mobile-menu .dropdown-item:hover {
+    background: #1d293a !important;
+    color: #ffffff !important;
+}
+
+[data-dark-mode="true"] .navbar .dropdown-divider {
+    border-color: #2a3a4f !important;
 }

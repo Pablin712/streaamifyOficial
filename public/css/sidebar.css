@@ -360,6 +360,55 @@
         left: 0;
     }
 
+
+    /* ========================================
+       DARK MODE FORZADO PARA SIDEBAR/NAVIGATION
+       ======================================== */
+    [data-dark-mode="true"] .sidebar,
+    [data-dark-mode="true"] .sb-sidenav,
+    [data-dark-mode="true"] #layoutSidenav_nav {
+        background-color: #15181f !important;
+        border-right: 1px solid #2b313a !important;
+    }
+
+    [data-dark-mode="true"] .sb-sidenav-menu-heading,
+    [data-dark-mode="true"] .sidebar .nav-link,
+    [data-dark-mode="true"] .sb-sidenav .nav-link,
+    [data-dark-mode="true"] .sb-sidenav-footer,
+    [data-dark-mode="true"] .sb-sidenav-collapse-arrow,
+    [data-dark-mode="true"] .sb-nav-link-icon {
+        color: #d7dde7 !important;
+    }
+
+    [data-dark-mode="true"] .sidebar .nav-link:hover,
+    [data-dark-mode="true"] .sb-sidenav .nav-link:hover {
+        background: #1f252f !important;
+        color: #ffffff !important;
+    }
+
+    [data-dark-mode="true"] .sidebar .nav-link.active,
+    [data-dark-mode="true"] .sb-sidenav .nav-link.active {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        color: #ffffff !important;
+    }
+
+    [data-dark-mode="true"] .sb-sidenav-footer {
+        background-color: #11151b !important;
+        border-top: 1px solid #2b313a !important;
+    }
+
+    /* Anular colores legacy del sidebar en dark mode (yellow/green/etc) */
+    [data-dark-mode="true"] .white-sidebar,
+    [data-dark-mode="true"] .blue-sidebar,
+    [data-dark-mode="true"] .dark-sidebar,
+    [data-dark-mode="true"] .orange-sidebar,
+    [data-dark-mode="true"] .yellow-sidebar,
+    [data-dark-mode="true"] .green-sidebar,
+    [data-dark-mode="true"] .purple-sidebar,
+    [data-dark-mode="true"] .inverted-blue-sidebar {
+        background-color: #15181f !important;
+        border-right-color: #2b313a !important;
+    }
     #toggleSidebar {
         position: absolute;
         top: 10px;
