@@ -389,6 +389,11 @@
                 <i class="fab fa-whatsapp"></i> Enviar inventario proveedor (0)
             </button>
         @endif
+            @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
+                <button type="button" id="btn-eliminar-seleccionadas" class="btn btn-danger" onclick="openBulkDeleteModal()" disabled>
+                    <i class="fas fa-trash"></i> Eliminar seleccionadas (0)
+                </button>
+            @endif
     </div>
 @endsection
 
@@ -617,7 +622,11 @@ function showTemporaryAlert(message, type = 'success') {
             bsAlert.close();
         }
     }, 3000);
-}
+            @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
+                @include('inventory.cuentas.modals.bulk-delete')
+            @endif
+
+            {{-- Modal de Crear Valor (compartido desde valores) --}}
 
 // ============================================================================
 // TOGGLE ESTADO EN TIEMPO REAL (SIN RELOAD)
@@ -1210,6 +1219,80 @@ function updateInventoryButtonState() {
     button.disabled = count === 0;
     button.innerHTML = `<i class="fab fa-whatsapp"></i> Enviar inventario proveedor (${count})`;
 }
+function openBulkDeleteModal() {
+        const selectedAccounts = getSelectedInventoryAccounts();
+        if (selectedAccounts.length === 0) {
+            showTemporaryAlert('No hay cuentas seleccionadas.', 'danger');
+            return;
+        }
+
+        const listEl = document.getElementById('bulk-delete-list');
+        const warningEl = document.getElementById('bulk-delete-warning');
+        let html = '';
+        let hasActiveUsers = false;
+
+        selectedAccounts.forEach((acc) => {
+            const usuarios = parseInt(acc.usuariosActivos || 0);
+            if (usuarios > 0) hasActiveUsers = true;
+            html += `<tr class="${usuarios > 0 ? 'table-danger' : ''}">
+                <td>${acc.idcue}</td>
+                <td>${acc.usuario}</td>
+                <td>${acc.servicioId}</td>
+                <td>${usuarios > 0 ? '<span class="badge bg-danger">' + usuarios + ' activo(s)</span>' : '<span class="badge bg-success">0</span>'}</td>
+            </tr>`;
+        });
+
+        if (listEl) listEl.innerHTML = html;
+
+        if (warningEl) {
+            warningEl.style.display = hasActiveUsers ? 'block' : 'none';
+        }
+
+        const btnConfirm = document.getElementById('bulk-delete-confirm-btn');
+        if (btnConfirm) btnConfirm.disabled = hasActiveUsers;
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'bulkDeleteCuentasModal' }));
+    }
+
+    function closeBulkDeleteModal() {
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'bulkDeleteCuentasModal' }));
+    }
+
+    async function submitBulkDelete() {
+        const selectedAccounts = getSelectedInventoryAccounts();
+        const ids = selectedAccounts.map((a) => a.idcue);
+
+        if (ids.length === 0) return;
+
+        const btnConfirm = document.getElementById('bulk-delete-confirm-btn');
+        if (btnConfirm) { btnConfirm.disabled = true; btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Eliminando...'; }
+
+        try {
+            const response = await fetch('{{ route("cuentas.bulkDestroy") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ ids }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showTemporaryAlert(data.message || 'Cuentas eliminadas exitosamente', 'success');
+                closeBulkDeleteModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showTemporaryAlert(data.message || 'Error al eliminar las cuentas', 'danger');
+                if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.innerHTML = '<i class="fas fa-trash"></i> Sí, Eliminar todas'; }
+            }
+        } catch (error) {
+            showTemporaryAlert('Error de conexión. Por favor, intenta nuevamente.', 'danger');
+            if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.innerHTML = '<i class="fas fa-trash"></i> Sí, Eliminar todas'; }
+        }
+    }
 
 function refreshSelectAllStateForTable(tableId) {
     if (!tableId) return;

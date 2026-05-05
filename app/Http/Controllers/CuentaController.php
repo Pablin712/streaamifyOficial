@@ -1415,9 +1415,9 @@ class CuentaController extends Controller
     }
 
     public function destroy($idcue)
-    {
-        if (!Gate::allows('cuentas.destroy')) {
-            abort(403, 'No tienes permiso para eliminar cuentas.');
+        {
+            if (!Gate::allows('cuentas.destroy')) {
+                abort(403, 'No tienes permiso para eliminar cuentas.');
         }
         $cuenta = Cuenta::with(['valor.servicio', 'perfiles'])->findOrFail($idcue);
         $cuentaInUsuariosActivos = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->exists();
@@ -1502,6 +1502,116 @@ class CuentaController extends Controller
         }
 
         return redirect()->route('cuentas')->with('success', 'Cuenta eliminada con éxito preservando histórico.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+            if (!Gate::allows('cuentas.destroy')) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar cuentas.'], 403);
+            }
+
+            $ids = $request->input('ids', []);
+
+            if (empty($ids) || !is_array($ids)) {
+                return response()->json(['success' => false, 'message' => 'No se proporcionaron cuentas para eliminar.'], 422);
+            }
+
+            if (count($ids) > 100) {
+                return response()->json(['success' => false, 'message' => 'No se pueden eliminar más de 100 cuentas a la vez.'], 422);
+            }
+
+            if (!$this->historicoDesacopladoDisponible()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pueden eliminar las cuentas. Falta ejecutar la migración de desacople histórico.',
+                ], 409);
+            }
+
+            // Rechazar si alguna cuenta tiene usuarios activos
+            $cuentasConUsuarios = ViewUsuarioActivo::whereIn('idcue', $ids)
+                ->distinct()
+                ->pluck('idcue')
+                ->toArray();
+
+            if (!empty($cuentasConUsuarios)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar. Las cuentas con ID ' . implode(', ', $cuentasConUsuarios) . ' tienen usuarios activos.',
+                ], 422);
+            }
+
+            $cuentas = Cuenta::with(['valor.servicio', 'perfiles'])->whereIn('idcue', $ids)->get();
+
+            if ($cuentas->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No se encontraron las cuentas indicadas.'], 404);
+            }
+
+            $eliminadas = 0;
+            $errores = [];
+
+            foreach ($cuentas as $cuenta) {
+                try {
+                    $servicioNombre = $cuenta->valor?->servicio?->nombreser ?? $cuenta->valor?->idser;
+                    $perfiles = $cuenta->perfiles;
+                    $idsPerfiles = $perfiles->pluck('idper')->filter()->values();
+
+                    Historial::create([
+                        'accion' => 'Se eliminó la cuenta con ID: ' . $cuenta->idcue,
+                        'descripcion' => 'Cuenta eliminada masivamente preservando histórico: ' . json_encode($cuenta),
+                        'empleado_id' => Auth::user()->idemp,
+                        'created_at' => now(),
+                    ]);
+
+                    DB::transaction(function () use ($cuenta, $servicioNombre, $perfiles, $idsPerfiles) {
+                        foreach ($perfiles as $perfil) {
+                            DB::table('detalles_venta')
+                                ->where('idper', $perfil->idper)
+                                ->update([
+                                    'idper_snapshot'           => DB::raw("COALESCE(idper_snapshot, '" . addslashes($perfil->idper) . "')"),
+                                    'idcue_snapshot'           => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                                    'idval_snapshot'           => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                                    'servicio_snapshot'        => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                                    'cuenta_usuario_snapshot'  => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+                                    'perfil_numeroper_snapshot' => DB::raw('COALESCE(perfil_numeroper_snapshot, ' . (int) $perfil->numeroper . ')'),
+                                ]);
+                        }
+
+                        DB::table('costos')
+                            ->where('idcue', $cuenta->idcue)
+                            ->update([
+                                'idcue_snapshot'          => DB::raw("COALESCE(idcue_snapshot, '" . addslashes($cuenta->idcue) . "')"),
+                                'idval_snapshot'          => DB::raw("COALESCE(idval_snapshot, '" . addslashes((string) $cuenta->idval) . "')"),
+                                'servicio_snapshot'       => DB::raw("COALESCE(servicio_snapshot, '" . addslashes((string) $servicioNombre) . "')"),
+                                'cuenta_usuario_snapshot' => DB::raw("COALESCE(cuenta_usuario_snapshot, '" . addslashes((string) $cuenta->usuariocue) . "')"),
+                            ]);
+
+                        DB::table('mantenimientos')->where('idcue', $cuenta->idcue)->delete();
+
+                        if ($idsPerfiles->isNotEmpty()) {
+                            Perfil::whereIn('idper', $idsPerfiles)->delete();
+                        }
+
+                        $cuenta->delete();
+                    });
+
+                    $this->cuentaService->actualizarEstadoProductos($cuenta->valor->idser);
+                    $eliminadas++;
+                } catch (\Exception $e) {
+                    $errores[] = $cuenta->idcue . ': ' . $e->getMessage();
+                }
+            }
+
+            if (!empty($errores)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Se eliminaron {$eliminadas} cuenta(s) pero hubo errores: " . implode('; ', $errores),
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Se eliminaron {$eliminadas} cuenta(s) exitosamente.",
+            ]);
     }
 
     private function historicoDesacopladoDisponible(): bool

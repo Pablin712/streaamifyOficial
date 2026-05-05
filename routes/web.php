@@ -256,6 +256,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/cuentas/{id}/renew', 'saveRenew')->name('cuentas.saveRenew');
         Route::put('/cuentas/{id}', 'update')->name('cuentas.update');
         Route::delete('/cuentas/{id}', 'destroy')->name('cuentas.destroy');
+            Route::post('/cuentas/bulk-destroy', 'bulkDestroy')->name('cuentas.bulkDestroy');
     });
     //Route::resource('perfil',PerfilController::class);
     Route::controller(PerfilController::class)->group(function () {

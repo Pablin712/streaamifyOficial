@@ -13,6 +13,7 @@ use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Producto;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Empleado;
 use App\Services\EntregaMensajeService;
 
@@ -415,24 +416,22 @@ class CuentaService
         }
 
         // Obtener los usuarios activos de la cuenta origen
-        $usuarios = ViewUsuarioActivo::where('idcue', $cuentaOrigen->idcue)->get();
+        $usuarios = ViewUsuarioActivo::with('cuenta.valor')
+            ->where('idcue', $cuentaOrigen->idcue)
+            ->get();
+
         if ($usuarios->isEmpty()) {
             return false; // Si no hay usuarios para mover, retornar false
         }
 
+        // Reutilizar la misma logica del movimiento individual (incluye reglas especiales Spotify).
         foreach ($usuarios as $usuario) {
-            // Buscar el perfil en la cuenta destino con el mismo número de perfil
-            $perfilDestino = Perfil::where('idcue', $cuentaDestino->idcue)
-                ->where('numeroper', $usuario->perfil)
-                ->first();
-
-            if ($perfilDestino) {
-                // Actualizar el idper en DetalleVenta para este usuario
-                DetalleVenta::where('iddet', $usuario->iddet)
-                    ->update(['idper' => $perfilDestino->idper]);
+            $resultado = $this->mudarClienteAMesaDeTrabajo($usuario);
+            if ($resultado === 'error') {
+                return false;
             }
-            // Si no existe el perfil en la cuenta destino, puedes decidir ignorar o manejarlo de otra forma
         }
+
         return true; // Retornar true si se movieron los clientes exitosamente
     }
 
@@ -510,28 +509,81 @@ class CuentaService
     public function mudarClienteAMesaDeTrabajo($usuario)
     {
         $cuentaOrigen = $usuario->cuenta;
-        $cuentaDestino = $this->obtenerCuentaDestino($cuentaOrigen);
-        if ($cuentaDestino) {
-            $perfilDestino = Perfil::where('idcue', $cuentaDestino->idcue)
-                ->where('numeroper', $usuario->perfil)
-                ->first();
-            if ($perfilDestino) {
-                // Actualizar el idper en DetalleVenta para este usuario
-                DetalleVenta::where('iddet', $usuario->iddet)
-                    ->update(['idper' => $perfilDestino->idper]);
-                Historial::create([
-                    'accion' => 'Mudacion-Usuario',
-                    'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta de atención al cliente',
-                    'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
-                    'created_at' => now(),
-                ]);
-                return 'Cliente ' . $usuario->nombre_cliente . ' movido a la mesa de trabajo';
-            } else {
-                return 'error';
-            }
-        } else {
+        if (!$cuentaOrigen) {
             return 'error';
         }
+
+        $cuentaDestino = $this->obtenerCuentaDestino($cuentaOrigen);
+        if (!$cuentaDestino) {
+            return 'error';
+        }
+
+        $esSpotify = strtoupper((string) ($cuentaOrigen->valor->idser ?? '')) === 'SPOTIFY';
+
+        return DB::transaction(function () use ($usuario, $cuentaDestino, $esSpotify) {
+            $detalle = DetalleVenta::with('perfil')->where('iddet', $usuario->iddet)->first();
+            if (!$detalle) {
+                return 'error';
+            }
+
+            $perfilOrigen = $detalle->perfil;
+            $pinOrigen = trim((string) ($perfilOrigen->pinper ?? ''));
+
+            if ($esSpotify) {
+                // 1) Priorizar perfiles vacíos en mesa; si no existe ninguno, crear uno nuevo.
+                $perfilDestino = Perfil::where('idcue', $cuentaDestino->idcue)
+                    ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos WHERE view_usuarios_activos.idcue = perfiles.idcue AND view_usuarios_activos.perfil = perfiles.numeroper) = 0')
+                    ->orderBy('numeroper')
+                    ->first();
+
+                if (!$perfilDestino) {
+                    $nuevoNumeroPerfil = ((int) Perfil::where('idcue', $cuentaDestino->idcue)->max('numeroper')) + 1;
+                    if ($nuevoNumeroPerfil <= 0) {
+                        $nuevoNumeroPerfil = 1;
+                    }
+
+                    $perfilDestino = Perfil::create([
+                        'idper' => $cuentaDestino->idcue . '.' . $nuevoNumeroPerfil,
+                        'idcue' => $cuentaDestino->idcue,
+                        'numeroper' => $nuevoNumeroPerfil,
+                        'pinper' => $pinOrigen,
+                    ]);
+                } else {
+                    // 2) Transferir credenciales (pinper) al perfil destino de mesa.
+                    $perfilDestino->pinper = $pinOrigen;
+                    $perfilDestino->save();
+                }
+
+                $detalle->idper = $perfilDestino->idper;
+                $detalle->save();
+
+                // 3) Liberar pin del perfil origen tras mover al cliente.
+                if ($perfilOrigen) {
+                    $perfilOrigen->pinper = 'libre';
+                    $perfilOrigen->save();
+                }
+            } else {
+                $perfilDestino = Perfil::where('idcue', $cuentaDestino->idcue)
+                    ->where('numeroper', $usuario->perfil)
+                    ->first();
+
+                if (!$perfilDestino) {
+                    return 'error';
+                }
+
+                $detalle->idper = $perfilDestino->idper;
+                $detalle->save();
+            }
+
+            Historial::create([
+                'accion' => 'Mudacion-Usuario',
+                'descripcion' => 'Se movió el cliente ' . $usuario->nombre_cliente . ' a la cuenta de atención al cliente',
+                'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
+                'created_at' => now(),
+            ]);
+
+            return 'Cliente ' . $usuario->nombre_cliente . ' movido a la mesa de trabajo';
+        });
     }
 
     /**

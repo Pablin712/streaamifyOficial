@@ -210,7 +210,8 @@
                                 data-proveedor-nombre="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
                                 data-proveedor-telefono="{{ $cuenta->valor->proveedor->telefonopro ?? '' }}"
                                 title="Seleccionar cuenta para envío de inventario"
-                            >
+                                          data-usuarios-activos="{{ $cuenta->usuarios_activos }}"
+                                     >
                         </td>
                     @endif
                     @if (Auth::user()->hasAnyPermission(['cuentas.mensaje', 'cuentas.edit', 'cuentas.renew', 'cuentas.destroy']))
