@@ -574,6 +574,9 @@
     @include('inventory.cuentas.modals.mensaje-proveedor')
     @include('inventory.cuentas.modals.mensaje-proveedor-inventario')
     @include('inventory.cuentas.modals.netflix-codigo')
+    @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
+        @include('inventory.cuentas.modals.bulk-delete')
+    @endif
 
     {{-- Modal de Crear Valor (compartido desde valores) --}}
     @include('inventory.valores.modals.create')
@@ -622,11 +625,7 @@ function showTemporaryAlert(message, type = 'success') {
             bsAlert.close();
         }
     }, 3000);
-            @if (Auth::user()->hasPermissionTo('cuentas.destroy'))
-                @include('inventory.cuentas.modals.bulk-delete')
-            @endif
-
-            {{-- Modal de Crear Valor (compartido desde valores) --}}
+}
 
 // ============================================================================
 // TOGGLE ESTADO EN TIEMPO REAL (SIN RELOAD)
@@ -1113,6 +1112,7 @@ function getSelectedInventoryAccounts() {
     return Array.from(document.querySelectorAll('.provider-inventory-checkbox:checked')).map((checkbox) => ({
         idcue: (checkbox.dataset.idcue || '').toString().trim(),
         usuario: (checkbox.dataset.usuario || '').toString().trim(),
+        usuariosActivos: parseInt(checkbox.dataset.usuariosActivos || '0', 10),
         fechavencue: (checkbox.dataset.fechavencue || '').toString().trim(),
         servicioId: (checkbox.dataset.servicioId || '').toString().trim().toUpperCase(),
         servicioNombre: (checkbox.dataset.servicioNombre || '').toString().trim(),
@@ -1212,12 +1212,19 @@ function clearInventorySelection() {
 
 function updateInventoryButtonState() {
     const selectedAccounts = getSelectedInventoryAccounts();
-    const button = document.getElementById('btn-enviar-inventario-proveedor');
-    if (!button) return;
-
     const count = selectedAccounts.length;
-    button.disabled = count === 0;
-    button.innerHTML = `<i class="fab fa-whatsapp"></i> Enviar inventario proveedor (${count})`;
+
+    const inventoryButton = document.getElementById('btn-enviar-inventario-proveedor');
+    if (inventoryButton) {
+        inventoryButton.disabled = count === 0;
+        inventoryButton.innerHTML = `<i class="fab fa-whatsapp"></i> Enviar inventario proveedor (${count})`;
+    }
+
+    const bulkDeleteButton = document.getElementById('btn-eliminar-seleccionadas');
+    if (bulkDeleteButton) {
+        bulkDeleteButton.disabled = count === 0;
+        bulkDeleteButton.innerHTML = `<i class="fas fa-trash"></i> Eliminar seleccionadas (${count})`;
+    }
 }
 function openBulkDeleteModal() {
         const selectedAccounts = getSelectedInventoryAccounts();

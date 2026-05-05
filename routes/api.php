@@ -2,8 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\VentaController;
-use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\Api\V1\ClienteApiController;
 use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\VentaApiController;
@@ -53,8 +51,8 @@ Route::prefix('daily-statistics')->group(function () {
 // === RUTAS ANTIGUAS (mantener temporalmente para compatibilidad) ===
 Route::post('login', [LoginController::class, 'loginApi']);
 Route::post('logout', [LoginController::class, 'logoutApi']);
-Route::middleware('auth:api')->get('ventas', [VentaController::class, 'indexApi']);
-Route::middleware('auth:api')->get('clientes', [ClienteController::class, 'indexApi']);
+Route::middleware('auth:api')->get('ventas', [VentaApiController::class, 'index']);
+Route::middleware('auth:api')->get('clientes', [ClienteApiController::class, 'index']);
 
 // === API v1 - Con autenticación por API Key ===
 Route::prefix('v1')->group(function () {
@@ -151,6 +149,12 @@ Route::prefix('v2')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('/auth/create-customer', 'crearCliente')->name('api.auth.create-customer');
         Route::post('/auth/validate-credentials', 'validarCredenciales')->name('api.auth.validate');
+        Route::post('/auth/empleado/login', 'loginEmpleado')->name('api.v2.auth.empleado.login');
+    });
+
+    Route::middleware('auth:api')->controller(AuthController::class)->group(function () {
+        Route::get('/auth/empleado/me', 'empleadoMe')->name('api.v2.auth.empleado.me');
+        Route::post('/auth/empleado/logout', 'logoutEmpleado')->name('api.v2.auth.empleado.logout');
     });
 
     // Clientes (CRUD completo) - pensado para consumo desde apps móviles
@@ -161,6 +165,22 @@ Route::prefix('v2')->group(function () {
         Route::match(['put', 'patch'], '/clientes/{id}', [ClienteApiController::class, 'update'])->name('api.v2.clientes.update');
         Route::delete('/clientes/{id}', [ClienteApiController::class, 'destroy'])->name('api.v2.clientes.destroy');
         Route::get('/clientes/{id}/ventas', [ClienteApiController::class, 'ventas'])->name('api.v2.clientes.ventas');
+
+        // Productos v2 (alias directo para apps móviles)
+        Route::get('/productos', [TecnicoProductosController::class, 'listar'])->name('api.v2.productos.index');
+
+        // Ventas v2 para Android (CRUD basado en productos)
+        Route::get('/ventas', [TecnicoVentasController::class, 'listar'])->name('api.v2.ventas.index');
+        Route::post('/ventas', [TecnicoVentasController::class, 'crear'])->name('api.v2.ventas.store');
+        Route::get('/ventas/{idven}', [TecnicoVentasController::class, 'detalle'])->name('api.v2.ventas.show');
+        Route::match(['put', 'patch'], '/ventas/{idven}', [TecnicoVentasController::class, 'editar'])->name('api.v2.ventas.update');
+        Route::delete('/ventas/{idven}', [TecnicoVentasController::class, 'eliminar'])->name('api.v2.ventas.destroy');
+    });
+
+    // Ventas v2 autenticadas por login de empleado (JWT)
+    Route::middleware('auth:api')->group(function () {
+        Route::get('/empleado/ventas', [TecnicoVentasController::class, 'listar'])->name('api.v2.empleado.ventas.index');
+        Route::get('/empleado/ventas/{idven}', [TecnicoVentasController::class, 'detalle'])->name('api.v2.empleado.ventas.show');
     });
 
     // Rutas públicas de información (sin prefijo 'info')
@@ -296,6 +316,8 @@ Route::prefix('v2')->group(function () {
     Route::controller(TecnicoVentasController::class)->prefix('tech-ventas')->group(function () {
         Route::post('/crear', 'crear')->name('api.tech-ventas.crear');
         Route::put('/editar/{idven}', 'editar')->name('api.tech-ventas.editar');
+        Route::patch('/editar/{idven}', 'editar')->name('api.tech-ventas.editar.patch');
+        Route::delete('/eliminar/{idven}', 'eliminar')->name('api.tech-ventas.eliminar');
         Route::get('/detalle/{idven}', 'detalle')->name('api.tech-ventas.detalle');
         Route::get('/listar', 'listar')->name('api.tech-ventas.listar');
         Route::get('/estadisticas', 'estadisticas')->name('api.tech-ventas.estadisticas');

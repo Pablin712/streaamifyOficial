@@ -7,7 +7,11 @@ use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Support\ClienteAuth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -109,6 +113,109 @@ class AuthController extends Controller
             'message' => 'Credenciales de empleado válidas',
             // Puedes incluir información adicional del empleado si es necesario
         ], 200);
+    }
+
+    public function loginEmpleado(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'usuarioemp' => 'required|string',
+            'passwordemp' => 'required|string|min:3',
+        ], [
+            'usuarioemp.required' => 'El usuario del empleado es obligatorio.',
+            'passwordemp.required' => 'La contraseña del empleado es obligatoria.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $empleado = Empleado::where('usuarioemp', $request->input('usuarioemp'))->first();
+
+        if (!$empleado || !Hash::check($request->input('passwordemp'), $empleado->passwordemp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario o contraseña incorrectos.',
+            ], 401);
+        }
+
+        if ($empleado->roles->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tu cuenta no tiene roles asignados. Contacta al administrador.',
+            ], 403);
+        }
+
+        try {
+            $token = JWTAuth::fromUser($empleado);
+        } catch (JWTException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo crear el token de sesión.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login de empleado exitoso.',
+            'data' => [
+                'token_type' => 'Bearer',
+                'access_token' => $token,
+                'expires_in' => ((int) config('jwt.ttl', 60)) * 60,
+                'empleado' => [
+                    'idemp' => $empleado->idemp,
+                    'nombreemp' => $empleado->nombreemp,
+                    'usuarioemp' => $empleado->usuarioemp,
+                    'email' => $empleado->email,
+                    'roles' => $empleado->roles->pluck('name')->values(),
+                ],
+            ],
+        ], 200);
+    }
+
+    public function empleadoMe(Request $request)
+    {
+        $empleado = $request->user('api');
+
+        if (!$empleado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado.',
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'empleado' => [
+                    'idemp' => $empleado->idemp,
+                    'nombreemp' => $empleado->nombreemp,
+                    'usuarioemp' => $empleado->usuarioemp,
+                    'email' => $empleado->email,
+                    'roles' => $empleado->roles->pluck('name')->values(),
+                ],
+            ],
+        ]);
+    }
+
+    public function logoutEmpleado()
+    {
+        try {
+            JWTAuth::parseToken()->invalidate();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Sesión de empleado cerrada correctamente.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo cerrar la sesión del empleado.',
+            ], 500);
+        }
     }
 
     public function crearCliente(Request $request)
