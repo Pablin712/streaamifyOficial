@@ -217,6 +217,7 @@ Route::prefix('v2')->group(function () {
         Route::get('/cobranzas/metodos-pago', 'cobranzasMetodosPago')->name('api.v2.chat.assistant.cobranzas.metodos-pago');
         Route::get('/cobranzas/bancos', 'cobranzasBancos')->name('api.v2.chat.assistant.cobranzas.bancos');
         Route::post('/venta', 'crearVenta')->name('api.v2.chat.assistant.venta.create');
+        Route::post('/venta/renovar', 'renovarVenta')->name('api.v2.chat.assistant.venta.renovar');
         Route::post('/pedido', 'crearPedido')->name('api.v2.chat.assistant.pedido.create');
         Route::post('/soporte', 'crearSoporte')->name('api.v2.chat.assistant.soporte.create');
         Route::get('/memoria-negocio', 'consultarMemoria')->name('api.v2.chat.assistant.memoria-negocio');

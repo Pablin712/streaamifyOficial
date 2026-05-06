@@ -89,6 +89,7 @@ También puedes enviarlo como query param: `?api_key=sk_FWmIdIrBXqYqsVwAGnX5gLU4
 | `GET` | `/api/v2/ventas/{idven}` | Ver detalle completo de una venta |
 | `PUT/PATCH` | `/api/v2/ventas/{idven}` | Editar venta y/o sus detalles |
 | `DELETE` | `/api/v2/ventas/{idven}` | Eliminar venta |
+| `POST` | `/api/v2/chat/assistant/venta/renovar` | Renovar una venta existente usando saldo del cliente |
 | `GET` | `/api/v2/tech-ventas/estadisticas` | Estadísticas de ventas |
 
 ---
@@ -243,6 +244,124 @@ Call<VentasListResponse> listarVentas(
 ```
 
 ---
+
+## Renovar Venta (automatizaciones)
+
+**POST** `/api/v2/chat/assistant/venta/renovar`
+**Content-Type:** `application/json`
+
+Este endpoint esta pensado para automatizaciones y agentes como `vendedor_cierre`.
+
+### Body (JSON)
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `idven` | string | ✅ | ID de la venta original a renovar |
+| `idcli` | string | ✅ | ID del cliente dueño de la venta |
+| `meses` | int | ✅ | Cantidad de meses a renovar (1-12) |
+| `detalles` | array<int> | ❌ | IDs de detalles (`iddet`) que se desean renovar. Si no se envía, renueva todos los detalles activos de esa venta |
+
+```json
+{
+  "idven": "VEN-045",
+  "idcli": "CLI-001",
+  "meses": 2,
+  "detalles": [89]
+}
+```
+
+Renovación parcial (ejemplo):
+- Venta original tiene 2 detalles activos: Netflix (`iddet=89`) y Spotify (`iddet=90`).
+- Si envías `detalles: [90]`, solo se renueva Spotify.
+- Netflix queda activo en la venta anterior y no se copia a la nueva venta de renovación.
+
+### Qué hace internamente
+
+1. Verifica que la venta pertenezca al cliente.
+2. Toma los detalles activos de la venta original.
+  - si envías `detalles`, usa solo esos `iddet`.
+  - si no envías `detalles`, usa todos los detalles activos de la venta.
+3. Calcula el valor mensual base:
+   - si encuentra un producto mensual exacto con los mismos servicios, usa ese precio;
+   - si no, usa la suma mensual de los detalles activos.
+4. Multiplica ese valor por los meses solicitados.
+5. Verifica el saldo del cliente.
+6. Desactiva solo los detalles renovados en la venta anterior.
+7. Crea una nueva venta separada de tipo renovacion.
+8. Crea nuevos detalles con nuevas fechas de vencimiento.
+9. Descuenta el saldo del cliente.
+
+### Respuesta exitosa `201`
+
+```json
+{
+  "success": true,
+  "message": "Venta renovada correctamente.",
+  "data": {
+    "venta_original": {
+      "idven": "VEN-045"
+    },
+    "venta_renovada": {
+      "idven": "VEN-046",
+      "idcli": "CLI-001",
+      "idemp": 10,
+      "meses": 2,
+      "total": 10.00,
+      "saldo_restante": 25.00,
+      "precio_mensual_base": 5.00,
+      "estrategia_precio": "producto_mensual",
+      "producto_base": {
+        "id": 3,
+        "nombre": "Netflix Premium 1 mes",
+        "precio_mensual": 5.00
+      }
+    },
+    "detalles_renovados": [
+      {
+        "iddet_anterior": 89,
+        "iddet_nuevo": 104,
+        "servicio": "Netflix",
+        "usuario": "cuenta@gmail.com",
+        "perfil": 2,
+        "fecha_anterior": "2026-05-30",
+        "fecha_nueva": "2026-07-30",
+        "monto": 10.00
+      }
+    ]
+  }
+}
+```
+
+### Errores posibles
+
+| Código | Motivo |
+|--------|--------|
+| `422` | Validación fallida (`idven`, `idcli`, `meses`) |
+| `422` | La venta no pertenece al cliente enviado |
+| `422` | La venta no tiene detalles activos para renovar |
+| `422` | Uno o más `detalles` no pertenecen a la venta o no están activos |
+| `422` | Saldo insuficiente |
+
+**Saldo insuficiente `422`:**
+```json
+{
+  "success": false,
+  "message": "Saldo insuficiente para realizar la renovacion.",
+  "data": {
+    "saldo_actual": 3.00,
+    "total_renovacion": 10.00,
+    "faltante": 7.00,
+    "precio_mensual_base": 5.00,
+    "estrategia_precio": "producto_mensual",
+    "producto_base": {
+      "id": 3,
+      "nombre": "Netflix Premium 1 mes",
+      "precio_mensual": 5.00
+    }
+  }
+}
+```
+
 
 ## 2. Crear Venta
 

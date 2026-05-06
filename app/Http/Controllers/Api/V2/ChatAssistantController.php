@@ -19,6 +19,7 @@ use App\Models\Venta;
 use App\Models\ViewUsuarioActivo;
 use App\Support\ClienteAuth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
@@ -34,6 +35,7 @@ class ChatAssistantController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'telefono' => 'required|string|max:50',
+            'include_renovables' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -45,6 +47,7 @@ class ChatAssistantController extends Controller
 
         $telefono = ClienteAuth::normalizePhone($request->input('telefono'));
         $cliente = Cliente::buscarPorTelefonoNormalizado($telefono);
+        $includeRenovables = $request->boolean('include_renovables', true);
 
         if (!$cliente) {
             return response()->json([
@@ -55,6 +58,84 @@ class ChatAssistantController extends Controller
                     'telefono_consultado' => $telefono,
                 ],
             ]);
+        }
+
+        $ventasRenovables = [];
+        $resumenRenovables = [
+            'ventas_con_detalles_activos' => 0,
+            'detalles_activos' => 0,
+            'detalles_renovables' => 0,
+            'por_vencer' => 0,
+            'vencidos' => 0,
+        ];
+
+        if ($includeRenovables) {
+            $hoy = Carbon::today();
+
+            $detallesActivos = DetalleVenta::query()
+                ->with(['perfil.cuenta.valor.servicio'])
+                ->where('activodet', true)
+                ->whereHas('venta', function ($query) use ($cliente) {
+                    $query->where('idcli', $cliente->idcli);
+                })
+                ->orderByDesc('idven')
+                ->orderBy('fechavendet')
+                ->get();
+
+            $resumenRenovables['detalles_activos'] = $detallesActivos->count();
+
+            $ventasRenovables = $detallesActivos
+                ->groupBy('idven')
+                ->map(function ($detalles, $idven) use ($hoy, &$resumenRenovables) {
+                    $detallesFormateados = $detalles->map(function (DetalleVenta $detalle) use ($hoy, &$resumenRenovables) {
+                        $fechaVencimiento = $detalle->fechavendet ? Carbon::parse($detalle->fechavendet)->startOfDay() : null;
+                        $diasRestantes = $fechaVencimiento ? $hoy->diffInDays($fechaVencimiento, false) : null;
+
+                        $estado = 'activo';
+                        if ($diasRestantes !== null && $diasRestantes < 0) {
+                            $estado = 'vencido';
+                            $resumenRenovables['vencidos']++;
+                        } elseif ($diasRestantes !== null && $diasRestantes <= 3) {
+                            $estado = 'por_vencer';
+                            $resumenRenovables['por_vencer']++;
+                        }
+
+                        $renovable = in_array($estado, ['vencido', 'por_vencer'], true);
+                        if ($renovable) {
+                            $resumenRenovables['detalles_renovables']++;
+                        }
+
+                        return [
+                            'iddet' => (int) $detalle->iddet,
+                            'idven' => $detalle->idven,
+                            'idper' => $detalle->idper,
+                            'servicio' => $detalle->perfil?->cuenta?->valor?->servicio?->nombreser,
+                            'cuenta' => $detalle->perfil?->cuenta?->usuariocue,
+                            'perfil' => $detalle->perfil?->numeroper,
+                            'fecha_vencimiento' => $fechaVencimiento?->toDateString(),
+                            'dias_restantes' => $diasRestantes,
+                            'estado' => $estado,
+                            'renovable' => $renovable,
+                            'monto_mensual_actual' => round((float) $detalle->montodet, 2),
+                        ];
+                    })->values();
+
+                    $detallesRenovables = $detallesFormateados->where('renovable', true)->values();
+
+                    if ($detallesFormateados->isNotEmpty()) {
+                        $resumenRenovables['ventas_con_detalles_activos']++;
+                    }
+
+                    return [
+                        'idven' => $idven,
+                        'cantidad_detalles_activos' => $detallesFormateados->count(),
+                        'cantidad_detalles_renovables' => $detallesRenovables->count(),
+                        'puede_renovar' => $detallesRenovables->isNotEmpty(),
+                        'detalles' => $detallesFormateados,
+                        'detalles_renovables' => $detallesRenovables,
+                    ];
+                })
+                ->values();
         }
 
         return response()->json([
@@ -69,6 +150,8 @@ class ChatAssistantController extends Controller
                     'email' => $cliente->email,
                     'saldo' => (float) $cliente->saldo,
                 ],
+                'ventas_renovables' => $ventasRenovables,
+                'resumen_renovables' => $resumenRenovables,
             ],
         ]);
     }
@@ -285,7 +368,7 @@ class ChatAssistantController extends Controller
         $limit = (int) $request->query('limit', 10);
 
         $recargas = Recarga::query()
-            ->with(['estado:idestado,nombreest', 'banco:idban,nombreban', 'transaccion.banco'])
+            ->with(['estado:idestado,nombre', 'banco:idban,nombreban', 'transaccion.banco'])
             ->where('idcli', $idcli)
             ->orderByDesc('created_at')
             ->limit($limit)
@@ -303,7 +386,7 @@ class ChatAssistantController extends Controller
                         'numcomprobante' => $recarga->numcomprobante,
                         'valor' => (float) $recarga->valor,
                         'idestado' => $recarga->idestado,
-                        'estado' => $recarga->estado->nombreest ?? null,
+                        'estado' => $recarga->estado->nombre ?? null,
                         'idban' => $recarga->idban,
                         'banco' => $recarga->transaccion->banco->nombreban ?? $recarga->banco->nombreban ?? null,
                         'origen' => $recarga->origen,
@@ -492,7 +575,7 @@ class ChatAssistantController extends Controller
 
         $recargasLimit = (int) $request->query('recargas_limit', 5);
         $recargasRecientes = Recarga::query()
-            ->with(['estado:idestado,nombreest', 'banco:idban,nombreban'])
+            ->with(['estado:idestado,nombre', 'banco:idban,nombreban'])
             ->where('idcli', $cliente->idcli)
             ->orderByDesc('created_at')
             ->limit($recargasLimit)
@@ -502,7 +585,7 @@ class ChatAssistantController extends Controller
                     'idrec' => $recarga->idrec,
                     'numcomprobante' => $recarga->numcomprobante,
                     'valor' => (float) $recarga->valor,
-                    'estado' => $recarga->estado->nombreest ?? null,
+                    'estado' => $recarga->estado->nombre ?? null,
                     'banco' => $recarga->banco->nombreban ?? null,
                     'created_at' => optional($recarga->created_at)?->toDateTimeString(),
                 ];
@@ -748,6 +831,203 @@ class ChatAssistantController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'No se pudo crear la venta.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function renovarVenta(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'idven' => 'required|string|exists:ventas,idven',
+            'idcli' => 'required|exists:clientes,idcli',
+            'meses' => 'required|integer|min:1|max:12',
+            'detalles' => 'nullable|array|min:1',
+            'detalles.*' => 'integer|exists:detalles_venta,iddet',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $idcli = (string) $request->input('idcli');
+        $meses = (int) $request->input('meses');
+        $detallesSolicitados = collect($request->input('detalles', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values();
+
+        $ventaOriginal = Venta::findOrFail($request->input('idven'));
+
+        if ((string) $ventaOriginal->idcli !== $idcli) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La venta indicada no pertenece al cliente enviado.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $cliente = Cliente::where('idcli', $idcli)->lockForUpdate()->firstOrFail();
+
+            $detallesVenta = DetalleVenta::with(['perfil.cuenta.valor.servicio'])
+                ->where('idven', $ventaOriginal->idven)
+                ->where('activodet', true)
+                ->when($detallesSolicitados->isNotEmpty(), function ($query) use ($detallesSolicitados) {
+                    $query->whereIn('iddet', $detallesSolicitados->all());
+                })
+                ->lockForUpdate()
+                ->get();
+
+            if ($detallesSolicitados->isNotEmpty() && $detallesVenta->count() !== $detallesSolicitados->count()) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Uno o mas detalles no pertenecen a la venta o no estan activos.',
+                    'data' => [
+                        'idven' => $ventaOriginal->idven,
+                        'detalles_solicitados' => $detallesSolicitados->all(),
+                        'detalles_validos' => $detallesVenta->pluck('iddet')->map(fn ($id) => (int) $id)->values(),
+                    ],
+                ], 422);
+            }
+
+            if ($detallesVenta->isEmpty()) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La venta no tiene detalles activos para renovar.',
+                ], 422);
+            }
+
+            $precioRenovacion = $this->calcularPrecioRenovacionAgente($detallesVenta, $meses);
+            $totalRenovacion = (float) ($precioRenovacion['total'] ?? 0);
+
+            if ($totalRenovacion <= 0) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se pudo calcular el valor de la renovacion.',
+                ], 422);
+            }
+
+            if ((float) $cliente->saldo < $totalRenovacion) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Saldo insuficiente para realizar la renovacion.',
+                    'data' => [
+                        'saldo_actual' => (float) $cliente->saldo,
+                        'total_renovacion' => round($totalRenovacion, 2),
+                        'faltante' => round($totalRenovacion - (float) $cliente->saldo, 2),
+                        'precio_mensual_base' => round((float) ($precioRenovacion['base_mensual'] ?? 0), 2),
+                        'estrategia_precio' => $precioRenovacion['pricing_strategy'] ?? 'detalles_actuales',
+                        'producto_base' => $precioRenovacion['producto_base'] ?? null,
+                    ],
+                ], 422);
+            }
+
+            $ventaNueva = new Venta();
+            $ventaNueva->idemp = 10;
+            $ventaNueva->idcli = $cliente->idcli;
+            $ventaNueva->fechaven = now();
+            $ventaNueva->totalpagoven = round($totalRenovacion, 2);
+            $ventaNueva->save();
+
+            $ventaNueva->idven = DB::selectOne(
+                'SELECT idven FROM ventas WHERE idcli = ? ORDER BY created_at DESC LIMIT 1',
+                [$ventaNueva->idcli]
+            )?->idven;
+
+            if (!$ventaNueva->idven) {
+                throw new \RuntimeException('No se pudo obtener el id de la venta renovada.');
+            }
+
+            $idsDetalleRenovado = $detallesVenta->pluck('iddet')->map(fn ($id) => (int) $id)->values();
+
+            DetalleVenta::where('idven', $ventaOriginal->idven)
+                ->whereIn('iddet', $idsDetalleRenovado->all())
+                ->where('activodet', true)
+                ->update(['activodet' => false]);
+
+            $montoPorDetalle = collect($precioRenovacion['detalles'] ?? [])->keyBy('iddet');
+            $detallesRenovados = [];
+
+            foreach ($detallesVenta as $detalle) {
+                $baseFecha = Carbon::parse($detalle->fechavendet);
+                if ($baseFecha->lt(Carbon::today())) {
+                    $baseFecha = Carbon::today();
+                }
+
+                $nuevaFechaVencimiento = $baseFecha->copy()->addMonths($meses);
+                $montoDetalle = (float) ($montoPorDetalle->get((int) $detalle->iddet)['monto'] ?? ((float) $detalle->montodet * $meses));
+
+                $detalleNuevo = new DetalleVenta();
+                $detalleNuevo->idven = $ventaNueva->idven;
+                $detalleNuevo->idper = $detalle->idper;
+                $detalleNuevo->fechavendet = $nuevaFechaVencimiento;
+                $detalleNuevo->descripciondet = 'Renovacion automatizada (' . $meses . 'm)';
+                $detalleNuevo->montodet = round($montoDetalle, 2);
+                $detalleNuevo->activodet = true;
+                $detalleNuevo->save();
+
+                $detallesRenovados[] = [
+                    'iddet_anterior' => (int) $detalle->iddet,
+                    'iddet_nuevo' => (int) $detalleNuevo->iddet,
+                    'servicio' => $detalle->perfil?->cuenta?->valor?->servicio?->nombreser,
+                    'usuario' => $detalle->perfil?->cuenta?->usuariocue,
+                    'perfil' => $detalle->perfil?->numeroper,
+                    'fecha_anterior' => optional($detalle->fechavendet)?->toDateString(),
+                    'fecha_nueva' => optional($nuevaFechaVencimiento)?->toDateString(),
+                    'monto' => round($montoDetalle, 2),
+                ];
+            }
+
+            $cliente->saldo = round((float) $cliente->saldo - $totalRenovacion, 2);
+            if (!$cliente->ya_compro) {
+                $cliente->ya_compro = true;
+            }
+            $cliente->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Venta renovada correctamente.',
+                'data' => [
+                    'venta_original' => [
+                        'idven' => $ventaOriginal->idven,
+                        'detalles_desactivados' => $idsDetalleRenovado,
+                    ],
+                    'venta_renovada' => [
+                        'idven' => $ventaNueva->idven,
+                        'idcli' => $ventaNueva->idcli,
+                        'idemp' => $ventaNueva->idemp,
+                        'meses' => $meses,
+                        'total' => round($totalRenovacion, 2),
+                        'saldo_restante' => (float) $cliente->saldo,
+                        'precio_mensual_base' => round((float) ($precioRenovacion['base_mensual'] ?? 0), 2),
+                        'estrategia_precio' => $precioRenovacion['pricing_strategy'] ?? 'detalles_actuales',
+                        'producto_base' => $precioRenovacion['producto_base'] ?? null,
+                    ],
+                    'detalles_renovados' => $detallesRenovados,
+                ],
+            ], 201);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo renovar la venta.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -1187,6 +1467,112 @@ class ChatAssistantController extends Controller
         }
 
         return $prefix . ' ' . $sequence;
+    }
+
+    private function calcularPrecioRenovacionAgente(Collection $detallesVenta, int $meses): array
+    {
+        $baseMensual = (float) $detallesVenta->sum('montodet');
+        $servicios = $detallesVenta
+            ->map(fn ($detalle) => (string) ($detalle->perfil?->cuenta?->valor?->servicio?->idser ?? ''))
+            ->filter()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        $productoMensual = $this->buscarProductoMensualParaRenovacion($servicios);
+        $precioMensual = $productoMensual ? (float) $productoMensual->preciopro : $baseMensual;
+        $total = round($precioMensual * $meses, 2);
+
+        return [
+            'total' => $total,
+            'base_mensual' => round($precioMensual, 2),
+            'pricing_strategy' => $productoMensual ? 'producto_mensual' : 'detalles_actuales',
+            'producto_base' => $productoMensual ? [
+                'id' => $productoMensual->id,
+                'nombre' => $productoMensual->nombrepro,
+                'precio_mensual' => round((float) $productoMensual->preciopro, 2),
+            ] : null,
+            'detalles' => $this->prorratearMontoPorDetallesAgente($detallesVenta, $total),
+        ];
+    }
+
+    private function buscarProductoMensualParaRenovacion(array $serviciosOrdenados): ?Producto
+    {
+        if (empty($serviciosOrdenados)) {
+            return null;
+        }
+
+        $serviciosUnicos = array_values(array_unique($serviciosOrdenados));
+        $cantidadServicios = count($serviciosOrdenados);
+
+        $productos = Producto::with('detalles')
+            ->where('activo', true)
+            ->whereHas('detalles', function ($query) use ($serviciosUnicos) {
+                $query->whereIn('idser', $serviciosUnicos)
+                    ->where('meses', 1);
+            })
+            ->get();
+
+        foreach ($productos as $producto) {
+            $serviciosProducto = $producto->detalles
+                ->where('meses', 1)
+                ->pluck('idser')
+                ->map(fn ($idser) => (string) $idser)
+                ->sort()
+                ->values()
+                ->toArray();
+
+            if (count($serviciosProducto) !== $cantidadServicios) {
+                continue;
+            }
+
+            if ($serviciosProducto === $serviciosOrdenados) {
+                return $producto;
+            }
+        }
+
+        return null;
+    }
+
+    private function prorratearMontoPorDetallesAgente(Collection $detallesVenta, float $total): array
+    {
+        $baseMensual = (float) $detallesVenta->sum('montodet');
+        $detalles = $detallesVenta->values();
+
+        if ($detalles->isEmpty()) {
+            return [];
+        }
+
+        if ($baseMensual <= 0) {
+            $montoUniforme = round($total / $detalles->count(), 2);
+            $acumulado = 0;
+
+            return $detalles->map(function ($detalle, $index) use ($detalles, $montoUniforme, $total, &$acumulado) {
+                $monto = $index === $detalles->count() - 1 ? round($total - $acumulado, 2) : $montoUniforme;
+                $acumulado += $monto;
+
+                return [
+                    'iddet' => (int) $detalle->iddet,
+                    'monto' => $monto,
+                ];
+            })->values()->toArray();
+        }
+
+        $acumulado = 0;
+
+        return $detalles->map(function ($detalle, $index) use ($detalles, $baseMensual, $total, &$acumulado) {
+            $proporcion = ((float) $detalle->montodet) / $baseMensual;
+            $monto = $index === $detalles->count() - 1
+                ? round($total - $acumulado, 2)
+                : round($total * $proporcion, 2);
+
+            $acumulado += $monto;
+
+            return [
+                'iddet' => (int) $detalle->iddet,
+                'monto' => $monto,
+            ];
+        })->values()->toArray();
     }
 
     private function buscarCuentaDisponible($idser)

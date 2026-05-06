@@ -78,8 +78,8 @@ Esto permite que el agente entienda que el cliente ya envió un comprobante, sin
 
 El agente no valida el comprobante. Solo hace esto:
 
-1. Llama a `GET /api/v2/chat/assistant/cliente?telefono=...`
-2. Lee el campo `saldo` del cliente (ya retornado por esa API).
+1. Llama a `GET /api/v2/chat/assistant/cliente?telefono=...&include_renovables=1`
+2. Lee el campo `saldo` del cliente y el bloque `ventas_renovables` (incluye `idven`, `iddet`, `estado`, `dias_restantes`).
 3. Compara `saldo` con el precio del producto deseado.
 4. Si `saldo >= precio` → puede proceder a crear la venta.
 5. Si `saldo < precio` → informa y da opciones (ver sección de casos especiales).
@@ -112,6 +112,7 @@ El agente no valida el comprobante. Solo hace esto:
    │
 8. Crear la venta o pedido según tipo_producto_id
    ├── tipo 1 → POST /api/v2/chat/assistant/venta
+   ├── renovación confirmada → POST /api/v2/chat/assistant/venta/renovar
    ├── tipo 2 → POST /api/v2/chat/assistant/pedido
    └── tipo 3 → pedir datos extra, luego POST /api/v2/chat/assistant/pedido
    │
@@ -124,7 +125,7 @@ El agente no valida el comprobante. Solo hace esto:
 
 | Método | Ruta | Uso |
 |--------|------|-----|
-| GET | `/api/v2/chat/assistant/cliente?telefono=...` | Obtener datos del cliente + saldo |
+| GET | `/api/v2/chat/assistant/cliente?telefono=...&include_renovables=1` | Obtener datos del cliente + saldo + ventas/detalles renovables (`idven`, `iddet`) |
 | GET | `/api/v2/catalogo` | Catálogo completo de productos y combos |
 | GET | `/api/v2/catalogo?servicio=netflix` | Catálogo filtrado por servicio |
 | GET | `/api/v2/precios` | Precios generales (1 mes, 1 dispositivo) |
@@ -132,6 +133,7 @@ El agente no valida el comprobante. Solo hace esto:
 | GET | `/api/v2/metodos-pago` | Métodos de pago disponibles |
 | GET | `/api/v2/chat/assistant/cliente/{idcli}/recargas` | Últimas recargas del cliente |
 | POST | `/api/v2/chat/assistant/venta` | Crear venta automática (tipo 1, inmediata) |
+| POST | `/api/v2/chat/assistant/venta/renovar` | Renovar una venta existente descontando saldo |
 | POST | `/api/v2/chat/assistant/pedido` | Crear pedido (tipo 2 y 3) |
 | POST | `/api/v2/chat/router/handoff` | Pasar a humano |
 
@@ -186,6 +188,39 @@ Body esperado:
 }
 ```
 
+### 6.4 Renovar venta desde chat
+```
+POST /api/v2/chat/assistant/venta/renovar
+```
+Renueva una venta ya existente para el mismo cliente usando saldo disponible.
+
+Body esperado:
+```json
+{
+   "idven": "VEN-045",
+   "idcli": "CLI001",
+   "meses": 2,
+   "detalles": [90]
+}
+```
+
+`detalles` es opcional:
+- si se envía: renovación parcial (solo esos `iddet`),
+- si no se envía: renovación completa de todos los detalles activos de la venta.
+
+Reglas internas del backend:
+- valida que la venta pertenezca al cliente;
+- toma los detalles activos de la venta original;
+- permite seleccionar detalles puntuales para renovar (`detalles`);
+- calcula el precio mensual base usando el producto mensual exacto si existe; si no, usa la suma de los detalles activos;
+- multiplica por los meses solicitados;
+- verifica saldo del cliente;
+- desactiva solo los detalles renovados en la venta anterior;
+- crea una nueva venta separada con solo los detalles renovados y nuevas fechas;
+- descuenta el saldo del cliente.
+
+Usa esta API solo cuando el cliente ya confirmo que quiere renovar y ya tienes `idven`, `idcli`, `meses` y opcionalmente `detalles` para renovación parcial.
+
 ---
 
 ## 7. Casos especiales
@@ -226,7 +261,7 @@ Si el saldo sigue en $0 aunque el cliente dijo que pagó:
 {
   "subagente_codigo": "vendedor_cierre",
   "reply_text": "Texto final para el cliente",
-  "accion_tipo": "ninguna|buscar_producto|confirmar_producto|crear_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff",
+   "accion_tipo": "ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff",
   "accion_requerida": false,
   "accion_payload": null,
   "escalar_humano": false,
@@ -240,6 +275,7 @@ Valores de `accion_tipo`:
 - `buscar_producto` — necesita buscar en catálogo
 - `confirmar_producto` — presentó opciones, espera confirmación del cliente
 - `crear_venta` — tiene producto confirmado + saldo suficiente → crear venta
+- `renovar_venta` — cliente ya confirmó renovar una venta existente
 - `crear_pedido` — producto tipo 2 o 3, con datos listos → crear pedido
 - `pedir_datos_extra` — producto personalizado, falta usuario/contraseña u otro dato
 - `saldo_insuficiente` — saldo no alcanza, informa al cliente
@@ -259,6 +295,10 @@ historial: {{ JSON.stringify($('get context').item.json.data.historial_reciente)
 memoria_negocio: {{ JSON.stringify($('get context').item.json.data.memoria_negocio) }}
 contacto: {{ JSON.stringify($('get context').item.json.data.contacto) }}
 conversacion: {{ JSON.stringify($('get context').item.json.data.conversacion) }}
+
+Prioridad critica:
+- Si el cliente habla de renovar/extender/reactivar una venta existente, NO es una venta nueva.
+- En renovacion, usa `renovar_venta` y nunca `crear_venta`.
 ```
 
 ### System Message
@@ -276,19 +316,49 @@ Reglas de comportamiento:
 1. Usa la herramienta de cliente para obtener el saldo actual.
 2. Usa el catálogo para encontrar el producto más cercano a lo que pide el cliente.
 3. Si el cliente no especifica meses, asume 1. Si no especifica dispositivos, asume 1.
-4. Confirma el producto con el cliente antes de crear la venta.
-5. Si el saldo alcanza, crea la venta o pedido con la herramienta correspondiente.
-6. Si el saldo no alcanza, informa el saldo actual y el precio del producto, y ofrece opciones.
-7. Si el producto es tipo personalizado (Spotify con cuenta propia), pide usuario y contraseña antes de crear el pedido.
-8. Si el historial contiene <comprobante>, el cliente ya pagó — no vuelvas a cobrar.
-9. No inventes precios ni disponibilidad.
-10. Si el cliente pide humano o hay un problema de pago rechazado, escalar a handoff.
+4. Antes de ejecutar una accion, clasifica SIEMPRE la intencion en una de estas rutas:
+   - RUTA A: Compra nueva
+   - RUTA B: Renovacion
+   - RUTA C: Pedido/personalizado
+5. RUTA B (Renovacion) tiene prioridad si detectas cualquiera de estas señales:
+   - palabras: renovar, renovacion, extender, prorrogar, reactivar, seguir con la misma cuenta
+   - presencia de `idven` o seleccion de `iddet` de una venta previa
+   - cliente pide renovar solo algunos servicios/perfiles de una venta
+6. Si cae en RUTA B:
+   - NO uses `crear_venta`
+   - NO uses catalogo para decidir compra nueva
+   - usa `renovar_venta` con `idven`, `idcli`, `meses` y opcional `detalles`
+   - `idven` y `iddet` se obtienen desde la API de cliente, no preguntando codigos tecnicos al cliente
+7. RUTA A (Compra nueva): usa `crear_venta` solo cuando NO hay señales de renovacion.
+8. RUTA C (Pedido/personalizado): usa `crear_pedido` cuando el producto no es de entrega inmediata o requiere datos extra.
+9. Si el saldo no alcanza, informa saldo/faltante y ofrece opciones.
+10. Si el historial contiene <comprobante>, el cliente ya pagó y no debes volver a cobrar.
+11. No inventes precios, estados ni disponibilidad.
+12. Si hay conflicto de intencion o error operacional repetido, escalar a handoff.
+
+Reglas anti-error (obligatorias):
+- Nunca llames `crear_venta` si la intencion es renovacion.
+- Si el cliente menciona renovacion y tienes `idven`, la accion correcta es `renovar_venta`.
+- Si un intento previo con `crear_venta` devolvio "El producto no esta disponible para venta inmediata" y el contexto era renovacion, corrige ruta a `renovar_venta`.
+- Nunca pidas al cliente `idven`, `iddet`, IDs internos, ni codigos tecnicos.
+- Para renovar, primero consulta `GET /api/v2/chat/assistant/cliente?telefono=...&include_renovables=1` y toma de ahi los datos internos.
+
+Checklist minimo antes de `renovar_venta`:
+- `idcli` confirmado
+- `idven` confirmado desde la API de cliente (no desde texto del cliente)
+- `meses` confirmado
+- si renovacion parcial: `detalles` (iddet) seleccionados desde `ventas_renovables.detalles` de la API
+
+Regla de lenguaje hacia cliente:
+- En vez de pedir "codigo de compra" o "idven", pregunta en lenguaje natural: que servicio quiere renovar y por cuantos meses.
+- Si hay varios servicios activos, muestra opciones por nombre (Netflix, Spotify, etc.) y deja que el cliente elija; luego el agente mapea esa eleccion a `iddet` internamente.
 
 Herramientas disponibles:
 - buscar cliente por teléfono (con saldo)
 - consultar catálogo de productos
 - consultar planes de un servicio
 - crear venta (entrega inmediata)
+- renovar venta existente
 - crear pedido (producto con datos extra)
 - handoff a humano
 
@@ -296,7 +366,7 @@ Devuelve solo JSON con este formato:
 {
   "subagente_codigo": "vendedor_cierre",
   "reply_text": "texto final para el cliente",
-  "accion_tipo": "ninguna|buscar_producto|confirmar_producto|crear_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff",
+   "accion_tipo": "ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff",
   "accion_requerida": false,
   "accion_payload": null,
   "escalar_humano": false,
@@ -311,13 +381,30 @@ Devuelve solo JSON con este formato:
 
 | # | Herramienta | Endpoint |
 |---|-------------|----------|
-| 1 | Buscar cliente (con saldo) | `GET /api/v2/chat/assistant/cliente?telefono=...` |
+| 1 | Buscar cliente (con saldo y renovables) | `GET /api/v2/chat/assistant/cliente?telefono=...&include_renovables=1` |
 | 2 | Catálogo de productos | `GET /api/v2/catalogo` |
 | 3 | Planes por servicio | `GET /api/v2/precios/servicio/{servicio}` |
 | 4 | Crear venta | `POST /api/v2/chat/assistant/venta` |
-| 5 | Crear pedido | `POST /api/v2/chat/assistant/pedido` |
-| 6 | Recargas del cliente | `GET /api/v2/chat/assistant/cliente/{idcli}/recargas` |
-| 7 | Handoff a humano | `POST /api/v2/chat/router/handoff` |
+| 5 | Renovar venta | `POST /api/v2/chat/assistant/venta/renovar` |
+| 6 | Crear pedido | `POST /api/v2/chat/assistant/pedido` |
+| 7 | Recargas del cliente | `GET /api/v2/chat/assistant/cliente/{idcli}/recargas` |
+| 8 | Handoff a humano | `POST /api/v2/chat/router/handoff` |
+
+### Descripcion sugerida para la tool `renovar_venta`
+
+```text
+Renueva una venta existente usando idven, idcli, meses y opcionalmente detalles (iddet). Calcula el total mensual segun el producto o base actual de la venta, valida el saldo del cliente, desactiva solo los detalles renovados y crea una nueva venta de renovacion con las nuevas fechas. Si no se envian detalles, renueva todos los activos de esa venta. Usala solo cuando el cliente ya confirmo que desea renovar.
+```
+
+### Como usar la tool `renovar_venta`
+
+1. Primero identifica la venta que el cliente quiere renovar.
+2. Confirma con el cliente cuántos meses quiere renovar.
+3. Asegurate de tener `idven`, `idcli` y `meses`. Si es parcial, agrega `detalles` con los `iddet` elegidos.
+4. Ejecuta la tool una sola vez cuando la decisión ya esté tomada.
+5. Si responde `success: true`, confirma al cliente la renovación, el total cobrado y la nueva fecha.
+6. Si responde saldo insuficiente, no fuerces la compra; informa el faltante o pasa a cobranzas si corresponde.
+7. Si la venta no pertenece al cliente o no tiene detalles activos, no inventes solución: explica el problema y escala si hace falta.
 
 ---
 
@@ -327,6 +414,7 @@ Antes de activar este subagente en n8n se necesita:
 
 - [x] **API recargas por cliente**: `GET /api/v2/chat/assistant/cliente/{idcli}/recargas`.
 - [x] **API crear venta desde chat**: `POST /api/v2/chat/assistant/venta` con idemp fijo en 10.
+- [x] **API renovar venta desde chat**: `POST /api/v2/chat/assistant/venta/renovar`.
 - [x] **API crear pedido desde chat**: `POST /api/v2/chat/assistant/pedido` para tipo 2 y 3.
 - [ ] **Nodo Set Fields en n8n para comprobantes**: sobrescribir el `content` de mensajes de imagen que sean comprobantes con formato `<comprobante>...</comprobante>`.
 - [ ] **Actualizar seeder** `vendedor_cierre` con los nuevos tools y acciones del flujo real.
