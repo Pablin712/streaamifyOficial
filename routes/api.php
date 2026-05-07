@@ -214,6 +214,7 @@ Route::prefix('v2')->group(function () {
         Route::post('/cliente/create', 'crearCliente')->name('api.v2.chat.assistant.cliente.create');
         Route::get('/cliente/{idcli}/recargas', 'recargasCliente')->name('api.v2.chat.assistant.cliente.recargas');
         Route::get('/postventa/contexto', 'contextoPostventaPorTelefono')->name('api.v2.chat.assistant.postventa.contexto');
+        Route::post('/postventa/cambio-servicio', 'cambioServicioPostventa')->name('api.v2.chat.assistant.postventa.cambio-servicio');
         Route::get('/cobranzas/metodos-pago', 'cobranzasMetodosPago')->name('api.v2.chat.assistant.cobranzas.metodos-pago');
         Route::get('/cobranzas/bancos', 'cobranzasBancos')->name('api.v2.chat.assistant.cobranzas.bancos');
         Route::post('/venta', 'crearVenta')->name('api.v2.chat.assistant.venta.create');

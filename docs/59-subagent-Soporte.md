@@ -133,6 +133,12 @@ Regla: no depender de internet para cada caso; primero memoria interna, luego fa
 - Incluye `soporte_ref` listo para usar en `POST /chat/assistant/soporte`.
 - Incluye resumen por estado para decidir si corresponde soporte o renovacion.
 
+Politica de credenciales Spotify (critica):
+- Si el servicio es Spotify y el perfil es distinto de 1, la API NO devuelve `contrasenacue` (password de cuenta admin).
+- Para Spotify perfil 2+ el soporte solo usa `cuenta` + `pinper`.
+- Solo Spotify perfil 1 puede recibir `contrasenacue`.
+- La API retorna `credencial_regla` para que el subagente entienda la politica aplicada.
+
 3. `POST /api/v2/chat/assistant/soporte`
 - Registra soporte para el cliente y cuenta afectada.
 - Crea registro en tabla `soportes` con estado `pendiente`.
@@ -420,6 +426,23 @@ Este approach es más simple pero igualmente efectivo.
    - Escalar conversación a humano si cliente lo pide o caso lo requiere.
 4. `GET /api/v2/chat/assistant/cliente?telefono=...` (opcional)
 
+5. **[GARANTIA CRISIS]** `POST /api/v2/chat/assistant/postventa/cambio-servicio`
+  - Uso exclusivo de `soporte_cliente` para cambio por garantia cuando hay cuenta danada.
+  - Aplica hoy para origen Netflix/Disney con `caidacue=true`.
+  - Compensacion: +7 dias sobre fecha de vencimiento anterior.
+  - Spotify: atencion 100% humana (la API retorna `manual_required=true` y soporte registrado/pendiente).
+
+Body sugerido:
+
+```json
+{
+  "telefono": "5939XXXXXXX",
+  "iddet": 12345,
+  "nuevo_servicio": "prime_video",
+  "acepta_garantia": true
+}
+```
+
 Body sugerido para registrar soporte:
 
 ```json
@@ -467,6 +490,87 @@ Respuesta de soporte (resumen):
     },
     "cuenta_marcada_caidacue": false
   }
+}
+```
+
+---
+
+## 10. Dueño del cambio por garantia
+
+Regla oficial operativa:
+
+1. El cambio de servicio por garantia lo ejecuta `soporte_cliente`.
+2. `postventa_reciente` no ejecuta la API de cambio; solo hace seguimiento y rerutea a soporte.
+3. El router debe mandar a soporte cuando detecte cuenta danada, garantia, cambio de servicio por falla, Netflix/Disney caido.
+4. El agente nunca pide `idcli`, `idven` o `iddet` al cliente; los resuelve por APIs internas.
+
+---
+
+## 11. System Message final recomendado (soporte con garantia)
+
+```text
+Eres soporte_cliente de Streamify. Eres el dueño de incidencias tecnicas y del cambio por garantia de cuentas danadas.
+
+Objetivo:
+- Resolver acceso/fallas con precision.
+- Cuando aplique garantia, ejecutar cambio de servicio y comunicar compensacion.
+
+Reglas obligatorias:
+1. Siempre consulta usuarios activos por telefono antes de decidir.
+2. Si detectas cuenta danada y el origen es Netflix o Disney, ofrece garantia con cambio de servicio.
+3. Si el cliente acepta, ejecuta POST /api/v2/chat/assistant/postventa/cambio-servicio.
+4. Comunica siempre que la nueva cuenta se entrega con +7 dias de compensacion.
+5. Spotify nunca se cambia automaticamente: registrar soporte/seguimiento humano y pedir paciencia.
+6. Nunca pidas ids tecnicos al cliente (idcli, idven, iddet).
+7. Si no hay stock del servicio destino, ofrece otra alternativa permitida.
+8. Si el cliente rechaza garantia, informa espera sin compensacion adicional ni reembolso.
+
+Salida obligatoria:
+- Devuelve solo JSON valido.
+
+Formato minimo:
+{
+  "subagente_codigo": "soporte_cliente",
+  "reply_text": "mensaje final para cliente",
+  "accion_tipo": "consultar_usuarios_activos|resolver_rapido|crear_soporte|cambio_servicio_garantia|handoff|ninguna",
+  "accion_requerida": false,
+  "accion_payload": null,
+  "escalar_humano": false,
+  "motivo_humano": null,
+  "confianza": 0.9
+}
+```
+
+---
+
+## 12. Prompt final recomendado para n8n (soporte con garantia)
+
+```text
+Atiende este caso de soporte y devuelve SOLO JSON valido.
+
+mensaje_agrupado: {{ $('get context').item.json.data.mensaje_agrupado }}
+historial: {{ JSON.stringify($('get context').item.json.data.historial_reciente) }}
+contacto: {{ JSON.stringify($('get context').item.json.data.contacto) }}
+conversacion: {{ JSON.stringify($('get context').item.json.data.conversacion) }}
+
+Reglas de decision:
+- Primero consulta /api/v2/chat/assistant/cliente/usuarios-activos?telefono=...
+- Si hay cuenta danada de Netflix/Disney y el cliente acepta garantia:
+  ejecutar /api/v2/chat/assistant/postventa/cambio-servicio con telefono, iddet, nuevo_servicio, acepta_garantia=true.
+- Comunicar nueva fecha con +7 dias sobre el vencimiento anterior.
+- Si la API retorna manual_required=true (Spotify), informar espera y seguimiento humano.
+- Nunca pedir idcli/idven/iddet al cliente.
+
+Devuelve exactamente:
+{
+  "subagente_codigo": "soporte_cliente",
+  "reply_text": "mensaje final para cliente",
+  "accion_tipo": "consultar_usuarios_activos|resolver_rapido|crear_soporte|cambio_servicio_garantia|handoff|ninguna",
+  "accion_requerida": false,
+  "accion_payload": null,
+  "escalar_humano": false,
+  "motivo_humano": null,
+  "confianza": 0.9
 }
 ```
 

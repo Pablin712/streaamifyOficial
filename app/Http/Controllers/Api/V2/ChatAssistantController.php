@@ -308,17 +308,28 @@ class ChatAssistantController extends Controller
                 $resumen['cuentas_caidas']++;
             }
 
+            $servicio = $detalle->perfil?->cuenta?->valor?->servicio?->nombreser;
+            $perfilNumero = is_numeric($detalle->perfil?->numeroper) ? (int) $detalle->perfil?->numeroper : null;
+            $credencialesEntrega = $this->resolverCredencialesEntrega(
+                servicio: $servicio,
+                perfilNumero: $perfilNumero,
+                usuarioCuenta: $detalle->perfil?->cuenta?->usuariocue,
+                contrasenaCuenta: $detalle->perfil?->cuenta?->contrasenacue,
+                pinPerfil: $detalle->perfil?->pinper,
+            );
+
             return [
                 'iddet' => $detalle->iddet,
                 'idven' => $detalle->idven,
                 'idcli' => $cliente->idcli,
                 'idcue' => $detalle->perfil?->cuenta?->idcue,
                 'idper' => $detalle->idper,
-                'servicio' => $detalle->perfil?->cuenta?->valor?->servicio?->nombreser,
-                'cuenta' => $detalle->perfil?->cuenta?->usuariocue,
-                'contrasenacue' => $detalle->perfil?->cuenta?->contrasenacue,
+                'servicio' => $servicio,
+                'cuenta' => $credencialesEntrega['cuenta'],
+                'contrasenacue' => $credencialesEntrega['contrasenacue'],
                 'perfil' => $detalle->perfil?->numeroper,
-                'pinper' => $detalle->perfil?->pinper,
+                'pinper' => $credencialesEntrega['pinper'],
+                'credencial_regla' => $credencialesEntrega['regla'],
                 'fecha_vencimiento' => $fechaVencimiento?->toDateString(),
                 'dias_restantes' => $diasRestantes,
                 'estado' => $estado,
@@ -617,6 +628,276 @@ class ChatAssistantController extends Controller
         ]);
     }
 
+    public function cambioServicioPostventa(Request $request)
+    {
+        // Normalize acepta_garantia: n8n sends "true"/"false" as strings
+        if ($request->has('acepta_garantia')) {
+            $raw = $request->input('acepta_garantia');
+            if (is_string($raw)) {
+                $request->merge(['acepta_garantia' => filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)]);
+            }
+        }
+
+        $validator = Validator::make($request->all(), [
+            'telefono' => 'required|string|max:50',
+            'iddet' => 'required|integer|exists:detalles_venta,iddet',
+            'nuevo_servicio' => 'required|string|max:50',
+            'acepta_garantia' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        if ($request->has('acepta_garantia') && !$request->boolean('acepta_garantia')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El cambio de servicio solo procede cuando el cliente acepta la garantia.',
+            ], 422);
+        }
+
+        $telefono = ClienteAuth::normalizePhone($request->input('telefono'));
+        $cliente = Cliente::buscarPorTelefonoNormalizado($telefono);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo identificar al cliente con el telefono enviado.',
+            ], 404);
+        }
+
+        $iddet = (int) $request->input('iddet');
+
+        $usuario = ViewUsuarioActivo::query()
+            ->with(['profile', 'cuenta.valor.servicio'])
+            ->where('iddet', $iddet)
+            ->where('idcli', $cliente->idcli)
+            ->first();
+
+        if (!$usuario || !$usuario->cuenta) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El iddet no pertenece a un usuario activo del cliente.',
+            ], 422);
+        }
+
+        $servicioOrigenId = strtoupper((string) ($usuario->cuenta->valor->idser ?? ''));
+
+        if ($servicioOrigenId === 'SPOTIFY') {
+            $soporte = Soporte::query()
+                ->where('idcli', $cliente->idcli)
+                ->where('idcue', $usuario->idcue)
+                ->where('tipo', 'otro')
+                ->where('estado', 'pendiente')
+                ->where('created_at', '>=', now()->subHours(12))
+                ->latest('created_at')
+                ->first();
+
+            if (!$soporte) {
+                $soporte = Soporte::create([
+                    'idcli' => $cliente->idcli,
+                    'idcue' => $usuario->idcue,
+                    'tipo' => 'otro',
+                    'descripcion' => 'Caso Spotify en cuenta danada. Cliente solicita garantia/cambio, requiere gestion 100% humana.',
+                    'estado' => 'pendiente',
+                ]);
+
+                $soporte->load(['cliente', 'cuenta.valor.servicio']);
+
+                $empleados = Empleado::permission('soportes')->get();
+                if ($empleados->isNotEmpty()) {
+                    Notification::send($empleados, new NuevoSoporteCliente($soporte));
+                }
+
+                event('notificacionRecibida');
+            }
+
+            return response()->json([
+                'success' => true,
+                'changed' => false,
+                'manual_required' => true,
+                'message' => 'Spotify se atiende de forma 100% humana. Se registro soporte y el cliente debe esperar respuesta del equipo.',
+                'data' => [
+                    'cliente' => [
+                        'idcli' => $cliente->idcli,
+                        'nombrecli' => $cliente->nombrecli,
+                        'telefonocli' => $cliente->telefonocli,
+                    ],
+                    'origen' => [
+                        'servicio_id' => $servicioOrigenId,
+                        'servicio' => $usuario->cuenta?->valor?->servicio?->nombreser,
+                        'idcue' => $usuario->idcue,
+                        'iddet' => $usuario->iddet,
+                        'cuenta_caidacue' => (bool) ($usuario->cuenta?->caidacue ?? false),
+                        'fecha_vencimiento_actual' => $usuario->fecha_vencimiento,
+                    ],
+                    'soporte' => [
+                        'idsop' => $soporte->idsop,
+                        'estado' => $soporte->estado,
+                        'created_at' => optional($soporte->created_at)?->toDateTimeString(),
+                    ],
+                ],
+            ]);
+        }
+
+        $serviciosOrigenPermitidos = ['NETFLIX', 'DISNEYP', 'DISNEY', 'DISNEYS'];
+        if (!in_array($servicioOrigenId, $serviciosOrigenPermitidos, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La garantia por cambio de servicio hoy solo aplica a cuentas danadas de Netflix y Disney.',
+                'data' => [
+                    'servicio_origen' => $servicioOrigenId,
+                ],
+            ], 422);
+        }
+
+        if (!(bool) $usuario->cuenta->caidacue) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El cambio por garantia solo aplica cuando la cuenta origen esta marcada como danada.',
+            ], 422);
+        }
+
+        $servicioDestinoId = $this->normalizarServicioIdGarantia((string) $request->input('nuevo_servicio'));
+        $serviciosDestinoPermitidos = ['PRIME', 'MAX', 'CRUNCHY', 'PARAMOUNT', 'MAGIS', 'FLUJO'];
+
+        if (!$servicioDestinoId || !in_array($servicioDestinoId, $serviciosDestinoPermitidos, true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El servicio destino no esta permitido para garantia automatica.',
+                'data' => [
+                    'servicios_permitidos' => ['prime_video', 'max', 'crunchyroll', 'paramount', 'flujo_tv'],
+                ],
+            ], 422);
+        }
+
+        if ($servicioDestinoId === $servicioOrigenId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El servicio destino debe ser diferente al servicio actual del cliente.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $detalle = DetalleVenta::query()
+                ->with(['venta', 'perfil.cuenta.valor.servicio'])
+                ->lockForUpdate()
+                ->find($iddet);
+
+            if (!$detalle || !$detalle->activodet || !$detalle->venta || $detalle->venta->idcli !== $cliente->idcli) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El detalle no corresponde a una suscripcion activa del cliente.',
+                ], 422);
+            }
+
+            $perfilOrigen = $detalle->perfil;
+            $cuentaOrigen = $perfilOrigen?->cuenta;
+            $servicioOrigenActual = strtoupper((string) ($cuentaOrigen?->valor?->idser ?? ''));
+
+            if (!$cuentaOrigen || !in_array($servicioOrigenActual, $serviciosOrigenPermitidos, true) || !(bool) $cuentaOrigen->caidacue) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El detalle ya no cumple condiciones de garantia para cambio de servicio.',
+                ], 422);
+            }
+
+            $cuentaDestino = $this->buscarCuentaDisponible($servicioDestinoId);
+            if (!$cuentaDestino) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay cuentas disponibles en el servicio destino solicitado.',
+                ], 422);
+            }
+
+            $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino, true);
+            if (!$perfilDestino) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay perfiles disponibles en la cuenta destino para completar el cambio.',
+                ], 422);
+            }
+
+            $fechaAnterior = $detalle->fechavendet
+                ? Carbon::parse($detalle->fechavendet)->startOfDay()
+                : Carbon::today();
+            $fechaNueva = $fechaAnterior->copy()->addDays(7);
+
+            $detalle->idper = $perfilDestino->idper;
+            $detalle->fechavendet = $fechaNueva;
+            $detalle->save();
+
+            DB::commit();
+
+            $detalle->refresh();
+            $perfilDestino->loadMissing(['cuenta.valor.servicio']);
+
+            $credencialesEntrega = $this->resolverCredencialesEntrega(
+                servicio: $perfilDestino->cuenta?->valor?->servicio?->nombreser,
+                perfilNumero: is_numeric($perfilDestino->numeroper) ? (int) $perfilDestino->numeroper : null,
+                usuarioCuenta: $perfilDestino->cuenta?->usuariocue,
+                contrasenaCuenta: $perfilDestino->cuenta?->contrasenacue,
+                pinPerfil: $perfilDestino->pinper,
+            );
+
+            return response()->json([
+                'success' => true,
+                'changed' => true,
+                'message' => 'Cambio de servicio aplicado correctamente con compensacion de 7 dias.',
+                'data' => [
+                    'cliente' => [
+                        'idcli' => $cliente->idcli,
+                        'nombrecli' => $cliente->nombrecli,
+                        'telefonocli' => $cliente->telefonocli,
+                    ],
+                    'origen' => [
+                        'servicio_id' => $servicioOrigenActual,
+                        'servicio' => $cuentaOrigen?->valor?->servicio?->nombreser,
+                        'idcue' => $cuentaOrigen?->idcue,
+                        'iddet' => $detalle->iddet,
+                        'fecha_vencimiento_anterior' => $fechaAnterior->toDateString(),
+                    ],
+                    'destino' => [
+                        'servicio_id' => strtoupper((string) ($perfilDestino->cuenta?->valor?->idser ?? $servicioDestinoId)),
+                        'servicio' => $perfilDestino->cuenta?->valor?->servicio?->nombreser,
+                        'idcue' => $perfilDestino->cuenta?->idcue,
+                        'perfil' => $perfilDestino->numeroper,
+                        'usuario' => $credencialesEntrega['cuenta'],
+                        'contrasenacue' => $credencialesEntrega['contrasenacue'],
+                        'pinper' => $credencialesEntrega['pinper'],
+                        'credencial_regla' => $credencialesEntrega['regla'],
+                        'fecha_vencimiento_nueva' => $fechaNueva->toDateString(),
+                    ],
+                    'garantia' => [
+                        'compensacion_dias' => 7,
+                        'mensaje_cliente' => 'Por garantia te cambiamos de servicio y te extendimos 7 dias adicionales sobre tu fecha de vencimiento anterior.',
+                    ],
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo aplicar el cambio de servicio por garantia.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function cobranzasMetodosPago()
     {
         $bancosDisponibles = Banco::query()
@@ -788,12 +1069,23 @@ class ChatAssistantController extends Controller
 
                 $montoTotalDetalles += (float) $detalleVenta->montodet;
 
+                $servicioEntrega = $perfil->cuenta->valor->servicio->nombreser ?? null;
+                $perfilNumeroEntrega = is_numeric($perfil->numeroper) ? (int) $perfil->numeroper : null;
+                $credencialesEntrega = $this->resolverCredencialesEntrega(
+                    servicio: $servicioEntrega,
+                    perfilNumero: $perfilNumeroEntrega,
+                    usuarioCuenta: $perfil->cuenta->usuariocue ?? null,
+                    contrasenaCuenta: $perfil->cuenta->contrasenacue ?? null,
+                    pinPerfil: $perfil->pinper,
+                );
+
                 $entregas[] = [
-                    'servicio' => $perfil->cuenta->valor->servicio->nombreser ?? null,
-                    'usuario' => $perfil->cuenta->usuariocue ?? null,
-                    'contrasena' => $perfil->cuenta->contrasenacue ?? null,
+                    'servicio' => $servicioEntrega,
+                    'usuario' => $credencialesEntrega['cuenta'],
+                    'contrasena' => $credencialesEntrega['contrasenacue'],
                     'perfil' => $perfil->numeroper,
-                    'pin' => $perfil->pinper,
+                    'pin' => $credencialesEntrega['pinper'],
+                    'credencial_regla' => $credencialesEntrega['regla'],
                     'vence' => optional($detalleVenta->fechavendet)->toDateString(),
                     'monto' => (float) $detalleVenta->montodet,
                 ];
@@ -980,12 +1272,25 @@ class ChatAssistantController extends Controller
                 $detalleNuevo->activodet = true;
                 $detalleNuevo->save();
 
+                $servicioEntrega = $detalle->perfil?->cuenta?->valor?->servicio?->nombreser;
+                $perfilNumeroEntrega = is_numeric($detalle->perfil?->numeroper) ? (int) $detalle->perfil?->numeroper : null;
+                $credencialesEntrega = $this->resolverCredencialesEntrega(
+                    servicio: $servicioEntrega,
+                    perfilNumero: $perfilNumeroEntrega,
+                    usuarioCuenta: $detalle->perfil?->cuenta?->usuariocue,
+                    contrasenaCuenta: $detalle->perfil?->cuenta?->contrasenacue,
+                    pinPerfil: $detalle->perfil?->pinper,
+                );
+
                 $detallesRenovados[] = [
                     'iddet_anterior' => (int) $detalle->iddet,
                     'iddet_nuevo' => (int) $detalleNuevo->iddet,
-                    'servicio' => $detalle->perfil?->cuenta?->valor?->servicio?->nombreser,
-                    'usuario' => $detalle->perfil?->cuenta?->usuariocue,
+                    'servicio' => $servicioEntrega,
+                    'usuario' => $credencialesEntrega['cuenta'],
+                    'contrasena' => $credencialesEntrega['contrasenacue'],
                     'perfil' => $detalle->perfil?->numeroper,
+                    'pinper' => $credencialesEntrega['pinper'],
+                    'credencial_regla' => $credencialesEntrega['regla'],
                     'fecha_anterior' => optional($detalle->fechavendet)?->toDateString(),
                     'fecha_nueva' => optional($nuevaFechaVencimiento)?->toDateString(),
                     'monto' => round($montoDetalle, 2),
@@ -1113,7 +1418,7 @@ class ChatAssistantController extends Controller
         $validator = Validator::make($request->all(), [
             'idcli' => 'nullable|string|exists:clientes,idcli',
             'telefono' => 'nullable|string|max:50',
-            'idcue' => 'nullable|string|exists:cuentas,idcue',
+            'idcue' => 'nullable|string|max:100',
             'iddet' => 'nullable|integer',
             'tipo' => 'required|string|in:' . implode(',', Soporte::TIPOS),
             'descripcion' => 'required|string|min:10|max:1500',
@@ -1138,6 +1443,12 @@ class ChatAssistantController extends Controller
 
         $idcueInput = $request->input('idcue');
         $iddetInput = $request->input('iddet');
+
+        // Compatibilidad n8n: algunos flujos envian iddet en el campo idcue por error.
+        if (!$iddetInput && $idcueInput && !Cuenta::query()->where('idcue', $idcueInput)->exists() && is_numeric($idcueInput)) {
+            $iddetInput = (int) $idcueInput;
+            $idcueInput = null;
+        }
 
         if (!$idcueInput && !$iddetInput) {
             return response()->json([
@@ -1208,6 +1519,16 @@ class ChatAssistantController extends Controller
             ->first();
 
         if ($soporteExistentePendiente) {
+            $servicioCuenta = $cuenta->valor?->servicio?->nombreser;
+            $perfilNumero = is_numeric($usuarioActivo?->perfil) ? (int) $usuarioActivo?->perfil : null;
+            $credencialesEntrega = $this->resolverCredencialesEntrega(
+                servicio: $servicioCuenta,
+                perfilNumero: $perfilNumero,
+                usuarioCuenta: $cuenta->usuariocue,
+                contrasenaCuenta: $cuenta->contrasenacue,
+                pinPerfil: $usuarioActivo?->profile?->pinper,
+            );
+
             return response()->json([
                 'success' => true,
                 'created' => false,
@@ -1223,11 +1544,12 @@ class ChatAssistantController extends Controller
                         'created_at' => optional($soporteExistentePendiente->created_at)?->toDateTimeString(),
                     ],
                     'contexto_cuenta' => [
-                        'servicio' => $cuenta->valor?->servicio?->nombreser,
-                        'usuario' => $cuenta->usuariocue,
-                        'contrasenacue' => $cuenta->contrasenacue,
+                        'servicio' => $servicioCuenta,
+                        'usuario' => $credencialesEntrega['cuenta'],
+                        'contrasenacue' => $credencialesEntrega['contrasenacue'],
                         'perfil' => $usuarioActivo?->perfil,
-                        'pinper' => $usuarioActivo?->profile?->pinper,
+                        'pinper' => $credencialesEntrega['pinper'],
+                        'credencial_regla' => $credencialesEntrega['regla'],
                         'iddet' => $usuarioActivo?->iddet,
                         'fecha_vencimiento' => $usuarioActivo?->fecha_vencimiento,
                         'cuenta_caidacue' => (bool) $cuenta->caidacue,
@@ -1254,6 +1576,16 @@ class ChatAssistantController extends Controller
 
         event('notificacionRecibida');
 
+        $servicioCuenta = $cuenta->valor?->servicio?->nombreser;
+        $perfilNumero = is_numeric($usuarioActivo?->perfil) ? (int) $usuarioActivo?->perfil : null;
+        $credencialesEntrega = $this->resolverCredencialesEntrega(
+            servicio: $servicioCuenta,
+            perfilNumero: $perfilNumero,
+            usuarioCuenta: $cuenta->usuariocue,
+            contrasenaCuenta: $cuenta->contrasenacue,
+            pinPerfil: $usuarioActivo?->profile?->pinper,
+        );
+
         return response()->json([
             'success' => true,
             'created' => true,
@@ -1270,11 +1602,12 @@ class ChatAssistantController extends Controller
                     'created_at' => optional($soporte->created_at)?->toDateTimeString(),
                 ],
                 'contexto_cuenta' => [
-                    'servicio' => $cuenta->valor?->servicio?->nombreser,
-                    'usuario' => $cuenta->usuariocue,
-                    'contrasenacue' => $cuenta->contrasenacue,
+                    'servicio' => $servicioCuenta,
+                    'usuario' => $credencialesEntrega['cuenta'],
+                    'contrasenacue' => $credencialesEntrega['contrasenacue'],
                     'perfil' => $usuarioActivo?->perfil,
-                    'pinper' => $usuarioActivo?->profile?->pinper,
+                    'pinper' => $credencialesEntrega['pinper'],
+                    'credencial_regla' => $credencialesEntrega['regla'],
                     'iddet' => $usuarioActivo?->iddet,
                     'fecha_vencimiento' => $usuarioActivo?->fecha_vencimiento,
                     'cuenta_caidacue' => (bool) $cuenta->caidacue,
@@ -1575,6 +1908,96 @@ class ChatAssistantController extends Controller
         })->values()->toArray();
     }
 
+    private function resolverCredencialesEntrega(
+        ?string $servicio,
+        ?int $perfilNumero,
+        ?string $usuarioCuenta,
+        ?string $contrasenaCuenta,
+        ?string $pinPerfil
+    ): array {
+        $esPerfilAdmin = $perfilNumero === 1;
+
+        if ($esPerfilAdmin) {
+            return [
+                'cuenta' => $usuarioCuenta,
+                'contrasenacue' => $contrasenaCuenta,
+                'pinper' => $pinPerfil,
+                'regla' => 'perfil_admin_con_credenciales_cuenta',
+            ];
+        }
+
+        $credencialesPin = $this->credencialesDesdePinPerfil($pinPerfil);
+
+        if ($credencialesPin !== null) {
+            return [
+                'cuenta' => $credencialesPin['usuario'],
+                'contrasenacue' => $credencialesPin['clave'],
+                'pinper' => $pinPerfil,
+                'regla' => 'perfil_no_admin_desde_pinper',
+            ];
+        }
+
+        return [
+            'cuenta' => null,
+            'contrasenacue' => null,
+            'pinper' => $pinPerfil,
+            'regla' => 'perfil_no_admin_sin_credenciales_pin',
+        ];
+    }
+
+    private function credencialesDesdePinPerfil(?string $pinPerfil): ?array
+    {
+        $pin = trim((string) $pinPerfil);
+
+        if ($pin === '' || strtolower($pin) === 'libre') {
+            return null;
+        }
+
+        foreach (['|', ':', ';'] as $separador) {
+            if (str_contains($pin, $separador)) {
+                $partes = explode($separador, $pin, 2);
+                $usuario = trim((string) ($partes[0] ?? ''));
+                $clave = trim((string) ($partes[1] ?? ''));
+
+                if ($usuario !== '' && $clave !== '') {
+                    return [
+                        'usuario' => $usuario,
+                        'clave' => $clave,
+                    ];
+                }
+            }
+        }
+
+        return [
+            'usuario' => $pin,
+            'clave' => $pin,
+        ];
+    }
+
+    private function normalizarServicioIdGarantia(string $servicio): ?string
+    {
+        $raw = strtoupper(trim($servicio));
+        $raw = str_replace(['-', '_', ' '], '', $raw);
+
+        $mapa = [
+            'PRIME' => 'PRIME',
+            'PRIMEVIDEO' => 'PRIME',
+            'AMAZONPRIME' => 'PRIME',
+            'MAX' => 'MAX',
+            'HBO' => 'MAX',
+            'HBOMAX' => 'MAX',
+            'CRUNCHY' => 'CRUNCHY',
+            'CRUNCHYROLL' => 'CRUNCHY',
+            'PARAMOUNT' => 'PARAMOUNT',
+            'PARAMOUNTPLUS' => 'PARAMOUNT',
+            'MAGIS' => 'MAGIS',
+            'FLUJO' => 'FLUJO',
+            'FLUJOTV' => 'FLUJO',
+        ];
+
+        return $mapa[$raw] ?? null;
+    }
+
     private function buscarCuentaDisponible($idser)
     {
         return Cuenta::whereHas('valor', function ($query) use ($idser) {
@@ -1590,27 +2013,32 @@ class ChatAssistantController extends Controller
 
     private function buscarPerfilDisponible($cuenta, bool $forUpdate = false)
     {
-        $query = Perfil::where('idcue', $cuenta->idcue)->orderBy('numeroper');
+        $queryPerfilesVacios = Perfil::where('idcue', $cuenta->idcue)
+            ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos
+                    WHERE view_usuarios_activos.idcue = perfiles.idcue
+                    AND view_usuarios_activos.perfil = perfiles.numeroper) = 0')
+            ->orderBy('numeroper');
 
         if ($forUpdate) {
-            $query->lockForUpdate();
+            $queryPerfilesVacios->lockForUpdate();
         }
 
-        $perfiles = $query->get();
+        $perfil = $queryPerfilesVacios->first();
 
-        foreach ([0, 1] as $ocupacionPermitida) {
-            foreach ($perfiles as $perfil) {
-                $usuariosActivos = DetalleVenta::where('idper', $perfil->idper)
-                    ->where('activodet', true)
-                    ->whereDate('fechavendet', '>=', now()->toDateString())
-                    ->count();
-
-                if ($usuariosActivos === $ocupacionPermitida) {
-                    return $perfil;
-                }
-            }
+        if ($perfil) {
+            return $perfil;
         }
 
-        return null;
+        $queryPerfilesConUno = Perfil::where('idcue', $cuenta->idcue)
+            ->whereRaw('(SELECT COUNT(*) FROM view_usuarios_activos
+                    WHERE view_usuarios_activos.idcue = perfiles.idcue
+                    AND view_usuarios_activos.perfil = perfiles.numeroper) = 1')
+            ->orderBy('numeroper');
+
+        if ($forUpdate) {
+            $queryPerfilesConUno->lockForUpdate();
+        }
+
+        return $queryPerfilesConUno->first();
     }
 }

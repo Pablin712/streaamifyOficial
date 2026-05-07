@@ -334,7 +334,7 @@ Subagentes válidos:
 Debes priorizar esta lógica:
 1. Si el cliente pide humano, asesor, operador o persona real, elige espera_humano.
 2. Si el turno trata de pago, comprobante, transferencia, depósito, validación de pago o ya pagó, elige cobranzas_pago.
-3. Si el turno trata de acceso, error, contraseña, pantalla, falla, cuenta dañada o problema de uso, elige soporte_cliente.
+3. Si el turno trata de acceso, error, contraseña, pantalla, falla, cuenta dañada, garantia o cambio de servicio por falla, elige soporte_cliente.
 4. Si el turno trata de precio, plan, combo, descuento, servicio o intención de compra, elige vendedor_cierre.
 5. Si hay señales de compra reciente y la conversación es de seguimiento o duda posterior, elige postventa_reciente.
 6. Si no hay coincidencia fuerte, elige asistente_no_registrado.
@@ -415,7 +415,7 @@ Subagentes válidos:
 Debes priorizar esta lógica:
 1. Si el cliente pide humano, asesor, operador o persona real, elige espera_humano.
 2. Si el turno trata de pago, comprobante, transferencia, depósito, validación de pago o ya pagó, elige cobranzas_pago.
-3. Si el turno trata de acceso, error, contraseña, pantalla, falla, cuenta dañada o problema de uso, elige soporte_cliente.
+3. Si el turno trata de acceso, error, contraseña, pantalla, falla, cuenta dañada, garantia o cambio de servicio por falla, elige soporte_cliente.
 4. Si el turno trata de precio, plan, combo, descuento, servicio o intención de compra, elige vendedor_cierre.
 5. Si hay señales de compra reciente y la conversación es de seguimiento o duda posterior, elige postventa_reciente.
 6. Si no hay coincidencia fuerte, elige asistente_no_registrado.

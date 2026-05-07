@@ -1053,6 +1053,8 @@ class ChatRouterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'idconv' => 'nullable|exists:conversaciones,idconv',
+            'idcli' => 'nullable|string|exists:clientes,idcli',
+            'telefono' => 'nullable|string|max:40',
             'canal' => 'nullable|in:' . implode(',', self::CANALES),
             'canal_user_id' => 'nullable|string|max:120',
             'razon' => 'nullable|string',
@@ -1232,6 +1234,31 @@ class ChatRouterController extends Controller
             return Conversacion::query()->with('contactoCanal')->find($request->input('idconv'));
         }
 
+        if ($request->filled('idcli')) {
+            return Conversacion::query()
+                ->with('contactoCanal')
+                ->where('idcli', $request->input('idcli'))
+                ->latest('ultima_actividad')
+                ->first();
+        }
+
+        $telefonoFallback = $this->normalizePhone((string) ($request->input('telefono') ?? ''));
+
+        if ($telefonoFallback !== '' && !$request->filled('canal')) {
+            $contactoPorTelefono = ChatContactoCanal::query()
+                ->where('telefono_normalizado', $telefonoFallback)
+                ->latest('last_seen_at')
+                ->first();
+
+            if ($contactoPorTelefono) {
+                return Conversacion::query()
+                    ->with('contactoCanal')
+                    ->where('canal_contacto_id', $contactoPorTelefono->id)
+                    ->latest('ultima_actividad')
+                    ->first();
+            }
+        }
+
         if (!$request->filled('canal')) {
             return null;
         }
@@ -1281,6 +1308,21 @@ class ChatRouterController extends Controller
         ], fn ($value) => is_string($value) && trim($value) !== '')));
 
         if (empty($candidates)) {
+            if ($telefonoFallback !== '') {
+                $contactoPorTelefonoCanal = ChatContactoCanal::query()
+                    ->where('canal', $canal)
+                    ->where('telefono_normalizado', $telefonoFallback)
+                    ->first();
+
+                if ($contactoPorTelefonoCanal) {
+                    return Conversacion::query()
+                        ->with('contactoCanal')
+                        ->where('canal_contacto_id', $contactoPorTelefonoCanal->id)
+                        ->latest('ultima_actividad')
+                        ->first();
+                }
+            }
+
             return null;
         }
 
