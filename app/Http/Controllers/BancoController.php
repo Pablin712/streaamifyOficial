@@ -19,6 +19,56 @@ class BancoController extends Controller
         $this->bancoService = $bancoService;
     }
 
+    /**
+     * Convierte distintos formatos legacy de ruta a una ruta de disco public válida.
+     */
+    private function resolvePublicDiskPath(?string $fotoPath): ?string
+    {
+        if (empty($fotoPath)) {
+            return null;
+        }
+
+        $path = trim($fotoPath);
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            return substr($path, strlen('storage/'));
+        }
+
+        if (str_starts_with($path, 'fotos/')) {
+            return $path;
+        }
+
+        return 'fotos/' . ltrim($path, '/');
+    }
+
+    /**
+     * Entrega imagen de banco desde disco public.
+     * Evita depender del acceso directo a /storage en hostings con restricciones.
+     */
+    public function foto(string $path)
+    {
+        $diskPath = $this->resolvePublicDiskPath($path);
+
+        if (!$diskPath || !Storage::disk('public')->exists($diskPath)) {
+            $fallback = public_path('images/Icono.png');
+            if (is_file($fallback)) {
+                return response()->file($fallback, [
+                    'Cache-Control' => 'public, max-age=3600',
+                ]);
+            }
+
+            abort(404);
+        }
+
+        return response()->file(Storage::disk('public')->path($diskPath), [
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
     // Listar bancos
     public function index(Request $request)
     {
@@ -203,7 +253,8 @@ class BancoController extends Controller
             $foto = $request->file('foto');
             $nombreFoto = time() . '_' . $foto->getClientOriginalName();
             $foto->storeAs('fotos', $nombreFoto, 'public');
-            $data['foto'] = 'storage/fotos/' . $nombreFoto;
+            // Guardar formato canónico relativo al disco public.
+            $data['foto'] = 'fotos/' . $nombreFoto;
         }
 
         Banco::create($data);
@@ -231,15 +282,17 @@ class BancoController extends Controller
 
         // Manejar foto si se subió
         if ($request->hasFile('foto')) {
-            // Eliminar foto anterior si existe (storage/fotos/...)
-            if ($banco->foto && Storage::disk('public')->exists(str_replace('storage/', '', $banco->foto))) {
-                Storage::disk('public')->delete(str_replace('storage/', '', $banco->foto));
+            // Eliminar foto anterior si existe (soporta formatos legacy).
+            $oldDiskPath = $this->resolvePublicDiskPath($banco->foto);
+            if ($oldDiskPath && Storage::disk('public')->exists($oldDiskPath)) {
+                Storage::disk('public')->delete($oldDiskPath);
             }
 
             $foto = $request->file('foto');
             $nombreFoto = time() . '_' . $foto->getClientOriginalName();
             $foto->storeAs('fotos', $nombreFoto, 'public');
-            $data['foto'] = 'storage/fotos/' . $nombreFoto;
+            // Guardar formato canónico relativo al disco public.
+            $data['foto'] = 'fotos/' . $nombreFoto;
         }
 
         $banco->update($data);

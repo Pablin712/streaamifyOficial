@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V2;
 
 use Carbon\Carbon;
+use App\Notifications\ComprasRealizadas;
 use App\Notifications\NuevoSoporteCliente;
 use App\Http\Controllers\Controller;
 use App\Models\Banco;
@@ -21,6 +22,7 @@ use App\Support\ClienteAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
@@ -630,11 +632,43 @@ class ChatAssistantController extends Controller
 
     public function cambioServicioPostventa(Request $request)
     {
-        // Normalize acepta_garantia: n8n sends "true"/"false" as strings
+        // Normalize acepta_garantia: n8n/agentes pueden enviar texto libre
         if ($request->has('acepta_garantia')) {
             $raw = $request->input('acepta_garantia');
+
             if (is_string($raw)) {
-                $request->merge(['acepta_garantia' => filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)]);
+                $normalizado = mb_strtolower(trim($raw), 'UTF-8');
+                $normalizado = str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $normalizado);
+
+                $afirmativos = [
+                    'true', '1', 'yes', 'y', 'on', 'si', 's', 'acepto', 'acepto garantia',
+                    'acepta', 'confirmo', 'confirmado', 'de acuerdo', 'ok', 'okay',
+                    'procede', 'aprobado',
+                ];
+
+                $negativos = [
+                    'false', '0', 'no', 'n', 'off', 'rechazo', 'no acepto',
+                    'cancelar', 'denegado', 'negado',
+                ];
+
+                $valor = null;
+
+                if (in_array($normalizado, $afirmativos, true)) {
+                    $valor = true;
+                } elseif (in_array($normalizado, $negativos, true)) {
+                    $valor = false;
+                } else {
+                    // Soporta frases como: "si, acepta garantia" o "no acepta"
+                    if (str_contains($normalizado, 'acepta garantia') || str_contains($normalizado, 'acepto garantia')) {
+                        $valor = true;
+                    } elseif (str_contains($normalizado, 'no acepta') || str_contains($normalizado, 'rechaza')) {
+                        $valor = false;
+                    } else {
+                        $valor = filter_var($normalizado, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    }
+                }
+
+                $request->merge(['acepta_garantia' => $valor]);
             }
         }
 
@@ -852,6 +886,64 @@ class ChatAssistantController extends Controller
                 contrasenaCuenta: $perfilDestino->cuenta?->contrasenacue,
                 pinPerfil: $perfilDestino->pinper,
             );
+
+            try {
+                $empleados = Empleado::all();
+
+                if ($empleados->isNotEmpty()) {
+                    Notification::send($empleados, new class([
+                        'idcli' => $cliente->idcli,
+                        'nombrecli' => $cliente->nombrecli,
+                        'telefonocli' => $cliente->telefonocli,
+                        'iddet' => $detalle->iddet,
+                        'origen' => $cuentaOrigen?->valor?->servicio?->nombreser ?? $servicioOrigenActual,
+                        'destino' => $perfilDestino->cuenta?->valor?->servicio?->nombreser ?? $servicioDestinoId,
+                        'idcue_origen' => $cuentaOrigen?->idcue,
+                        'idcue_destino' => $perfilDestino->cuenta?->idcue,
+                        'fecha_vencimiento_nueva' => $fechaNueva->toDateString(),
+                    ]) extends \Illuminate\Notifications\Notification {
+                        use \Illuminate\Bus\Queueable;
+
+                        public function __construct(public array $cambio)
+                        {
+                        }
+
+                        public function via(object $notifiable): array
+                        {
+                            return ['database'];
+                        }
+
+                        public function toDatabase(object $notifiable): array
+                        {
+                            $cliente = $this->cambio['nombrecli'] ?? 'Cliente';
+                            $origen = $this->cambio['origen'] ?? 'Servicio origen';
+                            $destino = $this->cambio['destino'] ?? 'Servicio destino';
+
+                            return [
+                                'titulo' => 'Cambio de servicio por garantia',
+                                'mensaje' => "{$cliente} fue cambiado de {$origen} a {$destino} por garantia.",
+                                'url' => route('ventas'),
+                                'contexto' => [
+                                    'idcli' => $this->cambio['idcli'] ?? null,
+                                    'telefonocli' => $this->cambio['telefonocli'] ?? null,
+                                    'iddet' => $this->cambio['iddet'] ?? null,
+                                    'idcue_origen' => $this->cambio['idcue_origen'] ?? null,
+                                    'idcue_destino' => $this->cambio['idcue_destino'] ?? null,
+                                    'fecha_vencimiento_nueva' => $this->cambio['fecha_vencimiento_nueva'] ?? null,
+                                ],
+                            ];
+                        }
+                    });
+
+                    event('notificacionRecibida');
+                }
+            } catch (\Throwable $notifyError) {
+                Log::warning('No se pudo notificar cambio de servicio por garantia', [
+                    'idcli' => $cliente->idcli,
+                    'iddet' => $detalle->iddet,
+                    'error' => $notifyError->getMessage(),
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -1100,6 +1192,23 @@ class ChatAssistantController extends Controller
             $cliente->save();
 
             DB::commit();
+
+            $venta->loadMissing('cliente');
+
+            try {
+                $empleados = Empleado::all();
+
+                if ($empleados->isNotEmpty()) {
+                    Notification::send($empleados, new ComprasRealizadas($venta));
+                    event('notificacionRecibida');
+                }
+            } catch (\Throwable $notifyError) {
+                Log::warning('No se pudo notificar venta creada por chat assistant', [
+                    'idven' => $venta->idven,
+                    'idcli' => $cliente->idcli,
+                    'error' => $notifyError->getMessage(),
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -1916,6 +2025,8 @@ class ChatAssistantController extends Controller
         ?string $pinPerfil
     ): array {
         $esPerfilAdmin = $perfilNumero === 1;
+        $servicioNormalizado = strtoupper(trim((string) $servicio));
+        $esSpotify = str_contains($servicioNormalizado, 'SPOTIFY');
 
         if ($esPerfilAdmin) {
             return [
@@ -1923,6 +2034,16 @@ class ChatAssistantController extends Controller
                 'contrasenacue' => $contrasenaCuenta,
                 'pinper' => $pinPerfil,
                 'regla' => 'perfil_admin_con_credenciales_cuenta',
+            ];
+        }
+
+        // Para servicios no Spotify, siempre se entregan credenciales de la cuenta.
+        if (!$esSpotify) {
+            return [
+                'cuenta' => $usuarioCuenta,
+                'contrasenacue' => $contrasenaCuenta,
+                'pinper' => $pinPerfil,
+                'regla' => 'perfil_no_admin_con_credenciales_cuenta',
             ];
         }
 

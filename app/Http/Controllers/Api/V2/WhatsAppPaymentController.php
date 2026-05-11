@@ -495,7 +495,7 @@ class WhatsAppPaymentController extends Controller
         $hash = hash_file('sha256', $file->getRealPath());
         $receiptNumber = trim((string) $providedReceiptNumber);
 
-        if ($receiptNumber === '') {
+        if ($receiptNumber === '' || !$this->isReliableReceiptNumber($receiptNumber)) {
             $receiptNumber = 'WA-' . strtoupper(substr($hash, 0, 20));
         }
 
@@ -503,6 +503,43 @@ class WhatsAppPaymentController extends Controller
             'hash' => $hash,
             'number' => $receiptNumber,
         ];
+    }
+
+    private function isReliableReceiptNumber(string $receiptNumber): bool
+    {
+        $normalized = Str::of($receiptNumber)
+            ->lower()
+            ->ascii()
+            ->replaceMatches('/[^a-z0-9]/', '')
+            ->toString();
+
+        if ($normalized === '') {
+            return false;
+        }
+
+        $genericTexts = [
+            'transferenciaexitosa',
+            'transferenciaaprobada',
+            'transferenciarealizada',
+            'comprobante',
+            'comprobantepago',
+            'pagorealizado',
+            'pagoexitoso',
+            'success',
+            'ok',
+        ];
+
+        if (in_array($normalized, $genericTexts, true)) {
+            return false;
+        }
+
+        $digitCount = preg_match_all('/\d/', $receiptNumber);
+        if ($digitCount >= 4) {
+            return true;
+        }
+
+        // Acepta codigos alfanumericos largos, pero descarta textos simples.
+        return strlen($normalized) >= 10 && $digitCount >= 2;
     }
 
     private function findDuplicateReceipt(string $comprobanteHash, string $receiptNumber): ?Recarga

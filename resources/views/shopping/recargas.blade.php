@@ -76,10 +76,21 @@
         <h2 class="text-center fw-bold mb-5">Bancos Disponibles</h2>
         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
             @foreach ($bancos as $banco)
+                @php
+                    $fotoBanco = trim((string) ($banco->foto ?? ''));
+                    if ($fotoBanco === '') {
+                        $fotoBancoUrl = asset('images/Icono.png');
+                    } elseif (Str::startsWith($fotoBanco, ['http://', 'https://'])) {
+                        $fotoBancoUrl = $fotoBanco;
+                    } else {
+                        // Cualquier formato local (storage/fotos, fotos o nombre suelto) se sirve por controlador.
+                        $fotoBancoUrl = route('bancos.foto', ['path' => $fotoBanco]);
+                    }
+                @endphp
                 <div class="col mb-5">
                     <div class="card h-100">
                         <!-- Imagen del banco -->
-                        <img class="card-img-top" src="{{ asset($banco->foto) }}" alt="{{ $banco->nombreban }}" />
+                        <img class="card-img-top" src="{{ $fotoBancoUrl }}" alt="{{ $banco->nombreban }}" />
 
                         <!-- Detalles del banco -->
                         <div class="card-body text-center">
