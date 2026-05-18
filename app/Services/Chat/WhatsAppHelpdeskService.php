@@ -132,20 +132,31 @@ class WhatsAppHelpdeskService
         $channel = $this->resolveChannelFromPayload($payload);
         $metadata = $this->buildChannelMetadata($payload, $channel);
 
-        $contact = ChatContactoCanal::firstOrCreate(
-            ['canal' => 'whatsapp', 'canal_user_id' => $channelUserId],
-            [
+        $contact = ChatContactoCanal::query()
+            ->where('canal', 'whatsapp')
+            ->where(function ($query) use ($channelUserId, $phone) {
+                $query->where('canal_user_id', $channelUserId)
+                    ->orWhere('canal_user_id', $phone)
+                    ->orWhere('telefono_normalizado', $phone);
+            })
+            ->first();
+
+        if (! $contact) {
+            $contact = ChatContactoCanal::create([
+                'canal' => 'whatsapp',
+                'canal_user_id' => $channelUserId,
                 'telefono_normalizado' => $phone,
                 'nombre_canal' => $payload['nombre'] ?? null,
                 'idcli' => $cliente?->idcli,
                 'estado_relacion' => $cliente ? 'cliente' : 'lead',
                 'metadata' => $metadata,
                 'last_seen_at' => now(),
-            ]
-        );
+            ]);
+        }
 
         // Actualizar datos del contacto siempre
         $contact->update([
+            'canal_user_id' => $channelUserId,
             'telefono_normalizado' => $phone,
             'nombre_canal' => $payload['nombre'] ?? $contact->nombre_canal,
             'idcli' => $cliente?->idcli ?? $contact->idcli,

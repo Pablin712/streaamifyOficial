@@ -181,14 +181,6 @@ class WhatsAppHelpdesk extends Component
         $conversationMeta = (array) ($conversation->metadata ?? []);
         $contactMeta = (array) ($contact?->metadata ?? []);
 
-        if ($conversation->idcli || $contact?->idcli) {
-            return [
-                'type' => 'cliente',
-                'label' => 'Cliente',
-                'tone' => 'success',
-            ];
-        }
-
         $declaredType = strtolower(trim((string) (
             $conversationMeta['tipo_contacto']
             ?? $contactMeta['tipo_contacto']
@@ -198,6 +190,22 @@ class WhatsAppHelpdesk extends Component
             ?? $contactMeta['role']
             ?? ''
         )));
+
+        if (str_contains($declaredType, 'proveedor') || str_contains($declaredType, 'provider')) {
+            return [
+                'type' => 'proveedor',
+                'label' => 'Proveedor',
+                'tone' => 'warning',
+            ];
+        }
+
+        if ($conversation->idcli || $contact?->idcli) {
+            return [
+                'type' => 'cliente',
+                'label' => 'Cliente',
+                'tone' => 'success',
+            ];
+        }
 
         if (str_contains($declaredType, 'proveedor') || str_contains($declaredType, 'provider')) {
             return [

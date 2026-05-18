@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cuenta;
 use App\Models\Valor;
+use App\Models\Proveedor;
 use App\Models\Servicio;
 use App\Models\Perfil;
 use App\Models\Costo;
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 class CuentaController extends Controller
@@ -655,12 +657,21 @@ class CuentaController extends Controller
         }
 
         $validated = $request->validate([
-            'proveedor' => 'nullable|string|max:255',
+            'proveedor_id' => 'required|exists:proveedores,idpro',
             'telefono' => 'required|string|max:50',
             'mensaje' => 'required|string|min:3|max:4000',
         ]);
 
-        $telefonoNormalizado = preg_replace('/\D+/', '', $validated['telefono']);
+        $cuenta = Cuenta::with(['valor.proveedor'])->findOrFail($idcue);
+
+        if ((int) ($cuenta->valor->proveedor->idpro ?? 0) !== (int) $validated['proveedor_id']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El proveedor seleccionado no corresponde a la cuenta indicada.',
+            ], 422);
+        }
+
+        $telefonoNormalizado = PhoneNumber::canonicalEc($validated['telefono']);
         if (empty($telefonoNormalizado)) {
             return response()->json([
                 'success' => false,
@@ -668,7 +679,7 @@ class CuentaController extends Controller
             ], 422);
         }
 
-        $cuenta = Cuenta::with(['valor.proveedor', 'valor.servicio'])->findOrFail($idcue);
+        $proveedor = Proveedor::findOrFail($validated['proveedor_id']);
 
         $channel = $this->resolveProviderOutboundChannel();
 
@@ -693,7 +704,7 @@ class CuentaController extends Controller
         } catch (\Throwable $e) {
             Log::error('Excepción al enviar mensaje a proveedor por Evolution API', [
                 'error' => $e->getMessage(),
-                'idcue' => $cuenta->idcue,
+                'proveedor_id' => $validated['proveedor_id'],
             ]);
 
             return response()->json([
@@ -704,7 +715,6 @@ class CuentaController extends Controller
 
         if (!($dispatch['ok'] ?? false)) {
             Log::warning('Evolution API no confirmó envío de mensaje a proveedor', [
-                'idcue' => $cuenta->idcue,
                 'instance' => $channel->instance_name,
                 'error' => $dispatch['error'] ?? null,
             ]);
@@ -723,13 +733,14 @@ class CuentaController extends Controller
                 mensaje: trim($validated['mensaje']),
                 empleado: $empleado,
                 channel: $channel,
-                proveedorNombre: $validated['proveedor'] ?: ($cuenta->valor->proveedor->nombrepro ?? 'Proveedor'),
+                proveedorNombre: $proveedor->nombrepro ?: 'Proveedor',
+                proveedorId: $proveedor->idpro,
                 source: 'provider-modal',
                 dispatch: $dispatch,
             );
         } catch (\Throwable $e) {
             Log::error('Error persistiendo mensaje enviado a proveedor en chat', [
-                'idcue' => $cuenta->idcue,
+                'proveedor_id' => $validated['proveedor_id'],
                 'error' => $e->getMessage(),
             ]);
         }
@@ -738,7 +749,7 @@ class CuentaController extends Controller
         try {
             Historial::create([
                 'accion' => 'Mensaje directo a proveedor',
-                'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Proveedor: ' . ($validated['proveedor'] ?: ($cuenta->valor->proveedor->nombrepro ?? 'Proveedor')) . ' | Teléfono: ' . $validated['telefono'],
+                'descripcion' => 'Cuenta: ' . $idcue . ' | Proveedor: ' . ($proveedor->nombrepro ?: 'Proveedor') . ' | Teléfono: ' . $validated['telefono'],
                 'empleado_id' => $empleado->idemp,
                 'created_at' => now(),
             ]);
@@ -833,7 +844,7 @@ class CuentaController extends Controller
 
         $proveedor = $cuentasPorServicio->first()->valor->proveedor;
         $telefonoProveedor = (string) ($proveedor->telefonopro ?? '');
-        $telefonoNormalizado = preg_replace('/\D+/', '', $telefonoProveedor);
+        $telefonoNormalizado = PhoneNumber::canonicalEc($telefonoProveedor);
 
         if (empty($telefonoNormalizado)) {
             return response()->json([
@@ -922,6 +933,7 @@ class CuentaController extends Controller
                 empleado: $empleado,
                 channel: $channel,
                 proveedorNombre: $proveedor->nombrepro ?? 'Proveedor',
+                proveedorId: $proveedor->idpro,
                 source: 'provider-inventory-modal',
                 dispatch: $dispatch,
             );
@@ -969,6 +981,7 @@ class CuentaController extends Controller
         $empleado,
         ChatWhatsappChannel $channel,
         string $proveedorNombre,
+        ?string $proveedorId,
         string $source,
         array $dispatch
     ): array {
@@ -979,18 +992,27 @@ class CuentaController extends Controller
             $empleado,
             $channel,
             $proveedorNombre,
+            $proveedorId,
             $source,
             $dispatch
         ) {
-            $contacto = ChatContactoCanal::query()->firstOrCreate(
-                [
+            $contacto = ChatContactoCanal::query()
+                ->where('canal', 'whatsapp')
+                ->where(function ($query) use ($telefonoNormalizado, $telefonoOriginal) {
+                    $query->where('canal_user_id', $telefonoNormalizado)
+                        ->orWhere('telefono_normalizado', $telefonoNormalizado)
+                        ->orWhere('telefono', $telefonoOriginal);
+                })
+                ->first();
+
+            if (! $contacto) {
+                $contacto = ChatContactoCanal::create([
                     'canal' => 'whatsapp',
                     'canal_user_id' => $telefonoNormalizado,
-                ],
-                [
                     'telefono_normalizado' => $telefonoNormalizado,
                     'telefono' => $telefonoOriginal,
                     'nombre' => $proveedorNombre,
+                    'nombre_canal' => $proveedorNombre,
                     'idcli' => null,
                     'estado_relacion' => 'lead',
                     'origen' => $source,
@@ -999,22 +1021,27 @@ class CuentaController extends Controller
                         'server_url' => $channel->server_url,
                         'whatsapp_channel_id' => $channel->id,
                         'contact_type' => 'provider',
+                        'provider_name' => $proveedorNombre,
+                        'provider_id' => $proveedorId,
                     ],
                     'last_seen_at' => now(),
-                ]
-            );
+                ]);
+            }
 
             $contactMetadata = array_merge($contacto->metadata ?? [], [
                 'instance' => $channel->instance_name,
                 'server_url' => $channel->server_url,
                 'whatsapp_channel_id' => $channel->id,
                 'contact_type' => 'provider',
+                'provider_name' => $proveedorNombre,
+                'provider_id' => $proveedorId,
             ]);
 
             $contacto->fill([
                 'telefono_normalizado' => $telefonoNormalizado,
                 'telefono' => $telefonoOriginal,
                 'nombre' => $proveedorNombre,
+                'nombre_canal' => $proveedorNombre,
                 'metadata' => $contactMetadata,
                 'last_seen_at' => now(),
             ])->save();

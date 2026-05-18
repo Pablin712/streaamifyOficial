@@ -663,10 +663,20 @@ class TecnicoConfigController extends Controller
      * Listar proveedores
      * GET /api/v2/tech-config/proveedores/listar
      */
-    public function listarProveedores()
+    public function listarProveedores(Request $request)
     {
         try {
-            $proveedores = Proveedor::all()->map(function($pro) {
+            $query = $request->get('q', '');
+            $proveedoresQuery = Proveedor::where('activopro', true);
+
+            if (!empty($query)) {
+                $proveedoresQuery->where(function($q) use ($query) {
+                    $q->where('nombrepro', 'LIKE', '%' . $query . '%')
+                      ->orWhere('telefonopro', 'LIKE', '%' . $query . '%');
+                });
+            }
+
+            $proveedores = $proveedoresQuery->orderBy('nombrepro')->get()->map(function($pro) {
                 return [
                     'idpro' => $pro->idpro,
                     'nombre' => $pro->nombrepro,

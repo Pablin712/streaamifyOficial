@@ -1434,11 +1434,14 @@
              @forelse($conversations as $conversation)
                  @php
                      $displayName = $conversation->cliente?->nombrecli
+                         ?: $conversation->contactoCanal?->nombre
+                         ?: data_get($conversation->contactoCanal?->metadata, 'provider_name')
                          ?: $conversation->contactoCanal?->nombre_canal
                          ?: $conversation->contactoCanal?->telefono_normalizado
                          ?: $conversation->contactoCanal?->canal_user_id
                          ?: 'Contacto';
                      $number = $conversation->contactoCanal?->telefono_normalizado
+                         ?: $conversation->contactoCanal?->telefono
                          ?: $conversation->contactoCanal?->canal_user_id
                          ?: $conversation->cliente?->telefonocli
                          ?: 'Sin numero';
@@ -1504,10 +1507,13 @@
         @if($activeConversation)
             @php
                 $activeName = $activeConversation->cliente?->nombrecli
+                    ?: $activeConversation->contactoCanal?->nombre
+                    ?: data_get($activeConversation->contactoCanal?->metadata, 'provider_name')
                     ?: $activeConversation->contactoCanal?->nombre_canal
                     ?: $activeConversation->contactoCanal?->telefono_normalizado
                     ?: 'Contacto';
                 $activeNumber = $activeConversation->contactoCanal?->telefono_normalizado
+                    ?: $activeConversation->contactoCanal?->telefono
                     ?: $activeConversation->contactoCanal?->canal_user_id
                     ?: $activeConversation->cliente?->telefonocli
                     ?: 'Sin numero';

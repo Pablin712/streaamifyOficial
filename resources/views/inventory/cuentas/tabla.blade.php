@@ -247,6 +247,7 @@
                                         data-cuenta-usuario="{{ $cuenta->usuariocue }}"
                                         data-cuenta-clave="{{ $cuenta->contrasenacue }}"
                                         data-proveedor="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
+                                        data-proveedor-id="{{ $cuenta->valor->proveedor->idpro ?? '' }}"
                                         data-proveedor-telefono="{{ $telefonoProveedor }}"
                                         onclick="openMensajeProveedorModal(this)"
                                         @if (empty($telefonoProveedor)) disabled @endif

@@ -1475,6 +1475,7 @@ function openMensajeProveedorModal(button) {
     const cuentaClave = button.dataset.cuentaClave || '';
     const proveedor = button.dataset.proveedor || 'Proveedor';
     const telefono = button.dataset.proveedorTelefono || '';
+    const proveedorId = button.dataset.proveedorId || '';
 
     const mensajePredeterminado = [
         'Hola bro, quiero *tu petición* con esta cuenta de',
@@ -1484,12 +1485,26 @@ function openMensajeProveedorModal(button) {
     ].join('\n');
 
     document.getElementById('mensaje_proveedor_idcue').value = idcue;
-    document.getElementById('mensaje_proveedor_nombre').value = proveedor;
+    document.getElementById('mensaje_proveedor_proveedor_id').value = proveedorId;
     document.getElementById('mensaje_proveedor_telefono').value = telefono;
     document.getElementById('mensaje_proveedor_nombre_display').textContent = proveedor;
     document.getElementById('mensaje_proveedor_telefono_display').textContent = telefono || 'Sin teléfono';
     document.getElementById('mensaje_proveedor_cuenta_display').textContent = `${idcue} (${cuentaUsuario})`;
     document.getElementById('mensaje_proveedor_texto').value = mensajePredeterminado;
+
+    // Mostrar info del proveedor si ya está seleccionado
+    const proveedorInfo = document.getElementById('proveedor_info');
+    if (proveedorId && proveedor !== 'Proveedor') {
+        proveedorInfo.style.display = 'block';
+        document.getElementById('mensaje_proveedor_submit_btn').disabled = false;
+    } else {
+        proveedorInfo.style.display = 'none';
+        document.getElementById('mensaje_proveedor_submit_btn').disabled = true;
+    }
+
+    // Limpiar búsqueda
+    document.getElementById('proveedor_search').value = '';
+    document.getElementById('proveedor_results').style.display = 'none';
 
     window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensajeProveedorModal' }));
 }
@@ -1517,10 +1532,14 @@ function openMensajeProveedorInventarioModal() {
         return;
     }
 
+    // Pre-seleccionar el proveedor
     document.getElementById('inventario_proveedor_id').value = provider.proveedorId;
     document.getElementById('inventario_proveedor_nombre').textContent = provider.proveedorNombre || 'Proveedor';
     document.getElementById('inventario_proveedor_telefono').textContent = provider.proveedorTelefono;
     document.getElementById('inventario_total_cuentas').textContent = String(selectedAccounts.length);
+
+    // Mostrar info del proveedor
+    document.getElementById('inventario_proveedor_info').style.display = 'block';
 
     const serviciosMap = new Map();
     selectedAccounts.forEach((account) => {
@@ -1556,6 +1575,10 @@ function openMensajeProveedorInventarioModal() {
         .join('');
 
     serviciosContainer.innerHTML = serviciosHtml || '<div class="text-muted small">No hay servicios disponibles.</div>';
+
+    // Limpiar búsqueda
+    document.getElementById('inventario_proveedor_search').value = '';
+    document.getElementById('inventario_proveedor_results').style.display = 'none';
 
     window.dispatchEvent(new CustomEvent('open-modal', { detail: 'mensajeProveedorInventarioModal' }));
 }
@@ -1641,16 +1664,17 @@ async function submitMensajeProveedor(event) {
 
     const form = event.target;
     const idcue = document.getElementById('mensaje_proveedor_idcue').value;
+    const proveedorId = document.getElementById('mensaje_proveedor_proveedor_id').value;
     const submitBtn = document.getElementById('mensaje_proveedor_submit_btn');
     const formData = new FormData(form);
     const payload = {
-        proveedor: (formData.get('proveedor') || '').toString(),
+        proveedor_id: proveedorId,
         telefono: (formData.get('telefono') || '').toString(),
         mensaje: (formData.get('mensaje') || '').toString().trim()
     };
 
-    if (!payload.telefono || !payload.mensaje) {
-        showTemporaryAlert('Falta teléfono del proveedor o mensaje.', 'danger');
+    if (!payload.proveedor_id || !payload.telefono || !payload.mensaje) {
+        showTemporaryAlert('Falta seleccionar proveedor, teléfono o mensaje.', 'danger');
         return;
     }
 
@@ -2011,6 +2035,180 @@ document.addEventListener('DOMContentLoaded', function () {
 
     setTimeout(applyServiceFilterRealtime, 0);
 });
+
+// ============================================================================
+// FUNCIONES PARA BÚSQUEDA DE PROVEEDORES EN MENSAJERÍA
+// ============================================================================
+
+let proveedorSearchTimeout = null;
+
+document.getElementById('proveedor_search')?.addEventListener('input', function() {
+    const query = this.value.trim();
+    const resultsContainer = document.getElementById('proveedor_results');
+
+    clearTimeout(proveedorSearchTimeout);
+
+    if (query.length < 2) {
+        resultsContainer.style.display = 'none';
+        return;
+    }
+
+    proveedorSearchTimeout = setTimeout(() => {
+        buscarProveedores(query);
+    }, 300);
+});
+
+async function buscarProveedores(query) {
+    const resultsContainer = document.getElementById('proveedor_results');
+
+    try {
+        const response = await fetch(`{{ route('api.tech-config.proveedores.listar') }}?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Error al buscar proveedores');
+        }
+
+        mostrarResultadosProveedores(data.proveedores);
+    } catch (error) {
+        console.error('Error buscando proveedores:', error);
+        resultsContainer.innerHTML = '<div class="p-2 text-danger">Error al buscar proveedores</div>';
+        resultsContainer.style.display = 'block';
+    }
+}
+
+function mostrarResultadosProveedores(proveedores) {
+    const resultsContainer = document.getElementById('proveedor_results');
+
+    if (!proveedores || proveedores.length === 0) {
+        resultsContainer.innerHTML = '<div class="p-2 text-muted">No se encontraron proveedores</div>';
+        resultsContainer.style.display = 'block';
+        return;
+    }
+
+    const html = proveedores.map(proveedor => `
+        <div class="p-2 border-bottom proveedor-result-item" style="cursor: pointer;"
+             data-id="${proveedor.idpro}"
+             data-nombre="${proveedor.nombre}"
+             data-telefono="${proveedor.telefono}"
+             onmouseover="this.style.backgroundColor='#f8f9fa'"
+             onmouseout="this.style.backgroundColor='transparent'"
+             onclick="seleccionarProveedor(${proveedor.idpro}, '${proveedor.nombre.replace(/'/g, "\\'")}', '${proveedor.telefono}')">
+            <div class="fw-semibold">${proveedor.nombre}</div>
+            <div class="text-muted small">${proveedor.telefono || 'Sin teléfono'}</div>
+        </div>
+    `).join('');
+
+    resultsContainer.innerHTML = html;
+    resultsContainer.style.display = 'block';
+}
+
+function seleccionarProveedor(id, nombre, telefono) {
+    document.getElementById('mensaje_proveedor_proveedor_id').value = id;
+    document.getElementById('mensaje_proveedor_telefono').value = telefono;
+    document.getElementById('mensaje_proveedor_nombre_display').textContent = nombre;
+    document.getElementById('mensaje_proveedor_telefono_display').textContent = telefono || 'Sin teléfono';
+
+    document.getElementById('proveedor_info').style.display = 'block';
+    document.getElementById('proveedor_results').style.display = 'none';
+    document.getElementById('proveedor_search').value = '';
+    document.getElementById('mensaje_proveedor_submit_btn').disabled = false;
+}
+
+// ============================================================================
+// FUNCIONES PARA BÚSQUEDA DE PROVEEDORES EN INVENTARIO
+// ============================================================================
+
+let inventarioProveedorSearchTimeout = null;
+
+document.getElementById('inventario_proveedor_search')?.addEventListener('input', function() {
+    const query = this.value.trim();
+    const resultsContainer = document.getElementById('inventario_proveedor_results');
+
+    clearTimeout(inventarioProveedorSearchTimeout);
+
+    if (query.length < 2) {
+        resultsContainer.style.display = 'none';
+        return;
+    }
+
+    inventarioProveedorSearchTimeout = setTimeout(() => {
+        buscarProveedoresInventario(query);
+    }, 300);
+});
+
+async function buscarProveedoresInventario(query) {
+    const resultsContainer = document.getElementById('inventario_proveedor_results');
+
+    try {
+        const response = await fetch(`{{ route('api.tech-config.proveedores.listar') }}?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Error al buscar proveedores');
+        }
+
+        mostrarResultadosProveedoresInventario(data.proveedores);
+    } catch (error) {
+        console.error('Error buscando proveedores:', error);
+        resultsContainer.innerHTML = '<div class="p-2 text-danger">Error al buscar proveedores</div>';
+        resultsContainer.style.display = 'block';
+    }
+}
+
+function mostrarResultadosProveedoresInventario(proveedores) {
+    const resultsContainer = document.getElementById('inventario_proveedor_results');
+
+    if (!proveedores || proveedores.length === 0) {
+        resultsContainer.innerHTML = '<div class="p-2 text-muted">No se encontraron proveedores</div>';
+        resultsContainer.style.display = 'block';
+        return;
+    }
+
+    const html = proveedores.map(proveedor => `
+        <div class="p-2 border-bottom proveedor-result-item" style="cursor: pointer;"
+             data-id="${proveedor.idpro}"
+             data-nombre="${proveedor.nombre}"
+             data-telefono="${proveedor.telefono}"
+             onmouseover="this.style.backgroundColor='#f8f9fa'"
+             onmouseout="this.style.backgroundColor='transparent'"
+             onclick="seleccionarProveedorInventario(${proveedor.idpro}, '${proveedor.nombre.replace(/'/g, "\\'")}', '${proveedor.telefono}')">
+            <div class="fw-semibold">${proveedor.nombre}</div>
+            <div class="text-muted small">${proveedor.telefono || 'Sin teléfono'}</div>
+        </div>
+    `).join('');
+
+    resultsContainer.innerHTML = html;
+    resultsContainer.style.display = 'block';
+}
+
+function seleccionarProveedorInventario(id, nombre, telefono) {
+    document.getElementById('inventario_proveedor_id').value = id;
+    document.getElementById('inventario_proveedor_nombre').textContent = nombre;
+    document.getElementById('inventario_proveedor_telefono').textContent = telefono || 'Sin teléfono';
+
+    document.getElementById('inventario_proveedor_info').style.display = 'block';
+    document.getElementById('inventario_proveedor_results').style.display = 'none';
+    document.getElementById('inventario_proveedor_search').value = '';
+
+    // Aquí podríamos recargar las cuentas del proveedor seleccionado
+    // Por ahora, mantendremos las cuentas seleccionadas
+    document.getElementById('inventario_submit_btn').disabled = false;
+}
 
 </script>
 @endsection
