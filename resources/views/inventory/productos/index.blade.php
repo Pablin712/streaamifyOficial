@@ -107,6 +107,16 @@
             <i class="fas fa-file-pdf"></i> Descargar Catálogo PDF
         </a>
 
+        <a href="{{ route('productos.exportarSRI') }}" class="btn btn-warning">
+            <i class="fas fa-file-excel"></i> Exportar para SRI
+        </a>
+
+        @if (Auth::user()->hasPermissionTo('productos.edit'))
+            <button type="button" class="btn btn-info" id="btnCurarCodigos">
+                <i class="fas fa-magic"></i> Curar Códigos SRI
+            </button>
+        @endif
+
         <button type="button" class="btn btn-secondary" id="copiarMensaje">
             <i class="fas fa-copy"></i> Copiar Mensaje PG
         </button>
@@ -825,4 +835,47 @@
 
     {{-- Enhanced Table v2 --}}
     <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('btnCurarCodigos');
+            if (!btn) return;
+
+            btn.addEventListener('click', async function () {
+                if (!confirm('¿Deseas recalcular todos los códigos de productos al formato estándar del SRI? Esta acción actualiza los códigos en la base de datos.')) return;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Curando...';
+
+                try {
+                    const response = await fetch('{{ route("productos.curarCodigos") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        let msg = data.message;
+                        if (data.conflictos && data.conflictos.length > 0) {
+                            msg += '\n\nConflictos omitidos:\n• ' + data.conflictos.join('\n• ');
+                        }
+                        alert(msg);
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Error al curar los códigos.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error de conexión. Por favor, intenta nuevamente.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-magic"></i> Curar Códigos SRI';
+                }
+            });
+        });
+    </script>
 @endsection

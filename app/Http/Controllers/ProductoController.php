@@ -12,6 +12,8 @@ use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
+use App\Exports\ProductosSriExport;
 
 class ProductoController extends Controller
 {
@@ -172,6 +174,118 @@ class ProductoController extends Controller
         }
 
         return view('inventory.productos.show', compact('producto'));
+    }
+
+    public function exportarSRI()
+    {
+        if (!Gate::allows('productos.index')) {
+            abort(403, 'No tienes permiso para exportar productos.');
+        }
+
+        $path = (new ProductosSriExport())->generate();
+        $filename = 'Productos_SRI_' . now()->format('Y-m-d') . '.xlsx';
+
+        return response()->download($path, $filename)->deleteFileAfterSend(true);
+    }
+
+    public function curarCodigos(Request $request)
+    {
+        if (!Gate::allows('productos.update')) {
+            return response()->json(['success' => false, 'message' => 'No tienes permiso para actualizar productos.'], 403);
+        }
+
+        $productos = Producto::with('detalles')->get();
+        $omitidos = 0;
+
+        // Paso 1: calcular el código objetivo para cada producto
+        $targetCodes = [];
+        foreach ($productos as $producto) {
+            $detalles = $producto->detalles;
+            if ($detalles->isEmpty()) {
+                $omitidos++;
+                continue;
+            }
+            $uniqueServices = $detalles->pluck('idser')
+                ->map(fn ($s) => strtoupper(trim($s)))->unique()->sort()->values();
+            $serviceKey = $uniqueServices->implode('+');
+            $codeHash = strtoupper(substr(md5($serviceKey), 0, 8));
+            $monthCount = (int) $detalles->first()->meses;
+            $uniqueServiceCount = $uniqueServices->count();
+            $deviceCount = max(1, (int) floor($detalles->count() / $uniqueServiceCount));
+            $codePrefix = $uniqueServiceCount > 1 ? 'C' : 'I';
+            $targetCodes[$producto->id] = sprintf('%s%02dM%02dD%s', $codePrefix, $monthCount, $deviceCount, $codeHash);
+        }
+
+        // Paso 2: filtrar solo los que necesitan cambio
+        $toUpdate = [];
+        foreach ($productos as $producto) {
+            if (isset($targetCodes[$producto->id]) && $producto->codigopro !== $targetCodes[$producto->id]) {
+                $toUpdate[$producto->id] = $targetCodes[$producto->id];
+            }
+        }
+
+        // Paso 3: detectar conflictos con productos que NO se van a actualizar
+        $idsToUpdate = array_keys($toUpdate);
+        $stableCodes = $productos->filter(fn ($p) => !in_array($p->id, $idsToUpdate))
+            ->pluck('codigopro')->flip();
+
+        $conflictos = [];
+        foreach ($toUpdate as $id => $newCode) {
+            if ($stableCodes->has($newCode)) {
+                $conflictos[] = "ID {$id} → {$newCode} ya pertenece a otro producto";
+                unset($toUpdate[$id]);
+            }
+        }
+
+        // Paso 4: detectar duplicados internos (varios productos con el mismo código nuevo)
+        $seenCodes = [];
+        foreach ($toUpdate as $id => $newCode) {
+            if (isset($seenCodes[$newCode])) {
+                $conflictos[] = "ID {$id} → {$newCode} duplicado con ID {$seenCodes[$newCode]}";
+                unset($toUpdate[$id]);
+            } else {
+                $seenCodes[$newCode] = $id;
+            }
+        }
+
+        // Paso 5: actualizar en transacción usando códigos temporales primero
+        // (evita violación de unicidad cuando el nuevo código de A coincide con el viejo de B)
+        $actualizados = 0;
+        DB::beginTransaction();
+        try {
+            foreach ($toUpdate as $id => $newCode) {
+                DB::table('productos')->where('id', $id)->update(['codigopro' => 'TMP_' . $id]);
+            }
+            foreach ($toUpdate as $id => $newCode) {
+                DB::table('productos')->where('id', $id)->update([
+                    'codigopro' => $newCode,
+                    'updated_at' => now(),
+                ]);
+                $actualizados++;
+            }
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Error al actualizar: ' . $e->getMessage()], 500);
+        }
+
+        $conflictosCount = count($conflictos);
+        Historial::create([
+            'accion' => 'Curación de Códigos de Productos',
+            'descripcion' => "Actualizados: {$actualizados}, omitidos (sin detalles): {$omitidos}, conflictos: {$conflictosCount}",
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
+
+        $mensaje = "Códigos curados. Actualizados: {$actualizados}";
+        if ($omitidos > 0) $mensaje .= ", sin detalles omitidos: {$omitidos}";
+        if ($conflictosCount > 0) $mensaje .= ", conflictos omitidos: {$conflictosCount}";
+
+        return response()->json([
+            'success' => true,
+            'message' => $mensaje,
+            'conflictos' => $conflictos,
+        ]);
     }
 
     public function generarPDF()

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem *)",
+      "Bash(php -l app/Exports/ProductosSriExport.php)",
+      "Bash(php -l app/Http/Controllers/ProductoController.php)",
+      "Bash(php artisan *)"
+    ]
+  }
+}

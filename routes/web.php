@@ -338,6 +338,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::put('tipos-producto/{id}', [TipoProductoController::class, 'update'])->name('tipos_producto.update');
         Route::delete('tipos-producto/{id}', [TipoProductoController::class, 'destroy'])->name('tipos_producto.destroy');
     });
+    Route::get('productos/exportar-sri', [ProductoController::class, 'exportarSRI'])->name('productos.exportarSRI');
+    Route::post('productos/curar-codigos', [ProductoController::class, 'curarCodigos'])->name('productos.curarCodigos');
     Route::resource('productos', ProductoController::class);
     Route::get('catalogo/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::resource('roles', RoleController::class);
