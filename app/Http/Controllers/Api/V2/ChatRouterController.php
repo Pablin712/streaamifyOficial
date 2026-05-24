@@ -96,6 +96,12 @@ class ChatRouterController extends Controller
             'media_base64' => 'nullable|string',
             'media_file_name' => 'nullable|string|max:191',
             'media_id' => 'nullable|string|max:191',
+            'mensaje_original' => 'nullable|string',
+            'texto_extraido' => 'nullable|string',
+            'media_kind' => 'nullable|string|max:40',
+            'media_transcription' => 'nullable|string',
+            'media_caption' => 'nullable|string',
+            'media_analysis_json' => 'nullable',
             'subagente_codigo' => 'nullable|string|max:50',
             'debounce_seconds' => 'nullable|integer|min:1|max:300',
             'instance' => 'nullable|string|max:120',
@@ -111,16 +117,38 @@ class ChatRouterController extends Controller
         }
 
         $contenido = trim((string) ($request->input('mensaje') ?? $request->input('contenido') ?? ''));
+        $tipoContenido = $this->normalizeContentType($request->input('tipo_contenido', 'texto'));
+        $mensajeOriginal = trim((string) $request->input('mensaje_original', ''));
+        $textoExtraido = trim((string) $request->input('texto_extraido',
+            $request->input('media_transcription', '')));
 
-        if ($contenido === '' && !$request->filled('media_url') && !$request->filled('media_base64')) {
+        if ($contenido !== '') {
+            $textoAgente = $contenido;
+        } elseif ($tipoContenido === 'audio') {
+            $textoAgente = "<audio>\nTranscripción: {$textoExtraido}\n</audio>";
+        } elseif ($tipoContenido === 'imagen') {
+            $parts = ['<imagen>'];
+            if ($mensajeOriginal !== '') {
+                $parts[] = "Texto del usuario: {$mensajeOriginal}";
+            }
+            if ($textoExtraido !== '') {
+                $parts[] = "Descripción de la imagen: {$textoExtraido}";
+            }
+            $parts[] = '</imagen>';
+            $textoAgente = implode("\n", $parts);
+        } else {
+            $textoAgente = $mensajeOriginal ?: $textoExtraido ?: $contenido;
+        }
+
+        if ($contenido === '' && $textoExtraido === '' && !$request->filled('media_url') && !$request->filled('media_base64')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Debes enviar mensaje, media_url o media_base64.',
+                'message' => 'Debes enviar mensaje, texto_extraido, media_url o media_base64.',
             ], 422);
         }
 
         try {
-            $resultado = DB::transaction(function () use ($request, $contenido) {
+            $resultado = DB::transaction(function () use ($request, $contenido, $tipoContenido, $mensajeOriginal, $textoExtraido, $textoAgente) {
                 $canal = $request->string('canal')->toString();
                 $canalUserId = trim((string) $request->input('canal_user_id'));
                 $telefono = $this->normalizePhone($request->input('telefono') ?? $request->input('numero') ?? $canalUserId);
@@ -135,8 +163,6 @@ class ChatRouterController extends Controller
 
                 $subagenteCodigo = $this->normalizeSubagentCode($request->input('subagente_codigo'))
                     ?? self::SUBAGENTE_POR_DEFECTO;
-
-                $tipoContenido = $this->normalizeContentType($request->input('tipo_contenido', 'texto'));
 
                 $contacto = ChatContactoCanal::query()->firstOrCreate(
                     [
@@ -239,11 +265,19 @@ class ChatRouterController extends Controller
                     'idconv' => $conversacion->idconv,
                     'tipo_remitente' => 'cliente',
                     'idcli' => $cliente?->idcli,
-                    'contenido' => $contenido,
+                    'contenido' => $textoAgente ?: $contenido,
+                    'mensaje_original' => $mensajeOriginal ?: null,
+                    'texto_extraido' => $textoExtraido ?: null,
+                    'texto_agente' => $textoAgente ?: null,
                     'tipo_contenido' => $tipoContenido,
+                    'media_kind' => $request->input('media_kind'),
                     'archivo_url' => $storedMediaUrl,
                     'media_url' => $storedMediaUrl,
                     'mime_type' => $resolvedMediaMimeType,
+                    'media_file_name' => $request->input('media_file_name'),
+                    'media_transcription' => $request->input('media_transcription') ?: ($textoExtraido ?: null),
+                    'media_caption' => $request->input('media_caption') ?: ($mensajeOriginal ?: null),
+                    'media_analysis_json' => $request->input('media_analysis_json'),
                     'leido' => false,
                     'respondido_por_ai' => false,
                     'metadata' => [
@@ -252,7 +286,6 @@ class ChatRouterController extends Controller
                         'external_message_id' => $request->input('external_message_id'),
                         'instance' => $request->input('instance'),
                         'media_original_url' => $request->input('media_url'),
-                        'media_file_name' => $request->input('media_file_name'),
                         'payload' => $request->input('payload'),
                     ],
                 ]);
@@ -1401,8 +1434,12 @@ class ChatRouterController extends Controller
 
     private function messageToPromptLine(Mensaje $mensaje): ?string
     {
-        $contenido = trim((string) $mensaje->contenido);
+        $textoAgente = trim((string) ($mensaje->texto_agente ?? ''));
+        if ($textoAgente !== '') {
+            return $textoAgente;
+        }
 
+        $contenido = trim((string) $mensaje->contenido);
         if ($contenido !== '') {
             return $contenido;
         }
