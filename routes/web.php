@@ -76,6 +76,10 @@ Route::get('/tutorial', function () {
     return view('shopping.tutorial');
 })->name('tutorial');
 
+Route::get('/donna', function () {
+    return view('donna');
+})->name('donna');
+
 // Imagen de bancos servida por Laravel (compatible con hostings que bloquean /storage directo)
 Route::get('/bancos/foto/{path}', [BancoController::class, 'foto'])
     ->where('path', '.*')

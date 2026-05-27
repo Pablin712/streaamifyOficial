@@ -125,6 +125,14 @@
     <!-- Mashead header-->
     <footer id="pie" class="bg-dark text-white text-center py-4">
         <div class="container">
+            <div class="mb-3">
+                <a href="{{ route('donna') }}" class="text-warning fw-semibold small me-3 text-decoration-none">
+                    <i class="bi bi-robot me-1"></i>Donna AI
+                </a>
+                <a href="{{ route('tutorial') }}" class="text-white-50 small text-decoration-none">
+                    Tutorial
+                </a>
+            </div>
             <p class="mb-2">© <span id="currentYear"></span> Streamify. Todos los derechos reservados.</p>
             <p class="small">Diseñado por Pablo Jiménez</p>
             <div>

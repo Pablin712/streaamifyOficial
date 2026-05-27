@@ -52,6 +52,10 @@
             <li><a class="dropdown-item" href="#servicios">Otros Servicios</a></li>
             <li><a class="dropdown-item" href="#redes">Redes Sociales</a></li>
             <li><a class="dropdown-item" href="#faq">Preguntas Frecuentes</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: #274698;">
+                <i class="bi bi-robot me-1"></i> Donna AI
+            </a></li>
         </ul>
     </div>
 
@@ -255,6 +259,111 @@
                         <li><i class="bi bi-lightbulb-fill text-success"></i> Pago de Luz y Agua</li>
                         <li><i class="bi bi-wifi text-success"></i> Pago de Internet</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 🤖 Donna AI - Teaser -->
+    <section id="donna" class="py-5" style="background: linear-gradient(135deg, #1D1D1B 0%, #274698 100%);">
+        <div class="container px-5">
+            <div class="row gx-5 align-items-center">
+                <div class="col-lg-6 text-white mb-4 mb-lg-0">
+                    <span class="badge mb-3 px-3 py-2 fw-semibold" style="background-color: #E4B100; color: #1D1D1B;">
+                        Nuevo Servicio
+                    </span>
+                    <h2 class="fw-bold display-6 mb-3">Conoce a Donna</h2>
+                    <p class="lead mb-3 text-white-50">Tu secretaria inteligente impulsada por IA. Automatiza la atención al
+                        cliente de tu negocio o tu productividad personal, directo desde WhatsApp.</p>
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-person-check-fill mt-1" style="color: #E4B100; font-size: 1.2rem;"></i>
+                                <div>
+                                    <div class="fw-bold text-white small">Donna Personal</div>
+                                    <div class="text-white-50 small">Secretaria privada para el dueño del negocio</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-building-check mt-1" style="color: #E4B100; font-size: 1.2rem;"></i>
+                                <div>
+                                    <div class="fw-bold text-white small">Donna Business</div>
+                                    <div class="text-white-50 small">Asesora que atiende a tus clientes finales</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-calendar-check mt-1" style="color: #E4B100; font-size: 1.2rem;"></i>
+                                <div>
+                                    <div class="fw-bold text-white small">Google Calendar</div>
+                                    <div class="text-white-50 small">Agenda citas automáticamente</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi bi-whatsapp mt-1" style="color: #E4B100; font-size: 1.2rem;"></i>
+                                <div>
+                                    <div class="fw-bold text-white small">WhatsApp Nativo</div>
+                                    <div class="text-white-50 small">Responde por tu número de negocio</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="{{ route('donna') }}" class="btn btn-lg fw-bold px-4"
+                            style="background-color: #E4B100; color: #1D1D1B;">
+                            <i class="bi bi-robot me-2"></i>Conocer Donna
+                        </a>
+                        <a href="https://wa.me/593961412826?text=Hola%2C%20quiero%20información%20sobre%20Donna%20AI"
+                            target="_blank" class="btn btn-outline-light btn-lg fw-bold px-4">
+                            <i class="bi bi-whatsapp me-2"></i>Consultar precio
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-flex justify-content-center">
+                    <div class="text-center">
+                        <div class="rounded-4 shadow-lg p-4 d-inline-block"
+                            style="background: rgba(255,255,255,0.07); border: 1px solid rgba(228,177,0,0.3); max-width: 380px;">
+                            <div class="d-flex align-items-center gap-3 mb-4 pb-3"
+                                style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width:48px;height:48px;background-color:#E4B100;">
+                                    <i class="bi bi-robot text-dark fs-5"></i>
+                                </div>
+                                <div class="text-start">
+                                    <div class="fw-bold text-white">Donna</div>
+                                    <div class="small" style="color: #E4B100;">Secretaria IA • En línea</div>
+                                </div>
+                            </div>
+                            <!-- Chat simulado -->
+                            <div class="d-flex flex-column gap-3 text-start">
+                                <div class="d-flex justify-content-end">
+                                    <div class="rounded-3 px-3 py-2 small text-dark" style="background-color:#E4B100;max-width:220px;">
+                                        Hola, quiero una cita para mañana
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-start">
+                                    <div class="rounded-3 px-3 py-2 small text-white" style="background:rgba(255,255,255,0.12);max-width:240px;">
+                                        ¡Hola! Tengo disponible a las 10:00 o las 15:30. ¿Cuál te viene mejor?
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    <div class="rounded-3 px-3 py-2 small text-dark" style="background-color:#E4B100;max-width:220px;">
+                                        Las 10:00 perfecto
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-start">
+                                    <div class="rounded-3 px-3 py-2 small text-white" style="background:rgba(255,255,255,0.12);max-width:240px;">
+                                        Listo, tu cita está agendada para mañana a las 10:00. Te confirmaré por aquí.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
