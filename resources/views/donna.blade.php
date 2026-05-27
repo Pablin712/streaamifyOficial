@@ -268,62 +268,75 @@
         </div>
     </section>
 
-    <!-- Planes: Personal vs Business -->
+    <!-- Planes: Personal vs Business — dinámico desde BD -->
     <section id="planes" class="py-5 bg-light">
         <div class="container px-5">
             <div class="text-center mb-5">
                 <span class="pill-tag mb-3 d-inline-block">Elige tu plan</span>
                 <h2 class="fw-bold display-6 mb-3">Donna se adapta a tu necesidad</h2>
-                <p class="text-muted lead">Elige el servicio que mejor se ajuste a ti o a tu negocio. Puedes contratar
-                    ambos.</p>
+                <p class="text-muted lead">Elige el servicio que mejor se ajuste a ti o a tu negocio. Puedes contratar ambos.</p>
                 <div class="donna-divider bg-primary mx-auto mt-3"></div>
             </div>
 
             <div class="row g-4 justify-content-center">
 
-                <!-- Donna Personal -->
+                {{-- ── Donna Personal ───────────────────────────────── --}}
                 <div class="col-md-6 col-lg-5">
                     <div class="donna-card donna-card-personal card shadow h-100 p-4">
-                        <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="feature-icon" style="background:#eef2ff;">
                                 <i class="bi bi-person-circle" style="color:var(--donna-blue);"></i>
                             </div>
                             <div>
-                                <h3 class="fw-bold mb-0">Donna Personal</h3>
+                                <h3 class="fw-bold mb-0">
+                                    {{ $planPersonal?->name ?? 'Donna Personal' }}
+                                </h3>
                                 <span class="small text-muted">Tu secretaria privada</span>
                             </div>
                         </div>
-                        <p class="text-muted mb-4">Donna es tu asistente personal. Hablas directamente con ella por
-                            WhatsApp o Telegram y ella gestiona tu agenda, recordatorios y notas.</p>
 
+                        {{-- Precio dinámico --}}
+                        @if ($planPersonal)
+                            <div class="mb-3 d-flex align-items-end gap-2">
+                                <span class="display-6 fw-bold" style="color:var(--donna-blue);">
+                                    ${{ number_format($planPersonal->price, 2) }}
+                                </span>
+                                <span class="text-muted mb-1">
+                                    {{ $planPersonal->currency }} / {{ $planPersonal->billing_cycle_label }}
+                                </span>
+                            </div>
+                        @else
+                            <div class="mb-3">
+                                <span class="text-muted fst-italic small">Consultar precio</span>
+                            </div>
+                        @endif
+
+                        <p class="text-muted mb-4">
+                            {{ $planPersonal?->description ?? 'Donna es tu asistente personal. Hablas directamente con ella por WhatsApp o Telegram y ella gestiona tu agenda, recordatorios y notas.' }}
+                        </p>
+
+                        {{-- Características dinámicas o por defecto --}}
                         <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
-                                <span>Agenda reuniones y citas en Google Calendar</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
-                                <span>Registra notas y seguimientos en Google Sheets</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
-                                <span>Envía recordatorios automáticos</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
-                                <span>Solo responde al dueño o contactos autorizados</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
-                                <span>Disponible por WhatsApp o Telegram</span>
-                            </li>
+                            @if ($planPersonal && !empty($planPersonal->features_json))
+                                @foreach ($planPersonal->features_json as $feature)
+                                    <li class="d-flex align-items-start gap-2">
+                                        <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
+                                        <span>{{ $feature }}</span>
+                                    </li>
+                                @endforeach
+                            @else
+                                @foreach (['Agenda reuniones y citas en Google Calendar', 'Registra notas y seguimientos en Google Sheets', 'Envía recordatorios automáticos', 'Solo responde al dueño o contactos autorizados', 'Disponible por WhatsApp o Telegram'] as $f)
+                                    <li class="d-flex align-items-start gap-2">
+                                        <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:var(--donna-blue);"></i>
+                                        <span>{{ $f }}</span>
+                                    </li>
+                                @endforeach
+                            @endif
                         </ul>
 
                         <div class="alert border-0 rounded-3 mb-4" style="background:#eef2ff;">
-                            <p class="small mb-1 fst-italic text-muted">"Donna, agenda una reunión con Fernando mañana a
-                                las 10."</p>
-                            <p class="small mb-0 fw-semibold" style="color:var(--donna-blue);">→ Donna crea el evento
-                                en tu Google Calendar al instante.</p>
+                            <p class="small mb-1 fst-italic text-muted">"Donna, agenda una reunión con Fernando mañana a las 10."</p>
+                            <p class="small mb-0 fw-semibold" style="color:var(--donna-blue);">→ Donna crea el evento en tu Google Calendar al instante.</p>
                         </div>
 
                         <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Personal"
@@ -334,49 +347,63 @@
                     </div>
                 </div>
 
-                <!-- Donna Business -->
+                {{-- ── Donna Business ───────────────────────────────── --}}
                 <div class="col-md-6 col-lg-5">
                     <div class="donna-card donna-card-business card shadow h-100 p-4">
-                        <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="feature-icon" style="background:#fffbea;">
                                 <i class="bi bi-building" style="color:var(--donna-yellow);"></i>
                             </div>
                             <div>
-                                <h3 class="fw-bold mb-0">Donna Business</h3>
+                                <h3 class="fw-bold mb-0">
+                                    {{ $planBusiness?->name ?? 'Donna Business' }}
+                                </h3>
                                 <span class="small text-muted">La voz de tu negocio</span>
                             </div>
                         </div>
-                        <p class="text-muted mb-4">Donna atiende a los clientes de tu negocio directamente desde tu
-                            número de WhatsApp. Responde, agenda y escala — sin que tengas que estar.</p>
 
+                        {{-- Precio dinámico --}}
+                        @if ($planBusiness)
+                            <div class="mb-3 d-flex align-items-end gap-2">
+                                <span class="display-6 fw-bold" style="color:#c9890a;">
+                                    ${{ number_format($planBusiness->price, 2) }}
+                                </span>
+                                <span class="text-muted mb-1">
+                                    {{ $planBusiness->currency }} / {{ $planBusiness->billing_cycle_label }}
+                                </span>
+                            </div>
+                        @else
+                            <div class="mb-3">
+                                <span class="text-muted fst-italic small">Consultar precio</span>
+                            </div>
+                        @endif
+
+                        <p class="text-muted mb-4">
+                            {{ $planBusiness?->description ?? 'Donna atiende a los clientes de tu negocio directamente desde tu número de WhatsApp. Responde, agenda y escala — sin que tengas que estar.' }}
+                        </p>
+
+                        {{-- Características dinámicas o por defecto --}}
                         <ul class="list-unstyled d-flex flex-column gap-3 mb-4">
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
-                                <span>Atiende a todos tus clientes simultáneamente</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
-                                <span>Usa tu base de conocimiento: precios, servicios, políticas</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
-                                <span>Agenda citas en Google Calendar del negocio</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
-                                <span>Registra leads y datos en Google Sheets</span>
-                            </li>
-                            <li class="d-flex align-items-start gap-2">
-                                <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
-                                <span>Escala a humano cuando no puede resolver</span>
-                            </li>
+                            @if ($planBusiness && !empty($planBusiness->features_json))
+                                @foreach ($planBusiness->features_json as $feature)
+                                    <li class="d-flex align-items-start gap-2">
+                                        <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
+                                        <span>{{ $feature }}</span>
+                                    </li>
+                                @endforeach
+                            @else
+                                @foreach (['Atiende a todos tus clientes simultáneamente', 'Usa tu base de conocimiento: precios, servicios, políticas', 'Agenda citas en Google Calendar del negocio', 'Registra leads y datos en Google Sheets', 'Escala a humano cuando no puede resolver'] as $f)
+                                    <li class="d-flex align-items-start gap-2">
+                                        <i class="bi bi-check-circle-fill mt-1 flex-shrink-0" style="color:#c9890a;"></i>
+                                        <span>{{ $f }}</span>
+                                    </li>
+                                @endforeach
+                            @endif
                         </ul>
 
                         <div class="alert border-0 rounded-3 mb-4" style="background:#fffbea;">
-                            <p class="small mb-1 fst-italic text-muted">"¿Cuánto cuesta el servicio de limpieza dental?"
-                            </p>
-                            <p class="small mb-0 fw-semibold" style="color:#c9890a;">→ Donna responde con los precios de tu negocio,
-                                24/7.</p>
+                            <p class="small mb-1 fst-italic text-muted">"¿Cuánto cuesta el servicio de limpieza dental?"</p>
+                            <p class="small mb-0 fw-semibold" style="color:#c9890a;">→ Donna responde con los precios de tu negocio, 24/7.</p>
                         </div>
 
                         <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Business"

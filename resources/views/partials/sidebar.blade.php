@@ -145,6 +145,25 @@
                             </nav>
                         </div>
                     @endif
+                    {{-- Donna Hub --}}
+                    @if (Auth::user()->hasAnyPermission(['donna.planes']))
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseDonna" aria-expanded="false" aria-controls="collapseDonna">
+                            <div class="sb-nav-link-icon"><i class="bi bi-robot"></i></div>
+                            Donna Hub
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseDonna" aria-labelledby="headingDonna"
+                            data-bs-parent="#sidenavAccordion">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                @if (Auth::user()->hasPermissionTo('donna.planes'))
+                                    <a class="nav-link" href="{{ route('donna.planes.index') }}">
+                                        <i class="bi bi-card-list me-1"></i> Planes
+                                    </a>
+                                @endif
+                            </nav>
+                        </div>
+                    @endif
                     {{-- Reemplazamos @canany(['servicios', 'proveedores', 'valores']) --}}
                     @if (Auth::user()->hasAnyPermission(['servicios', 'proveedores', 'valores', 'mails.index']))
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"

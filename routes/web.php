@@ -60,6 +60,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\AlyssonController;
 use App\Http\Controllers\SistemaController;
+use App\Http\Controllers\DonnaPlanController;
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
@@ -77,7 +78,10 @@ Route::get('/tutorial', function () {
 })->name('tutorial');
 
 Route::get('/donna', function () {
-    return view('donna');
+    $planes = \App\Models\DonnaPlan::active()->get()->groupBy('service_type');
+    $planPersonal = $planes->get('personal')?->first();
+    $planBusiness = $planes->get('business')?->first();
+    return view('donna', compact('planPersonal', 'planBusiness'));
 })->name('donna');
 
 // Imagen de bancos servida por Laravel (compatible con hostings que bloquean /storage directo)
@@ -348,6 +352,21 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::get('catalogo/pdf', [ProductoController::class, 'generarPDF'])->name('productos.pdf');
     Route::resource('roles', RoleController::class);
     Route::post('/productos/updatePrecios', [ProductoController::class, 'updatePrecios'])->name('productos.updatePrecios');
+
+    // ── Donna Hub ──────────────────────────────────────────────
+    Route::prefix('donna')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('donna.planes.index');
+        })->name('donna.hub');
+
+        // Planes (CRUD)
+        Route::get('/planes', [DonnaPlanController::class, 'index'])->name('donna.planes.index');
+        Route::post('/planes', [DonnaPlanController::class, 'store'])->name('donna.planes.store');
+        Route::get('/planes/{id}', [DonnaPlanController::class, 'show'])->name('donna.planes.show');
+        Route::put('/planes/{id}', [DonnaPlanController::class, 'update'])->name('donna.planes.update');
+        Route::delete('/planes/{id}', [DonnaPlanController::class, 'destroy'])->name('donna.planes.destroy');
+    });
+    // ── Fin Donna Hub ───────────────────────────────────────────
 
     Route::controller(RecargaController::class)->group(function () {
         Route::get('/recargas', 'index')->name('empleado.recargas.index');
