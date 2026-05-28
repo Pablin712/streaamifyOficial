@@ -14,6 +14,10 @@
             <li><a class="dropdown-item" href="{{ route('principal') }}#servicios">Otros Servicios</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: #274698;">
+                <i class="bi bi-robot me-1"></i> Donna AI
+            </a></li>
         </ul>
     </div>
 
@@ -145,8 +149,8 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label"><strong>💰 Link de referido:</strong></label>
                             <div class="input-group">
-                                <input type="text" class="form-control" 
-                                       value="{{ route('register', ['codigo_referidor' => $cliente->codigo_referidor]) }}" 
+                                <input type="text" class="form-control"
+                                       value="{{ route('register', ['codigo_referidor' => $cliente->codigo_referidor]) }}"
                                        id="referralLink" readonly>
                                 <button class="btn btn-secondary" type="button" onclick="copyReferralLink()">Copiar</button>
                             </div>

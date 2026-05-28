@@ -14,6 +14,10 @@
             <li><a class="dropdown-item" href="{{ route('principal') }}#servicios">Otros Servicios</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: #274698;">
+                <i class="bi bi-robot me-1"></i> Donna AI
+            </a></li>
         </ul>
     </div>
 
