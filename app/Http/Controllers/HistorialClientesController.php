@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DonnaIntegration;
+use App\Models\DonnaSubscription;
 use App\Models\Pedido;
 use App\Models\Recarga;
 use App\Models\Soporte;
@@ -37,9 +39,18 @@ class HistorialClientesController extends Controller
             ->unique('idcue')
             ->values();
         // Obtener las recargas del cliente logueado
-        $recargas = Recarga::where('idcli', $idcli)->with('estado')->orderBy('created_at', 'desc')->paginate(10); // 10 recargas por página
+        $recargas = Recarga::where('idcli', $idcli)->with('estado')->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte'));
+        $donnaIntegracion = DonnaIntegration::where('client_id', $idcli)
+            ->where('integration_type', 'google')
+            ->latest()
+            ->first();
+        $donnaSuscripcion = DonnaSubscription::where('client_id', $idcli)
+            ->whereIn('status', ['active', 'pending', 'suspended'])
+            ->latest()
+            ->first();
+
+        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte', 'donnaIntegracion', 'donnaSuscripcion'));
     }
 
     public function pedirCodigoNetflix(Request $request, $iddet)

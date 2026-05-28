@@ -498,6 +498,15 @@
                     <i class="bi bi-people me-2"></i>Referidos
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="donna-tab" data-bs-toggle="tab" data-bs-target="#donna"
+                    type="button" role="tab" aria-controls="donna" aria-selected="false">
+                    <i class="bi bi-robot me-2"></i>Donna AI
+                    @if($donnaIntegracion && $donnaIntegracion->isActive())
+                        <span class="badge rounded-pill bg-success ms-1" style="font-size:0.65rem;">●</span>
+                    @endif
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content" id="historialTabsContent">
@@ -973,6 +982,119 @@
                     </div>
                 </div>
             </div>
+
+            {{-- ── TAB DONNA AI ─────────────────────────────────────────── --}}
+            <div class="tab-pane fade" id="donna" role="tabpanel" aria-labelledby="donna-tab">
+                <div class="card activity-card">
+                    <div class="card-body">
+                        <div class="activity-section-title mb-4">
+                            <div>
+                                <h3><i class="bi bi-robot me-2" style="color:#274698;"></i>Donna AI</h3>
+                                <p class="text-muted mb-0">Estado de tu cuenta de Google y suscripción Donna.</p>
+                            </div>
+                        </div>
+
+                        {{-- Google --}}
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-google me-1"></i> Integración con Google
+                        </h6>
+
+                        @if($donnaIntegracion && $donnaIntegracion->isActive())
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-4" style="background:#e8f5e9;border:1px solid #c8e6c9;">
+                                @if(!empty($donnaIntegracion->metadata_json['avatar']))
+                                    <img src="{{ $donnaIntegracion->metadata_json['avatar'] }}" width="46" height="46" class="rounded-circle border" alt="Avatar Google">
+                                @else
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-success text-white fw-bold" style="width:46px;height:46px;font-size:1.2rem;">
+                                        {{ strtoupper(substr($donnaIntegracion->metadata_json['email'] ?? 'G', 0, 1)) }}
+                                    </div>
+                                @endif
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Google conectado
+                                    </div>
+                                    <div class="text-muted small mt-1">{{ $donnaIntegracion->metadata_json['email'] ?? '—' }}</div>
+                                    <div class="mt-2 d-flex flex-wrap gap-1">
+                                        @foreach($donnaIntegracion->scopes_json ?? [] as $scope)
+                                            <span class="badge bg-light text-dark border">
+                                                @if($scope === 'calendar') <i class="bi bi-calendar3 me-1"></i>Google Calendar
+                                                @elseif($scope === 'spreadsheets') <i class="bi bi-grid me-1"></i>Google Sheets
+                                                @else {{ $scope }}
+                                                @endif
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                    @if($donnaIntegracion->isTokenExpired())
+                                        <div class="text-warning small mt-2"><i class="bi bi-exclamation-triangle me-1"></i>Token expirado. Reconecta tu cuenta.</div>
+                                    @endif
+                                </div>
+                                <form method="POST" action="{{ route('cliente.donna.google.disconnect') }}" class="ms-auto flex-shrink-0">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill"
+                                        onclick="return confirm('¿Desconectar Google de Donna?')">
+                                        <i class="bi bi-x-circle me-1"></i>Desconectar
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#fffbea;border:1px solid #ffe082;">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">Google no conectado</div>
+                                    <div class="text-muted small">Necesitas conectar Google para usar Donna AI (Calendar & Sheets).</div>
+                                </div>
+                                <a href="{{ route('cliente.donna.google.connect') }}" class="btn btn-dark btn-sm rounded-pill flex-shrink-0">
+                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" class="me-1" alt="">
+                                    Conectar
+                                </a>
+                            </div>
+                        @endif
+
+                        {{-- Donna Subscription --}}
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-stars me-1"></i> Suscripción Donna
+                        </h6>
+
+                        @if($donnaSuscripcion)
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:#f4f6ff;border:1px solid #c5cae9;">
+                                <i class="bi bi-robot fs-3" style="color:#274698;"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ $donnaSuscripcion->plan?->name ?? 'Plan Donna' }}</div>
+                                    <div class="d-flex flex-wrap gap-2 mt-1">
+                                        <span class="badge bg-{{ $donnaSuscripcion->status_color }}">{{ $donnaSuscripcion->status_label }}</span>
+                                        @if($donnaSuscripcion->service_type === 'personal')
+                                            <span class="badge" style="background:#274698;">Personal</span>
+                                        @else
+                                            <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
+                                        @endif
+                                    </div>
+                                    @if($donnaSuscripcion->expires_at)
+                                        @php $dias = $donnaSuscripcion->daysRemaining(); @endphp
+                                        <div class="text-muted small mt-1">
+                                            Vence: {{ $donnaSuscripcion->expires_at->format('d/m/Y') }}
+                                            @if($dias !== null && $dias <= 7 && $dias >= 0)
+                                                <span class="text-warning fw-semibold ms-1">({{ $dias }} días restantes)</span>
+                                            @elseif($dias !== null && $dias < 0)
+                                                <span class="text-danger fw-semibold ms-1">(Vencida)</span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            <div class="p-3 rounded-3 text-center" style="background:#f8f9fa;border:1px dashed #dee2e6;">
+                                <i class="bi bi-robot fs-2 d-block mb-2 text-muted"></i>
+                                <div class="text-muted small">No tienes una suscripción Donna activa.</div>
+                                <a href="{{ route('donna') }}" class="btn btn-primary btn-sm rounded-pill mt-2">Ver planes Donna</a>
+                            </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+            {{-- ── FIN TAB DONNA ─────────────────────────────────────────── --}}
+
         </div>
     </div>
 

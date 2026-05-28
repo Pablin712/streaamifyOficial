@@ -68,7 +68,8 @@
                     <th class="sortable" data-type="string" data-col="1">Cliente <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
                     <th class="sortable" data-type="string" data-col="2">Plan <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
                     <th>Tipo</th>
-                    <th class="sortable" data-type="string" data-col="4">Estado <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
+                    <th>Google</th>
+                    <th class="sortable" data-type="string" data-col="5">Estado <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
                     <th>Vencimiento</th>
                     <th>Días restantes</th>
                     @if (Auth::user()->hasPermissionTo('donna.suscripciones.store'))
@@ -98,6 +99,25 @@
                                 <span class="badge" style="background:#274698;">Personal</span>
                             @else
                                 <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
+                            @endif
+                        </td>
+                        <td>
+                            @php $integ = $integraciones->get($sub->client_id); @endphp
+                            @if($integ && $integ->isActive())
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Conectado</span>
+                                </div>
+                                <div class="text-muted small mt-1" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                                    title="{{ $integ->metadata_json['email'] ?? '' }}">
+                                    {{ $integ->metadata_json['email'] ?? '' }}
+                                </div>
+                                @if($integ->isTokenExpired())
+                                    <span class="badge bg-warning text-dark mt-1"><i class="bi bi-exclamation-triangle me-1"></i>Token expirado</span>
+                                @endif
+                            @elseif($integ && $integ->status === 'revoked')
+                                <span class="badge bg-secondary">Revocado</span>
+                            @else
+                                <span class="badge bg-light text-muted border">Sin conectar</span>
                             @endif
                         </td>
                         <td>
@@ -132,6 +152,15 @@
                                             onclick="openSuspendModal({{ $sub->id }}, '{{ addslashes($sub->cliente?->nombrecli ?? '') }}')">
                                             <i class="fas fa-ban" title="Suspender"></i>
                                         </button>
+                                    @endif
+                                    @if($integ && $integ->isActive())
+                                        <form method="POST" action="{{ route('donna.integraciones.revoke', $integ->id) }}"
+                                            onsubmit="return confirm('¿Revocar Google de {{ addslashes($sub->cliente?->nombrecli ?? '') }}?')">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Revocar Google">
+                                                <i class="bi bi-google"></i>
+                                            </button>
+                                        </form>
                                     @endif
                                 </div>
                             </td>

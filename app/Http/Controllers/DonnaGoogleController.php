@@ -7,6 +7,7 @@ use App\Models\DonnaIntegration;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Gate;
 
 class DonnaGoogleController extends Controller
 {
@@ -74,6 +75,21 @@ class DonnaGoogleController extends Controller
             '¡Google conectado exitosamente! Ya puedes activar Donna. ' .
             'Cuenta: ' . $googleUser->getEmail()
         );
+    }
+
+    public function adminRevoke(int $id)
+    {
+        if (!Gate::allows('donna.suscripciones.store')) {
+            abort(403);
+        }
+
+        $integracion = DonnaIntegration::findOrFail($id);
+        $integracion->update([
+            'status'     => 'revoked',
+            'last_error' => 'Revocado por el administrador.',
+        ]);
+
+        return back()->with('success', 'Google desconectado para el cliente.');
     }
 
     public function disconnect(Request $request)

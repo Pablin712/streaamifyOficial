@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\DonnaIntegration;
 use App\Models\DonnaPlan;
 use App\Models\DonnaSubscription;
 use App\Models\DonnaRequest;
@@ -27,7 +28,13 @@ class DonnaSubscriptionController extends Controller
         $planes   = DonnaPlan::orderBy('name')->get();
         $clientes = Cliente::orderBy('nombrecli')->get();
 
-        return view('donna.suscripciones.index', compact('suscripciones', 'planes', 'clientes'));
+        $integraciones = DonnaIntegration::where('integration_type', 'google')
+            ->whereIn('client_id', $suscripciones->pluck('client_id')->unique())
+            ->latest()
+            ->get()
+            ->keyBy('client_id');
+
+        return view('donna.suscripciones.index', compact('suscripciones', 'planes', 'clientes', 'integraciones'));
     }
 
     public function store(Request $request)

@@ -412,6 +412,9 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/solicitudes', [DonnaRequestController::class, 'index'])->name('donna.solicitudes.index');
         Route::post('/solicitudes/{id}/approve', [DonnaRequestController::class, 'approve'])->name('donna.solicitudes.approve');
         Route::post('/solicitudes/{id}/reject', [DonnaRequestController::class, 'reject'])->name('donna.solicitudes.reject');
+
+        // Integraciones Google
+        Route::post('/integraciones/{id}/revoke', [DonnaGoogleController::class, 'adminRevoke'])->name('donna.integraciones.revoke');
     });
     // ── Fin Donna Hub ───────────────────────────────────────────
 
