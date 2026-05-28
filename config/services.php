@@ -60,6 +60,12 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI', '/cliente/donna/google/callback'),
+    ],
+
     'netflix_code' => [
         'provider_name' => env('NETFLIX_CODE_PROVIDER_NAME', 'Alejandro Guevara'),
         'service_id' => env('NETFLIX_CODE_SERVICE_ID', 'NETFLIX'),

@@ -268,6 +268,24 @@
         </div>
     </section>
 
+    <!-- Mensajes flash de acciones del cliente -->
+    @if (session('donna_success'))
+        <div class="container px-5 pt-4">
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ session('donna_success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    @endif
+    @if (session('donna_error'))
+        <div class="container px-5 pt-4">
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('donna_error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    @endif
+
     <!-- Planes: Personal vs Business — dinámico desde BD -->
     <section id="planes" class="py-5 bg-light">
         <div class="container px-5">
@@ -339,11 +357,65 @@
                             <p class="small mb-0 fw-semibold" style="color:var(--donna-blue);">→ Donna crea el evento en tu Google Calendar al instante.</p>
                         </div>
 
-                        <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Personal"
-                            target="_blank" class="btn fw-bold w-100 rounded-pill py-2"
-                            style="background-color:var(--donna-blue);color:#fff;">
-                            <i class="bi bi-whatsapp me-2"></i>Consultar Donna Personal
-                        </a>
+                        @auth('cliente')
+                            @php $clienteSaldo = Auth::guard('cliente')->user()->saldo; @endphp
+
+                            {{-- Estado Google --}}
+                            @if ($googleConnected)
+                                <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3" style="background:#e8f5e9;">
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-semibold text-success">Google conectado</div>
+                                        <div class="text-muted">{{ $googleInfo['email'] ?? '' }} · Calendar & Sheets</div>
+                                    </div>
+                                    <form method="POST" action="{{ route('cliente.donna.google.disconnect') }}" class="ms-auto">
+                                        @csrf
+                                        <button type="submit" class="btn btn-link btn-sm text-danger p-0" title="Desconectar Google">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3 border border-warning" style="background:#fffbea;">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-semibold">Google Calendar & Sheets requerido</div>
+                                        <div class="text-muted">Conecta tu cuenta para contratar Donna.</div>
+                                    </div>
+                                </div>
+                                <a href="{{ route('cliente.donna.google.connect') }}"
+                                    class="btn btn-outline-dark fw-bold w-100 rounded-pill py-2 mb-2">
+                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                        width="18" class="me-2" alt="">Conectar Google
+                                </a>
+                            @endif
+
+                            {{-- Botón de acción —→ abre modal de confirmación --}}
+                            @if ($planPersonal)
+                                @if ($googleConnected)
+                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
+                                        style="background-color:var(--donna-blue);color:#fff;"
+                                        data-bs-toggle="modal" data-bs-target="#modalConfirmarPersonal">
+                                        @if ($clienteSaldo >= $planPersonal->price)
+                                            <i class="bi bi-lightning-fill me-2"></i>Activar ahora — ${{ number_format($planPersonal->price, 2) }}
+                                        @else
+                                            <i class="bi bi-send me-2"></i>Solicitar Donna Personal
+                                        @endif
+                                    </button>
+                                @else
+                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
+                                        style="background-color:var(--donna-blue);color:#fff;opacity:0.5;" disabled>
+                                        <i class="bi bi-lock me-2"></i>Conecta Google primero
+                                    </button>
+                                @endif
+                            @endif
+                        @else
+                            <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Personal"
+                                target="_blank" class="btn fw-bold w-100 rounded-pill py-2"
+                                style="background-color:var(--donna-blue);color:#fff;">
+                                <i class="bi bi-whatsapp me-2"></i>Consultar Donna Personal
+                            </a>
+                        @endauth
                     </div>
                 </div>
 
@@ -406,17 +478,215 @@
                             <p class="small mb-0 fw-semibold" style="color:#c9890a;">→ Donna responde con los precios de tu negocio, 24/7.</p>
                         </div>
 
-                        <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Business"
-                            target="_blank" class="btn fw-bold w-100 rounded-pill py-2"
-                            style="background-color:var(--donna-yellow);color:var(--donna-dark);">
-                            <i class="bi bi-whatsapp me-2"></i>Consultar Donna Business
-                        </a>
+                        @auth('cliente')
+                            @php $clienteSaldo = Auth::guard('cliente')->user()->saldo; @endphp
+
+                            {{-- Estado Google --}}
+                            @if ($googleConnected)
+                                <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3" style="background:#e8f5e9;">
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-semibold text-success">Google conectado</div>
+                                        <div class="text-muted">{{ $googleInfo['email'] ?? '' }} · Calendar & Sheets</div>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3 border border-warning" style="background:#fffbea;">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-semibold">Google Calendar & Sheets requerido</div>
+                                        <div class="text-muted">Conecta tu cuenta para contratar Donna.</div>
+                                    </div>
+                                </div>
+                                <a href="{{ route('cliente.donna.google.connect') }}"
+                                    class="btn btn-outline-dark fw-bold w-100 rounded-pill py-2 mb-2">
+                                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                        width="18" class="me-2" alt="">Conectar Google
+                                </a>
+                            @endif
+
+                            {{-- Botón de acción --}}
+                            @if ($planBusiness)
+                                @if ($googleConnected)
+                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
+                                        style="background-color:var(--donna-yellow);color:var(--donna-dark);"
+                                        data-bs-toggle="modal" data-bs-target="#modalConfirmarBusiness">
+                                        @if ($clienteSaldo >= $planBusiness->price)
+                                            <i class="bi bi-lightning-fill me-2"></i>Activar ahora — ${{ number_format($planBusiness->price, 2) }}
+                                        @else
+                                            <i class="bi bi-send me-2"></i>Solicitar Donna Business
+                                        @endif
+                                    </button>
+                                @else
+                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
+                                        style="background-color:var(--donna-yellow);color:var(--donna-dark);opacity:0.5;" disabled>
+                                        <i class="bi bi-lock me-2"></i>Conecta Google primero
+                                    </button>
+                                @endif
+                            @endif
+                        @else
+                            <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Business"
+                                target="_blank" class="btn fw-bold w-100 rounded-pill py-2"
+                                style="background-color:var(--donna-yellow);color:var(--donna-dark);">
+                                <i class="bi bi-whatsapp me-2"></i>Consultar Donna Business
+                            </a>
+                        @endauth
                     </div>
                 </div>
 
             </div>
         </div>
     </section>
+
+    {{-- ══ Modales de confirmación (Bootstrap 5) ════════════════════════════ --}}
+    @auth('cliente')
+    @php $clienteSaldo = Auth::guard('cliente')->user()->saldo; @endphp
+
+    {{-- Modal Donna Personal --}}
+    @if ($planPersonal && $googleConnected)
+    <div class="modal fade" id="modalConfirmarPersonal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#274698,#3a5fc5);border-radius:1rem 1rem 0 0;">
+                    <div class="p-2">
+                        <h5 class="modal-title text-white fw-bold mb-0">
+                            <i class="bi bi-robot me-2"></i>{{ $planPersonal->name }}
+                        </h5>
+                        <p class="text-white-50 small mb-0">Confirma tu contratación</p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-4">
+                    {{-- Resumen --}}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background:#f0f4ff;">
+                        <div>
+                            <div class="fw-semibold">{{ $planPersonal->name }}</div>
+                            <div class="text-muted small">{{ ucfirst($planPersonal->billing_cycle_label) }}</div>
+                        </div>
+                        <div class="fw-bold fs-5" style="color:#274698;">${{ number_format($planPersonal->price, 2) }}</div>
+                    </div>
+
+                    {{-- Google --}}
+                    <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3" style="background:#e8f5e9;">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span class="small fw-semibold text-success">Google Calendar & Sheets conectado</span>
+                    </div>
+
+                    {{-- Saldo --}}
+                    @if ($clienteSaldo >= $planPersonal->price)
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Tu saldo disponible</span>
+                            <span class="fw-semibold text-success">${{ number_format($clienteSaldo, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-3">
+                            <span>Se descuenta</span>
+                            <span class="fw-semibold text-danger">− ${{ number_format($planPersonal->price, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold mb-4">
+                            <span>Saldo tras activación</span>
+                            <span>${{ number_format($clienteSaldo - $planPersonal->price, 2) }}</span>
+                        </div>
+                        <form method="POST" action="{{ route('cliente.donna.activar') }}">
+                            @csrf
+                            <input type="hidden" name="plan_id" value="{{ $planPersonal->id }}">
+                            <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
+                                style="background-color:#274698;color:#fff;">
+                                <i class="bi bi-lightning-fill me-2"></i>Confirmar activación
+                            </button>
+                        </form>
+                    @else
+                        <div class="alert alert-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Saldo insuficiente: tienes ${{ number_format($clienteSaldo, 2) }} y necesitas ${{ number_format($planPersonal->price, 2) }}.
+                            <a href="{{ route('recargar.index') }}" class="alert-link">Recargar saldo →</a>
+                        </div>
+                        <form method="POST" action="{{ route('cliente.donna.solicitar') }}">
+                            @csrf
+                            <input type="hidden" name="plan_id" value="{{ $planPersonal->id }}">
+                            <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
+                                style="background-color:#274698;color:#fff;">
+                                <i class="bi bi-send me-2"></i>Confirmar solicitud
+                            </button>
+                        </form>
+                        <p class="text-center small text-muted mt-2">El equipo activará Donna una vez confirmado el pago.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal Donna Business --}}
+    @if ($planBusiness && $googleConnected)
+    <div class="modal fade" id="modalConfirmarBusiness" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow">
+                <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#c9890a,#E4B100);border-radius:1rem 1rem 0 0;">
+                    <div class="p-2">
+                        <h5 class="modal-title fw-bold mb-0" style="color:#1D1D1B;">
+                            <i class="bi bi-building me-2"></i>{{ $planBusiness->name }}
+                        </h5>
+                        <p class="small mb-0" style="color:#4a3800;">Confirma tu contratación</p>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background:#fffbea;">
+                        <div>
+                            <div class="fw-semibold">{{ $planBusiness->name }}</div>
+                            <div class="text-muted small">{{ ucfirst($planBusiness->billing_cycle_label) }}</div>
+                        </div>
+                        <div class="fw-bold fs-5" style="color:#c9890a;">${{ number_format($planBusiness->price, 2) }}</div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3" style="background:#e8f5e9;">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span class="small fw-semibold text-success">Google Calendar & Sheets conectado</span>
+                    </div>
+
+                    @if ($clienteSaldo >= $planBusiness->price)
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Tu saldo disponible</span>
+                            <span class="fw-semibold text-success">${{ number_format($clienteSaldo, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-3">
+                            <span>Se descuenta</span>
+                            <span class="fw-semibold text-danger">− ${{ number_format($planBusiness->price, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold mb-4">
+                            <span>Saldo tras activación</span>
+                            <span>${{ number_format($clienteSaldo - $planBusiness->price, 2) }}</span>
+                        </div>
+                        <form method="POST" action="{{ route('cliente.donna.activar') }}">
+                            @csrf
+                            <input type="hidden" name="plan_id" value="{{ $planBusiness->id }}">
+                            <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
+                                style="background-color:#E4B100;color:#1D1D1B;">
+                                <i class="bi bi-lightning-fill me-2"></i>Confirmar activación
+                            </button>
+                        </form>
+                    @else
+                        <div class="alert alert-warning small mb-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>
+                            Saldo insuficiente: tienes ${{ number_format($clienteSaldo, 2) }} y necesitas ${{ number_format($planBusiness->price, 2) }}.
+                            <a href="{{ route('recargar.index') }}" class="alert-link">Recargar saldo →</a>
+                        </div>
+                        <form method="POST" action="{{ route('cliente.donna.solicitar') }}">
+                            @csrf
+                            <input type="hidden" name="plan_id" value="{{ $planBusiness->id }}">
+                            <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
+                                style="background-color:#E4B100;color:#1D1D1B;">
+                                <i class="bi bi-send me-2"></i>Confirmar solicitud
+                            </button>
+                        </form>
+                        <p class="text-center small text-muted mt-2">El equipo activará Donna una vez confirmado el pago.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    @endauth
 
     <!-- Cómo funciona -->
     <section id="como-funciona" class="py-5 bg-white">

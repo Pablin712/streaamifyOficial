@@ -133,6 +133,10 @@
                     Tutorial
                 </a>
             </div>
+            <div class="mb-2 small">
+                <a href="{{ route('legal.privacidad') }}" class="text-white-50 text-decoration-none me-3">Política de Privacidad</a>
+                <a href="{{ route('legal.terminos') }}" class="text-white-50 text-decoration-none">Condiciones de Servicio</a>
+            </div>
             <p class="mb-2">© <span id="currentYear"></span> Streamify. Todos los derechos reservados.</p>
             <p class="small">Diseñado por Pablo Jiménez</p>
             <div>

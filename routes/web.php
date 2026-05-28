@@ -61,6 +61,10 @@ use App\Http\Controllers\MailController;
 use App\Http\Controllers\AlyssonController;
 use App\Http\Controllers\SistemaController;
 use App\Http\Controllers\DonnaPlanController;
+use App\Http\Controllers\DonnaSubscriptionController;
+use App\Http\Controllers\DonnaRequestController;
+use App\Http\Controllers\ClienteDonnaController;
+use App\Http\Controllers\DonnaGoogleController;
 //cliente
 Route::get('/register', function () {
     return view('auth.register');
@@ -77,11 +81,34 @@ Route::get('/tutorial', function () {
     return view('shopping.tutorial');
 })->name('tutorial');
 
+// Páginas legales
+Route::get('/politica-de-privacidad', function () {
+    return view('legal.politica-privacidad');
+})->name('legal.privacidad');
+
+Route::get('/condiciones-de-servicio', function () {
+    return view('legal.terminos-servicio');
+})->name('legal.terminos');
+
+// Callback de Google OAuth — fuera del middleware de cliente para que la sesión persista
+Route::get('/cliente/donna/google/callback', [DonnaGoogleController::class, 'callback'])->name('cliente.donna.google.callback');
+
 Route::get('/donna', function () {
     $planes = \App\Models\DonnaPlan::active()->get()->groupBy('service_type');
     $planPersonal = $planes->get('personal')?->first();
     $planBusiness = $planes->get('business')?->first();
-    return view('donna', compact('planPersonal', 'planBusiness'));
+    $googleConnected = false;
+    $googleInfo = null;
+    if (\Illuminate\Support\Facades\Auth::guard('cliente')->check()) {
+        $clienteId = \Illuminate\Support\Facades\Auth::guard('cliente')->user()->idcli;
+        $googleInteg = \App\Models\DonnaIntegration::where('client_id', $clienteId)
+            ->where('integration_type', 'google')
+            ->where('status', 'active')
+            ->first();
+        $googleConnected = (bool) $googleInteg;
+        $googleInfo = $googleInteg?->metadata_json;
+    }
+    return view('donna', compact('planPersonal', 'planBusiness', 'googleConnected', 'googleInfo'));
 })->name('donna');
 
 // Imagen de bancos servida por Laravel (compatible con hostings que bloquean /storage directo)
@@ -133,6 +160,14 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     });
     Route::controller(CodigoController::class)->group(function () {
         Route::get('/codigo', 'index')->name('codigo.index');
+    });
+    Route::controller(ClienteDonnaController::class)->group(function () {
+        Route::post('/donna/solicitar', 'solicitar')->name('cliente.donna.solicitar');
+        Route::post('/donna/activar', 'activar')->name('cliente.donna.activar');
+    });
+    Route::controller(DonnaGoogleController::class)->group(function () {
+        Route::get('/donna/google/connect', 'redirect')->name('cliente.donna.google.connect');
+        Route::post('/donna/google/disconnect', 'disconnect')->name('cliente.donna.google.disconnect');
     });
 });
 /*
@@ -365,6 +400,18 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/planes/{id}', [DonnaPlanController::class, 'show'])->name('donna.planes.show');
         Route::put('/planes/{id}', [DonnaPlanController::class, 'update'])->name('donna.planes.update');
         Route::delete('/planes/{id}', [DonnaPlanController::class, 'destroy'])->name('donna.planes.destroy');
+
+        // Suscripciones
+        Route::get('/suscripciones', [DonnaSubscriptionController::class, 'index'])->name('donna.suscripciones.index');
+        Route::post('/suscripciones', [DonnaSubscriptionController::class, 'store'])->name('donna.suscripciones.store');
+        Route::get('/suscripciones/{id}', [DonnaSubscriptionController::class, 'show'])->name('donna.suscripciones.show');
+        Route::post('/suscripciones/{id}/suspend', [DonnaSubscriptionController::class, 'suspend'])->name('donna.suscripciones.suspend');
+        Route::post('/suscripciones/{id}/renew', [DonnaSubscriptionController::class, 'renew'])->name('donna.suscripciones.renew');
+
+        // Solicitudes
+        Route::get('/solicitudes', [DonnaRequestController::class, 'index'])->name('donna.solicitudes.index');
+        Route::post('/solicitudes/{id}/approve', [DonnaRequestController::class, 'approve'])->name('donna.solicitudes.approve');
+        Route::post('/solicitudes/{id}/reject', [DonnaRequestController::class, 'reject'])->name('donna.solicitudes.reject');
     });
     // ── Fin Donna Hub ───────────────────────────────────────────
 
