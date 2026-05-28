@@ -393,6 +393,35 @@ Route::prefix('v2')->group(function () {
     Route::middleware('web')->post('/chat/ai/send', [\App\Http\Controllers\Api\ChatAIController::class, 'sendMessage'])->name('api.v2.chat.ai.send');
 });
 
+// ===== DONNA API =====
+use App\Http\Controllers\Api\Donna\DonnaTelegramController;
+use App\Http\Controllers\Api\Donna\DonnaContextController;
+use App\Http\Controllers\Api\Donna\DonnaResponseController;
+use App\Http\Controllers\Api\Donna\Tools\DonnaCalendarToolController;
+use App\Http\Controllers\Api\Donna\Tools\DonnaSheetsToolController;
+
+Route::prefix('donna')->middleware(['donna.api'])->group(function () {
+    Route::post('/register-telegram', [DonnaTelegramController::class, 'register'])->name('api.donna.register-telegram');
+    Route::get('/context', [DonnaContextController::class, 'show'])->name('api.donna.context');
+    Route::post('/respond', [DonnaResponseController::class, 'store'])->name('api.donna.respond');
+
+    Route::prefix('tools/calendar')->group(function () {
+        Route::post('/list-events',   [DonnaCalendarToolController::class, 'listEvents'])->name('api.donna.calendar.list');
+        Route::post('/freebusy',      [DonnaCalendarToolController::class, 'freebusy'])->name('api.donna.calendar.freebusy');
+        Route::post('/create-event',  [DonnaCalendarToolController::class, 'createEvent'])->name('api.donna.calendar.create');
+        Route::post('/update-event',  [DonnaCalendarToolController::class, 'updateEvent'])->name('api.donna.calendar.update');
+        Route::post('/delete-event',  [DonnaCalendarToolController::class, 'deleteEvent'])->name('api.donna.calendar.delete');
+    });
+
+    Route::prefix('tools/sheets')->group(function () {
+        Route::post('/get-tasks',     [DonnaSheetsToolController::class, 'getTasks'])->name('api.donna.sheets.get');
+        Route::post('/create-task',   [DonnaSheetsToolController::class, 'createTask'])->name('api.donna.sheets.create');
+        Route::post('/update-task',   [DonnaSheetsToolController::class, 'updateTask'])->name('api.donna.sheets.update');
+        Route::post('/complete-task', [DonnaSheetsToolController::class, 'completeTask'])->name('api.donna.sheets.complete');
+    });
+});
+// ===== FIN DONNA API =====
+
 // ===== CHAT MODULE START =====
 Route::prefix('chat')->group(function () {
     // CHAT MODULE

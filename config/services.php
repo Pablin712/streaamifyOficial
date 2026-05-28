@@ -66,6 +66,14 @@ return [
         'redirect'      => rtrim(env('APP_URL', 'http://localhost'), '/') . '/cliente/donna/google/callback',
     ],
 
+    'donna' => [
+        'api_key'                => env('DONNA_API_KEY'),
+        'telegram_bot_username'  => env('DONNA_TELEGRAM_BOT_USERNAME', 'DonnaStreamifyBot'),
+        'personal_payment_url'   => env('DONNA_PERSONAL_PAYMENT_URL', env('APP_URL') . '/donna'),
+        'google_default_timezone'=> env('DONNA_GOOGLE_DEFAULT_TIMEZONE', 'America/Guayaquil'),
+        'expose_google_token'    => env('DONNA_EXPOSE_GOOGLE_ACCESS_TOKEN', false),
+    ],
+
     'netflix_code' => [
         'provider_name' => env('NETFLIX_CODE_PROVIDER_NAME', 'Alejandro Guevara'),
         'service_id' => env('NETFLIX_CODE_SERVICE_ID', 'NETFLIX'),

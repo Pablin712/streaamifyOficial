@@ -277,6 +277,75 @@
             </div>
         </div>
     @endif
+
+    {{-- Modal de código Telegram — aparece automáticamente tras activar Donna Personal --}}
+    @if (session('donna_activation_code') && session('donna_plan_type') === 'personal')
+    <div class="modal fade" id="modalCodigoTelegram" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 shadow-lg">
+                <div class="modal-header border-0" style="background:linear-gradient(135deg,#274698,#3a5fc5);border-radius:1rem 1rem 0 0;">
+                    <div class="p-2">
+                        <h5 class="modal-title text-white fw-bold mb-0">
+                            <i class="bi bi-telegram me-2"></i>¡Un último paso!
+                        </h5>
+                        <p class="text-white-50 small mb-0">Registra tu Telegram para activar Donna</p>
+                    </div>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-4">
+                        Donna ya está activa. Para que pueda responderte, <strong>escríbele a nuestro bot de Telegram</strong> con tu código personal:
+                    </p>
+
+                    {{-- Código --}}
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center gap-3 px-4 py-3 rounded-3"
+                            style="background:#f0f4ff;border:2px dashed #274698;">
+                            <i class="bi bi-key-fill fs-3" style="color:#274698;"></i>
+                            <span class="fw-bold font-monospace" style="font-size:2rem;letter-spacing:.2em;color:#274698;">
+                                {{ session('donna_activation_code') }}
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                onclick="navigator.clipboard.writeText('{{ session('donna_activation_code') }}').then(()=>this.textContent='✓')"
+                                title="Copiar">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Pasos --}}
+                    <ol class="list-group list-group-numbered list-group-flush mb-4">
+                        <li class="list-group-item border-0 ps-0">
+                            Abre Telegram y busca
+                            <a href="https://t.me/{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}"
+                                target="_blank" class="fw-semibold" style="color:#274698;">
+                                @{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}
+                            </a>
+                        </li>
+                        <li class="list-group-item border-0 ps-0">Envía el código de arriba como mensaje</li>
+                        <li class="list-group-item border-0 ps-0">¡Listo! Donna te responderá y quedará vinculada a tu cuenta</li>
+                    </ol>
+
+                    <div class="alert alert-info small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Este código es de un solo uso y caduca en 48 horas. Si no lo usas, puedes obtener uno nuevo desde tu panel en "Mi Actividad → Donna AI".
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = new bootstrap.Modal(document.getElementById('modalCodigoTelegram'));
+            modal.show();
+        });
+    </script>
+    @endif
+
     @if (session('donna_error'))
         <div class="container px-5 pt-4">
             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">

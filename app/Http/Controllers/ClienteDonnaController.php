@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use App\Models\DonnaChannel;
 use App\Models\DonnaPlan;
 use App\Models\DonnaRequest;
 use App\Models\DonnaSubscription;
@@ -12,6 +13,7 @@ use App\Models\Empleado;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ClienteDonnaController extends Controller
 {
@@ -85,7 +87,7 @@ class ClienteDonnaController extends Controller
                 default    => null,
             };
 
-            DonnaSubscription::create([
+            $sub = DonnaSubscription::create([
                 'client_id'       => $cliente->idcli,
                 'plan_id'         => $plan->id,
                 'service_type'    => $plan->service_type,
@@ -99,6 +101,34 @@ class ClienteDonnaController extends Controller
                 'is_enabled'      => true,
             ]);
 
+            $activationCode = null;
+
+            if ($plan->service_type === 'personal') {
+                // Código único para que el cliente registre su Telegram chat_id
+                $activationCode = strtoupper(Str::random(6));
+                DonnaChannel::create([
+                    'client_id'       => $cliente->idcli,
+                    'subscription_id' => $sub->id,
+                    'service_type'    => 'personal',
+                    'channel_type'    => 'telegram',
+                    'provider'        => 'telegram_bot',
+                    'status'          => 'pending',
+                    'activation_code' => $activationCode,
+                    'is_default'      => true,
+                ]);
+            } elseif ($plan->service_type === 'business') {
+                DonnaChannel::create([
+                    'client_id'       => $cliente->idcli,
+                    'subscription_id' => $sub->id,
+                    'service_type'    => 'business',
+                    'channel_type'    => 'whatsapp',
+                    'provider'        => 'evolution_api',
+                    'status'          => 'pending',
+                    'is_default'      => true,
+                    'metadata_json'   => ['requires_manual_setup' => true],
+                ]);
+            }
+
             Cliente::where('idcli', $cliente->idcli)->decrement('saldo', $plan->price);
 
             $sistemaEmp = Empleado::where('nombreemp', 'Laravel')->value('idemp');
@@ -111,10 +141,14 @@ class ClienteDonnaController extends Controller
 
             DB::commit();
 
-            return back()->with('donna_success',
-                '¡Donna activada exitosamente! Tu suscripción está activa' .
-                ($expiresAt ? ' hasta el ' . $expiresAt->format('d/m/Y') : '') . '.'
-            );
+            $successMsg = '¡Donna activada exitosamente! Tu suscripción está activa' .
+                ($expiresAt ? ' hasta el ' . $expiresAt->format('d/m/Y') : '') . '.';
+
+            return back()
+                ->with('donna_success', $successMsg)
+                ->with('donna_activation_code', $activationCode)
+                ->with('donna_plan_type', $plan->service_type);
+
         } catch (\Exception) {
             DB::rollBack();
             return back()->with('donna_error', 'Error al procesar el pago. Intenta nuevamente.');

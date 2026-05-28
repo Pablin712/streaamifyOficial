@@ -20,8 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Registrar alias de middleware
         $middleware->alias([
-            'api.key' => \App\Http\Middleware\AuthenticateApiKey::class,
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'api.key'    => \App\Http\Middleware\AuthenticateApiKey::class,
+            'donna.api'  => \App\Http\Middleware\DonnaApiKeyMiddleware::class,
+            'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
