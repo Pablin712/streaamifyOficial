@@ -195,7 +195,8 @@ class DonnaBusinessContextService
         }
         $rulesSection .= "- Si detectas reclamo, caso delicado o usuario muy molesto, deriva a humano.\n";
         $rulesSection .= "- No digas que eres ChatGPT, DeepSeek ni ningún otro modelo.\n";
-        $rulesSection .= "- Máximo {$config?->max_tool_calls ?? 8} llamadas a herramientas por ejecución.\n";
+        $maxToolCalls = $config?->max_tool_calls ?? 8;
+        $rulesSection .= "- Máximo {$maxToolCalls} llamadas a herramientas por ejecución.\n";
 
         $contextSection = '';
         if ($config?->business_description) {

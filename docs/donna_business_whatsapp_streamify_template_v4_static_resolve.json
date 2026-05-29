@@ -1434,7 +1434,7 @@
     },
     {
       "parameters": {
-        "content": "### Cambios v4\n- URL Streamify fija: https://streamify.aaronsoft.es/public\n- X-Donna-Key fijo: donna-secret-key-pablin-712\n- Nuevo nodo Resolver cliente/canal Streamify antes de Normalizar.\n- Normalizar usa la apikey devuelta por Streamify, no la del webhook.\n\nEndpoint esperado: POST /api/donna/business/resolve-webhook",
+        "content": "### Cambios v4 — REIMPORTAR SIEMPRE\n- URL Streamify fija: https://streamify.aaronsoft.es/public\n- X-Donna-Key fijo: donna-secret-key-pablin-712\n- Nuevo nodo: Resolver cliente/canal Streamify → gate ¿Donna Business activa? → Normalizar.\n- Normalizar usa la apikey devuelta por Streamify, no la del webhook.\n- Endpoint activo: POST /api/donna/business/resolve-webhook\n\nTOOLS CONECTADAS AL AGENTE (ai_tool):\n  • Date & Time\n  • donna_business_knowledge_search\n  • donna_business_customer_context_search\n  • donna_business_memory_search\n  • donna_business_calendar_freebusy\n  • donna_business_calendar_create_event\n  • donna_business_sheets_append_row\n\n⚠ Si las tools aparecen desconectadas: borrar el flujo en n8n y reimportar este JSON.",
         "height": 260,
         "width": 560,
         "color": 6
