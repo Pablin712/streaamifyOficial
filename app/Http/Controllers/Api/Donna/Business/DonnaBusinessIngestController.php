@@ -12,6 +12,12 @@ class DonnaBusinessIngestController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->has('has_media')) {
+            $request->merge([
+                'has_media' => filter_var($request->input('has_media'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false,
+            ]);
+        }
+
         $data = $request->validate([
             'provider'            => 'nullable|string',
             'instance_name'       => 'required|string',
