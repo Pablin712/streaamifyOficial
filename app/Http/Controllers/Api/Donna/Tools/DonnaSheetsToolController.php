@@ -9,15 +9,17 @@ use App\Services\Donna\DonnaServiceValidator;
 use App\Services\Donna\DonnaToolLogger;
 use App\Services\Donna\Google\DonnaGoogleTokenService;
 use App\Services\Donna\Google\DonnaSheetsTaskService;
+use App\Services\Donna\Google\DonnaSpreadsheetSetupService;
 use Illuminate\Http\Request;
 
 class DonnaSheetsToolController extends Controller
 {
     public function __construct(
-        private DonnaServiceValidator   $validator,
-        private DonnaGoogleTokenService $tokenService,
-        private DonnaSheetsTaskService  $sheets,
-        private DonnaToolLogger         $logger
+        private DonnaServiceValidator        $validator,
+        private DonnaGoogleTokenService      $tokenService,
+        private DonnaSheetsTaskService       $sheets,
+        private DonnaToolLogger              $logger,
+        private DonnaSpreadsheetSetupService $spreadsheetSetup,
     ) {}
 
     private function resolveContext(Request $request): array
@@ -37,7 +39,7 @@ class DonnaSheetsToolController extends Controller
         if (!$integ) {
             return ['error' => [
                 'success' => false, 'allowed' => false,
-                'reason' => 'google_not_connected',
+                'reason'  => 'google_not_connected',
                 'message' => 'La cuenta Google del cliente no está conectada.',
             ]];
         }
@@ -46,20 +48,36 @@ class DonnaSheetsToolController extends Controller
         if (!$token) {
             return ['error' => [
                 'success' => false, 'allowed' => false,
-                'reason' => 'google_token_revoked',
+                'reason'  => 'google_token_revoked',
                 'message' => 'La conexión con Google expiró. Vuelve a conectar desde Streamify.',
             ]];
         }
 
-        $config = DonnaAgentConfig::where('client_id', $clientId)->where('service_type', 'personal')->first();
+        $config        = DonnaAgentConfig::where('client_id', $clientId)->where('service_type', 'personal')->first();
         $spreadsheetId = $config?->spreadsheet_id;
 
         if (!$spreadsheetId) {
-            return ['error' => [
-                'success' => false, 'allowed' => true,
-                'reason' => 'spreadsheet_not_configured',
-                'message' => 'El cliente no tiene una hoja de tareas configurada. Contacta a soporte.',
-            ]];
+            $setup = $this->spreadsheetSetup->createTasksSpreadsheet($token);
+
+            if (!($setup['success'] ?? false)) {
+                return ['error' => [
+                    'success' => false, 'allowed' => true,
+                    'reason'  => 'spreadsheet_setup_failed',
+                    'message' => 'No se pudo crear la hoja de tareas. Intenta de nuevo en un momento.',
+                ]];
+            }
+
+            $spreadsheetId = $setup['spreadsheet_id'];
+
+            DonnaAgentConfig::updateOrCreate(
+                ['client_id' => $clientId, 'service_type' => 'personal'],
+                [
+                    'subscription_id'  => $subscriptionId,
+                    'spreadsheet_id'   => $spreadsheetId,
+                    'spreadsheet_name' => 'Tareas',
+                    'is_active'        => true,
+                ]
+            );
         }
 
         return [
@@ -73,11 +91,28 @@ class DonnaSheetsToolController extends Controller
 
     private function sheetsError(array $googleError, string $toolName, int $clientId, array $req): \Illuminate\Http\JsonResponse
     {
+        $httpCode = $googleError['code'] ?? 0;
+
+        // La hoja fue eliminada de Google Drive: resetear el ID para que se recree en el próximo intento
+        if ($httpCode === 404) {
+            DonnaAgentConfig::where('client_id', $clientId)
+                ->where('service_type', 'personal')
+                ->update(['spreadsheet_id' => null]);
+
+            $result = [
+                'success' => false, 'allowed' => true,
+                'reason'  => 'spreadsheet_not_found',
+                'message' => 'La hoja de tareas no fue encontrada (fue eliminada de Google Drive). Se está reconfigurando automáticamente — por favor repite la acción.',
+            ];
+            $this->logger->log($toolName, $clientId, $req, $result);
+            return response()->json($result, 422);
+        }
+
         $result = [
-            'success' => false, 'allowed' => true,
-            'reason'  => 'google_api_error',
-            'message' => 'Google devolvió un error al ejecutar la acción.',
-            'error_code' => 'google_' . ($googleError['code'] ?? '?'),
+            'success'    => false, 'allowed' => true,
+            'reason'     => 'google_api_error',
+            'message'    => 'Google devolvió un error al ejecutar la acción.',
+            'error_code' => 'google_' . ($httpCode ?: '?'),
         ];
         $this->logger->log($toolName, $clientId, $req, $result);
         return response()->json($result, 422);
