@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DonnaAgentConfig;
 use App\Models\DonnaChannel;
 use App\Models\DonnaIntegration;
 use App\Models\DonnaSubscription;
@@ -13,6 +14,7 @@ use App\Models\Recarga;
 use App\Models\Soporte;
 use App\Models\Venta;
 use App\Models\ViewUsuarioActivo;
+use App\Services\Donna\DonnaPersonalContextService;
 use App\Services\NetflixCodigoService;
 
 class HistorialClientesController extends Controller
@@ -55,7 +57,14 @@ class HistorialClientesController extends Controller
             ->latest()
             ->first();
 
-        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte', 'donnaIntegracion', 'donnaSuscripcion', 'donnaCanal'));
+        $donnaConfig = DonnaAgentConfig::where('client_id', $idcli)
+            ->where('service_type', 'personal')
+            ->first();
+
+        $donnaSystemPreview = app(DonnaPersonalContextService::class)
+            ->getSystemMessagePreview($donnaConfig, $donnaIntegracion?->metadata_json['email'] ?? null);
+
+        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte', 'donnaIntegracion', 'donnaSuscripcion', 'donnaCanal', 'donnaConfig', 'donnaSystemPreview'));
     }
 
     public function pedirCodigoNetflix(Request $request, $iddet)

@@ -193,6 +193,37 @@ class ClienteDonnaController extends Controller
         }
     }
 
+    public function saveConfig(Request $request)
+    {
+        $request->validate([
+            'personal_context' => 'nullable|string|max:1000',
+            'main_prompt'      => 'nullable|string|max:5000',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+
+        $sub = DonnaSubscription::where('client_id', $cliente->idcli)
+            ->where('service_type', 'personal')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$sub) {
+            return back()->with('donna_error', 'No tienes una suscripción Donna Personal activa.');
+        }
+
+        DonnaAgentConfig::updateOrCreate(
+            ['client_id' => $cliente->idcli, 'service_type' => 'personal'],
+            [
+                'subscription_id'  => $sub->id,
+                'personal_context' => $request->input('personal_context') ?: null,
+                'main_prompt'      => $request->input('main_prompt') ?: null,
+                'is_active'        => true,
+            ]
+        );
+
+        return back()->with('donna_config_success', 'Configuración de Donna actualizada. Los cambios se aplican en el próximo mensaje.');
+    }
+
     private function setupSpreadsheet(int $clientId, int $subscriptionId): void
     {
         // Solo actúa si no hay spreadsheet configurado aún

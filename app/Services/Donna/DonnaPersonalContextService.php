@@ -110,6 +110,18 @@ class DonnaPersonalContextService
         ];
     }
 
+    public function getSystemMessagePreview(?DonnaAgentConfig $config, ?string $googleEmail): string
+    {
+        $agentName     = $config?->agent_name ?? 'Donna';
+        $timezone      = $config?->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil');
+        $sheetsEnabled = $config?->spreadsheet_id !== null;
+
+        return $this->buildSystemMessage(
+            $agentName, $timezone, $googleEmail,
+            $config?->main_prompt, $config?->personal_context, $sheetsEnabled
+        );
+    }
+
     private function buildSystemMessage(
         string $agentName,
         string $timezone,

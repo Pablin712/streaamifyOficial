@@ -164,6 +164,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
     Route::controller(ClienteDonnaController::class)->group(function () {
         Route::post('/donna/solicitar', 'solicitar')->name('cliente.donna.solicitar');
         Route::post('/donna/activar', 'activar')->name('cliente.donna.activar');
+        Route::post('/donna/config', 'saveConfig')->name('cliente.donna.config');
     });
     Route::controller(DonnaGoogleController::class)->group(function () {
         Route::get('/donna/google/connect', 'redirect')->name('cliente.donna.google.connect');

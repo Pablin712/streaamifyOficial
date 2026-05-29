@@ -1178,6 +1178,97 @@
                             </div>
                         @endif
 
+                        {{-- ── Personalizar Donna ──────────────────────────────── --}}
+                        @if($donnaSuscripcion && $donnaSuscripcion->service_type === 'personal' && $donnaSuscripcion->status === 'active')
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-sliders me-1"></i> Personalizar a Donna
+                        </h6>
+
+                        @if(session('donna_config_success'))
+                            <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{ session('donna_config_success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        {{-- Vista previa del prompt actual --}}
+                        <div class="accordion mb-4" id="accordionSystemMsg">
+                            <div class="accordion-item border rounded-3 overflow-hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseSystemMsg"
+                                            style="font-size:0.9rem;">
+                                        <i class="bi bi-eye me-2" style="color:#274698;"></i>
+                                        Ver el prompt que recibe Donna ahora mismo
+                                    </button>
+                                </h2>
+                                <div id="collapseSystemMsg" class="accordion-collapse collapse">
+                                    <div class="accordion-body p-3">
+                                        <p class="small text-muted mb-2">
+                                            Este es el texto exacto que Donna recibe como instrucciones al inicio de cada conversación:
+                                        </p>
+                                        <textarea class="form-control font-monospace" rows="12" readonly
+                                                  style="background:#f8f9fa;resize:none;font-size:0.77rem;line-height:1.5;">{{ $donnaSystemPreview }}</textarea>
+                                        @if($donnaConfig?->main_prompt)
+                                            <div class="alert alert-warning py-2 small mt-2 mb-0">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                                Estás usando un <strong>prompt personalizado completo</strong>. El contenido de abajo reemplaza el prompt por defecto.
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Formulario de edición --}}
+                        <form method="POST" action="{{ route('cliente.donna.config') }}">
+                            @csrf
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold mb-1">
+                                    <i class="bi bi-person-lines-fill me-1" style="color:#274698;"></i>
+                                    Contexto personal
+                                    <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.7rem;">Recomendado</span>
+                                </label>
+                                <p class="text-muted small mb-2">
+                                    Cuéntale a Donna quién eres: tu profesión, proyectos activos, preferencias de comunicación, horarios que no debes interrumpir, etc. Donna usará esto para ser más precisa y personalizada contigo.
+                                </p>
+                                <textarea name="personal_context" id="personal_context_input"
+                                          class="form-control" rows="5" maxlength="1000"
+                                          placeholder="Ejemplo: Soy diseñador freelance. Trabajo de 9am a 6pm de lunes a viernes. Prefiero respuestas cortas y directas. No agendar nada los domingos. Actualmente tengo 3 proyectos activos: rediseño de App X, branding de Y, y propuesta Z."
+                                >{{ $donnaConfig?->personal_context }}</textarea>
+                                <div class="d-flex justify-content-end mt-1">
+                                    <span class="text-muted small">
+                                        <span id="personal_context_count">{{ strlen($donnaConfig?->personal_context ?? '') }}</span>/1000
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold mb-1">
+                                    <i class="bi bi-code-square me-1" style="color:#274698;"></i>
+                                    Prompt personalizado completo
+                                    <span class="badge bg-warning text-dark border ms-1" style="font-size:0.7rem;">Avanzado</span>
+                                </label>
+                                <p class="text-muted small mb-2">
+                                    Si lo dejas vacío, Donna usa su prompt por defecto (recomendado para la mayoría). Si escribes aquí, <strong>reemplaza completamente</strong> el prompt anterior — el "Contexto personal" se ignora.
+                                    Puedes usar las variables: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>.
+                                </p>
+                                <textarea name="main_prompt" class="form-control font-monospace" rows="9"
+                                          maxlength="5000" style="font-size:0.8rem;"
+                                          placeholder="Deja vacío para usar el prompt predeterminado de Donna..."
+                                >{{ $donnaConfig?->main_prompt }}</textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
+                                <i class="bi bi-save me-1"></i>Guardar cambios
+                            </button>
+                        </form>
+                        @endif
+                        {{-- ── Fin Personalizar ─────────────────────────────── --}}
+
                     </div>
                 </div>
             </div>
@@ -1530,6 +1621,13 @@
             document.querySelectorAll('.js-renov-meses').forEach(function(select) {
                 refreshRenovPreview(select.dataset.modal);
             });
+
+            // Contador caracteres contexto personal Donna
+            const pcInput = document.getElementById('personal_context_input');
+            const pcCount = document.getElementById('personal_context_count');
+            if (pcInput && pcCount) {
+                pcInput.addEventListener('input', () => pcCount.textContent = pcInput.value.length);
+            }
         });
     </script>
 @endsection
