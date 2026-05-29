@@ -271,6 +271,45 @@ class ClienteDonnaController extends Controller
         return back()->with('donna_config_success', 'Configuración de Donna actualizada. Los cambios se aplican en el próximo mensaje.');
     }
 
+    public function saveBusinessConfig(Request $request)
+    {
+        $request->validate([
+            'agent_name'           => 'nullable|string|max:80',
+            'business_name'        => 'nullable|string|max:120',
+            'business_description' => 'nullable|string|max:2000',
+            'tone'                 => 'nullable|string|max:200',
+            'language'             => 'nullable|string|max:10',
+            'main_prompt'          => 'nullable|string|max:5000',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+
+        $sub = DonnaSubscription::where('client_id', $cliente->idcli)
+            ->where('service_type', 'business')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$sub) {
+            return back()->with('donna_business_error', 'No tienes una suscripción Donna Business activa.');
+        }
+
+        DonnaAgentConfig::updateOrCreate(
+            ['client_id' => $cliente->idcli, 'service_type' => 'business'],
+            [
+                'subscription_id'      => $sub->id,
+                'agent_name'           => $request->input('agent_name') ?: null,
+                'business_name'        => $request->input('business_name') ?: null,
+                'business_description' => $request->input('business_description') ?: null,
+                'tone'                 => $request->input('tone') ?: null,
+                'language'             => $request->input('language') ?: null,
+                'main_prompt'          => $request->input('main_prompt') ?: null,
+                'is_active'            => true,
+            ]
+        );
+
+        return back()->with('donna_business_config_success', 'Configuración de Donna Business actualizada.');
+    }
+
     private function setupSpreadsheet(int $clientId, int $subscriptionId): void
     {
         // Solo actúa si no hay spreadsheet configurado aún

@@ -177,6 +177,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::post('/donna/solicitar', 'solicitar')->name('cliente.donna.solicitar');
         Route::post('/donna/activar', 'activar')->name('cliente.donna.activar');
         Route::post('/donna/config', 'saveConfig')->name('cliente.donna.config');
+        Route::post('/donna/config-business', 'saveBusinessConfig')->name('cliente.donna.config-business');
         Route::post('/donna/connect-whatsapp', 'connectWhatsApp')->name('cliente.donna.connect-whatsapp');
     });
     Route::controller(DonnaGoogleController::class)->group(function () {
