@@ -990,11 +990,11 @@
                         <div class="activity-section-title mb-4">
                             <div>
                                 <h3><i class="bi bi-robot me-2" style="color:#274698;"></i>Donna AI</h3>
-                                <p class="text-muted mb-0">Estado de tu cuenta de Google y suscripción Donna.</p>
+                                <p class="text-muted mb-0">Estado de tus servicios, integraciones y canales de Donna.</p>
                             </div>
                         </div>
 
-                        {{-- Google --}}
+                        {{-- Google (compartido entre Personal y Business) --}}
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
                             <i class="bi bi-google me-1"></i> Integración con Google
                         </h6>
@@ -1040,7 +1040,7 @@
                                 <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold">Google no conectado</div>
-                                    <div class="text-muted small">Necesitas conectar Google para usar Donna AI (Calendar & Sheets).</div>
+                                    <div class="text-muted small">Conecta tu cuenta para habilitar Calendar y Sheets en Donna.</div>
                                 </div>
                                 <a href="{{ route('cliente.donna.google.connect') }}" class="btn btn-dark btn-sm rounded-pill flex-shrink-0">
                                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" class="me-1" alt="">
@@ -1049,37 +1049,76 @@
                             </div>
                         @endif
 
+                        @if(!$subPersonal && !$subBusiness)
+                            {{-- Sin ninguna suscripción --}}
+                            <div class="p-4 rounded-3 text-center" style="background:#f8f9fa;border:1px dashed #dee2e6;">
+                                <i class="bi bi-robot fs-2 d-block mb-2 text-muted"></i>
+                                <div class="text-muted small mb-2">No tienes suscripciones Donna activas.</div>
+                                <a href="{{ route('donna') }}" class="btn btn-primary btn-sm rounded-pill">Ver planes Donna</a>
+                            </div>
+                        @endif
+
+                        {{-- ══ DONNA PERSONAL ══════════════════════════════════ --}}
+                        @if($subPersonal)
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase small mb-3" style="color:#274698;">
+                            <i class="bi bi-person-circle me-1"></i> Donna Personal
+                        </h6>
+
+                        {{-- Suscripción Personal --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#f4f6ff;border:1px solid #c5cae9;">
+                            <i class="bi bi-robot fs-3" style="color:#274698;"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ $subPersonal->plan?->name ?? 'Donna Personal' }}</div>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    <span class="badge bg-{{ $subPersonal->status_color }}">{{ $subPersonal->status_label }}</span>
+                                    <span class="badge" style="background:#274698;">Personal</span>
+                                </div>
+                                @if($subPersonal->expires_at)
+                                    @php $diasP = $subPersonal->daysRemaining(); @endphp
+                                    <div class="text-muted small mt-1">
+                                        Vence: {{ $subPersonal->expires_at->format('d/m/Y') }}
+                                        @if($diasP !== null && $diasP <= 7 && $diasP >= 0)
+                                            <span class="text-warning fw-semibold ms-1">({{ $diasP }} días restantes)</span>
+                                        @elseif($diasP !== null && $diasP < 0)
+                                            <span class="text-danger fw-semibold ms-1">(Vencida)</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
+                                @endif
+                            </div>
+                        </div>
+
                         {{-- Canal Telegram --}}
-                        @if($donnaSuscripcion && $donnaSuscripcion->service_type === 'personal')
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
                             <i class="bi bi-telegram me-1"></i> Canal Telegram
                         </h6>
 
-                        @if($donnaCanal && $donnaCanal->status === 'active')
-                            {{-- Canal ya vinculado --}}
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#e8f5e9;border:1px solid #c8e6c9;">
+                        @if($canalTelegram && $canalTelegram->status === 'active')
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#e8f5e9;border:1px solid #c8e6c9;">
                                 <i class="bi bi-telegram fs-3 text-success"></i>
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold text-success">
                                         <i class="bi bi-check-circle-fill me-1"></i>Telegram vinculado
                                     </div>
-                                    @if($donnaCanal->telegram_name || $donnaCanal->telegram_username)
+                                    @if($canalTelegram->telegram_name || $canalTelegram->telegram_username)
                                         <div class="text-muted small mt-1">
-                                            {{ $donnaCanal->telegram_name }}
-                                            @if($donnaCanal->telegram_username)
-                                                &nbsp;·&nbsp;&#64;{{ $donnaCanal->telegram_username }}
+                                            {{ $canalTelegram->telegram_name }}
+                                            @if($canalTelegram->telegram_username)
+                                                &nbsp;·&nbsp;&#64;{{ $canalTelegram->telegram_username }}
                                             @endif
                                         </div>
                                     @endif
-                                    @if($donnaCanal->activated_at)
-                                        <div class="text-muted small">Vinculado el {{ $donnaCanal->activated_at->format('d/m/Y H:i') }}</div>
+                                    @if($canalTelegram->activated_at)
+                                        <div class="text-muted small">Vinculado el {{ $canalTelegram->activated_at->format('d/m/Y H:i') }}</div>
                                     @endif
                                 </div>
                             </div>
 
-                        @elseif($donnaCanal && $donnaCanal->status === 'pending' && $donnaCanal->activation_code)
-                            {{-- Código pendiente de usar --}}
-                            <div class="p-3 rounded-3 mb-4" style="background:#f0f4ff;border:1px solid #c5cae9;">
+                        @elseif($canalTelegram && $canalTelegram->status === 'pending' && $canalTelegram->activation_code)
+                            <div class="p-3 rounded-3 mb-3" style="background:#f0f4ff;border:1px solid #c5cae9;">
                                 <div class="fw-semibold mb-2" style="color:#274698;">
                                     <i class="bi bi-key-fill me-1"></i>Tu código de activación Telegram
                                 </div>
@@ -1095,12 +1134,12 @@
                                     style="background:#fff;border:2px dashed #274698;max-width:320px;margin:0 auto;">
                                     <span class="fw-bold font-monospace" id="donna-code-historial"
                                         style="font-size:1.8rem;letter-spacing:.2em;color:#274698;">
-                                        {{ $donnaCanal->activation_code }}
+                                        {{ $canalTelegram->activation_code }}
                                     </span>
                                     <button type="button"
                                         class="btn btn-sm btn-outline-secondary"
                                         onclick="
-                                            navigator.clipboard.writeText('{{ $donnaCanal->activation_code }}');
+                                            navigator.clipboard.writeText('{{ $canalTelegram->activation_code }}');
                                             this.innerHTML='<i class=\'bi bi-check-lg\'></i>';
                                             this.classList.replace('btn-outline-secondary','btn-success');
                                             setTimeout(()=>{
@@ -1124,9 +1163,8 @@
                                 </div>
                             </div>
 
-                        @elseif(!$donnaCanal || $donnaCanal->status === 'inactive')
-                            {{-- Sin canal --}}
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#fff8e1;border:1px solid #ffe082;">
+                        @else
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fff8e1;border:1px solid #ffe082;">
                                 <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
                                 <div class="flex-grow-1 small text-muted">
                                     No tienes un canal Telegram configurado. Ve a
@@ -1135,51 +1173,9 @@
                                 </div>
                             </div>
                         @endif
-                        @endif
 
-                        {{-- Donna Subscription --}}
-                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
-                            <i class="bi bi-stars me-1"></i> Suscripción Donna
-                        </h6>
-
-                        @if($donnaSuscripcion)
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:#f4f6ff;border:1px solid #c5cae9;">
-                                <i class="bi bi-robot fs-3" style="color:#274698;"></i>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">{{ $donnaSuscripcion->plan?->name ?? 'Plan Donna' }}</div>
-                                    <div class="d-flex flex-wrap gap-2 mt-1">
-                                        <span class="badge bg-{{ $donnaSuscripcion->status_color }}">{{ $donnaSuscripcion->status_label }}</span>
-                                        @if($donnaSuscripcion->service_type === 'personal')
-                                            <span class="badge" style="background:#274698;">Personal</span>
-                                        @else
-                                            <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
-                                        @endif
-                                    </div>
-                                    @if($donnaSuscripcion->expires_at)
-                                        @php $dias = $donnaSuscripcion->daysRemaining(); @endphp
-                                        <div class="text-muted small mt-1">
-                                            Vence: {{ $donnaSuscripcion->expires_at->format('d/m/Y') }}
-                                            @if($dias !== null && $dias <= 7 && $dias >= 0)
-                                                <span class="text-warning fw-semibold ms-1">({{ $dias }} días restantes)</span>
-                                            @elseif($dias !== null && $dias < 0)
-                                                <span class="text-danger fw-semibold ms-1">(Vencida)</span>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
-                                    @endif
-                                </div>
-                            </div>
-                        @else
-                            <div class="p-3 rounded-3 text-center" style="background:#f8f9fa;border:1px dashed #dee2e6;">
-                                <i class="bi bi-robot fs-2 d-block mb-2 text-muted"></i>
-                                <div class="text-muted small">No tienes una suscripción Donna activa.</div>
-                                <a href="{{ route('donna') }}" class="btn btn-primary btn-sm rounded-pill mt-2">Ver planes Donna</a>
-                            </div>
-                        @endif
-
-                        {{-- ── Personalizar Donna ──────────────────────────────── --}}
-                        @if($donnaSuscripcion && $donnaSuscripcion->service_type === 'personal' && $donnaSuscripcion->status === 'active')
+                        {{-- Personalizar Donna Personal --}}
+                        @if($subPersonal->status === 'active')
                         <hr class="my-4">
 
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
@@ -1193,7 +1189,6 @@
                             </div>
                         @endif
 
-                        {{-- Vista previa del prompt actual --}}
                         <div class="accordion mb-4" id="accordionSystemMsg">
                             <div class="accordion-item border rounded-3 overflow-hidden">
                                 <h2 class="accordion-header">
@@ -1211,7 +1206,7 @@
                                         </p>
                                         <textarea class="form-control font-monospace" rows="12" readonly
                                                   style="background:#f8f9fa;resize:none;font-size:0.77rem;line-height:1.5;">{{ $donnaSystemPreview }}</textarea>
-                                        @if($donnaConfig?->main_prompt)
+                                        @if($donnaConfigPersonal?->main_prompt)
                                             <div class="alert alert-warning py-2 small mt-2 mb-0">
                                                 <i class="bi bi-exclamation-triangle me-1"></i>
                                                 Estás usando un <strong>prompt personalizado completo</strong>. El contenido de abajo reemplaza el prompt por defecto.
@@ -1222,7 +1217,6 @@
                             </div>
                         </div>
 
-                        {{-- Formulario de edición --}}
                         <form method="POST" action="{{ route('cliente.donna.config') }}">
                             @csrf
 
@@ -1233,15 +1227,15 @@
                                     <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.7rem;">Recomendado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Cuéntale a Donna quién eres: tu profesión, proyectos activos, preferencias de comunicación, horarios que no debes interrumpir, etc. Donna usará esto para ser más precisa y personalizada contigo.
+                                    Cuéntale a Donna quién eres: tu profesión, proyectos activos, preferencias de comunicación, horarios que no debes interrumpir, etc.
                                 </p>
                                 <textarea name="personal_context" id="personal_context_input"
                                           class="form-control" rows="5" maxlength="1000"
-                                          placeholder="Ejemplo: Soy diseñador freelance. Trabajo de 9am a 6pm de lunes a viernes. Prefiero respuestas cortas y directas. No agendar nada los domingos. Actualmente tengo 3 proyectos activos: rediseño de App X, branding de Y, y propuesta Z."
-                                >{{ $donnaConfig?->personal_context }}</textarea>
+                                          placeholder="Ejemplo: Soy diseñador freelance. Trabajo de 9am a 6pm de lunes a viernes. Prefiero respuestas cortas y directas."
+                                >{{ $donnaConfigPersonal?->personal_context }}</textarea>
                                 <div class="d-flex justify-content-end mt-1">
                                     <span class="text-muted small">
-                                        <span id="personal_context_count">{{ strlen($donnaConfig?->personal_context ?? '') }}</span>/1000
+                                        <span id="personal_context_count">{{ strlen($donnaConfigPersonal?->personal_context ?? '') }}</span>/1000
                                     </span>
                                 </div>
                             </div>
@@ -1253,13 +1247,13 @@
                                     <span class="badge bg-warning text-dark border ms-1" style="font-size:0.7rem;">Avanzado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Si lo dejas vacío, Donna usa su prompt por defecto (recomendado para la mayoría). Si escribes aquí, <strong>reemplaza completamente</strong> el prompt anterior — el "Contexto personal" se ignora.
-                                    Puedes usar las variables: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>.
+                                    Si lo dejas vacío, Donna usa su prompt por defecto (recomendado). Si escribes aquí, <strong>reemplaza completamente</strong> el prompt anterior.
+                                    Variables disponibles: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>.
                                 </p>
                                 <textarea name="main_prompt" class="form-control font-monospace" rows="9"
                                           maxlength="5000" style="font-size:0.8rem;"
                                           placeholder="Deja vacío para usar el prompt predeterminado de Donna..."
-                                >{{ $donnaConfig?->main_prompt }}</textarea>
+                                >{{ $donnaConfigPersonal?->main_prompt }}</textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
@@ -1267,7 +1261,135 @@
                             </button>
                         </form>
                         @endif
-                        {{-- ── Fin Personalizar ─────────────────────────────── --}}
+                        @endif
+                        {{-- ══ FIN DONNA PERSONAL ══════════════════════════════ --}}
+
+                        {{-- ══ DONNA BUSINESS ══════════════════════════════════ --}}
+                        @if($subBusiness)
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase small mb-3" style="color:#8a6218;">
+                            <i class="bi bi-briefcase-fill me-1"></i> Donna Business
+                        </h6>
+
+                        {{-- Suscripción Business --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
+                            <i class="bi bi-robot fs-3" style="color:#E4B100;"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ $subBusiness->plan?->name ?? 'Donna Business' }}</div>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    <span class="badge bg-{{ $subBusiness->status_color }}">{{ $subBusiness->status_label }}</span>
+                                    <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
+                                </div>
+                                @if($subBusiness->expires_at)
+                                    @php $diasB = $subBusiness->daysRemaining(); @endphp
+                                    <div class="text-muted small mt-1">
+                                        Vence: {{ $subBusiness->expires_at->format('d/m/Y') }}
+                                        @if($diasB !== null && $diasB <= 7 && $diasB >= 0)
+                                            <span class="text-warning fw-semibold ms-1">({{ $diasB }} días restantes)</span>
+                                        @elseif($diasB !== null && $diasB < 0)
+                                            <span class="text-danger fw-semibold ms-1">(Vencida)</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Canal WhatsApp --}}
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-whatsapp me-1"></i> Canal WhatsApp
+                        </h6>
+
+                        @if($canalWhatsapp && $canalWhatsapp->status === 'active')
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-3" style="background:#e8f5e9;border:1px solid #c8e6c9;">
+                                <i class="bi bi-whatsapp fs-3 text-success"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i>WhatsApp conectado
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        Instancia: <code>{{ $canalWhatsapp->instance_name }}</code>
+                                    </div>
+                                    @if($canalWhatsapp->provider)
+                                        <div class="text-muted small">Proveedor: {{ $canalWhatsapp->provider }}</div>
+                                    @endif
+                                    @if($canalWhatsapp->activated_at)
+                                        <div class="text-muted small">Conectado el {{ $canalWhatsapp->activated_at->format('d/m/Y H:i') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        @elseif($canalWhatsapp && $canalWhatsapp->status === 'pending')
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fff8e1;border:1px solid #ffe082;">
+                                <i class="bi bi-hourglass-split text-warning fs-3"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">WhatsApp pendiente de configuración</div>
+                                    <div class="text-muted small mt-1">
+                                        Instancia: <code>{{ $canalWhatsapp->instance_name }}</code>
+                                    </div>
+                                    <div class="text-muted small">El canal está siendo configurado por el equipo de Streamify.</div>
+                                </div>
+                            </div>
+
+                        @else
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fff8e1;border:1px solid #ffe082;">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+                                <div class="flex-grow-1 small text-muted">
+                                    No tienes un canal WhatsApp configurado. Contacta al equipo de Streamify para activarlo.
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Configuración Business --}}
+                        @if($donnaConfigBusiness)
+                        <h6 class="fw-bold text-uppercase text-muted small mb-2 mt-3">
+                            <i class="bi bi-gear me-1"></i> Configuración del agente
+                        </h6>
+                        <div class="p-3 rounded-3" style="background:#f9f9f9;border:1px solid #e9ecef;">
+                            <div class="row g-2 small text-muted">
+                                <div class="col-6">
+                                    <span class="fw-semibold text-dark">Nombre del agente:</span><br>
+                                    {{ $donnaConfigBusiness->agent_name ?? 'Donna' }}
+                                </div>
+                                <div class="col-6">
+                                    <span class="fw-semibold text-dark">Negocio:</span><br>
+                                    {{ $donnaConfigBusiness->business_name ?? '—' }}
+                                </div>
+                                <div class="col-6">
+                                    <span class="fw-semibold text-dark">Idioma:</span><br>
+                                    {{ $donnaConfigBusiness->language ?? 'es' }}
+                                </div>
+                                <div class="col-6">
+                                    <span class="fw-semibold text-dark">Zona horaria:</span><br>
+                                    {{ $donnaConfigBusiness->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil') }}
+                                </div>
+                                <div class="col-12 mt-1">
+                                    <span class="fw-semibold text-dark">Funciones activas:</span>
+                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                        @if($donnaIntegracion && $donnaIntegracion->isActive() && $donnaConfigBusiness->calendar_enabled)
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-calendar3 me-1"></i>Calendar</span>
+                                        @endif
+                                        @if($donnaIntegracion && $donnaIntegracion->isActive() && $donnaConfigBusiness->sheets_enabled)
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-grid me-1"></i>Sheets</span>
+                                        @endif
+                                        @if($donnaConfigBusiness->knowledge_enabled)
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-book me-1"></i>Knowledge</span>
+                                        @endif
+                                        @if(!($donnaIntegracion && $donnaIntegracion->isActive() && $donnaConfigBusiness->calendar_enabled) &&
+                                            !($donnaIntegracion && $donnaIntegracion->isActive() && $donnaConfigBusiness->sheets_enabled) &&
+                                            !$donnaConfigBusiness->knowledge_enabled)
+                                            <span class="text-muted">Ninguna función adicional habilitada</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        @endif
+                        {{-- ══ FIN DONNA BUSINESS ══════════════════════════════ --}}
 
                     </div>
                 </div>

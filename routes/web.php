@@ -99,6 +99,8 @@ Route::get('/donna', function () {
     $planBusiness = $planes->get('business')?->first();
     $googleConnected = false;
     $googleInfo = null;
+    $subPersonal = null;
+    $subBusiness = null;
     if (\Illuminate\Support\Facades\Auth::guard('cliente')->check()) {
         $clienteId = \Illuminate\Support\Facades\Auth::guard('cliente')->user()->idcli;
         $googleInteg = \App\Models\DonnaIntegration::where('client_id', $clienteId)
@@ -107,8 +109,18 @@ Route::get('/donna', function () {
             ->first();
         $googleConnected = (bool) $googleInteg;
         $googleInfo = $googleInteg?->metadata_json;
+        $subPersonal = \App\Models\DonnaSubscription::where('client_id', $clienteId)
+            ->where('service_type', 'personal')
+            ->whereIn('status', ['active', 'pending', 'suspended'])
+            ->latest()
+            ->first();
+        $subBusiness = \App\Models\DonnaSubscription::where('client_id', $clienteId)
+            ->where('service_type', 'business')
+            ->whereIn('status', ['active', 'pending', 'suspended'])
+            ->latest()
+            ->first();
     }
-    return view('donna', compact('planPersonal', 'planBusiness', 'googleConnected', 'googleInfo'));
+    return view('donna', compact('planPersonal', 'planBusiness', 'googleConnected', 'googleInfo', 'subPersonal', 'subBusiness'));
 })->name('donna');
 
 // Imagen de bancos servida por Laravel (compatible con hostings que bloquean /storage directo)

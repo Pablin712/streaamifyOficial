@@ -624,8 +624,38 @@
                                 </a>
                             @endif
 
-                            {{-- Botón de acción —→ abre modal de confirmación --}}
-                            @if ($planPersonal)
+                            {{-- Estado suscripción o botón de acción --}}
+                            @if ($subPersonal && $subPersonal->status === 'active')
+                                <div class="d-flex align-items-center gap-2 p-3 rounded-3" style="background:#e8f5e9;">
+                                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-bold text-success">Donna Personal activa</div>
+                                        <div class="text-muted">
+                                            @if ($subPersonal->expires_at)
+                                                Vence {{ $subPersonal->expires_at->format('d/m/Y') }}
+                                            @else
+                                                Sin vencimiento
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif ($subPersonal && $subPersonal->status === 'pending')
+                                <div class="d-flex align-items-center gap-2 p-3 rounded-3 border border-warning" style="background:#fffbea;">
+                                    <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-bold text-warning">Solicitud pendiente</div>
+                                        <div class="text-muted">El equipo activará Donna Personal en breve.</div>
+                                    </div>
+                                </div>
+                            @elseif ($subPersonal && $subPersonal->status === 'suspended')
+                                <div class="d-flex align-items-center gap-2 p-3 rounded-3 border border-danger" style="background:#fff5f5;">
+                                    <i class="bi bi-pause-circle-fill text-danger fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-bold text-danger">Suscripción suspendida</div>
+                                        <div class="text-muted">Contáctanos para reactivar.</div>
+                                    </div>
+                                </div>
+                            @elseif ($planPersonal)
                                 @if ($googleConnected)
                                     <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
                                         style="background-color:var(--donna-blue);color:#fff;"
@@ -739,8 +769,38 @@
                                 </a>
                             @endif
 
-                            {{-- Botón de acción --}}
-                            @if ($planBusiness)
+                            {{-- Estado suscripción o botón de acción --}}
+                            @if ($subBusiness && $subBusiness->status === 'active')
+                                <div class="d-flex align-items-center gap-2 p-3 rounded-3" style="background:#fffbea;">
+                                    <i class="bi bi-check-circle-fill fs-5" style="color:#c9890a;"></i>
+                                    <div class="small">
+                                        <div class="fw-bold" style="color:#c9890a;">Donna Business activa</div>
+                                        <div class="text-muted">
+                                            @if ($subBusiness->expires_at)
+                                                Vence {{ $subBusiness->expires_at->format('d/m/Y') }}
+                                            @else
+                                                Sin vencimiento
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif ($subBusiness && $subBusiness->status === 'pending')
+                                <div class="d-flex align-items-center gap-2 p-3 rounded-3 border border-warning" style="background:#fffbea;">
+                                    <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-bold text-warning">Solicitud pendiente</div>
+                                        <div class="text-muted">El equipo activará Donna Business en breve.</div>
+                                    </div>
+                                </div>
+                            @elseif ($subBusiness && $subBusiness->status === 'suspended')
+                                <div class="d-flex align-items-center gap-2 p-3 rounded-3 border border-danger" style="background:#fff5f5;">
+                                    <i class="bi bi-pause-circle-fill text-danger fs-5"></i>
+                                    <div class="small">
+                                        <div class="fw-bold text-danger">Suscripción suspendida</div>
+                                        <div class="text-muted">Contáctanos para reactivar.</div>
+                                    </div>
+                                </div>
+                            @elseif ($planBusiness)
                                 @if ($googleConnected)
                                     <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
                                         style="background-color:var(--donna-yellow);color:var(--donna-dark);"
