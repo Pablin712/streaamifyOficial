@@ -420,6 +420,48 @@ Route::prefix('donna')->middleware(['donna.api'])->group(function () {
         Route::post('/complete-task', [DonnaSheetsToolController::class, 'completeTask'])->name('api.donna.sheets.complete');
     });
 });
+// ===== DONNA BUSINESS API =====
+use App\Http\Controllers\Api\Donna\Business\DonnaBusinessIngestController;
+use App\Http\Controllers\Api\Donna\Business\DonnaBusinessMessageController;
+use App\Http\Controllers\Api\Donna\Business\DonnaBusinessContextController;
+use App\Http\Controllers\Api\Donna\Business\DonnaBusinessRespondController;
+use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessKnowledgeToolController;
+use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessMemoryToolController;
+use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessCalendarToolController;
+use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessSheetsToolController;
+use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessCustomerContextController;
+use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessDataToolController;
+
+Route::prefix('donna/business')->middleware(['donna.api'])->group(function () {
+    // Core flows
+    Route::post('/ingest',                                    [DonnaBusinessIngestController::class, 'store'])->name('api.donna.business.ingest');
+    Route::patch('/messages/{message_id}/extractions',        [DonnaBusinessMessageController::class, 'updateExtractions'])->name('api.donna.business.message.extractions');
+    Route::get('/context',                                    [DonnaBusinessContextController::class, 'show'])->name('api.donna.business.context');
+    Route::post('/save-respond',                              [DonnaBusinessRespondController::class, 'store'])->name('api.donna.business.save-respond');
+
+    // Tools
+    Route::prefix('tools')->group(function () {
+        Route::post('/knowledge/search',         [DonnaBusinessKnowledgeToolController::class, 'search'])->name('api.donna.business.knowledge.search');
+        Route::post('/memory/search',            [DonnaBusinessMemoryToolController::class, 'search'])->name('api.donna.business.memory.search');
+        Route::post('/customer/context-search',  [DonnaBusinessCustomerContextController::class, 'search'])->name('api.donna.business.customer.context-search');
+        Route::post('/data/query',               [DonnaBusinessDataToolController::class, 'query'])->name('api.donna.business.data.query');
+        Route::post('/data/upsert-lead',         [DonnaBusinessDataToolController::class, 'upsertLead'])->name('api.donna.business.data.upsert-lead');
+
+        Route::prefix('calendar')->group(function () {
+            Route::post('/list-events',  [DonnaBusinessCalendarToolController::class, 'listEvents'])->name('api.donna.business.calendar.list');
+            Route::post('/freebusy',     [DonnaBusinessCalendarToolController::class, 'freebusy'])->name('api.donna.business.calendar.freebusy');
+            Route::post('/create-event', [DonnaBusinessCalendarToolController::class, 'createEvent'])->name('api.donna.business.calendar.create');
+            Route::post('/update-event', [DonnaBusinessCalendarToolController::class, 'updateEvent'])->name('api.donna.business.calendar.update');
+            Route::post('/delete-event', [DonnaBusinessCalendarToolController::class, 'deleteEvent'])->name('api.donna.business.calendar.delete');
+        });
+
+        Route::prefix('sheets')->group(function () {
+            Route::post('/get-rows',    [DonnaBusinessSheetsToolController::class, 'getRows'])->name('api.donna.business.sheets.get');
+            Route::post('/append-row',  [DonnaBusinessSheetsToolController::class, 'appendRow'])->name('api.donna.business.sheets.append');
+            Route::post('/update-row',  [DonnaBusinessSheetsToolController::class, 'updateRow'])->name('api.donna.business.sheets.update');
+        });
+    });
+});
 // ===== FIN DONNA API =====
 
 // ===== CHAT MODULE START =====

@@ -17,6 +17,12 @@ class DonnaSheetsTaskService
         return Http::withToken($token)->acceptJson();
     }
 
+    private function googleError(\Illuminate\Http\Client\Response $response): array
+    {
+        $body = $response->json();
+        return $body['error'] ?? ['code' => $response->status(), 'message' => $body['message'] ?? 'Error desconocido de Google.'];
+    }
+
     public function getTasks(string $token, string $spreadsheetId, bool $includeCompleted = false): array
     {
         $response = $this->http($token)->get(
@@ -24,7 +30,7 @@ class DonnaSheetsTaskService
         );
 
         if (!$response->successful()) {
-            return ['success' => false, 'google_error' => $response->json()];
+            return ['success' => false, 'google_error' => $this->googleError($response)];
         }
 
         $rows   = $response->json('values', []);
@@ -60,7 +66,7 @@ class DonnaSheetsTaskService
         );
 
         if (!$response->successful()) {
-            return ['success' => false, 'google_error' => $response->json()];
+            return ['success' => false, 'google_error' => $this->googleError($response)];
         }
 
         $updatedRange = $response->json('updates.updatedRange', '');

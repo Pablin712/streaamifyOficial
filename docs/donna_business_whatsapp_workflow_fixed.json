@@ -1,0 +1,631 @@
+{
+  "name": "Donna Business WhatsApp SaaS - Fixed",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "donna-business-whatsapp",
+        "responseMode": "onReceived",
+        "options": { "responseCode": 200 }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 620],
+      "id": "a1b0f5ab-0ad6-4cfc-a07e-c4c21ee87470",
+      "name": "Webhook Evo API"
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $input.first().json || {};\nconst body = Array.isArray(root) ? (root[0]?.body || root[0]) : (root.body || root);\nconst data = body.data || {};\nconst key = data.key || {};\nconst messagePayload = data.message || {};\n\nconst instanceName = body.instance || data.instance || '';\nconst instanceId = data.instanceId || null;\nconst serverUrl = body.server_url || body.serverUrl || body.serverURL || $env.EVO_DEFAULT_SERVER_URL || '';\nconst event = body.event || '';\nconst remoteJid = key.remoteJid || key.remoteJidAlt || '';\nconst remoteJidAlt = key.remoteJidAlt || null;\nconst senderIdentifier = String(remoteJid || '').split('@')[0] || '';\nconst fromMe = Boolean(key.fromMe);\nconst providerMessageId = key.id || null;\nconst pushName = data.pushName || 'Cliente';\nconst messageTimestamp = data.messageTimestamp || null;\n\nlet messageType = data.messageType || 'unknown';\nlet contentText =\n  messagePayload.conversation ||\n  messagePayload.extendedTextMessage?.text ||\n  messagePayload.imageMessage?.caption ||\n  messagePayload.videoMessage?.caption ||\n  messagePayload.documentMessage?.caption ||\n  '';\n\nlet captionText =\n  messagePayload.imageMessage?.caption ||\n  messagePayload.videoMessage?.caption ||\n  messagePayload.documentMessage?.caption ||\n  null;\n\nlet mediaType = null;\nlet mediaUrl = null;\nlet mediaMimeType = null;\nlet mediaFileName = null;\n\nif (messagePayload.audioMessage) {\n  mediaType = 'audio';\n  mediaUrl = messagePayload.audioMessage.url || null;\n  mediaMimeType = messagePayload.audioMessage.mimetype || messagePayload.audioMessage.mimeType || 'audio/ogg';\n} else if (messagePayload.imageMessage) {\n  mediaType = 'image';\n  mediaUrl = messagePayload.imageMessage.url || null;\n  mediaMimeType = messagePayload.imageMessage.mimetype || messagePayload.imageMessage.mimeType || 'image/jpeg';\n} else if (messagePayload.documentMessage) {\n  mediaType = 'document';\n  mediaUrl = messagePayload.documentMessage.url || null;\n  mediaMimeType = messagePayload.documentMessage.mimetype || messagePayload.documentMessage.mimeType || null;\n  mediaFileName = messagePayload.documentMessage.fileName || null;\n} else if (messagePayload.videoMessage) {\n  mediaType = 'video';\n  mediaUrl = messagePayload.videoMessage.url || null;\n  mediaMimeType = messagePayload.videoMessage.mimetype || messagePayload.videoMessage.mimeType || 'video/mp4';\n} else if (messagePayload.stickerMessage) {\n  mediaType = 'sticker';\n  mediaUrl = messagePayload.stickerMessage.url || null;\n  mediaMimeType = messagePayload.stickerMessage.mimetype || messagePayload.stickerMessage.mimeType || 'image/webp';\n}\n\nconst routeType = mediaType || 'text';\n\nreturn [{\n  json: {\n    provider: 'evolution_api',\n    event,\n    instance_name: instanceName,\n    instance_id: instanceId,\n    server_url: serverUrl,\n    remote_jid: remoteJid,\n    remote_jid_alt: remoteJidAlt,\n    sender_identifier: senderIdentifier,\n    sender_name: pushName,\n    from_me: fromMe,\n    provider_message_id: providerMessageId,\n    message_type: messageType,\n    route_type: routeType,\n    content_text: contentText,\n    caption_text: captionText,\n    message_timestamp: messageTimestamp,\n    has_media: Boolean(mediaType),\n    media_type: mediaType,\n    media_url: mediaUrl,\n    media_mime_type: mediaMimeType,\n    media_file_name: mediaFileName,\n    instance: {\n      name: instanceName,\n      server_url: serverUrl,\n      apikey: body.apikey || $env.EVO_API_KEY || ''\n    },\n    message: {\n      id: providerMessageId,\n      key: key,\n      type: messageType,\n      body: messagePayload\n    },\n    contact: {\n      numero: senderIdentifier,\n      nombre: pushName,\n      jid: remoteJid,\n      tipo: 'cliente_final'\n    },\n    raw_payload: body\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 620],
+      "id": "a2fa7dd2-e2ae-4b97-a1a9-3379458257ec",
+      "name": "Normalizar Evo Payload"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "0b86ecfa", "leftValue": "={{ $json.from_me ? 'from_me' : 'cliente' }}", "rightValue": "from_me", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "fromMe" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "2843dcac", "leftValue": "={{ $json.from_me ? 'from_me' : 'cliente' }}", "rightValue": "cliente", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "clienteFinal" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [520, 620],
+      "id": "8d63f011-e649-44e0-b3a5-a69e3c7e7255",
+      "name": "¿fromMe?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/ingest",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"provider\": \"{{ $json.provider }}\",\n  \"event\": \"{{ $json.event }}\",\n  \"instance_name\": \"{{ $json.instance_name }}\",\n  \"instance_id\": \"{{ $json.instance_id }}\",\n  \"server_url\": \"{{ $json.server_url }}\",\n  \"remote_jid\": \"{{ $json.remote_jid }}\",\n  \"sender_identifier\": \"{{ $json.sender_identifier }}\",\n  \"sender_name\": \"{{ $json.sender_name }}\",\n  \"from_me\": true,\n  \"provider_message_id\": \"{{ $json.provider_message_id }}\",\n  \"message_type\": \"{{ $json.message_type }}\",\n  \"content_text\": \"{{ $json.content_text }}\",\n  \"message_timestamp\": \"{{ $json.message_timestamp }}\",\n  \"raw_payload\": {{ JSON.stringify($json.raw_payload) }}\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [780, 420],
+      "id": "f7e23750-42c3-46b7-b421-61bc869ea99e",
+      "name": "POST Ingest fromMe / Ignorar loop",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "5059800a", "leftValue": "={{ $json.route_type }}", "rightValue": "text", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "texto" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "3c04e53c", "leftValue": "={{ $json.route_type }}", "rightValue": "audio", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "audio" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "2a8bdad1", "leftValue": "={{ $json.route_type }}", "rightValue": "image", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "imagen" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "c70a3434", "leftValue": "={{ $json.route_type }}", "rightValue": "document", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "documento" }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [780, 720],
+      "id": "52963953-a00e-4a4d-af52-34f4407ad5d8",
+      "name": "Switch tipo de mensaje"
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "10151a1f", "name": "processed_type", "value": "text", "type": "string" },
+          { "id": "aeb70e5b", "name": "agent_input_text", "value": "={{ $json.content_text }}", "type": "string" },
+          { "id": "b964d9cf", "name": "transcription_text", "value": "", "type": "string" },
+          { "id": "c721e8f6", "name": "ocr_text", "value": "", "type": "string" },
+          { "id": "c5ba0f4f", "name": "image_analysis_json", "value": "", "type": "string" }
+        ]},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1060, 520],
+      "id": "1828701e-e737-4f90-b9cc-d71181b7b906",
+      "name": "Preparar texto para ingest"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.instance.server_url }}/chat/getBase64FromMediaMessage/{{ $json.instance.name }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $json.instance.apikey }}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "message.key.id", "value": "={{ $json.message.id }}" }, { "name": "convertToMp4", "value": "={{ Boolean(false) }}" }] },
+        "options": { "timeout": 60000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1060, 700],
+      "id": "7de9f4db-7cfa-47d8-a569-71bf6e8974c6",
+      "name": "Get audio"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": { "mimeType": "={{ $json.mimetype || $('Normalizar Evo Payload').first().json.media_mime_type || 'audio/ogg' }}" }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [1300, 700],
+      "id": "01afbaf8-f4ff-437e-aa25-86078491a137",
+      "name": "Convert audio"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [1540, 700],
+      "id": "adcae8b5-4733-4d59-95ee-ca03711245f8",
+      "name": "Transcribe",
+      "credentials": { "openAiApi": { "id": "dBPlamBZ6NHPVTxU", "name": "OpenAi Pablin" } }
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "09756ad8", "name": "processed_type", "value": "audio", "type": "string" },
+          { "id": "9a11aa91", "name": "transcription_text", "value": "={{ $json.text || $json.transcription || $json.transcription_text || '' }}", "type": "string" },
+          { "id": "04a4f589", "name": "agent_input_text", "value": "={{ $json.text || $json.transcription || $json.transcription_text || '[Audio recibido sin transcripción]' }}", "type": "string" },
+          { "id": "903ae17e", "name": "ocr_text", "value": "", "type": "string" },
+          { "id": "951bba6c", "name": "image_analysis_json", "value": "", "type": "string" }
+        ]},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1780, 700],
+      "id": "987a42f2-1fd8-44b1-909f-bbf2d2e7ef4a",
+      "name": "Preparar audio para ingest"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.instance.server_url }}/chat/getBase64FromMediaMessage/{{ $json.instance.name }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "apikey", "value": "={{ $json.instance.apikey }}" }] },
+        "sendBody": true,
+        "bodyParameters": { "parameters": [{ "name": "message.key.id", "value": "={{ $json.message.id }}" }, { "name": "convertToMp4", "value": "={{ Boolean(false) }}" }] },
+        "options": { "timeout": 60000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1060, 900],
+      "id": "904304dd-cb41-4fff-800b-ca56b417c895",
+      "name": "Get imagen"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": { "mimeType": "={{ $json.mimetype || $('Normalizar Evo Payload').first().json.media_mime_type || 'image/jpeg' }}" }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [1300, 900],
+      "id": "2fa33952-9011-4362-835d-25a2c9972cf8",
+      "name": "Convert image"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": { "__rl": true, "value": "gpt-4o-mini", "mode": "list", "cachedResultName": "GPT-4O-MINI" },
+        "text": "Analiza la imagen recibida para Donna Business.\n\nDevuelve SOLO JSON válido sin markdown.\n\nSi la imagen contiene texto útil para atender al cliente, extrae ese texto.\nSi es comprobante de pago, extrae datos visibles.\nSi no es comprobante, describe claramente la imagen.\n\nFormato:\n{\n  \"tipo\": \"comprobante | captura | producto | documento | otra\",\n  \"es_comprobante\": true,\n  \"descripcion\": \"descripción breve\",\n  \"texto_detectado\": \"texto visible u OCR\",\n  \"datos\": {\n    \"monto\": null,\n    \"banco\": null,\n    \"fecha\": null,\n    \"comprobante\": null,\n    \"emisor\": null,\n    \"titular\": null\n  },\n  \"confianza\": 85\n}\n\nNo inventes datos. Si no se ve algo, usa null.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [1540, 900],
+      "id": "ad6447b0-5e28-4540-8688-97ca93bd5755",
+      "name": "Analyze",
+      "credentials": { "openAiApi": { "id": "dBPlamBZ6NHPVTxU", "name": "OpenAi Pablin" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nlet raw =\n  input?.[\"0\"]?.content?.[0]?.text ||\n  input?.content?.[0]?.text ||\n  input?.message?.content ||\n  input?.text ||\n  \"\";\n\nif (typeof raw !== \"string\") raw = JSON.stringify(raw);\n\nraw = raw.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {\n    tipo: \"imagen\",\n    es_comprobante: false,\n    descripcion: raw || \"Imagen recibida sin análisis estructurado\",\n    texto_detectado: \"\",\n    confianza: null\n  };\n}\n\nconst caption = $('Normalizar Evo Payload').first().json.caption_text || \"\";\n\nconst descripcion = parsed.descripcion || \"\";\nconst textoDetectado = parsed.texto_detectado || parsed.ocr_text || parsed.content || \"\";\n\nconst agentInput = [\n  caption ? `Caption del cliente: ${caption}` : \"\",\n  descripcion ? `Descripción de imagen: ${descripcion}` : \"\",\n  textoDetectado ? `Texto detectado en imagen: ${textoDetectado}` : \"\",\n  parsed.es_comprobante ? `Datos de comprobante: ${JSON.stringify(parsed.datos || parsed.data || {})}` : \"\"\n].filter(Boolean).join(\"\\n\\n\") || \"[Imagen recibida sin texto detectable]\";\n\nreturn [{\n  json: {\n    processed_type: \"image\",\n    ocr_text: textoDetectado || descripcion || \"\",\n    transcription_text: \"\",\n    image_analysis_json: JSON.stringify(parsed),\n    agent_input_text: agentInput\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 900],
+      "id": "96a3f530-e6c4-474c-88a4-c4dcbdc6e222",
+      "name": "Parsear imagen"
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "a23ef276", "name": "processed_type", "value": "={{ $json.route_type }}", "type": "string" },
+          { "id": "c360af52", "name": "agent_input_text", "value": "={{ $json.content_text || $json.caption_text || '[Mensaje multimedia recibido]' }}", "type": "string" },
+          { "id": "af5140b3", "name": "transcription_text", "value": "", "type": "string" },
+          { "id": "b36783dd", "name": "ocr_text", "value": "", "type": "string" },
+          { "id": "22f79fda", "name": "image_analysis_json", "value": "", "type": "string" }
+        ]},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1060, 1080],
+      "id": "7c1e8693-f8ef-4d2f-a476-ed94d6552d51",
+      "name": "Preparar documento/otro para ingest"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/ingest",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"provider\": \"{{ $('Normalizar Evo Payload').first().json.provider }}\",\n  \"event\": \"{{ $('Normalizar Evo Payload').first().json.event }}\",\n  \"instance_name\": \"{{ $('Normalizar Evo Payload').first().json.instance_name }}\",\n  \"instance_id\": \"{{ $('Normalizar Evo Payload').first().json.instance_id }}\",\n  \"server_url\": \"{{ $('Normalizar Evo Payload').first().json.server_url }}\",\n  \"remote_jid\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid }}\",\n  \"remote_jid_alt\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid_alt }}\",\n  \"sender_identifier\": \"{{ $('Normalizar Evo Payload').first().json.sender_identifier }}\",\n  \"sender_name\": \"{{ $('Normalizar Evo Payload').first().json.sender_name }}\",\n  \"from_me\": false,\n  \"provider_message_id\": \"{{ $('Normalizar Evo Payload').first().json.provider_message_id }}\",\n  \"message_type\": \"{{ $('Normalizar Evo Payload').first().json.message_type }}\",\n  \"processed_type\": \"{{ $json.processed_type }}\",\n  \"content_text\": \"{{ $json.agent_input_text || $('Normalizar Evo Payload').first().json.content_text }}\",\n  \"caption_text\": \"{{ $('Normalizar Evo Payload').first().json.caption_text }}\",\n  \"transcription_text\": \"{{ $json.transcription_text }}\",\n  \"ocr_text\": \"{{ $json.ocr_text }}\",\n  \"image_analysis_json\": \"{{ $json.image_analysis_json }}\",\n  \"message_timestamp\": \"{{ $('Normalizar Evo Payload').first().json.message_timestamp }}\",\n  \"has_media\": {{ $('Normalizar Evo Payload').first().json.has_media }},\n  \"media_type\": \"{{ $('Normalizar Evo Payload').first().json.media_type }}\",\n  \"media_url\": \"{{ $('Normalizar Evo Payload').first().json.media_url }}\",\n  \"media_mime_type\": \"{{ $('Normalizar Evo Payload').first().json.media_mime_type }}\",\n  \"raw_payload\": {{ JSON.stringify($('Normalizar Evo Payload').first().json.raw_payload) }}\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2040, 760],
+      "id": "57ec987c-f183-483e-bfbb-d26ef6216954",
+      "name": "POST Donna Business Ingest"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "d5811c1a", "leftValue": "={{ $json.allowed ? 'allowed' : 'blocked' }}", "rightValue": "allowed", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "allowed" },
+            { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 }, "conditions": [{ "id": "e4d4c84c", "leftValue": "={{ $json.allowed ? 'allowed' : 'blocked' }}", "rightValue": "blocked", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "blocked" }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [2300, 760],
+      "id": "dc69ffd3-fcb4-4fca-b567-51e3930feb64",
+      "name": "¿Donna Business permitida?"
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "1079e575", "name": "status", "value": "blocked", "type": "string" },
+          { "id": "a5dd5a7f", "name": "reason", "value": "={{ $json.reason || 'not_allowed' }}", "type": "string" },
+          { "id": "f921eb10", "name": "message", "value": "={{ $json.message || 'Donna Business no está activa para este negocio.' }}", "type": "string" }
+        ]},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2540, 980],
+      "id": "d2436149-85a8-4199-94d9-1a811b07af3a",
+      "name": "No responder / Servicio bloqueado"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/context",
+        "sendQuery": true,
+        "queryParameters": { "parameters": [
+          { "name": "client_id", "value": "={{ $json.client.id }}" },
+          { "name": "service_id", "value": "={{ $json.service.id }}" },
+          { "name": "channel_id", "value": "={{ $json.channel.id }}" },
+          { "name": "conversation_id", "value": "={{ $json.conversation.id }}" },
+          { "name": "message_id", "value": "={{ $json.message.id }}" }
+        ]},
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }] },
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2540, 660],
+      "id": "17a1a30c-9a8e-4352-b640-061bafd9d324",
+      "name": "GET Donna Business Context"
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "f81ac923", "name": "client_id", "value": "={{ $json.client.id }}", "type": "number" },
+          { "id": "311b3cee", "name": "service_id", "value": "={{ $json.service.id }}", "type": "number" },
+          { "id": "aeb738f5", "name": "channel_id", "value": "={{ $json.channel.id }}", "type": "number" },
+          { "id": "fefaff60", "name": "conversation_id", "value": "={{ $json.conversation.id }}", "type": "number" },
+          { "id": "3324fe22", "name": "message_id", "value": "={{ $('POST Donna Business Ingest').first().json.message.id }}", "type": "number" },
+          { "id": "2b365a0d", "name": "external_chat_id", "value": "={{ $json.conversation.external_chat_id }}", "type": "string" },
+          { "id": "37958394", "name": "sender_identifier", "value": "={{ $('Normalizar Evo Payload').first().json.sender_identifier }}", "type": "string" },
+          { "id": "4921ce92", "name": "sender_name", "value": "={{ $json.conversation.sender_name || $('Normalizar Evo Payload').first().json.sender_name }}", "type": "string" },
+          { "id": "75fd4992", "name": "session_key", "value": "={{ $json.memory.session_key || ('donna-business:' + $json.client.id + ':' + $json.conversation.id) }}", "type": "string" },
+          { "id": "57f18f8a", "name": "system_message", "value": "={{ $json.agent.system_message }}", "type": "string" },
+          {
+            "id": "37ced78b",
+            "name": "input_text",
+            "value": "={{ $('POST Donna Business Ingest').first().json.message.effective_text || $('POST Donna Business Ingest').first().json.message.content_for_agent || $('Normalizar Evo Payload').first().json.content_text }}",
+            "type": "string"
+          },
+          { "id": "08a9784e", "name": "server_url", "value": "={{ $json.channel.server_url || $('Normalizar Evo Payload').first().json.server_url }}", "type": "string" },
+          { "id": "7a37dd6b", "name": "instance_name", "value": "={{ $json.channel.instance_name || $('Normalizar Evo Payload').first().json.instance_name }}", "type": "string" },
+          {
+            "id": "evo-api-key-001",
+            "name": "evo_api_key",
+            "value": "={{ $json.channel.evo_api_key || $env.EVO_API_KEY || '' }}",
+            "type": "string"
+          }
+        ]},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2780, 660],
+      "id": "965f984f-772d-447a-af7e-ea286c2b6548",
+      "name": "Guardar contexto Business"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Guardar contexto Business').first().json.input_text }}",
+        "options": { "systemMessage": "={{ $('Guardar contexto Business').first().json.system_message }}" }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [3060, 660],
+      "id": "42ef3b8a-91a0-43aa-a2e8-eeb9d5054243",
+      "name": "AI Agent Donna Business",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": { "options": {} },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [2840, 980],
+      "id": "f2e45f43-eafa-4d1d-8f21-21ba752658f2",
+      "name": "DeepSeek Chat Model",
+      "credentials": { "deepSeekApi": { "id": "miOzEyelkvZ6G51F", "name": "DeepSeek account 2" } }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Guardar contexto Business').first().json.session_key }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [3040, 980],
+      "id": "bea536e9-c97f-47a3-b5ff-cee053e1ce24",
+      "name": "Simple Memory Business"
+    },
+    {
+      "parameters": { "options": { "timezone": "America/Guayaquil" } },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [3240, 980],
+      "id": "d3fada3c-471a-43ab-ad9b-a597346e4dc7",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Busca en la base de conocimientos general del negocio: productos, servicios, precios, políticas, horarios y FAQ. Úsala cuando el cliente pregunte por precios, disponibilidad, servicios o información del negocio.",
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/tools/knowledge/search",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"query\": \"{{ $fromAI('query', 'Consulta del cliente sobre el negocio, producto o servicio', 'string') }}\",\n  \"limit\": 5\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [2680, 1280],
+      "id": "f6519a99-8fb9-466b-b4d6-8b9d290cb64d",
+      "name": "donna_business_knowledge_search"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Busca historial, pedidos, citas o datos previos del cliente final (su número de WhatsApp). Úsala cuando el cliente diga: lo de antes, mi pedido, mi cita, como quedamos, ya te dije, o cuando necesites contexto histórico de este cliente específico.",
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/tools/customer/context-search",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"external_chat_id\": \"{{ $('Guardar contexto Business').first().json.external_chat_id }}\",\n  \"sender_identifier\": \"{{ $('Guardar contexto Business').first().json.sender_identifier }}\",\n  \"query\": \"{{ $fromAI('query', 'Dato del cliente final que necesitas recuperar de su historial', 'string') }}\",\n  \"limit\": 10\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [2940, 1280],
+      "id": "5ede519c-e812-4e35-96cb-2b0dfc71bc64",
+      "name": "donna_business_customer_context_search"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta memoria histórica del chat cuando el cliente menciona algo pasado de esta conversación. Diferente al customer_context_search: este busca dentro del hilo actual de mensajes.",
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/tools/memory/search",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"query\": \"{{ $fromAI('query', 'Contexto del hilo actual que necesitas recuperar', 'string') }}\",\n  \"limit\": 10\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [3200, 1280],
+      "id": "91023001-0721-4716-abbc-5e56f9219d90",
+      "name": "donna_business_memory_search"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Opcional. Verifica disponibilidad en Google Calendar del negocio antes de confirmar una cita. Solo usar si Calendar está habilitado según el system message.",
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/tools/calendar/freebusy",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"time_min\": \"{{ $fromAI('time_min', 'Inicio ISO 8601 con offset -05:00. Ej: 2026-05-29T09:00:00-05:00', 'string') }}\",\n  \"time_max\": \"{{ $fromAI('time_max', 'Fin ISO 8601 con offset -05:00. Ej: 2026-05-29T18:00:00-05:00', 'string') }}\",\n  \"timezone\": \"America/Guayaquil\"\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [3460, 1280],
+      "id": "c48bbda2-7faa-41c9-b8cc-7363adb3c4eb",
+      "name": "donna_business_calendar_freebusy"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Opcional. Crea cita en Google Calendar del negocio. Siempre usa freebusy antes. Confirma la cita al cliente SOLO si success=true.",
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/tools/calendar/create-event",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"summary\": \"{{ $fromAI('summary', 'Título de la cita incluyendo nombre del cliente', 'string') }}\",\n  \"description\": \"{{ $fromAI('description', 'Descripción de la cita y datos del cliente', 'string') }}\",\n  \"start\": \"{{ $fromAI('start', 'Inicio ISO 8601 con offset -05:00', 'string') }}\",\n  \"end\": \"{{ $fromAI('end', 'Fin ISO 8601 con offset -05:00', 'string') }}\",\n  \"timezone\": \"America/Guayaquil\"\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [3720, 1280],
+      "id": "41e39ea5-4ade-4e7a-8034-914f9b32367d",
+      "name": "donna_business_calendar_create_event"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Opcional. Registra leads, pedidos, citas o ventas en Google Sheets del negocio si Sheets está habilitado según el system message.",
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/tools/sheets/append-row",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"values\": [\n    \"{{ $fromAI('nombre', 'Nombre del cliente final', 'string') }}\",\n    \"{{ $('Guardar contexto Business').first().json.sender_identifier }}\",\n    \"{{ $fromAI('interes', 'Producto o servicio de interés', 'string') }}\",\n    \"{{ $fromAI('nota', 'Nota o estado del lead', 'string') }}\",\n    \"{{ new Date().toISOString() }}\"\n  ]\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [3980, 1280],
+      "id": "447e2d54-6d8e-4960-a575-4b46ffa3b01a",
+      "name": "donna_business_sheets_append_row"
+    },
+    {
+      "parameters": {
+        "jsCode": "let text = $json.output || $json.text || $json.response || \"\";\n\nif (typeof text !== \"string\") text = JSON.stringify(text, null, 2);\n\n// WhatsApp: formato simple (no HTML, usa *negrita* nativo)\ntext = text.replace(/^#{1,6}\\s*/gm, \"\");\ntext = text.replace(/\\*\\*(.*?)\\*\\*/g, \"*$1*\");\ntext = text.replace(/`{1,3}([\\s\\S]*?)`{1,3}/g, \"$1\");\ntext = text.replace(/\\[(.*?)\\]\\((.*?)\\)/g, \"$1\");\n\nreturn [{ json: { text: text.trim() || \"Listo.\" } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3360, 660],
+      "id": "c815c584-232e-4d4e-8d92-a98d8644c54d",
+      "name": "Formatear respuesta WhatsApp"
+    },
+    {
+      "parameters": {
+        "assignments": { "assignments": [
+          { "id": "c272de2a", "name": "text", "value": "={{ $json.text }}", "type": "string" },
+          { "id": "9fc85834", "name": "number", "value": "={{ $('Guardar contexto Business').first().json.sender_identifier }}", "type": "string" }
+        ]},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3600, 660],
+      "id": "046446b3-20e1-4d6e-85dc-d1f41207fccf",
+      "name": "Respuesta final"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Guardar contexto Business').first().json.server_url }}/message/sendText/{{ $('Guardar contexto Business').first().json.instance_name }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "apikey", "value": "={{ $('Guardar contexto Business').first().json.evo_api_key }}" },
+          { "name": "Accept", "value": "application/json" },
+          { "name": "Content-Type", "value": "application/json" }
+        ]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $('Respuesta final').first().json.number }}\",\n  \"text\": \"{{ $('Respuesta final').first().json.text }}\"\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3840, 660],
+      "id": "34c584a2-f5ed-4260-83ef-bc89fad5c1c7",
+      "name": "Enviar mensaje Evo API",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STREAMIFY_BASE_URL }}/api/donna/business/save-respond",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Donna-Key", "value": "={{ $env.DONNA_API_KEY }}" }, { "name": "Accept", "value": "application/json" }, { "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"message_id\": \"{{ $('Guardar contexto Business').first().json.message_id }}\",\n  \"sender_type\": \"ai_agent\",\n  \"direction\": \"outbound\",\n  \"external_chat_id\": \"{{ $('Guardar contexto Business').first().json.external_chat_id }}\",\n  \"recipient_number\": \"{{ $('Guardar contexto Business').first().json.sender_identifier }}\",\n  \"content_text\": \"{{ $('Respuesta final').first().json.text }}\",\n  \"provider_message_id\": \"{{ $json.key?.id || $json.id || '' }}\",\n  \"send_whatsapp\": false,\n  \"ai_metadata\": {\n    \"model\": \"deepseek-chat\",\n    \"workflow\": \"Donna Business WhatsApp SaaS\"\n  }\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [4080, 660],
+      "id": "77ed99ed-c063-4d80-9428-3031853a730b",
+      "name": "POST Donna Business Save Respond",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "### Donna Business WhatsApp — workflow corregido\n\nFixes aplicados vs versión original:\n1. input_text usa effective_text (transcripción > OCR > texto)\n2. Enviar mensaje Evo API usa evo_api_key del contexto por canal (multi-tenant)\n3. save-respond tiene send_whatsapp: false (n8n ya envió, no duplicar)\n4. donna_business_customer_context_search apunta al endpoint correcto\n\nVariables de entorno n8n:\n- STREAMIFY_BASE_URL → https://streamify.aaronsoft.es\n- DONNA_API_KEY → clave del backend\n- EVO_DEFAULT_SERVER_URL → fallback si no viene en webhook",
+        "height": 300,
+        "width": 600,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 280],
+      "id": "nota-fixes-001",
+      "name": "Nota fixes"
+    }
+  ],
+  "connections": {
+    "Webhook Evo API": { "main": [[{ "node": "Normalizar Evo Payload", "type": "main", "index": 0 }]] },
+    "Normalizar Evo Payload": { "main": [[{ "node": "¿fromMe?", "type": "main", "index": 0 }]] },
+    "¿fromMe?": { "main": [
+      [{ "node": "POST Ingest fromMe / Ignorar loop", "type": "main", "index": 0 }],
+      [{ "node": "Switch tipo de mensaje", "type": "main", "index": 0 }]
+    ]},
+    "Switch tipo de mensaje": { "main": [
+      [{ "node": "Preparar texto para ingest", "type": "main", "index": 0 }],
+      [{ "node": "Get audio", "type": "main", "index": 0 }],
+      [{ "node": "Get imagen", "type": "main", "index": 0 }],
+      [{ "node": "Preparar documento/otro para ingest", "type": "main", "index": 0 }],
+      [{ "node": "Preparar documento/otro para ingest", "type": "main", "index": 0 }]
+    ]},
+    "Preparar texto para ingest": { "main": [[{ "node": "POST Donna Business Ingest", "type": "main", "index": 0 }]] },
+    "Get audio": { "main": [[{ "node": "Convert audio", "type": "main", "index": 0 }]] },
+    "Convert audio": { "main": [[{ "node": "Transcribe", "type": "main", "index": 0 }]] },
+    "Transcribe": { "main": [[{ "node": "Preparar audio para ingest", "type": "main", "index": 0 }]] },
+    "Preparar audio para ingest": { "main": [[{ "node": "POST Donna Business Ingest", "type": "main", "index": 0 }]] },
+    "Get imagen": { "main": [[{ "node": "Convert image", "type": "main", "index": 0 }]] },
+    "Convert image": { "main": [[{ "node": "Analyze", "type": "main", "index": 0 }]] },
+    "Analyze": { "main": [[{ "node": "Parsear imagen", "type": "main", "index": 0 }]] },
+    "Parsear imagen": { "main": [[{ "node": "POST Donna Business Ingest", "type": "main", "index": 0 }]] },
+    "Preparar documento/otro para ingest": { "main": [[{ "node": "POST Donna Business Ingest", "type": "main", "index": 0 }]] },
+    "POST Donna Business Ingest": { "main": [[{ "node": "¿Donna Business permitida?", "type": "main", "index": 0 }]] },
+    "¿Donna Business permitida?": { "main": [
+      [{ "node": "GET Donna Business Context", "type": "main", "index": 0 }],
+      [{ "node": "No responder / Servicio bloqueado", "type": "main", "index": 0 }]
+    ]},
+    "GET Donna Business Context": { "main": [[{ "node": "Guardar contexto Business", "type": "main", "index": 0 }]] },
+    "Guardar contexto Business": { "main": [[{ "node": "AI Agent Donna Business", "type": "main", "index": 0 }]] },
+    "AI Agent Donna Business": { "main": [[{ "node": "Formatear respuesta WhatsApp", "type": "main", "index": 0 }]] },
+    "Formatear respuesta WhatsApp": { "main": [[{ "node": "Respuesta final", "type": "main", "index": 0 }]] },
+    "Respuesta final": { "main": [[{ "node": "Enviar mensaje Evo API", "type": "main", "index": 0 }]] },
+    "Enviar mensaje Evo API": { "main": [[{ "node": "POST Donna Business Save Respond", "type": "main", "index": 0 }]] },
+    "DeepSeek Chat Model": { "ai_languageModel": [[{ "node": "AI Agent Donna Business", "type": "ai_languageModel", "index": 0 }]] },
+    "Simple Memory Business": { "ai_memory": [[{ "node": "AI Agent Donna Business", "type": "ai_memory", "index": 0 }]] },
+    "Date & Time": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] },
+    "donna_business_knowledge_search": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] },
+    "donna_business_customer_context_search": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] },
+    "donna_business_memory_search": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] },
+    "donna_business_calendar_freebusy": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] },
+    "donna_business_calendar_create_event": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] },
+    "donna_business_sheets_append_row": { "ai_tool": [[{ "node": "AI Agent Donna Business", "type": "ai_tool", "index": 0 }]] }
+  },
+  "pinData": {
+    "Webhook Evo API": [{
+      "body": {
+        "event": "messages.upsert",
+        "instance": "bot-pagos",
+        "data": {
+          "key": { "remoteJid": "593992571346@s.whatsapp.net", "fromMe": false, "id": "3EB00804F97B01E000412F" },
+          "pushName": "Siani M",
+          "message": { "conversation": "Buen dia cuanto es de spoty y prime porfavor?" },
+          "messageType": "conversation",
+          "messageTimestamp": 1780064142,
+          "instanceId": "bf50604e-6927-4f89-80f8-a4a7dd5ce4cc"
+        },
+        "sender": "593961412826@s.whatsapp.net",
+        "server_url": "https://evoapi.abigailsoft.com",
+        "apikey": null
+      }
+    }]
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "meta": { "templateCredsSetupCompleted": false }
+}

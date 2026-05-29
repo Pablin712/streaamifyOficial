@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\DonnaChannel;
 use App\Models\DonnaIntegration;
 use App\Models\DonnaPlan;
 use App\Models\DonnaSubscription;
@@ -10,6 +11,7 @@ use App\Models\DonnaRequest;
 use App\Models\Cliente;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 
@@ -43,15 +45,24 @@ class DonnaSubscriptionController extends Controller
             return $this->jsonOrAbort($request, 403, 'Sin permiso para crear suscripciones.');
         }
 
-        $request->validate([
-            'client_id'  => 'required|exists:clientes,idcli',
-            'plan_id'    => 'required|exists:donna_plans,id',
-            'starts_at'  => 'required|date',
-            'expires_at' => 'nullable|date|after_or_equal:starts_at',
-            'notes'      => 'nullable|string|max:1000',
-        ]);
+        $rules = [
+            'client_id'    => 'required|exists:clientes,idcli',
+            'plan_id'      => 'required|exists:donna_plans,id',
+            'starts_at'    => 'required|date',
+            'expires_at'   => 'nullable|date|after_or_equal:starts_at',
+            'notes'        => 'nullable|string|max:1000',
+        ];
 
         $plan = DonnaPlan::findOrFail($request->plan_id);
+
+        if ($plan->service_type === 'business') {
+            $rules['instance_name'] = 'required|string|max:100';
+            $rules['api_base_url']  = 'required|url|max:255';
+            $rules['api_key']       = 'required|string';
+            $rules['phone_number']  = 'nullable|string|max:50';
+        }
+
+        $request->validate($rules);
 
         DB::beginTransaction();
         try {
@@ -70,6 +81,23 @@ class DonnaSubscriptionController extends Controller
                 'notes'           => $request->notes,
                 'activated_by'    => Auth::user()->idemp,
             ]);
+
+            // Crear canal WhatsApp para Donna Business
+            if ($plan->service_type === 'business') {
+                DonnaChannel::create([
+                    'client_id'         => $request->client_id,
+                    'subscription_id'   => $sub->id,
+                    'service_type'      => 'business',
+                    'channel_type'      => 'whatsapp',
+                    'provider'          => 'evolution_api',
+                    'instance_name'     => $request->instance_name,
+                    'phone_number'      => $request->phone_number,
+                    'api_base_url'      => rtrim($request->api_base_url, '/'),
+                    'api_key_encrypted' => Crypt::encryptString($request->api_key),
+                    'status'            => 'active',
+                    'is_default'        => true,
+                ]);
+            }
 
             $cliente = Cliente::findOrFail($request->client_id);
 

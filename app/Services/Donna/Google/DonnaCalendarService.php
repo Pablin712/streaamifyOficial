@@ -13,8 +13,18 @@ class DonnaCalendarService
         return Http::withToken($token)->acceptJson();
     }
 
-    public function listEvents(string $token, string $calendarId, string $timeMin, string $timeMax, int $maxResults = 20): array
+    private function googleError(\Illuminate\Http\Client\Response $response): array
     {
+        $body = $response->json();
+        return $body['error'] ?? ['code' => $response->status(), 'message' => $body['message'] ?? 'Error desconocido de Google.'];
+    }
+
+    public function listEvents(string $token, string $calendarId, ?string $timeMin, ?string $timeMax, int $maxResults = 20): array
+    {
+        if (!$timeMin || !$timeMax) {
+            return ['success' => false, 'google_error' => ['code' => 400, 'message' => 'Se requieren time_min y time_max en formato ISO 8601 con timezone (ej: 2026-05-29T00:00:00-05:00).']];
+        }
+
         $response = $this->http($token)->get(self::BASE . "/calendars/{$calendarId}/events", [
             'timeMin'      => $timeMin,
             'timeMax'      => $timeMax,
@@ -24,7 +34,7 @@ class DonnaCalendarService
         ]);
 
         if (!$response->successful()) {
-            return ['success' => false, 'google_error' => $response->json()];
+            return ['success' => false, 'google_error' => $this->googleError($response)];
         }
 
         $events = collect($response->json('items', []))->map(fn ($e) => [
@@ -40,8 +50,12 @@ class DonnaCalendarService
         return ['success' => true, 'events' => $events];
     }
 
-    public function freebusy(string $token, string $calendarId, string $timeMin, string $timeMax, string $timezone): array
+    public function freebusy(string $token, string $calendarId, ?string $timeMin, ?string $timeMax, string $timezone): array
     {
+        if (!$timeMin || !$timeMax) {
+            return ['success' => false, 'google_error' => ['code' => 400, 'message' => 'Se requieren time_min y time_max en formato ISO 8601 con timezone (ej: 2026-05-29T00:00:00-05:00).']];
+        }
+
         $response = $this->http($token)->post(self::BASE . '/freeBusy', [
             'timeMin'  => $timeMin,
             'timeMax'  => $timeMax,
@@ -50,7 +64,7 @@ class DonnaCalendarService
         ]);
 
         if (!$response->successful()) {
-            return ['success' => false, 'google_error' => $response->json()];
+            return ['success' => false, 'google_error' => $this->googleError($response)];
         }
 
         $busy = $response->json("calendars.{$calendarId}.busy", []);
@@ -81,7 +95,7 @@ class DonnaCalendarService
         $response = $this->http($token)->post(self::BASE . "/calendars/{$calendarId}/events", $body);
 
         if (!$response->successful()) {
-            return ['success' => false, 'google_error' => $response->json()];
+            return ['success' => false, 'google_error' => $this->googleError($response)];
         }
 
         $e = $response->json();
@@ -116,7 +130,7 @@ class DonnaCalendarService
         $response = $this->http($token)->patch(self::BASE . "/calendars/{$calendarId}/events/{$eventId}", $body);
 
         if (!$response->successful()) {
-            return ['success' => false, 'google_error' => $response->json()];
+            return ['success' => false, 'google_error' => $this->googleError($response)];
         }
 
         $e = $response->json();
@@ -141,6 +155,6 @@ class DonnaCalendarService
             return ['success' => true, 'deleted' => true, 'event_id' => $eventId, 'message' => 'Evento eliminado correctamente.'];
         }
 
-        return ['success' => false, 'google_error' => $response->json()];
+        return ['success' => false, 'google_error' => $this->googleError($response)];
     }
 }
