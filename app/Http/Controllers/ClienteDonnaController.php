@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cliente;
+use App\Models\DonnaAgentConfig;
 use App\Models\DonnaChannel;
 use App\Models\DonnaPlan;
 use App\Models\DonnaRequest;
@@ -11,8 +12,11 @@ use App\Models\DonnaSubscription;
 use App\Models\DonnaIntegration;
 use App\Models\Empleado;
 use App\Models\Historial;
+use App\Services\Donna\Google\DonnaGoogleTokenService;
+use App\Services\Donna\Google\DonnaSpreadsheetSetupService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ClienteDonnaController extends Controller
@@ -92,6 +96,9 @@ class ClienteDonnaController extends Controller
                     'activation_code' => $code,
                     'is_default'      => true,
                 ]);
+
+                $this->setupSpreadsheet($cliente->idcli, $subActiva->id);
+
                 return back()
                     ->with('donna_success', 'Tu Donna ya estaba activa. Aquí tienes tu código para vincular Telegram.')
                     ->with('donna_activation_code', $code)
@@ -168,6 +175,10 @@ class ClienteDonnaController extends Controller
 
             DB::commit();
 
+            if ($plan->service_type === 'personal') {
+                $this->setupSpreadsheet($cliente->idcli, $sub->id);
+            }
+
             $successMsg = '¡Donna activada exitosamente! Tu suscripción está activa' .
                 ($expiresAt ? ' hasta el ' . $expiresAt->format('d/m/Y') : '') . '.';
 
@@ -179,6 +190,54 @@ class ClienteDonnaController extends Controller
         } catch (\Exception) {
             DB::rollBack();
             return back()->with('donna_error', 'Error al procesar el pago. Intenta nuevamente.');
+        }
+    }
+
+    private function setupSpreadsheet(int $clientId, int $subscriptionId): void
+    {
+        // Solo actúa si no hay spreadsheet configurado aún
+        $yaConfigurado = DonnaAgentConfig::where('client_id', $clientId)
+            ->where('service_type', 'personal')
+            ->whereNotNull('spreadsheet_id')
+            ->exists();
+
+        if ($yaConfigurado) {
+            return;
+        }
+
+        $integ = DonnaIntegration::where('client_id', $clientId)
+            ->where('integration_type', 'google')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$integ) {
+            return;
+        }
+
+        try {
+            $token = app(DonnaGoogleTokenService::class)->getValidAccessToken($integ);
+
+            if (!$token) {
+                return;
+            }
+
+            $result = app(DonnaSpreadsheetSetupService::class)->createTasksSpreadsheet($token);
+
+            if (!$result['success']) {
+                return;
+            }
+
+            DonnaAgentConfig::updateOrCreate(
+                ['client_id' => $clientId, 'service_type' => 'personal'],
+                [
+                    'subscription_id'  => $subscriptionId,
+                    'spreadsheet_id'   => $result['spreadsheet_id'],
+                    'spreadsheet_name' => 'Tareas',
+                    'is_active'        => true,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::error('Donna setupSpreadsheet failed', ['client_id' => $clientId, 'error' => $e->getMessage()]);
         }
     }
 }
