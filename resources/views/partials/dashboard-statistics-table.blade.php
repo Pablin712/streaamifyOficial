@@ -31,7 +31,7 @@
         </div>
 
         <div class="table-responsive">
-            <table id="resultados-table" data-table="resultados-table" class="table table-striped table-bordered">
+            <table id="resultados-table" data-table="resultados-table" data-default-rows="10" class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th class="sortable" data-type="string" data-col="0">
