@@ -425,6 +425,7 @@ use App\Http\Controllers\Api\Donna\Business\DonnaBusinessIngestController;
 use App\Http\Controllers\Api\Donna\Business\DonnaBusinessMessageController;
 use App\Http\Controllers\Api\Donna\Business\DonnaBusinessContextController;
 use App\Http\Controllers\Api\Donna\Business\DonnaBusinessRespondController;
+use App\Http\Controllers\Api\Donna\Business\DonnaBusinessResolveWebhookController;
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessKnowledgeToolController;
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessMemoryToolController;
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessCalendarToolController;
@@ -433,6 +434,9 @@ use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessCustomerContextCo
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessDataToolController;
 
 Route::prefix('donna/business')->middleware(['donna.api'])->group(function () {
+    // Resolve webhook → client/channel/apikey
+    Route::post('/resolve-webhook', [DonnaBusinessResolveWebhookController::class, 'resolve'])->name('api.donna.business.resolve-webhook');
+
     // Core flows
     Route::post('/ingest',                                    [DonnaBusinessIngestController::class, 'store'])->name('api.donna.business.ingest');
     Route::patch('/messages/{message_id}/extractions',        [DonnaBusinessMessageController::class, 'updateExtractions'])->name('api.donna.business.message.extractions');

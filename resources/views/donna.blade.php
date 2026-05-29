@@ -346,6 +346,171 @@
     </script>
     @endif
 
+    {{-- Modal configuración WhatsApp — aparece automáticamente tras activar Donna Business --}}
+    @if (session('donna_business_channel_id') && session('donna_plan_type') === 'business')
+    <div class="modal fade" id="modalBusinessWhatsApp" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 shadow-lg">
+                <div class="modal-header border-0" style="background:linear-gradient(135deg,#c9890a,#E4B100);border-radius:1rem 1rem 0 0;">
+                    <div class="p-2">
+                        <h5 class="modal-title fw-bold mb-0" style="color:#1D1D1B;">
+                            <i class="bi bi-whatsapp me-2"></i>¡Donna Business activa! Conecta tu WhatsApp
+                        </h5>
+                        <p class="small mb-0" style="color:#4a3800;">Último paso para que Donna empiece a atender a tus clientes</p>
+                    </div>
+                </div>
+                <div class="modal-body p-4">
+
+                    {{-- Aviso principal --}}
+                    <div class="alert border-0 rounded-3 mb-4 d-flex align-items-start gap-3"
+                         style="background:#fff8e1;border-left:4px solid #E4B100 !important;">
+                        <i class="bi bi-info-circle-fill fs-4 flex-shrink-0" style="color:#c9890a;margin-top:2px;"></i>
+                        <div class="small">
+                            <div class="fw-semibold mb-1">Tu suscripción Donna Business ya está activa y pagada.</div>
+                            Para que Donna empiece a responder a tus clientes por WhatsApp, necesitas vincular tu instancia de <strong>Evolution API</strong>.
+                            Si no tienes acceso a Evo API o no sabes cómo configurarlo, <strong>contacta a nuestro equipo</strong> y lo hacemos por ti.
+                        </div>
+                    </div>
+
+                    {{-- Tabs: Configurar yo / Contactar admin --}}
+                    <ul class="nav nav-pills mb-4 gap-2" id="businessSetupTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active fw-semibold" id="tab-selfsetup"
+                                    data-bs-toggle="pill" data-bs-target="#selfSetupPanel" type="button">
+                                <i class="bi bi-gear me-1"></i>Configurar yo mismo
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link fw-semibold" id="tab-adminsetup"
+                                    data-bs-toggle="pill" data-bs-target="#adminSetupPanel" type="button">
+                                <i class="bi bi-headset me-1"></i>Pedir ayuda al administrador
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        {{-- Panel 1: Auto-configuración --}}
+                        <div class="tab-pane fade show active" id="selfSetupPanel">
+                            <form method="POST" action="{{ route('cliente.donna.connect-whatsapp') }}">
+                                @csrf
+                                <input type="hidden" name="channel_id" value="{{ session('donna_business_channel_id') }}">
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            Nombre de instancia <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" name="instance_name" class="form-control font-monospace"
+                                               placeholder="bot-mi-negocio" required>
+                                        <div class="form-text">El nombre de tu instancia en Evo API (ej: <code>bot-pagos</code>).</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Número de WhatsApp</label>
+                                        <input type="text" name="phone_number" class="form-control"
+                                               placeholder="593961412826">
+                                        <div class="form-text">Número del WhatsApp del negocio, sin el +.</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">
+                                            URL del servidor Evo API <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="url" name="api_base_url" class="form-control"
+                                               placeholder="https://evoapi.miservidor.com" required>
+                                        <div class="form-text">La URL base de tu servidor Evolution API.</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">
+                                            API Key de Evo API <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="password" name="api_key" id="evo_api_key_input"
+                                                   class="form-control font-monospace"
+                                                   placeholder="Clave de acceso de tu instancia" required>
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                    onclick="toggleApiKeyVisibility()">
+                                                <i class="bi bi-eye" id="eye-icon"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">Se guarda encriptada y nunca se muestra en texto plano.</div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn fw-bold rounded-pill px-4"
+                                            style="background:#E4B100;color:#1D1D1B;">
+                                        <i class="bi bi-check2-circle me-1"></i>Guardar y vincular WhatsApp
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill"
+                                            data-bs-dismiss="modal">
+                                        Hacerlo después
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {{-- Panel 2: Contactar admin --}}
+                        <div class="tab-pane fade" id="adminSetupPanel">
+                            <div class="text-center py-3">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-4"
+                                     style="width:72px;height:72px;background:#fff8e1;">
+                                    <i class="bi bi-headset fs-2" style="color:#c9890a;"></i>
+                                </div>
+                                <h5 class="fw-bold mb-2">El administrador conecta tu WhatsApp</h5>
+                                <p class="text-muted mb-4" style="max-width:420px;margin:0 auto;">
+                                    Contáctanos con el nombre de tu instancia de <strong>Evolution API</strong> y nuestro equipo
+                                    configurará Donna Business por ti, sin que necesites hacer nada técnico.
+                                </p>
+
+                                <div class="p-3 rounded-3 text-start mb-4"
+                                     style="background:#f8f9fa;border:1px dashed #dee2e6;">
+                                    <div class="small fw-semibold text-muted text-uppercase mb-2">Dile al administrador:</div>
+                                    <ul class="mb-0 small">
+                                        <li>Tu nombre o correo en Streamify</li>
+                                        <li>El nombre de tu instancia en Evo API</li>
+                                        <li>La URL de tu servidor Evo API</li>
+                                        <li>Tu API key de Evo API</li>
+                                    </ul>
+                                </div>
+
+                                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                    <a href="https://wa.me/593961412826?text=Hola%2C%20quiero%20configurar%20Donna%20Business%20para%20mi%20cuenta"
+                                       target="_blank"
+                                       class="btn fw-bold rounded-pill px-4"
+                                       style="background:#25D366;color:#fff;">
+                                        <i class="bi bi-whatsapp me-2"></i>Escribir por WhatsApp
+                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">
+                                        Hacerlo después
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = new bootstrap.Modal(document.getElementById('modalBusinessWhatsApp'));
+            modal.show();
+        });
+        function toggleApiKeyVisibility() {
+            var input = document.getElementById('evo_api_key_input');
+            var icon  = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        }
+    </script>
+    @endif
+
     @if (session('donna_error'))
         <div class="container px-5 pt-4">
             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
