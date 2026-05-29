@@ -1215,7 +1215,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"number\": \"{{ $('Respuesta final').first().json.number }}\",\n  \"text\": \"{{ $('Respuesta final').first().json.text }}\"\n}",
+        "jsonBody": "={{ JSON.stringify({ number: $('Respuesta final').first().json.number || '', text: $('Respuesta final').first().json.text || '' }) }}",
         "options": {
           "timeout": 30000
         }
@@ -1252,7 +1252,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"message_id\": \"{{ $('Guardar contexto Business').first().json.message_id }}\",\n  \"sender_type\": \"ai_agent\",\n  \"direction\": \"outbound\",\n  \"external_chat_id\": \"{{ $('Guardar contexto Business').first().json.external_chat_id }}\",\n  \"recipient_jid\": \"{{ $('Guardar contexto Business').first().json.external_chat_id }}\",\n  \"content_text\": \"{{ $('Respuesta final').first().json.text }}\",\n  \"provider_message_id\": \"{{ $json.key?.id || $json.id || '' }}\",\n  \"ai_metadata\": {\n    \"model\": \"deepseek-chat\",\n    \"workflow\": \"Donna Business WhatsApp SaaS\"\n  }\n}",
+        "jsonBody": "={{ JSON.stringify({ client_id: $('Guardar contexto Business').first().json.client_id, service_id: $('Guardar contexto Business').first().json.service_id, channel_id: $('Guardar contexto Business').first().json.channel_id, conversation_id: $('Guardar contexto Business').first().json.conversation_id, message_id: $('Guardar contexto Business').first().json.message_id, sender_type: 'ai_agent', direction: 'outbound', external_chat_id: $('Guardar contexto Business').first().json.external_chat_id, recipient_jid: $('Guardar contexto Business').first().json.external_chat_id, content_text: $('Respuesta final').first().json.text || '', provider_message_id: ($json.key && $json.key.id) ? $json.key.id : ($json.id || ''), ai_metadata: { model: 'deepseek-chat', workflow: 'Donna Business WhatsApp SaaS' } }) }}",
         "options": {
           "timeout": 30000
         }
