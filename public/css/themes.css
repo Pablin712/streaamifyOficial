@@ -363,6 +363,108 @@
     --shadow-hover: 0 2px 8px rgba(253, 126, 20, 0.25);
 }
 
+/* ========================================
+   TEMA MUNDIAL 2026 🏆⚽
+   Ecuador 🇪🇨 — 11 Junio - 19 Julio 2026
+   Colores: Amarillo/Azul/Rojo Ecuador + Verde cancha
+   ======================================== */
+[data-theme="mundial2026"] {
+    /* Ecuador flag: yellow, blue, red */
+    --primary-color: #FFD100;
+    --primary-dark: #e6bc00;
+    --primary-light: #ffe640;
+    --primary-gradient: linear-gradient(135deg, #FFD100 0%, #003893 55%, #D30000 100%);
+
+    --secondary-color: #003893;
+    --accent-color: #D30000;
+
+    /* Cancha de fútbol verde */
+    --bg-body: #0a2e14;
+    --bg-card: #0f3d1c;
+    --bg-light: #0d3318;
+    --bg-overlay: rgba(10, 46, 20, 0.96);
+    --bg-table-odd: #112f18;
+    --bg-table-even: #0f3d1c;
+    --bg-hover: #1a5228;
+
+    --text-primary: #ffffff;
+    --text-secondary: #FFD100;
+    --text-muted: #a8d5a2;
+    --text-on-primary: #0a2e14;
+
+    --border-color: #1e5c2a;
+    --border-primary: #FFD100;
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
+    --shadow-hover: 0 4px 16px rgba(255, 209, 0, 0.4);
+}
+
+/* Líneas de cancha en el fondo */
+[data-theme="mundial2026"] body {
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 60px,
+            rgba(255,255,255,0.03) 60px,
+            rgba(255,255,255,0.03) 61px
+        );
+}
+
+[data-theme="mundial2026"] .card {
+    border-color: #1e5c2a;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,209,0,0.08);
+}
+
+[data-theme="mundial2026"] .card-header {
+    background: linear-gradient(135deg, #0d3318 0%, #0a2e14 100%);
+    border-bottom: 2px solid #FFD100;
+    color: #FFD100;
+}
+
+[data-theme="mundial2026"] .table thead th {
+    background: linear-gradient(135deg, #003893 0%, #001f5c 100%);
+    color: #FFD100;
+    border-color: #FFD100;
+}
+
+[data-theme="mundial2026"] .btn-primary {
+    background: linear-gradient(135deg, #FFD100, #e6bc00);
+    border-color: #FFD100;
+    color: #0a2e14;
+    font-weight: 700;
+}
+
+[data-theme="mundial2026"] .btn-primary:hover {
+    background: linear-gradient(135deg, #ffe640, #FFD100);
+    box-shadow: 0 4px 14px rgba(255, 209, 0, 0.5);
+}
+
+[data-theme="mundial2026"] .sidebar,
+[data-theme="mundial2026"] #layoutSidenav_nav {
+    background: linear-gradient(180deg, #001a0a 0%, #002a0d 100%);
+    border-right: 1px solid #1e5c2a;
+}
+
+[data-theme="mundial2026"] .nav-item .nav-link {
+    color: #c8e6c9 !important;
+}
+
+[data-theme="mundial2026"] .nav-item.active .nav-link,
+[data-theme="mundial2026"] .nav-item .nav-link:hover {
+    color: #FFD100 !important;
+    background: rgba(255, 209, 0, 0.1) !important;
+}
+
+/* Dark mode sobre Mundial */
+[data-theme="mundial2026"][data-dark-mode="true"] {
+    --bg-body: #030d05 !important;
+    --bg-card: #071209 !important;
+    --bg-light: #050e07 !important;
+    --bg-hover: #0d2412 !important;
+}
+
 /* TRANSICIONES SUAVES AL CAMBIAR TEMA */
 body,
 .card,

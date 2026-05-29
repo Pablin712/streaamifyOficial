@@ -294,6 +294,131 @@ const Decorations = {
     /**
      * Activar decoración por tema
      */
+    /**
+     * MUNDIAL 2026 ⚽🏆 — Pelotas + Confeti Ecuador + Ticker
+     */
+    mundial2026: {
+        container: null,
+        ticker: null,
+        intervalId: null,
+
+        init() {
+            this.createBalls();
+            this.createConfetti();
+            this.createTicker();
+            return [this.container, this.ticker];
+        },
+
+        createBalls() {
+            this.container = document.createElement('div');
+            this.container.id = 'mundial-container';
+            this.container.style.cssText = `
+                position:fixed;top:0;left:0;width:100%;height:100%;
+                pointer-events:none;z-index:9998;overflow:hidden;
+            `;
+            document.body.appendChild(this.container);
+
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => this.spawnBall(), i * 900);
+            }
+            this.intervalId = setInterval(() => this.spawnBall(), 4000);
+        },
+
+        spawnBall() {
+            if (!this.container) return;
+            const ball = document.createElement('div');
+            const size = Math.random() * 22 + 18;
+            const left = Math.random() * 90 + 5;
+            const dur  = Math.random() * 5 + 6;
+            const delay = Math.random() * 2;
+            ball.textContent = '⚽';
+            ball.style.cssText = `
+                position:absolute;
+                font-size:${size}px;
+                left:${left}%;
+                top:-${size + 10}px;
+                animation: mundialFall ${dur}s ease-in ${delay}s forwards;
+                filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+            `;
+            this.container.appendChild(ball);
+            setTimeout(() => ball.remove(), (dur + delay + 0.5) * 1000);
+        },
+
+        createConfetti() {
+            // Confeti en colores Ecuador: amarillo, azul, rojo
+            const colors = ['#FFD100','#003893','#D30000','#ffffff','#FFD100','#003893'];
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    if (!this.container) return;
+                    const piece = document.createElement('div');
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const left  = Math.random() * 100;
+                    const size  = Math.random() * 8 + 5;
+                    const dur   = Math.random() * 6 + 5;
+                    const rotate = Math.random() * 360;
+                    piece.style.cssText = `
+                        position:absolute;
+                        width:${size}px;height:${size * 0.5}px;
+                        background:${color};
+                        left:${left}%;top:-10px;
+                        border-radius:2px;
+                        animation: mundialConfetti ${dur}s linear forwards;
+                        transform: rotate(${rotate}deg);
+                        opacity:0.85;
+                    `;
+                    this.container.appendChild(piece);
+                    setTimeout(() => piece.remove(), (dur + 0.5) * 1000);
+                }, i * 200);
+            }
+        },
+
+        createTicker() {
+            this.ticker = document.createElement('div');
+            this.ticker.id = 'mundial-ticker';
+            const messages = [
+                '🏆 Mundial 2026 · México · Canadá · USA',
+                '🇪🇨 ¡Vamos Ecuador! · La Tri en el Mundial',
+                '⚽ FIFA World Cup 2026 · 11 Jun – 19 Jul',
+                '🟡🔵🔴 Ecuador en el Mundial · #LaTri',
+                '🏟️ Streamify HQ te desea ¡arriba Ecuador!',
+            ];
+            let idx = 0;
+            this.ticker.style.cssText = `
+                position:fixed;bottom:0;left:0;right:0;
+                background:linear-gradient(135deg,#003893,#001f5c);
+                color:#FFD100;font-weight:700;font-size:.82rem;
+                padding:7px 20px;z-index:10001;
+                display:flex;align-items:center;gap:12px;
+                border-top:3px solid #FFD100;
+                letter-spacing:.04em;
+                animation:mundialTickerIn .4s ease;
+                pointer-events:none;
+            `;
+            this.ticker.innerHTML = `
+                <span style="font-size:1.2rem">⚽</span>
+                <span id="mundial-ticker-text">${messages[0]}</span>
+                <span style="margin-left:auto;font-size:1rem">🇪🇨🇲🇽🇨🇦🇺🇸</span>
+            `;
+            document.body.appendChild(this.ticker);
+            const textEl = this.ticker.querySelector('#mundial-ticker-text');
+            setInterval(() => {
+                idx = (idx + 1) % messages.length;
+                textEl.style.opacity = '0';
+                setTimeout(() => {
+                    textEl.textContent = messages[idx];
+                    textEl.style.opacity = '1';
+                    textEl.style.transition = 'opacity .4s';
+                }, 300);
+            }, 4000);
+        },
+
+        destroy() {
+            if (this.container) { this.container.remove(); this.container = null; }
+            if (this.ticker)    { this.ticker.remove();    this.ticker    = null; }
+            if (this.intervalId){ clearInterval(this.intervalId); this.intervalId = null; }
+        }
+    },
+
     activate(theme) {
         console.log(`[Decorations] Activando decoración: ${theme}`);
         this.deactivateAll();
@@ -308,6 +433,9 @@ const Decorations = {
             case 'valentine':
                 this.activeDecorations = [this.valentine.init()];
                 break;
+            case 'mundial2026':
+                this.activeDecorations = this.mundial2026.init();
+                break;
         }
     },
 
@@ -319,6 +447,7 @@ const Decorations = {
         this.christmas.destroy();
         this.newyear.destroy();
         this.valentine.destroy();
+        this.mundial2026.destroy();
         this.activeDecorations = [];
     }
 };
@@ -347,6 +476,23 @@ decorationStyles.textContent = `
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-10px); }
+    }
+
+    @keyframes mundialFall {
+        0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+        80%  { opacity: 1; }
+        100% { transform: translateY(105vh) rotate(540deg); opacity: 0; }
+    }
+
+    @keyframes mundialConfetti {
+        0%   { transform: translateY(0) rotate(0deg) scaleX(1);   opacity: .9; }
+        50%  { transform: translateY(50vh) rotate(180deg) scaleX(-1); opacity: .7; }
+        100% { transform: translateY(105vh) rotate(360deg) scaleX(1); opacity: 0; }
+    }
+
+    @keyframes mundialTickerIn {
+        from { transform: translateY(100%); }
+        to   { transform: translateY(0); }
     }
 `;
 document.head.appendChild(decorationStyles);

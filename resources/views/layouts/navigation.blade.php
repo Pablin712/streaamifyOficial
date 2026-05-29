@@ -73,10 +73,10 @@
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
     </script>
-    <script src="{{ asset('js/scripts.js') }}"></script>
+    <script src="{{ asset('js/scripts.js') }}?v={{ filemtime(public_path('js/scripts.js')) }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="{{ asset('js/sidebar.js') }}"></script>
-    <script src="{{ asset('js/navbar.js') }}"></script>
+    <script src="{{ asset('js/sidebar.js') }}?v={{ filemtime(public_path('js/sidebar.js')) }}"></script>
+    <script src="{{ asset('js/navbar.js') }}?v={{ filemtime(public_path('js/navbar.js')) }}"></script>
 
     <!-- Alpine.js para modales - DEBE cargarse ANTES de jQuery y Select2 -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -85,11 +85,11 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
     <!-- Inicializador automático de searchable-select -->
-    <script src="{{ asset('js/searchable-select.js') }}"></script>
+    <script src="{{ asset('js/searchable-select.js') }}?v={{ filemtime(public_path('js/searchable-select.js')) }}"></script>
 
     <!-- Sistema de Temas Dinámicos -->
-    <script src="{{ asset('js/decorations.js') }}"></script>
-    <script src="{{ asset('js/theme-manager.js') }}"></script>
+    <script src="{{ asset('js/decorations.js') }}?v={{ filemtime(public_path('js/decorations.js')) }}"></script>
+    <script src="{{ asset('js/theme-manager.js') }}?v={{ filemtime(public_path('js/theme-manager.js')) }}"></script>
 
     @yield('scripts')
     <script>
@@ -196,7 +196,7 @@
             });
         }, 300000); // 5 minutos = 300,000 ms
     </script>
-    <script src="{{asset('js/sistema.js')}}"></script>
+    <script src="{{ asset('js/sistema.js') }}?v={{ filemtime(public_path('js/sistema.js')) }}"></script>
 
     {{-- Livewire Scripts (REQUERIDO para notificador global y otros componentes) --}}
     @livewireScripts

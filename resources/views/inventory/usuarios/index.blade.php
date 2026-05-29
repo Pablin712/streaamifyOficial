@@ -1378,7 +1378,7 @@
     </script>
 
     {{-- Enhanced Table v2 --}}
-    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+    <script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

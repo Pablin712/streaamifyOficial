@@ -505,7 +505,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 {{-- Enhanced Table --}}
-<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 
 <script>
     function abrirModalReportes() {

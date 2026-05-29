@@ -453,7 +453,7 @@
 <!-- Modal Transferir Fondos -->
 @include('finance.bancos.modals.transferir')
 
-<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 <script>
     // Inicializar enhanced tables
     document.addEventListener('DOMContentLoaded', function() {
