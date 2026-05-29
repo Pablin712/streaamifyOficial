@@ -83,12 +83,31 @@
                         $dias = $sub->daysRemaining();
                         $badgeColor = $sub->status_color;
                         if ($sub->status === 'active' && $dias !== null && $dias <= 7) $badgeColor = 'warning';
+                        $integ = $integraciones->get($sub->client_id);
+                        $avatar = $integ?->metadata_json['avatar'] ?? null;
                     @endphp
                     <tr>
                         <td>{{ $sub->id }}</td>
                         <td>
-                            <div class="fw-semibold">{{ $sub->cliente?->nombrecli ?? 'ID '.$sub->client_id }}</div>
-                            <div class="text-muted small">{{ $sub->cliente?->telefonocli }}</div>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($avatar)
+                                    <img src="{{ $avatar }}" alt=""
+                                         class="rounded-circle flex-shrink-0"
+                                         style="width:36px;height:36px;object-fit:cover;border:2px solid #dee2e6;"
+                                         onerror="this.replaceWith(this.nextElementSibling)">
+                                    <span class="rounded-circle bg-light border d-none flex-shrink-0 align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        <i class="bi bi-person text-muted"></i>
+                                    </span>
+                                @else
+                                    <span class="rounded-circle bg-light border d-flex flex-shrink-0 align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        <i class="bi bi-person text-muted"></i>
+                                    </span>
+                                @endif
+                                <div>
+                                    <div class="fw-semibold">{{ $sub->cliente?->nombrecli ?? 'ID '.$sub->client_id }}</div>
+                                    <div class="text-muted small">{{ $sub->cliente?->telefonocli }}</div>
+                                </div>
+                            </div>
                         </td>
                         <td>
                             <div class="fw-semibold">{{ $sub->plan?->name ?? 'ID '.$sub->plan_id }}</div>
@@ -102,7 +121,6 @@
                             @endif
                         </td>
                         <td>
-                            @php $integ = $integraciones->get($sub->client_id); @endphp
                             @if($integ && $integ->isActive())
                                 <div class="d-flex align-items-center gap-1">
                                     <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Conectado</span>

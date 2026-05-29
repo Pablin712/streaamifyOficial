@@ -28,6 +28,7 @@ return new class extends Migration
                 $table->string('webhook_url', 255)->nullable();
                 $table->enum('status', ['pending', 'active', 'inactive', 'error', 'suspended'])->default('pending');
                 $table->string('activation_code', 20)->nullable()->unique();
+                $table->timestamp('code_expires_at')->nullable();
                 $table->boolean('is_default')->default(true);
                 $table->timestamp('last_connected_at')->nullable();
                 $table->text('last_error')->nullable();

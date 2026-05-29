@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DonnaChannel;
 use App\Models\DonnaIntegration;
 use App\Models\DonnaSubscription;
 use App\Models\Pedido;
@@ -49,8 +50,12 @@ class HistorialClientesController extends Controller
             ->whereIn('status', ['active', 'pending', 'suspended'])
             ->latest()
             ->first();
+        $donnaCanal = DonnaChannel::where('client_id', $idcli)
+            ->whereIn('channel_type', ['telegram', 'whatsapp'])
+            ->latest()
+            ->first();
 
-        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte', 'donnaIntegracion', 'donnaSuscripcion'));
+        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte', 'donnaIntegracion', 'donnaSuscripcion', 'donnaCanal'));
     }
 
     public function pedirCodigoNetflix(Request $request, $iddet)

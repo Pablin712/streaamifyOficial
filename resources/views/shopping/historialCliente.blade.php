@@ -1049,6 +1049,94 @@
                             </div>
                         @endif
 
+                        {{-- Canal Telegram --}}
+                        @if($donnaSuscripcion && $donnaSuscripcion->service_type === 'personal')
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-telegram me-1"></i> Canal Telegram
+                        </h6>
+
+                        @if($donnaCanal && $donnaCanal->status === 'active')
+                            {{-- Canal ya vinculado --}}
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#e8f5e9;border:1px solid #c8e6c9;">
+                                <i class="bi bi-telegram fs-3 text-success"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Telegram vinculado
+                                    </div>
+                                    @if($donnaCanal->telegram_name || $donnaCanal->telegram_username)
+                                        <div class="text-muted small mt-1">
+                                            {{ $donnaCanal->telegram_name }}
+                                            @if($donnaCanal->telegram_username)
+                                                &nbsp;·&nbsp;&#64;{{ $donnaCanal->telegram_username }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                    @if($donnaCanal->activated_at)
+                                        <div class="text-muted small">Vinculado el {{ $donnaCanal->activated_at->format('d/m/Y H:i') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        @elseif($donnaCanal && $donnaCanal->status === 'pending' && $donnaCanal->activation_code)
+                            {{-- Código pendiente de usar --}}
+                            <div class="p-3 rounded-3 mb-4" style="background:#f0f4ff;border:1px solid #c5cae9;">
+                                <div class="fw-semibold mb-2" style="color:#274698;">
+                                    <i class="bi bi-key-fill me-1"></i>Tu código de activación Telegram
+                                </div>
+                                <p class="small text-muted mb-3">
+                                    Envía este código al bot
+                                    <a href="https://t.me/{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}"
+                                        target="_blank" class="fw-semibold" style="color:#274698;">
+                                        &#64;{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}
+                                    </a>
+                                    en Telegram para activar Donna.
+                                </p>
+                                <div class="d-flex align-items-center justify-content-center gap-3 px-4 py-3 rounded-3 mb-3"
+                                    style="background:#fff;border:2px dashed #274698;max-width:320px;margin:0 auto;">
+                                    <span class="fw-bold font-monospace" id="donna-code-historial"
+                                        style="font-size:1.8rem;letter-spacing:.2em;color:#274698;">
+                                        {{ $donnaCanal->activation_code }}
+                                    </span>
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        onclick="
+                                            navigator.clipboard.writeText('{{ $donnaCanal->activation_code }}');
+                                            this.innerHTML='<i class=\'bi bi-check-lg\'></i>';
+                                            this.classList.replace('btn-outline-secondary','btn-success');
+                                            setTimeout(()=>{
+                                                this.innerHTML='<i class=\'bi bi-clipboard\'></i>';
+                                                this.classList.replace('btn-success','btn-outline-secondary');
+                                            }, 2000);"
+                                        title="Copiar código">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <div class="text-center">
+                                    <a href="https://t.me/{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}"
+                                        target="_blank"
+                                        class="btn btn-primary btn-sm rounded-pill px-4">
+                                        <i class="bi bi-telegram me-1"></i>Abrir bot en Telegram
+                                    </a>
+                                </div>
+                                <div class="alert alert-info small mt-3 mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Este código es de un solo uso. Cuando lo uses en el bot, desaparecerá de aquí.
+                                </div>
+                            </div>
+
+                        @elseif(!$donnaCanal || $donnaCanal->status === 'inactive')
+                            {{-- Sin canal --}}
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#fff8e1;border:1px solid #ffe082;">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+                                <div class="flex-grow-1 small text-muted">
+                                    No tienes un canal Telegram configurado. Ve a
+                                    <a href="{{ route('donna') }}" class="fw-semibold">la página de Donna</a>
+                                    para obtener tu código de activación.
+                                </div>
+                            </div>
+                        @endif
+                        @endif
+
                         {{-- Donna Subscription --}}
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
                             <i class="bi bi-stars me-1"></i> Suscripción Donna

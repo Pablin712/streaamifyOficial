@@ -69,12 +69,39 @@ class ClienteDonnaController extends Controller
             );
         }
 
-        $yaActivo = DonnaSubscription::where('client_id', $cliente->idcli)
+        $subActiva = DonnaSubscription::where('client_id', $cliente->idcli)
             ->where('status', 'active')
             ->where('is_enabled', true)
-            ->exists();
+            ->first();
 
-        if ($yaActivo) {
+        // Si hay suscripción activa pero sin canal Telegram, generar el canal/código sin cobrar
+        if ($subActiva && $plan->service_type === 'personal') {
+            $canalExiste = DonnaChannel::where('subscription_id', $subActiva->id)
+                ->where('channel_type', 'telegram')
+                ->exists();
+
+            if (!$canalExiste) {
+                $code = strtoupper(Str::random(6));
+                DonnaChannel::create([
+                    'client_id'       => $cliente->idcli,
+                    'subscription_id' => $subActiva->id,
+                    'service_type'    => 'personal',
+                    'channel_type'    => 'telegram',
+                    'provider'        => 'telegram_bot',
+                    'status'          => 'pending',
+                    'activation_code' => $code,
+                    'is_default'      => true,
+                ]);
+                return back()
+                    ->with('donna_success', 'Tu Donna ya estaba activa. Aquí tienes tu código para vincular Telegram.')
+                    ->with('donna_activation_code', $code)
+                    ->with('donna_plan_type', 'personal');
+            }
+
+            return back()->with('donna_error', 'Ya tienes una suscripción Donna activa con canal configurado.');
+        }
+
+        if ($subActiva) {
             return back()->with('donna_error', 'Ya tienes una suscripción Donna activa.');
         }
 

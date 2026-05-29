@@ -316,9 +316,9 @@
                     <ol class="list-group list-group-numbered list-group-flush mb-4">
                         <li class="list-group-item border-0 ps-0">
                             Abre Telegram y busca
-                            <a href="https://t.me/{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}"
+                            <a href="https://t.me/{{ config('services.donna.telegram_bot_username', 'donna_mateo_bot') }}"
                                 target="_blank" class="fw-semibold" style="color:#274698;">
-                                @{{ config('services.donna.telegram_bot_username', 'DonnaStreamifyBot') }}
+                                &#64;{{ config('services.donna.telegram_bot_username', 'donna_mateo_bot') }}
                             </a>
                         </li>
                         <li class="list-group-item border-0 ps-0">Envía el código de arriba como mensaje</li>
