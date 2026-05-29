@@ -156,6 +156,14 @@
                         <div class="collapse" id="collapseDonna" aria-labelledby="headingDonna"
                             data-bs-parent="#sidenavAccordion">
                             <nav class="sb-sidenav-menu-nested nav">
+                                @if (Auth::user()->hasPermissionTo('donna.suscripciones'))
+                                    <a class="nav-link" href="{{ route('donna.dashboard') }}">
+                                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                                    </a>
+                                    <a class="nav-link" href="{{ route('donna.conversaciones.index') }}">
+                                        <i class="bi bi-chat-dots me-1"></i> Conversaciones
+                                    </a>
+                                @endif
                                 @if (Auth::user()->hasPermissionTo('donna.planes'))
                                     <a class="nav-link" href="{{ route('donna.planes.index') }}">
                                         <i class="bi bi-card-list me-1"></i> Planes

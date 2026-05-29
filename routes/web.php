@@ -63,6 +63,7 @@ use App\Http\Controllers\SistemaController;
 use App\Http\Controllers\DonnaPlanController;
 use App\Http\Controllers\DonnaSubscriptionController;
 use App\Http\Controllers\DonnaRequestController;
+use App\Http\Controllers\DonnaDashboardController;
 use App\Http\Controllers\ClienteDonnaController;
 use App\Http\Controllers\DonnaGoogleController;
 //cliente
@@ -406,8 +407,15 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     // ── Donna Hub ──────────────────────────────────────────────
     Route::prefix('donna')->group(function () {
         Route::get('/', function () {
-            return redirect()->route('donna.planes.index');
+            return redirect()->route('donna.dashboard');
         })->name('donna.hub');
+
+        // Dashboard
+        Route::get('/dashboard', [DonnaDashboardController::class, 'index'])->name('donna.dashboard');
+
+        // Conversaciones
+        Route::get('/conversaciones', [DonnaDashboardController::class, 'conversaciones'])->name('donna.conversaciones.index');
+        Route::get('/conversaciones/{id}/messages', [DonnaDashboardController::class, 'showMessages'])->name('donna.conversaciones.messages');
 
         // Planes (CRUD)
         Route::get('/planes', [DonnaPlanController::class, 'index'])->name('donna.planes.index');

@@ -175,6 +175,7 @@ class RoleSeeder extends Seeder
         $this->syncPermission('mails.destroy', [$admin, $gerente]);
 
         // Permisos Donna Hub
+        $this->syncPermission('donna.dashboard', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('donna.planes', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('donna.planes.store', [$admin, $gerente, $trabajador, $vendedor]);
         $this->syncPermission('donna.planes.destroy', [$admin, $gerente]);
