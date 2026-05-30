@@ -190,6 +190,11 @@ class ContabilidadController extends Controller
         extract($this->dashboardService->getSpotify($month, $year));
         extract($this->dashboardService->getOtros($month, $year));
 
+        // Capturar imágenes de gráficos enviadas desde el frontend (base64)
+        $chartArea = $request->input('chart_area', '');
+        $chartBar  = $request->input('chart_bar',  '');
+        $chartPie  = $request->input('chart_pie',  '');
+
         $mes = Carbon::create($year, $month, 1)->translatedFormat('F');
         $pdf = PDF::loadView('finance.resultPDF', compact(
             'mes',
@@ -258,12 +263,14 @@ class ContabilidadController extends Controller
             'ingresos_spotify',
             'costos_spotify',
 
-            'cuentas_otros', // Agrega la variable para "otros"
+            'cuentas_otros',
             'usuarios_otros',
             'ingresos_otros',
-            'costos_otros'
+            'costos_otros',
+            'chartArea',
+            'chartBar',
+            'chartPie'
         ));
-        // formato de descarga: contabilidad-Mes-Año.pdf
         return $pdf->download('contabilidad-'.$mes.'-'.$year.'.pdf');
     }
 

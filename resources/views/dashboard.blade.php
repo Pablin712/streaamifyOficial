@@ -511,12 +511,45 @@ document.addEventListener("DOMContentLoaded", function () {
     function abrirModalReportes() {
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'reportesDashboardModal' }));
     }
+
+    function captureCharts() {
+        const charts = {};
+        ['myAreaChart','myBarChart','myPieChart'].forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                try { charts[id] = canvas.toDataURL('image/png', 0.85); } catch(e) {}
+            }
+        });
+        return charts;
+    }
+
     function generarReporteMensual() {
         const mes = document.getElementById('mes_reporte').value;
         const ano = document.getElementById('ano_reporte').value;
         if (!mes || !ano) { alert('Por favor selecciona mes y año'); return; }
-        window.open(`{{ route('dashboard.pdf') }}?tipo=mensual&mes=${mes}&ano=${ano}`, '_blank');
+
+        const charts = captureCharts();
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('dashboard.pdf') }}";
+        form.target = '_blank';
+
+        const fields = { _token: '{{ csrf_token() }}', tipo: 'mensual', mes, ano,
+            chart_area: charts['myAreaChart'] || '',
+            chart_bar:  charts['myBarChart']  || '',
+            chart_pie:  charts['myPieChart']  || '' };
+
+        Object.entries(fields).forEach(([k,v]) => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = k; inp.value = v;
+            form.appendChild(inp);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        setTimeout(() => form.remove(), 1000);
     }
+
     function generarReporteAnual() {
         const ano = document.getElementById('ano_reporte_anual').value;
         if (!ano) { alert('Por favor selecciona el año'); return; }
@@ -526,27 +559,56 @@ document.addEventListener("DOMContentLoaded", function () {
 @endsection
 
 <!-- Modal para Generar Reportes -->
-<x-modal name="reportesDashboardModal" :show="false" maxWidth="md">
-    <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title"><i class="fas fa-file-pdf me-2"></i>Generar Reporte</h5>
+<x-modal name="reportesDashboardModal" :show="false" maxWidth="lg">
+    <div class="modal-header text-white" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);">
+        <h5 class="modal-title fw-bold">
+            <i class="fas fa-file-pdf me-2"></i> Generar Reporte Financiero
+        </h5>
         <button type="button" class="btn-close btn-close-white"
                 onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'reportesDashboardModal'}))"></button>
     </div>
-    <div class="modal-body">
-        <div class="card mb-3">
-            <div class="card-header bg-primary text-white"><h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Reporte Mensual</h6></div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="mes_reporte" class="form-label fw-semibold">Mes</label>
+    <div class="modal-body p-0">
+
+        {{-- Tabs inside modal --}}
+        <ul class="nav nav-pills p-3 pb-0 gap-2" id="reporteTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-4" id="rep-mensual-tab"
+                        data-bs-toggle="pill" data-bs-target="#rep-mensual" type="button">
+                    <i class="fas fa-calendar-alt me-1"></i> Mensual
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4" id="rep-anual-tab"
+                        data-bs-toggle="pill" data-bs-target="#rep-anual" type="button">
+                    <i class="fas fa-calendar me-1"></i> Anual
+                </button>
+            </li>
+        </ul>
+        <hr class="mt-2 mb-0">
+
+        <div class="tab-content p-3">
+            {{-- Mensual --}}
+            <div class="tab-pane fade show active" id="rep-mensual" role="tabpanel">
+                <p class="text-muted small mb-3">
+                    <i class="fas fa-chart-bar me-1 text-primary"></i>
+                    El reporte incluirá KPIs, resumen financiero, tabla de resultados por servicio
+                    y <strong>los gráficos del dashboard</strong> (área, barras y circular) capturados en el momento actual.
+                </p>
+                <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                        <label for="mes_reporte" class="form-label fw-semibold small">
+                            <i class="fas fa-calendar-day text-primary me-1"></i> Mes
+                        </label>
                         <select id="mes_reporte" class="form-select">
                             @foreach(['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] as $i=>$m)
                             <option value="{{ $i+1 }}" {{ now()->subMonth()->month == $i+1 ? 'selected' : '' }}>{{ $m }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="ano_reporte" class="form-label fw-semibold">Año</label>
+                    <div class="col-sm-6">
+                        <label for="ano_reporte" class="form-label fw-semibold small">
+                            <i class="fas fa-calendar-alt text-primary me-1"></i> Año
+                        </label>
                         <select id="ano_reporte" class="form-select">
                             @for($i=now()->year;$i>=2020;$i--)
                             <option value="{{ $i }}" {{ $i==now()->year?'selected':'' }}>{{ $i }}</option>
@@ -554,30 +616,55 @@ document.addEventListener("DOMContentLoaded", function () {
                         </select>
                     </div>
                 </div>
-                <button type="button" class="btn btn-primary w-100" onclick="generarReporteMensual()">
-                    <i class="fas fa-file-pdf me-2"></i>Generar Reporte Mensual
+
+                {{-- Preview info --}}
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" style="font-size:.75rem;">
+                        <i class="fas fa-chart-area me-1"></i> Gráfico de progreso incluido
+                    </span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2" style="font-size:.75rem;">
+                        <i class="fas fa-chart-bar me-1"></i> Finanzas por servicio incluido
+                    </span>
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2" style="font-size:.75rem;">
+                        <i class="fas fa-chart-pie me-1"></i> Ganancias por servicio incluido
+                    </span>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100 py-2" onclick="generarReporteMensual()">
+                    <i class="fas fa-file-pdf me-2"></i> Descargar Reporte Mensual (PDF)
                 </button>
+                <p class="text-muted text-center mt-2 mb-0" style="font-size:.72rem;">
+                    Los gráficos se capturan del dashboard en tiempo real al generar el PDF.
+                </p>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-header bg-success text-white"><h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Reporte Anual</h6></div>
-            <div class="card-body">
+
+            {{-- Anual --}}
+            <div class="tab-pane fade" id="rep-anual" role="tabpanel">
+                <p class="text-muted small mb-3">
+                    <i class="fas fa-chart-line me-1 text-success"></i>
+                    Reporte consolidado de los 12 meses del año seleccionado con resumen de KPIs e ingresos anuales.
+                </p>
                 <div class="mb-3">
-                    <label for="ano_reporte_anual" class="form-label fw-semibold">Año</label>
+                    <label for="ano_reporte_anual" class="form-label fw-semibold small">
+                        <i class="fas fa-calendar-alt text-success me-1"></i> Año
+                    </label>
                     <select id="ano_reporte_anual" class="form-select">
                         @for($i=now()->year;$i>=2020;$i--)
                         <option value="{{ $i }}" {{ $i==now()->year?'selected':'' }}>{{ $i }}</option>
                         @endfor
                     </select>
                 </div>
-                <button type="button" class="btn btn-success w-100" onclick="generarReporteAnual()">
-                    <i class="fas fa-file-pdf me-2"></i>Generar Reporte Anual
+                <button type="button" class="btn btn-success w-100 py-2" onclick="generarReporteAnual()">
+                    <i class="fas fa-file-pdf me-2"></i> Descargar Reporte Anual (PDF)
                 </button>
             </div>
         </div>
-        <div class="alert alert-info mt-3 mb-0">
-            <i class="fas fa-info-circle me-2"></i>
-            <small>Por defecto se muestra el <strong>mes anterior</strong> para reportes históricos.</small>
-        </div>
+
+    </div>
+    <div class="modal-footer justify-content-start py-2">
+        <small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            El mes anterior se selecciona por defecto para obtener datos históricos completos.
+        </small>
     </div>
 </x-modal>

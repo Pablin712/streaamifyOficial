@@ -205,7 +205,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
         Route::post('/dashboard/createstore', 'store')->name('dashboard.store');
         Route::get('/dashboard/filter', 'filterData')->name('dashboard.filter');
-        Route::get('/dashboard/pdf', 'generarPDF')->name('dashboard.pdf');
+        Route::match(['get','post'], '/dashboard/pdf', 'generarPDF')->name('dashboard.pdf');
     });
     Route::controller(CalendarController::class)->group(function () {
         Route::get('/calendario', 'index')->name('calendario');
@@ -218,6 +218,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/bancos/{banco_id}/transacciones', 'registrarTransaccion')->name('bancos.transacciones.store')->middleware('permission:bancos.transacciones.store');
         Route::post('/bancos/transferir', 'transferirFondos')->name('bancos.transferir')->middleware('permission:bancos.transacciones.store');
         Route::put('/bancos/deudas/{id}/pagar', 'pagarDeuda')->name('bancos.pagar-deuda')->middleware('permission:bancos.transacciones.store');
+        Route::get('/bancos/transacciones/exportar-pdf', 'exportarTransaccionesPDF')->name('bancos.transacciones.exportar-pdf')->middleware('permission:bancos.index');
+        Route::get('/bancos/transacciones/exportar-excel', 'exportarTransaccionesExcel')->name('bancos.transacciones.exportar-excel')->middleware('permission:bancos.index');
     });
 
     Route::controller(CostoController::class)->group(function () {

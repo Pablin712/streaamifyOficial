@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TransaccionesExport;
 use App\Models\Banco;
 use App\Models\Gasto;
 use App\Models\TipoGasto;
 use App\Services\BancoService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BancoController extends Controller
 {
@@ -298,6 +301,51 @@ class BancoController extends Controller
         $banco->update($data);
 
         return redirect()->route('bancos.index')->with('success', 'Banco actualizado correctamente.');
+    }
+
+    // Construir query de transacciones con filtros comunes
+    private function buildTransaccionesExportQuery(Request $request)
+    {
+        $query = \App\Models\Transaccion::with('banco')->where('anulada', false);
+
+        if ($request->filled('banco_id')) {
+            $query->where('banco_id', $request->banco_id);
+        }
+        if ($request->filled('fecha_inicio')) {
+            $query->whereDate('fecha', '>=', $request->fecha_inicio);
+        }
+        if ($request->filled('fecha_fin')) {
+            $query->whereDate('fecha', '<=', $request->fecha_fin);
+        }
+        if ($request->filled('tipo') && $request->tipo !== 'todos') {
+            $query->where('tipo', $request->tipo);
+        }
+
+        return $query->orderBy('fecha', 'desc');
+    }
+
+    // Exportar transacciones a PDF
+    public function exportarTransaccionesPDF(Request $request)
+    {
+        $transacciones = $this->buildTransaccionesExportQuery($request)->get();
+        $banco         = $request->filled('banco_id') ? Banco::find($request->banco_id) : null;
+        $fechaInicio   = $request->fecha_inicio;
+        $fechaFin      = $request->fecha_fin;
+        $tipo          = ($request->filled('tipo') && $request->tipo !== 'todos') ? $request->tipo : null;
+
+        $pdf = Pdf::loadView('finance.bancos.transacciones-pdf', compact('transacciones', 'banco', 'fechaInicio', 'fechaFin', 'tipo'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('transacciones-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    // Exportar transacciones a Excel
+    public function exportarTransaccionesExcel(Request $request)
+    {
+        return Excel::download(
+            new TransaccionesExport($request->only(['banco_id', 'fecha_inicio', 'fecha_fin', 'tipo'])),
+            'transacciones-' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 
     // Pagar deuda (puede ser abono parcial o total)
