@@ -142,7 +142,7 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 <script>
 function openApproveModal(id, cliente, plan) {
     document.getElementById('approve_req_id').value = id;

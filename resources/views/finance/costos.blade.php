@@ -192,7 +192,7 @@
 <script src="{{ asset('js/searchable-select.js') }}"></script>
 
 <!-- Enhanced Table v2.0 -->
-<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 
 <script>
     console.log('Vista de costos cargada con Enhanced Table v2.0 Server-side');

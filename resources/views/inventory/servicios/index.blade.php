@@ -191,7 +191,7 @@
 
 @section('scripts')
 <!-- Enhanced Table v2.0 -->
-<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 
 <script>
 console.log('Vista de servicios cargada con modales');

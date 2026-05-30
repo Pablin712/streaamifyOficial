@@ -73,6 +73,12 @@ const ThemeManager = {
             icon: '🍂',
             decoration: null,
             autoActivate: { month: 9, dayStart: 22, dayEnd: 24 }
+        },
+        mundial2026: {
+            name: 'Mundial 2026 ⚽',
+            icon: '🏆',
+            decoration: 'mundial2026',
+            autoActivate: { monthStart: 6, dayStart: 11, monthEnd: 7, dayEnd: 19 }
         }
     },
 
@@ -161,17 +167,29 @@ const ThemeManager = {
      */
     getAutoTheme() {
         const now = new Date();
-        const currentMonth = now.getMonth() + 1; // JavaScript months are 0-based
-        const currentDay = now.getDate();
+        const currentMonth = now.getMonth() + 1;
+        const currentDay   = now.getDate();
 
         for (const [themeId, config] of Object.entries(this.themes)) {
-            if (config.autoActivate) {
-                const { month, dayStart, dayEnd } = config.autoActivate;
+            if (!config.autoActivate) continue;
+            const a = config.autoActivate;
 
-                if (currentMonth === month && currentDay >= dayStart && currentDay <= dayEnd) {
-                    console.log(`[ThemeManager] Auto-activando tema: ${themeId} (${currentDay}/${currentMonth})`);
-                    return themeId;
-                }
+            let match = false;
+
+            if (a.monthStart !== undefined) {
+                // Rango multi-mes: monthStart/dayStart → monthEnd/dayEnd
+                const current  = currentMonth * 100 + currentDay;
+                const rangeStart = a.monthStart * 100 + a.dayStart;
+                const rangeEnd   = a.monthEnd   * 100 + a.dayEnd;
+                match = current >= rangeStart && current <= rangeEnd;
+            } else {
+                // Rango de un solo mes
+                match = currentMonth === a.month && currentDay >= a.dayStart && currentDay <= a.dayEnd;
+            }
+
+            if (match) {
+                console.log(`[ThemeManager] Auto-activando tema: ${themeId} (${currentDay}/${currentMonth})`);
+                return themeId;
             }
         }
 

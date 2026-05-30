@@ -287,7 +287,7 @@ function initEnhancedTable(table) {
         isServerSide: isServerSide,
         searchUrl: table.dataset.searchUrl || window.location.href,
         currentPage: 1,
-        rowsPerPage: 5,
+        rowsPerPage: parseInt(table.dataset.defaultRows) || 5,
         sortBy: null,
         sortOrder: 'asc',
         searchTerm: '',

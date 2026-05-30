@@ -5,848 +5,551 @@
 @section('h1')
     <i class="fas fa-chart-line text-primary me-2"></i> Dashboard Financiero
 @endsection
-
-@section('breadcrumb')
-    Dashboard
-@endsection
-
+@section('breadcrumb') Dashboard @endsection
 @section('introduccion')
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
             <h4 class="mb-1">Bienvenido, <strong>{{ Auth::user()->nombreemp }}</strong></h4>
-            <p class="mb-0 text-muted">Resumen completo del rendimiento financiero y operativo de Streamify HQ</p>
+            <p class="mb-0 text-muted">Resumen del rendimiento financiero y operativo de Streamify HQ</p>
         </div>
-        <div>
-            <button type="button" class="btn btn-danger" onclick="abrirModalReportes()">
-                <i class="fas fa-file-pdf me-1"></i> Generar Reporte
-            </button>
-        </div>
+        <button type="button" class="btn btn-danger" onclick="abrirModalReportes()">
+            <i class="fas fa-file-pdf me-1"></i> Generar Reporte
+        </button>
     </div>
 @endsection
+
+@section('styles')
+<style>
+/* ── KPI Cards ───────────────────────────────────────────── */
+.kpi-card {
+    border: none;
+    border-radius: 14px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.12) !important; }
+.kpi-card .kpi-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.kpi-card .kpi-label {
+    font-size: .7rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    opacity: .75; margin-bottom: 4px;
+}
+.kpi-card .kpi-value {
+    font-size: 1.65rem; font-weight: 800; line-height: 1.1;
+}
+.kpi-card .kpi-sub { font-size: .75rem; opacity: .6; margin-top: 2px; }
+.kpi-card::after {
+    content: '';
+    position: absolute; bottom: -16px; right: -16px;
+    width: 80px; height: 80px; border-radius: 50%;
+    opacity: .07;
+}
+
+/* Color variants */
+.kpi-blue   { background: linear-gradient(135deg,#e8f0fe,#dce8fd); color:#1a56db; }
+.kpi-blue   .kpi-icon { background:#c7d9fb; }
+.kpi-blue::after { background:#1a56db; }
+
+.kpi-green  { background: linear-gradient(135deg,#e3f9ee,#d1f5e4); color:#057a55; }
+.kpi-green  .kpi-icon { background:#bbf0d6; }
+.kpi-green::after { background:#057a55; }
+
+.kpi-purple { background: linear-gradient(135deg,#ede9fe,#e4dffd); color:#6d28d9; }
+.kpi-purple .kpi-icon { background:#d4c8fb; }
+.kpi-purple::after { background:#6d28d9; }
+
+.kpi-orange { background: linear-gradient(135deg,#fff3e0,#ffe8c4); color:#b45309; }
+.kpi-orange .kpi-icon { background:#fcd59a; }
+.kpi-orange::after { background:#b45309; }
+
+.kpi-red    { background: linear-gradient(135deg,#fef2f2,#fee2e2); color:#b91c1c; }
+.kpi-red    .kpi-icon { background:#fecaca; }
+.kpi-red::after { background:#b91c1c; }
+
+.kpi-teal   { background: linear-gradient(135deg,#f0fdfa,#ccfbf1); color:#0f766e; }
+.kpi-teal   .kpi-icon { background:#99f6e4; }
+.kpi-teal::after { background:#0f766e; }
+
+.kpi-indigo { background: linear-gradient(135deg,#eef2ff,#e0e7ff); color:#3730a3; }
+.kpi-indigo .kpi-icon { background:#c7d2fe; }
+.kpi-indigo::after { background:#3730a3; }
+
+.kpi-yellow { background: linear-gradient(135deg,#fffbeb,#fef3c7); color:#92400e; }
+.kpi-yellow .kpi-icon { background:#fde68a; }
+.kpi-yellow::after { background:#92400e; }
+
+/* ── Section headers ─────────────────────────────────────── */
+.dash-section-label {
+    font-size: .7rem; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; opacity: .55; margin-bottom: 12px;
+}
+
+/* ── Chart cards ─────────────────────────────────────────── */
+.chart-card { border: none; border-radius: 14px; overflow: hidden; }
+.chart-card .card-header {
+    font-weight: 600; font-size: .88rem;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-body-bg);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.chart-card .card-footer {
+    font-size: .75rem; padding: 8px 20px;
+    background: var(--bs-tertiary-bg); border-top: 1px solid var(--bs-border-color);
+}
+.interval-btn {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 6px; padding: 3px 10px;
+    font-size: .75rem; font-weight: 600; cursor: pointer;
+    background: var(--bs-body-bg); color: var(--bs-body-color);
+    transition: all .15s;
+}
+.interval-btn.active, .interval-btn:hover {
+    background: var(--bs-primary); color: #fff; border-color: var(--bs-primary);
+}
+
+/* ── Finance summary table ───────────────────────────────── */
+.finance-table th { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.finance-table td { font-size: .85rem; }
+</style>
+@endsection
+
 @section('content')
-    <!-- Content Wrapper -->
-    <div id="content-wrapper" class="d-flex flex-column">
-        <!-- Main Content -->
-        <div id="content">
-            <!-- Begin Page Content -->
-            <div class="container-fluid">
-                <!-- Page Heading -->
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <h1 class="h3 mb-0 text-gray-800">Resumen de Streamify HQ</h1>
-                </div>
-                <div class="row">
-                    <!-- Earnings (Monthly) Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-primary shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                            Ingresos (Mensual)</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_mes }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Earnings (Annual) Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Ingresos (Anual)</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">${{ $ingresos_ano }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Earnings (Annual) Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                            Ventas este mes</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $ventas_mes }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                            Ventas este Año</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                            {{ $ventas_ano }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {{-- otro card --}}
-
-                </div>
-
-                <!-- Cards de Resumen Financiero Total -->
-                <div class="row mb-4">
-                    <div class="col-12 mb-3">
-                        <h5 class="font-weight-bold text-primary">
-                            <i class="fas fa-money-bill-wave me-2"></i> Resumen Financiero del Negocio
-                        </h5>
-                    </div>
-
-                    <div class="col-xl-4 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            <i class="fas fa-university"></i> Total Disponible en Bancos
-                                        </div>
-                                        <div class="h4 mb-0 font-weight-bold text-success">
-                                            ${{ number_format($totalDisponible ?? 0, 2) }}
-                                        </div>
-                                        <small class="text-muted">Suma de todos los bancos registrados</small>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-coins fa-3x text-success" style="opacity: 0.3;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-4 col-md-6 mb-4">
-                        <div class="card border-left-danger shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                            <i class="fas fa-file-invoice-dollar"></i> Deudas Pendientes
-                                        </div>
-                                        <div class="h4 mb-0 font-weight-bold text-danger">
-                                            ${{ number_format($totalDeudasPendientes ?? 0, 2) }}
-                                        </div>
-                                        <small class="text-muted">Total por pagar a proveedores</small>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-exclamation-triangle fa-3x text-danger" style="opacity: 0.3;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-4 col-md-6 mb-4">
-                        <div class="card shadow h-100 py-2" style="border-left: 4px solid {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }};">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }};">
-                                            <i class="fas fa-balance-scale"></i> Balance Neto
-                                        </div>
-                                        <div class="h4 mb-0 font-weight-bold" style="color: {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }};">
-                                            ${{ number_format(($totalDisponible ?? 0) - ($totalDeudasPendientes ?? 0), 2) }}
-                                        </div>
-                                        <small class="text-muted">Disponible - Deudas</small>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-chart-line fa-3x" style="color: {{ ($totalDisponible - $totalDeudasPendientes) >= 0 ? '#28a745' : '#dc3545' }}; opacity: 0.3;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Clientes activos (Monthly) Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-primary shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                            Cuentas Activas</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $num_cuentas }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-crown fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Espacios disponibles</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                            {{ $espacios }}
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-warehouse fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Pending Requests Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-warning shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                            Pending Payments</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $usuarios_acobrar }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Pending Requests Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-warning shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                            Cuentas caidas</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $cuentas_caidas }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-tools fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <!-- Clientes activos (Monthly) Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-primary shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                            Clientes Activos</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $clientes_activos }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-users fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Earnings (Annual) Card Example -->
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Usuarios Activos</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $total_usuarios_activos }}
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-id-badge fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                            Media de pago por cliente</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                            ${{ number_format($promedio_pagos_mes, 2) }}</div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-coins fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {{-- otro card --}}
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                            Cliente más facturado</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                            {{ $cliente_mas_facturado->nombre_cliente ?? 'No encontrado' }}
-                                            ${{ $cliente_mas_facturado->facturado ?? 0 }}
-                                        </div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-user fa-2x text-gray-300"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- /.container-fluid -->
-        </div>
-        <!-- End of Main Content -->
-    </div>
-
-    {{-- Tabla de Resultados del Mes --}}
-    @include('partials.dashboard-statistics-table')
-
-    {{-- Resumen Financiero --}}
-    <div class="card mb-4">
-        <div class="card-header" style="background-color: var(--bg-light);">
-            <h5 class="mb-0" style="color: var(--text-primary);">
-                <i class="fas fa-calculator me-2"></i>Resumen Financiero del Mes
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <h6 class="fw-bold mb-3">
-                        <i class="fas fa-chart-pie me-2 text-primary"></i>Análisis de Resultados
-                    </h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>📌 Concepto</th>
-                                    <th class="text-end">💰 Monto</th>
-                                    <th class="text-end">📈 Porcentaje</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>💵 Ingresos</strong></td>
-                                    <td class="text-end">${{ number_format($ingresos_mes, 2) }}</td>
-                                    <td class="text-end"><strong>100%</strong></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>🏭 Costos</strong></td>
-                                    <td class="text-end">${{ number_format($costos_mes, 2) }}</td>
-                                    <td class="text-end">{{ number_format($costos_pct, 2) }}%</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>💸 Gastos</strong></td>
-                                    <td class="text-end">${{ number_format($gastos_mes, 2) }}</td>
-                                    <td class="text-end">{{ number_format($gastos_pct, 2) }}%</td>
-                                </tr>
-                                <tr class="table-{{ $balance >= 0 ? 'success' : 'danger' }}">
-                                    <td><strong>📊 Balance</strong></td>
-                                    <td class="text-end">
-                                        <strong>${{ number_format($balance, 2) }}</strong>
-                                    </td>
-                                    <td class="text-end">
-                                        <strong>{{ number_format($balance_pct, 2) }}%</strong>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="fw-bold mb-3">
-                        <i class="fas fa-receipt me-2 text-warning"></i>Desglose de Gastos
-                    </h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>📍 Concepto</th>
-                                    <th class="text-end">💲 Monto</th>
-                                    <th class="text-end">📊 %</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($gastos as $gasto)
-                                    <tr>
-                                        <td>{{ $gasto['concepto'] }}</td>
-                                        <td class="text-end">${{ number_format($gasto['total'], 2) }}</td>
-                                        <td class="text-end">{{ $gasto['porcentaje'] }}%</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <p class="text-muted mb-0">
-                <i class="fas fa-info-circle me-1"></i>
-                Visualiza los gráficos de resultados del mes actual en la sección inferior.
-            </p>
-        </div>
-    </div>
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>
-                <i class="fas fa-chart-area me-1"></i>
-                Progreso de Streamify
-            </span>
+{{-- ══ ROW 1: Ingresos & Ventas ══════════════════════════ --}}
+<p class="dash-section-label"><i class="fas fa-money-bill-wave me-1"></i>Ingresos y Ventas</p>
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-blue shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-calendar-alt"></i></div>
             <div>
-                <button class="btn btn-sm btn-primary filter-btn" data-interval="1d">1D</button>
-                <button class="btn btn-sm btn-primary filter-btn" data-interval="1w">1W</button>
-                <button class="btn btn-sm btn-primary filter-btn" data-interval="1m">1M</button>
-                <button class="btn btn-sm btn-primary filter-btn" data-interval="3m">3M</button>
-                <button class="btn btn-sm btn-primary filter-btn" data-interval="1y">1Y</button>
-            </div>
-        </div>
-        <div class="card-body">
-            <canvas id="myAreaChart" width="100%" height="30"></canvas>
-        </div>
-        <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
-    </div>
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-bar me-1"></i>
-                    Finanzas de los servicios este mes
-                </div>
-                <div class="card-body">
-                    <canvas id="myBarChart" width="100%" height="50"></canvas>
-                </div>
-                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-pie me-1"></i>
-                    Porcentaje de Ganancias
-                </div>
-                <div class="card-body"><canvas id="myPieChart" width="100%" height="50"></canvas></div>
-                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+                <div class="kpi-label">Ingresos este mes</div>
+                <div class="kpi-value">${{ number_format($ingresos_mes, 2) }}</div>
+                <div class="kpi-sub">Ventas: {{ $ventas_mes }}</div>
             </div>
         </div>
     </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-green shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+            <div>
+                <div class="kpi-label">Ingresos este año</div>
+                <div class="kpi-value">${{ number_format($ingresos_ano, 2) }}</div>
+                <div class="kpi-sub">Ventas: {{ $ventas_ano }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-teal shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-coins"></i></div>
+            <div>
+                <div class="kpi-label">Total en bancos</div>
+                <div class="kpi-value">${{ number_format($totalDisponible ?? 0, 2) }}</div>
+                <div class="kpi-sub">Suma de todos los bancos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        @php $balanceColor = (($totalDisponible??0) - ($totalDeudasPendientes??0)) >= 0 ? 'kpi-green' : 'kpi-red'; @endphp
+        <div class="kpi-card {{ $balanceColor }} shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-balance-scale"></i></div>
+            <div>
+                <div class="kpi-label">Balance neto</div>
+                <div class="kpi-value">${{ number_format(($totalDisponible??0)-($totalDeudasPendientes??0), 2) }}</div>
+                <div class="kpi-sub">Deudas: ${{ number_format($totalDeudasPendientes??0, 2) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══ ROW 2: Operaciones ═════════════════════════════════ --}}
+<p class="dash-section-label"><i class="fas fa-server me-1"></i>Operaciones</p>
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-indigo shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-crown"></i></div>
+            <div>
+                <div class="kpi-label">Cuentas activas</div>
+                <div class="kpi-value">{{ $num_cuentas }}</div>
+                <div class="kpi-sub">Espacios: {{ $espacios }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-orange shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+            <div>
+                <div class="kpi-label">Pagos pendientes</div>
+                <div class="kpi-value">{{ $usuarios_acobrar }}</div>
+                <div class="kpi-sub">Usuarios por cobrar</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-red shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-tools"></i></div>
+            <div>
+                <div class="kpi-label">Cuentas caídas</div>
+                <div class="kpi-value">{{ $cuentas_caidas }}</div>
+                <div class="kpi-sub">Requieren atención</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-purple shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div>
+                <div class="kpi-label">Deudas pendientes</div>
+                <div class="kpi-value">${{ number_format($totalDeudasPendientes??0, 2) }}</div>
+                <div class="kpi-sub">Por pagar a proveedores</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══ ROW 3: Clientes ════════════════════════════════════ --}}
+<p class="dash-section-label"><i class="fas fa-users me-1"></i>Clientes</p>
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-blue shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-users"></i></div>
+            <div>
+                <div class="kpi-label">Clientes activos</div>
+                <div class="kpi-value">{{ $clientes_activos }}</div>
+                <div class="kpi-sub">Usuarios: {{ $total_usuarios_activos }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-green shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-id-badge"></i></div>
+            <div>
+                <div class="kpi-label">Usuarios activos</div>
+                <div class="kpi-value">{{ $total_usuarios_activos }}</div>
+                <div class="kpi-sub">Suscripciones vigentes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-yellow shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-coins"></i></div>
+            <div>
+                <div class="kpi-label">Media de pago / cliente</div>
+                <div class="kpi-value">${{ number_format($promedio_pagos_mes, 2) }}</div>
+                <div class="kpi-sub">Este mes</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-teal shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-user-tie"></i></div>
+            <div>
+                <div class="kpi-label">Cliente más facturado</div>
+                <div class="kpi-value" style="font-size:1.1rem;">{{ $cliente_mas_facturado->nombre_cliente ?? '—' }}</div>
+                <div class="kpi-sub">${{ number_format($cliente_mas_facturado->facturado ?? 0, 2) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══ Tabla de resultados ════════════════════════════════ --}}
+@include('partials.dashboard-statistics-table')
+
+{{-- ══ Resumen Financiero ═════════════════════════════════ --}}
+<div class="card chart-card shadow-sm mb-4">
+    <div class="card-header">
+        <span><i class="fas fa-calculator me-2 text-primary"></i>Resumen Financiero del Mes</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-3 small text-uppercase opacity-75"><i class="fas fa-chart-pie me-1"></i>Análisis de resultados</h6>
+                <table class="table table-sm finance-table">
+                    <thead><tr><th>Concepto</th><th class="text-end">Monto</th><th class="text-end">%</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Ingresos</strong></td><td class="text-end">${{ number_format($ingresos_mes,2) }}</td><td class="text-end fw-bold">100%</td></tr>
+                        <tr><td>Costos</td><td class="text-end">${{ number_format($costos_mes,2) }}</td><td class="text-end">{{ number_format($costos_pct,1) }}%</td></tr>
+                        <tr><td>Gastos</td><td class="text-end">${{ number_format($gastos_mes,2) }}</td><td class="text-end">{{ number_format($gastos_pct,1) }}%</td></tr>
+                        <tr class="table-{{ $balance>=0?'success':'danger' }} fw-bold">
+                            <td>Balance</td>
+                            <td class="text-end">${{ number_format($balance,2) }}</td>
+                            <td class="text-end">{{ number_format($balance_pct,1) }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold mb-3 small text-uppercase opacity-75"><i class="fas fa-receipt me-1"></i>Desglose de gastos</h6>
+                <table class="table table-sm finance-table">
+                    <thead><tr><th>Concepto</th><th class="text-end">Monto</th><th class="text-end">%</th></tr></thead>
+                    <tbody>
+                        @foreach($gastos as $g)
+                        <tr><td>{{ $g['concepto'] }}</td><td class="text-end">${{ number_format($g['total'],2) }}</td><td class="text-end">{{ $g['porcentaje'] }}%</td></tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══ Gráfico de progreso (área) ═════════════════════════ --}}
+<div class="card chart-card shadow-sm mb-4">
+    <div class="card-header">
+        <span><i class="fas fa-chart-area me-1"></i>Progreso de Streamify</span>
+        <div class="d-flex gap-1 flex-wrap">
+            @foreach(['1d'=>'1D','1w'=>'1S','1m'=>'1M','3m'=>'3M','1y'=>'1A'] as $val=>$label)
+            <button class="interval-btn filter-btn {{ $loop->first?'active':'' }}" data-interval="{{ $val }}">{{ $label }}</button>
+            @endforeach
+        </div>
+    </div>
+    <div class="card-body p-3">
+        <canvas id="myAreaChart" style="width:100%;height:260px;max-height:260px;"></canvas>
+    </div>
+    <div class="card-footer text-muted">Actualizado automáticamente</div>
+</div>
+
+{{-- ══ Bar + Pie ══════════════════════════════════════════ --}}
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card chart-card shadow-sm h-100">
+            <div class="card-header">
+                <span><i class="fas fa-chart-bar me-1"></i>Finanzas por servicio este mes</span>
+            </div>
+            <div class="card-body p-3">
+                <canvas id="myBarChart" style="width:100%;height:260px;max-height:260px;"></canvas>
+            </div>
+            <div class="card-footer text-muted">Ingresos, costos y ganancias por plataforma</div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card chart-card shadow-sm h-100">
+            <div class="card-header">
+                <span><i class="fas fa-chart-pie me-1"></i>Ganancias por servicio</span>
+            </div>
+            <div class="card-body p-3 d-flex align-items-center justify-content-center">
+                <canvas id="myPieChart" style="width:100%;max-height:260px;"></canvas>
+            </div>
+            <div class="card-footer text-muted">Distribución de ganancias del mes</div>
+        </div>
+    </div>
+</div>
+
 @endsection
-@section('pie')
-    Realiza las tareas
-@endsection
+
+@section('pie') Streamify HQ @endsection
+
 @section('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var ctx = document.getElementById("myAreaChart").getContext("2d");
-            var myAreaChart;
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
-            function initChart(labels, ingresos, costos, gastos, ganancias, ventasChart, newCustomers, users, accounts, dangerAccounts, pendingPayments, affectedCustomers) {
-                if (myAreaChart) {
-                    myAreaChart.destroy(); // Destruir el gráfico si ya existe
-                }
+    /* ── Paleta ─────────────────────────────────────────── */
+    const C = {
+        blue:   { line:'#3b82f6', fill:'rgba(59,130,246,.12)' },
+        orange: { line:'#f97316', fill:'rgba(249,115,22,.12)' },
+        red:    { line:'#ef4444', fill:'rgba(239,68,68,.12)' },
+        green:  { line:'#10b981', fill:'rgba(16,185,129,.12)' },
+        yellow: { line:'#f59e0b', fill:'rgba(245,158,11,.12)' },
+        pink:   { line:'#ec4899', fill:'rgba(236,72,153,.12)' },
+        purple: { line:'#8b5cf6', fill:'rgba(139,92,246,.12)' },
+        brown:  { line:'#78716c', fill:'rgba(120,113,108,.12)' },
+        teal:   { line:'#14b8a6', fill:'rgba(20,184,166,.12)' },
+        indigo: { line:'#6366f1', fill:'rgba(99,102,241,.12)' },
+    };
 
-                myAreaChart = new Chart(ctx, {
-                    type: "line",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                                label: "Ingresos",
-                                data: ingresos,
-                                fill: true,
-                                backgroundColor: "rgba(78, 115, 223, 0.2)",
-                                borderColor: "rgba(78, 115, 223, 1)",
-                                borderWidth: 2,
-                            },
-                            {
-                                label: "Costos",
-                                data: costos,
-                                fill: true,
-                                backgroundColor: "rgba(255, 159, 64, 0.2)", // 🟠 Naranja estándar
-                                borderColor: "rgba(255, 159, 64, 1)",
-                                borderWidth: 2,
-                            },
-                            {
-                                label: "Gastos",
-                                data: gastos,
-                                fill: true,
-                                backgroundColor: "rgba(220, 53, 69, 0.2)", // 🔴 Rojo translúcido
-                                borderColor: "rgba(220, 53, 69, 1)", // 🔴 Rojo fuerte
-                                borderWidth: 2,
-                            },
-                            {
-                                label: "Ganancias",
-                                data: ganancias,
-                                fill: true,
-                                backgroundColor: "rgba(28, 200, 138, 0.2)",
-                                borderColor: "rgba(28, 200, 138, 1)",
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Ventas",
-                                data: ventasChart,
-                                fill: false,
-                                backgroundColor: "rgba(255, 205, 86, 0.2)", // 🟡 Amarillo translúcido
-                                borderColor: "rgba(255, 205, 86, 1)", // 🟡 Amarillo fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Clientes New",
-                                data: newCustomers,
-                                fill: false,
-                                backgroundColor: "rgba(255, 20, 147, 0.2)", // 🌸 Rosa más vibrante
-                                borderColor: "rgba(255, 20, 147, 1)", // 🌸 Rosa fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Suscripciones",
-                                data: users,
-                                fill: false,
-                                backgroundColor: "rgba(153, 102, 255, 0.2)", // 🟣 Morado translúcido
-                                borderColor: "rgba(153, 102, 255, 1)", // 🟣 Morado fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Cuentas",
-                                data: accounts,
-                                fill: false,
-                                backgroundColor: "rgba(139, 69, 19, 0.2)", // 🟤 Marrón translúcido
-                                borderColor: "rgba(139, 69, 19, 1)", // 🟤 Marrón fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Cuentas Peligrosas",
-                                data: dangerAccounts,
-                                fill: false,
-                                backgroundColor: "rgba(255, 99, 132, 0.2)", // 🔴 Rojo translúcido
-                                borderColor: "rgba(255, 99, 132, 1)", // 🔴 Rojo fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Pagos Pendientes",
-                                data: pendingPayments,
-                                fill: false,
-                                backgroundColor: "rgba(54, 162, 235, 0.2)", // 🔵 Azul translúcido
-                                borderColor: "rgba(54, 162, 235, 1)", // 🔵 Azul fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            },
-                            {
-                                label: "Clientes Afectados",
-                                data: affectedCustomers,
-                                fill: false,
-                                backgroundColor: "rgba(255, 159, 64, 0.2)", // 🟠 Naranja translúcido
-                                borderColor: "rgba(255, 159, 64, 1)", // 🟠 Naranja fuerte
-                                borderWidth: 2,
-                                hidden: true
-                            }
-                        ],
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            x: {
-                                beginAtZero: true
-                            },
-                            y: {
-                                beginAtZero: true
-                            },
-                        },
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: "top"
-                            },
-                            tooltip: {
-                                enabled: true
-                            },
-                        },
-                    },
-                });
-            }
+    const gridColor = 'rgba(150,150,150,.1)';
+    const money = v => '$' + parseFloat(v||0).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-            function loadChartData(interval) {
-                fetch("{{ route('dashboard.filter') }}?range=" + interval)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        initChart(
-                            data.labels,
-                            Object.values(data.ingresos),
-                            Object.values(data.costos),
-                            Object.values(data.gastos),
-                            Object.values(data.ganancias),
-                            Object.values(data.ventasChart),
-                            Object.values(data.newCustomers),
-                            Object.values(data.users),
-                            Object.values(data.accounts),
-                            Object.values(data.dangerAccounts),
-                            Object.values(data.pendingPayments),
-                            Object.values(data.affectedCustomers),
-                        );
-                    })
-                    .catch((error) => console.error("Error al cargar datos:", error));
-            }
+    Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
+    Chart.defaults.font.size   = 12;
 
-            document.querySelectorAll(".filter-btn").forEach((button) => {
-                button.addEventListener("click", function() {
-                    document.querySelectorAll(".filter-btn").forEach((btn) =>
-                        btn.classList.remove("btn-primary")
-                    );
-                    this.classList.add("btn-primary");
+    /* ── Área Chart ─────────────────────────────────────── */
+    const ctxArea = document.getElementById("myAreaChart").getContext("2d");
+    let myAreaChart;
 
-                    var interval = this.getAttribute("data-interval");
-                    loadChartData(interval);
-                });
-            });
+    function dataset(label, c, data, hidden=false, fill=true) {
+        return {
+            label, data, hidden,
+            fill, tension: 0.45,
+            backgroundColor: fill ? c.fill : 'transparent',
+            borderColor: c.line, borderWidth: 2,
+            pointBackgroundColor: c.line,
+            pointRadius: 3, pointHoverRadius: 5,
+        };
+    }
 
-            // Cargar datos iniciales
-            loadChartData("1d");
-        });
-    </script>
-    <script>
-        var ctx = document.getElementById('myBarChart').getContext('2d');
+    function initChart(labels, ingresos, costos, gastos, ganancias, ventas, newCustomers, users, accounts, dangerAccounts, pendingPayments, affectedCustomers) {
+        if (myAreaChart) myAreaChart.destroy();
 
-        var ingNetflix = @json($ingresos_netflix); // Ingresos
-        var cosNetflix = @json($costos_netflix); // Costos
-        var ganNetflix = ingNetflix - cosNetflix;
-
-        // Ingresos, costos y ganancias de Disney
-        var ingDisney = @json($ingresos_disney); // Ingresos de Disney
-        var cosDisney = @json($costos_disney); // Costos de Disney
-        var ganDisney = ingDisney - cosDisney; // Ganancias de Disney
-        // Ingresos, costos y ganancias de Prime
-        var ingPrime = @json($ingresos_prime); // Ingresos de Prime
-        var cosPrime = @json($costos_prime); // Costos de Prime
-        var ganPrime = ingPrime - cosPrime; // Ganancias de Prime
-        // Ingresos, costos y ganancias de Max
-        var ingMax = @json($ingresos_max); // Ingresos de Max
-        var cosMax = @json($costos_max); // Costos de Max
-        var ganMax = ingMax - cosMax; // Ganancias de Max
-        // Ingresos, costos y ganancias de Magis
-        var ingMagis = @json($ingresos_magis); // Ingresos de Magis
-        var cosMagis = @json($costos_magis); // Costos de Magis
-        var ganMagis = ingMagis - cosMagis; // Ganancias de Magis
-        // Ingresos, costos y ganancias de Crunchy
-        var ingCrunchy = @json($ingresos_crunchy); // Ingresos de Crunchy
-        var cosCrunchy = @json($costos_crunchy); // Costos de Crunchy
-        var ganCrunchy = ingCrunchy - cosCrunchy; // Ganancias de Crunchy
-        // Ingresos, costos y ganancias de Paramount
-        var ingParamount = @json($ingresos_paramount); // Ingresos de Paramount
-        var cosParamount = @json($costos_paramount); // Costos de Paramount
-        var ganParamount = ingParamount - cosParamount; // Ganancias de Paramount
-        // Ingresos, costos y ganancias de Spotify
-        var ingSpotify = @json($ingresos_spotify); // Ingresos de Spotify
-        var cosSpotify = @json($costos_spotify); // Costos de Spotify
-        var ganSpotify = ingSpotify - cosSpotify; // Ganancias de Spotify
-        // Ingresos, costos y ganancias de Otros
-        var ingOtros = @json($ingresos_otros); // Ingresos de Otros
-        var cosOtros = @json($costos_otros); // Costos de Otros
-        var ganOtros = ingOtros - cosOtros; // Ganancias de Otros
-        // Ingresos, costos y ganancias de Netflix
-        var myBarChart = new Chart(ctx, {
-            type: 'bar', // Tipo de gráfico: barra
+        myAreaChart = new Chart(ctxArea, {
+            type: "line",
             data: {
-                labels: ['Netflix', 'Disney', 'Prime', 'Max', 'Magis', 'Crunchy', 'Paramount', 'Spotify',
-                    'Otros'
-                ], // Etiquetas de las categorías (eje X)
-                datasets: [{
-                        label: 'Ingresos', // Etiqueta para la primera barra
-                        data: [ingNetflix, ingDisney, ingPrime, ingMax, ingMagis, ingCrunchy, ingParamount,
-                            ingSpotify, ingOtros
-                        ], // Datos para la serie 1
-                        backgroundColor: '#3aff00', // Color de las barras de la primera serie
-                        borderColor: '#3aff00', // Color del borde de las barras
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Costos', // Etiqueta para la segunda barra
-                        data: [cosNetflix, cosDisney, cosPrime, cosMax, cosMagis, cosCrunchy, cosParamount,
-                            cosSpotify, cosOtros
-                        ], // Datos para la serie 2
-                        backgroundColor: '#ff0000', // Color de las barras de la segunda serie
-                        borderColor: '#ff0000', // Color del borde de las barras
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Ganancias', // Etiqueta para la tercera barra
-                        data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount,
-                            ganSpotify, ganOtros
-                        ], // Datos para la serie 3
-                        backgroundColor: '#18af00', // Color de las barras de la tercera serie
-                        borderColor: '#18af00', // Color del borde de las barras
-                        borderWidth: 1
-                    }
-                ]
+                labels,
+                datasets: [
+                    dataset('Ingresos',   C.blue,   ingresos),
+                    dataset('Costos',     C.orange, costos),
+                    dataset('Gastos',     C.red,    gastos),
+                    dataset('Ganancias',  C.green,  ganancias,  true),
+                    dataset('Ventas',     C.yellow, ventas,     true, false),
+                    dataset('Clientes nuevos', C.pink,   newCustomers, true, false),
+                    dataset('Suscripciones',   C.purple, users,    true, false),
+                    dataset('Cuentas',         C.brown,  accounts, true, false),
+                    dataset('Cuentas riesgo',  C.teal,   dangerAccounts, true, false),
+                    dataset('Pagos pendientes',C.indigo, pendingPayments,true, false),
+                    dataset('Clientes afectados',C.orange,affectedCustomers,true,false),
+                ],
             },
             options: {
-                responsive: true, // Hacer el gráfico responsivo
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
                 scales: {
-                    x: {
-                        stacked: false // No apilar las barras, es necesario para barras agrupadas
-                    },
-                    y: {
-                        stacked: false // No apilar las barras en el eje Y
-                    }
+                    x: { grid: { color: gridColor }, ticks: { maxRotation: 45 } },
+                    y: { beginAtZero: true, grid: { color: gridColor },
+                         ticks: { callback: v => '$' + v.toLocaleString() } },
                 },
                 plugins: {
-                    legend: {
-                        display: true, // Mostrar la leyenda
-                        position: 'top' // Posición de la leyenda
-                    }
-                }
-            }
-        });
-    </script>
-    <script>
-        var ctx = document.getElementById('myPieChart').getContext('2d');
-        var myPieChart = new Chart(ctx, {
-            type: 'pie', // Tipo de gráfico: pastel
-            data: {
-                labels: ['Netflix', 'Disney', 'Prime', 'Max', 'Magis', 'Crunchy', 'Paramount', 'Spotify',
-                    'Otros'
-                ], // Etiquetas para cada porción del pastel
-                datasets: [{
-                    data: [ganNetflix, ganDisney, ganPrime, ganMax, ganMagis, ganCrunchy, ganParamount,
-                        ganSpotify, ganOtros
-                    ], // Datos para cada porción del pastel
-                    backgroundColor: ['#ff0000', '#00babd', '#00f7ff', '#003aff', '#ff8f00',
-                        '#ffcd00', '#009eff', '#1abd00', '#d100ff'
-                    ], // Colores para las porciones
-                    borderColor: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff',
-                        '#ffffff', '#ffffff', '#ffffff', '#ffffff'
-                    ], // Color de los bordes
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true, // Hacer el gráfico responsivo
-                plugins: {
-                    legend: {
-                        display: true, // Mostrar la leyenda
-                        position: 'top' // Posición de la leyenda
-                    },
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, padding: 12 } },
                     tooltip: {
-                        enabled: true, // Habilitar los tooltips
-                    }
-                }
-            }
+                        callbacks: {
+                            label: ctx => ` ${ctx.dataset.label}: ${money(ctx.parsed.y)}`
+                        }
+                    },
+                },
+            },
         });
-    </script>
+    }
 
-    {{-- Enhanced Table v2 --}}
-    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+    function loadChartData(interval) {
+        fetch("{{ route('dashboard.filter') }}?range=" + interval)
+            .then(r => r.json())
+            .then(d => initChart(
+                d.labels,
+                Object.values(d.ingresos),  Object.values(d.costos),
+                Object.values(d.gastos),    Object.values(d.ganancias),
+                Object.values(d.ventasChart),Object.values(d.newCustomers),
+                Object.values(d.users),     Object.values(d.accounts),
+                Object.values(d.dangerAccounts),Object.values(d.pendingPayments),
+                Object.values(d.affectedCustomers)
+            ))
+            .catch(e => console.error(e));
+    }
 
-    <script>
-        function abrirModalReportes() {
-            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'reportesDashboardModal' }));
-        }
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+            loadChartData(this.dataset.interval);
+        });
+    });
 
-        function generarReporteMensual() {
-            const mes = document.getElementById('mes_reporte').value;
-            const ano = document.getElementById('ano_reporte').value;
+    loadChartData("1d");
 
-            if (!mes || !ano) {
-                alert('Por favor selecciona mes y año');
-                return;
-            }
+    /* ── Bar Chart ──────────────────────────────────────── */
+    const servicios = ['Netflix','Disney','Prime','Max','Magis','Crunchy','Paramount','Spotify','Otros'];
+    const ing = [@json($ingresos_netflix),@json($ingresos_disney),@json($ingresos_prime),@json($ingresos_max),@json($ingresos_magis),@json($ingresos_crunchy),@json($ingresos_paramount),@json($ingresos_spotify),@json($ingresos_otros)];
+    const cos = [@json($costos_netflix),@json($costos_disney),@json($costos_prime),@json($costos_max),@json($costos_magis),@json($costos_crunchy),@json($costos_paramount),@json($costos_spotify),@json($costos_otros)];
+    const gan = ing.map((v,i) => v - cos[i]);
 
-            const url = `{{ route('dashboard.pdf') }}?tipo=mensual&mes=${mes}&ano=${ano}`;
-            window.open(url, '_blank');
-        }
+    new Chart(document.getElementById('myBarChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: servicios,
+            datasets: [
+                { label:'Ingresos', data:ing, backgroundColor:'rgba(59,130,246,.75)', borderColor:'#3b82f6', borderWidth:1, borderRadius:4 },
+                { label:'Costos',   data:cos, backgroundColor:'rgba(249,115,22,.75)', borderColor:'#f97316', borderWidth:1, borderRadius:4 },
+                { label:'Ganancias',data:gan, backgroundColor:'rgba(16,185,129,.75)', borderColor:'#10b981', borderWidth:1, borderRadius:4 },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode:'index', intersect:false },
+            scales: {
+                x: { grid:{ color:gridColor } },
+                y: { beginAtZero:true, grid:{ color:gridColor },
+                     ticks:{ callback: v => '$'+v } },
+            },
+            plugins: {
+                legend: { position:'top', labels:{ usePointStyle:true, boxWidth:8 } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${money(ctx.parsed.y)}` } },
+            },
+        },
+    });
 
-        function generarReporteAnual() {
-            const ano = document.getElementById('ano_reporte_anual').value;
+    /* ── Pie Chart ──────────────────────────────────────── */
+    const pieColors = ['#ef4444','#06b6d4','#3b82f6','#6366f1','#f59e0b','#fde047','#0ea5e9','#10b981','#a855f7'];
+    new Chart(document.getElementById('myPieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: servicios,
+            datasets: [{ data:gan, backgroundColor:pieColors, borderColor:'#fff', borderWidth:2 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: { position:'right', labels:{ usePointStyle:true, boxWidth:8, padding:10, font:{ size:11 } } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${money(ctx.parsed)}` } },
+            },
+        },
+    });
+});
+</script>
 
-            if (!ano) {
-                alert('Por favor selecciona el año');
-                return;
-            }
+{{-- Enhanced Table --}}
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 
-            const url = `{{ route('dashboard.pdf') }}?tipo=anual&ano=${ano}`;
-            window.open(url, '_blank');
-        }
-    </script>
+<script>
+    function abrirModalReportes() {
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'reportesDashboardModal' }));
+    }
+    function generarReporteMensual() {
+        const mes = document.getElementById('mes_reporte').value;
+        const ano = document.getElementById('ano_reporte').value;
+        if (!mes || !ano) { alert('Por favor selecciona mes y año'); return; }
+        window.open(`{{ route('dashboard.pdf') }}?tipo=mensual&mes=${mes}&ano=${ano}`, '_blank');
+    }
+    function generarReporteAnual() {
+        const ano = document.getElementById('ano_reporte_anual').value;
+        if (!ano) { alert('Por favor selecciona el año'); return; }
+        window.open(`{{ route('dashboard.pdf') }}?tipo=anual&ano=${ano}`, '_blank');
+    }
+</script>
 @endsection
 
 <!-- Modal para Generar Reportes -->
 <x-modal name="reportesDashboardModal" :show="false" maxWidth="md">
     <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title">
-            <i class="fas fa-file-pdf me-2"></i>Generar Reporte
-        </h5>
+        <h5 class="modal-title"><i class="fas fa-file-pdf me-2"></i>Generar Reporte</h5>
         <button type="button" class="btn-close btn-close-white"
-                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'reportesDashboardModal' }))">
-        </button>
+                onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'reportesDashboardModal'}))"></button>
     </div>
     <div class="modal-body">
-        <!-- Reporte Mensual -->
         <div class="card mb-3">
-            <div class="card-header bg-primary text-white">
-                <h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Reporte Mensual</h6>
-            </div>
+            <div class="card-header bg-primary text-white"><h6 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Reporte Mensual</h6></div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="mes_reporte" class="form-label fw-semibold">Mes</label>
                         <select id="mes_reporte" class="form-select">
-                            <option value="1" {{ now()->subMonth()->month == 1 ? 'selected' : '' }}>Enero</option>
-                            <option value="2" {{ now()->subMonth()->month == 2 ? 'selected' : '' }}>Febrero</option>
-                            <option value="3" {{ now()->subMonth()->month == 3 ? 'selected' : '' }}>Marzo</option>
-                            <option value="4" {{ now()->subMonth()->month == 4 ? 'selected' : '' }}>Abril</option>
-                            <option value="5" {{ now()->subMonth()->month == 5 ? 'selected' : '' }}>Mayo</option>
-                            <option value="6" {{ now()->subMonth()->month == 6 ? 'selected' : '' }}>Junio</option>
-                            <option value="7" {{ now()->subMonth()->month == 7 ? 'selected' : '' }}>Julio</option>
-                            <option value="8" {{ now()->subMonth()->month == 8 ? 'selected' : '' }}>Agosto</option>
-                            <option value="9" {{ now()->subMonth()->month == 9 ? 'selected' : '' }}>Septiembre</option>
-                            <option value="10" {{ now()->subMonth()->month == 10 ? 'selected' : '' }}>Octubre</option>
-                            <option value="11" {{ now()->subMonth()->month == 11 ? 'selected' : '' }}>Noviembre</option>
-                            <option value="12" {{ now()->subMonth()->month == 12 ? 'selected' : '' }}>Diciembre</option>
+                            @foreach(['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'] as $i=>$m)
+                            <option value="{{ $i+1 }}" {{ now()->subMonth()->month == $i+1 ? 'selected' : '' }}>{{ $m }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="ano_reporte" class="form-label fw-semibold">Año</label>
                         <select id="ano_reporte" class="form-select">
-                            @for ($i = now()->year; $i >= 2020; $i--)
-                                <option value="{{ $i }}" {{ $i == now()->year ? 'selected' : '' }}>{{ $i }}</option>
+                            @for($i=now()->year;$i>=2020;$i--)
+                            <option value="{{ $i }}" {{ $i==now()->year?'selected':'' }}>{{ $i }}</option>
                             @endfor
                         </select>
                     </div>
@@ -856,18 +559,14 @@
                 </button>
             </div>
         </div>
-
-        <!-- Reporte Anual -->
         <div class="card">
-            <div class="card-header bg-success text-white">
-                <h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Reporte Anual</h6>
-            </div>
+            <div class="card-header bg-success text-white"><h6 class="mb-0"><i class="fas fa-calendar me-2"></i>Reporte Anual</h6></div>
             <div class="card-body">
                 <div class="mb-3">
                     <label for="ano_reporte_anual" class="form-label fw-semibold">Año</label>
                     <select id="ano_reporte_anual" class="form-select">
-                        @for ($i = now()->year; $i >= 2020; $i--)
-                            <option value="{{ $i }}" {{ $i == now()->year ? 'selected' : '' }}>{{ $i }}</option>
+                        @for($i=now()->year;$i>=2020;$i--)
+                        <option value="{{ $i }}" {{ $i==now()->year?'selected':'' }}>{{ $i }}</option>
                         @endfor
                     </select>
                 </div>
@@ -876,10 +575,9 @@
                 </button>
             </div>
         </div>
-
         <div class="alert alert-info mt-3 mb-0">
             <i class="fas fa-info-circle me-2"></i>
-            <small>Por defecto se muestra el <strong>mes anterior</strong> para facilitar la generación de reportes históricos.</small>
+            <small>Por defecto se muestra el <strong>mes anterior</strong> para reportes históricos.</small>
         </div>
     </div>
 </x-modal>

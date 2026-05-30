@@ -313,7 +313,7 @@
 
 @section('scripts')
 <!-- Enhanced Table v2.0 -->
-<script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+<script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 
 <!-- Opcional: Librerías para exportación -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

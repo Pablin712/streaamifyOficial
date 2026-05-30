@@ -245,7 +245,7 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ asset('js/enhanced-table-v2.js') }}"></script>
+    <script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
     <script>
         function showAlert(message, type = 'success') {
             const container = document.getElementById('alert-container');
