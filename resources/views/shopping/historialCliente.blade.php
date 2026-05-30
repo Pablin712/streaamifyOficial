@@ -1469,6 +1469,104 @@
                         </form>
                         @endif
 
+                        {{-- ══ BASE DE CONOCIMIENTOS ═══════════════════════════ --}}
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase small mb-1" style="color:#8a6218;">
+                            <i class="bi bi-book me-1"></i> Base de Conocimientos
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Aquí defines qué sabe Donna sobre tu negocio: productos, precios, horarios, políticas, preguntas frecuentes.
+                            Donna consulta esta base automáticamente cuando un cliente pregunta algo.
+                        </p>
+
+                        @if(session('donna_knowledge_success'))
+                            <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{ session('donna_knowledge_success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        {{-- Tipos de ítem --}}
+                        @php
+                            $tiposLabel = [
+                                'product' => ['icon' => 'bi-box-seam',        'label' => 'Productos',             'color' => '#274698'],
+                                'service' => ['icon' => 'bi-tools',           'label' => 'Servicios',             'color' => '#5a3c9a'],
+                                'faq'     => ['icon' => 'bi-question-circle', 'label' => 'Preguntas frecuentes', 'color' => '#1a7a4a'],
+                                'policy'  => ['icon' => 'bi-shield-check',    'label' => 'Políticas',             'color' => '#b45309'],
+                                'table'   => ['icon' => 'bi-table',           'label' => 'Datos / Tablas',        'color' => '#0369a1'],
+                            ];
+                            $itemsPorTipo = $donnaKnowledgeItems->groupBy('type');
+                        @endphp
+
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="button" class="btn btn-sm rounded-pill fw-semibold"
+                                    style="background:#E4B100;color:#1D1D1B;"
+                                    onclick="abrirModalKnowledge()">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar ítem
+                            </button>
+                        </div>
+
+                        @if($donnaKnowledgeItems->isEmpty())
+                            <div class="text-center py-4 rounded-3" style="background:#f9f9f9;border:1px dashed #e9ecef;">
+                                <i class="bi bi-book fs-3 d-block mb-2 text-muted"></i>
+                                <div class="text-muted small mb-2">Tu base de conocimientos está vacía.</div>
+                                <div class="text-muted small">Agrega productos, preguntas frecuentes o políticas para que Donna pueda responder a tus clientes.</div>
+                            </div>
+                        @else
+                            <div class="accordion" id="accordionKnowledge">
+                                @foreach($tiposLabel as $tipo => $meta)
+                                    @php $items = $itemsPorTipo->get($tipo, collect()); @endphp
+                                    @if($items->isNotEmpty())
+                                    <div class="accordion-item border rounded-3 mb-2 overflow-hidden">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed fw-semibold py-2" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse-knowledge-{{ $tipo }}"
+                                                    style="font-size:0.88rem;">
+                                                <i class="bi {{ $meta['icon'] }} me-2" style="color:{{ $meta['color'] }};"></i>
+                                                {{ $meta['label'] }}
+                                                <span class="badge ms-2 rounded-pill" style="background:{{ $meta['color'] }};font-size:0.7rem;">{{ $items->count() }}</span>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-knowledge-{{ $tipo }}" class="accordion-collapse collapse">
+                                            <div class="accordion-body p-2">
+                                                <div class="d-flex flex-column gap-2">
+                                                    @foreach($items as $item)
+                                                    <div class="d-flex align-items-start gap-2 p-2 rounded-2" style="background:#f8f9fc;border:1px solid #e9ecef;" id="knowledge-item-{{ $item->id }}">
+                                                        <div class="flex-grow-1 min-width-0">
+                                                            <div class="fw-semibold small">{{ $item->title }}</div>
+                                                            <div class="text-muted small mt-1" style="white-space:pre-line;font-size:0.78rem;">{{ Str::limit($item->content_text, 180) }}</div>
+                                                            @if($item->source_url)
+                                                                <a href="{{ $item->source_url }}" target="_blank" class="small text-primary mt-1 d-inline-block">
+                                                                    <i class="bi bi-link-45deg me-1"></i>Fuente
+                                                                </a>
+                                                            @endif
+                                                        </div>
+                                                        <div class="d-flex gap-1 flex-shrink-0">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm p-1"
+                                                                    style="font-size:0.72rem;"
+                                                                    onclick="editarKnowledge({{ $item->id }}, '{{ addslashes($item->type) }}', '{{ addslashes($item->title) }}', {{ json_encode($item->content_text) }}, '{{ addslashes($item->source_url ?? '') }}')">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-danger btn-sm p-1"
+                                                                    style="font-size:0.72rem;"
+                                                                    onclick="eliminarKnowledge({{ $item->id }})">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+                        {{-- ══ FIN BASE DE CONOCIMIENTOS ═══════════════════════ --}}
+
                         @endif
                         {{-- ══ FIN DONNA BUSINESS ══════════════════════════════ --}}
 
@@ -1479,6 +1577,70 @@
 
         </div>
     </div>
+
+    {{-- Modal Knowledge Base --}}
+    <x-modal name="knowledgeItemModal" maxWidth="lg">
+        <div class="modal-header" style="background:#fffbea;border-bottom:1px solid #ffe082;">
+            <h5 class="modal-title fw-bold" id="knowledgeModalTitle">
+                <i class="bi bi-book me-2" style="color:#b45309;"></i>Ítem de conocimiento
+            </h5>
+            <button type="button" class="btn-close"
+                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }))">
+            </button>
+        </div>
+        <form id="knowledgeForm" onsubmit="submitKnowledge(event)">
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-sm-5">
+                        <label class="form-label fw-semibold small mb-1">Tipo</label>
+                        <select id="knowledge_type" name="type" class="form-select form-select-sm" required>
+                            <option value="product">📦 Producto</option>
+                            <option value="service">🔧 Servicio</option>
+                            <option value="faq">❓ Pregunta frecuente</option>
+                            <option value="policy">🛡️ Política</option>
+                            <option value="table">📊 Datos / Tabla</option>
+                        </select>
+                        <div class="form-text">¿Qué tipo de información es?</div>
+                    </div>
+                    <div class="col-sm-7">
+                        <label class="form-label fw-semibold small mb-1">Título</label>
+                        <input type="text" id="knowledge_title" name="title"
+                               class="form-control form-control-sm" maxlength="200" required
+                               placeholder="Ej: Precio camiseta básica, ¿Hacen envíos?...">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small mb-1">
+                            Contenido
+                            <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Lo que Donna lee</span>
+                        </label>
+                        <textarea id="knowledge_content_input" name="content_text"
+                                  class="form-control" rows="6" maxlength="5000" required
+                                  placeholder="Escribe aquí toda la información relevante. Ej: &#10;Camiseta básica algodón 100% - tallas S, M, L, XL&#10;Precio: $15 (S/M), $17 (L/XL)&#10;Colores disponibles: blanco, negro, gris, azul marino"></textarea>
+                        <div class="d-flex justify-content-end mt-1">
+                            <span class="text-muted small"><span id="knowledge_content_count">0</span>/5000</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small mb-1">URL de referencia <span class="text-muted">(opcional)</span></label>
+                        <input type="url" id="knowledge_source_url" name="source_url"
+                               class="form-control form-control-sm"
+                               placeholder="https://...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }))">
+                    Cancelar
+                </button>
+                <button type="submit" id="knowledgeSubmitBtn"
+                        class="btn btn-sm rounded-pill fw-semibold"
+                        style="background:#E4B100;color:#1D1D1B;">
+                    <i class="bi bi-save me-1"></i>Guardar
+                </button>
+            </div>
+        </form>
+    </x-modal>
 
     <div class="modal fade" id="crearSoporteModal" tabindex="-1" aria-labelledby="crearSoporteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1838,6 +2000,91 @@
             if (bdInput && bdCount) {
                 bdInput.addEventListener('input', () => bdCount.textContent = bdInput.value.length);
             }
+
+            // Contador caracteres knowledge content
+            const kcInput = document.getElementById('knowledge_content_input');
+            const kcCount = document.getElementById('knowledge_content_count');
+            if (kcInput && kcCount) {
+                kcInput.addEventListener('input', () => kcCount.textContent = kcInput.value.length);
+            }
         });
+
+        // ── Knowledge Base ─────────────────────────────────────────
+        let knowledgeEditId = null;
+
+        function abrirModalKnowledge() {
+            knowledgeEditId = null;
+            document.getElementById('knowledgeModalTitle').textContent = 'Agregar ítem';
+            document.getElementById('knowledgeForm').reset();
+            document.getElementById('knowledge_content_count').textContent = '0';
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'knowledgeItemModal' }));
+        }
+
+        function editarKnowledge(id, type, title, content, sourceUrl) {
+            knowledgeEditId = id;
+            document.getElementById('knowledgeModalTitle').textContent = 'Editar ítem';
+            document.getElementById('knowledge_type').value = type;
+            document.getElementById('knowledge_title').value = title;
+            document.getElementById('knowledge_content_input').value = content;
+            document.getElementById('knowledge_content_count').textContent = content.length;
+            document.getElementById('knowledge_source_url').value = sourceUrl || '';
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'knowledgeItemModal' }));
+        }
+
+        async function submitKnowledge(e) {
+            e.preventDefault();
+            const btn = document.getElementById('knowledgeSubmitBtn');
+            btn.disabled = true;
+
+            const body = {
+                _token:       '{{ csrf_token() }}',
+                type:         document.getElementById('knowledge_type').value,
+                title:        document.getElementById('knowledge_title').value,
+                content_text: document.getElementById('knowledge_content_input').value,
+                source_url:   document.getElementById('knowledge_source_url').value || null,
+            };
+
+            const url    = knowledgeEditId
+                ? `/cliente/donna/knowledge/${knowledgeEditId}`
+                : '/cliente/donna/knowledge';
+            const method = knowledgeEditId ? 'PUT' : 'POST';
+
+            try {
+                const r = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify(body),
+                });
+                const data = await r.json();
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }));
+                    setTimeout(() => location.reload(), 300);
+                } else {
+                    alert(data.message || 'Error al guardar.');
+                }
+            } catch {
+                alert('Error de conexión.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function eliminarKnowledge(id) {
+            if (!confirm('¿Eliminar este ítem de la base de conocimientos?')) return;
+            try {
+                const r = await fetch(`/cliente/donna/knowledge/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                });
+                const data = await r.json();
+                if (data.success) {
+                    document.getElementById(`knowledge-item-${id}`)?.remove();
+                } else {
+                    alert('Error al eliminar.');
+                }
+            } catch {
+                alert('Error de conexión.');
+            }
+        }
     </script>
 @endsection

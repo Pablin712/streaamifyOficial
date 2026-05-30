@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\DonnaAgentConfig;
 use App\Models\DonnaChannel;
 use App\Models\DonnaIntegration;
+use App\Models\DonnaKnowledgeBase;
+use App\Models\DonnaKnowledgeItem;
 use App\Models\DonnaSubscription;
 use App\Models\Pedido;
 use App\Models\Recarga;
@@ -82,6 +84,12 @@ class HistorialClientesController extends Controller
         $donnaSystemPreview = app(DonnaPersonalContextService::class)
             ->getSystemMessagePreview($donnaConfigPersonal, $donnaIntegracion?->metadata_json['email'] ?? null);
 
+        $donnaKnowledgeBase = DonnaKnowledgeBase::where('client_id', $idcli)->first();
+        $donnaKnowledgeItems = $donnaKnowledgeBase
+            ? DonnaKnowledgeItem::where('knowledge_base_id', $donnaKnowledgeBase->id)
+                ->orderBy('type')->orderBy('title')->get()
+            : collect();
+
         return view('shopping.historialCliente', compact(
             'ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos',
             'soportes', 'cuentasSoporte',
@@ -89,7 +97,8 @@ class HistorialClientesController extends Controller
             'subPersonal', 'subBusiness',
             'canalTelegram', 'canalWhatsapp',
             'donnaConfigPersonal', 'donnaConfigBusiness',
-            'donnaSystemPreview'
+            'donnaSystemPreview',
+            'donnaKnowledgeBase', 'donnaKnowledgeItems'
         ));
     }
 

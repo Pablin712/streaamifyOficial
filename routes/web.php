@@ -65,6 +65,7 @@ use App\Http\Controllers\DonnaSubscriptionController;
 use App\Http\Controllers\DonnaRequestController;
 use App\Http\Controllers\DonnaDashboardController;
 use App\Http\Controllers\ClienteDonnaController;
+use App\Http\Controllers\ClienteDonnaKnowledgeController;
 use App\Http\Controllers\DonnaGoogleController;
 //cliente
 Route::get('/register', function () {
@@ -180,6 +181,11 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::post('/donna/config', 'saveConfig')->name('cliente.donna.config');
         Route::post('/donna/config-business', 'saveBusinessConfig')->name('cliente.donna.config-business');
         Route::post('/donna/connect-whatsapp', 'connectWhatsApp')->name('cliente.donna.connect-whatsapp');
+    });
+    Route::controller(ClienteDonnaKnowledgeController::class)->group(function () {
+        Route::post('/donna/knowledge', 'store')->name('cliente.donna.knowledge.store');
+        Route::put('/donna/knowledge/{id}', 'update')->name('cliente.donna.knowledge.update');
+        Route::delete('/donna/knowledge/{id}', 'destroy')->name('cliente.donna.knowledge.destroy');
     });
     Route::controller(DonnaGoogleController::class)->group(function () {
         Route::get('/donna/google/connect', 'redirect')->name('cliente.donna.google.connect');
