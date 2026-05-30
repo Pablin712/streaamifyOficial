@@ -1070,10 +1070,40 @@
             });
         }
 
-        function confirmarBorradoUsuariosSeleccionados() {
-            const form = document.getElementById('form-borrar-usuarios');
+        async function confirmarBorradoUsuariosSeleccionados() {
             window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-borrar-usuarios-seleccionados' }));
-            form.submit();
+            const form = document.getElementById('form-borrar-usuarios');
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'Error al eliminar usuarios');
+
+                (data.ids || []).forEach(id => {
+                    const row = document.querySelector(`tr[data-iddet="${id}"]`);
+                    if (row) row.remove();
+                });
+
+                // Deselect checkboxes
+                document.querySelectorAll('.check-usuario').forEach(chk => { chk.checked = false; });
+                const checkTodos = document.getElementById('check-todos');
+                if (checkTodos) checkTodos.checked = false;
+                const btnBorrar = document.getElementById('btn-borrar-seleccionados');
+                if (btnBorrar) btnBorrar.disabled = true;
+
+                showUsuariosToast(data.message || 'Usuarios eliminados correctamente.', 'success');
+            } catch (error) {
+                showUsuariosToast(error.message || 'No se pudieron eliminar los usuarios.', 'danger');
+            }
         }
 
         // ========================================================================
@@ -1125,13 +1155,44 @@
         // FUNCIÓN DE MODAL - ELIMINAR USUARIO
         // ========================================================================
         function confirmarEliminarUsuario(iddet) {
-            console.log('🔷 Abriendo modal de eliminar usuario:', iddet);
-
             const form = document.getElementById('deleteUsuarioForm');
+            form.dataset.iddet = iddet;
             form.action = "{{ route('usuarios.destroy', '') }}/" + iddet;
-
             window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirmar-eliminar-usuario' }));
         }
+        // Interceptar el form de eliminar usuario individual con AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteForm = document.getElementById('deleteUsuarioForm');
+            if (deleteForm) {
+                deleteForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const iddet = deleteForm.dataset.iddet;
+                    const formData = new FormData(deleteForm);
+
+                    try {
+                        const response = await fetch(deleteForm.action, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: formData
+                        });
+                        const data = await response.json();
+                        if (!response.ok || !data.success) throw new Error(data.message || 'Error al eliminar usuario');
+
+                        const row = document.querySelector(`tr[data-iddet="${iddet}"]`);
+                        if (row) row.remove();
+
+                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirmar-eliminar-usuario' }));
+                        showUsuariosToast(data.message || 'Usuario eliminado con éxito.', 'success');
+                    } catch (error) {
+                        showUsuariosToast(error.message || 'No se pudo eliminar el usuario.', 'danger');
+                    }
+                });
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const checkTodos = document.getElementById('check-todos');
             const btnBorrar = document.getElementById('btn-borrar-seleccionados');

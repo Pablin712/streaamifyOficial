@@ -136,6 +136,7 @@
                     data-fechavencue="{{ $cuenta->fechavencue }}"
                     data-servicio-id="{{ strtoupper((string) ($cuenta->valor->idser ?? '')) }}"
                     data-servicio-nombre="{{ $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? 'Servicio') }}"
+                    data-servicio-label="{{ $cuenta->valor->servicio->nombreser ?? ($cuenta->valor->idser ?? 'Servicio') }}"
                     data-proveedor-id="{{ $cuenta->valor->proveedor->idpro ?? '' }}"
                     data-proveedor-nombre="{{ $cuenta->valor->proveedor->nombrepro ?? 'Proveedor' }}"
                     data-proveedor-telefono="{{ $cuenta->valor->proveedor->telefonopro ?? '' }}"

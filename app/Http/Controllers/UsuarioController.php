@@ -571,10 +571,12 @@ class UsuarioController extends Controller
     public function destroy($iddet)
     {
         if (!Gate::allows('usuarios.destroy')) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar usuarios.'], 403);
+            }
             abort(403, 'No tienes permiso para eliminar usuarios.');
         }
         $detalle = DetalleVenta::findOrFail($iddet);
-        // Invertir el estado de activodet
         $detalle->activodet = !$detalle->activodet;
         $detalle->save();
 
@@ -585,13 +587,21 @@ class UsuarioController extends Controller
             'created_at' => now(),
         ]);
 
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Usuario eliminado con éxito.', 'iddet' => $iddet]);
+        }
+
         return redirect()->back()->with('success', 'Usuario eliminado con éxito.');
     }
+
     public function destroyMultiple(Request $request)
     {
         $ids = $request->input('usuarios', []);
         $ids = array_filter($ids, 'is_numeric');
         if (!Gate::allows('usuarios.destroy')) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'No tienes permiso para eliminar usuarios.'], 403);
+            }
             abort(403, 'No tienes permiso para eliminar usuarios.');
         }
         if (!empty($ids)) {
@@ -608,6 +618,11 @@ class UsuarioController extends Controller
                 ]);
             }
         }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Usuarios eliminados correctamente.', 'ids' => array_values($ids)]);
+        }
+
         return redirect()->back()->with('success', 'Usuarios eliminados correctamente.');
     }
 

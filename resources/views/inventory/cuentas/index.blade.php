@@ -763,10 +763,9 @@ async function submitCreate(event) {
         console.log('📦 Datos recibidos:', data);
 
         if (response.ok && data.success) {
-            console.log('✅ Cuenta creada exitosamente:', data);
             showTemporaryAlert(data.message || 'Cuenta creada exitosamente', 'success');
             closeCreateModal();
-            setTimeout(() => location.reload(), 1500);
+            setTimeout(() => location.reload(), 700);
         } else {
             console.error('❌ Error al crear:', data);
             const errorMessage = data.message || data.error || 'Error al crear la cuenta';
@@ -862,10 +861,9 @@ async function submitEdit(event) {
         const data = await response.json();
 
         if (data.success) {
-            console.log('✅ Cuenta actualizada');
+            updateCuentaRowInAllTables(idcue, data.cuenta);
             showTemporaryAlert(data.message || 'Cuenta actualizada exitosamente', 'success');
             closeEditModal();
-            setTimeout(() => location.reload(), 1500);
         } else {
             console.error('❌ Error al actualizar:', data);
             showTemporaryAlert(data.message || 'Error al actualizar la cuenta', 'danger');
@@ -990,10 +988,9 @@ async function submitDelete(event) {
         const data = await response.json();
 
         if (data.success) {
-            console.log('✅ Cuenta eliminada');
+            removeRowFromAllTables(idcue);
             showTemporaryAlert(data.message || 'Cuenta eliminada exitosamente', 'success');
             closeDeleteModal();
-            setTimeout(() => location.reload(), 1500);
         } else {
             console.error('❌ Error al eliminar:', data);
             showTemporaryAlert(data.message || 'Error al eliminar la cuenta', 'danger');
@@ -1087,10 +1084,9 @@ async function submitRenew(event) {
         const data = await response.json();
 
         if (data.success) {
-            console.log('✅ Cuenta renovada');
+            updateCuentaRowInAllTables(idcue, data.cuenta);
             showTemporaryAlert(data.message || 'Cuenta renovada exitosamente', 'success');
             closeRenewModal();
-            setTimeout(() => location.reload(), 1500);
         } else {
             console.error('❌ Error al renovar:', data);
             showTemporaryAlert(data.message || 'Error al renovar la cuenta', 'danger');
@@ -1288,9 +1284,9 @@ function openBulkDeleteModal() {
             const data = await response.json();
 
             if (data.success) {
+                ids.forEach(id => removeRowFromAllTables(id));
                 showTemporaryAlert(data.message || 'Cuentas eliminadas exitosamente', 'success');
                 closeBulkDeleteModal();
-                setTimeout(() => location.reload(), 1500);
             } else {
                 showTemporaryAlert(data.message || 'Error al eliminar las cuentas', 'danger');
                 if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.innerHTML = '<i class="fas fa-trash"></i> Sí, Eliminar todas'; }
@@ -1864,6 +1860,106 @@ function mostrarToast(mensaje, tipo = 'success') {
             toast.style.display = 'none';
         }, 500);
     }, 2000);
+}
+
+// ============================================================================
+// DOM HELPERS — ACTUALIZACIÓN SIN RECARGA DE PÁGINA
+// ============================================================================
+
+/**
+ * Elimina una fila de todas las instancias de enhanced-table sin recargar la página.
+ * Actualiza los arrays internos (allRows, baseRows, filteredRows) y re-renderiza la paginación.
+ */
+function removeRowFromAllTables(idcue) {
+    document.querySelectorAll(`tr[data-idcue="${idcue}"]`).forEach(row => {
+        const table = row.closest('table[data-table]');
+        if (table && table._config) {
+            const cfg = table._config;
+            cfg.allRows      = cfg.allRows.filter(r => r !== row);
+            cfg.baseRows     = cfg.baseRows.filter(r => r !== row);
+            cfg.filteredRows = cfg.filteredRows.filter(r => r !== row);
+            cfg.normalizedCache.delete(row);
+            cfg.totalRecords = cfg.allRows.length;
+            const maxPage = Math.max(1, Math.ceil(cfg.filteredRows.length / cfg.rowsPerPage));
+            if (cfg.currentPage > maxPage) cfg.currentPage = maxPage;
+            renderClientPage(cfg);
+        }
+        row.remove();
+    });
+}
+
+/**
+ * Actualiza las celdas de una fila en todas las tablas con los datos frescos del servidor.
+ * Aplica a edición (usuario, clave, fecha) y renovación (fecha).
+ */
+function updateCuentaRowInAllTables(idcue, cuenta) {
+    if (!cuenta) return;
+
+    // Calcular nuevo estado desde la fecha de vencimiento
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const vence = new Date((cuenta.fechavencue || '').replace(/-/g, '/'));
+    const dias = Math.round((vence - hoy) / 86400000);
+
+    let statusClass, statusText;
+    if (cuenta.caidacue) {
+        statusClass = 'dark';  statusText = 'Dañada';
+    } else if (dias <= 0) {
+        statusClass = 'danger'; statusText = 'Vencida';
+    } else if (dias <= 5) {
+        statusClass = 'warning'; statusText = 'Ya vence';
+    } else {
+        statusClass = 'success'; statusText = 'Activa';
+    }
+
+    document.querySelectorAll(`tr[data-idcue="${idcue}"]`).forEach(row => {
+        const cells = row.cells;
+        if (!cells || cells.length < 8) return;
+
+        // Actualizar data-* del row
+        row.dataset.usuario    = cuenta.usuariocue || '';
+        row.dataset.fechavencue = cuenta.fechavencue || '';
+
+        // cells[0]: ID — actualizar onclick copiarInfoCuenta con nuevas credenciales
+        const servicioLabel = row.dataset.servicioLabel || '';
+        cells[0].onclick = () => copiarInfoCuenta(servicioLabel, cuenta.usuariocue, cuenta.contrasenacue);
+
+        // cells[2]: Usuario
+        cells[2].textContent = cuenta.usuariocue || '';
+        cells[2].onclick = () => copiarTexto(cuenta.usuariocue, 'Usuario');
+
+        // cells[3]: Clave
+        cells[3].textContent = cuenta.contrasenacue || '';
+        cells[3].onclick = () => copiarTexto(cuenta.contrasenacue, 'Contraseña');
+
+        // cells[4]: Fecha de vencimiento
+        cells[4].textContent = cuenta.fechavencue || '';
+
+        // cells[7]: Estado — badge + botón toggle
+        const badge = row.querySelector('.status-badge');
+        if (badge) {
+            badge.className = `badge bg-${statusClass} status-badge`;
+            badge.textContent = statusText;
+        }
+        const toggle = row.querySelector('button[onclick*="toggleEstado"]');
+        if (toggle) {
+            toggle.className = `btn ${cuenta.caidacue ? 'btn-danger' : 'btn-success'} btn-sm ms-1`;
+            toggle.innerHTML = `<i class="fas fa-toggle-${cuenta.caidacue ? 'on' : 'off'} fa-xs"></i>`;
+        }
+
+        // Ocultar botón renovar si la fecha ya no está próxima a vencer
+        if (dias > 5) {
+            const renewBtn = row.querySelector('button[onclick*="openRenewModal"]');
+            if (renewBtn) renewBtn.style.display = 'none';
+        }
+
+        // Invalidar caché de búsqueda para que el filtro sea preciso
+        const table = row.closest('table[data-table]');
+        if (table && table._config) {
+            const cfg = table._config;
+            cfg.normalizedCache.set(row, normalizeText(row.innerText));
+            if (cfg.searchTerm) renderClientPage(cfg);
+        }
+    });
 }
 
 // ============================================================================
