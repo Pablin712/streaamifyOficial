@@ -108,11 +108,12 @@ class DonnaSheetsToolController extends Controller
             return response()->json($result, 422);
         }
 
+        $message = $googleError['message'] ?? 'Error desconocido de Google.';
         $result = [
             'success'    => false, 'allowed' => true,
             'reason'     => 'google_api_error',
-            'message'    => 'Google devolvió un error al ejecutar la acción.',
-            'error_code' => 'google_' . ($httpCode ?: '?'),
+            'message'    => "Error de Google Sheets: {$message}",
+            'error_code' => 'google_' . ($httpCode ?: 'unknown'),
         ];
         $this->logger->log($toolName, $clientId, $req, $result);
         return response()->json($result, 422);

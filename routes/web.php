@@ -63,7 +63,9 @@ use App\Http\Controllers\SistemaController;
 use App\Http\Controllers\DonnaPlanController;
 use App\Http\Controllers\DonnaSubscriptionController;
 use App\Http\Controllers\DonnaRequestController;
+use App\Http\Controllers\DonnaDashboardController;
 use App\Http\Controllers\ClienteDonnaController;
+use App\Http\Controllers\ClienteDonnaKnowledgeController;
 use App\Http\Controllers\DonnaGoogleController;
 //cliente
 Route::get('/register', function () {
@@ -99,6 +101,8 @@ Route::get('/donna', function () {
     $planBusiness = $planes->get('business')?->first();
     $googleConnected = false;
     $googleInfo = null;
+    $subPersonal = null;
+    $subBusiness = null;
     if (\Illuminate\Support\Facades\Auth::guard('cliente')->check()) {
         $clienteId = \Illuminate\Support\Facades\Auth::guard('cliente')->user()->idcli;
         $googleInteg = \App\Models\DonnaIntegration::where('client_id', $clienteId)
@@ -107,8 +111,18 @@ Route::get('/donna', function () {
             ->first();
         $googleConnected = (bool) $googleInteg;
         $googleInfo = $googleInteg?->metadata_json;
+        $subPersonal = \App\Models\DonnaSubscription::where('client_id', $clienteId)
+            ->where('service_type', 'personal')
+            ->whereIn('status', ['active', 'pending', 'suspended'])
+            ->latest()
+            ->first();
+        $subBusiness = \App\Models\DonnaSubscription::where('client_id', $clienteId)
+            ->where('service_type', 'business')
+            ->whereIn('status', ['active', 'pending', 'suspended'])
+            ->latest()
+            ->first();
     }
-    return view('donna', compact('planPersonal', 'planBusiness', 'googleConnected', 'googleInfo'));
+    return view('donna', compact('planPersonal', 'planBusiness', 'googleConnected', 'googleInfo', 'subPersonal', 'subBusiness'));
 })->name('donna');
 
 // Imagen de bancos servida por Laravel (compatible con hostings que bloquean /storage directo)
@@ -165,6 +179,13 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::post('/donna/solicitar', 'solicitar')->name('cliente.donna.solicitar');
         Route::post('/donna/activar', 'activar')->name('cliente.donna.activar');
         Route::post('/donna/config', 'saveConfig')->name('cliente.donna.config');
+        Route::post('/donna/config-business', 'saveBusinessConfig')->name('cliente.donna.config-business');
+        Route::post('/donna/connect-whatsapp', 'connectWhatsApp')->name('cliente.donna.connect-whatsapp');
+    });
+    Route::controller(ClienteDonnaKnowledgeController::class)->group(function () {
+        Route::post('/donna/knowledge', 'store')->name('cliente.donna.knowledge.store');
+        Route::put('/donna/knowledge/{id}', 'update')->name('cliente.donna.knowledge.update');
+        Route::delete('/donna/knowledge/{id}', 'destroy')->name('cliente.donna.knowledge.destroy');
     });
     Route::controller(DonnaGoogleController::class)->group(function () {
         Route::get('/donna/google/connect', 'redirect')->name('cliente.donna.google.connect');
@@ -394,8 +415,15 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     // ── Donna Hub ──────────────────────────────────────────────
     Route::prefix('donna')->group(function () {
         Route::get('/', function () {
-            return redirect()->route('donna.planes.index');
+            return redirect()->route('donna.dashboard');
         })->name('donna.hub');
+
+        // Dashboard
+        Route::get('/dashboard', [DonnaDashboardController::class, 'index'])->name('donna.dashboard');
+
+        // Conversaciones
+        Route::get('/conversaciones', [DonnaDashboardController::class, 'conversaciones'])->name('donna.conversaciones.index');
+        Route::get('/conversaciones/{id}/messages', [DonnaDashboardController::class, 'showMessages'])->name('donna.conversaciones.messages');
 
         // Planes (CRUD)
         Route::get('/planes', [DonnaPlanController::class, 'index'])->name('donna.planes.index');

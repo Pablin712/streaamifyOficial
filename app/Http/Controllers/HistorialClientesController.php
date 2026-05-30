@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\DonnaAgentConfig;
 use App\Models\DonnaChannel;
 use App\Models\DonnaIntegration;
+use App\Models\DonnaKnowledgeBase;
+use App\Models\DonnaKnowledgeItem;
 use App\Models\DonnaSubscription;
 use App\Models\Pedido;
 use App\Models\Recarga;
@@ -48,23 +50,56 @@ class HistorialClientesController extends Controller
             ->where('integration_type', 'google')
             ->latest()
             ->first();
-        $donnaSuscripcion = DonnaSubscription::where('client_id', $idcli)
+
+        $subPersonal = DonnaSubscription::where('client_id', $idcli)
+            ->where('service_type', 'personal')
             ->whereIn('status', ['active', 'pending', 'suspended'])
             ->latest()
             ->first();
-        $donnaCanal = DonnaChannel::where('client_id', $idcli)
-            ->whereIn('channel_type', ['telegram', 'whatsapp'])
+
+        $subBusiness = DonnaSubscription::where('client_id', $idcli)
+            ->where('service_type', 'business')
+            ->whereIn('status', ['active', 'pending', 'suspended'])
             ->latest()
             ->first();
 
-        $donnaConfig = DonnaAgentConfig::where('client_id', $idcli)
+        $canalTelegram = DonnaChannel::where('client_id', $idcli)
+            ->where('channel_type', 'telegram')
+            ->latest()
+            ->first();
+
+        $canalWhatsapp = DonnaChannel::where('client_id', $idcli)
+            ->where('channel_type', 'whatsapp')
+            ->latest()
+            ->first();
+
+        $donnaConfigPersonal = DonnaAgentConfig::where('client_id', $idcli)
             ->where('service_type', 'personal')
             ->first();
 
-        $donnaSystemPreview = app(DonnaPersonalContextService::class)
-            ->getSystemMessagePreview($donnaConfig, $donnaIntegracion?->metadata_json['email'] ?? null);
+        $donnaConfigBusiness = DonnaAgentConfig::where('client_id', $idcli)
+            ->where('service_type', 'business')
+            ->first();
 
-        return view('shopping.historialCliente', compact('ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos', 'soportes', 'cuentasSoporte', 'donnaIntegracion', 'donnaSuscripcion', 'donnaCanal', 'donnaConfig', 'donnaSystemPreview'));
+        $donnaSystemPreview = app(DonnaPersonalContextService::class)
+            ->getSystemMessagePreview($donnaConfigPersonal, $donnaIntegracion?->metadata_json['email'] ?? null);
+
+        $donnaKnowledgeBase = DonnaKnowledgeBase::where('client_id', $idcli)->first();
+        $donnaKnowledgeItems = $donnaKnowledgeBase
+            ? DonnaKnowledgeItem::where('knowledge_base_id', $donnaKnowledgeBase->id)
+                ->orderBy('type')->orderBy('title')->get()
+            : collect();
+
+        return view('shopping.historialCliente', compact(
+            'ventas', 'recargas', 'pedidos', 'usuarios_activos', 'referidos',
+            'soportes', 'cuentasSoporte',
+            'donnaIntegracion',
+            'subPersonal', 'subBusiness',
+            'canalTelegram', 'canalWhatsapp',
+            'donnaConfigPersonal', 'donnaConfigBusiness',
+            'donnaSystemPreview',
+            'donnaKnowledgeBase', 'donnaKnowledgeItems'
+        ));
     }
 
     public function pedirCodigoNetflix(Request $request, $iddet)

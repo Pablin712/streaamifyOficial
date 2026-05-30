@@ -67,11 +67,15 @@ class DonnaCalendarToolController extends Controller
 
     private function toolError(array $googleError, string $toolName, int $clientId, array $request): \Illuminate\Http\JsonResponse
     {
+        $code    = $googleError['code'] ?? 0;
+        $message = $googleError['message'] ?? 'Error desconocido de Google.';
+
         $result = [
-            'success' => false, 'allowed' => true,
-            'reason'  => 'google_api_error',
-            'message' => 'Google devolvió un error al ejecutar la acción.',
-            'error_code' => 'google_' . ($googleError['code'] ?? '?'),
+            'success'    => false,
+            'allowed'    => true,
+            'reason'     => 'google_api_error',
+            'message'    => "Error de Google Calendar: {$message}",
+            'error_code' => 'google_' . ($code ?: 'unknown'),
         ];
         $this->logger->log($toolName, $clientId, $request, $result);
         return response()->json($result, 422);

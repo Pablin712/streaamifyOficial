@@ -10,6 +10,7 @@ class DonnaToolLog extends Model
 
     protected $fillable = [
         'client_id', 'subscription_id', 'channel_id',
+        'conversation_id', 'message_id',
         'tool_name', 'request_json', 'response_json',
         'success', 'reason', 'duration_ms',
     ];

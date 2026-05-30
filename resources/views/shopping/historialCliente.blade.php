@@ -990,11 +990,11 @@
                         <div class="activity-section-title mb-4">
                             <div>
                                 <h3><i class="bi bi-robot me-2" style="color:#274698;"></i>Donna AI</h3>
-                                <p class="text-muted mb-0">Estado de tu cuenta de Google y suscripción Donna.</p>
+                                <p class="text-muted mb-0">Estado de tus servicios, integraciones y canales de Donna.</p>
                             </div>
                         </div>
 
-                        {{-- Google --}}
+                        {{-- Google (compartido entre Personal y Business) --}}
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
                             <i class="bi bi-google me-1"></i> Integración con Google
                         </h6>
@@ -1040,7 +1040,7 @@
                                 <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold">Google no conectado</div>
-                                    <div class="text-muted small">Necesitas conectar Google para usar Donna AI (Calendar & Sheets).</div>
+                                    <div class="text-muted small">Conecta tu cuenta para habilitar Calendar y Sheets en Donna.</div>
                                 </div>
                                 <a href="{{ route('cliente.donna.google.connect') }}" class="btn btn-dark btn-sm rounded-pill flex-shrink-0">
                                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" class="me-1" alt="">
@@ -1049,37 +1049,76 @@
                             </div>
                         @endif
 
+                        @if(!$subPersonal && !$subBusiness)
+                            {{-- Sin ninguna suscripción --}}
+                            <div class="p-4 rounded-3 text-center" style="background:#f8f9fa;border:1px dashed #dee2e6;">
+                                <i class="bi bi-robot fs-2 d-block mb-2 text-muted"></i>
+                                <div class="text-muted small mb-2">No tienes suscripciones Donna activas.</div>
+                                <a href="{{ route('donna') }}" class="btn btn-primary btn-sm rounded-pill">Ver planes Donna</a>
+                            </div>
+                        @endif
+
+                        {{-- ══ DONNA PERSONAL ══════════════════════════════════ --}}
+                        @if($subPersonal)
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase small mb-3" style="color:#274698;">
+                            <i class="bi bi-person-circle me-1"></i> Donna Personal
+                        </h6>
+
+                        {{-- Suscripción Personal --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#f4f6ff;border:1px solid #c5cae9;">
+                            <i class="bi bi-robot fs-3" style="color:#274698;"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ $subPersonal->plan?->name ?? 'Donna Personal' }}</div>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    <span class="badge bg-{{ $subPersonal->status_color }}">{{ $subPersonal->status_label }}</span>
+                                    <span class="badge" style="background:#274698;">Personal</span>
+                                </div>
+                                @if($subPersonal->expires_at)
+                                    @php $diasP = $subPersonal->daysRemaining(); @endphp
+                                    <div class="text-muted small mt-1">
+                                        Vence: {{ $subPersonal->expires_at->format('d/m/Y') }}
+                                        @if($diasP !== null && $diasP <= 7 && $diasP >= 0)
+                                            <span class="text-warning fw-semibold ms-1">({{ $diasP }} días restantes)</span>
+                                        @elseif($diasP !== null && $diasP < 0)
+                                            <span class="text-danger fw-semibold ms-1">(Vencida)</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
+                                @endif
+                            </div>
+                        </div>
+
                         {{-- Canal Telegram --}}
-                        @if($donnaSuscripcion && $donnaSuscripcion->service_type === 'personal')
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
                             <i class="bi bi-telegram me-1"></i> Canal Telegram
                         </h6>
 
-                        @if($donnaCanal && $donnaCanal->status === 'active')
-                            {{-- Canal ya vinculado --}}
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#e8f5e9;border:1px solid #c8e6c9;">
+                        @if($canalTelegram && $canalTelegram->status === 'active')
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#e8f5e9;border:1px solid #c8e6c9;">
                                 <i class="bi bi-telegram fs-3 text-success"></i>
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold text-success">
                                         <i class="bi bi-check-circle-fill me-1"></i>Telegram vinculado
                                     </div>
-                                    @if($donnaCanal->telegram_name || $donnaCanal->telegram_username)
+                                    @if($canalTelegram->telegram_name || $canalTelegram->telegram_username)
                                         <div class="text-muted small mt-1">
-                                            {{ $donnaCanal->telegram_name }}
-                                            @if($donnaCanal->telegram_username)
-                                                &nbsp;·&nbsp;&#64;{{ $donnaCanal->telegram_username }}
+                                            {{ $canalTelegram->telegram_name }}
+                                            @if($canalTelegram->telegram_username)
+                                                &nbsp;·&nbsp;&#64;{{ $canalTelegram->telegram_username }}
                                             @endif
                                         </div>
                                     @endif
-                                    @if($donnaCanal->activated_at)
-                                        <div class="text-muted small">Vinculado el {{ $donnaCanal->activated_at->format('d/m/Y H:i') }}</div>
+                                    @if($canalTelegram->activated_at)
+                                        <div class="text-muted small">Vinculado el {{ $canalTelegram->activated_at->format('d/m/Y H:i') }}</div>
                                     @endif
                                 </div>
                             </div>
 
-                        @elseif($donnaCanal && $donnaCanal->status === 'pending' && $donnaCanal->activation_code)
-                            {{-- Código pendiente de usar --}}
-                            <div class="p-3 rounded-3 mb-4" style="background:#f0f4ff;border:1px solid #c5cae9;">
+                        @elseif($canalTelegram && $canalTelegram->status === 'pending' && $canalTelegram->activation_code)
+                            <div class="p-3 rounded-3 mb-3" style="background:#f0f4ff;border:1px solid #c5cae9;">
                                 <div class="fw-semibold mb-2" style="color:#274698;">
                                     <i class="bi bi-key-fill me-1"></i>Tu código de activación Telegram
                                 </div>
@@ -1095,12 +1134,12 @@
                                     style="background:#fff;border:2px dashed #274698;max-width:320px;margin:0 auto;">
                                     <span class="fw-bold font-monospace" id="donna-code-historial"
                                         style="font-size:1.8rem;letter-spacing:.2em;color:#274698;">
-                                        {{ $donnaCanal->activation_code }}
+                                        {{ $canalTelegram->activation_code }}
                                     </span>
                                     <button type="button"
                                         class="btn btn-sm btn-outline-secondary"
                                         onclick="
-                                            navigator.clipboard.writeText('{{ $donnaCanal->activation_code }}');
+                                            navigator.clipboard.writeText('{{ $canalTelegram->activation_code }}');
                                             this.innerHTML='<i class=\'bi bi-check-lg\'></i>';
                                             this.classList.replace('btn-outline-secondary','btn-success');
                                             setTimeout(()=>{
@@ -1124,9 +1163,8 @@
                                 </div>
                             </div>
 
-                        @elseif(!$donnaCanal || $donnaCanal->status === 'inactive')
-                            {{-- Sin canal --}}
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#fff8e1;border:1px solid #ffe082;">
+                        @else
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fff8e1;border:1px solid #ffe082;">
                                 <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
                                 <div class="flex-grow-1 small text-muted">
                                     No tienes un canal Telegram configurado. Ve a
@@ -1135,51 +1173,9 @@
                                 </div>
                             </div>
                         @endif
-                        @endif
 
-                        {{-- Donna Subscription --}}
-                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
-                            <i class="bi bi-stars me-1"></i> Suscripción Donna
-                        </h6>
-
-                        @if($donnaSuscripcion)
-                            <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:#f4f6ff;border:1px solid #c5cae9;">
-                                <i class="bi bi-robot fs-3" style="color:#274698;"></i>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">{{ $donnaSuscripcion->plan?->name ?? 'Plan Donna' }}</div>
-                                    <div class="d-flex flex-wrap gap-2 mt-1">
-                                        <span class="badge bg-{{ $donnaSuscripcion->status_color }}">{{ $donnaSuscripcion->status_label }}</span>
-                                        @if($donnaSuscripcion->service_type === 'personal')
-                                            <span class="badge" style="background:#274698;">Personal</span>
-                                        @else
-                                            <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
-                                        @endif
-                                    </div>
-                                    @if($donnaSuscripcion->expires_at)
-                                        @php $dias = $donnaSuscripcion->daysRemaining(); @endphp
-                                        <div class="text-muted small mt-1">
-                                            Vence: {{ $donnaSuscripcion->expires_at->format('d/m/Y') }}
-                                            @if($dias !== null && $dias <= 7 && $dias >= 0)
-                                                <span class="text-warning fw-semibold ms-1">({{ $dias }} días restantes)</span>
-                                            @elseif($dias !== null && $dias < 0)
-                                                <span class="text-danger fw-semibold ms-1">(Vencida)</span>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
-                                    @endif
-                                </div>
-                            </div>
-                        @else
-                            <div class="p-3 rounded-3 text-center" style="background:#f8f9fa;border:1px dashed #dee2e6;">
-                                <i class="bi bi-robot fs-2 d-block mb-2 text-muted"></i>
-                                <div class="text-muted small">No tienes una suscripción Donna activa.</div>
-                                <a href="{{ route('donna') }}" class="btn btn-primary btn-sm rounded-pill mt-2">Ver planes Donna</a>
-                            </div>
-                        @endif
-
-                        {{-- ── Personalizar Donna ──────────────────────────────── --}}
-                        @if($donnaSuscripcion && $donnaSuscripcion->service_type === 'personal' && $donnaSuscripcion->status === 'active')
+                        {{-- Personalizar Donna Personal --}}
+                        @if($subPersonal->status === 'active')
                         <hr class="my-4">
 
                         <h6 class="fw-bold text-uppercase text-muted small mb-3">
@@ -1193,7 +1189,6 @@
                             </div>
                         @endif
 
-                        {{-- Vista previa del prompt actual --}}
                         <div class="accordion mb-4" id="accordionSystemMsg">
                             <div class="accordion-item border rounded-3 overflow-hidden">
                                 <h2 class="accordion-header">
@@ -1211,7 +1206,7 @@
                                         </p>
                                         <textarea class="form-control font-monospace" rows="12" readonly
                                                   style="background:#f8f9fa;resize:none;font-size:0.77rem;line-height:1.5;">{{ $donnaSystemPreview }}</textarea>
-                                        @if($donnaConfig?->main_prompt)
+                                        @if($donnaConfigPersonal?->main_prompt)
                                             <div class="alert alert-warning py-2 small mt-2 mb-0">
                                                 <i class="bi bi-exclamation-triangle me-1"></i>
                                                 Estás usando un <strong>prompt personalizado completo</strong>. El contenido de abajo reemplaza el prompt por defecto.
@@ -1222,7 +1217,6 @@
                             </div>
                         </div>
 
-                        {{-- Formulario de edición --}}
                         <form method="POST" action="{{ route('cliente.donna.config') }}">
                             @csrf
 
@@ -1233,15 +1227,15 @@
                                     <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.7rem;">Recomendado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Cuéntale a Donna quién eres: tu profesión, proyectos activos, preferencias de comunicación, horarios que no debes interrumpir, etc. Donna usará esto para ser más precisa y personalizada contigo.
+                                    Cuéntale a Donna quién eres: tu profesión, proyectos activos, preferencias de comunicación, horarios que no debes interrumpir, etc.
                                 </p>
                                 <textarea name="personal_context" id="personal_context_input"
                                           class="form-control" rows="5" maxlength="1000"
-                                          placeholder="Ejemplo: Soy diseñador freelance. Trabajo de 9am a 6pm de lunes a viernes. Prefiero respuestas cortas y directas. No agendar nada los domingos. Actualmente tengo 3 proyectos activos: rediseño de App X, branding de Y, y propuesta Z."
-                                >{{ $donnaConfig?->personal_context }}</textarea>
+                                          placeholder="Ejemplo: Soy diseñador freelance. Trabajo de 9am a 6pm de lunes a viernes. Prefiero respuestas cortas y directas."
+                                >{{ $donnaConfigPersonal?->personal_context }}</textarea>
                                 <div class="d-flex justify-content-end mt-1">
                                     <span class="text-muted small">
-                                        <span id="personal_context_count">{{ strlen($donnaConfig?->personal_context ?? '') }}</span>/1000
+                                        <span id="personal_context_count">{{ strlen($donnaConfigPersonal?->personal_context ?? '') }}</span>/1000
                                     </span>
                                 </div>
                             </div>
@@ -1253,13 +1247,13 @@
                                     <span class="badge bg-warning text-dark border ms-1" style="font-size:0.7rem;">Avanzado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Si lo dejas vacío, Donna usa su prompt por defecto (recomendado para la mayoría). Si escribes aquí, <strong>reemplaza completamente</strong> el prompt anterior — el "Contexto personal" se ignora.
-                                    Puedes usar las variables: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>.
+                                    Si lo dejas vacío, Donna usa su prompt por defecto (recomendado). Si escribes aquí, <strong>reemplaza completamente</strong> el prompt anterior.
+                                    Variables disponibles: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>.
                                 </p>
                                 <textarea name="main_prompt" class="form-control font-monospace" rows="9"
                                           maxlength="5000" style="font-size:0.8rem;"
                                           placeholder="Deja vacío para usar el prompt predeterminado de Donna..."
-                                >{{ $donnaConfig?->main_prompt }}</textarea>
+                                >{{ $donnaConfigPersonal?->main_prompt }}</textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
@@ -1267,7 +1261,314 @@
                             </button>
                         </form>
                         @endif
-                        {{-- ── Fin Personalizar ─────────────────────────────── --}}
+                        @endif
+                        {{-- ══ FIN DONNA PERSONAL ══════════════════════════════ --}}
+
+                        {{-- ══ DONNA BUSINESS ══════════════════════════════════ --}}
+                        @if($subBusiness)
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase small mb-3" style="color:#8a6218;">
+                            <i class="bi bi-briefcase-fill me-1"></i> Donna Business
+                        </h6>
+
+                        {{-- Suscripción Business --}}
+                        <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
+                            <i class="bi bi-robot fs-3" style="color:#E4B100;"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">{{ $subBusiness->plan?->name ?? 'Donna Business' }}</div>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    <span class="badge bg-{{ $subBusiness->status_color }}">{{ $subBusiness->status_label }}</span>
+                                    <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
+                                </div>
+                                @if($subBusiness->expires_at)
+                                    @php $diasB = $subBusiness->daysRemaining(); @endphp
+                                    <div class="text-muted small mt-1">
+                                        Vence: {{ $subBusiness->expires_at->format('d/m/Y') }}
+                                        @if($diasB !== null && $diasB <= 7 && $diasB >= 0)
+                                            <span class="text-warning fw-semibold ms-1">({{ $diasB }} días restantes)</span>
+                                        @elseif($diasB !== null && $diasB < 0)
+                                            <span class="text-danger fw-semibold ms-1">(Vencida)</span>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="text-muted small mt-1">Sin fecha de vencimiento</div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Canal WhatsApp --}}
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-whatsapp me-1"></i> Canal WhatsApp
+                        </h6>
+
+                        @if($canalWhatsapp && $canalWhatsapp->status === 'active')
+                            <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-3" style="background:#e8f5e9;border:1px solid #c8e6c9;">
+                                <i class="bi bi-whatsapp fs-3 text-success"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i>WhatsApp conectado
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        Instancia: <code>{{ $canalWhatsapp->instance_name }}</code>
+                                    </div>
+                                    @if($canalWhatsapp->provider)
+                                        <div class="text-muted small">Proveedor: {{ $canalWhatsapp->provider }}</div>
+                                    @endif
+                                    @if($canalWhatsapp->activated_at)
+                                        <div class="text-muted small">Conectado el {{ $canalWhatsapp->activated_at->format('d/m/Y H:i') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        @elseif($canalWhatsapp && $canalWhatsapp->status === 'pending')
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fff8e1;border:1px solid #ffe082;">
+                                <i class="bi bi-hourglass-split text-warning fs-3"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">WhatsApp pendiente de configuración</div>
+                                    <div class="text-muted small mt-1">
+                                        Instancia: <code>{{ $canalWhatsapp->instance_name }}</code>
+                                    </div>
+                                    <div class="text-muted small">El canal está siendo configurado por el equipo de Streamify.</div>
+                                </div>
+                            </div>
+
+                        @else
+                            <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fff8e1;border:1px solid #ffe082;">
+                                <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+                                <div class="flex-grow-1 small text-muted">
+                                    No tienes un canal WhatsApp configurado. Contacta al equipo de Streamify para activarlo.
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Funciones activas (solo lectura) --}}
+                        @php
+                            $googleOk = $donnaIntegracion && $donnaIntegracion->isActive();
+                            $calOk    = $googleOk && ($donnaConfigBusiness?->calendar_enabled ?? false);
+                            $sheetOk  = $googleOk && ($donnaConfigBusiness?->sheets_enabled ?? false);
+                            $knowOk   = $donnaConfigBusiness?->knowledge_enabled ?? false;
+                        @endphp
+                        @if($calOk || $sheetOk || $knowOk)
+                        <div class="d-flex flex-wrap gap-1 mb-3">
+                            @if($calOk)
+                                <span class="badge bg-light text-dark border"><i class="bi bi-calendar3 me-1"></i>Google Calendar</span>
+                            @endif
+                            @if($sheetOk)
+                                <span class="badge bg-light text-dark border"><i class="bi bi-grid me-1"></i>Google Sheets</span>
+                            @endif
+                            @if($knowOk)
+                                <span class="badge bg-light text-dark border"><i class="bi bi-book me-1"></i>Knowledge Base</span>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Formulario de configuración Business --}}
+                        @if($subBusiness->status === 'active')
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">
+                            <i class="bi bi-sliders me-1"></i> Configurar Donna Business
+                        </h6>
+
+                        @if(session('donna_business_config_success'))
+                            <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{ session('donna_business_config_success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+                        @if(session('donna_business_error'))
+                            <div class="alert alert-danger alert-dismissible fade show py-2 small mb-3">
+                                <i class="bi bi-x-circle-fill me-1"></i>{{ session('donna_business_error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('cliente.donna.config-business') }}">
+                            @csrf
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label fw-semibold small mb-1">
+                                        <i class="bi bi-robot me-1" style="color:#E4B100;"></i>Nombre del agente
+                                    </label>
+                                    <input type="text" name="agent_name" class="form-control form-control-sm"
+                                           maxlength="80"
+                                           placeholder="Donna"
+                                           value="{{ old('agent_name', $donnaConfigBusiness?->agent_name) }}">
+                                    <div class="form-text">Cómo se presenta el agente ante tus clientes.</div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label fw-semibold small mb-1">
+                                        <i class="bi bi-building me-1" style="color:#E4B100;"></i>Nombre del negocio
+                                    </label>
+                                    <input type="text" name="business_name" class="form-control form-control-sm"
+                                           maxlength="120"
+                                           placeholder="Mi Empresa"
+                                           value="{{ old('business_name', $donnaConfigBusiness?->business_name) }}">
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label fw-semibold small mb-1">
+                                        <i class="bi bi-translate me-1"></i>Idioma de respuesta
+                                    </label>
+                                    <select name="language" class="form-select form-select-sm">
+                                        @php $lang = old('language', $donnaConfigBusiness?->language ?? 'es'); @endphp
+                                        <option value="es" @selected($lang === 'es')>Español</option>
+                                        <option value="en" @selected($lang === 'en')>English</option>
+                                        <option value="pt" @selected($lang === 'pt')>Português</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label fw-semibold small mb-1">
+                                        <i class="bi bi-emoji-smile me-1"></i>Tono del agente
+                                    </label>
+                                    <input type="text" name="tone" class="form-control form-control-sm"
+                                           maxlength="200"
+                                           placeholder="profesional, amable y directa"
+                                           value="{{ old('tone', $donnaConfigBusiness?->tone) }}">
+                                    <div class="form-text">Describe cómo quieres que hable el agente.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small mb-1">
+                                    <i class="bi bi-card-text me-1"></i>Descripción del negocio
+                                    <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Recomendado</span>
+                                </label>
+                                <p class="text-muted small mb-2">
+                                    Cuéntale a Donna qué hace tu negocio: productos, servicios, horarios de atención, ubicación, preguntas frecuentes. Donna usará esto para responder a tus clientes.
+                                </p>
+                                <textarea name="business_description" class="form-control" rows="5"
+                                          maxlength="2000"
+                                          id="business_description_input"
+                                          placeholder="Ejemplo: Somos una tienda de ropa casual ubicada en Guayaquil. Atendemos de lunes a sábado de 9am a 7pm. Enviamos a todo el país...">{{ old('business_description', $donnaConfigBusiness?->business_description) }}</textarea>
+                                <div class="d-flex justify-content-end mt-1">
+                                    <span class="text-muted small">
+                                        <span id="business_desc_count">{{ strlen($donnaConfigBusiness?->business_description ?? '') }}</span>/2000
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold small mb-1">
+                                    <i class="bi bi-code-square me-1"></i>Prompt personalizado completo
+                                    <span class="badge bg-warning text-dark border ms-1" style="font-size:0.65rem;">Avanzado</span>
+                                </label>
+                                <p class="text-muted small mb-2">
+                                    Solo si necesitas control total. Si lo dejas vacío, Donna usa su configuración por defecto combinada con los campos de arriba.
+                                    Variables: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>, <code>&#123;&#123;business_name&#125;&#125;</code>.
+                                </p>
+                                <textarea name="main_prompt" class="form-control font-monospace" rows="8"
+                                          maxlength="5000" style="font-size:0.8rem;"
+                                          placeholder="Deja vacío para usar la configuración por defecto...">{{ old('main_prompt', $donnaConfigBusiness?->main_prompt) }}</textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold" style="color:#1D1D1B;">
+                                <i class="bi bi-save me-1"></i>Guardar configuración
+                            </button>
+                        </form>
+                        @endif
+
+                        {{-- ══ BASE DE CONOCIMIENTOS ═══════════════════════════ --}}
+                        <hr class="my-4">
+
+                        <h6 class="fw-bold text-uppercase small mb-1" style="color:#8a6218;">
+                            <i class="bi bi-book me-1"></i> Base de Conocimientos
+                        </h6>
+                        <p class="text-muted small mb-3">
+                            Aquí defines qué sabe Donna sobre tu negocio: productos, precios, horarios, políticas, preguntas frecuentes.
+                            Donna consulta esta base automáticamente cuando un cliente pregunta algo.
+                        </p>
+
+                        @if(session('donna_knowledge_success'))
+                            <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
+                                <i class="bi bi-check-circle-fill me-1"></i>{{ session('donna_knowledge_success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        {{-- Tipos de ítem --}}
+                        @php
+                            $tiposLabel = [
+                                'product' => ['icon' => 'bi-box-seam',        'label' => 'Productos',             'color' => '#274698'],
+                                'service' => ['icon' => 'bi-tools',           'label' => 'Servicios',             'color' => '#5a3c9a'],
+                                'faq'     => ['icon' => 'bi-question-circle', 'label' => 'Preguntas frecuentes', 'color' => '#1a7a4a'],
+                                'policy'  => ['icon' => 'bi-shield-check',    'label' => 'Políticas',             'color' => '#b45309'],
+                                'table'   => ['icon' => 'bi-table',           'label' => 'Datos / Tablas',        'color' => '#0369a1'],
+                            ];
+                            $itemsPorTipo = $donnaKnowledgeItems->groupBy('type');
+                        @endphp
+
+                        <div class="d-flex justify-content-end mb-3">
+                            <button type="button" class="btn btn-sm rounded-pill fw-semibold"
+                                    style="background:#E4B100;color:#1D1D1B;"
+                                    onclick="abrirModalKnowledge()">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar ítem
+                            </button>
+                        </div>
+
+                        @if($donnaKnowledgeItems->isEmpty())
+                            <div class="text-center py-4 rounded-3" style="background:#f9f9f9;border:1px dashed #e9ecef;">
+                                <i class="bi bi-book fs-3 d-block mb-2 text-muted"></i>
+                                <div class="text-muted small mb-2">Tu base de conocimientos está vacía.</div>
+                                <div class="text-muted small">Agrega productos, preguntas frecuentes o políticas para que Donna pueda responder a tus clientes.</div>
+                            </div>
+                        @else
+                            <div class="accordion" id="accordionKnowledge">
+                                @foreach($tiposLabel as $tipo => $meta)
+                                    @php $items = $itemsPorTipo->get($tipo, collect()); @endphp
+                                    @if($items->isNotEmpty())
+                                    <div class="accordion-item border rounded-3 mb-2 overflow-hidden">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed fw-semibold py-2" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse-knowledge-{{ $tipo }}"
+                                                    style="font-size:0.88rem;">
+                                                <i class="bi {{ $meta['icon'] }} me-2" style="color:{{ $meta['color'] }};"></i>
+                                                {{ $meta['label'] }}
+                                                <span class="badge ms-2 rounded-pill" style="background:{{ $meta['color'] }};font-size:0.7rem;">{{ $items->count() }}</span>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-knowledge-{{ $tipo }}" class="accordion-collapse collapse">
+                                            <div class="accordion-body p-2">
+                                                <div class="d-flex flex-column gap-2">
+                                                    @foreach($items as $item)
+                                                    <div class="d-flex align-items-start gap-2 p-2 rounded-2" style="background:#f8f9fc;border:1px solid #e9ecef;" id="knowledge-item-{{ $item->id }}">
+                                                        <div class="flex-grow-1 min-width-0">
+                                                            <div class="fw-semibold small">{{ $item->title }}</div>
+                                                            <div class="text-muted small mt-1" style="white-space:pre-line;font-size:0.78rem;">{{ Str::limit($item->content_text, 180) }}</div>
+                                                            @if($item->source_url)
+                                                                <a href="{{ $item->source_url }}" target="_blank" class="small text-primary mt-1 d-inline-block">
+                                                                    <i class="bi bi-link-45deg me-1"></i>Fuente
+                                                                </a>
+                                                            @endif
+                                                        </div>
+                                                        <div class="d-flex gap-1 flex-shrink-0">
+                                                            <button type="button" class="btn btn-outline-primary btn-sm p-1"
+                                                                    style="font-size:0.72rem;"
+                                                                    onclick="editarKnowledge({{ $item->id }}, '{{ addslashes($item->type) }}', '{{ addslashes($item->title) }}', {{ json_encode($item->content_text) }}, '{{ addslashes($item->source_url ?? '') }}')">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-danger btn-sm p-1"
+                                                                    style="font-size:0.72rem;"
+                                                                    onclick="eliminarKnowledge({{ $item->id }})">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+                        {{-- ══ FIN BASE DE CONOCIMIENTOS ═══════════════════════ --}}
+
+                        @endif
+                        {{-- ══ FIN DONNA BUSINESS ══════════════════════════════ --}}
 
                     </div>
                 </div>
@@ -1276,6 +1577,70 @@
 
         </div>
     </div>
+
+    {{-- Modal Knowledge Base --}}
+    <x-modal name="knowledgeItemModal" maxWidth="lg">
+        <div class="modal-header" style="background:#fffbea;border-bottom:1px solid #ffe082;">
+            <h5 class="modal-title fw-bold" id="knowledgeModalTitle">
+                <i class="bi bi-book me-2" style="color:#b45309;"></i>Ítem de conocimiento
+            </h5>
+            <button type="button" class="btn-close"
+                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }))">
+            </button>
+        </div>
+        <form id="knowledgeForm" onsubmit="submitKnowledge(event)">
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-sm-5">
+                        <label class="form-label fw-semibold small mb-1">Tipo</label>
+                        <select id="knowledge_type" name="type" class="form-select form-select-sm" required>
+                            <option value="product">📦 Producto</option>
+                            <option value="service">🔧 Servicio</option>
+                            <option value="faq">❓ Pregunta frecuente</option>
+                            <option value="policy">🛡️ Política</option>
+                            <option value="table">📊 Datos / Tabla</option>
+                        </select>
+                        <div class="form-text">¿Qué tipo de información es?</div>
+                    </div>
+                    <div class="col-sm-7">
+                        <label class="form-label fw-semibold small mb-1">Título</label>
+                        <input type="text" id="knowledge_title" name="title"
+                               class="form-control form-control-sm" maxlength="200" required
+                               placeholder="Ej: Precio camiseta básica, ¿Hacen envíos?...">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small mb-1">
+                            Contenido
+                            <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Lo que Donna lee</span>
+                        </label>
+                        <textarea id="knowledge_content_input" name="content_text"
+                                  class="form-control" rows="6" maxlength="5000" required
+                                  placeholder="Escribe aquí toda la información relevante. Ej: &#10;Camiseta básica algodón 100% - tallas S, M, L, XL&#10;Precio: $15 (S/M), $17 (L/XL)&#10;Colores disponibles: blanco, negro, gris, azul marino"></textarea>
+                        <div class="d-flex justify-content-end mt-1">
+                            <span class="text-muted small"><span id="knowledge_content_count">0</span>/5000</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold small mb-1">URL de referencia <span class="text-muted">(opcional)</span></label>
+                        <input type="url" id="knowledge_source_url" name="source_url"
+                               class="form-control form-control-sm"
+                               placeholder="https://...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }))">
+                    Cancelar
+                </button>
+                <button type="submit" id="knowledgeSubmitBtn"
+                        class="btn btn-sm rounded-pill fw-semibold"
+                        style="background:#E4B100;color:#1D1D1B;">
+                    <i class="bi bi-save me-1"></i>Guardar
+                </button>
+            </div>
+        </form>
+    </x-modal>
 
     <div class="modal fade" id="crearSoporteModal" tabindex="-1" aria-labelledby="crearSoporteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1628,6 +1993,98 @@
             if (pcInput && pcCount) {
                 pcInput.addEventListener('input', () => pcCount.textContent = pcInput.value.length);
             }
+
+            // Contador caracteres descripción negocio (Business)
+            const bdInput = document.getElementById('business_description_input');
+            const bdCount = document.getElementById('business_desc_count');
+            if (bdInput && bdCount) {
+                bdInput.addEventListener('input', () => bdCount.textContent = bdInput.value.length);
+            }
+
+            // Contador caracteres knowledge content
+            const kcInput = document.getElementById('knowledge_content_input');
+            const kcCount = document.getElementById('knowledge_content_count');
+            if (kcInput && kcCount) {
+                kcInput.addEventListener('input', () => kcCount.textContent = kcInput.value.length);
+            }
         });
+
+        // ── Knowledge Base ─────────────────────────────────────────
+        let knowledgeEditId = null;
+
+        function abrirModalKnowledge() {
+            knowledgeEditId = null;
+            document.getElementById('knowledgeModalTitle').textContent = 'Agregar ítem';
+            document.getElementById('knowledgeForm').reset();
+            document.getElementById('knowledge_content_count').textContent = '0';
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'knowledgeItemModal' }));
+        }
+
+        function editarKnowledge(id, type, title, content, sourceUrl) {
+            knowledgeEditId = id;
+            document.getElementById('knowledgeModalTitle').textContent = 'Editar ítem';
+            document.getElementById('knowledge_type').value = type;
+            document.getElementById('knowledge_title').value = title;
+            document.getElementById('knowledge_content_input').value = content;
+            document.getElementById('knowledge_content_count').textContent = content.length;
+            document.getElementById('knowledge_source_url').value = sourceUrl || '';
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'knowledgeItemModal' }));
+        }
+
+        async function submitKnowledge(e) {
+            e.preventDefault();
+            const btn = document.getElementById('knowledgeSubmitBtn');
+            btn.disabled = true;
+
+            const body = {
+                _token:       '{{ csrf_token() }}',
+                type:         document.getElementById('knowledge_type').value,
+                title:        document.getElementById('knowledge_title').value,
+                content_text: document.getElementById('knowledge_content_input').value,
+                source_url:   document.getElementById('knowledge_source_url').value || null,
+            };
+
+            const url    = knowledgeEditId
+                ? `/cliente/donna/knowledge/${knowledgeEditId}`
+                : '/cliente/donna/knowledge';
+            const method = knowledgeEditId ? 'PUT' : 'POST';
+
+            try {
+                const r = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify(body),
+                });
+                const data = await r.json();
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }));
+                    setTimeout(() => location.reload(), 300);
+                } else {
+                    alert(data.message || 'Error al guardar.');
+                }
+            } catch {
+                alert('Error de conexión.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function eliminarKnowledge(id) {
+            if (!confirm('¿Eliminar este ítem de la base de conocimientos?')) return;
+            try {
+                const r = await fetch(`/cliente/donna/knowledge/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                });
+                const data = await r.json();
+                if (data.success) {
+                    document.getElementById(`knowledge-item-${id}`)?.remove();
+                } else {
+                    alert('Error al eliminar.');
+                }
+            } catch {
+                alert('Error de conexión.');
+            }
+        }
     </script>
 @endsection

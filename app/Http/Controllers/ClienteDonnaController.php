@@ -26,22 +26,28 @@ class ClienteDonnaController extends Controller
         $request->validate(['plan_id' => 'required|exists:donna_plans,id']);
 
         $cliente = Auth::guard('cliente')->user();
+        $plan    = DonnaPlan::where('id', $request->plan_id)->where('is_active', true)->firstOrFail();
 
-        if (!DonnaIntegration::googleConnected($cliente->idcli)) {
-            return back()->with('donna_error', 'Debes conectar tu cuenta de Google antes de solicitar Donna.');
+        // Google solo es obligatorio para Personal (Business lo usa opcionalmente)
+        if ($plan->service_type === 'personal' && !DonnaIntegration::googleConnected($cliente->idcli)) {
+            return back()->with('donna_error', 'Debes conectar tu cuenta de Google antes de solicitar Donna Personal.');
         }
 
-        $plan = DonnaPlan::where('id', $request->plan_id)->where('is_active', true)->firstOrFail();
-
-        $yaExiste = DonnaSubscription::where('client_id', $cliente->idcli)
+        // Solo verifica duplicado del mismo tipo de servicio: Personal no bloquea Business ni viceversa
+        $subExiste = DonnaSubscription::where('client_id', $cliente->idcli)
+            ->where('service_type', $plan->service_type)
             ->whereIn('status', ['active', 'pending'])
-            ->exists()
-            || DonnaRequest::where('client_id', $cliente->idcli)
-            ->where('status', 'pending')
             ->exists();
 
-        if ($yaExiste) {
-            return back()->with('donna_error', 'Ya tienes una solicitud o suscripción activa para Donna.');
+        $requestExiste = DonnaRequest::where('client_id', $cliente->idcli)
+            ->where('status', 'pending')
+            ->whereHas('plan', fn ($q) => $q->where('service_type', $plan->service_type))
+            ->exists();
+
+        if ($subExiste || $requestExiste) {
+            return back()->with('donna_error',
+                'Ya tienes una solicitud o suscripción activa para Donna ' . ucfirst($plan->service_type) . '.'
+            );
         }
 
         DonnaRequest::create([
@@ -59,12 +65,12 @@ class ClienteDonnaController extends Controller
         $request->validate(['plan_id' => 'required|exists:donna_plans,id']);
 
         $cliente = Auth::guard('cliente')->user();
+        $plan    = DonnaPlan::where('id', $request->plan_id)->where('is_active', true)->firstOrFail();
 
-        if (!DonnaIntegration::googleConnected($cliente->idcli)) {
-            return back()->with('donna_error', 'Debes conectar tu cuenta de Google antes de activar Donna.');
+        // Google solo es obligatorio para Personal
+        if ($plan->service_type === 'personal' && !DonnaIntegration::googleConnected($cliente->idcli)) {
+            return back()->with('donna_error', 'Debes conectar tu cuenta de Google antes de activar Donna Personal.');
         }
-
-        $plan = DonnaPlan::where('id', $request->plan_id)->where('is_active', true)->firstOrFail();
 
         if ($cliente->saldo < $plan->price) {
             return back()->with('donna_error',
@@ -73,12 +79,14 @@ class ClienteDonnaController extends Controller
             );
         }
 
+        // Busca suscripción activa del MISMO tipo — Personal no bloquea Business ni viceversa
         $subActiva = DonnaSubscription::where('client_id', $cliente->idcli)
+            ->where('service_type', $plan->service_type)
             ->where('status', 'active')
             ->where('is_enabled', true)
             ->first();
 
-        // Si hay suscripción activa pero sin canal Telegram, generar el canal/código sin cobrar
+        // Personal: si la suscripción existe pero falta el canal Telegram, regenerarlo sin cobrar
         if ($subActiva && $plan->service_type === 'personal') {
             $canalExiste = DonnaChannel::where('subscription_id', $subActiva->id)
                 ->where('channel_type', 'telegram')
@@ -100,16 +108,19 @@ class ClienteDonnaController extends Controller
                 $this->setupSpreadsheet($cliente->idcli, $subActiva->id);
 
                 return back()
-                    ->with('donna_success', 'Tu Donna ya estaba activa. Aquí tienes tu código para vincular Telegram.')
+                    ->with('donna_success', 'Tu Donna Personal ya estaba activa. Aquí tienes tu código para vincular Telegram.')
                     ->with('donna_activation_code', $code)
                     ->with('donna_plan_type', 'personal');
             }
 
-            return back()->with('donna_error', 'Ya tienes una suscripción Donna activa con canal configurado.');
+            return back()->with('donna_error', 'Ya tienes una suscripción Donna Personal activa con canal configurado.');
         }
 
+        // Business: si ya existe, bloquear
         if ($subActiva) {
-            return back()->with('donna_error', 'Ya tienes una suscripción Donna activa.');
+            return back()->with('donna_error',
+                'Ya tienes una suscripción Donna ' . ucfirst($plan->service_type) . ' activa.'
+            );
         }
 
         DB::beginTransaction();
@@ -151,7 +162,7 @@ class ClienteDonnaController extends Controller
                     'is_default'      => true,
                 ]);
             } elseif ($plan->service_type === 'business') {
-                DonnaChannel::create([
+                $businessChannel = DonnaChannel::create([
                     'client_id'       => $cliente->idcli,
                     'subscription_id' => $sub->id,
                     'service_type'    => 'business',
@@ -182,15 +193,51 @@ class ClienteDonnaController extends Controller
             $successMsg = '¡Donna activada exitosamente! Tu suscripción está activa' .
                 ($expiresAt ? ' hasta el ' . $expiresAt->format('d/m/Y') : '') . '.';
 
-            return back()
+            $response = back()
                 ->with('donna_success', $successMsg)
                 ->with('donna_activation_code', $activationCode)
                 ->with('donna_plan_type', $plan->service_type);
+
+            // Para Business: pasar el channel_id al modal de configuración de WhatsApp
+            if ($plan->service_type === 'business' && isset($businessChannel)) {
+                $response = $response->with('donna_business_channel_id', $businessChannel->id);
+            }
+
+            return $response;
 
         } catch (\Exception) {
             DB::rollBack();
             return back()->with('donna_error', 'Error al procesar el pago. Intenta nuevamente.');
         }
+    }
+
+    public function connectWhatsApp(Request $request)
+    {
+        $request->validate([
+            'channel_id'   => 'required|integer',
+            'instance_name'=> 'required|string|max:100',
+            'api_base_url' => 'required|url|max:255',
+            'api_key'      => 'required|string',
+            'phone_number' => 'nullable|string|max:50',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+
+        $channel = DonnaChannel::where('id', $request->channel_id)
+            ->where('client_id', $cliente->idcli)
+            ->where('service_type', 'business')
+            ->where('channel_type', 'whatsapp')
+            ->firstOrFail();
+
+        $channel->update([
+            'instance_name'     => $request->instance_name,
+            'api_base_url'      => rtrim($request->api_base_url, '/'),
+            'api_key_encrypted' => \Illuminate\Support\Facades\Crypt::encryptString($request->api_key),
+            'phone_number'      => $request->phone_number,
+            'status'            => 'active',
+        ]);
+
+        return back()->with('donna_success', '¡WhatsApp de Donna Business configurado! El equipo verificará la conexión en breve.');
     }
 
     public function saveConfig(Request $request)
@@ -222,6 +269,45 @@ class ClienteDonnaController extends Controller
         );
 
         return back()->with('donna_config_success', 'Configuración de Donna actualizada. Los cambios se aplican en el próximo mensaje.');
+    }
+
+    public function saveBusinessConfig(Request $request)
+    {
+        $request->validate([
+            'agent_name'           => 'nullable|string|max:80',
+            'business_name'        => 'nullable|string|max:120',
+            'business_description' => 'nullable|string|max:2000',
+            'tone'                 => 'nullable|string|max:200',
+            'language'             => 'nullable|string|max:10',
+            'main_prompt'          => 'nullable|string|max:5000',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+
+        $sub = DonnaSubscription::where('client_id', $cliente->idcli)
+            ->where('service_type', 'business')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$sub) {
+            return back()->with('donna_business_error', 'No tienes una suscripción Donna Business activa.');
+        }
+
+        DonnaAgentConfig::updateOrCreate(
+            ['client_id' => $cliente->idcli, 'service_type' => 'business'],
+            [
+                'subscription_id'      => $sub->id,
+                'agent_name'           => $request->input('agent_name') ?: null,
+                'business_name'        => $request->input('business_name') ?: null,
+                'business_description' => $request->input('business_description') ?: null,
+                'tone'                 => $request->input('tone') ?: null,
+                'language'             => $request->input('language') ?: null,
+                'main_prompt'          => $request->input('main_prompt') ?: null,
+                'is_active'            => true,
+            ]
+        );
+
+        return back()->with('donna_business_config_success', 'Configuración de Donna Business actualizada.');
     }
 
     private function setupSpreadsheet(int $clientId, int $subscriptionId): void
