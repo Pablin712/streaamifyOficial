@@ -4,7 +4,8 @@
       "Bash(Get-ChildItem *)",
       "Bash(php -l app/Exports/ProductosSriExport.php)",
       "Bash(php -l app/Http/Controllers/ProductoController.php)",
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "Bash(dir C:\\\\laragon\\\\www\\\\streaamifyOficial\\\\public\\\\css *)"
     ]
   }
 }

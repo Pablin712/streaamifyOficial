@@ -2,6 +2,15 @@
 
 @section('title', 'Donna — Solicitudes')
 
+@section('styles')
+<style>
+    :root { --donna-blue: #274698; --donna-gold: #E4B100; }
+    .badge-donna-personal { background-color: var(--donna-blue); color: #fff; }
+    .badge-donna-business { background-color: var(--donna-gold); color: #1D1D1B; }
+    .icon-donna-blue { color: var(--donna-blue); }
+</style>
+@endsection
+
 @section('h1', 'Donna — Solicitudes')
 
 @section('descripcion')
@@ -19,7 +28,7 @@
     @endif
 
     <h5 class="mb-1 fw-bold">
-        <i class="bi bi-robot me-2" style="color:#274698;"></i>Solicitudes de Donna
+        <i class="bi bi-robot me-2 icon-donna-blue"></i>Solicitudes de Donna
     </h5>
     <p class="text-muted mb-0">
         Revisa y aprueba las solicitudes de clientes que quieren contratar Donna.
@@ -80,9 +89,9 @@
                         <td>{{ $sol->plan?->name ?? 'ID '.$sol->plan_id }}</td>
                         <td>
                             @if ($sol->plan?->service_type === 'personal')
-                                <span class="badge" style="background:#274698;">Personal</span>
+                                <span class="badge badge-donna-personal">Personal</span>
                             @else
-                                <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
+                                <span class="badge badge-donna-business">Business</span>
                             @endif
                         </td>
                         <td>

@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Select2 Dark Mode -->
     <link href="{{ asset('css/select2-dark-mode.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/modal-system.css') }}" rel="stylesheet" />
 
     <style>
         .btn-rosa-1 {
@@ -64,7 +65,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: var(--border-color);
             transition: .4s;
             border-radius: 24px;
         }
@@ -82,7 +83,7 @@
         }
 
         input:checked + .toggle-slider {
-            background-color: #28a745;
+            background-color: var(--success-color);
         }
 
         input:checked + .toggle-slider:before {
@@ -101,7 +102,7 @@
         }
 
         tbody tr.clickable-row:hover {
-            background-color: rgba(248, 187, 208, 0.2) !important;
+            background-color: var(--bg-hover) !important;
         }
 
         tbody tr.clickable-row td {
@@ -146,7 +147,7 @@
             background:
                 radial-gradient(circle at top right, rgba(17, 163, 127, 0.16), transparent 32%),
                 radial-gradient(circle at bottom left, rgba(27, 124, 255, 0.14), transparent 30%),
-                #ffffff;
+                var(--bg-card);
         }
 
         .wa-compose-hero {
@@ -230,11 +231,11 @@
         }
 
         .wa-compose-card {
-            border: 1px solid rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--border-color);
             border-radius: 1rem;
-            background: rgba(248, 250, 252, 0.92);
+            background: var(--bg-light);
             padding: 0.95rem 1rem;
-            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+            box-shadow: var(--shadow-md);
         }
 
         .wa-compose-label {
@@ -244,22 +245,22 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
         }
 
         .wa-compose-value {
             margin: 0;
-            color: #0f172a;
+            color: var(--text-primary);
             font-weight: 600;
             line-height: 1.4;
             word-break: break-word;
         }
 
         .wa-compose-panel {
-            border: 1px solid rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--border-color);
             border-radius: 1.1rem;
-            background: #ffffff;
-            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+            background: var(--bg-card);
+            box-shadow: var(--shadow-md);
             overflow: hidden;
         }
 
@@ -269,21 +270,21 @@
             justify-content: space-between;
             gap: 1rem;
             padding: 0.95rem 1rem;
-            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-            background: rgba(248, 250, 252, 0.92);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-light);
         }
 
         .wa-compose-panel-title {
             margin: 0;
             font-size: 0.98rem;
             font-weight: 700;
-            color: #0f172a;
+            color: var(--text-primary);
         }
 
         .wa-compose-counter {
             font-size: 0.82rem;
             font-weight: 600;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
         }
 
         .wa-compose-textarea {
@@ -301,7 +302,32 @@
             margin: 0;
             padding: 0.85rem 1rem 1rem;
             font-size: 0.84rem;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
+        }
+
+        /* Toast de notificación */
+        .usuarios-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            z-index: 9999;
+            box-shadow: var(--shadow-md);
+            font-weight: bold;
+            animation: usuariosSlideIn 0.3s ease-out;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .usuarios-toast.is-success { background-color: var(--success-color); color: #fff; border-color: var(--success-color); }
+        .usuarios-toast.is-danger  { background-color: var(--danger-color);  color: #fff; border-color: var(--danger-color); }
+        .usuarios-toast.is-warning { background-color: var(--warning-color); color: #000; border-color: var(--warning-color); }
+
+        @keyframes usuariosSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
         }
 
         @media (max-width: 767.98px) {
@@ -472,21 +498,7 @@
         </div>
     </form>
 
-    <div id="toast-mensaje"
-        style="
-    display: none;
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-    padding: 12px 16px;
-    border-radius: 6px;
-    z-index: 9999;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    font-weight: bold;
-    ">
+    <div id="toast-mensaje" class="usuarios-toast" style="display: none;">
         ✅ Mensaje copiado
     </div>
 
@@ -498,7 +510,7 @@
 @include('inventory.cuentas.modals.confirm-move-user-otro-servicio')
 
 <x-modal name="confirmar-marcar-cuenta-danada" :show="false" maxWidth="lg">
-    <div class="modal-header border-bottom" style="background-color: #b02a37; color: #ffffff;">
+    <div class="modal-header modal-header-danger">
         <h5 class="modal-title">
             <i class="fas fa-triangle-exclamation me-2"></i>Confirmar Cuenta Danada
         </h5>
@@ -526,7 +538,7 @@
 </x-modal>
 
 <x-modal name="confirmar-borrar-usuarios-seleccionados" :show="false" maxWidth="lg">
-    <div class="modal-header border-bottom" style="background-color: #dc3545; color: #ffffff;">
+    <div class="modal-header modal-header-danger">
         <h5 class="modal-title">
             <i class="fas fa-trash me-2"></i>Confirmar Borrado Masivo
         </h5>
@@ -686,36 +698,11 @@
 
         function showUsuariosToast(message, type = 'success') {
             const toast = document.getElementById('toast-mensaje');
-            if (!toast) {
-                return;
-            }
+            if (!toast) return;
 
-            const visualConfig = {
-                success: {
-                    backgroundColor: '#d4edda',
-                    color: '#155724',
-                    borderColor: '#c3e6cb',
-                    prefix: '✅ '
-                },
-                warning: {
-                    backgroundColor: '#fff3cd',
-                    color: '#856404',
-                    borderColor: '#ffeeba',
-                    prefix: '⚠️ '
-                },
-                danger: {
-                    backgroundColor: '#f8d7da',
-                    color: '#721c24',
-                    borderColor: '#f5c6cb',
-                    prefix: '❌ '
-                }
-            };
-
-            const style = visualConfig[type] || visualConfig.success;
-            toast.style.backgroundColor = style.backgroundColor;
-            toast.style.color = style.color;
-            toast.style.border = `1px solid ${style.borderColor}`;
-            toast.textContent = `${style.prefix}${message}`;
+            const prefixes = { success: '✅ ', warning: '⚠️ ', danger: '❌ ' };
+            toast.textContent = (prefixes[type] || '✅ ') + message;
+            toast.className = 'usuarios-toast is-' + (type === 'success' ? 'success' : type === 'danger' ? 'danger' : 'warning');
             toast.style.display = 'block';
             toast.style.opacity = 1;
 
@@ -1278,31 +1265,13 @@
             }
 
             navigator.clipboard.writeText(mensaje).then(() => {
-                const toast = document.getElementById('toast-mensaje');
-                toast.textContent = '✅ Mensaje copiado';
-                toast.style.display = 'block';
-                toast.style.opacity = 1;
-
-                setTimeout(() => {
-                    toast.style.transition = 'opacity 0.5s ease';
-                    toast.style.opacity = 0;
-                    setTimeout(() => toast.style.display = 'none', 500);
-                }, 2000);
+                showUsuariosToast('Mensaje copiado');
             });
         }
 
         function copiarTelefono(telefono) {
             navigator.clipboard.writeText(telefono).then(() => {
-                const toast = document.getElementById('toast-mensaje');
-                toast.textContent = '✅ Teléfono copiado';
-                toast.style.display = 'block';
-                toast.style.opacity = 1;
-
-                setTimeout(() => {
-                    toast.style.transition = 'opacity 0.5s ease';
-                    toast.style.opacity = 0;
-                    setTimeout(() => toast.style.display = 'none', 500);
-                }, 2000);
+                showUsuariosToast('Teléfono copiado');
             });
         }
 
@@ -1405,17 +1374,7 @@
                                 labelEstado.className = `d-block mt-1 text-${nuevoEstado === 'COBRADO' ? 'success' : 'warning'}`;
                             }
 
-                            // Mostrar toast de éxito
-                            const toast = document.getElementById('toast-mensaje');
-                            toast.textContent = `✅ Estado actualizado a ${nuevoEstado}`;
-                            toast.style.display = 'block';
-                            toast.style.opacity = 1;
-
-                            setTimeout(() => {
-                                toast.style.transition = 'opacity 0.5s ease';
-                                toast.style.opacity = 0;
-                                setTimeout(() => toast.style.display = 'none', 500);
-                            }, 2000);
+                            showUsuariosToast(`Estado actualizado a ${nuevoEstado}`);
                         } else {
                             // Revertir el toggle si hay error
                             toggle.checked = !toggle.checked;

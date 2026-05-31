@@ -1,5 +1,5 @@
 <x-modal name="suspendDonnaSubModal" :show="false" maxWidth="md">
-    <div class="modal-header bg-secondary text-white">
+    <div class="modal-header modal-header-secondary">
         <h5 class="modal-title">
             <i class="fas fa-ban me-2"></i>Suspender Suscripción
         </h5>

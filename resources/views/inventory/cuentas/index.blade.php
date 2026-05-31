@@ -6,25 +6,25 @@
     <!-- Select2 v4.1.0-rc.0 con Bootstrap 5 theme -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <!-- Select2 Dark Mode -->
     <link rel="stylesheet" href="{{ asset('css/select2-dark-mode.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}">
     <style>
-        /* Personalizando el fondo oscuro de las filas de la tabla a morado */
+        /* ── Cuentas — estilos locales ──────────────────────────── */
+
+        /* Magis TV / Flujo: identificador visual morado con soporte dark mode */
+        :root { --cuentas-magis-bg: #800080; }
+        [data-dark-mode="true"] { --cuentas-magis-bg: #9940b0; }
+
         .table-dark {
-            background-color: #800080 !important;
-            /* Color morado */
-            color: white !important;
+            background-color: var(--cuentas-magis-bg) !important;
+            color: #fff !important;
         }
-
-        /* Personalizando el badge bg-dark a morado */
         .badge.bg-dark {
-            background-color: #800080 !important;
-            /* Color morado */
-            color: white !important;
+            background-color: var(--cuentas-magis-bg) !important;
+            color: #fff !important;
         }
-
         .badge.bg-dark:hover {
-            background-color: #6a006a !important;
+            filter: brightness(0.85);
         }
 
         .btn-xs {
@@ -79,75 +79,6 @@
             height: 300px;
         }
 
-        /* ===================================
-           ESTILOS PERSONALIZADOS PARA MODALES
-           =================================== */
-
-        /* Mejorar legibilidad del contenido del modal */
-        .modal-body {
-            background-color: #ffffff;
-            color: #212529;
-        }
-
-        .modal-body .form-label {
-            color: #495057;
-            font-weight: 600;
-        }
-
-        .modal-body .form-control,
-        .modal-body .form-select {
-            background-color: #ffffff;
-            color: #212529;
-            border: 1px solid #ced4da;
-        }
-
-        .modal-body .form-control:focus,
-        .modal-body .form-select:focus {
-            background-color: #ffffff;
-            color: #212529;
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        /* Alerts en modales */
-        .modal-body .alert {
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
-            color: #0c5460;
-        }
-
-        .modal-body .alert-info {
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
-            color: #0c5460;
-        }
-
-        .modal-body .alert-warning {
-            background-color: #fff3cd;
-            border-color: #ffecb5;
-            color: #664d03;
-        }
-
-        .modal-body .alert-danger {
-            background-color: #f8d7da;
-            border-color: #f5c2c7;
-            color: #842029;
-        }
-
-        /* Card dentro del modal */
-        .modal-body .card {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-        }
-
-        .modal-body .card-body {
-            color: #212529;
-        }
-
-        .modal-body .card-title {
-            color: #dc3545;
-        }
-
         /* Columnas clickeables para copiar */
         .clickable-copy {
             cursor: pointer;
@@ -155,136 +86,48 @@
         }
 
         .clickable-copy:hover {
-            background-color: rgba(13, 110, 253, 0.1);
+            background-color: var(--bg-hover);
         }
 
         /* Toast de notificación */
-        .toast-success, .toast-error {
+        .cuentas-toast {
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 12px 20px;
             border-radius: 8px;
             z-index: 9999;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-md);
             font-weight: 600;
             font-size: 14px;
-            animation: slideIn 0.3s ease-out;
+            animation: cuentasSlideIn 0.3s ease-out;
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }
 
-        .toast-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .cuentas-toast.is-success {
+            background-color: var(--success-color);
+            color: #fff;
+            border-color: var(--success-color);
         }
 
-        .toast-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .cuentas-toast.is-danger {
+            background-color: var(--danger-color);
+            color: #fff;
+            border-color: var(--danger-color);
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        @keyframes cuentasSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
         }
 
-        .modal-body .fw-semibold {
-            color: #495057;
-        }
-
-        .modal-body .text-muted {
-            color: #6c757d !important;
-        }
-
-        /* Texto informativo en modales */
-        .modal-body .text-primary {
-            color: #0d6efd !important;
-            font-weight: 600;
-        }
-
-        /* Span de ID en modal edit */
+        /* Modal: ID display */
         #edit_idcue_display {
-            background-color: #e7f1ff;
+            background-color: var(--bg-light);
             padding: 2px 8px;
             border-radius: 4px;
-        }
-
-        /* Input groups en modales */
-        .modal-body .input-group .btn-outline-secondary {
-            background-color: #ffffff;
-            color: #6c757d;
-            border-color: #ced4da;
-        }
-
-        .modal-body .input-group .btn-outline-secondary:hover {
-            background-color: #e9ecef;
-            color: #495057;
-        }
-
-        /* Small text en modales */
-        .modal-body small {
-            color: #6c757d;
-        }
-
-        /* Headers de modal - asegurar buen contraste */
-        .modal-header {
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .modal-header .modal-title {
-            font-weight: 600;
-            font-size: 1.25rem;
-        }
-
-        /* Footer de modal */
-        .modal-footer {
-            background-color: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-        }
-
-        /* Badges en modal */
-        .modal-body .badge {
-            font-weight: 600;
-            padding: 0.35em 0.65em;
-        }
-
-        /* Rows en información del modal */
-        .modal-body .row {
-            margin-bottom: 0.5rem;
-        }
-
-        .modal-body .row:last-child {
-            margin-bottom: 0;
-        }
-
-        /* H6 en modales */
-        .modal-body h6 {
-            color: #495057;
-            font-weight: 700;
-        }
-
-        /* Botones outline en modales */
-        .modal-body .btn-outline-success {
-            color: #198754;
-            border-color: #198754;
-        }
-
-        .modal-body .btn-outline-success:hover {
-            background-color: #198754;
-            color: #ffffff;
-        }
-
-        /* Select2 en modales */
-        .modal-body .select2-container--default .select2-selection--single {
-            background-color: #ffffff;
-            border: 1px solid #ced4da;
         }
     </style>
 @endsection
@@ -356,9 +199,6 @@
             @endif
         @endforeach
     </div>
-@endsection
-@section('styles')
-    <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}">
 @endsection
 
 @section('btncrear')
@@ -582,7 +422,7 @@
     @include('inventory.valores.modals.create')
 
     {{-- Toast de notificación para copiar --}}
-    <div id="toast-copy" class="toast-success" style="display: none;">
+    <div id="toast-copy" class="cuentas-toast" style="display: none;">
         ✅ Copiado
     </div>
 @endsection
@@ -1849,7 +1689,7 @@ function mostrarToast(mensaje, tipo = 'success') {
     if (!toast) return;
 
     toast.textContent = mensaje;
-    toast.className = tipo === 'error' ? 'toast-error' : 'toast-success';
+    toast.className = 'cuentas-toast ' + (tipo === 'error' ? 'is-danger' : 'is-success');
     toast.style.display = 'block';
     toast.style.opacity = '1';
 

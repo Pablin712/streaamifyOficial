@@ -1,5 +1,5 @@
 <x-modal name="confirm-send-invoice" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #6c757d; color: white;">
+    <div class="modal-header modal-header-secondary">
         <h5 class="modal-title">
             <i class="fas fa-envelope me-2"></i>Enviar Factura por Email
         </h5>

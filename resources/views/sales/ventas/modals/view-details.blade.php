@@ -1,5 +1,5 @@
 <x-modal name="view-venta-details" :show="false" maxWidth="2xl">
-    <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white;">
+    <div class="modal-header modal-header-teal">
         <h5 class="modal-title">
             <i class="fas fa-receipt me-2"></i>Detalles de Venta #<span id="view_venta_number"></span>
         </h5>

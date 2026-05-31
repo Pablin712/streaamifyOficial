@@ -4,8 +4,10 @@
 
 @section('styles')
 <style>
-    .badge-personal { background-color: #274698; color: #fff; }
-    .badge-business { background-color: #E4B100; color: #1D1D1B; }
+    :root { --donna-blue: #274698; --donna-gold: #E4B100; }
+    .badge-personal { background-color: var(--donna-blue); color: #fff; }
+    .badge-business { background-color: var(--donna-gold); color: #1D1D1B; }
+    .icon-donna-blue { color: var(--donna-blue); }
 </style>
 @endsection
 
@@ -26,7 +28,7 @@
     @endif
 
     <h5 class="mb-1 fw-bold">
-        <i class="bi bi-robot me-2" style="color:#274698;"></i>Planes de Donna
+        <i class="bi bi-robot me-2 icon-donna-blue"></i>Planes de Donna
     </h5>
     <p class="text-muted mb-0">
         Define los planes que los clientes pueden contratar. El precio se refleja automáticamente en

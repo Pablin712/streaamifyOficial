@@ -9,21 +9,22 @@
     <link href="{{ asset('css/select2-dark-mode.css') }}" rel="stylesheet" />
 
     <style>
-        /* Personalizando el fondo oscuro de las filas de la tabla */
+        /* Productos: identificador visual verde con soporte dark mode */
+        :root { --productos-green-bg: #4CAF50; }
+        [data-dark-mode="true"] { --productos-green-bg: #5dbf60; }
+
         .table-dark {
-            background-color: #4CAF50 !important;
-            /* Verde personalizado */
-            color: white !important;
+            background-color: var(--productos-green-bg) !important;
+            color: #fff !important;
         }
 
-        /* Personalizando el badge bg-dark */
         .badge.bg-dark {
-            background-color: #4CAF50 !important;
-            color: white !important;
+            background-color: var(--productos-green-bg) !important;
+            color: #fff !important;
         }
 
         .badge.bg-dark:hover {
-            background-color: #388E3C !important;
+            filter: brightness(0.85);
         }
     </style>
 @endsection

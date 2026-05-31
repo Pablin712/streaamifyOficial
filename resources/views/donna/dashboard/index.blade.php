@@ -4,6 +4,14 @@
 
 @section('styles')
 <style>
+    :root {
+        --donna-blue: #274698;
+        --donna-gold: #E4B100;
+        --donna-nav-bg: #f0f2f8;
+    }
+    [data-dark-mode="true"] {
+        --donna-nav-bg: rgba(39, 70, 152, 0.15);
+    }
     .donna-kpi {
         border-radius: 18px;
         padding: 1.25rem 1.4rem;
@@ -18,32 +26,24 @@
         font-size: 3.2rem;
         opacity: 0.15;
     }
-    .donna-kpi .kpi-val {
-        font-size: 2.4rem;
-        font-weight: 800;
-        line-height: 1;
-    }
-    .donna-kpi .kpi-label {
-        font-size: 0.85rem;
-        opacity: 0.88;
-        margin-top: 0.3rem;
-    }
-    .kpi-blue    { background: linear-gradient(135deg,#274698,#3a5bbf); }
-    .kpi-yellow  { background: linear-gradient(135deg,#b88a00,#E4B100); color:#1D1D1B !important; }
-    .kpi-green   { background: linear-gradient(135deg,#1a7a4a,#28a745); }
-    .kpi-purple  { background: linear-gradient(135deg,#5a3c9a,#7952cc); }
-    .donna-kpi.kpi-yellow .kpi-label { color:#1D1D1B; opacity: 0.75; }
+    .donna-kpi .kpi-val { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+    .donna-kpi .kpi-label { font-size: 0.85rem; opacity: 0.88; margin-top: 0.3rem; }
+    .kpi-blue   { background: linear-gradient(135deg, var(--donna-blue), #3a5bbf); }
+    .kpi-yellow { background: linear-gradient(135deg, #b88a00, var(--donna-gold)); color: #1D1D1B !important; }
+    .kpi-green  { background: linear-gradient(135deg, #1a7a4a, var(--success-color, #28a745)); }
+    .kpi-purple { background: linear-gradient(135deg, #5a3c9a, #7952cc); }
+    .donna-kpi.kpi-yellow .kpi-label { color: #1D1D1B; opacity: 0.75; }
 
     .rank-badge {
         width: 28px; height: 28px;
         border-radius: 50%;
         display: inline-flex; align-items: center; justify-content: center;
         font-weight: 800; font-size: 0.8rem;
-        background: #f0f2f8; color: #274698;
+        background: var(--donna-nav-bg); color: var(--donna-blue);
     }
-    .rank-badge.top1 { background:#E4B100; color:#1D1D1B; }
-    .rank-badge.top2 { background:#274698; color:#fff; }
-    .rank-badge.top3 { background:#5a3c9a; color:#fff; }
+    .rank-badge.top1 { background: var(--donna-gold); color: #1D1D1B; }
+    .rank-badge.top2 { background: var(--donna-blue); color: #fff; }
+    .rank-badge.top3 { background: #5a3c9a; color: #fff; }
 
     .conv-preview {
         display: -webkit-box;
@@ -51,28 +51,23 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
         font-size: 0.82rem;
-        color: #6c757d;
+        color: var(--text-muted);
     }
-    .status-dot {
-        width: 8px; height: 8px; border-radius: 50%; display: inline-block;
-    }
-    .status-dot.open     { background: #28a745; }
-    .status-dot.takeover { background: #fd7e14; }
-    .status-dot.closed   { background: #adb5bd; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .status-dot.open     { background: var(--success-color, #28a745); }
+    .status-dot.takeover { background: var(--warning-color, #fd7e14); }
+    .status-dot.closed   { background: var(--text-muted, #adb5bd); }
 
-    .donna-nav {
-        display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;
-    }
+    .donna-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
     .donna-nav a {
         display: inline-flex; align-items: center; gap: 0.4rem;
         padding: 0.45rem 1rem; border-radius: 999px;
         font-size: 0.85rem; font-weight: 600; text-decoration: none;
-        background: #f0f2f8; color: #274698;
+        background: var(--donna-nav-bg); color: var(--donna-blue);
         transition: background 0.15s;
     }
-    .donna-nav a:hover, .donna-nav a.active {
-        background: #274698; color: #fff;
-    }
+    .donna-nav a:hover, .donna-nav a.active { background: var(--donna-blue); color: #fff; }
+    .icon-donna-blue { color: var(--donna-blue); }
 </style>
 @endsection
 
@@ -80,7 +75,7 @@
 
 @section('descripcion')
     <h5 class="mb-1 fw-bold">
-        <i class="bi bi-speedometer2 me-2" style="color:#274698;"></i>Dashboard Donna
+        <i class="bi bi-speedometer2 me-2 icon-donna-blue"></i>Dashboard Donna
     </h5>
     <p class="text-muted mb-0">Visión general de clientes activos, conversaciones y uso de Donna AI.</p>
 @endsection
@@ -137,7 +132,7 @@
         {{-- Top clientes --}}
         <div class="col-lg-7">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="fw-bold mb-0" style="color:#274698;">
+                <h6 class="fw-bold mb-0 icon-donna-blue">
                     <i class="bi bi-trophy me-1"></i>Clientes más activos
                 </h6>
                 <span class="text-muted small">{{ $totalConvs }} conversaciones en total</span>
@@ -197,7 +192,7 @@
         {{-- Conversaciones recientes --}}
         <div class="col-lg-5">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h6 class="fw-bold mb-0" style="color:#274698;">
+                <h6 class="fw-bold mb-0 icon-donna-blue">
                     <i class="bi bi-clock-history me-1"></i>Actividad reciente
                 </h6>
                 <a href="{{ route('donna.conversaciones.index') }}" class="small fw-semibold" style="color:#274698;">

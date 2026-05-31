@@ -1,6 +1,6 @@
 <x-modal name="editDonnaPlanModal" :show="false" maxWidth="2xl">
-    <div class="modal-header" style="background-color:#E4B100;">
-        <h5 class="modal-title text-dark">
+    <div class="modal-header modal-header-donna-gold">
+        <h5 class="modal-title">
             <i class="fas fa-edit me-2"></i>Editar Plan Donna
         </h5>
         <button type="button" class="btn-close"

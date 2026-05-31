@@ -1,5 +1,5 @@
 <x-modal name="confirm-move-all-disperso" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #ffc107; color: #000000;">
+    <div class="modal-header modal-header-warning">
         <h5 class="modal-title">
             <i class="fas fa-random me-2"></i>
             Dispersar TODOS los Clientes

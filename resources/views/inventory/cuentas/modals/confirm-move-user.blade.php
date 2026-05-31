@@ -1,7 +1,7 @@
 <x-modal name="confirm-move-user" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #6c757d; color: #ffffff;">
+    <div class="modal-header modal-header-secondary">
         <h5 class="modal-title">
-            <i class="fas fa-exchange-alt me-2" style="color: #ffffff;"></i>
+            <i class="fas fa-exchange-alt me-2"></i>
             Mover Usuario a Otra Cuenta
         </h5>
         <button type="button" class="btn-close btn-close-white" @click="$dispatch('close-modal', 'confirm-move-user')"></button>

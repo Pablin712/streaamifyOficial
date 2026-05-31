@@ -1,5 +1,5 @@
 <x-modal name="agregar-detalle-modal" :show="false" maxWidth="lg">
-    <div class="modal-header bg-success text-white">
+    <div class="modal-header modal-header-success">
         <h5 class="modal-title">
             <i class="fas fa-plus-circle me-2"></i>Agregar Detalle a la Venta
         </h5>

@@ -283,12 +283,12 @@
     <div class="modal fade" id="modalCodigoTelegram" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 shadow-lg">
-                <div class="modal-header border-0" style="background:linear-gradient(135deg,#274698,#3a5fc5);border-radius:1rem 1rem 0 0;">
+                <div class="modal-header border-0 modal-header-donna-blue" style="border-radius:1rem 1rem 0 0;">
                     <div class="p-2">
-                        <h5 class="modal-title text-white fw-bold mb-0">
+                        <h5 class="modal-title fw-bold mb-0">
                             <i class="bi bi-telegram me-2"></i>¡Un último paso!
                         </h5>
-                        <p class="text-white-50 small mb-0">Registra tu Telegram para activar Donna</p>
+                        <p class="small mb-0" style="color:rgba(255,255,255,0.7);">Registra tu Telegram para activar Donna</p>
                     </div>
                 </div>
                 <div class="modal-body p-4">
@@ -351,7 +351,7 @@
     <div class="modal fade" id="modalBusinessWhatsApp" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content rounded-4 shadow-lg">
-                <div class="modal-header border-0" style="background:linear-gradient(135deg,#c9890a,#E4B100);border-radius:1rem 1rem 0 0;">
+                <div class="modal-header border-0 modal-header-donna-gold" style="border-radius:1rem 1rem 0 0;">
                     <div class="p-2">
                         <h5 class="modal-title fw-bold mb-0" style="color:#1D1D1B;">
                             <i class="bi bi-whatsapp me-2"></i>¡Donna Business activa! Conecta tu WhatsApp
@@ -841,12 +841,12 @@
     <div class="modal fade" id="modalConfirmarPersonal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 shadow">
-                <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#274698,#3a5fc5);border-radius:1rem 1rem 0 0;">
+                <div class="modal-header border-0 pb-0 modal-header-donna-blue" style="border-radius:1rem 1rem 0 0;">
                     <div class="p-2">
-                        <h5 class="modal-title text-white fw-bold mb-0">
+                        <h5 class="modal-title fw-bold mb-0">
                             <i class="bi bi-robot me-2"></i>{{ $planPersonal->name }}
                         </h5>
-                        <p class="text-white-50 small mb-0">Confirma tu contratación</p>
+                        <p class="small mb-0" style="color:rgba(255,255,255,0.7);">Confirma tu contratación</p>
                     </div>
                     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
                 </div>
@@ -915,7 +915,7 @@
     <div class="modal fade" id="modalConfirmarBusiness" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 shadow">
-                <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#c9890a,#E4B100);border-radius:1rem 1rem 0 0;">
+                <div class="modal-header border-0 pb-0 modal-header-donna-gold" style="border-radius:1rem 1rem 0 0;">
                     <div class="p-2">
                         <h5 class="modal-title fw-bold mb-0" style="color:#1D1D1B;">
                             <i class="bi bi-building me-2"></i>{{ $planBusiness->name }}

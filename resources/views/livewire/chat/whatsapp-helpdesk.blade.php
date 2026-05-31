@@ -456,7 +456,7 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
-            background: var(--wa-bg);
+            background: var(--wa-bg) !important;
         }
 
         .wa-chat-header {
@@ -622,6 +622,7 @@
             display: flex;
             flex-direction: column;
             gap: var(--wa-space-3);
+            background: var(--wa-bg);
         }
 
         .wa-message {

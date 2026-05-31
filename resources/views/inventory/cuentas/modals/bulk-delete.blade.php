@@ -1,5 +1,5 @@
 <x-modal name="bulkDeleteCuentasModal" :show="false" maxWidth="lg">
-    <div class="modal-header bg-danger text-white">
+    <div class="modal-header modal-header-danger">
         <h5 class="modal-title">
             <i class="fas fa-trash me-2"></i>Eliminar Cuentas Seleccionadas
         </h5>

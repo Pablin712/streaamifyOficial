@@ -1,0 +1,186 @@
+/* ============================================================
+   MUNDIAL 2026 — Decoración temporal
+   FIFA World Cup USA / México / Canadá
+   Activación: 1 de junio → 19 de julio 2026
+   ============================================================ */
+
+/* ---- Ajuste de offset cuando el bar está visible ---- */
+:root { --mundial-bar-h: 0px; }
+
+html.mundial-bar-visible #mainNav {
+    top: var(--mundial-bar-h) !important;
+}
+
+/* ---- Barra de anuncio ---- */
+#mundial-bar {
+    display: none; /* activado por JS con verificación de fecha */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1060;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    background: linear-gradient(90deg,
+        #005C29 0%,
+        #006B31 18%,
+        #007A38 30%,
+        #c8102e 55%,
+        #b22234 70%,
+        #002868 88%,
+        #001f54 100%
+    );
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+    overflow: hidden;
+}
+
+#mundial-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,0.04) 60px,
+        rgba(255,255,255,0.04) 62px
+    );
+    pointer-events: none;
+}
+
+.mundial-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.mundial-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+    animation: mundialBounce 1.8s ease-in-out infinite;
+}
+
+.mundial-icon:last-child {
+    animation-delay: 0.9s;
+}
+
+.mundial-title {
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.mundial-flags {
+    display: inline-flex;
+    gap: 0.3rem;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.mundial-sep {
+    opacity: 0.5;
+    font-size: 0.7rem;
+}
+
+.mundial-countdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+}
+
+.mundial-countdown.is-live {
+    background: rgba(200, 16, 46, 0.5);
+    border-color: rgba(255,80,80,0.6);
+    animation: mundialLivePulse 1.4s ease-in-out infinite;
+}
+
+.mundial-close {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+    transition: all 0.15s;
+}
+
+.mundial-close:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+}
+
+/* ---- Pelotas de fondo ---- */
+#mundial-balls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* ---- Acento en el navbar cliente ---- */
+html.mundial-active #mainNav {
+    border-bottom: 3px solid #006B31 !important;
+}
+
+/* ---- Acento en el footer ---- */
+html.mundial-active #pie {
+    border-top: 3px solid #c8102e;
+}
+
+/* ---- Animaciones ---- */
+@keyframes mundialBounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-3px); }
+}
+
+@keyframes mundialLivePulse {
+    0%, 100% { background: rgba(200, 16, 46, 0.5); box-shadow: none; }
+    50%       { background: rgba(200, 16, 46, 0.8); box-shadow: 0 0 8px rgba(200,16,46,0.6); }
+}
+
+@keyframes mundialFall {
+    0%   { transform: translateY(-60px) rotate(0deg);    opacity: 0; }
+    8%   { opacity: 0.12; }
+    92%  { opacity: 0.12; }
+    100% { transform: translateY(110vh) rotate(540deg);  opacity: 0; }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 575.98px) {
+    .mundial-flags,
+    .mundial-sep {
+        display: none;
+    }
+    .mundial-bar-inner {
+        gap: 0.5rem;
+    }
+}

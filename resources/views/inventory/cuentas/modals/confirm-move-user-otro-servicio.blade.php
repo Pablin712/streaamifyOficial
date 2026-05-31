@@ -1,7 +1,7 @@
 <x-modal name="confirm-move-user-otro-servicio" :show="false" maxWidth="lg">
-    <div class="modal-header" style="background-color: #d63384; color: #ffffff;">
+    <div class="modal-header modal-header-pink">
         <h5 class="modal-title">
-            <i class="fas fa-exchange-alt me-2" style="color: #ffffff;"></i>
+            <i class="fas fa-exchange-alt me-2"></i>
             Mover Cliente a Otro Servicio
         </h5>
         <button type="button" class="btn-close btn-close-white" @click="$dispatch('close-modal', 'confirm-move-user-otro-servicio')"></button>

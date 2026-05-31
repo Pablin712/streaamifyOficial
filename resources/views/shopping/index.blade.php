@@ -2,9 +2,14 @@
 @section('title', 'Shop Streamify')
 @section('styles')
     <style>
+        :root {
+            --donna-blue: #274698;
+            --donna-blue-dark: #1d3a8c;
+        }
+
         .section-link {
             cursor: pointer;
-            color: #007bff;
+            color: var(--donna-blue);
             text-decoration: none;
             margin-right: 15px;
         }
@@ -17,53 +22,34 @@
             text-decoration: underline;
         }
 
-        .star {
-            color: gold;
-        }
-
-        .gray-star {
-            color: lightgray;
-        }
+        .star { color: gold; }
+        .gray-star { color: lightgray; }
 
         .cart-float {
             position: fixed;
             bottom: 20px;
             top: 100px;
-            /* Distancia del borde inferior */
             right: 30px;
-            /* Distancia del borde derecho */
             z-index: 1000;
-            /* Asegúrate de que esté sobre otros elementos */
         }
 
         .cart-float .btn {
             width: 60px;
             height: 60px;
-            background-color: #274698;
-            /* Color del fondo del botón */
+            background-color: var(--donna-blue);
             color: white;
-            /* Color del icono */
             transition: transform 0.3s ease, background-color 0.3s ease;
         }
 
         .cart-float .btn:hover {
             transform: scale(1.1);
-            /* Efecto de zoom al pasar el mouse */
-            background-color: #1d3a8c;
-            /* Color de fondo al hacer hover */
+            background-color: var(--donna-blue-dark);
             color: #f1f1f1;
-            /* Cambiar color del icono */
         }
 
-        .cart-float .btn i {
-            font-size: 1.5rem;
-            /* Tamaño del icono */
-        }
+        .cart-float .btn i { font-size: 1.5rem; }
 
-        #cart-count {
-            font-size: 0.75rem;
-            padding: 5px 8px;
-        }
+        #cart-count { font-size: 0.75rem; padding: 5px 8px; }
     </style>
 @endsection
 @section('menu')
@@ -81,7 +67,7 @@
             <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: #274698;">
+            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: var(--donna-blue);">
                 <i class="bi bi-robot me-1"></i> Donna AI
             </a></li>
         </ul>
@@ -182,7 +168,7 @@
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
+                    <div class="modal-header modal-header-danger">
                         <h5 class="modal-title" id="errorModalLabel">¡Error!</h5>
                         <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"
                             onclick="cerrarErrorModal()"></button>

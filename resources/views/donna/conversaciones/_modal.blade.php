@@ -1,5 +1,5 @@
 <x-modal name="donnaConvModal" maxWidth="lg">
-    <div class="modal-header" style="background:#f8f9fc;border-bottom:1px solid #e9ecef;">
+    <div class="modal-header">
         <h5 class="modal-title fw-bold" id="donnaConvTitle">
             <i class="bi bi-chat-dots me-2" style="color:#274698;"></i>Conversación
         </h5>

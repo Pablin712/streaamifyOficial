@@ -1,7 +1,7 @@
 <x-modal name="confirm-move-user-mesa" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #17a2b8; color: #ffffff;">
+    <div class="modal-header modal-header-info">
         <h5 class="modal-title">
-            <i class="fas fa-arrow-right-to-bracket me-2" style="color: #ffffff;"></i>
+            <i class="fas fa-arrow-right-to-bracket me-2"></i>
             Mover Usuario a Mesa de Trabajo
         </h5>
         <button type="button" class="btn-close btn-close-white" @click="$dispatch('close-modal', 'confirm-move-user-mesa')"></button>

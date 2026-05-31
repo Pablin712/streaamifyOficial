@@ -1,5 +1,5 @@
 <x-modal name="renewDonnaSubModal" :show="false" maxWidth="md">
-    <div class="modal-header bg-success text-white">
+    <div class="modal-header modal-header-success">
         <h5 class="modal-title">
             <i class="fas fa-redo me-2"></i>Renovar Suscripción
         </h5>

@@ -2,6 +2,15 @@
 
 @section('title', 'Donna — Suscripciones')
 
+@section('styles')
+<style>
+    :root { --donna-blue: #274698; --donna-gold: #E4B100; }
+    .badge-donna-personal { background-color: var(--donna-blue); color: #fff; }
+    .badge-donna-business { background-color: var(--donna-gold); color: #1D1D1B; }
+    .icon-donna-blue { color: var(--donna-blue); }
+</style>
+@endsection
+
 @section('h1', 'Donna — Suscripciones')
 
 @section('descripcion')
@@ -19,7 +28,7 @@
     @endif
 
     <h5 class="mb-1 fw-bold">
-        <i class="bi bi-robot me-2" style="color:#274698;"></i>Suscripciones Donna
+        <i class="bi bi-robot me-2 icon-donna-blue"></i>Suscripciones Donna
     </h5>
     <p class="text-muted mb-0">
         Gestiona las suscripciones activas, suspendidas y vencidas de clientes con servicio Donna.
@@ -115,9 +124,9 @@
                         </td>
                         <td>
                             @if ($sub->service_type === 'personal')
-                                <span class="badge" style="background:#274698;">Personal</span>
+                                <span class="badge badge-donna-personal">Personal</span>
                             @else
-                                <span class="badge" style="background:#E4B100;color:#1D1D1B;">Business</span>
+                                <span class="badge badge-donna-business">Business</span>
                             @endif
                         </td>
                         <td>

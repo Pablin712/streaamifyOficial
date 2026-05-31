@@ -1,5 +1,5 @@
 <x-modal name="renewCuentaModal" :show="false" maxWidth="md">
-    <div class="modal-header bg-success text-white">
+    <div class="modal-header modal-header-success">
         <h5 class="modal-title">
             <i class="fas fa-sync-alt me-2"></i>Renovar Cuenta
         </h5>

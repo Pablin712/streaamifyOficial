@@ -14,7 +14,7 @@
             <li><a class="dropdown-item" href="{{ route('principal') }}#redes">Redes Sociales</a></li>
             <li><a class="dropdown-item" href="{{ route('principal') }}#faq">Preguntas Frecuentes</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: #274698;">
+            <li><a class="dropdown-item fw-bold" href="{{ route('donna') }}" style="color: var(--donna-blue);">
                 <i class="bi bi-robot me-1"></i> Donna AI
             </a></li>
         </ul>
@@ -40,6 +40,15 @@
 
 @section('styles')
     <style>
+        :root {
+            --streamify-navy: #10245f;
+            --donna-blue: #274698;
+            --streamify-navy-subtle-1: rgba(16, 36, 95, 0.08);
+            --streamify-navy-subtle-2: rgba(16, 36, 95, 0.04);
+            --streamify-gold-border: rgba(228, 177, 0, 0.35);
+            --streamify-gold-hover: rgba(228, 177, 0, 0.09);
+        }
+
         .activity-shell {
             position: relative;
             padding-top: 2rem;
@@ -145,7 +154,7 @@
         }
 
         .activity-nav .nav-link.active {
-            background: #10245f;
+            background: var(--streamify-navy);
             color: #fff;
             box-shadow: 0 14px 28px rgba(16, 36, 95, 0.22);
         }
@@ -164,8 +173,8 @@
 
         .table-soft {
             --bs-table-bg: transparent;
-            --bs-table-striped-bg: rgba(16, 36, 95, 0.04);
-            --bs-table-hover-bg: rgba(228, 177, 0, 0.09);
+            --bs-table-striped-bg: var(--streamify-navy-subtle-2);
+            --bs-table-hover-bg: var(--streamify-gold-hover);
             vertical-align: middle;
         }
 
@@ -175,8 +184,8 @@
             gap: 0.45rem;
             padding: 0.4rem 0.75rem;
             border-radius: 999px;
-            background: rgba(16, 36, 95, 0.08);
-            color: #10245f;
+            background: var(--streamify-navy-subtle-1);
+            color: var(--streamify-navy);
             font-weight: 700;
             font-size: 0.92rem;
         }
@@ -199,7 +208,7 @@
             gap: 0.9rem;
             padding: 1rem;
             border-radius: 18px;
-            background: rgba(16, 36, 95, 0.04);
+            background: var(--streamify-navy-subtle-2);
         }
 
         .support-step-number {
@@ -210,7 +219,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #10245f;
+            background: var(--streamify-navy);
             color: #fff;
             font-weight: 800;
         }
@@ -224,7 +233,7 @@
             padding: 1.1rem 1.2rem;
             border-radius: 20px;
             background: #fff8e1;
-            border: 1px solid rgba(228, 177, 0, 0.35);
+            border: 1px solid var(--streamify-gold-border);
         }
 
         .support-summary-card.is-success {
@@ -242,7 +251,7 @@
         .support-empty {
             padding: 1.4rem;
             border-radius: 20px;
-            background: rgba(16, 36, 95, 0.04);
+            background: var(--streamify-navy-subtle-2);
             color: #4a5877;
             text-align: center;
         }
@@ -440,7 +449,7 @@
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
+                    <div class="modal-header modal-header-danger">
                         <h5 class="modal-title" id="errorModalLabel">Ocurrió un problema</h5>
                         <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"
                             onclick="cerrarErrorModal()"></button>
@@ -1580,7 +1589,7 @@
 
     {{-- Modal Knowledge Base --}}
     <x-modal name="knowledgeItemModal" maxWidth="lg">
-        <div class="modal-header" style="background:#fffbea;border-bottom:1px solid #ffe082;">
+        <div class="modal-header modal-header-warning">
             <h5 class="modal-title fw-bold" id="knowledgeModalTitle">
                 <i class="bi bi-book me-2" style="color:#b45309;"></i>Ítem de conocimiento
             </h5>

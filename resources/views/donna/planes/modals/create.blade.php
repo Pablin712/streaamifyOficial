@@ -1,6 +1,6 @@
 <x-modal name="createDonnaPlanModal" :show="false" maxWidth="2xl">
-    <div class="modal-header" style="background-color:#274698;">
-        <h5 class="modal-title text-white">
+    <div class="modal-header modal-header-donna-blue">
+        <h5 class="modal-title">
             <i class="bi bi-robot me-2"></i>Nuevo Plan Donna
         </h5>
         <button type="button" class="btn-close btn-close-white"

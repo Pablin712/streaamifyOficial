@@ -1,5 +1,5 @@
 <x-modal name="mensajeProveedorModal" :show="false" maxWidth="lg">
-    <div class="modal-header" style="background-color: #198754; color: #ffffff;">
+    <div class="modal-header modal-header-success">
         <h5 class="modal-title">
             <i class="fab fa-whatsapp me-2"></i>Enviar Mensaje al Proveedor
         </h5>

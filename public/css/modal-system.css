@@ -264,6 +264,114 @@
     border-color: var(--primary-color);
 }
 
+/* ── Semantic Modal Header Color Variants ──────────── */
+/* Use these classes instead of inline style="" on .modal-header */
+
+.modal-header-primary {
+    background: var(--primary-gradient, var(--primary-color)) !important;
+    color: #fff !important;
+    border-bottom-color: var(--primary-color) !important;
+}
+.modal-header-danger {
+    background-color: var(--danger-color) !important;
+    color: #fff !important;
+    border-bottom-color: var(--danger-color) !important;
+}
+.modal-header-success {
+    background-color: var(--success-color) !important;
+    color: #fff !important;
+    border-bottom-color: var(--success-color) !important;
+}
+.modal-header-warning {
+    background-color: var(--warning-color) !important;
+    color: #000 !important;
+    border-bottom-color: var(--warning-color) !important;
+}
+.modal-header-info {
+    background-color: var(--info-color) !important;
+    color: #fff !important;
+    border-bottom-color: var(--info-color) !important;
+}
+.modal-header-secondary {
+    background-color: #6c757d !important;
+    color: #fff !important;
+    border-bottom-color: #5a6268 !important;
+}
+.modal-header-whatsapp {
+    background-color: #25d366 !important;
+    color: #fff !important;
+    border-bottom-color: #128c7e !important;
+}
+.modal-header-orange {
+    background-color: #fd7e14 !important;
+    color: #fff !important;
+    border-bottom-color: #e07010 !important;
+}
+.modal-header-pink {
+    background-color: #d63384 !important;
+    color: #fff !important;
+    border-bottom-color: #c02070 !important;
+}
+.modal-header-blue {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+    color: #fff !important;
+    border-bottom-color: #1e3a8a !important;
+}
+.modal-header-donna-blue {
+    background-color: #274698 !important;
+    color: #fff !important;
+    border-bottom-color: #1d3576 !important;
+}
+.modal-header-donna-gold {
+    background-color: #E4B100 !important;
+    color: #000 !important;
+    border-bottom-color: #c49a00 !important;
+}
+.modal-header-teal {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    color: #fff !important;
+    border-bottom-color: #138496 !important;
+}
+
+/* Make title and close-button inherit the color in colored headers */
+.modal-header-primary .modal-title,
+.modal-header-primary .btn-close,
+.modal-header-danger .modal-title,
+.modal-header-danger .btn-close,
+.modal-header-success .modal-title,
+.modal-header-success .btn-close,
+.modal-header-info .modal-title,
+.modal-header-info .btn-close,
+.modal-header-secondary .modal-title,
+.modal-header-secondary .btn-close,
+.modal-header-whatsapp .modal-title,
+.modal-header-whatsapp .btn-close,
+.modal-header-orange .modal-title,
+.modal-header-orange .btn-close,
+.modal-header-pink .modal-title,
+.modal-header-pink .btn-close {
+    color: #fff !important;
+    opacity: 1;
+}
+
+.modal-header-warning .modal-title,
+.modal-header-warning .btn-close,
+.modal-header-donna-gold .modal-title,
+.modal-header-donna-gold .btn-close {
+    color: #000 !important;
+    opacity: 1;
+}
+
+.modal-header-blue .modal-title,
+.modal-header-blue .btn-close,
+.modal-header-donna-blue .modal-title,
+.modal-header-donna-blue .btn-close,
+.modal-header-teal .modal-title,
+.modal-header-teal .btn-close {
+    color: #fff !important;
+    opacity: 1;
+}
+
 /* TEMA CHRISTMAS */
 [data-theme="christmas"] .modal-header {
     background: var(--christmas-gradient, linear-gradient(135deg, #c41e3a 0%, #165b33 100%));

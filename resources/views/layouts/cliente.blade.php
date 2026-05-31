@@ -25,6 +25,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="{{ asset('css/styles2.css') }}" rel="stylesheet" />
+    <!-- Mundial 2026 -->
+    <link href="{{ asset('css/mundial-2026.css') }}?v=1" rel="stylesheet" />
     @yield('styles')
     <style>
         .btn-outline-primary {
@@ -44,6 +46,19 @@
 </head>
 
 <body id="page-top">
+
+    <!-- ⚽ Mundial 2026 — barra temporal (activada por JS según fecha) -->
+    <div id="mundial-bar" role="banner" aria-label="FIFA World Cup 2026">
+        <div class="mundial-bar-inner">
+            <span class="mundial-icon">⚽</span>
+            <span class="mundial-title">FIFA World Cup 2026™</span>
+            <span class="mundial-flags">🇲🇽 🇺🇸 🇨🇦</span>
+            <span class="mundial-sep">·</span>
+            <span id="mundial-countdown" class="mundial-countdown">Cargando...</span>
+        </div>
+        <button class="mundial-close" type="button" title="Cerrar">✕</button>
+    </div>
+
     <!-- Navigation-->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top shadow-sm" id="mainNav">
         <div class="container px-5">
@@ -202,6 +217,9 @@
 
     <!-- Chat Widget JS (module) -->
     @vite(['resources/js/chat-widget.js'])
+
+    <!-- Mundial 2026 -->
+    <script src="{{ asset('js/mundial-2026.js') }}?v=1"></script>
 
     {{-- comentado por n8n
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />

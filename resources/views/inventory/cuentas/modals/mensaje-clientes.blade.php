@@ -1,5 +1,5 @@
 <x-modal name="mensajeClientesModal" :show="false" maxWidth="lg">
-    <div class="modal-header" style="background-color: #25d366; color: #ffffff;">
+    <div class="modal-header modal-header-whatsapp">
         <h5 class="modal-title">
             <i class="fab fa-whatsapp me-2"></i>Enviar Mensaje a Clientes de Cuenta
         </h5>

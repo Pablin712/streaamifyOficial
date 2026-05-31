@@ -1,7 +1,7 @@
 <x-modal name="confirm-delete-user" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #dc3545; color: #ffffff;">
+    <div class="modal-header modal-header-danger">
         <h5 class="modal-title">
-            <i class="fas fa-trash me-2" style="color: #ffffff;"></i>
+            <i class="fas fa-trash me-2"></i>
             Eliminar Usuario
         </h5>
         <button type="button" class="btn-close btn-close-white" @click="$dispatch('close-modal', 'confirm-delete-user')"></button>

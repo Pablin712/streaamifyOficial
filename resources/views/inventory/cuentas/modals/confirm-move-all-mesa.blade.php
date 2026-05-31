@@ -1,7 +1,7 @@
 <x-modal name="confirm-move-all-mesa" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #dc3545; color: #ffffff;">
+    <div class="modal-header modal-header-danger">
         <h5 class="modal-title">
-            <i class="fas fa-users me-2" style="color: #ffffff;"></i>
+            <i class="fas fa-users me-2"></i>
             Mover TODOS los Clientes a Mesa de Trabajo
         </h5>
         <button type="button" class="btn-close btn-close-white" @click="$dispatch('close-modal', 'confirm-move-all-mesa')"></button>

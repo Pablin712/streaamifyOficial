@@ -1,6 +1,6 @@
 <x-modal name="createDonnaSubModal" :show="false" maxWidth="lg">
-    <div class="modal-header" style="background-color:#274698;">
-        <h5 class="modal-title text-white">
+    <div class="modal-header modal-header-donna-blue">
+        <h5 class="modal-title">
             <i class="bi bi-robot me-2"></i>Nueva Suscripción Donna
         </h5>
         <button type="button" class="btn-close btn-close-white"

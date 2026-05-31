@@ -1,5 +1,5 @@
 <x-modal name="createCuentaModal" :show="false" maxWidth="lg">
-    <div class="modal-header bg-primary text-white">
+    <div class="modal-header modal-header-primary">
         <h5 class="modal-title">
             <i class="fas fa-plus-circle me-2"></i>Crear Nueva Cuenta
         </h5>

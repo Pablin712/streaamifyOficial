@@ -4,6 +4,18 @@
 
 @section('styles')
 <style>
+    :root {
+        --donna-blue: #274698;
+        --donna-gold: #E4B100;
+        --donna-nav-bg: #f0f2f8;
+        --donna-bubble-ai-bg: #f0f4ff;
+        --donna-bubble-client-bg: #e9f5e9;
+    }
+    [data-dark-mode="true"] {
+        --donna-nav-bg: rgba(39, 70, 152, 0.15);
+        --donna-bubble-ai-bg: rgba(39, 70, 152, 0.18);
+        --donna-bubble-client-bg: rgba(40, 167, 69, 0.15);
+    }
     .donna-nav {
         display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;
     }
@@ -11,21 +23,23 @@
         display: inline-flex; align-items: center; gap: 0.4rem;
         padding: 0.45rem 1rem; border-radius: 999px;
         font-size: 0.85rem; font-weight: 600; text-decoration: none;
-        background: #f0f2f8; color: #274698;
+        background: var(--donna-nav-bg); color: var(--donna-blue);
         transition: background 0.15s;
     }
-    .donna-nav a:hover, .donna-nav a.active { background: #274698; color: #fff; }
-
+    .donna-nav a:hover, .donna-nav a.active { background: var(--donna-blue); color: #fff; }
     .conv-preview {
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
         overflow: hidden;
         font-size: 0.8rem;
-        color: #6c757d;
+        color: var(--text-muted);
     }
-    .badge-personal { background:#274698; color:#fff; }
-    .badge-business { background:#E4B100; color:#1D1D1B; }
+    .badge-personal { background: var(--donna-blue); color: #fff; }
+    .badge-business { background: var(--donna-gold); color: #1D1D1B; }
+    .donna-bubble-ai     { background: var(--donna-bubble-ai-bg);     border: 1px solid var(--border-color); }
+    .donna-bubble-client { background: var(--donna-bubble-client-bg); border: 1px solid var(--border-color); }
+    .icon-donna-blue { color: var(--donna-blue); }
 </style>
 @endsection
 
@@ -33,7 +47,7 @@
 
 @section('descripcion')
     <h5 class="mb-1 fw-bold">
-        <i class="bi bi-chat-dots me-2" style="color:#274698;"></i>Conversaciones
+        <i class="bi bi-chat-dots me-2 icon-donna-blue"></i>Conversaciones
     </h5>
     <p class="text-muted mb-0">
         Monitorea cómo responde Donna a los clientes finales de cada cliente SaaS.
@@ -197,7 +211,7 @@
         const title = document.getElementById('donnaConvTitle');
 
         body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
-        title.innerHTML = '<i class="bi bi-chat-dots me-2" style="color:#274698;"></i>Cargando...';
+        title.innerHTML = '<i class="bi bi-chat-dots me-2 icon-donna-blue"></i>Cargando...';
 
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'donnaConvModal' }));
 
@@ -219,7 +233,7 @@
 
         const typeIcon = c.channel_type === 'whatsapp'
             ? '<i class="bi bi-whatsapp text-success me-1"></i>'
-            : '<i class="bi bi-telegram me-1" style="color:#274698;"></i>';
+            : '<i class="bi bi-telegram me-1 icon-donna-blue"></i>';
 
         title.innerHTML = `${typeIcon}Chat con ${c.sender_name || '#' + c.id}`;
 
@@ -241,9 +255,9 @@
             data.messages.forEach(m => {
                 const isAI   = m.sender_type === 'ai_agent';
                 const align  = isAI ? 'align-self-end' : 'align-self-start';
-                const bg     = isAI ? '#f0f4ff' : '#e9f5e9';
+                const bgClass = isAI ? 'donna-bubble-ai' : 'donna-bubble-client';
                 const label  = isAI
-                    ? `<span class="badge" style="background:#274698;font-size:0.6rem;">Donna</span>`
+                    ? `<span class="badge badge-personal" style="font-size:0.6rem;">Donna</span>`
                     : `<span class="badge bg-secondary" style="font-size:0.6rem;">Cliente</span>`;
                 const content = m.content
                     ? m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
@@ -254,7 +268,7 @@
                         ${label}
                         <span class="text-muted" style="font-size:0.7rem;">${m.created_at}</span>
                     </div>
-                    <div class="p-2 px-3 rounded-3 small" style="background:${bg};border:1px solid #dee2e6;line-height:1.5;">${content}</div>
+                    <div class="p-2 px-3 rounded-3 small ${bgClass}" style="line-height:1.5;">${content}</div>
                 </div>`;
             });
         }

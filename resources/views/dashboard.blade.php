@@ -560,7 +560,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <!-- Modal para Generar Reportes -->
 <x-modal name="reportesDashboardModal" :show="false" maxWidth="lg">
-    <div class="modal-header text-white" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6);">
+    <div class="modal-header modal-header-blue">
         <h5 class="modal-title fw-bold">
             <i class="fas fa-file-pdf me-2"></i> Generar Reporte Financiero
         </h5>

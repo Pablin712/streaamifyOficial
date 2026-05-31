@@ -1,5 +1,5 @@
 <x-modal name="editCuentaModal" :show="false" maxWidth="lg">
-    <div class="modal-header" style="background-color: #fd7e14; color: #ffffff;">
+    <div class="modal-header modal-header-orange">
         <h5 class="modal-title">
             <i class="fas fa-edit me-2"></i>Editar Cuenta
         </h5>

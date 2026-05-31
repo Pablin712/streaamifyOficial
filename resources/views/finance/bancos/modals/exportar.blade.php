@@ -1,5 +1,5 @@
 <x-modal name="exportar-transacciones" maxWidth="lg">
-    <div class="modal-header" style="background: linear-gradient(135deg,#1e3a8a,#3b82f6); color:white;">
+    <div class="modal-header modal-header-blue">
         <h5 class="modal-title fw-bold">
             <i class="fas fa-file-export me-2"></i> Exportar Transacciones
         </h5>

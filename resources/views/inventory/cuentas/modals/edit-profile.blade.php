@@ -1,7 +1,7 @@
 <x-modal name="edit-profile" :show="false" maxWidth="md">
-    <div class="modal-header" style="background-color: #0d6efd; color: #ffffff;">
+    <div class="modal-header modal-header-primary">
         <h5 class="modal-title">
-            <i class="fas fa-edit me-2" style="color: #ffffff;"></i>
+            <i class="fas fa-edit me-2"></i>
             Editar PIN del Perfil
         </h5>
         <button type="button" class="btn-close btn-close-white" @click="$dispatch('close-modal', 'edit-profile')"></button>

@@ -4,6 +4,28 @@
 
 @section('styles')
 <style>
+/* ── Bancos — variables locales con soporte dark mode ── */
+:root {
+    --kpi-green-bg1: #e3f9ee; --kpi-green-bg2: #d1f5e4;
+    --kpi-green-icon: #bbf0d6; --kpi-green-text: #057a55;
+    --kpi-red-bg1: #fef2f2;   --kpi-red-bg2: #fee2e2;
+    --kpi-red-icon: #fecaca;   --kpi-red-text: #b91c1c;
+    --kpi-teal-bg1: #f0fdfa;  --kpi-teal-bg2: #ccfbf1;
+    --kpi-teal-icon: #99f6e4;  --kpi-teal-text: #0f766e;
+    /* Bank card colors (brand identity — light only) */
+    --bancos-ahorros-bg:   linear-gradient(135deg,#1e3a8a,#3b82f6);
+    --bancos-corriente-bg: linear-gradient(135deg,#4c1d95,#7c3aed);
+    --bancos-efectivo-bg:  linear-gradient(135deg,#065f46,#059669);
+}
+[data-dark-mode="true"] {
+    --kpi-green-bg1: #0d2e1a; --kpi-green-bg2: #0a2415;
+    --kpi-green-icon: #164a28; --kpi-green-text: #4ade80;
+    --kpi-red-bg1: #2d0e0e;   --kpi-red-bg2: #3a1010;
+    --kpi-red-icon: #5a1a1a;   --kpi-red-text: #f87171;
+    --kpi-teal-bg1: #0b2929;  --kpi-teal-bg2: #0d3535;
+    --kpi-teal-icon: #164040;  --kpi-teal-text: #2dd4bf;
+}
+
 /* ── KPI Cards ──────────────────────────────────── */
 .kpi-card {
     border: none; border-radius: 14px; padding: 20px 22px;
@@ -26,15 +48,15 @@
     content:''; position:absolute; bottom:-16px; right:-16px;
     width:80px; height:80px; border-radius:50%; opacity:.07;
 }
-.kpi-green  { background:linear-gradient(135deg,#e3f9ee,#d1f5e4); color:#057a55; }
-.kpi-green  .kpi-icon { background:#bbf0d6; }
-.kpi-green::after  { background:#057a55; }
-.kpi-red    { background:linear-gradient(135deg,#fef2f2,#fee2e2); color:#b91c1c; }
-.kpi-red    .kpi-icon { background:#fecaca; }
-.kpi-red::after    { background:#b91c1c; }
-.kpi-teal   { background:linear-gradient(135deg,#f0fdfa,#ccfbf1); color:#0f766e; }
-.kpi-teal   .kpi-icon { background:#99f6e4; }
-.kpi-teal::after   { background:#0f766e; }
+.kpi-green  { background:linear-gradient(135deg,var(--kpi-green-bg1),var(--kpi-green-bg2)); color:var(--kpi-green-text); }
+.kpi-green  .kpi-icon { background:var(--kpi-green-icon); }
+.kpi-green::after  { background:var(--kpi-green-text); }
+.kpi-red    { background:linear-gradient(135deg,var(--kpi-red-bg1),var(--kpi-red-bg2)); color:var(--kpi-red-text); }
+.kpi-red    .kpi-icon { background:var(--kpi-red-icon); }
+.kpi-red::after    { background:var(--kpi-red-text); }
+.kpi-teal   { background:linear-gradient(135deg,var(--kpi-teal-bg1),var(--kpi-teal-bg2)); color:var(--kpi-teal-text); }
+.kpi-teal   .kpi-icon { background:var(--kpi-teal-icon); }
+.kpi-teal::after   { background:var(--kpi-teal-text); }
 
 /* ── Bank Cards ─────────────────────────────────── */
 .bank-card {
@@ -54,9 +76,9 @@
     width:80px; height:80px; border-radius:50%;
     background:rgba(255,255,255,.06);
 }
-.bank-card.type-ahorros  { background:linear-gradient(135deg,#1e3a8a,#3b82f6); }
-.bank-card.type-corriente { background:linear-gradient(135deg,#4c1d95,#7c3aed); }
-.bank-card.type-efectivo  { background:linear-gradient(135deg,#065f46,#059669); }
+.bank-card.type-ahorros   { background: var(--bancos-ahorros-bg); }
+.bank-card.type-corriente { background: var(--bancos-corriente-bg); }
+.bank-card.type-efectivo  { background: var(--bancos-efectivo-bg); }
 .bank-card .bank-logo {
     width:40px; height:40px; border-radius:10px;
     background:rgba(255,255,255,.2); display:flex;
@@ -78,25 +100,25 @@
 /* ── Tabs ───────────────────────────────────────── */
 .fin-tabs .nav-link {
     border:none; border-bottom:3px solid transparent;
-    color:#64748b; font-weight:600; font-size:.85rem;
+    color:var(--text-muted, #64748b); font-weight:600; font-size:.85rem;
     padding:10px 18px; border-radius:0;
     transition:color .15s, border-color .15s;
 }
 .fin-tabs .nav-link.active, .fin-tabs .nav-link:hover {
-    color:#1e3a8a; border-bottom-color:#3b82f6; background:transparent;
+    color:var(--primary-color); border-bottom-color:var(--primary-color); background:transparent;
 }
-.fin-tabs { border-bottom: 2px solid #e2e8f0; }
+.fin-tabs { border-bottom: 2px solid var(--border-color); }
 
 /* ── Section card ───────────────────────────────── */
-.fin-card { border:none; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+.fin-card { border:none; border-radius:14px; box-shadow:var(--shadow-md); background:var(--bg-card); }
 .fin-card .fin-card-header {
-    background:linear-gradient(90deg,#f8fafc,#fff);
-    border-bottom:1px solid #e2e8f0; border-radius:14px 14px 0 0;
-    padding:16px 20px; font-weight:700; font-size:.88rem; color:#1e293b;
+    background:var(--bg-light);
+    border-bottom:1px solid var(--border-color); border-radius:14px 14px 0 0;
+    padding:16px 20px; font-weight:700; font-size:.88rem; color:var(--text-primary);
 }
 
 /* ── Filter bar ─────────────────────────────────── */
-.filter-bar { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; }
+.filter-bar { background:var(--bg-light); border:1px solid var(--border-color); border-radius:10px; padding:14px 16px; }
 </style>
 @endsection
 
@@ -314,7 +336,7 @@
                     </div>
                     <div class="table-responsive">
                         <table id="deudas-table" data-table="deudas-table" class="table table-hover align-middle">
-                            <thead style="background:#f8fafc;">
+                            <thead style="background:var(--bg-light);">
                                 <tr>
                                     <th class="sortable" data-type="number" data-col="0">#<span class="sort-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
                                     <th>Proveedor</th>
@@ -407,7 +429,7 @@
                                data-search-url="{{ route('bancos.index') }}"
                                data-rows-per-page="25"
                                class="table table-hover align-middle">
-                            <thead style="background:#f8fafc;">
+                            <thead style="background:var(--bg-light);">
                                 <tr>
                                     <th class="sortable" data-type="number" data-col="0">
                                         #<span class="sort-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span>

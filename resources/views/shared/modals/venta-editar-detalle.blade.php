@@ -1,5 +1,5 @@
 <x-modal name="editar-detalle-modal" :show="false" maxWidth="lg">
-    <div class="modal-header bg-warning text-dark">
+    <div class="modal-header modal-header-warning">
         <h5 class="modal-title">
             <i class="fas fa-edit me-2"></i>Editar Detalle de la Venta
         </h5>

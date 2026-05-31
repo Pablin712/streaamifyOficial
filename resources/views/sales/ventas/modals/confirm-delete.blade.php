@@ -1,5 +1,5 @@
 <x-modal name="confirm-delete-venta" :show="false" maxWidth="md">
-    <div class="modal-header bg-danger text-white">
+    <div class="modal-header modal-header-danger">
         <h5 class="modal-title">
             <i class="fas fa-exclamation-triangle me-2"></i>Eliminar Venta
         </h5>

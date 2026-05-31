@@ -9,14 +9,14 @@
         /* Animación de Cards */
         .employee-card {
             transition: all 0.3s ease;
-            border: 1px solid #e3e6f0;
+            border: 1px solid var(--border-color);
             box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         }
 
         .employee-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.25);
-            border-color: #4e73df;
+            border-color: var(--primary-color);
         }
 
         /* Estilo uniforme de botones */
@@ -55,12 +55,12 @@
         /* Efecto hover en foto */
         .employee-photo {
             transition: transform 0.3s ease;
-            border: 3px solid #e3e6f0;
+            border: 3px solid var(--border-color);
         }
 
         .employee-card:hover .employee-photo {
             transform: scale(1.05);
-            border-color: #4e73df;
+            border-color: var(--primary-color);
         }
     </style>
 @endsection
