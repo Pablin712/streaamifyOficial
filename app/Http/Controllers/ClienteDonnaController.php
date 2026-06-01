@@ -273,9 +273,9 @@ class ClienteDonnaController extends Controller
             ['client_id' => $cliente->idcli, 'service_type' => 'personal'],
             [
                 'subscription_id'    => $sub->id,
-                'agent_name'         => $request->input('agent_name') ?: null,
+                'agent_name'         => $request->input('agent_name') ?: 'Donna',
                 'personal_context'   => $request->input('personal_context') ?: null,
-                'timezone'           => $request->input('timezone') ?: null,
+                'timezone'           => $request->input('timezone') ?: 'America/Guayaquil',
                 'working_hours_json' => $wh ?: null,
                 'is_active'          => true,
             ]
@@ -323,12 +323,12 @@ class ClienteDonnaController extends Controller
             ['client_id' => $cliente->idcli, 'service_type' => 'business'],
             [
                 'subscription_id'      => $sub->id,
-                'agent_name'           => $request->input('agent_name') ?: null,
+                'agent_name'           => $request->input('agent_name') ?: 'Donna',
                 'business_name'        => $request->input('business_name') ?: null,
                 'business_description' => $request->input('business_description') ?: null,
-                'tone'                 => $request->input('tone') ?: null,
-                'language'             => $request->input('language') ?: null,
-                'timezone'             => $request->input('timezone') ?: null,
+                'tone'                 => $request->input('tone') ?: 'profesional, amable y directa',
+                'language'             => $request->input('language') ?: 'es',
+                'timezone'             => $request->input('timezone') ?: 'America/Guayaquil',
                 'working_hours_json'   => $wh ?: null,
                 'calendar_enabled'     => $calendarEnabled,
                 'sheets_enabled'       => $sheetsEnabled,

@@ -1849,69 +1849,69 @@
         </div>
     </div>
 
-    {{-- Modal Knowledge Base --}}
-    <x-modal name="knowledgeItemModal" maxWidth="lg">
-        <div class="modal-header modal-header-warning">
-            <h5 class="modal-title fw-bold" id="knowledgeModalTitle">
-                <i class="bi bi-book me-2" style="color:#b45309;"></i>Ítem de conocimiento
-            </h5>
-            <button type="button" class="btn-close"
-                onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }))">
-            </button>
-        </div>
-        <form id="knowledgeForm" onsubmit="submitKnowledge(event)">
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-sm-5">
-                        <label class="form-label fw-semibold small mb-1">Tipo</label>
-                        <select id="knowledge_type" name="type" class="form-select form-select-sm" required>
-                            <option value="product">📦 Producto</option>
-                            <option value="service">🔧 Servicio</option>
-                            <option value="faq">❓ Pregunta frecuente</option>
-                            <option value="policy">🛡️ Política</option>
-                            <option value="table">📊 Datos / Tabla</option>
-                        </select>
-                        <div class="form-text">¿Qué tipo de información es?</div>
-                    </div>
-                    <div class="col-sm-7">
-                        <label class="form-label fw-semibold small mb-1">Título</label>
-                        <input type="text" id="knowledge_title" name="title"
-                               class="form-control form-control-sm" maxlength="200" required
-                               placeholder="Ej: Precio camiseta básica, ¿Hacen envíos?...">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-semibold small mb-1">
-                            Contenido
-                            <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Lo que Donna lee</span>
-                        </label>
-                        <textarea id="knowledge_content_input" name="content_text"
-                                  class="form-control" rows="6" maxlength="5000" required
-                                  placeholder="Escribe aquí toda la información relevante. Ej: &#10;Camiseta básica algodón 100% - tallas S, M, L, XL&#10;Precio: $15 (S/M), $17 (L/XL)&#10;Colores disponibles: blanco, negro, gris, azul marino"></textarea>
-                        <div class="d-flex justify-content-end mt-1">
-                            <span class="text-muted small"><span id="knowledge_content_count">0</span>/5000</span>
+    {{-- Modal Knowledge Base (Bootstrap, no Alpine) --}}
+    <div class="modal fade" id="knowledgeItemModal" tabindex="-1" aria-labelledby="knowledgeModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#fffbea;border-bottom:2px solid #E4B100;">
+                    <h5 class="modal-title fw-bold" id="knowledgeModalTitle">
+                        <i class="bi bi-book me-2" style="color:#b45309;"></i>Ítem de conocimiento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="knowledgeForm" onsubmit="submitKnowledge(event)">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-sm-5">
+                                <label class="form-label fw-semibold small mb-1">Tipo</label>
+                                <select id="knowledge_type" name="type" class="form-select form-select-sm" required>
+                                    <option value="product">📦 Producto</option>
+                                    <option value="service">🔧 Servicio</option>
+                                    <option value="faq">❓ Pregunta frecuente</option>
+                                    <option value="policy">🛡️ Política</option>
+                                    <option value="table">📊 Datos / Tabla</option>
+                                </select>
+                                <div class="form-text">¿Qué tipo de información es?</div>
+                            </div>
+                            <div class="col-sm-7">
+                                <label class="form-label fw-semibold small mb-1">Título</label>
+                                <input type="text" id="knowledge_title" name="title"
+                                       class="form-control form-control-sm" maxlength="200" required
+                                       placeholder="Ej: Precio camiseta básica, ¿Hacen envíos?...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small mb-1">
+                                    Contenido
+                                    <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Lo que Donna lee</span>
+                                </label>
+                                <textarea id="knowledge_content_input" name="content_text"
+                                          class="form-control" rows="6" maxlength="5000" required
+                                          placeholder="Escribe aquí toda la información relevante. Ej: &#10;Camiseta básica algodón 100% - tallas S, M, L, XL&#10;Precio: $15 (S/M), $17 (L/XL)&#10;Colores disponibles: blanco, negro, gris, azul marino"></textarea>
+                                <div class="d-flex justify-content-end mt-1">
+                                    <span class="text-muted small"><span id="knowledge_content_count">0</span>/5000</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold small mb-1">URL de referencia <span class="text-muted">(opcional)</span></label>
+                                <input type="url" id="knowledge_source_url" name="source_url"
+                                       class="form-control form-control-sm"
+                                       placeholder="https://...">
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <label class="form-label fw-semibold small mb-1">URL de referencia <span class="text-muted">(opcional)</span></label>
-                        <input type="url" id="knowledge_source_url" name="source_url"
-                               class="form-control form-control-sm"
-                               placeholder="https://...">
+                    <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="knowledgeSubmitBtn"
+                                class="btn btn-sm rounded-pill fw-semibold"
+                                style="background:#E4B100;color:#1D1D1B;">
+                            <i class="bi bi-save me-1"></i>Guardar
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
-            <div class="modal-footer" style="border-top:1px solid #e9ecef;">
-                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
-                    onclick="window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }))">
-                    Cancelar
-                </button>
-                <button type="submit" id="knowledgeSubmitBtn"
-                        class="btn btn-sm rounded-pill fw-semibold"
-                        style="background:#E4B100;color:#1D1D1B;">
-                    <i class="bi bi-save me-1"></i>Guardar
-                </button>
-            </div>
-        </form>
-    </x-modal>
+        </div>
+    </div>
 
     <div class="modal fade" id="crearSoporteModal" tabindex="-1" aria-labelledby="crearSoporteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -2311,23 +2311,27 @@
         // ── Knowledge Base ─────────────────────────────────────────
         let knowledgeEditId = null;
 
+        function _knowModal() {
+            return bootstrap.Modal.getOrCreateInstance(document.getElementById('knowledgeItemModal'));
+        }
+
         function abrirModalKnowledge() {
             knowledgeEditId = null;
-            document.getElementById('knowledgeModalTitle').textContent = 'Agregar ítem';
+            document.getElementById('knowledgeModalTitle').innerHTML = '<i class="bi bi-plus-circle me-2" style="color:#b45309;"></i>Agregar ítem';
             document.getElementById('knowledgeForm').reset();
             document.getElementById('knowledge_content_count').textContent = '0';
-            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'knowledgeItemModal' }));
+            _knowModal().show();
         }
 
         function editarKnowledge(id, type, title, content, sourceUrl) {
             knowledgeEditId = id;
-            document.getElementById('knowledgeModalTitle').textContent = 'Editar ítem';
+            document.getElementById('knowledgeModalTitle').innerHTML = '<i class="bi bi-pencil me-2" style="color:#b45309;"></i>Editar ítem';
             document.getElementById('knowledge_type').value = type;
             document.getElementById('knowledge_title').value = title;
             document.getElementById('knowledge_content_input').value = content;
             document.getElementById('knowledge_content_count').textContent = content.length;
             document.getElementById('knowledge_source_url').value = sourceUrl || '';
-            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'knowledgeItemModal' }));
+            _knowModal().show();
         }
 
         async function submitKnowledge(e) {
@@ -2356,7 +2360,7 @@
                 });
                 const data = await r.json();
                 if (data.success) {
-                    window.dispatchEvent(new CustomEvent('close-modal', { detail: 'knowledgeItemModal' }));
+                    _knowModal().hide();
                     setTimeout(() => location.reload(), 300);
                 } else {
                     alert(data.message || 'Error al guardar.');

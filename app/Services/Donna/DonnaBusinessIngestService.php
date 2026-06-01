@@ -56,8 +56,14 @@ class DonnaBusinessIngestService
         }
 
         // 3. Resolver o crear conversación
-        $remoteJid         = $data['remote_jid'] ?? '';
-        $senderIdentifier  = $data['sender_identifier'] ?? preg_replace('/@.+$/', '', $remoteJid);
+        // remote_jid puede llegar vacío si n8n no lo extrajo correctamente; se reconstruye desde sender_identifier
+        $senderIdentifier  = $data['sender_identifier'] ?? '';
+        $remoteJid         = $data['remote_jid']
+                            ?? $data['customer_jid']
+                            ?? ($senderIdentifier ? $senderIdentifier . '@s.whatsapp.net' : '');
+        if (!$senderIdentifier) {
+            $senderIdentifier = preg_replace('/@.+$/', '', $remoteJid);
+        }
         $senderName        = $data['sender_name'] ?? null;
 
         $conversation = DonnaConversation::firstOrCreate(

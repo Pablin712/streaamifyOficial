@@ -21,7 +21,7 @@ class DonnaBusinessIngestController extends Controller
         $data = $request->validate([
             'provider'            => 'nullable|string',
             'instance_name'       => 'required|string',
-            'remote_jid'          => 'required|string',
+            'remote_jid'          => 'nullable|string',
             'from_me'             => 'required|boolean',
             'message_type'        => 'required|string',   // text | audio | image | video | document
             'provider_message_id' => 'nullable|string',
