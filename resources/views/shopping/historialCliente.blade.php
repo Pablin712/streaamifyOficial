@@ -1597,7 +1597,7 @@
                                             <input type="number" name="wait_seconds" id="biz_wait_seconds"
                                                    class="form-control form-control-sm"
                                                    min="3" max="60" step="1"
-                                                   value="{{ old('wait_seconds', $donnaConfigBusiness?->wait_seconds ?? 10) }}">
+                                                   value="{{ old('wait_seconds', $donnaConfigBusiness?->wait_seconds ?? 35) }}">
                                             <span class="input-group-text">seg</span>
                                         </div>
                                         <div class="form-text">

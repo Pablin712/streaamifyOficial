@@ -109,7 +109,7 @@ class DonnaBusinessIngestService
             'stored'  => true,
             'allowed' => true,
             'reason'  => null,
-            'config'  => ['wait_seconds' => $agentConfig?->wait_seconds ?? 10],
+            'config'  => ['wait_seconds' => $agentConfig?->wait_seconds ?? 35],
             'client'  => ['id' => $channel->client_id, 'name' => $channel->cliente?->nombrecli ?? ''],
             'service' => [
                 'id'         => $sub->id,

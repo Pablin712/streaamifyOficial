@@ -334,7 +334,7 @@ class ClienteDonnaController extends Controller
                 'calendar_enabled'     => $calendarEnabled,
                 'sheets_enabled'       => $sheetsEnabled,
                 'main_prompt'          => $request->input('main_prompt') ?: null,
-                'wait_seconds'         => (int) ($request->input('wait_seconds') ?? 10),
+                'wait_seconds'         => (int) ($request->input('wait_seconds') ?? 35),
                 'is_active'            => true,
             ]
         );

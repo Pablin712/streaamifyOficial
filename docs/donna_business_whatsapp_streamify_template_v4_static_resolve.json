@@ -2168,7 +2168,7 @@
     },
     {
       "parameters": {
-        "amount": "={{ $('POST Donna Business Ingest').first().json.config?.wait_seconds || 10 }}"
+        "amount": "={{ $('POST Donna Business Ingest').first().json.config?.wait_seconds || 35 }}"
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
