@@ -1,23 +1,20 @@
 {
-  "name": "Donna Business WhatsApp SaaS - v4 Static Streamify + Resolve Channel",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
         "path": "donna-business-whatsapp",
-        "responseMode": "onReceived",
-        "options": {
-          "responseCode": 200
-        }
+        "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
-        620
+        19456,
+        6848
       ],
-      "id": "a1b0f5ab-0ad6-4cfc-a07e-c4c21ee87470",
-      "name": "Webhook Evo API"
+      "id": "598235b3-f066-4158-83f8-0167db06936a",
+      "name": "Webhook Evo API",
+      "webhookId": "a0ab275c-3741-43bc-be5a-4a74cc408188"
     },
     {
       "parameters": {
@@ -26,10 +23,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        500,
-        620
+        20048,
+        6832
       ],
-      "id": "a2fa7dd2-e2ae-4b97-a1a9-3379458257ec",
+      "id": "99720b57-f43e-428b-9a4b-f21f895e27d2",
       "name": "Normalizar Evo Payload"
     },
     {
@@ -91,10 +88,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        720,
-        620
+        20352,
+        6848
       ],
-      "id": "8d63f011-e649-44e0-b3a5-a69e3c7e7255",
+      "id": "0a8ba82e-7a08-42c4-9652-7325318e4796",
       "name": "¿fromMe?"
     },
     {
@@ -128,10 +125,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        780,
-        420
+        20560,
+        6704
       ],
-      "id": "f7e23750-42c3-46b7-b421-61bc869ea99e",
+      "id": "55e07789-fd18-4119-bcf0-4e4d0067a171",
       "name": "POST Ingest fromMe / Ignorar loop"
     },
     {
@@ -243,10 +240,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        780,
-        720
+        20576,
+        6960
       ],
-      "id": "52963953-a00e-4a4d-af52-34f4407ad5d8",
+      "id": "3daf66af-d761-4a63-914b-bb2e0fab0d4f",
       "name": "Switch tipo de mensaje"
     },
     {
@@ -290,10 +287,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1060,
-        520
+        20784,
+        6752
       ],
-      "id": "1828701e-e737-4f90-b9cc-d71181b7b906",
+      "id": "1676a509-f249-472d-9177-1d756df29417",
       "name": "Preparar texto para ingest"
     },
     {
@@ -329,10 +326,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1060,
-        700
+        20784,
+        6928
       ],
-      "id": "7de9f4db-7cfa-47d8-a569-71bf6e8974c6",
+      "id": "f8b84eac-57d9-4c02-99a6-ac947ccdad11",
       "name": "Get audio"
     },
     {
@@ -346,10 +343,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        1300,
-        700
+        21024,
+        6928
       ],
-      "id": "01afbaf8-f4ff-437e-aa25-86078491a137",
+      "id": "e910f281-bc1f-4e63-8b1f-9c411f1d2f91",
       "name": "Convert audio"
     },
     {
@@ -361,10 +358,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        1540,
-        700
+        21264,
+        6928
       ],
-      "id": "adcae8b5-4733-4d59-95ee-ca03711245f8",
+      "id": "52b67332-a00a-4e3b-abd4-43146601c1d6",
       "name": "Transcribe",
       "credentials": {
         "openAiApi": {
@@ -414,10 +411,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1780,
-        700
+        21504,
+        6928
       ],
-      "id": "987a42f2-1fd8-44b1-909f-bbf2d2e7ef4a",
+      "id": "6ef39f75-9281-45a3-8665-a57873243434",
       "name": "Preparar audio para ingest"
     },
     {
@@ -453,10 +450,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1060,
-        900
+        20784,
+        7120
       ],
-      "id": "904304dd-cb41-4fff-800b-ca56b417c895",
+      "id": "52f5c1cd-414f-4702-b815-d8199c44c346",
       "name": "Get imagen"
     },
     {
@@ -470,10 +467,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        1300,
-        900
+        21024,
+        7120
       ],
-      "id": "2fa33952-9011-4362-835d-25a2c9972cf8",
+      "id": "37da7dcc-cd02-4515-8500-36a3cb71fd76",
       "name": "Convert image"
     },
     {
@@ -493,10 +490,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        1540,
-        900
+        21264,
+        7120
       ],
-      "id": "ad6447b0-5e28-4540-8688-97ca93bd5755",
+      "id": "4d16954a-1ced-46be-a35d-d597cffa643f",
       "name": "Analyze",
       "credentials": {
         "openAiApi": {
@@ -512,10 +509,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1780,
-        900
+        21504,
+        7120
       ],
-      "id": "96a3f530-e6c4-474c-88a4-c4dcbdc6e222",
+      "id": "bfac6d47-6030-4f07-b340-b85a3bd557d4",
       "name": "Parsear imagen"
     },
     {
@@ -559,10 +556,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1060,
-        1080
+        20784,
+        7312
       ],
-      "id": "7c1e8693-f8ef-4d2f-a476-ed94d6552d51",
+      "id": "53755ea6-bc15-4754-9170-53dc005049e6",
       "name": "Preparar documento/otro para ingest"
     },
     {
@@ -596,10 +593,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2040,
-        760
+        21760,
+        6992
       ],
-      "id": "57ec987c-f183-483e-bfbb-d26ef6216954",
+      "id": "5ae3a469-12bc-412f-b257-da5447a35166",
       "name": "POST Donna Business Ingest"
     },
     {
@@ -661,10 +658,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        2300,
-        760
+        22016,
+        6992
       ],
-      "id": "dc69ffd3-fcb4-4fca-b567-51e3930feb64",
+      "id": "53162ba2-746a-4256-8a54-c08606ebf5aa",
       "name": "¿Donna Business permitida?"
     },
     {
@@ -696,10 +693,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2540,
-        980
+        22256,
+        7200
       ],
-      "id": "d2436149-85a8-4199-94d9-1a811b07af3a",
+      "id": "0e028f55-abc5-4c49-8c1d-4cf87736539f",
       "name": "No responder / Servicio bloqueado"
     },
     {
@@ -750,10 +747,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2540,
-        660
+        22256,
+        6880
       ],
-      "id": "17a1a30c-9a8e-4352-b640-061bafd9d324",
+      "id": "41a78cf2-cde4-4b1a-900d-0a367942577d",
       "name": "GET Donna Business Context"
     },
     {
@@ -845,10 +842,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2780,
-        660
+        22496,
+        6880
       ],
-      "id": "965f984f-772d-447a-af7e-ea286c2b6548",
+      "id": "964d4296-503f-4fdc-be95-8709cd7cea5f",
       "name": "Guardar contexto Business"
     },
     {
@@ -862,10 +859,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        3060,
-        660
+        22784,
+        6880
       ],
-      "id": "42ef3b8a-91a0-43aa-a2e8-eeb9d5054243",
+      "id": "06043d80-c545-4595-bd3f-8254591cb13d",
       "name": "AI Agent Donna Business"
     },
     {
@@ -875,10 +872,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        2840,
-        980
+        22576,
+        7136
       ],
-      "id": "f2e45f43-eafa-4d1d-8f21-21ba752658f2",
+      "id": "58aa82ae-9c26-416d-8599-3110c793215e",
       "name": "DeepSeek Chat Model",
       "credentials": {
         "deepSeekApi": {
@@ -895,10 +892,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        3040,
-        980
+        22768,
+        7136
       ],
-      "id": "bea536e9-c97f-47a3-b5ff-cee053e1ce24",
+      "id": "7ac4dd28-3a2d-4234-8bce-50cffe40f71c",
       "name": "Simple Memory Business"
     },
     {
@@ -910,245 +907,11 @@
       "type": "n8n-nodes-base.dateTimeTool",
       "typeVersion": 2,
       "position": [
-        3240,
-        980
+        22976,
+        7136
       ],
-      "id": "d3fada3c-471a-43ab-ad9b-a597346e4dc7",
+      "id": "bf648bf2-24f3-4997-bd53-b0cc82f7bea6",
       "name": "Date & Time"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Busca en la base de conocimientos general del negocio: productos, servicios, precios, políticas, horarios y FAQ.",
-        "method": "POST",
-        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/knowledge/search",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Donna-Key",
-              "value": "donna-secret-key-pablin-712"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"query\": \"{{ $fromAI('query', 'Consulta del cliente final sobre el negocio', 'string') }}\",\n  \"limit\": 5\n}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        2680,
-        1280
-      ],
-      "id": "f6519a99-8fb9-466b-b4d6-8b9d290cb64d",
-      "name": "donna_business_knowledge_search"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Busca datos del cliente final: nombre, compras, citas, pagos, historial, intereses o estado en la base del negocio.",
-        "method": "POST",
-        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/customer/context-search",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Donna-Key",
-              "value": "donna-secret-key-pablin-712"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"external_chat_id\": \"{{ $('Guardar contexto Business').first().json.external_chat_id }}\",\n  \"sender_identifier\": \"{{ $('Guardar contexto Business').first().json.sender_identifier }}\",\n  \"query\": \"{{ $fromAI('query', 'Dato del cliente final que necesitas recuperar', 'string') }}\",\n  \"limit\": 10\n}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        2940,
-        1280
-      ],
-      "id": "5ede519c-e812-4e35-96cb-2b0dfc71bc64",
-      "name": "donna_business_customer_context_search"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Consulta memoria histórica del chat cuando el cliente dice: lo anterior, como quedamos, mi pedido, mi cita o ya te dije.",
-        "method": "POST",
-        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/memory/search",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Donna-Key",
-              "value": "donna-secret-key-pablin-712"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"query\": \"{{ $fromAI('query', 'Contexto histórico que necesitas recuperar', 'string') }}\",\n  \"limit\": 10\n}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        3200,
-        1280
-      ],
-      "id": "91023001-0721-4716-abbc-5e56f9219d90",
-      "name": "donna_business_memory_search"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Opcional. Verifica disponibilidad en Google Calendar del negocio antes de confirmar una cita. Solo usar si Calendar está habilitado.",
-        "method": "POST",
-        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/freebusy",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Donna-Key",
-              "value": "donna-secret-key-pablin-712"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"time_min\": \"{{ $fromAI('time_min', 'Inicio ISO 8601', 'string') }}\",\n  \"time_max\": \"{{ $fromAI('time_max', 'Fin ISO 8601', 'string') }}\",\n  \"timezone\": \"America/Guayaquil\"\n}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        3460,
-        1280
-      ],
-      "id": "c48bbda2-7faa-41c9-b8cc-7363adb3c4eb",
-      "name": "donna_business_calendar_freebusy"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Opcional. Crea cita en Google Calendar del negocio. Antes usa freebusy. Solo confirmar si success=true.",
-        "method": "POST",
-        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/create-event",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Donna-Key",
-              "value": "donna-secret-key-pablin-712"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"customer_name\": \"{{ $fromAI('customer_name', 'Nombre del cliente final', 'string') }}\",\n  \"customer_phone\": \"{{ $('Guardar contexto Business').first().json.sender_identifier }}\",\n  \"summary\": \"{{ $fromAI('summary', 'Título de la cita', 'string') }}\",\n  \"description\": \"{{ $fromAI('description', 'Descripción de la cita', 'string') }}\",\n  \"start\": \"{{ $fromAI('start', 'Inicio ISO 8601', 'string') }}\",\n  \"end\": \"{{ $fromAI('end', 'Fin ISO 8601', 'string') }}\",\n  \"timezone\": \"America/Guayaquil\"\n}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        3720,
-        1280
-      ],
-      "id": "41e39ea5-4ade-4e7a-8034-914f9b32367d",
-      "name": "donna_business_calendar_create_event"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "Opcional. Registra leads, pedidos, citas o ventas en Google Sheets del negocio si Sheets está habilitado.",
-        "method": "POST",
-        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/sheets/append-row",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Donna-Key",
-              "value": "donna-secret-key-pablin-712"
-            },
-            {
-              "name": "Accept",
-              "value": "application/json"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"client_id\": \"{{ $('Guardar contexto Business').first().json.client_id }}\",\n  \"service_id\": \"{{ $('Guardar contexto Business').first().json.service_id }}\",\n  \"channel_id\": \"{{ $('Guardar contexto Business').first().json.channel_id }}\",\n  \"conversation_id\": \"{{ $('Guardar contexto Business').first().json.conversation_id }}\",\n  \"sheet_key\": \"{{ $fromAI('sheet_key', 'leads, ventas, pedidos, citas o clientes', 'string') }}\",\n  \"row\": {\n    \"nombre\": \"{{ $fromAI('nombre', 'Nombre del cliente final', 'string') }}\",\n    \"telefono\": \"{{ $('Guardar contexto Business').first().json.sender_identifier }}\",\n    \"interes\": \"{{ $fromAI('interes', 'Producto o servicio de interés', 'string') }}\",\n    \"nota\": \"{{ $fromAI('nota', 'Nota breve', 'string') }}\"\n  }\n}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        3980,
-        1280
-      ],
-      "id": "447e2d54-6d8e-4960-a575-4b46ffa3b01a",
-      "name": "donna_business_sheets_append_row"
     },
     {
       "parameters": {
@@ -1157,10 +920,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3360,
-        660
+        23072,
+        6880
       ],
-      "id": "c815c584-232e-4d4e-8d92-a98d8644c54d",
+      "id": "bb5370a1-6d9f-482b-8be1-1d6af9e17440",
       "name": "Formatear respuesta WhatsApp"
     },
     {
@@ -1186,10 +949,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3600,
-        660
+        23312,
+        6880
       ],
-      "id": "046446b3-20e1-4d6e-85dc-d1f41207fccf",
+      "id": "d0ef0aaf-6d4d-41ef-9c0d-7e3b489ccec9",
       "name": "Respuesta final"
     },
     {
@@ -1215,7 +978,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $('Respuesta final').first().json.number || '', text: $('Respuesta final').first().json.text || '' }) }}",
+        "jsonBody": "={\n  \"number\": \"{{ $('Respuesta final').first().json.number }}\",\n  \"text\": {{ JSON.stringify($('Respuesta final').first().json.text || '') }}\n}",
         "options": {
           "timeout": 30000
         }
@@ -1223,10 +986,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        3840,
-        660
+        23552,
+        6880
       ],
-      "id": "34c584a2-f5ed-4260-83ef-bc89fad5c1c7",
+      "id": "441f4976-d811-4b4c-a3b5-38a046e360cc",
       "name": "Enviar mensaje Evo API"
     },
     {
@@ -1260,10 +1023,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        4080,
-        660
+        23792,
+        6880
       ],
-      "id": "77ed99ed-c063-4d80-9428-3031853a730b",
+      "id": "bbd73293-58fe-4627-b1cd-1bf3da679005",
       "name": "POST Donna Business Save Respond"
     },
     {
@@ -1276,10 +1039,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        0,
-        280
+        19632,
+        6272
       ],
-      "id": "655489f9-116d-44ae-8fa8-7429ef0dc8c2",
+      "id": "b201cea2-be65-4e79-9847-e77f66812e31",
       "name": "Nota variables"
     },
     {
@@ -1341,10 +1104,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        470,
-        620
+        20208,
+        6832
       ],
-      "id": "cd76f44d-1b3d-4aa7-be72-d1f3522b060e",
+      "id": "ea12055c-9eb7-480d-a851-8dba8cdafd13",
       "name": "¿Ignorar grupo?"
     },
     {
@@ -1388,10 +1151,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        700,
-        300
+        20416,
+        6528
       ],
-      "id": "6b37da60-8d8c-4dae-a2cd-b96c6b56cee4",
+      "id": "e87c5940-9bd0-4bbe-b5d2-5c028c3d1266",
       "name": "Grupo ignorado"
     },
     {
@@ -1425,16 +1188,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        230,
-        620
+        19696,
+        6848
       ],
-      "id": "9c0b29d9-d0d4-4a52-b398-d7888e32589c",
+      "id": "ae57382c-4ab9-4b41-85b5-7c0fdf46124b",
       "name": "Resolver cliente/canal Streamify",
       "notes": "Resuelve client_id/service_id/channel_id y devuelve la apikey de Evo API de la instancia. Endpoint a implementar en Laravel si aún no existe."
     },
     {
       "parameters": {
-        "content": "### Cambios v4 — REIMPORTAR SIEMPRE\n- URL Streamify fija: https://streamify.aaronsoft.es/public\n- X-Donna-Key fijo: donna-secret-key-pablin-712\n- Nuevo nodo: Resolver cliente/canal Streamify → gate ¿Donna Business activa? → Normalizar.\n- Normalizar usa la apikey devuelta por Streamify, no la del webhook.\n- Endpoint activo: POST /api/donna/business/resolve-webhook\n\nTOOLS CONECTADAS AL AGENTE (ai_tool):\n  • Date & Time\n  • donna_business_knowledge_search\n  • donna_business_customer_context_search\n  • donna_business_memory_search\n  • donna_business_calendar_freebusy\n  • donna_business_calendar_create_event\n  • donna_business_sheets_append_row\n\n⚠ Si las tools aparecen desconectadas: borrar el flujo en n8n y reimportar este JSON.",
+        "content": "### Cambios v5\n- Corregidos 4 nodos calendar: ahora usan rutas Business (/api/donna/business/tools/calendar/) y contexto $('Guardar contexto Business').first().json\n- Todos los calendar tools ahora envían conversation_id y Accept/Content-Type headers\n- Añadidos 5 nuevos tools: donna_business_data_query, donna_business_upsert_lead, donna_business_sheets_get_rows, donna_business_sheets_append_row, donna_business_sheets_update_row\n\nTools disponibles (12 total):\n- knowledge_search, customer_context_search, memory_search\n- calendar_freebusy, calendar_list_events, calendar_create_event, calendar_update_event, calendar_delete_event\n- data_query, upsert_lead\n- sheets_get_rows, sheets_append_row, sheets_update_row",
         "height": 260,
         "width": 560,
         "color": 6
@@ -1442,10 +1205,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        0,
-        180
+        20768,
+        6384
       ],
-      "id": "caeea4b5-482b-4086-b68f-54012e5a426d",
+      "id": "65b4bb69-39e3-4117-ba2a-af2685451e44",
       "name": "Nota v4 static config"
     },
     {
@@ -1507,10 +1270,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        380,
-        620
+        19856,
+        6848
       ],
-      "id": "b3c8f1a2-d4e5-4f6a-9b9c-0d1e2f3a4b5c",
+      "id": "2c689b6b-586d-4468-a43c-74ad1909a454",
       "name": "¿Donna Business activa?"
     },
     {
@@ -1548,11 +1311,848 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        380,
-        460
+        20064,
+        7040
       ],
-      "id": "c4d5e6f7-a8b9-4c0d-9e2f-3a4b5c6d7e8f",
+      "id": "34b5c4d3-a7db-43f2-bc19-6a99b2ebdac6",
       "name": "Servicio Donna Business inactivo"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/knowledge/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Consulta del cliente final sobre el negocio`, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23136,
+        7136
+      ],
+      "id": "646b1e0d-fa37-4985-ba01-1b4751702b79",
+      "name": "donna_business_knowledge_search"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/customer/context-search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Dato del cliente final que necesitas recuperar`, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            },
+            {
+              "name": "external_chat_id",
+              "value": "={{ $('Guardar contexto Business').first().json.external_chat_id }}"
+            },
+            {
+              "name": "sender_identifier",
+              "value": "={{ $('Guardar contexto Business').first().json.sender_identifier }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23312,
+        7136
+      ],
+      "id": "8b62750d-db32-4342-95d5-5bf7ce3bba95",
+      "name": "donna_business_customer_context_search"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/memory/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Contexto histórico que necesitas recuperar`, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23472,
+        7136
+      ],
+      "id": "b8b08887-8d1c-4281-87dd-6b872bc9486e",
+      "name": "donna_business_memory_search"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/freebusy",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "=time_min",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Inicio ISO 8601`, 'string') }}"
+            },
+            {
+              "name": "time_max",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters5_Value', `Fin ISO 8601`, 'string') }}"
+            },
+            {
+              "name": "timezone",
+              "value": "America/Guayaquil"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        22800,
+        7456
+      ],
+      "id": "f8139f58-aace-4af2-a652-7f1f385b28da",
+      "name": "donna_business_calendar_freebusy"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/list-events",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "time_min",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Inicio del rango en ISO 8601 con timezone America/Guayaquil`, 'string') }}"
+            },
+            {
+              "name": "time_max",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Fin del rango en ISO 8601 con timezone America/Guayaquil`, 'string') }}"
+            },
+            {
+              "name": "max_results",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        22992,
+        7456
+      ],
+      "id": "1575cad5-0af4-4af3-9ca8-75c563db8b7b",
+      "name": "donna_business_calendar_list_events"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/create-event",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "start",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Fecha/hora inicio ISO 8601 con timezone America/Guayaquil`, 'string') }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Fecha/hora fin ISO 8601 con timezone America/Guayaquil`, 'string') }}"
+            },
+            {
+              "name": "timezone",
+              "value": "America/Guayaquil"
+            },
+            {
+              "name": "summary",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters6_Value', `Título del evento, incluye nombre del cliente`, 'string') }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters7_Value', `Descripción opcional del evento`, 'string') }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters8_Value', `Ubicación opcional`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23168,
+        7456
+      ],
+      "id": "498bfa34-2994-4c8b-a4f9-cf36517da3d5",
+      "name": "donna_business_calendar_create_event"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/update-event",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "event_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `ID del evento a actualizar`, 'string') }}"
+            },
+            {
+              "name": "start",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Nueva fecha/hora inicio ISO 8601 con timezone America/Guayaquil`, 'string') }}"
+            },
+            {
+              "name": "end",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters5_Value', `Nueva fecha/hora fin ISO 8601 con timezone America/Guayaquil`, 'string') }}"
+            },
+            {
+              "name": "timezone",
+              "value": "America/Guayaquil"
+            },
+            {
+              "name": "summary",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters7_Value', `Nuevo título del evento`, 'string') }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters8_Value', `Nueva descripción del evento`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23360,
+        7456
+      ],
+      "id": "141618ae-5e0d-460d-9659-66be4778b166",
+      "name": "donna_business_calendar_update_event"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/calendar/delete-event",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "event_id",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `ID del evento a eliminar`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23552,
+        7456
+      ],
+      "id": "1e84b2df-2d3a-49d6-9545-6415537ffd3b",
+      "name": "donna_business_calendar_delete_event"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/data/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "type",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Tipo de dato a consultar: product, service, faq, policy, table`, 'string') }}"
+            },
+            {
+              "name": "query",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Texto a buscar en título y contenido`, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23632,
+        7136
+      ],
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "donna_business_data_query"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/data/upsert-lead",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $('Guardar contexto Business').first().json.conversation_id }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Nombre del cliente final`, 'string') }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('Guardar contexto Business').first().json.sender_identifier }}"
+            },
+            {
+              "name": "interest",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters6_Value', `Producto o servicio de interés`, 'string') }}"
+            },
+            {
+              "name": "notes",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters7_Value', `Notas adicionales sobre el lead`, 'string') }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters8_Value', `Estado: new, hot, warm, cold`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23808,
+        7136
+      ],
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "donna_business_upsert_lead"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/sheets/get-rows",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "range",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Nombre de la hoja o rango, ej: Conocimientos`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23632,
+        7312
+      ],
+      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "name": "donna_business_sheets_get_rows"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/sheets/append-row",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "values",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Array de valores a insertar como nueva fila`, 'array') }}"
+            },
+            {
+              "name": "sheet",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Nombre de la hoja, ej: Conocimientos`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23808,
+        7312
+      ],
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "donna_business_sheets_append_row"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/tools/sheets/update-row",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "={{ $('Guardar contexto Business').first().json.client_id }}"
+            },
+            {
+              "name": "service_id",
+              "value": "={{ $('Guardar contexto Business').first().json.service_id }}"
+            },
+            {
+              "name": "channel_id",
+              "value": "={{ $('Guardar contexto Business').first().json.channel_id }}"
+            },
+            {
+              "name": "row_number",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Número de fila a actualizar (1-based, la fila 1 es el header)`, 'number') }}"
+            },
+            {
+              "name": "values",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Array de valores nuevos para la fila`, 'array') }}"
+            },
+            {
+              "name": "sheet",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters5_Value', `Nombre de la hoja, ej: Conocimientos`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        23984,
+        7312
+      ],
+      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "name": "donna_business_sheets_update_row"
     }
   ],
   "connections": {
@@ -1807,39 +2407,6 @@
         ]
       ]
     },
-    "Formatear respuesta WhatsApp": {
-      "main": [
-        [
-          {
-            "node": "Respuesta final",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Respuesta final": {
-      "main": [
-        [
-          {
-            "node": "Enviar mensaje Evo API",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Enviar mensaje Evo API": {
-      "main": [
-        [
-          {
-            "node": "POST Donna Business Save Respond",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "DeepSeek Chat Model": {
       "ai_languageModel": [
         [
@@ -1873,67 +2440,34 @@
         ]
       ]
     },
-    "donna_business_knowledge_search": {
-      "ai_tool": [
+    "Formatear respuesta WhatsApp": {
+      "main": [
         [
           {
-            "node": "AI Agent Donna Business",
-            "type": "ai_tool",
+            "node": "Respuesta final",
+            "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "donna_business_customer_context_search": {
-      "ai_tool": [
+    "Respuesta final": {
+      "main": [
         [
           {
-            "node": "AI Agent Donna Business",
-            "type": "ai_tool",
+            "node": "Enviar mensaje Evo API",
+            "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "donna_business_memory_search": {
-      "ai_tool": [
+    "Enviar mensaje Evo API": {
+      "main": [
         [
           {
-            "node": "AI Agent Donna Business",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "donna_business_calendar_freebusy": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent Donna Business",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "donna_business_calendar_create_event": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent Donna Business",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "donna_business_sheets_append_row": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent Donna Business",
-            "type": "ai_tool",
+            "node": "POST Donna Business Save Respond",
+            "type": "main",
             "index": 0
           }
         ]
@@ -1985,41 +2519,281 @@
           }
         ]
       ]
+    },
+    "donna_business_knowledge_search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_customer_context_search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_memory_search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_calendar_freebusy": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_calendar_list_events": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_calendar_create_event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_calendar_update_event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_calendar_delete_event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_data_query": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_upsert_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_sheets_get_rows": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_sheets_append_row": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "donna_business_sheets_update_row": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Donna Business",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {
     "Webhook Evo API": [
       {
+        "headers": {
+          "host": "autobot.aaronsoft.es",
+          "user-agent": "axios/1.13.2",
+          "content-length": "1412",
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "content-type": "application/json",
+          "x-forwarded-for": "172.29.0.4",
+          "x-forwarded-host": "autobot.aaronsoft.es",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "vps-82a11f08",
+          "x-real-ip": "172.29.0.4"
+        },
+        "params": {},
+        "query": {},
         "body": {
           "event": "messages.upsert",
-          "instance": "bot-pagos",
+          "instance": "Pablin",
           "data": {
             "key": {
-              "remoteJid": "593992571346@s.whatsapp.net",
-              "remoteJidAlt": "593992571346@s.whatsapp.net",
+              "remoteJid": "593961412826@s.whatsapp.net",
+              "remoteJidAlt": "593961412826@s.whatsapp.net",
               "fromMe": false,
-              "id": "3EB00804F97B01E000412F"
+              "id": "2AE88DA777AED01C1525",
+              "participant": "",
+              "addressingMode": "lid"
             },
-            "pushName": "Siani M",
+            "pushName": "Streamify",
+            "status": "DELIVERY_ACK",
             "message": {
-              "conversation": "Buen dia cuanto es de spoty y prime porfavor?"
+              "conversation": "Qué puedes hacer?",
+              "messageContextInfo": {
+                "threadId": [],
+                "deviceListMetadata": {
+                  "senderKeyIndexes": [],
+                  "recipientKeyIndexes": [],
+                  "senderKeyHash": {
+                    "0": 132,
+                    "1": 214,
+                    "2": 217,
+                    "3": 48,
+                    "4": 82,
+                    "5": 63,
+                    "6": 171,
+                    "7": 127,
+                    "8": 1,
+                    "9": 82
+                  },
+                  "senderTimestamp": {
+                    "low": 1779991725,
+                    "high": 0,
+                    "unsigned": true
+                  },
+                  "recipientKeyHash": {
+                    "0": 197,
+                    "1": 65,
+                    "2": 238,
+                    "3": 234,
+                    "4": 208,
+                    "5": 5,
+                    "6": 56,
+                    "7": 72,
+                    "8": 177,
+                    "9": 29
+                  },
+                  "recipientTimestamp": {
+                    "low": 1779930583,
+                    "high": 0,
+                    "unsigned": true
+                  }
+                },
+                "deviceListMetadataVersion": 2,
+                "messageSecret": {
+                  "0": 106,
+                  "1": 79,
+                  "2": 165,
+                  "3": 237,
+                  "4": 157,
+                  "5": 180,
+                  "6": 139,
+                  "7": 254,
+                  "8": 142,
+                  "9": 222,
+                  "10": 180,
+                  "11": 161,
+                  "12": 177,
+                  "13": 47,
+                  "14": 166,
+                  "15": 117,
+                  "16": 92,
+                  "17": 232,
+                  "18": 155,
+                  "19": 129,
+                  "20": 69,
+                  "21": 96,
+                  "22": 11,
+                  "23": 24,
+                  "24": 87,
+                  "25": 171,
+                  "26": 84,
+                  "27": 151,
+                  "28": 108,
+                  "29": 186,
+                  "30": 179,
+                  "31": 212
+                }
+              }
             },
             "messageType": "conversation",
-            "messageTimestamp": 1780064142,
-            "instanceId": "bf50604e-6927-4f89-80f8-a4a7dd5ce4cc"
+            "messageTimestamp": 1780076742,
+            "instanceId": "9758fb02-13d4-4965-81e7-99579d4c3049",
+            "source": "unknown"
           },
-          "sender": "593961412826@s.whatsapp.net",
+          "destination": "https://autobot.aaronsoft.es/webhook/donna-business-whatsapp",
+          "date_time": "2026-05-29T17:45:42.589Z",
+          "sender": "593961778319@s.whatsapp.net",
           "server_url": "https://evoapi.abigailsoft.com",
           "apikey": null
-        }
+        },
+        "webhookUrl": "https://autobot.aaronsoft.es/webhook/donna-business-whatsapp",
+        "executionMode": "production"
       }
     ]
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
   "meta": {
-    "templateCredsSetupCompleted": false
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2a4787fedcd3a9fda6d63f2231359e551e48f7e0d6a6b433946467fe82f7e7a4"
   }
 }

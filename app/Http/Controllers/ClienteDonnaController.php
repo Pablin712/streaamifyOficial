@@ -13,6 +13,7 @@ use App\Models\DonnaIntegration;
 use App\Models\Empleado;
 use App\Models\Historial;
 use App\Services\Donna\Google\DonnaGoogleTokenService;
+use App\Services\Donna\Google\DonnaBusinessKnowledgeSheetService;
 use App\Services\Donna\Google\DonnaSpreadsheetSetupService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -315,7 +316,10 @@ class ClienteDonnaController extends Controller
             'lunch' => $request->input('wh_lunch') ?: null,
         ]);
 
-        DonnaAgentConfig::updateOrCreate(
+        $calendarEnabled = (bool) $request->input('calendar_enabled', false);
+        $sheetsEnabled   = (bool) $request->input('sheets_enabled', false);
+
+        $config = DonnaAgentConfig::updateOrCreate(
             ['client_id' => $cliente->idcli, 'service_type' => 'business'],
             [
                 'subscription_id'      => $sub->id,
@@ -326,12 +330,39 @@ class ClienteDonnaController extends Controller
                 'language'             => $request->input('language') ?: null,
                 'timezone'             => $request->input('timezone') ?: null,
                 'working_hours_json'   => $wh ?: null,
+                'calendar_enabled'     => $calendarEnabled,
+                'sheets_enabled'       => $sheetsEnabled,
                 'main_prompt'          => $request->input('main_prompt') ?: null,
                 'is_active'            => true,
             ]
         );
 
+        // Si se habilitó Sheets y no hay spreadsheet, crear uno con la KB
+        if ($sheetsEnabled && !$config->spreadsheet_id) {
+            $this->setupBusinessSheet($cliente->idcli, $config);
+        }
+
         return back()->with('donna_business_config_success', 'Configuración de Donna Business actualizada.');
+    }
+
+    private function setupBusinessSheet(int $clientId, DonnaAgentConfig $config): void
+    {
+        $integ = DonnaIntegration::where('client_id', $clientId)
+            ->where('integration_type', 'google')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$integ) return;
+
+        try {
+            $token = app(DonnaGoogleTokenService::class)->getValidAccessToken($integ);
+            if (!$token) return;
+
+            $businessName = $config->business_name ?? '';
+            app(DonnaBusinessKnowledgeSheetService::class)->createAndSync($token, $config, $businessName);
+        } catch (\Throwable $e) {
+            Log::error('Donna setupBusinessSheet failed', ['client_id' => $clientId, 'error' => $e->getMessage()]);
+        }
     }
 
     private function setupSpreadsheet(int $clientId, int $subscriptionId): void

@@ -2,19 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DonnaAgentConfig;
+use App\Models\DonnaIntegration;
 use App\Models\DonnaKnowledgeBase;
 use App\Models\DonnaKnowledgeItem;
 use App\Models\DonnaSubscription;
+use App\Services\Donna\Google\DonnaBusinessKnowledgeSheetService;
+use App\Services\Donna\Google\DonnaGoogleTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClienteDonnaKnowledgeController extends Controller
 {
-    private function getActiveBusinessSub(int $clientId): ?DonnaSubscription
+    public function __construct(
+        private DonnaBusinessKnowledgeSheetService $sheetService,
+        private DonnaGoogleTokenService            $tokenService,
+    ) {}
+
+    private function getBusinessSub(int $clientId): ?DonnaSubscription
     {
         return DonnaSubscription::where('client_id', $clientId)
             ->where('service_type', 'business')
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'pending'])
+            ->latest()
             ->first();
     }
 
@@ -31,9 +42,38 @@ class ClienteDonnaKnowledgeController extends Controller
         );
     }
 
+    private function trySheetSync(int $clientId, DonnaKnowledgeItem $item, string $action): void
+    {
+        try {
+            $config = DonnaAgentConfig::where('client_id', $clientId)
+                ->where('service_type', 'business')
+                ->where('is_active', true)
+                ->where('sheets_enabled', true)
+                ->whereNotNull('spreadsheet_id')
+                ->first();
+
+            if (!$config) return;
+
+            $integ = DonnaIntegration::where('client_id', $clientId)
+                ->where('integration_type', 'google')
+                ->where('status', 'active')
+                ->first();
+
+            if (!$integ) return;
+
+            $token = $this->tokenService->getValidAccessToken($integ);
+            if (!$token) return;
+
+            // Resincroniza todo para mantener consistencia (append puede crear duplicados en edición/borrado)
+            $this->sheetService->syncAllItems($token, $config->spreadsheet_id, $clientId);
+        } catch (\Throwable $e) {
+            Log::warning('DonnaKnowledge: sheet sync failed', ['client_id' => $clientId, 'error' => $e->getMessage()]);
+        }
+    }
+
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'type'         => 'required|in:product,service,faq,policy,table',
             'title'        => 'required|string|max:200',
             'content_text' => 'required|string|max:5000',
@@ -41,10 +81,10 @@ class ClienteDonnaKnowledgeController extends Controller
         ]);
 
         $cliente = Auth::guard('cliente')->user();
-        $sub = $this->getActiveBusinessSub($cliente->idcli);
+        $sub = $this->getBusinessSub($cliente->idcli);
 
         if (!$sub) {
-            return response()->json(['success' => false, 'message' => 'No tienes una suscripción Donna Business activa.'], 403);
+            return response()->json(['success' => false, 'message' => 'No tienes una suscripción Donna Business.'], 403);
         }
 
         $base = $this->getOrCreateBase($cliente->idcli, $sub->id);
@@ -53,19 +93,21 @@ class ClienteDonnaKnowledgeController extends Controller
             'knowledge_base_id' => $base->id,
             'client_id'         => $cliente->idcli,
             'service_id'        => $sub->id,
-            'type'              => $request->input('type'),
-            'title'             => $request->input('title'),
-            'content_text'      => $request->input('content_text'),
-            'source_url'        => $request->input('source_url') ?: null,
+            'type'              => $validated['type'],
+            'title'             => $validated['title'],
+            'content_text'      => $validated['content_text'],
+            'source_url'        => $validated['source_url'] ?? null,
             'is_active'         => true,
         ]);
+
+        $this->trySheetSync($cliente->idcli, $item, 'create');
 
         return response()->json(['success' => true, 'item' => $item]);
     }
 
     public function update(Request $request, int $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'type'         => 'required|in:product,service,faq,policy,table',
             'title'        => 'required|string|max:200',
             'content_text' => 'required|string|max:5000',
@@ -79,11 +121,13 @@ class ClienteDonnaKnowledgeController extends Controller
             ->firstOrFail();
 
         $item->update([
-            'type'         => $request->input('type'),
-            'title'        => $request->input('title'),
-            'content_text' => $request->input('content_text'),
-            'source_url'   => $request->input('source_url') ?: null,
+            'type'         => $validated['type'],
+            'title'        => $validated['title'],
+            'content_text' => $validated['content_text'],
+            'source_url'   => $validated['source_url'] ?? null,
         ]);
+
+        $this->trySheetSync($cliente->idcli, $item, 'update');
 
         return response()->json(['success' => true, 'item' => $item]);
     }
@@ -92,10 +136,13 @@ class ClienteDonnaKnowledgeController extends Controller
     {
         $cliente = Auth::guard('cliente')->user();
 
-        DonnaKnowledgeItem::where('id', $id)
+        $item = DonnaKnowledgeItem::where('id', $id)
             ->where('client_id', $cliente->idcli)
-            ->firstOrFail()
-            ->delete();
+            ->firstOrFail();
+
+        $item->delete();
+
+        $this->trySheetSync($cliente->idcli, $item, 'delete');
 
         return response()->json(['success' => true]);
     }

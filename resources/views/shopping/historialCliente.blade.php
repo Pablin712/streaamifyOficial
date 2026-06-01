@@ -1590,6 +1590,62 @@
                                 </div>
                             </div>
 
+                            {{-- Funciones de Google --}}
+                            @if($googleOk)
+                            <div class="p-3 rounded-3 mb-3" style="background:#f0f7ff;border:1px solid #bdd7f5;">
+                                <div class="fw-semibold small mb-3" style="color:#0d47a1;">
+                                    <i class="bi bi-google me-1"></i>Funciones de Google
+                                </div>
+                                <div class="row g-3">
+                                    {{-- Google Calendar --}}
+                                    <div class="col-sm-6">
+                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 h-100"
+                                             style="background:#fff;border:1px solid #e2e8f0;">
+                                            <div class="form-check form-switch mt-1 mb-0">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="calendar_enabled" id="biz_cal_enabled" value="1"
+                                                       @checked($donnaConfigBusiness?->calendar_enabled)>
+                                            </div>
+                                            <div>
+                                                <label class="form-check-label fw-semibold small" for="biz_cal_enabled">
+                                                    <i class="bi bi-calendar3 me-1" style="color:#1a73e8;"></i>Google Calendar
+                                                </label>
+                                                <p class="text-muted mb-0" style="font-size:0.72rem;">
+                                                    Permite a Donna agendar, consultar y cancelar citas directamente en tu Google Calendar.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- Google Sheets / Base de conocimientos --}}
+                                    <div class="col-sm-6">
+                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 h-100"
+                                             style="background:#fff;border:1px solid #e2e8f0;">
+                                            <div class="form-check form-switch mt-1 mb-0">
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="sheets_enabled" id="biz_sheets_enabled" value="1"
+                                                       @checked($donnaConfigBusiness?->sheets_enabled)>
+                                            </div>
+                                            <div>
+                                                <label class="form-check-label fw-semibold small" for="biz_sheets_enabled">
+                                                    <i class="bi bi-table me-1" style="color:#0f9d58;"></i>Google Sheets — Base de Conocimientos
+                                                </label>
+                                                <p class="text-muted mb-0" style="font-size:0.72rem;">
+                                                    Sincroniza tu base de conocimientos a una hoja de Google Sheets que Donna puede consultar.
+                                                </p>
+                                                @if($sheetOk && $donnaConfigBusiness?->spreadsheet_id)
+                                                    <a href="https://docs.google.com/spreadsheets/d/{{ $donnaConfigBusiness->spreadsheet_id }}"
+                                                       target="_blank" class="d-inline-flex align-items-center gap-1 mt-2"
+                                                       style="font-size:0.72rem;color:#0f9d58;">
+                                                        <i class="bi bi-box-arrow-up-right"></i>Ver hoja de conocimientos
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
                             {{-- Descripción del negocio --}}
                             <div class="mb-4">
                                 <label class="form-label fw-semibold small mb-1">
