@@ -426,6 +426,7 @@ use App\Http\Controllers\Api\Donna\Business\DonnaBusinessMessageController;
 use App\Http\Controllers\Api\Donna\Business\DonnaBusinessContextController;
 use App\Http\Controllers\Api\Donna\Business\DonnaBusinessRespondController;
 use App\Http\Controllers\Api\Donna\Business\DonnaBusinessResolveWebhookController;
+use App\Http\Controllers\Api\Donna\Business\DonnaBusinessShouldRespondController;
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessKnowledgeToolController;
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessMemoryToolController;
 use App\Http\Controllers\Api\Donna\Business\Tools\DonnaBusinessCalendarToolController;
@@ -438,10 +439,11 @@ Route::prefix('donna/business')->middleware(['donna.api'])->group(function () {
     Route::post('/resolve-webhook', [DonnaBusinessResolveWebhookController::class, 'resolve'])->name('api.donna.business.resolve-webhook');
 
     // Core flows
-    Route::post('/ingest',                                    [DonnaBusinessIngestController::class, 'store'])->name('api.donna.business.ingest');
-    Route::patch('/messages/{message_id}/extractions',        [DonnaBusinessMessageController::class, 'updateExtractions'])->name('api.donna.business.message.extractions');
-    Route::get('/context',                                    [DonnaBusinessContextController::class, 'show'])->name('api.donna.business.context');
-    Route::post('/save-respond',                              [DonnaBusinessRespondController::class, 'store'])->name('api.donna.business.save-respond');
+    Route::post('/ingest',          [DonnaBusinessIngestController::class, 'store'])->name('api.donna.business.ingest');
+    Route::post('/should-respond',  [DonnaBusinessShouldRespondController::class, 'check'])->name('api.donna.business.should-respond');
+    Route::patch('/messages/{message_id}/extractions', [DonnaBusinessMessageController::class, 'updateExtractions'])->name('api.donna.business.message.extractions');
+    Route::get('/context',          [DonnaBusinessContextController::class, 'show'])->name('api.donna.business.context');
+    Route::post('/save-respond',    [DonnaBusinessRespondController::class, 'store'])->name('api.donna.business.save-respond');
 
     // Tools
     Route::prefix('tools')->group(function () {

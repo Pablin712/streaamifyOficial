@@ -1588,6 +1588,23 @@
                                         <div class="form-text">Hora bloqueada para citas.</div>
                                     </div>
                                 </div>
+                                <div class="row g-3 mt-1 align-items-end">
+                                    <div class="col-sm-6 col-lg-4">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-hourglass-split me-1"></i>Tiempo de espera de respuesta
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="wait_seconds" id="biz_wait_seconds"
+                                                   class="form-control form-control-sm"
+                                                   min="3" max="60" step="1"
+                                                   value="{{ old('wait_seconds', $donnaConfigBusiness?->wait_seconds ?? 10) }}">
+                                            <span class="input-group-text">seg</span>
+                                        </div>
+                                        <div class="form-text">
+                                            Donna espera este tiempo antes de responder, agrupando mensajes consecutivos del cliente en una sola respuesta (3–60 seg).
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {{-- Funciones de Google --}}

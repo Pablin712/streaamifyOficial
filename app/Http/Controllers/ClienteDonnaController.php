@@ -297,6 +297,7 @@ class ClienteDonnaController extends Controller
             'wh_end'               => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
             'wh_lunch'             => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
             'main_prompt'          => 'nullable|string|max:5000',
+            'wait_seconds'         => 'nullable|integer|min:3|max:60',
         ]);
 
         $cliente = Auth::guard('cliente')->user();
@@ -333,6 +334,7 @@ class ClienteDonnaController extends Controller
                 'calendar_enabled'     => $calendarEnabled,
                 'sheets_enabled'       => $sheetsEnabled,
                 'main_prompt'          => $request->input('main_prompt') ?: null,
+                'wait_seconds'         => (int) ($request->input('wait_seconds') ?? 10),
                 'is_active'            => true,
             ]
         );

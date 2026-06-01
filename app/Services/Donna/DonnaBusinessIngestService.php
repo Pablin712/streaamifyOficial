@@ -2,6 +2,7 @@
 
 namespace App\Services\Donna;
 
+use App\Models\DonnaAgentConfig;
 use App\Models\DonnaChannel;
 use App\Models\DonnaConversation;
 use App\Models\DonnaMessage;
@@ -99,10 +100,16 @@ class DonnaBusinessIngestService
         );
         $conversation->update(['last_message_at' => now(), 'last_message_preview' => $preview]);
 
+        // 7. Obtener configuración del agente para exponer wait_seconds a n8n
+        $agentConfig = DonnaAgentConfig::where('client_id', $channel->client_id)
+            ->where('service_type', 'business')
+            ->first();
+
         return [
             'stored'  => true,
             'allowed' => true,
             'reason'  => null,
+            'config'  => ['wait_seconds' => $agentConfig?->wait_seconds ?? 10],
             'client'  => ['id' => $channel->client_id, 'name' => $channel->cliente?->nombrecli ?? ''],
             'service' => [
                 'id'         => $sub->id,

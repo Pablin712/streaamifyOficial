@@ -585,7 +585,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"provider\": \"{{ $('Normalizar Evo Payload').first().json.provider }}\",\n  \"event\": \"{{ $('Normalizar Evo Payload').first().json.event }}\",\n  \"instance_name\": \"{{ $('Normalizar Evo Payload').first().json.instance_name }}\",\n  \"instance_id\": \"{{ $('Normalizar Evo Payload').first().json.instance_id }}\",\n  \"server_url\": \"{{ $('Normalizar Evo Payload').first().json.server_url }}\",\n\n  \"remote_jid\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid }}\",\n  \"remote_jid_alt\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid_alt }}\",\n  \"sender_identifier\": \"{{ $('Normalizar Evo Payload').first().json.sender_identifier }}\",\n  \"sender_name\": \"{{ $('Normalizar Evo Payload').first().json.sender_name }}\",\n\n  \"from_me\": false,\n  \"provider_message_id\": \"{{ $('Normalizar Evo Payload').first().json.provider_message_id }}\",\n  \"message_type\": \"{{ $('Normalizar Evo Payload').first().json.message_type }}\",\n  \"processed_type\": \"{{ $json.processed_type }}\",\n\n  \"content_text\": \"{{ $json.agent_input_text || $('Normalizar Evo Payload').first().json.content_text }}\",\n  \"caption_text\": \"{{ $('Normalizar Evo Payload').first().json.caption_text }}\",\n  \"transcription_text\": \"{{ $json.transcription_text }}\",\n  \"ocr_text\": \"{{ $json.ocr_text }}\",\n  \"image_analysis_json\": \"{{ $json.image_analysis_json }}\",\n\n  \"message_timestamp\": \"{{ $('Normalizar Evo Payload').first().json.message_timestamp }}\",\n  \"has_media\": {{ $('Normalizar Evo Payload').first().json.has_media }},\n  \"media_type\": \"{{ $('Normalizar Evo Payload').first().json.media_type }}\",\n  \"media_url\": \"{{ $('Normalizar Evo Payload').first().json.media_url }}\",\n  \"media_mime_type\": \"{{ $('Normalizar Evo Payload').first().json.media_mime_type }}\",\n\n  \"raw_payload\": {{ JSON.stringify($('Normalizar Evo Payload').first().json.raw_payload) }}\n}",
+        "jsonBody": "={\n  \"provider\": \"{{ $('Normalizar Evo Payload').first().json.provider }}\",\n  \"event\": \"{{ $('Normalizar Evo Payload').first().json.event }}\",\n  \"instance_name\": \"{{ $('Normalizar Evo Payload').first().json.instance_name }}\",\n  \"instance_id\": \"{{ $('Normalizar Evo Payload').first().json.instance_id }}\",\n  \"server_url\": \"{{ $('Normalizar Evo Payload').first().json.server_url }}\",\n\n  \"remote_jid\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid || $('Normalizar Evo Payload').first().json.customer_jid || $('Webhook Evo API').first().json.body?.data?.key?.remoteJid || '' }}\",\n  \"customer_jid\": \"{{ $('Normalizar Evo Payload').first().json.customer_jid || $('Normalizar Evo Payload').first().json.remote_jid || '' }}\",\n  \"remote_jid_alt\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid_alt }}\",\n  \"sender_identifier\": \"{{ $('Normalizar Evo Payload').first().json.sender_identifier }}\",\n  \"sender_name\": \"{{ $('Normalizar Evo Payload').first().json.sender_name }}\",\n\n  \"from_me\": false,\n  \"provider_message_id\": \"{{ $('Normalizar Evo Payload').first().json.provider_message_id }}\",\n  \"message_type\": \"{{ $('Normalizar Evo Payload').first().json.message_type }}\",\n  \"processed_type\": \"{{ $json.processed_type }}\",\n\n  \"content_text\": \"{{ $json.agent_input_text || $('Normalizar Evo Payload').first().json.content_text }}\",\n  \"caption_text\": \"{{ $('Normalizar Evo Payload').first().json.caption_text }}\",\n  \"transcription_text\": \"{{ $json.transcription_text }}\",\n  \"ocr_text\": \"{{ $json.ocr_text }}\",\n  \"image_analysis_json\": \"{{ $json.image_analysis_json }}\",\n\n  \"message_timestamp\": \"{{ $('Normalizar Evo Payload').first().json.message_timestamp }}\",\n  \"has_media\": {{ $('Normalizar Evo Payload').first().json.has_media }},\n  \"media_type\": \"{{ $('Normalizar Evo Payload').first().json.media_type }}\",\n  \"media_url\": \"{{ $('Normalizar Evo Payload').first().json.media_url }}\",\n  \"media_mime_type\": \"{{ $('Normalizar Evo Payload').first().json.media_mime_type }}\",\n\n  \"raw_payload\": {{ JSON.stringify($('Normalizar Evo Payload').first().json.raw_payload) }}\n}",
         "options": {
           "timeout": 30000
         }
@@ -2074,7 +2074,7 @@
             },
             {
               "name": "values",
-              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `Array de valores a insertar como nueva fila`, 'array') }}"
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `JSON string con array de valores a insertar como nueva fila, ej: [\"valor1\",\"valor2\",\"valor3\"]`, 'string') }}"
             },
             {
               "name": "sheet",
@@ -2135,7 +2135,7 @@
             },
             {
               "name": "values",
-              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `Array de valores nuevos para la fila`, 'array') }}"
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `JSON string con array de valores nuevos para la fila, ej: [\"valor1\",\"valor2\",\"valor3\"]`, 'string') }}"
             },
             {
               "name": "sheet",
@@ -2153,6 +2153,92 @@
       ],
       "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
       "name": "donna_business_sheets_update_row"
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('POST Donna Business Ingest').first().json.config?.wait_seconds || 10 }}",
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        21952,
+        6992
+      ],
+      "id": "b8c2e4f6-9a1d-4e7b-8f2a-5c6d3e1f9b0a",
+      "name": "Esperar mensajes",
+      "webhookId": "e7f3a5b1-2c8d-4f6e-9b0a-3d4c5e6f7a8b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/donna/business/should-respond",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Donna-Key",
+              "value": "donna-secret-key-pablin-712"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"conversation_id\": {{ $('POST Donna Business Ingest').first().json.conversation?.id }},\n  \"message_id\": {{ $('POST Donna Business Ingest').first().json.message?.id }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        22160,
+        6992
+      ],
+      "id": "c9d3f5a7-1b2e-4c6d-8e0f-9a4b5c6d7e8f",
+      "name": "¿Debo responder?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "debe-responder-condition-001",
+              "leftValue": "={{ $json.debe_responder }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        22368,
+        6992
+      ],
+      "id": "d4e5f6a7-8b9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "¿Es el mensaje más reciente?"
     }
   ],
   "connections": {
@@ -2349,7 +2435,7 @@
       "main": [
         [
           {
-            "node": "¿Donna Business permitida?",
+            "node": "Esperar mensajes",
             "type": "main",
             "index": 0
           }
@@ -2661,6 +2747,40 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Esperar mensajes": {
+      "main": [
+        [
+          {
+            "node": "¿Debo responder?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Debo responder?": {
+      "main": [
+        [
+          {
+            "node": "¿Es el mensaje más reciente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es el mensaje más reciente?": {
+      "main": [
+        [
+          {
+            "node": "¿Donna Business permitida?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },

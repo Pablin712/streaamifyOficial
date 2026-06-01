@@ -18,7 +18,7 @@ class DonnaAgentConfig extends Model
         'working_hours_json', 'human_handoff_msg',
         'spreadsheet_id', 'spreadsheet_name', 'calendar_id',
         'knowledge_enabled', 'calendar_enabled', 'sheets_enabled',
-        'human_takeover_enabled', 'max_tool_calls',
+        'human_takeover_enabled', 'max_tool_calls', 'wait_seconds',
         'is_active',
     ];
 
@@ -29,6 +29,7 @@ class DonnaAgentConfig extends Model
         'calendar_enabled'       => 'boolean',
         'sheets_enabled'         => 'boolean',
         'human_takeover_enabled' => 'boolean',
+        'wait_seconds'           => 'integer',
     ];
 
     public function cliente()
