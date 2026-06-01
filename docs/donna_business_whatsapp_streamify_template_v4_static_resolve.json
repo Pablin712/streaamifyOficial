@@ -9,10 +9,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        19456,
-        6848
+        27296,
+        9584
       ],
-      "id": "598235b3-f066-4158-83f8-0167db06936a",
+      "id": "a32bfcd9-2652-4aa5-86b4-a89bab884315",
       "name": "Webhook Evo API",
       "webhookId": "a0ab275c-3741-43bc-be5a-4a74cc408188"
     },
@@ -23,10 +23,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        20048,
-        6832
+        27888,
+        9568
       ],
-      "id": "99720b57-f43e-428b-9a4b-f21f895e27d2",
+      "id": "2e75f1ea-4158-4186-92ef-885c389283c7",
       "name": "Normalizar Evo Payload"
     },
     {
@@ -88,10 +88,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        20352,
-        6848
+        28192,
+        9584
       ],
-      "id": "0a8ba82e-7a08-42c4-9652-7325318e4796",
+      "id": "bc53efc2-f770-4984-8efa-c8c8d22a9fd0",
       "name": "¿fromMe?"
     },
     {
@@ -125,10 +125,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        20560,
-        6704
+        28400,
+        9440
       ],
-      "id": "55e07789-fd18-4119-bcf0-4e4d0067a171",
+      "id": "819c3e99-c718-4276-b14c-983775790d63",
       "name": "POST Ingest fromMe / Ignorar loop"
     },
     {
@@ -240,10 +240,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        20576,
-        6960
+        28416,
+        9696
       ],
-      "id": "3daf66af-d761-4a63-914b-bb2e0fab0d4f",
+      "id": "eaf6ac55-c43d-4de5-83b2-c26c9ad27c88",
       "name": "Switch tipo de mensaje"
     },
     {
@@ -287,10 +287,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        20784,
-        6752
+        28624,
+        9488
       ],
-      "id": "1676a509-f249-472d-9177-1d756df29417",
+      "id": "a39c2b43-9e30-4539-954d-7f77dfca5926",
       "name": "Preparar texto para ingest"
     },
     {
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        20784,
-        6928
+        28624,
+        9664
       ],
-      "id": "f8b84eac-57d9-4c02-99a6-ac947ccdad11",
+      "id": "67fd22f9-6ee1-4e55-a9bb-37e731d1db51",
       "name": "Get audio"
     },
     {
@@ -343,10 +343,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        21024,
-        6928
+        28864,
+        9664
       ],
-      "id": "e910f281-bc1f-4e63-8b1f-9c411f1d2f91",
+      "id": "766502db-f371-4b8c-b301-e22f1d7a1507",
       "name": "Convert audio"
     },
     {
@@ -358,10 +358,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        21264,
-        6928
+        29104,
+        9664
       ],
-      "id": "52b67332-a00a-4e3b-abd4-43146601c1d6",
+      "id": "b36ed155-9a63-44bb-9496-3c7730d0d253",
       "name": "Transcribe",
       "credentials": {
         "openAiApi": {
@@ -411,10 +411,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        21504,
-        6928
+        29344,
+        9664
       ],
-      "id": "6ef39f75-9281-45a3-8665-a57873243434",
+      "id": "758f6e64-ff57-42cc-93c4-0e7ffae53fb5",
       "name": "Preparar audio para ingest"
     },
     {
@@ -450,10 +450,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        20784,
-        7120
+        28624,
+        9856
       ],
-      "id": "52f5c1cd-414f-4702-b815-d8199c44c346",
+      "id": "3a605908-9c09-4e47-9a99-3139c9ac056b",
       "name": "Get imagen"
     },
     {
@@ -467,10 +467,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        21024,
-        7120
+        28864,
+        9856
       ],
-      "id": "37da7dcc-cd02-4515-8500-36a3cb71fd76",
+      "id": "c5d35156-4bec-46ac-bde9-abc274d60aea",
       "name": "Convert image"
     },
     {
@@ -490,10 +490,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        21264,
-        7120
+        29104,
+        9856
       ],
-      "id": "4d16954a-1ced-46be-a35d-d597cffa643f",
+      "id": "3a5e8ca7-9cda-4fb0-ae4b-4f46bbb76256",
       "name": "Analyze",
       "credentials": {
         "openAiApi": {
@@ -509,10 +509,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        21504,
-        7120
+        29344,
+        9856
       ],
-      "id": "bfac6d47-6030-4f07-b340-b85a3bd557d4",
+      "id": "feebc3cd-5496-44e9-9082-7838a95346d5",
       "name": "Parsear imagen"
     },
     {
@@ -556,10 +556,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        20784,
-        7312
+        28624,
+        10048
       ],
-      "id": "53755ea6-bc15-4754-9170-53dc005049e6",
+      "id": "7a57012f-1ebc-4208-b3f4-ac2009d654c7",
       "name": "Preparar documento/otro para ingest"
     },
     {
@@ -593,10 +593,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        21760,
-        6992
+        29600,
+        9728
       ],
-      "id": "5ae3a469-12bc-412f-b257-da5447a35166",
+      "id": "0a7ce77f-75c5-44a5-92f3-5c75249225fa",
       "name": "POST Donna Business Ingest"
     },
     {
@@ -614,7 +614,7 @@
                 "conditions": [
                   {
                     "id": "d5811c1a-e4fb-4c63-8435-4e93d16e421f",
-                    "leftValue": "={{ $json.allowed ? 'allowed' : 'blocked' }}",
+                    "leftValue": "={{ $('POST Donna Business Ingest').first().json.allowed ? 'allowed' : 'blocked' }}",
                     "rightValue": "allowed",
                     "operator": {
                       "type": "string",
@@ -638,7 +638,7 @@
                 "conditions": [
                   {
                     "id": "e4d4c84c-ec77-4afa-b33d-76438f7d8b94",
-                    "leftValue": "={{ $json.allowed ? 'allowed' : 'blocked' }}",
+                    "leftValue": "={{ $('POST Donna Business Ingest').first().json.allowed ? 'allowed' : 'blocked' }}",
                     "rightValue": "blocked",
                     "operator": {
                       "type": "string",
@@ -658,10 +658,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        22016,
-        6992
+        30336,
+        9712
       ],
-      "id": "53162ba2-746a-4256-8a54-c08606ebf5aa",
+      "id": "fb835775-d748-415e-8d1c-3dac4aa886a2",
       "name": "¿Donna Business permitida?"
     },
     {
@@ -693,10 +693,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        22256,
-        7200
+        30544,
+        9936
       ],
-      "id": "0e028f55-abc5-4c49-8c1d-4cf87736539f",
+      "id": "5a41d04a-c509-471b-8d52-bdb158ec8cc8",
       "name": "No responder / Servicio bloqueado"
     },
     {
@@ -707,23 +707,23 @@
           "parameters": [
             {
               "name": "client_id",
-              "value": "={{ $json.client.id }}"
+              "value": "={{ $('POST Donna Business Ingest').item.json.client.id }}"
             },
             {
               "name": "service_id",
-              "value": "={{ $json.service.id }}"
+              "value": "={{ $('POST Donna Business Ingest').item.json.service.id }}"
             },
             {
               "name": "channel_id",
-              "value": "={{ $json.channel.id }}"
+              "value": "={{ $('POST Donna Business Ingest').item.json.channel.id }}"
             },
             {
               "name": "conversation_id",
-              "value": "={{ $json.conversation.id }}"
+              "value": "={{ $('POST Donna Business Ingest').item.json.conversation.id }}"
             },
             {
               "name": "message_id",
-              "value": "={{ $json.message.id }}"
+              "value": "={{ $('POST Donna Business Ingest').item.json.message.id }}"
             }
           ]
         },
@@ -747,10 +747,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        22256,
-        6880
+        30544,
+        9616
       ],
-      "id": "41a78cf2-cde4-4b1a-900d-0a367942577d",
+      "id": "0b4e9353-665d-421d-accf-f83c79c42118",
       "name": "GET Donna Business Context"
     },
     {
@@ -820,7 +820,7 @@
             {
               "id": "37ced78b-b31e-45d1-8b37-a6ed39920b79",
               "name": "input_text",
-              "value": "={{ $('POST Donna Business Ingest').first().json.message.content_for_agent || $('POST Donna Business Ingest').first().json.message.content_text || $('Normalizar Evo Payload').first().json.content_text }}",
+              "value": "={{ $json.context?.mensaje_agrupado || $('POST Donna Business Ingest').first().json.message?.content_for_agent || $('POST Donna Business Ingest').first().json.message?.content_text || $('Normalizar Evo Payload').first().json.content_text || '' }}",
               "type": "string"
             },
             {
@@ -834,6 +834,18 @@
               "name": "instance_name",
               "value": "={{ $json.channel.instance_name || $('Normalizar Evo Payload').first().json.instance_name }}",
               "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "name": "mensaje_agrupado",
+              "value": "={{ $json.context?.mensaje_agrupado || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+              "name": "historial_reciente",
+              "value": "={{ $json.context?.historial_reciente || '' }}",
+              "type": "string"
             }
           ]
         },
@@ -842,16 +854,16 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        22496,
-        6880
+        30784,
+        9616
       ],
-      "id": "964d4296-503f-4fdc-be95-8709cd7cea5f",
+      "id": "46799c35-36c2-4a7e-83d0-e71fd3c834b5",
       "name": "Guardar contexto Business"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $('Guardar contexto Business').first().json.input_text }}",
+        "text": "={{ ($('Guardar contexto Business').first().json.historial_reciente ? 'HISTORIAL DE CONVERSACIÓN:\\n' + $('Guardar contexto Business').first().json.historial_reciente + '\\n\\n' : '') + 'MENSAJE ACTUAL:\\n' + $('Guardar contexto Business').first().json.input_text }}",
         "options": {
           "systemMessage": "={{ $('Guardar contexto Business').first().json.system_message }}"
         }
@@ -859,10 +871,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        22784,
-        6880
+        31072,
+        9616
       ],
-      "id": "06043d80-c545-4595-bd3f-8254591cb13d",
+      "id": "bfafa4d9-c7cc-46e7-8892-a34384448163",
       "name": "AI Agent Donna Business"
     },
     {
@@ -872,10 +884,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        22576,
-        7136
+        30864,
+        9872
       ],
-      "id": "58aa82ae-9c26-416d-8599-3110c793215e",
+      "id": "db03f29f-744d-488c-8002-b775c0e6b6fb",
       "name": "DeepSeek Chat Model",
       "credentials": {
         "deepSeekApi": {
@@ -892,10 +904,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        22768,
-        7136
+        31056,
+        9872
       ],
-      "id": "7ac4dd28-3a2d-4234-8bce-50cffe40f71c",
+      "id": "af1f9835-4bf7-4eb1-b97d-b5399aa1d354",
       "name": "Simple Memory Business"
     },
     {
@@ -907,10 +919,10 @@
       "type": "n8n-nodes-base.dateTimeTool",
       "typeVersion": 2,
       "position": [
-        22976,
-        7136
+        31264,
+        9872
       ],
-      "id": "bf648bf2-24f3-4997-bd53-b0cc82f7bea6",
+      "id": "75b7943f-3122-42da-8802-4e90ac3483f3",
       "name": "Date & Time"
     },
     {
@@ -920,10 +932,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        23072,
-        6880
+        31360,
+        9616
       ],
-      "id": "bb5370a1-6d9f-482b-8be1-1d6af9e17440",
+      "id": "9f70b62d-f815-46f2-8369-4667fd5002d8",
       "name": "Formatear respuesta WhatsApp"
     },
     {
@@ -949,10 +961,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        23312,
-        6880
+        31600,
+        9616
       ],
-      "id": "d0ef0aaf-6d4d-41ef-9c0d-7e3b489ccec9",
+      "id": "fc6bd976-005c-4225-bf5e-b07159d70927",
       "name": "Respuesta final"
     },
     {
@@ -986,10 +998,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        23552,
-        6880
+        31840,
+        9616
       ],
-      "id": "441f4976-d811-4b4c-a3b5-38a046e360cc",
+      "id": "9b82e1dc-03ac-4189-ac12-b41847acde82",
       "name": "Enviar mensaje Evo API"
     },
     {
@@ -1023,10 +1035,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        23792,
-        6880
+        32080,
+        9616
       ],
-      "id": "bbd73293-58fe-4627-b1cd-1bf3da679005",
+      "id": "cb7cdc5f-ed80-48c1-b8f2-b9ebe82ddde3",
       "name": "POST Donna Business Save Respond"
     },
     {
@@ -1039,10 +1051,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        19632,
-        6272
+        27472,
+        9008
       ],
-      "id": "b201cea2-be65-4e79-9847-e77f66812e31",
+      "id": "e31741a4-6af1-472d-9104-29e281c60ef4",
       "name": "Nota variables"
     },
     {
@@ -1104,10 +1116,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        20208,
-        6832
+        28048,
+        9568
       ],
-      "id": "ea12055c-9eb7-480d-a851-8dba8cdafd13",
+      "id": "4d6b3ed8-8e67-4c92-aaa0-9130ae77d83d",
       "name": "¿Ignorar grupo?"
     },
     {
@@ -1151,10 +1163,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        20416,
-        6528
+        28256,
+        9264
       ],
-      "id": "e87c5940-9bd0-4bbe-b5d2-5c028c3d1266",
+      "id": "56eb0546-647d-4032-abe0-849acd3aa154",
       "name": "Grupo ignorado"
     },
     {
@@ -1188,10 +1200,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        19696,
-        6848
+        27536,
+        9584
       ],
-      "id": "ae57382c-4ab9-4b41-85b5-7c0fdf46124b",
+      "id": "3bd8f489-b5c5-41a5-8ace-f7794dee2f9d",
       "name": "Resolver cliente/canal Streamify",
       "notes": "Resuelve client_id/service_id/channel_id y devuelve la apikey de Evo API de la instancia. Endpoint a implementar en Laravel si aún no existe."
     },
@@ -1205,10 +1217,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        20768,
-        6384
+        28608,
+        9120
       ],
-      "id": "65b4bb69-39e3-4117-ba2a-af2685451e44",
+      "id": "ad97ed14-fec8-492f-a970-20bdc6302f48",
       "name": "Nota v4 static config"
     },
     {
@@ -1270,10 +1282,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        19856,
-        6848
+        27696,
+        9584
       ],
-      "id": "2c689b6b-586d-4468-a43c-74ad1909a454",
+      "id": "fcc403fa-33df-4442-a205-8c68551fb685",
       "name": "¿Donna Business activa?"
     },
     {
@@ -1311,10 +1323,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        20064,
-        7040
+        27904,
+        9776
       ],
-      "id": "34b5c4d3-a7db-43f2-bc19-6a99b2ebdac6",
+      "id": "a8d42c99-b5c1-4f07-b744-e7d6084137b6",
       "name": "Servicio Donna Business inactivo"
     },
     {
@@ -1372,10 +1384,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23136,
-        7136
+        31424,
+        9872
       ],
-      "id": "646b1e0d-fa37-4985-ba01-1b4751702b79",
+      "id": "91722b59-83bd-4bd4-a0eb-176097f917d0",
       "name": "donna_business_knowledge_search"
     },
     {
@@ -1441,10 +1453,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23312,
-        7136
+        31600,
+        9872
       ],
-      "id": "8b62750d-db32-4342-95d5-5bf7ce3bba95",
+      "id": "4300e01e-2047-4c8c-b17f-6f7c12c29ce2",
       "name": "donna_business_customer_context_search"
     },
     {
@@ -1502,10 +1514,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23472,
-        7136
+        31760,
+        9872
       ],
-      "id": "b8b08887-8d1c-4281-87dd-6b872bc9486e",
+      "id": "b0bc1109-a0f2-49a5-83a8-beff4e71c150",
       "name": "donna_business_memory_search"
     },
     {
@@ -1567,10 +1579,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        22800,
-        7456
+        31088,
+        10192
       ],
-      "id": "f8139f58-aace-4af2-a652-7f1f385b28da",
+      "id": "93e57681-f0ca-4ecf-98ff-9b00e8e494af",
       "name": "donna_business_calendar_freebusy"
     },
     {
@@ -1632,10 +1644,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        22992,
-        7456
+        31280,
+        10192
       ],
-      "id": "1575cad5-0af4-4af3-9ca8-75c563db8b7b",
+      "id": "fcec11b7-8a90-4484-9bd0-3a05d48eca5e",
       "name": "donna_business_calendar_list_events"
     },
     {
@@ -1709,10 +1721,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23168,
-        7456
+        31456,
+        10192
       ],
-      "id": "498bfa34-2994-4c8b-a4f9-cf36517da3d5",
+      "id": "ea7de9cf-d957-4391-83a8-fef197b877cf",
       "name": "donna_business_calendar_create_event"
     },
     {
@@ -1786,10 +1798,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23360,
-        7456
+        31648,
+        10192
       ],
-      "id": "141618ae-5e0d-460d-9659-66be4778b166",
+      "id": "8e6efc58-5719-4518-975b-b8bda3e69e01",
       "name": "donna_business_calendar_update_event"
     },
     {
@@ -1843,10 +1855,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23552,
-        7456
+        31840,
+        10192
       ],
-      "id": "1e84b2df-2d3a-49d6-9545-6415537ffd3b",
+      "id": "6452e61f-1719-4974-aa92-fd0e6934382e",
       "name": "donna_business_calendar_delete_event"
     },
     {
@@ -1904,10 +1916,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23632,
-        7136
+        31920,
+        9872
       ],
-      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "id": "5d3b11dd-a192-4915-96b1-65e4d183fad1",
       "name": "donna_business_data_query"
     },
     {
@@ -1977,10 +1989,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23808,
-        7136
+        32096,
+        9872
       ],
-      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "id": "f20789aa-215a-4e92-b66d-6e529b8404f7",
       "name": "donna_business_upsert_lead"
     },
     {
@@ -2030,10 +2042,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23632,
-        7312
+        31920,
+        10048
       ],
-      "id": "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+      "id": "a2f06d6f-27ee-4cb1-acfe-6e62ea20d8d2",
       "name": "donna_business_sheets_get_rows"
     },
     {
@@ -2087,10 +2099,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23808,
-        7312
+        32096,
+        10048
       ],
-      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "id": "d88c6c5b-bc84-4da8-a254-14517edaebd5",
       "name": "donna_business_sheets_append_row"
     },
     {
@@ -2148,24 +2160,23 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        23984,
-        7312
+        32272,
+        10048
       ],
-      "id": "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+      "id": "0ceebbb7-b7b0-47a6-b543-01e110550d47",
       "name": "donna_business_sheets_update_row"
     },
     {
       "parameters": {
-        "amount": "={{ $('POST Donna Business Ingest').first().json.config?.wait_seconds || 10 }}",
-        "unit": "seconds"
+        "amount": "={{ $('POST Donna Business Ingest').first().json.config?.wait_seconds || 10 }}"
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        21952,
-        6992
+        29760,
+        9728
       ],
-      "id": "b8c2e4f6-9a1d-4e7b-8f2a-5c6d3e1f9b0a",
+      "id": "effb6bef-0911-4b2e-aee4-c565d2df0a74",
       "name": "Esperar mensajes",
       "webhookId": "e7f3a5b1-2c8d-4f6e-9b0a-3d4c5e6f7a8b"
     },
@@ -2200,10 +2211,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        22160,
-        6992
+        29936,
+        9728
       ],
-      "id": "c9d3f5a7-1b2e-4c6d-8e0f-9a4b5c6d7e8f",
+      "id": "2ac8057f-80a2-4165-8e4b-d42732037c08",
       "name": "¿Debo responder?"
     },
     {
@@ -2234,10 +2245,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        22368,
-        6992
+        30112,
+        9728
       ],
-      "id": "d4e5f6a7-8b9c-4d0e-1f2a-3b4c5d6e7f8a",
+      "id": "625d45fb-ef72-48ae-a4f1-a59c53d1e002",
       "name": "¿Es el mensaje más reciente?"
     }
   ],
@@ -2779,8 +2790,7 @@
             "type": "main",
             "index": 0
           }
-        ],
-        []
+        ]
       ]
     }
   },
@@ -2790,7 +2800,7 @@
         "headers": {
           "host": "autobot.aaronsoft.es",
           "user-agent": "axios/1.13.2",
-          "content-length": "1412",
+          "content-length": "1400",
           "accept": "application/json, text/plain, */*",
           "accept-encoding": "gzip, compress, deflate, br",
           "content-type": "application/json",
@@ -2811,14 +2821,14 @@
               "remoteJid": "593961412826@s.whatsapp.net",
               "remoteJidAlt": "593961412826@s.whatsapp.net",
               "fromMe": false,
-              "id": "2AE88DA777AED01C1525",
+              "id": "2AE8600680755A39EBAF",
               "participant": "",
               "addressingMode": "lid"
             },
             "pushName": "Streamify",
             "status": "DELIVERY_ACK",
             "message": {
-              "conversation": "Qué puedes hacer?",
+              "conversation": "Ese proyecto",
               "messageContextInfo": {
                 "threadId": [],
                 "deviceListMetadata": {
@@ -2861,48 +2871,48 @@
                 },
                 "deviceListMetadataVersion": 2,
                 "messageSecret": {
-                  "0": 106,
-                  "1": 79,
-                  "2": 165,
-                  "3": 237,
-                  "4": 157,
-                  "5": 180,
-                  "6": 139,
-                  "7": 254,
-                  "8": 142,
-                  "9": 222,
-                  "10": 180,
-                  "11": 161,
-                  "12": 177,
-                  "13": 47,
-                  "14": 166,
-                  "15": 117,
-                  "16": 92,
-                  "17": 232,
-                  "18": 155,
-                  "19": 129,
-                  "20": 69,
-                  "21": 96,
-                  "22": 11,
-                  "23": 24,
-                  "24": 87,
-                  "25": 171,
-                  "26": 84,
-                  "27": 151,
-                  "28": 108,
-                  "29": 186,
-                  "30": 179,
-                  "31": 212
+                  "0": 208,
+                  "1": 52,
+                  "2": 145,
+                  "3": 63,
+                  "4": 67,
+                  "5": 80,
+                  "6": 242,
+                  "7": 67,
+                  "8": 4,
+                  "9": 192,
+                  "10": 92,
+                  "11": 63,
+                  "12": 235,
+                  "13": 80,
+                  "14": 143,
+                  "15": 159,
+                  "16": 161,
+                  "17": 33,
+                  "18": 124,
+                  "19": 123,
+                  "20": 33,
+                  "21": 116,
+                  "22": 111,
+                  "23": 169,
+                  "24": 158,
+                  "25": 177,
+                  "26": 179,
+                  "27": 4,
+                  "28": 93,
+                  "29": 247,
+                  "30": 222,
+                  "31": 127
                 }
               }
             },
             "messageType": "conversation",
-            "messageTimestamp": 1780076742,
+            "messageTimestamp": 1780338945,
             "instanceId": "9758fb02-13d4-4965-81e7-99579d4c3049",
             "source": "unknown"
           },
           "destination": "https://autobot.aaronsoft.es/webhook/donna-business-whatsapp",
-          "date_time": "2026-05-29T17:45:42.589Z",
+          "date_time": "2026-06-01T18:35:45.902Z",
           "sender": "593961778319@s.whatsapp.net",
           "server_url": "https://evoapi.abigailsoft.com",
           "apikey": null

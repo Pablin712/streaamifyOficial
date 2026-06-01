@@ -57,7 +57,9 @@ class DonnaBusinessContextService
             ? max(0, (int) now()->diffInDays($sub->expires_at, false))
             : null;
 
-        $recentMessages = $conversation->recentMessages(20);
+        $recentMessages   = $conversation->recentMessages(20);
+        $mensajeAgrupado  = $this->buildMensajeAgrupado($conversation, $message);
+        $historialReciente = $this->buildHistorialText($conversation, $message);
 
         return [
             'success' => true,
@@ -102,6 +104,10 @@ class DonnaBusinessContextService
                 'tone'           => $tone,
                 'system_message' => $systemMessage,
                 'max_tool_calls' => $maxTools,
+            ],
+            'context' => [
+                'mensaje_agrupado'   => $mensajeAgrupado,
+                'historial_reciente' => $historialReciente,
             ],
             'memory' => [
                 'session_key'     => "donna-business:{$clientId}:{$conversation->id}",
@@ -169,6 +175,60 @@ class DonnaBusinessContextService
             $config, $calendarEnabled, $sheetsEnabled, $knowledgeEnabled,
             $workingHours, $lunchBreak
         );
+    }
+
+    /**
+     * Agrupa todos los mensajes inbound desde trigger_message_id en adelante.
+     * Esto permite al agente responder a rafagas de mensajes como un solo turno.
+     */
+    private function buildMensajeAgrupado(DonnaConversation $conversation, ?DonnaMessage $triggerMessage): string
+    {
+        if (!$triggerMessage) {
+            return '';
+        }
+
+        $pending = DonnaMessage::where('conversation_id', $conversation->id)
+            ->where('id', '>=', $triggerMessage->id)
+            ->where('direction', 'inbound')
+            ->orderBy('id')
+            ->get();
+
+        if ($pending->isEmpty()) {
+            return $triggerMessage->effective_text ?? '';
+        }
+
+        return $pending
+            ->map(fn ($m) => $m->transcription_text ?? $m->ocr_text ?? $m->content_text ?? '')
+            ->filter(fn ($t) => $t !== '')
+            ->join("\n");
+    }
+
+    /**
+     * Genera el historial formateado de la conversación previo al mensaje trigger.
+     * Formato: "[Cliente]: texto\n[Donna]: texto\n..."
+     */
+    private function buildHistorialText(DonnaConversation $conversation, ?DonnaMessage $triggerMessage): string
+    {
+        $query = $conversation->messages()
+            ->whereIn('sender_type', ['final_customer', 'ai_agent'])
+            ->orderByDesc('id')
+            ->limit(15);
+
+        if ($triggerMessage) {
+            $query->where('id', '<', $triggerMessage->id);
+        }
+
+        $msgs = $query->get()->reverse()->values();
+
+        if ($msgs->isEmpty()) {
+            return '';
+        }
+
+        return $msgs->map(function ($m) {
+            $role = $m->sender_type === 'final_customer' ? 'Cliente' : 'Donna';
+            $text = $m->transcription_text ?? $m->ocr_text ?? $m->content_text ?? '';
+            return $text !== '' ? "[{$role}]: {$text}" : null;
+        })->filter()->join("\n");
     }
 
     private function buildSystemMessage(
