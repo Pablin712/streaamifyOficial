@@ -42,7 +42,7 @@ class ClienteDonnaKnowledgeController extends Controller
         );
     }
 
-    private function trySheetSync(int $clientId, DonnaKnowledgeItem $item, string $action): void
+    private function trySheetSync(int $clientId, DonnaKnowledgeItem $item, string $action): bool
     {
         try {
             $config = DonnaAgentConfig::where('client_id', $clientId)
@@ -52,22 +52,25 @@ class ClienteDonnaKnowledgeController extends Controller
                 ->whereNotNull('spreadsheet_id')
                 ->first();
 
-            if (!$config) return;
+            if (!$config) return false;
 
             $integ = DonnaIntegration::where('client_id', $clientId)
                 ->where('integration_type', 'google')
                 ->where('status', 'active')
                 ->first();
 
-            if (!$integ) return;
+            if (!$integ) return false;
 
             $token = $this->tokenService->getValidAccessToken($integ);
-            if (!$token) return;
+            if (!$token) {
+                Log::warning('DonnaKnowledge: token inválido o expirado', ['client_id' => $clientId]);
+                return false;
+            }
 
-            // Resincroniza todo para mantener consistencia (append puede crear duplicados en edición/borrado)
-            $this->sheetService->syncAllItems($token, $config->spreadsheet_id, $clientId);
+            return $this->sheetService->syncAllItems($token, $config->spreadsheet_id, $clientId);
         } catch (\Throwable $e) {
             Log::warning('DonnaKnowledge: sheet sync failed', ['client_id' => $clientId, 'error' => $e->getMessage()]);
+            return false;
         }
     }
 
@@ -100,9 +103,9 @@ class ClienteDonnaKnowledgeController extends Controller
             'is_active'         => true,
         ]);
 
-        $this->trySheetSync($cliente->idcli, $item, 'create');
+        $synced = $this->trySheetSync($cliente->idcli, $item, 'create');
 
-        return response()->json(['success' => true, 'item' => $item]);
+        return response()->json(['success' => true, 'item' => $item, 'sheet_synced' => $synced]);
     }
 
     public function update(Request $request, int $id)
@@ -127,9 +130,9 @@ class ClienteDonnaKnowledgeController extends Controller
             'source_url'   => $validated['source_url'] ?? null,
         ]);
 
-        $this->trySheetSync($cliente->idcli, $item, 'update');
+        $synced = $this->trySheetSync($cliente->idcli, $item, 'update');
 
-        return response()->json(['success' => true, 'item' => $item]);
+        return response()->json(['success' => true, 'item' => $item, 'sheet_synced' => $synced]);
     }
 
     public function destroy(int $id)

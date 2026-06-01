@@ -255,13 +255,10 @@ class DonnaBusinessContextService
         $now = now()->setTimezone($timezone)->format('Y-m-d H:i');
 
         $toolsSection = "HERRAMIENTAS DISPONIBLES:\n";
-        $toolsSection .= "- donna_business_data_query: consultar tablas internas del negocio\n";
+        $toolsSection .= "- donna_business_knowledge_search: buscar en la base de conocimientos del negocio (productos, servicios, precios, FAQs, políticas)\n";
+        $toolsSection .= "- donna_business_data_query: listar todos los ítems de un tipo específico (product, service, faq, policy) cuando se necesita un catálogo completo\n";
         $toolsSection .= "- donna_business_upsert_lead: registrar o actualizar lead/cliente final\n";
         $toolsSection .= "- donna_business_memory_search: consultar historial previo de este chat\n";
-
-        if ($knowledgeEnabled) {
-            $toolsSection .= "- donna_business_knowledge_search: buscar en la base de conocimientos del negocio\n";
-        }
         if ($calendarEnabled) {
             $toolsSection .= "- donna_business_calendar_freebusy: consultar disponibilidad antes de agendar\n";
             $toolsSection .= "- donna_business_calendar_list_events: listar eventos del calendario\n";
@@ -284,9 +281,7 @@ class DonnaBusinessContextService
         if ($lunchBreak) {
             $rulesSection .= "- Horario de almuerzo: {$lunchBreak} (no agendar en este horario).\n";
         }
-        if ($knowledgeEnabled) {
-            $rulesSection .= "- OBLIGATORIO: Antes de responder sobre productos, servicios, precios, catálogo, políticas o cualquier información específica del negocio, SIEMPRE llama a donna_business_knowledge_search. NUNCA respondas sobre el negocio desde tu conocimiento propio ni inventes información.\n";
-        }
+        $rulesSection .= "- OBLIGATORIO: Antes de responder sobre productos, servicios, precios, catálogo, políticas o cualquier información específica del negocio, SIEMPRE llama a donna_business_knowledge_search. NUNCA respondas sobre el negocio desde tu conocimiento propio ni inventes información.\n";
         if ($calendarEnabled) {
             $rulesSection .= "- Antes de agendar, usa donna_business_calendar_freebusy para verificar disponibilidad.\n";
             $rulesSection .= "- Confirma la cita solo si create_event devuelve success=true.\n";

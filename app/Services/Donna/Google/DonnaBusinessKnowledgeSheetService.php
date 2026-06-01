@@ -85,18 +85,29 @@ class DonnaBusinessKnowledgeSheetService
             ->orderBy('id')
             ->get();
 
+        $rowsWritten = 0;
         if ($items->isNotEmpty()) {
-            $rows = $items->map(fn ($item) => $this->itemToRow($item))->all();
-            $this->http($token)->post(
+            $rows    = $items->map(fn ($item) => $this->itemToRow($item))->all();
+            $written = $this->http($token)->post(
                 self::BASE . "/{$spreadsheetId}/values/" . self::SHEET_NAME . "!A2:G?valueInputOption=USER_ENTERED",
                 ['values' => $rows]
             );
+            if (!$written->successful()) {
+                Log::warning('DonnaBusinessKnowledgeSheet: error al escribir filas', [
+                    'spreadsheet_id' => $spreadsheetId,
+                    'status'         => $written->status(),
+                    'body'           => $written->json(),
+                ]);
+            } else {
+                $rowsWritten = count($rows);
+            }
         }
 
         return [
             'success'         => true,
             'spreadsheet_id'  => $spreadsheetId,
             'spreadsheet_url' => "https://docs.google.com/spreadsheets/d/{$spreadsheetId}",
+            'rows_written'    => $rowsWritten,
         ];
     }
 
