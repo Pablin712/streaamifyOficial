@@ -41,9 +41,16 @@ class DonnaBusinessContextService
         $tone         = $config?->tone ?? 'profesional, amable y directa';
         $maxTools     = $config?->max_tool_calls ?? 8;
 
+        $wh = $config?->working_hours_json ?? [];
+        $workingHours = ($wh['start'] ?? null) && ($wh['end'] ?? null)
+            ? ($wh['start'] . ' a ' . $wh['end'])
+            : null;
+        $lunchBreak = $wh['lunch'] ?? null;
+
         $systemMessage = $this->buildSystemMessage(
             $agentName, $businessName, $timezone, $language, $tone,
-            $config, $calendarEnabled, $sheetsEnabled, $knowledgeEnabled
+            $config, $calendarEnabled, $sheetsEnabled, $knowledgeEnabled,
+            $workingHours, $lunchBreak
         );
 
         $daysRemaining = $sub->expires_at
@@ -138,6 +145,32 @@ class DonnaBusinessContextService
         ];
     }
 
+    public function getSystemMessagePreview(?DonnaAgentConfig $config, ?DonnaIntegration $integ): string
+    {
+        $agentName    = $config?->agent_name ?? 'Donna';
+        $businessName = $config?->business_name ?? 'el negocio';
+        $timezone     = $config?->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil');
+        $language     = $config?->language ?? 'es';
+        $tone         = $config?->tone ?? 'profesional, amable y directa';
+
+        $googleConnected  = $integ !== null && $integ->isActive();
+        $calendarEnabled  = $googleConnected && ($config?->calendar_enabled ?? false);
+        $sheetsEnabled    = $googleConnected && ($config?->sheets_enabled ?? false);
+        $knowledgeEnabled = $config?->knowledge_enabled ?? false;
+
+        $wh = $config?->working_hours_json ?? [];
+        $workingHours = ($wh['start'] ?? null) && ($wh['end'] ?? null)
+            ? ($wh['start'] . ' a ' . $wh['end'])
+            : null;
+        $lunchBreak = $wh['lunch'] ?? null;
+
+        return $this->buildSystemMessage(
+            $agentName, $businessName, $timezone, $language, $tone,
+            $config, $calendarEnabled, $sheetsEnabled, $knowledgeEnabled,
+            $workingHours, $lunchBreak
+        );
+    }
+
     private function buildSystemMessage(
         string $agentName,
         string $businessName,
@@ -147,12 +180,14 @@ class DonnaBusinessContextService
         ?DonnaAgentConfig $config,
         bool $calendarEnabled,
         bool $sheetsEnabled,
-        bool $knowledgeEnabled
+        bool $knowledgeEnabled,
+        ?string $workingHours = null,
+        ?string $lunchBreak = null
     ): string {
         if ($config?->main_prompt) {
             return str_replace(
-                ['{{now}}', '{{timezone}}', '{{agent_name}}', '{{business_name}}'],
-                [now()->setTimezone($timezone)->format('Y-m-d H:i'), $timezone, $agentName, $businessName],
+                ['{{now}}', '{{timezone}}', '{{agent_name}}', '{{business_name}}', '{{working_hours}}', '{{lunch_break}}'],
+                [now()->setTimezone($timezone)->format('Y-m-d H:i'), $timezone, $agentName, $businessName, $workingHours ?? '', $lunchBreak ?? ''],
                 $config->main_prompt
             );
         }
@@ -183,6 +218,12 @@ class DonnaBusinessContextService
         $rulesSection = "REGLAS:\n";
         $rulesSection .= "- Responde de forma breve, clara y en tono: {$tone}.\n";
         $rulesSection .= "- No inventes precios, horarios ni información que no tengas.\n";
+        if ($workingHours) {
+            $rulesSection .= "- Horario de atención: {$workingHours}.\n";
+        }
+        if ($lunchBreak) {
+            $rulesSection .= "- Horario de almuerzo: {$lunchBreak} (no agendar en este horario).\n";
+        }
         if ($knowledgeEnabled) {
             $rulesSection .= "- Ante preguntas sobre productos, precios o servicios usa donna_business_knowledge_search.\n";
         }

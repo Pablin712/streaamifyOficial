@@ -33,10 +33,14 @@ class DonnaPersonalContextService
 
         $googleEmail = $integ?->metadata_json['email'] ?? null;
 
+        $wh = $config?->working_hours_json ?? [];
+        $workingHours = ($wh['start'] ?? '09:00') . ' a ' . ($wh['end'] ?? '20:00');
+        $lunchBreak   = $wh['lunch'] ?? '13:00';
+
         $systemMessage = $this->buildSystemMessage(
             $agentName, $timezone, $googleEmail,
             $config?->main_prompt, $config?->personal_context,
-            $spreadsheetId !== null
+            $spreadsheetId !== null, $workingHours, $lunchBreak
         );
 
         $googleConnected     = $integ !== null;
@@ -112,13 +116,18 @@ class DonnaPersonalContextService
 
     public function getSystemMessagePreview(?DonnaAgentConfig $config, ?string $googleEmail): string
     {
-        $agentName     = $config?->agent_name ?? 'Donna';
-        $timezone      = $config?->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil');
+        $agentName    = $config?->agent_name ?? 'Donna';
+        $timezone     = $config?->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil');
         $sheetsEnabled = $config?->spreadsheet_id !== null;
+
+        $wh = $config?->working_hours_json ?? [];
+        $workingHours = ($wh['start'] ?? '09:00') . ' a ' . ($wh['end'] ?? '20:00');
+        $lunchBreak   = $wh['lunch'] ?? '13:00';
 
         return $this->buildSystemMessage(
             $agentName, $timezone, $googleEmail,
-            $config?->main_prompt, $config?->personal_context, $sheetsEnabled
+            $config?->main_prompt, $config?->personal_context,
+            $sheetsEnabled, $workingHours, $lunchBreak
         );
     }
 
@@ -128,12 +137,14 @@ class DonnaPersonalContextService
         ?string $googleEmail,
         ?string $customPrompt,
         ?string $personalContext,
-        bool $sheetsEnabled
+        bool $sheetsEnabled,
+        string $workingHours = '09:00 a 20:00',
+        string $lunchBreak = '13:00'
     ): string {
         if ($customPrompt) {
             return str_replace(
-                ['{{now}}', '{{timezone}}', '{{agent_name}}'],
-                [now()->setTimezone($timezone)->format('Y-m-d H:i'), $timezone, $agentName],
+                ['{{now}}', '{{timezone}}', '{{agent_name}}', '{{working_hours}}', '{{lunch_break}}'],
+                [now()->setTimezone($timezone)->format('Y-m-d H:i'), $timezone, $agentName, $workingHours, $lunchBreak],
                 $customPrompt
             );
         }
@@ -145,6 +156,6 @@ class DonnaPersonalContextService
 
         $context = $personalContext ? "\nCONTEXTO PERSONAL:\n{$personalContext}\n" : '';
 
-        return "Eres {$agentName}, una secretaria personal inteligente.\n\nFecha actual: " . now()->setTimezone($timezone)->format('Y-m-d H:i') . "\nZona horaria: {$timezone}\n" . ($googleEmail ? "Cuenta Google: {$googleEmail}\n" : '') . "{$context}\nFUNCIONES:\n- Gestionar agenda desde Google Calendar.\n- Gestionar tareas desde Google Sheets.\n- Organizar el día del usuario.\n- Responder por Telegram de forma breve y clara.\n\nREGLAS:\n- Usa herramientas solo cuando sea necesario.\n- Consulta disponibilidad antes de agendar.\n- Horario permitido: 09:00 AM a 08:00 PM.\n- Nunca usar 01:00 PM (almuerzo).\n- No solapar eventos existentes.\n- No confirmes eventos si no fueron creados correctamente.\n- Si no tienes datos suficientes, pregunta.\n- Máximo 6 acciones por ejecución.\n- Sé breve y directo en las respuestas.\n\nHERRAMIENTAS DISPONIBLES:\n{$toolsList}";
+        return "Eres {$agentName}, una secretaria personal inteligente.\n\nFecha actual: " . now()->setTimezone($timezone)->format('Y-m-d H:i') . "\nZona horaria: {$timezone}\n" . ($googleEmail ? "Cuenta Google: {$googleEmail}\n" : '') . "{$context}\nFUNCIONES:\n- Gestionar agenda desde Google Calendar.\n- Gestionar tareas desde Google Sheets.\n- Organizar el día del usuario.\n- Responder por Telegram de forma breve y clara.\n\nREGLAS:\n- Usa herramientas solo cuando sea necesario.\n- Consulta disponibilidad antes de agendar.\n- Horario permitido: {$workingHours}.\n- Nunca usar {$lunchBreak} (almuerzo).\n- No solapar eventos existentes.\n- No confirmes eventos si no fueron creados correctamente.\n- Si no tienes datos suficientes, pregunta.\n- Máximo 6 acciones por ejecución.\n- Sé breve y directo en las respuestas.\n\nHERRAMIENTAS DISPONIBLES:\n{$toolsList}";
     }
 }

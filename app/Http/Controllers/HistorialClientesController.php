@@ -16,6 +16,7 @@ use App\Models\Recarga;
 use App\Models\Soporte;
 use App\Models\Venta;
 use App\Models\ViewUsuarioActivo;
+use App\Services\Donna\DonnaBusinessContextService;
 use App\Services\Donna\DonnaPersonalContextService;
 use App\Services\NetflixCodigoService;
 
@@ -84,6 +85,9 @@ class HistorialClientesController extends Controller
         $donnaSystemPreview = app(DonnaPersonalContextService::class)
             ->getSystemMessagePreview($donnaConfigPersonal, $donnaIntegracion?->metadata_json['email'] ?? null);
 
+        $donnaBusinessSystemPreview = app(DonnaBusinessContextService::class)
+            ->getSystemMessagePreview($donnaConfigBusiness, $donnaIntegracion);
+
         $donnaKnowledgeBase = DonnaKnowledgeBase::where('client_id', $idcli)->first();
         $donnaKnowledgeItems = $donnaKnowledgeBase
             ? DonnaKnowledgeItem::where('knowledge_base_id', $donnaKnowledgeBase->id)
@@ -97,7 +101,7 @@ class HistorialClientesController extends Controller
             'subPersonal', 'subBusiness',
             'canalTelegram', 'canalWhatsapp',
             'donnaConfigPersonal', 'donnaConfigBusiness',
-            'donnaSystemPreview',
+            'donnaSystemPreview', 'donnaBusinessSystemPreview',
             'donnaKnowledgeBase', 'donnaKnowledgeItems'
         ));
     }

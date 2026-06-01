@@ -1067,13 +1067,37 @@
                             </div>
                         @endif
 
-                        {{-- ══ DONNA PERSONAL ══════════════════════════════════ --}}
-                        @if($subPersonal)
-                        <hr class="my-4">
+                        @if($subPersonal || $subBusiness)
+                        {{-- Sub-tabs Donna --}}
+                        <ul class="nav nav-pills gap-1 mt-3 mb-4" id="donnaTipoTab" role="tablist">
+                            @if($subPersonal)
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-pill px-4 fw-semibold"
+                                        id="donna-personal-tab"
+                                        data-bs-toggle="tab" data-bs-target="#donna-personal-pane"
+                                        type="button" role="tab">
+                                    <i class="bi bi-person-circle me-1"></i>Personal
+                                    <span class="badge rounded-pill ms-1 bg-{{ $subPersonal->status_color }}" style="font-size:0.65rem;">{{ $subPersonal->status_label }}</span>
+                                </button>
+                            </li>
+                            @endif
+                            @if($subBusiness)
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {{ !$subPersonal ? 'active' : '' }} rounded-pill px-4 fw-semibold"
+                                        id="donna-business-tab"
+                                        data-bs-toggle="tab" data-bs-target="#donna-business-pane"
+                                        type="button" role="tab">
+                                    <i class="bi bi-briefcase-fill me-1"></i>Business
+                                    <span class="badge rounded-pill ms-1 bg-{{ $subBusiness->status_color }}" style="font-size:0.65rem;">{{ $subBusiness->status_label }}</span>
+                                </button>
+                            </li>
+                            @endif
+                        </ul>
+                        <div class="tab-content" id="donnaTipoTabContent">
 
-                        <h6 class="fw-bold text-uppercase small mb-3" style="color:#274698;">
-                            <i class="bi bi-person-circle me-1"></i> Donna Personal
-                        </h6>
+                        {{-- ══ PANE DONNA PERSONAL ══════════════════════════════════ --}}
+                        @if($subPersonal)
+                        <div class="tab-pane fade show active" id="donna-personal-pane" role="tabpanel">
 
                         {{-- Suscripción Personal --}}
                         <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#f4f6ff;border:1px solid #c5cae9;">
@@ -1228,19 +1252,88 @@
 
                         <form method="POST" action="{{ route('cliente.donna.config') }}">
                             @csrf
+                            @php
+                                $whP = $donnaConfigPersonal?->working_hours_json ?? [];
+                            @endphp
 
+                            {{-- Variables del agente --}}
+                            <div class="p-3 rounded-3 mb-4" style="background:#f4f6ff;border:1px solid #c5cae9;">
+                                <div class="fw-semibold small mb-3" style="color:#274698;">
+                                    <i class="bi bi-sliders me-1"></i>Variables del agente
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-robot me-1"></i>Nombre del agente
+                                        </label>
+                                        <input type="text" name="agent_name" class="form-control form-control-sm"
+                                               maxlength="80" placeholder="Donna"
+                                               value="{{ old('agent_name', $donnaConfigPersonal?->agent_name) }}">
+                                        <div class="form-text">Cómo se presenta en Telegram.</div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-globe me-1"></i>Zona horaria
+                                        </label>
+                                        @php
+                                            $tzP = old('timezone', $donnaConfigPersonal?->timezone ?? 'America/Guayaquil');
+                                            $tzOptions = [
+                                                'America/Guayaquil'   => 'Guayaquil / Lima (UTC-5)',
+                                                'America/Bogota'      => 'Bogotá (UTC-5)',
+                                                'America/Mexico_City' => 'Ciudad de México (UTC-6)',
+                                                'America/New_York'    => 'New York (UTC-5/-4)',
+                                                'America/Los_Angeles' => 'Los Ángeles (UTC-8/-7)',
+                                                'America/Santiago'    => 'Santiago (UTC-4/-3)',
+                                                'America/Argentina/Buenos_Aires' => 'Buenos Aires (UTC-3)',
+                                                'Europe/Madrid'       => 'Madrid (UTC+1/+2)',
+                                                'UTC'                 => 'UTC',
+                                            ];
+                                        @endphp
+                                        <select name="timezone" class="form-select form-select-sm">
+                                            @foreach($tzOptions as $tzVal => $tzLabel)
+                                                <option value="{{ $tzVal }}" @selected($tzP === $tzVal)>{{ $tzLabel }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-clock me-1"></i>Horario desde
+                                        </label>
+                                        <input type="time" name="wh_start" class="form-control form-control-sm"
+                                               value="{{ old('wh_start', $whP['start'] ?? '09:00') }}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-clock me-1"></i>Horario hasta
+                                        </label>
+                                        <input type="time" name="wh_end" class="form-control form-control-sm"
+                                               value="{{ old('wh_end', $whP['end'] ?? '20:00') }}">
+                                        <div class="form-text">Donna no agendará fuera de este rango.</div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-cup-hot me-1"></i>Horario almuerzo
+                                        </label>
+                                        <input type="time" name="wh_lunch" class="form-control form-control-sm"
+                                               value="{{ old('wh_lunch', $whP['lunch'] ?? '13:00') }}">
+                                        <div class="form-text">Hora bloqueada para eventos.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Contexto personal --}}
                             <div class="mb-4">
                                 <label class="form-label fw-semibold mb-1">
                                     <i class="bi bi-person-lines-fill me-1" style="color:#274698;"></i>
-                                    Contexto personal
+                                    Cuéntale de ti a Donna
                                     <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.7rem;">Recomendado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Cuéntale a Donna quién eres: tu profesión, proyectos activos, preferencias de comunicación, horarios que no debes interrumpir, etc.
+                                    Tu profesión, proyectos activos, preferencias de comunicación, etc. Donna usará esto para entenderte mejor.
                                 </p>
                                 <textarea name="personal_context" id="personal_context_input"
                                           class="form-control" rows="5" maxlength="1000"
-                                          placeholder="Ejemplo: Soy diseñador freelance. Trabajo de 9am a 6pm de lunes a viernes. Prefiero respuestas cortas y directas."
+                                          placeholder="Ejemplo: Soy diseñador freelance. Prefiero respuestas cortas y directas. No interrumpir los martes por la tarde."
                                 >{{ $donnaConfigPersonal?->personal_context }}</textarea>
                                 <div class="d-flex justify-content-end mt-1">
                                     <span class="text-muted small">
@@ -1249,37 +1342,18 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold mb-1">
-                                    <i class="bi bi-code-square me-1" style="color:#274698;"></i>
-                                    Prompt personalizado completo
-                                    <span class="badge bg-warning text-dark border ms-1" style="font-size:0.7rem;">Avanzado</span>
-                                </label>
-                                <p class="text-muted small mb-2">
-                                    Si lo dejas vacío, Donna usa su prompt por defecto (recomendado). Si escribes aquí, <strong>reemplaza completamente</strong> el prompt anterior.
-                                    Variables disponibles: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>.
-                                </p>
-                                <textarea name="main_prompt" class="form-control font-monospace" rows="9"
-                                          maxlength="5000" style="font-size:0.8rem;"
-                                          placeholder="Deja vacío para usar el prompt predeterminado de Donna..."
-                                >{{ $donnaConfigPersonal?->main_prompt }}</textarea>
-                            </div>
-
                             <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
                                 <i class="bi bi-save me-1"></i>Guardar cambios
                             </button>
                         </form>
                         @endif
+                        </div>{{-- /donna-personal-pane --}}
                         @endif
-                        {{-- ══ FIN DONNA PERSONAL ══════════════════════════════ --}}
+                        {{-- ══ FIN PANE DONNA PERSONAL ══════════════════════════ --}}
 
-                        {{-- ══ DONNA BUSINESS ══════════════════════════════════ --}}
+                        {{-- ══ PANE DONNA BUSINESS ══════════════════════════════════ --}}
                         @if($subBusiness)
-                        <hr class="my-4">
-
-                        <h6 class="fw-bold text-uppercase small mb-3" style="color:#8a6218;">
-                            <i class="bi bi-briefcase-fill me-1"></i> Donna Business
-                        </h6>
+                        <div class="tab-pane fade {{ !$subPersonal ? 'show active' : '' }}" id="donna-business-pane" role="tabpanel">
 
                         {{-- Suscripción Business --}}
                         <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
@@ -1393,17 +1467,60 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('cliente.donna.config-business') }}">
-                            @csrf
+                        <div class="accordion mb-4" id="accordionBusinessSystemMsg">
+                            <div class="accordion-item border rounded-3 overflow-hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseBusinessSystemMsg"
+                                            style="font-size:0.9rem;">
+                                        <i class="bi bi-eye me-2" style="color:#E4B100;"></i>
+                                        Ver el prompt que recibe Donna Business ahora mismo
+                                    </button>
+                                </h2>
+                                <div id="collapseBusinessSystemMsg" class="accordion-collapse collapse">
+                                    <div class="accordion-body p-3">
+                                        <p class="small text-muted mb-2">
+                                            Este es el texto exacto que Donna Business recibe como instrucciones al inicio de cada conversación con tus clientes:
+                                        </p>
+                                        <textarea class="form-control font-monospace" rows="12" readonly
+                                                  style="background:#f8f9fa;resize:none;font-size:0.77rem;line-height:1.5;">{{ $donnaBusinessSystemPreview }}</textarea>
+                                        @if($donnaConfigBusiness?->main_prompt)
+                                            <div class="alert alert-warning py-2 small mt-2 mb-0">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                                Estás usando un <strong>prompt personalizado completo</strong>. El contenido de abajo reemplaza el prompt por defecto.
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <form method="POST" action="{{ route('cliente.donna.config-business') }}" id="businessConfigForm">
+                            @csrf
+                            @php
+                                $whB  = $donnaConfigBusiness?->working_hours_json ?? [];
+                                $tzB  = old('timezone', $donnaConfigBusiness?->timezone ?? 'America/Guayaquil');
+                                $tzOptions = [
+                                    'America/Guayaquil'   => 'Guayaquil / Lima (UTC-5)',
+                                    'America/Bogota'      => 'Bogotá (UTC-5)',
+                                    'America/Mexico_City' => 'Ciudad de México (UTC-6)',
+                                    'America/New_York'    => 'New York (UTC-5/-4)',
+                                    'America/Los_Angeles' => 'Los Ángeles (UTC-8/-7)',
+                                    'America/Santiago'    => 'Santiago (UTC-4/-3)',
+                                    'America/Argentina/Buenos_Aires' => 'Buenos Aires (UTC-3)',
+                                    'Europe/Madrid'       => 'Madrid (UTC+1/+2)',
+                                    'UTC'                 => 'UTC',
+                                ];
+                            @endphp
+
+                            {{-- Identidad del agente --}}
                             <div class="row g-3 mb-3">
                                 <div class="col-sm-6">
                                     <label class="form-label fw-semibold small mb-1">
                                         <i class="bi bi-robot me-1" style="color:#E4B100;"></i>Nombre del agente
                                     </label>
-                                    <input type="text" name="agent_name" class="form-control form-control-sm"
-                                           maxlength="80"
-                                           placeholder="Donna"
+                                    <input type="text" name="agent_name" id="biz_agent_name" class="form-control form-control-sm"
+                                           maxlength="80" placeholder="Donna"
                                            value="{{ old('agent_name', $donnaConfigBusiness?->agent_name) }}">
                                     <div class="form-text">Cómo se presenta el agente ante tus clientes.</div>
                                 </div>
@@ -1411,9 +1528,8 @@
                                     <label class="form-label fw-semibold small mb-1">
                                         <i class="bi bi-building me-1" style="color:#E4B100;"></i>Nombre del negocio
                                     </label>
-                                    <input type="text" name="business_name" class="form-control form-control-sm"
-                                           maxlength="120"
-                                           placeholder="Mi Empresa"
+                                    <input type="text" name="business_name" id="biz_business_name" class="form-control form-control-sm"
+                                           maxlength="120" placeholder="Mi Empresa"
                                            value="{{ old('business_name', $donnaConfigBusiness?->business_name) }}">
                                 </div>
                                 <div class="col-sm-6">
@@ -1432,24 +1548,59 @@
                                         <i class="bi bi-emoji-smile me-1"></i>Tono del agente
                                     </label>
                                     <input type="text" name="tone" class="form-control form-control-sm"
-                                           maxlength="200"
-                                           placeholder="profesional, amable y directa"
+                                           maxlength="200" placeholder="profesional, amable y directa"
                                            value="{{ old('tone', $donnaConfigBusiness?->tone) }}">
                                     <div class="form-text">Describe cómo quieres que hable el agente.</div>
                                 </div>
                             </div>
 
-                            <div class="mb-3">
+                            {{-- Horarios --}}
+                            <div class="p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
+                                <div class="fw-semibold small mb-3" style="color:#8a6218;">
+                                    <i class="bi bi-clock me-1"></i>Horarios y zona horaria
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-sm-6 col-lg-3">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-globe me-1"></i>Zona horaria
+                                        </label>
+                                        <select name="timezone" id="biz_timezone" class="form-select form-select-sm">
+                                            @foreach($tzOptions as $tzVal => $tzLabel)
+                                                <option value="{{ $tzVal }}" @selected($tzB === $tzVal)>{{ $tzLabel }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <label class="form-label fw-semibold small mb-1">Horario desde</label>
+                                        <input type="time" name="wh_start" id="biz_wh_start" class="form-control form-control-sm"
+                                               value="{{ old('wh_start', $whB['start'] ?? '09:00') }}">
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <label class="form-label fw-semibold small mb-1">Horario hasta</label>
+                                        <input type="time" name="wh_end" id="biz_wh_end" class="form-control form-control-sm"
+                                               value="{{ old('wh_end', $whB['end'] ?? '20:00') }}">
+                                        <div class="form-text">Donna no agendará fuera de este rango.</div>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <label class="form-label fw-semibold small mb-1">Almuerzo</label>
+                                        <input type="time" name="wh_lunch" id="biz_wh_lunch" class="form-control form-control-sm"
+                                               value="{{ old('wh_lunch', $whB['lunch'] ?? '13:00') }}">
+                                        <div class="form-text">Hora bloqueada para citas.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Descripción del negocio --}}
+                            <div class="mb-4">
                                 <label class="form-label fw-semibold small mb-1">
                                     <i class="bi bi-card-text me-1"></i>Descripción del negocio
                                     <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Recomendado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Cuéntale a Donna qué hace tu negocio: productos, servicios, horarios de atención, ubicación, preguntas frecuentes. Donna usará esto para responder a tus clientes.
+                                    Cuéntale a Donna qué hace tu negocio: productos, servicios, horarios de atención, ubicación, preguntas frecuentes.
                                 </p>
                                 <textarea name="business_description" class="form-control" rows="5"
-                                          maxlength="2000"
-                                          id="business_description_input"
+                                          maxlength="2000" id="business_description_input"
                                           placeholder="Ejemplo: Somos una tienda de ropa casual ubicada en Guayaquil. Atendemos de lunes a sábado de 9am a 7pm. Enviamos a todo el país...">{{ old('business_description', $donnaConfigBusiness?->business_description) }}</textarea>
                                 <div class="d-flex justify-content-end mt-1">
                                     <span class="text-muted small">
@@ -1458,18 +1609,68 @@
                                 </div>
                             </div>
 
+                            {{-- Prompt personalizado: dos columnas --}}
                             <div class="mb-4">
                                 <label class="form-label fw-semibold small mb-1">
                                     <i class="bi bi-code-square me-1"></i>Prompt personalizado completo
                                     <span class="badge bg-warning text-dark border ms-1" style="font-size:0.65rem;">Avanzado</span>
                                 </label>
                                 <p class="text-muted small mb-2">
-                                    Solo si necesitas control total. Si lo dejas vacío, Donna usa su configuración por defecto combinada con los campos de arriba.
-                                    Variables: <code>&#123;&#123;now&#125;&#125;</code>, <code>&#123;&#123;timezone&#125;&#125;</code>, <code>&#123;&#123;agent_name&#125;&#125;</code>, <code>&#123;&#123;business_name&#125;&#125;</code>.
+                                    Si lo dejas vacío, Donna usa su configuración predeterminada combinada con los campos de arriba.
+                                    Escribe aquí solo si necesitas control total del comportamiento del agente.
                                 </p>
-                                <textarea name="main_prompt" class="form-control font-monospace" rows="8"
-                                          maxlength="5000" style="font-size:0.8rem;"
-                                          placeholder="Deja vacío para usar la configuración por defecto...">{{ old('main_prompt', $donnaConfigBusiness?->main_prompt) }}</textarea>
+                                <div class="row g-3 align-items-start">
+                                    <div class="col-lg-8">
+                                        <textarea name="main_prompt" id="biz_main_prompt"
+                                                  class="form-control font-monospace" rows="14"
+                                                  maxlength="5000" style="font-size:0.8rem;resize:vertical;"
+                                                  placeholder="Deja vacío para usar la configuración por defecto...">{{ old('main_prompt', $donnaConfigBusiness?->main_prompt) }}</textarea>
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                                    onclick="resetBusinessPrompt()"
+                                                    title="Elimina el prompt personalizado y vuelve al comportamiento predeterminado de Donna">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurar prompt predeterminado
+                                            </button>
+                                            <span class="text-muted small align-self-center">
+                                                <span id="biz_prompt_count">{{ strlen($donnaConfigBusiness?->main_prompt ?? '') }}</span>/5000
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="p-3 rounded-3 h-100" style="background:#f8f9fc;border:1px solid #e2e5f0;">
+                                            <div class="fw-semibold small mb-2" style="color:#274698;">
+                                                <i class="bi bi-braces me-1"></i>Variables disponibles
+                                            </div>
+                                            <p class="text-muted" style="font-size:0.72rem;">Haz clic en una variable para insertarla en el prompt.</p>
+                                            <div class="d-flex flex-column gap-2">
+                                                @php
+                                                    $bizVars = [
+                                                        ['key' => '{{agent_name}}',    'label' => 'Nombre del agente',  'icon' => 'bi-robot',       'color' => '#E4B100'],
+                                                        ['key' => '{{business_name}}', 'label' => 'Nombre del negocio', 'icon' => 'bi-building',     'color' => '#274698'],
+                                                        ['key' => '{{timezone}}',      'label' => 'Zona horaria',       'icon' => 'bi-globe',        'color' => '#5a3c9a'],
+                                                        ['key' => '{{now}}',           'label' => 'Fecha y hora actual','icon' => 'bi-calendar3',    'color' => '#1a7a4a'],
+                                                        ['key' => '{{working_hours}}', 'label' => 'Horario de atención','icon' => 'bi-clock',        'color' => '#b45309'],
+                                                        ['key' => '{{lunch_break}}',   'label' => 'Horario de almuerzo','icon' => 'bi-cup-hot',      'color' => '#0369a1'],
+                                                    ];
+                                                @endphp
+                                                @foreach($bizVars as $bv)
+                                                <button type="button"
+                                                        class="btn btn-sm text-start rounded-2 d-flex align-items-center gap-2"
+                                                        style="background:#fff;border:1px solid #e2e5f0;font-size:0.75rem;"
+                                                        onclick="insertBizVar('{{ $bv['key'] }}')"
+                                                        title="Insertar {{ $bv['key'] }}">
+                                                    <i class="bi {{ $bv['icon'] }} flex-shrink-0" style="color:{{ $bv['color'] }};font-size:0.85rem;"></i>
+                                                    <span class="flex-grow-1">
+                                                        <code style="font-size:0.72rem;color:{{ $bv['color'] }};">{{ $bv['key'] }}</code><br>
+                                                        <span class="text-muted" style="font-size:0.68rem;">{{ $bv['label'] }}</span>
+                                                    </span>
+                                                    <i class="bi bi-plus-circle text-muted flex-shrink-0" style="font-size:0.75rem;"></i>
+                                                </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold" style="color:#1D1D1B;">
@@ -1576,8 +1777,13 @@
                         @endif
                         {{-- ══ FIN BASE DE CONOCIMIENTOS ═══════════════════════ --}}
 
+                        </div>{{-- /donna-business-pane --}}
                         @endif
-                        {{-- ══ FIN DONNA BUSINESS ══════════════════════════════ --}}
+                        {{-- ══ FIN PANE DONNA BUSINESS ══════════════════════════ --}}
+
+                        </div>{{-- /donnaTipoTabContent --}}
+                        @endif
+                        {{-- ══ FIN SUB-TABS DONNA ══════════════════════════════ --}}
 
                     </div>
                 </div>
@@ -2010,6 +2216,13 @@
                 bdInput.addEventListener('input', () => bdCount.textContent = bdInput.value.length);
             }
 
+            // Contador prompt personalizado Business
+            const bpInput = document.getElementById('biz_main_prompt');
+            const bpCount = document.getElementById('biz_prompt_count');
+            if (bpInput && bpCount) {
+                bpInput.addEventListener('input', () => bpCount.textContent = bpInput.value.length);
+            }
+
             // Contador caracteres knowledge content
             const kcInput = document.getElementById('knowledge_content_input');
             const kcCount = document.getElementById('knowledge_content_count');
@@ -2017,6 +2230,27 @@
                 kcInput.addEventListener('input', () => kcCount.textContent = kcInput.value.length);
             }
         });
+
+        // ── Donna Business: insertar variable en prompt ─────────────
+        function insertBizVar(variable) {
+            const ta = document.getElementById('biz_main_prompt');
+            if (!ta) return;
+            const start = ta.selectionStart;
+            const end   = ta.selectionEnd;
+            ta.value = ta.value.slice(0, start) + variable + ta.value.slice(end);
+            ta.selectionStart = ta.selectionEnd = start + variable.length;
+            ta.focus();
+            ta.dispatchEvent(new Event('input'));
+        }
+
+        function resetBusinessPrompt() {
+            const ta = document.getElementById('biz_main_prompt');
+            if (!ta) return;
+            if (ta.value.trim() === '') return;
+            if (!confirm('¿Eliminar el prompt personalizado y volver al comportamiento predeterminado de Donna?')) return;
+            ta.value = '';
+            ta.dispatchEvent(new Event('input'));
+        }
 
         // ── Knowledge Base ─────────────────────────────────────────
         let knowledgeEditId = null;

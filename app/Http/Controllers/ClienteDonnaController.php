@@ -243,8 +243,12 @@ class ClienteDonnaController extends Controller
     public function saveConfig(Request $request)
     {
         $request->validate([
+            'agent_name'       => 'nullable|string|max:80',
             'personal_context' => 'nullable|string|max:1000',
-            'main_prompt'      => 'nullable|string|max:5000',
+            'timezone'         => 'nullable|string|max:50',
+            'wh_start'         => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'wh_end'           => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'wh_lunch'         => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
         ]);
 
         $cliente = Auth::guard('cliente')->user();
@@ -258,13 +262,21 @@ class ClienteDonnaController extends Controller
             return back()->with('donna_error', 'No tienes una suscripción Donna Personal activa.');
         }
 
+        $wh = array_filter([
+            'start' => $request->input('wh_start') ?: null,
+            'end'   => $request->input('wh_end') ?: null,
+            'lunch' => $request->input('wh_lunch') ?: null,
+        ]);
+
         DonnaAgentConfig::updateOrCreate(
             ['client_id' => $cliente->idcli, 'service_type' => 'personal'],
             [
-                'subscription_id'  => $sub->id,
-                'personal_context' => $request->input('personal_context') ?: null,
-                'main_prompt'      => $request->input('main_prompt') ?: null,
-                'is_active'        => true,
+                'subscription_id'    => $sub->id,
+                'agent_name'         => $request->input('agent_name') ?: null,
+                'personal_context'   => $request->input('personal_context') ?: null,
+                'timezone'           => $request->input('timezone') ?: null,
+                'working_hours_json' => $wh ?: null,
+                'is_active'          => true,
             ]
         );
 
@@ -279,6 +291,10 @@ class ClienteDonnaController extends Controller
             'business_description' => 'nullable|string|max:2000',
             'tone'                 => 'nullable|string|max:200',
             'language'             => 'nullable|string|max:10',
+            'timezone'             => 'nullable|string|max:50',
+            'wh_start'             => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'wh_end'               => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
+            'wh_lunch'             => ['nullable', 'regex:/^\d{2}:\d{2}$/'],
             'main_prompt'          => 'nullable|string|max:5000',
         ]);
 
@@ -293,6 +309,12 @@ class ClienteDonnaController extends Controller
             return back()->with('donna_business_error', 'No tienes una suscripción Donna Business activa.');
         }
 
+        $wh = array_filter([
+            'start' => $request->input('wh_start') ?: null,
+            'end'   => $request->input('wh_end') ?: null,
+            'lunch' => $request->input('wh_lunch') ?: null,
+        ]);
+
         DonnaAgentConfig::updateOrCreate(
             ['client_id' => $cliente->idcli, 'service_type' => 'business'],
             [
@@ -302,6 +324,8 @@ class ClienteDonnaController extends Controller
                 'business_description' => $request->input('business_description') ?: null,
                 'tone'                 => $request->input('tone') ?: null,
                 'language'             => $request->input('language') ?: null,
+                'timezone'             => $request->input('timezone') ?: null,
+                'working_hours_json'   => $wh ?: null,
                 'main_prompt'          => $request->input('main_prompt') ?: null,
                 'is_active'            => true,
             ]
