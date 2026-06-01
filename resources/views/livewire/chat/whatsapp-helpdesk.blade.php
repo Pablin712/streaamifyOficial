@@ -1,4 +1,4 @@
-<div class="wa-helpdesk {{ $mobilePane === 'list' ? 'wa-sidebar-open' : '' }}" wire:poll.3s="refreshChat">
+<div class="wa-helpdesk wa-pane-{{ $mobilePane }}" data-pane="{{ $mobilePane }}" wire:poll.3s="refreshChat">
     <style>
         /* ================================================
            DESIGN SYSTEM PREMIUM - INTERCOM / ZENDESK STYLE
@@ -1319,12 +1319,41 @@
         }
 
         /* ================================================
+           MOBILE NAV (oculto en desktop)
+           ================================================ */
+
+        .wa-mobile-nav {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--wa-border);
+            background: var(--wa-panel);
+            flex-shrink: 0;
+            min-height: 48px;
+        }
+
+        .wa-mobile-nav-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--wa-text);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wa-profile-btn-mobile {
+            display: none !important;
+        }
+
+        /* ================================================
            RESPONSIVE
            ================================================ */
 
         @media (max-width: 1180px) {
             .wa-helpdesk {
-                grid-template-columns: 340px 1fr;
+                grid-template-columns: 320px 1fr;
             }
             .wa-right {
                 display: none;
@@ -1332,66 +1361,112 @@
         }
 
         @media (max-width: 768px) {
+            /* ---- Contenedor principal: cambia de grid a bloque ---- */
             .wa-helpdesk {
+                display: block;
                 position: relative;
-                height: calc(100dvh - 58px);
-                min-height: 0;
+                height: calc(100dvh - 56px);
+                overflow: hidden;
             }
 
-            .wa-column:first-child {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                max-width: 320px;
-                height: 100vh;
-                z-index: 99;
-                transform: translateX(-100%);
-                transition: transform 220ms cubic-bezier(0.2, 0, 0.38, 0.9);
-                box-shadow: 4px 0 24px rgba(0,0,0,0.12);
-            }
-
-            .wa-helpdesk.wa-sidebar-open .wa-column:first-child {
-                transform: translateX(0);
-            }
-
-            .wa-helpdesk::after {
-                content: '';
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.4);
-                backdrop-filter: blur(2px);
-                z-index: 98;
-                pointer-events: none;
-                opacity: 0;
-                transition: opacity 180ms ease;
-            }
-
-            .wa-helpdesk.wa-sidebar-open::after {
-                pointer-events: auto;
-                opacity: 1;
-            }
-
-            .wa-chat {
+            /* ---- Los 3 paneles ocupan todo el espacio del contenedor ---- */
+            .wa-column:first-child,
+            .wa-chat,
+            .wa-column.wa-right {
                 position: absolute;
                 inset: 0;
+                width: 100%;
+                display: flex !important;
+                flex-direction: column;
+                transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            /* ---- PANEL: lista (.wa-pane-list) ---- */
+            .wa-pane-list .wa-column:first-child { transform: translateX(0);     z-index: 3; pointer-events: auto; }
+            .wa-pane-list .wa-chat               { transform: translateX(100%);  z-index: 2; }
+            .wa-pane-list .wa-column.wa-right     { transform: translateX(200%); z-index: 1; }
+
+            /* ---- PANEL: chat (.wa-pane-chat) ---- */
+            .wa-pane-chat .wa-column:first-child  { transform: translateX(-100%); z-index: 1; }
+            .wa-pane-chat .wa-chat                { transform: translateX(0);     z-index: 3; pointer-events: auto; }
+            .wa-pane-chat .wa-column.wa-right     { transform: translateX(100%);  z-index: 2; }
+
+            /* ---- PANEL: perfil (.wa-pane-profile) ---- */
+            .wa-pane-profile .wa-column:first-child { transform: translateX(-200%); z-index: 1; }
+            .wa-pane-profile .wa-chat               { transform: translateX(-100%); z-index: 2; }
+            .wa-pane-profile .wa-column.wa-right    { transform: translateX(0);     z-index: 3; pointer-events: auto; }
+
+            /* ---- Lista: scroll táctil ---- */
+            .wa-list {
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
+            }
+
+            /* ---- Mensajes: scroll táctil ---- */
+            .wa-messages {
+                padding: var(--wa-space-3);
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
+            }
+
+            /* ---- iOS auto-zoom fix: inputs >= 16px ---- */
+            .wa-search,
+            .wa-textarea {
+                font-size: 16px !important;
+            }
+
+            /* ---- Toolbar de la lista ---- */
+            .wa-toolbar {
+                padding-top: 12px;
+                padding-bottom: 8px;
+            }
+
+            /* ---- Mensaje máximo ancho ---- */
+            .wa-message {
+                max-width: 85%;
+            }
+
+            /* ---- Botón volver ---- */
+            .wa-back {
+                display: inline-flex !important;
+            }
+
+            /* ---- Nav mobile del panel de perfil ---- */
+            .wa-mobile-nav {
                 display: flex;
             }
 
-            .wa-back {
-                display: inline-flex;
+            /* ---- Botón "Ver perfil" en header del chat ---- */
+            .wa-profile-btn-mobile {
+                display: inline-flex !important;
             }
 
-            .wa-messages {
-                padding: var(--wa-space-4);
+            /* ---- Acciones del chat: scroll horizontal ---- */
+            .wa-chat-actions {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+            .wa-chat-actions::-webkit-scrollbar { display: none; }
+
+            /* ---- Header del chat: apila title y acciones ---- */
+            .wa-chat-title-row {
+                flex-direction: column;
+                gap: 8px;
             }
 
-            .wa-message {
-                max-width: 80%;
+            /* ---- Composer: espacio para home bar en iOS ---- */
+            .wa-composer {
+                padding: 10px 12px;
+                padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
             }
 
-            .wa-toolbar {
-                padding-top: 66px;
+            /* ---- Quita el overlay (ya no necesario) ---- */
+            .wa-helpdesk::after {
+                display: none !important;
             }
         }
     </style>
@@ -1554,6 +1629,9 @@
                         </div>
                     </div>
                     <div class="wa-chat-actions">
+                        <button wire:click="$set('mobilePane', 'profile')" class="wa-action wa-profile-btn-mobile" type="button" title="Ver ficha del cliente">
+                            👤 Ver perfil
+                        </button>
                         <span class="wa-badge {{ $activeContactIdentity['tone'] }}">{{ $activeContactIdentity['label'] }}</span>
                         <span class="wa-badge info">{{ $activeConversation->estado }}</span>
                         <button wire:click="takeConversation" class="wa-action" type="button">Tomar</button>
@@ -1708,11 +1786,23 @@
                 <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
                 <strong style="font-size: 16px; display: block; margin-bottom: 4px;">Selecciona una conversación</strong>
                 <span style="color: var(--wa-text-tertiary);">Elige un chat de la lista para empezar a atender</span>
+                <button type="button" wire:click="$set('mobilePane', 'list')" class="wa-action wa-profile-btn-mobile" style="margin-top: 16px;">
+                    ← Ver conversaciones
+                </button>
             </div>
         @endif
     </main>
 
      <aside class="wa-column wa-right">
+         <!-- Nav mobile: volver al chat -->
+         <div class="wa-mobile-nav">
+             <button type="button" wire:click="$set('mobilePane', 'chat')" class="wa-icon-btn" style="flex-shrink:0;">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+             </button>
+             <span class="wa-mobile-nav-title">
+                 {{ $activeConversation ? ($activeConversation->cliente?->nombrecli ?: $activeName ?? 'Ficha del cliente') : 'Ficha del cliente' }}
+             </span>
+         </div>
          @if($activeConversation)
              @php
                  $client = $activeConversation->cliente;
