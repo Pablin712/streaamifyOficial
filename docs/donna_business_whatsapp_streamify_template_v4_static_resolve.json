@@ -9,10 +9,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        27296,
-        9584
+        32736,
+        11536
       ],
-      "id": "a32bfcd9-2652-4aa5-86b4-a89bab884315",
+      "id": "b384f11b-dd03-4577-b3ca-ac272e2a5e24",
       "name": "Webhook Evo API",
       "webhookId": "a0ab275c-3741-43bc-be5a-4a74cc408188"
     },
@@ -23,10 +23,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        27888,
-        9568
+        33328,
+        11520
       ],
-      "id": "2e75f1ea-4158-4186-92ef-885c389283c7",
+      "id": "b216edfd-559e-4f9d-9b7b-f5fdb64087aa",
       "name": "Normalizar Evo Payload"
     },
     {
@@ -88,10 +88,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        28192,
-        9584
+        33632,
+        11536
       ],
-      "id": "bc53efc2-f770-4984-8efa-c8c8d22a9fd0",
+      "id": "0a63526e-07ca-4cb2-afdb-a48f4b38e88f",
       "name": "¿fromMe?"
     },
     {
@@ -125,10 +125,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        28400,
-        9440
+        33840,
+        11392
       ],
-      "id": "819c3e99-c718-4276-b14c-983775790d63",
+      "id": "a058142b-c88f-4360-a56b-d39df3f05bdc",
       "name": "POST Ingest fromMe / Ignorar loop"
     },
     {
@@ -240,10 +240,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        28416,
-        9696
+        33856,
+        11648
       ],
-      "id": "eaf6ac55-c43d-4de5-83b2-c26c9ad27c88",
+      "id": "ee197202-4f5a-434f-804e-0d6f5268e6ef",
       "name": "Switch tipo de mensaje"
     },
     {
@@ -287,10 +287,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        28624,
-        9488
+        34064,
+        11440
       ],
-      "id": "a39c2b43-9e30-4539-954d-7f77dfca5926",
+      "id": "baa809f9-6a66-4649-a3ff-9d4d96068381",
       "name": "Preparar texto para ingest"
     },
     {
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        28624,
-        9664
+        34064,
+        11616
       ],
-      "id": "67fd22f9-6ee1-4e55-a9bb-37e731d1db51",
+      "id": "03ef47cd-6d98-400f-af5d-5022660dc15a",
       "name": "Get audio"
     },
     {
@@ -343,10 +343,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        28864,
-        9664
+        34304,
+        11616
       ],
-      "id": "766502db-f371-4b8c-b301-e22f1d7a1507",
+      "id": "a049171e-e796-4764-bb8d-9fd433e3ac26",
       "name": "Convert audio"
     },
     {
@@ -358,10 +358,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        29104,
-        9664
+        34544,
+        11616
       ],
-      "id": "b36ed155-9a63-44bb-9496-3c7730d0d253",
+      "id": "cdade4cb-bab7-49ea-bcfb-7c354dc8e3a0",
       "name": "Transcribe",
       "credentials": {
         "openAiApi": {
@@ -411,10 +411,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        29344,
-        9664
+        34784,
+        11616
       ],
-      "id": "758f6e64-ff57-42cc-93c4-0e7ffae53fb5",
+      "id": "4d74c4aa-3193-4305-9907-30f4badf4ec9",
       "name": "Preparar audio para ingest"
     },
     {
@@ -450,10 +450,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        28624,
-        9856
+        34064,
+        11808
       ],
-      "id": "3a605908-9c09-4e47-9a99-3139c9ac056b",
+      "id": "cfc5fb4b-8191-4477-9cc4-70da383b6f2e",
       "name": "Get imagen"
     },
     {
@@ -467,10 +467,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        28864,
-        9856
+        34304,
+        11808
       ],
-      "id": "c5d35156-4bec-46ac-bde9-abc274d60aea",
+      "id": "38091945-743a-4a00-9be3-11a25eaafdbd",
       "name": "Convert image"
     },
     {
@@ -490,10 +490,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        29104,
-        9856
+        34544,
+        11808
       ],
-      "id": "3a5e8ca7-9cda-4fb0-ae4b-4f46bbb76256",
+      "id": "08703c59-c404-4022-944e-21424d0657e2",
       "name": "Analyze",
       "credentials": {
         "openAiApi": {
@@ -509,10 +509,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        29344,
-        9856
+        34784,
+        11808
       ],
-      "id": "feebc3cd-5496-44e9-9082-7838a95346d5",
+      "id": "84cdc7a3-f4d9-4ffc-bf5d-ae2dcd9c18a5",
       "name": "Parsear imagen"
     },
     {
@@ -556,10 +556,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        28624,
-        10048
+        34064,
+        12000
       ],
-      "id": "7a57012f-1ebc-4208-b3f4-ac2009d654c7",
+      "id": "4db6f0c3-4953-46f9-8bb0-e59e74ff6da8",
       "name": "Preparar documento/otro para ingest"
     },
     {
@@ -585,7 +585,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"provider\": \"{{ $('Normalizar Evo Payload').first().json.provider }}\",\n  \"event\": \"{{ $('Normalizar Evo Payload').first().json.event }}\",\n  \"instance_name\": \"{{ $('Normalizar Evo Payload').first().json.instance_name }}\",\n  \"instance_id\": \"{{ $('Normalizar Evo Payload').first().json.instance_id }}\",\n  \"server_url\": \"{{ $('Normalizar Evo Payload').first().json.server_url }}\",\n\n  \"remote_jid\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid || $('Normalizar Evo Payload').first().json.customer_jid || $('Webhook Evo API').first().json.body?.data?.key?.remoteJid || '' }}\",\n  \"customer_jid\": \"{{ $('Normalizar Evo Payload').first().json.customer_jid || $('Normalizar Evo Payload').first().json.remote_jid || '' }}\",\n  \"remote_jid_alt\": \"{{ $('Normalizar Evo Payload').first().json.remote_jid_alt }}\",\n  \"sender_identifier\": \"{{ $('Normalizar Evo Payload').first().json.sender_identifier }}\",\n  \"sender_name\": \"{{ $('Normalizar Evo Payload').first().json.sender_name }}\",\n\n  \"from_me\": false,\n  \"provider_message_id\": \"{{ $('Normalizar Evo Payload').first().json.provider_message_id }}\",\n  \"message_type\": \"{{ $('Normalizar Evo Payload').first().json.message_type }}\",\n  \"processed_type\": \"{{ $json.processed_type }}\",\n\n  \"content_text\": \"{{ $json.agent_input_text || $('Normalizar Evo Payload').first().json.content_text }}\",\n  \"caption_text\": \"{{ $('Normalizar Evo Payload').first().json.caption_text }}\",\n  \"transcription_text\": \"{{ $json.transcription_text }}\",\n  \"ocr_text\": \"{{ $json.ocr_text }}\",\n  \"image_analysis_json\": \"{{ $json.image_analysis_json }}\",\n\n  \"message_timestamp\": \"{{ $('Normalizar Evo Payload').first().json.message_timestamp }}\",\n  \"has_media\": {{ $('Normalizar Evo Payload').first().json.has_media }},\n  \"media_type\": \"{{ $('Normalizar Evo Payload').first().json.media_type }}\",\n  \"media_url\": \"{{ $('Normalizar Evo Payload').first().json.media_url }}\",\n  \"media_mime_type\": \"{{ $('Normalizar Evo Payload').first().json.media_mime_type }}\",\n\n  \"raw_payload\": {{ JSON.stringify($('Normalizar Evo Payload').first().json.raw_payload) }}\n}",
+        "jsonBody": "={\n  \"provider\":            {{ JSON.stringify($('Normalizar Evo Payload').first().json.provider ?? null) }},\n  \"event\":               {{ JSON.stringify($('Normalizar Evo Payload').first().json.event ?? null) }},\n  \"instance_name\":       {{ JSON.stringify($('Normalizar Evo Payload').first().json.instance_name ?? null) }},\n  \"instance_id\":         {{ JSON.stringify($('Normalizar Evo Payload').first().json.instance_id ?? null) }},\n  \"server_url\":          {{ JSON.stringify($('Normalizar Evo Payload').first().json.server_url ?? null) }},\n\n  \"remote_jid\":          {{ JSON.stringify($('Normalizar Evo Payload').first().json.remote_jid || $('Normalizar Evo Payload').first().json.customer_jid || $('Webhook Evo API').first().json.body?.data?.key?.remoteJid || '') }},\n  \"customer_jid\":        {{ JSON.stringify($('Normalizar Evo Payload').first().json.customer_jid || $('Normalizar Evo Payload').first().json.remote_jid || '') }},\n  \"remote_jid_alt\":      {{ JSON.stringify($('Normalizar Evo Payload').first().json.remote_jid_alt ?? null) }},\n  \"sender_identifier\":   {{ JSON.stringify($('Normalizar Evo Payload').first().json.sender_identifier ?? null) }},\n  \"sender_name\":         {{ JSON.stringify($('Normalizar Evo Payload').first().json.sender_name ?? null) }},\n\n  \"from_me\":             false,\n  \"provider_message_id\": {{ JSON.stringify($('Normalizar Evo Payload').first().json.provider_message_id ?? null) }},\n  \"message_type\":        {{ JSON.stringify($('Normalizar Evo Payload').first().json.message_type ?? null) }},\n  \"processed_type\":      {{ JSON.stringify($json.processed_type ?? null) }},\n\n  \"content_text\":        {{ JSON.stringify($json.agent_input_text || $('Normalizar Evo Payload').first().json.content_text || null) }},\n  \"caption_text\":        {{ JSON.stringify($('Normalizar Evo Payload').first().json.caption_text ?? null) }},\n  \"transcription_text\":  {{ JSON.stringify($json.transcription_text ?? null) }},\n  \"ocr_text\":            {{ JSON.stringify($json.ocr_text ?? null) }},\n  \"image_analysis_json\": {{ JSON.stringify($json.image_analysis_json ?? null) }},\n\n  \"message_timestamp\":   {{ JSON.stringify($('Normalizar Evo Payload').first().json.message_timestamp ?? null) }},\n  \"has_media\":           {{ $('Normalizar Evo Payload').first().json.has_media ? true : false }},\n  \"media_type\":          {{ JSON.stringify($('Normalizar Evo Payload').first().json.media_type ?? null) }},\n  \"media_url\":           {{ JSON.stringify($('Normalizar Evo Payload').first().json.media_url ?? null) }},\n  \"media_mime_type\":     {{ JSON.stringify($('Normalizar Evo Payload').first().json.media_mime_type ?? null) }},\n\n  \"raw_payload\":         {{ JSON.stringify($('Normalizar Evo Payload').first().json.raw_payload ?? null) }}\n}",
         "options": {
           "timeout": 30000
         }
@@ -593,10 +593,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        29600,
-        9728
+        35040,
+        11680
       ],
-      "id": "0a7ce77f-75c5-44a5-92f3-5c75249225fa",
+      "id": "f3645edd-87f5-4ef9-9a24-ee15ec5b1f42",
       "name": "POST Donna Business Ingest"
     },
     {
@@ -658,10 +658,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        30336,
-        9712
+        35776,
+        11664
       ],
-      "id": "fb835775-d748-415e-8d1c-3dac4aa886a2",
+      "id": "a34637f3-acb4-48ac-86d8-11f4e750d390",
       "name": "¿Donna Business permitida?"
     },
     {
@@ -693,10 +693,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        30544,
-        9936
+        35984,
+        11888
       ],
-      "id": "5a41d04a-c509-471b-8d52-bdb158ec8cc8",
+      "id": "e5186c96-3c06-40e9-be3e-96e656785768",
       "name": "No responder / Servicio bloqueado"
     },
     {
@@ -747,10 +747,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        30544,
-        9616
+        35984,
+        11568
       ],
-      "id": "0b4e9353-665d-421d-accf-f83c79c42118",
+      "id": "394aec43-c3a6-4d0c-bdeb-e44a06df5b0f",
       "name": "GET Donna Business Context"
     },
     {
@@ -854,10 +854,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        30784,
-        9616
+        36224,
+        11568
       ],
-      "id": "46799c35-36c2-4a7e-83d0-e71fd3c834b5",
+      "id": "1774e9ea-687b-4ba7-abff-9508c2f15fcc",
       "name": "Guardar contexto Business"
     },
     {
@@ -871,10 +871,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        31072,
-        9616
+        36512,
+        11568
       ],
-      "id": "bfafa4d9-c7cc-46e7-8892-a34384448163",
+      "id": "840952f7-f8ba-4bc8-b2c4-ceae5ca1a29e",
       "name": "AI Agent Donna Business"
     },
     {
@@ -884,10 +884,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        30864,
-        9872
+        36304,
+        11824
       ],
-      "id": "db03f29f-744d-488c-8002-b775c0e6b6fb",
+      "id": "347435f9-d070-4425-ae96-f3b6718de97a",
       "name": "DeepSeek Chat Model",
       "credentials": {
         "deepSeekApi": {
@@ -904,10 +904,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
       "position": [
-        31056,
-        9872
+        36496,
+        11824
       ],
-      "id": "af1f9835-4bf7-4eb1-b97d-b5399aa1d354",
+      "id": "ed1d7096-5a7b-430f-ae20-6f6521731b8e",
       "name": "Simple Memory Business"
     },
     {
@@ -919,10 +919,10 @@
       "type": "n8n-nodes-base.dateTimeTool",
       "typeVersion": 2,
       "position": [
-        31264,
-        9872
+        36704,
+        11824
       ],
-      "id": "75b7943f-3122-42da-8802-4e90ac3483f3",
+      "id": "3eb516a4-5248-41c6-89fe-e6b18e30991f",
       "name": "Date & Time"
     },
     {
@@ -932,10 +932,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        31360,
-        9616
+        36800,
+        11568
       ],
-      "id": "9f70b62d-f815-46f2-8369-4667fd5002d8",
+      "id": "7c1bb482-1d04-4528-8fc8-f0db6c4fd894",
       "name": "Formatear respuesta WhatsApp"
     },
     {
@@ -961,10 +961,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        31600,
-        9616
+        37040,
+        11568
       ],
-      "id": "fc6bd976-005c-4225-bf5e-b07159d70927",
+      "id": "0757720d-84d9-4a69-bb51-bec6bed9dca5",
       "name": "Respuesta final"
     },
     {
@@ -998,10 +998,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        31840,
-        9616
+        37280,
+        11568
       ],
-      "id": "9b82e1dc-03ac-4189-ac12-b41847acde82",
+      "id": "2972ea78-813e-441f-96d3-e5d47e8f70f0",
       "name": "Enviar mensaje Evo API"
     },
     {
@@ -1035,10 +1035,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        32080,
-        9616
+        37520,
+        11568
       ],
-      "id": "cb7cdc5f-ed80-48c1-b8f2-b9ebe82ddde3",
+      "id": "e5e4cec2-07e8-46a7-bf0c-389ceed8eb56",
       "name": "POST Donna Business Save Respond"
     },
     {
@@ -1051,10 +1051,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        27472,
-        9008
+        32912,
+        10960
       ],
-      "id": "e31741a4-6af1-472d-9104-29e281c60ef4",
+      "id": "4e15cdd1-c3f7-409e-b6f8-013bba9d1861",
       "name": "Nota variables"
     },
     {
@@ -1116,10 +1116,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        28048,
-        9568
+        33488,
+        11520
       ],
-      "id": "4d6b3ed8-8e67-4c92-aaa0-9130ae77d83d",
+      "id": "3c1d942e-9f82-4b25-8fe4-0d981ff10381",
       "name": "¿Ignorar grupo?"
     },
     {
@@ -1163,10 +1163,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        28256,
-        9264
+        33696,
+        11216
       ],
-      "id": "56eb0546-647d-4032-abe0-849acd3aa154",
+      "id": "24454f71-2e57-4834-b41a-e9f507be916c",
       "name": "Grupo ignorado"
     },
     {
@@ -1200,10 +1200,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        27536,
-        9584
+        32976,
+        11536
       ],
-      "id": "3bd8f489-b5c5-41a5-8ace-f7794dee2f9d",
+      "id": "bed210a0-7070-47e5-a365-a44a26272e31",
       "name": "Resolver cliente/canal Streamify",
       "notes": "Resuelve client_id/service_id/channel_id y devuelve la apikey de Evo API de la instancia. Endpoint a implementar en Laravel si aún no existe."
     },
@@ -1217,10 +1217,10 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        28608,
-        9120
+        34048,
+        11072
       ],
-      "id": "ad97ed14-fec8-492f-a970-20bdc6302f48",
+      "id": "c4827712-0032-439a-9ab6-0bdc4f50f80f",
       "name": "Nota v4 static config"
     },
     {
@@ -1282,10 +1282,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        27696,
-        9584
+        33136,
+        11536
       ],
-      "id": "fcc403fa-33df-4442-a205-8c68551fb685",
+      "id": "675eb175-5003-48e4-a3d9-b26c44f2619f",
       "name": "¿Donna Business activa?"
     },
     {
@@ -1323,10 +1323,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        27904,
-        9776
+        33344,
+        11728
       ],
-      "id": "a8d42c99-b5c1-4f07-b744-e7d6084137b6",
+      "id": "a576450b-bdc0-4d1d-8217-5de4aae7728d",
       "name": "Servicio Donna Business inactivo"
     },
     {
@@ -1379,15 +1379,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "OBLIGATORIO: Busca en la base de conocimientos del negocio. Llama esta tool SIEMPRE antes de responder sobre productos, servicios, precios, horarios, políticas o cualquier información específica del negocio. Nunca respondas sobre el negocio desde tu conocimiento propio."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31424,
-        9872
+        36864,
+        11824
       ],
-      "id": "91722b59-83bd-4bd4-a0eb-176097f917d0",
+      "id": "3248b23b-4302-4061-b30f-eceb7b520be3",
       "name": "donna_business_knowledge_search"
     },
     {
@@ -1448,15 +1449,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Busca historial y datos previos del cliente final (compras, consultas, preferencias). Úsala cuando el cliente mencione pedidos anteriores o cuando necesites contexto de su historial."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31600,
-        9872
+        37040,
+        11824
       ],
-      "id": "4300e01e-2047-4c8c-b17f-6f7c12c29ce2",
+      "id": "112402a5-4ee6-4717-9245-5916121b4dc1",
       "name": "donna_business_customer_context_search"
     },
     {
@@ -1509,15 +1511,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Busca en la memoria de conversaciones anteriores con este cliente. Úsala para recordar acuerdos, preferencias o información que se mencionó en sesiones pasadas."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31760,
-        9872
+        37200,
+        11824
       ],
-      "id": "b0bc1109-a0f2-49a5-83a8-beff4e71c150",
+      "id": "f0b04b83-49ce-4df0-95b2-d8347a79331d",
       "name": "donna_business_memory_search"
     },
     {
@@ -1574,15 +1577,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Consulta la disponibilidad del calendario antes de agendar. SIEMPRE llama esta tool antes de donna_business_calendar_create_event para verificar que el horario esté libre."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31088,
-        10192
+        36528,
+        12144
       ],
-      "id": "93e57681-f0ca-4ecf-98ff-9b00e8e494af",
+      "id": "8b8d93cf-fc46-47cf-b9f8-57c8aa9eb120",
       "name": "donna_business_calendar_freebusy"
     },
     {
@@ -1639,15 +1643,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Lista eventos del calendario en un rango de fechas. Úsala cuando el cliente pregunte por citas agendadas o quiera ver su agenda."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31280,
-        10192
+        36720,
+        12144
       ],
-      "id": "fcec11b7-8a90-4484-9bd0-3a05d48eca5e",
+      "id": "4f02d5c2-4cba-4793-972b-3ae53fb424c4",
       "name": "donna_business_calendar_list_events"
     },
     {
@@ -1716,15 +1721,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Crea una cita en el calendario. Solo llamar DESPUÉS de verificar disponibilidad con donna_business_calendar_freebusy y confirmar datos completos con el cliente."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31456,
-        10192
+        36896,
+        12144
       ],
-      "id": "ea7de9cf-d957-4391-83a8-fef197b877cf",
+      "id": "bc246652-293b-4f75-8a0a-559ddf5fd1fb",
       "name": "donna_business_calendar_create_event"
     },
     {
@@ -1793,15 +1799,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Modifica una cita existente en el calendario. Úsala cuando el cliente quiera cambiar hora, fecha o datos de un evento ya agendado."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31648,
-        10192
+        37088,
+        12144
       ],
-      "id": "8e6efc58-5719-4518-975b-b8bda3e69e01",
+      "id": "3b1f0165-1763-453f-9fce-676a353f2094",
       "name": "donna_business_calendar_update_event"
     },
     {
@@ -1850,15 +1857,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Cancela o elimina una cita del calendario. Confirmar con el cliente antes de ejecutar."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31840,
-        10192
+        37280,
+        12144
       ],
-      "id": "6452e61f-1719-4974-aa92-fd0e6934382e",
+      "id": "5ba3f686-9484-467d-80c5-b75db1145dcf",
       "name": "donna_business_calendar_delete_event"
     },
     {
@@ -1911,15 +1919,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Consulta datos internos del negocio (clientes, conversaciones, leads). Úsala para obtener información estructurada sobre clientes registrados."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31920,
-        9872
+        37360,
+        11824
       ],
-      "id": "5d3b11dd-a192-4915-96b1-65e4d183fad1",
+      "id": "92a0f27d-0e39-44e4-bb07-a01474798119",
       "name": "donna_business_data_query"
     },
     {
@@ -1984,15 +1993,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Registra o actualiza un lead/prospecto en el sistema. Llamar cuando el cliente muestre interés en comprar, cotizar o agendar, capturando nombre, teléfono e interés."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        32096,
-        9872
+        37536,
+        11824
       ],
-      "id": "f20789aa-215a-4e92-b66d-6e529b8404f7",
+      "id": "4eb57c25-da48-483c-bcfd-663770bdc84c",
       "name": "donna_business_upsert_lead"
     },
     {
@@ -2037,15 +2047,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Lee filas de una hoja de Google Sheets del negocio. Útil para consultar catálogos, precios, inventario o cualquier tabla que el negocio tenga en Sheets."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        31920,
-        10048
+        37360,
+        12000
       ],
-      "id": "a2f06d6f-27ee-4cb1-acfe-6e62ea20d8d2",
+      "id": "9538990a-d5c6-4242-b381-2a183a66a749",
       "name": "donna_business_sheets_get_rows"
     },
     {
@@ -2094,15 +2105,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Agrega una fila nueva a una hoja de Google Sheets. Úsala para registrar pedidos, leads, reservas o cualquier dato nuevo en las hojas del negocio."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        32096,
-        10048
+        37536,
+        12000
       ],
-      "id": "d88c6c5b-bc84-4da8-a254-14517edaebd5",
+      "id": "755ff1fb-6e83-48e0-8cfb-a9d1768df8e5",
       "name": "donna_business_sheets_append_row"
     },
     {
@@ -2155,15 +2167,16 @@
             }
           ]
         },
-        "options": {}
+        "options": {},
+        "description": "Actualiza una fila existente en una hoja de Google Sheets. Úsala para modificar el estado de un pedido, actualizar un lead o corregir un registro."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        32272,
-        10048
+        37712,
+        12000
       ],
-      "id": "0ceebbb7-b7b0-47a6-b543-01e110550d47",
+      "id": "21fe4cd0-f1c9-4527-8aab-35b5d4d3b2a5",
       "name": "donna_business_sheets_update_row"
     },
     {
@@ -2173,10 +2186,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        29760,
-        9728
+        35200,
+        11680
       ],
-      "id": "effb6bef-0911-4b2e-aee4-c565d2df0a74",
+      "id": "a5ca5aba-485c-44ff-92dc-09e497dae876",
       "name": "Esperar mensajes",
       "webhookId": "e7f3a5b1-2c8d-4f6e-9b0a-3d4c5e6f7a8b"
     },
@@ -2211,10 +2224,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        29936,
-        9728
+        35376,
+        11680
       ],
-      "id": "2ac8057f-80a2-4165-8e4b-d42732037c08",
+      "id": "e485cd6e-7a12-4b44-b6aa-8d46f41afb6f",
       "name": "¿Debo responder?"
     },
     {
@@ -2245,10 +2258,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        30112,
-        9728
+        35552,
+        11680
       ],
-      "id": "625d45fb-ef72-48ae-a4f1-a59c53d1e002",
+      "id": "58083eb3-362b-44d1-a3a0-d44a64d58ccf",
       "name": "¿Es el mensaje más reciente?"
     }
   ],

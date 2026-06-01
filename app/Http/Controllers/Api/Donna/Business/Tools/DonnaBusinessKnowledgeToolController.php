@@ -29,10 +29,11 @@ class DonnaBusinessKnowledgeToolController extends Controller
 
         if (!$config?->knowledge_enabled) {
             return response()->json([
-                'success' => false,
-                'error'   => 'knowledge_not_enabled',
-                'message' => 'La base de conocimientos no está habilitada para este negocio.',
-            ], 422);
+                'success'        => true,
+                'results_count'  => 0,
+                'results'        => [],
+                'message'        => 'Base de conocimientos no habilitada. Informa al cliente que no tienes esa información disponible.',
+            ]);
         }
 
         $query  = $request->input('query', '');

@@ -285,7 +285,7 @@ class DonnaBusinessContextService
             $rulesSection .= "- Horario de almuerzo: {$lunchBreak} (no agendar en este horario).\n";
         }
         if ($knowledgeEnabled) {
-            $rulesSection .= "- Ante preguntas sobre productos, precios o servicios usa donna_business_knowledge_search.\n";
+            $rulesSection .= "- OBLIGATORIO: Antes de responder sobre productos, servicios, precios, catálogo, políticas o cualquier información específica del negocio, SIEMPRE llama a donna_business_knowledge_search. NUNCA respondas sobre el negocio desde tu conocimiento propio ni inventes información.\n";
         }
         if ($calendarEnabled) {
             $rulesSection .= "- Antes de agendar, usa donna_business_calendar_freebusy para verificar disponibilidad.\n";
