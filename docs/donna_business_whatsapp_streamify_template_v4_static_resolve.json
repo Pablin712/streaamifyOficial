@@ -1920,7 +1920,7 @@
           ]
         },
         "options": {},
-        "description": "Lista ítems del negocio por tipo específico (product, service, faq, policy, table). Usar SOLO cuando se necesita un catálogo completo de un tipo, NO para responder preguntas puntuales sobre el negocio. Para buscar información específica sobre productos, precios o servicios usar SIEMPRE donna_business_knowledge_search."
+        "description": "Consulta datos internos del negocio (clientes, conversaciones, leads). Úsala para obtener información estructurada sobre clientes registrados."
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,

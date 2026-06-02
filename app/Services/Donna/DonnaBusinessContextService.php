@@ -34,12 +34,13 @@ class DonnaBusinessContextService
         $sheetsEnabled    = $googleConnected && ($config?->sheets_enabled ?? false);
         $knowledgeEnabled = $config?->knowledge_enabled ?? false;
 
-        $agentName    = $config?->agent_name ?? 'Donna';
-        $businessName = $config?->business_name ?? $channel->cliente?->nombrecli ?? 'el negocio';
-        $timezone     = $config?->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil');
-        $language     = $config?->language ?? 'es';
-        $tone         = $config?->tone ?? 'profesional, amable y directa';
-        $maxTools     = $config?->max_tool_calls ?? 8;
+        $agentName     = $config?->agent_name ?? 'Donna';
+        $businessName  = $config?->business_name ?? $channel->cliente?->nombrecli ?? 'el negocio';
+        $timezone      = $config?->timezone ?? config('services.donna.google_default_timezone', 'America/Guayaquil');
+        $language      = $config?->language ?? 'es';
+        $tone          = $config?->tone ?? 'profesional, amable y directa';
+        $maxTools      = $config?->max_tool_calls ?? 8;
+        $responseStyle = $config?->response_style ?? 'concise';
 
         $wh = $config?->working_hours_json ?? [];
         $workingHours = ($wh['start'] ?? null) && ($wh['end'] ?? null)
@@ -50,7 +51,7 @@ class DonnaBusinessContextService
         $systemMessage = $this->buildSystemMessage(
             $agentName, $businessName, $timezone, $language, $tone,
             $config, $calendarEnabled, $sheetsEnabled, $knowledgeEnabled,
-            $workingHours, $lunchBreak
+            $workingHours, $lunchBreak, $responseStyle
         );
 
         $daysRemaining = $sub->expires_at
@@ -242,7 +243,8 @@ class DonnaBusinessContextService
         bool $sheetsEnabled,
         bool $knowledgeEnabled,
         ?string $workingHours = null,
-        ?string $lunchBreak = null
+        ?string $lunchBreak = null,
+        string $responseStyle = 'concise'
     ): string {
         if ($config?->main_prompt) {
             return str_replace(
@@ -272,8 +274,15 @@ class DonnaBusinessContextService
             $toolsSection .= "- donna_business_sheets_update_row: actualizar fila existente\n";
         }
 
+        $styleInstruction = match($responseStyle) {
+            'moderate' => 'Responde de forma clara y completa. Máximo 80 palabras por respuesta. Si el tema requiere más detalle, ofrécelo al final.',
+            'detailed' => 'Puedes dar respuestas completas y detalladas cuando el tema lo requiera. Estructura con puntos si hay varios ítems.',
+            default    => 'IMPORTANTE: Responde siempre de forma MUY BREVE y directa. Máximo 2 oraciones por respuesta. Si el cliente necesita más detalle, díselo en una línea y espera que lo pida.',
+        };
+
         $rulesSection = "REGLAS:\n";
-        $rulesSection .= "- Responde de forma breve, clara y en tono: {$tone}.\n";
+        $rulesSection .= "- {$styleInstruction}\n";
+        $rulesSection .= "- Tono: {$tone}.\n";
         $rulesSection .= "- No inventes precios, horarios ni información que no tengas.\n";
         if ($workingHours) {
             $rulesSection .= "- Horario de atención: {$workingHours}.\n";

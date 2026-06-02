@@ -1604,6 +1604,33 @@
                                             Donna espera este tiempo antes de responder, agrupando mensajes consecutivos del cliente en una sola respuesta (3–60 seg).
                                         </div>
                                     </div>
+                                    <div class="col-sm-6 col-lg-8">
+                                        <label class="form-label fw-semibold small mb-1">
+                                            <i class="bi bi-chat-text me-1"></i>Extensión de las respuestas
+                                        </label>
+                                        @php $curStyle = old('response_style', $donnaConfigBusiness?->response_style ?? 'concise'); @endphp
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @foreach([
+                                                'concise'  => ['label' => 'Directa', 'icon' => 'bi-lightning-charge', 'desc' => 'Máx. 2 oraciones'],
+                                                'moderate' => ['label' => 'Moderada', 'icon' => 'bi-chat-dots', 'desc' => 'Máx. 80 palabras'],
+                                                'detailed' => ['label' => 'Detallada', 'icon' => 'bi-journals', 'desc' => 'Sin límite estricto'],
+                                            ] as $val => $opt)
+                                            <label class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 cursor-pointer"
+                                                   style="border:1.5px solid {{ $curStyle === $val ? '#E4B100' : '#dee2e6' }};background:{{ $curStyle === $val ? '#fffbea' : '#fff' }};cursor:pointer;"
+                                                   id="style_label_{{ $val }}">
+                                                <input type="radio" name="response_style" value="{{ $val }}"
+                                                       class="d-none response-style-radio"
+                                                       @checked($curStyle === $val)>
+                                                <i class="bi {{ $opt['icon'] }} fs-5" style="color:{{ $curStyle === $val ? '#b45309' : '#6c757d' }};"></i>
+                                                <div>
+                                                    <div class="fw-semibold small">{{ $opt['label'] }}</div>
+                                                    <div class="text-muted" style="font-size:0.7rem;">{{ $opt['desc'] }}</div>
+                                                </div>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                        <div class="form-text">Predeterminado: Directa — respuestas cortas salvo que necesite más detalle.</div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -2281,6 +2308,20 @@
             if (pcInput && pcCount) {
                 pcInput.addEventListener('input', () => pcCount.textContent = pcInput.value.length);
             }
+
+            // Selector visual de extensión de respuestas
+            document.querySelectorAll('.response-style-radio').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    document.querySelectorAll('.response-style-radio').forEach(r => {
+                        const lbl = document.getElementById('style_label_' + r.value);
+                        if (!lbl) return;
+                        const active = r.checked;
+                        lbl.style.borderColor  = active ? '#E4B100' : '#dee2e6';
+                        lbl.style.background   = active ? '#fffbea' : '#fff';
+                        lbl.querySelector('i').style.color = active ? '#b45309' : '#6c757d';
+                    });
+                });
+            });
 
             // Contador caracteres descripción negocio (Business)
             const bdInput = document.getElementById('business_description_input');
