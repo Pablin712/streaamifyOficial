@@ -736,6 +736,20 @@ class WhatsAppHelpdesk extends Component
             'no_leidas' => $query->where(function ($q) {
                 $q->where('unread_count', '>', 0)->orWhere('mensajes_no_leidos', '>', 0);
             }),
+            'proveedor' => $query->where(function ($q) {
+                $q->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.tipo_contacto'))) LIKE '%proveedor%'")
+                  ->orWhereHas('contactoCanal', function ($cc) {
+                      $cc->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.tipo_contacto'))) LIKE '%proveedor%'");
+                  });
+            }),
+            'bot' => $query->where(function ($q) {
+                $q->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.tipo_contacto'))) LIKE '%bot%'")
+                  ->orWhereRaw("JSON_EXTRACT(metadata, '$.is_bot') = true")
+                  ->orWhereHas('contactoCanal', function ($cc) {
+                      $cc->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.tipo_contacto'))) LIKE '%bot%'")
+                         ->orWhereRaw("JSON_EXTRACT(metadata, '$.is_bot') = true");
+                  });
+            }),
             'asignadas_mi' => $query->where('assigned_to', $this->operator()?->idemp),
             'abiertas' => $query->whereIn('estado', ['nueva', 'nuevo', 'abierta', 'abierto', 'asignado', 'atendiendo', 'pausado', 'en_atencion', 'en_espera']),
             'cerradas' => $query->whereIn('estado', ['cerrado', 'cerrada']),

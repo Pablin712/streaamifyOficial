@@ -1495,6 +1495,8 @@
                      'todos' => 'Todos',
                      'nuevas' => 'Nuevas',
                      'no_leidas' => 'No leídas',
+                     'proveedor' => 'Proveedores',
+                     'bot' => 'Bots',
                      'asignadas_mi' => 'Mías',
                      'abiertas' => 'Abiertas',
                      'cerradas' => 'Cerradas',
