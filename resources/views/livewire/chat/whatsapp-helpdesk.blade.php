@@ -1347,6 +1347,10 @@
             display: none !important;
         }
 
+        .wa-profile-icon-mobile {
+            display: none !important;
+        }
+
         /* ================================================
            RESPONSIVE
            ================================================ */
@@ -1441,6 +1445,17 @@
             /* ---- Botón "Ver perfil" en header del chat ---- */
             .wa-profile-btn-mobile {
                 display: inline-flex !important;
+            }
+
+            /* ---- Ícono perfil en fila del nombre (chat header) ---- */
+            .wa-profile-icon-mobile {
+                display: inline-flex !important;
+                flex-shrink: 0;
+            }
+
+            /* ---- Chat info ocupa ancho completo en mobile ---- */
+            .wa-chat-info {
+                width: 100%;
             }
 
             /* ---- Acciones del chat: scroll horizontal ---- */
@@ -1616,9 +1631,11 @@
             <header class="wa-chat-header">
                 <div class="wa-chat-title-row">
                     <div class="wa-chat-info">
-                        <div style="display: flex; gap: 12px; align-items: center;">
-                            <button wire:click="backToList" class="wa-icon-btn wa-back" type="button">←</button>
-                            <div>
+                        <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
+                            <button wire:click="backToList" class="wa-icon-btn wa-back" type="button" title="Volver a chats">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            </button>
+                            <div style="flex: 1; min-width: 0;">
                                 <h2 class="wa-chat-title">{{ $activeName }}</h2>
                                 <div class="wa-chat-subtitle wa-channel-meta">
                                     <span>{{ $activeNumber }}</span>
@@ -1628,6 +1645,9 @@
                                     </span>
                                 </div>
                             </div>
+                            <button wire:click="$set('mobilePane', 'profile')" class="wa-icon-btn wa-profile-icon-mobile" type="button" title="Ver ficha del contacto">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </button>
                         </div>
                     </div>
                     <div class="wa-chat-actions">
@@ -2416,6 +2436,44 @@
                     @this.set('mobilePane', 'chat');
                 }
             });
+
+            // Navegación por swipe horizontal en móvil
+            if (!window.__waSwipeNavBound) {
+                window.__waSwipeNavBound = true;
+
+                let _swipeTouchStartX = 0;
+                let _swipeTouchStartY = 0;
+                const SWIPE_MIN = 60;
+
+                document.addEventListener('touchstart', e => {
+                    if (!e.target.closest('.wa-helpdesk')) return;
+                    _swipeTouchStartX = e.touches[0].clientX;
+                    _swipeTouchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                document.addEventListener('touchend', e => {
+                    if (!e.target.closest('.wa-helpdesk')) return;
+                    if (window.innerWidth > 768) return;
+                    if (e.target.closest('.wa-chat-actions, .wa-filters, .wa-textarea, .wa-composer')) return;
+
+                    const dx = e.changedTouches[0].clientX - _swipeTouchStartX;
+                    const dy = e.changedTouches[0].clientY - _swipeTouchStartY;
+
+                    if (Math.abs(dy) > Math.abs(dx) * 0.8) return;
+                    if (Math.abs(dx) < SWIPE_MIN) return;
+
+                    const helpdesk = document.querySelector('.wa-helpdesk');
+                    const pane = helpdesk?.dataset?.pane;
+                    if (!pane) return;
+
+                    if (dx < 0) { // swipe izquierda → avanzar
+                        if (pane === 'chat') @this.set('mobilePane', 'profile');
+                    } else { // swipe derecha → regresar
+                        if (pane === 'chat') @this.call('backToList');
+                        else if (pane === 'profile') @this.set('mobilePane', 'chat');
+                    }
+                }, { passive: true });
+            }
         });
     </script>
 </div>
