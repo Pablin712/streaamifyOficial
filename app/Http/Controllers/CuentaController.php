@@ -447,6 +447,54 @@ class CuentaController extends Controller
         return redirect()->back()->with('success', 'Clientes movidos a la mesa de trabajo correctamente.');
     }
 
+    public function acomodarUsuariosCuenta(Request $request, $idcue)
+    {
+        if (!Gate::allows('usuarios.change')) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permiso para acomodar usuarios.',
+                ], 403);
+            }
+            abort(403, 'No tienes permiso para acomodar usuarios.');
+        }
+
+        $cuenta = Cuenta::with('valor')->findOrFail($idcue);
+        $respuesta = $this->cuentaService->acomodarUsuariosExcedentes($cuenta);
+
+        if (($respuesta['status'] ?? null) === 'no_excedente') {
+            return response()->json([
+                'success' => false,
+                'message' => 'La cuenta no tiene usuarios excedentes que acomodar.',
+            ], 422);
+        }
+
+        if (($respuesta['status'] ?? null) === 'error') {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudieron acomodar los usuarios. No hay espacio disponible en otras cuentas.',
+            ], 422);
+        }
+
+        $movidos = count($respuesta['movements']);
+        $message = ($respuesta['status'] === 'partial')
+            ? "Se acomodaron {$movidos} usuario(s). No había espacio suficiente para todos."
+            : "Se acomodaron {$movidos} usuario(s) correctamente.";
+
+        Historial::create([
+            'accion' => 'Acomodar Usuarios de Cuenta',
+            'descripcion' => 'Cuenta: ' . $cuenta->idcue . ' | Usuarios acomodados: ' . $movidos,
+            'empleado_id' => Auth::user()->idemp,
+            'created_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'movements' => $respuesta['movements'],
+        ]);
+    }
+
     public function moverClientesDisperso(Request $request)
     {
         if (!Gate::allows('usuarios.change')) {

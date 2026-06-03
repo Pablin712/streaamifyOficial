@@ -478,6 +478,86 @@ class CuentaService
             'movements' => $movements,
         ];
     }
+    public function acomodarUsuariosExcedentes(Cuenta $cuenta): array
+    {
+        $cuenta->loadMissing('valor');
+        $max = (int) ($cuenta->valor->pantmaxval ?? 0);
+        $idser = $cuenta->valor->idser;
+
+        $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)->get();
+        $total = $usuarios->count();
+
+        if ($max <= 0 || $total <= $max) {
+            return ['status' => 'no_excedente', 'movements' => []];
+        }
+
+        $excedentes = $total - $max;
+
+        // Agrupar por perfil, ordenar descendente por cantidad (perfiles con más usuarios primero)
+        $porPerfil = $usuarios->groupBy('perfil')
+            ->sortByDesc(fn($grupo) => $grupo->count());
+
+        $seleccionados = collect();
+
+        // Primera pasada: tomar uno de cada perfil que tenga 2+ usuarios (perfiles compartidos)
+        foreach ($porPerfil as $numeroPerfil => $usuariosEnPerfil) {
+            if ($seleccionados->count() >= $excedentes) break;
+            if ($usuariosEnPerfil->count() >= 2) {
+                $seleccionados->push($usuariosEnPerfil->first());
+            }
+        }
+
+        // Segunda pasada: si aún faltan, tomar del resto
+        if ($seleccionados->count() < $excedentes) {
+            $idsSeleccionados = $seleccionados->pluck('iddet');
+            foreach ($porPerfil as $numeroPerfil => $usuariosEnPerfil) {
+                if ($seleccionados->count() >= $excedentes) break;
+                foreach ($usuariosEnPerfil as $usuario) {
+                    if ($seleccionados->count() >= $excedentes) break;
+                    if (!$idsSeleccionados->contains($usuario->iddet)) {
+                        $seleccionados->push($usuario);
+                        $idsSeleccionados->push($usuario->iddet);
+                    }
+                }
+            }
+        }
+
+        $movements = [];
+        $noMovidos = 0;
+
+        foreach ($seleccionados as $usuario) {
+            $cuentaDestino = $this->buscarCuentaDisponible($idser);
+            $perfilDestino = $this->buscarPerfilDisponible($cuentaDestino);
+
+            if (!$perfilDestino) {
+                $noMovidos++;
+                continue;
+            }
+
+            DetalleVenta::where('iddet', $usuario->iddet)
+                ->update(['idper' => $perfilDestino->idper]);
+
+            Historial::create([
+                'accion' => 'Acomodar-Usuarios',
+                'descripcion' => 'Se acomodó el cliente ' . $usuario->nombre_cliente . ' de la cuenta ' . $cuenta->idcue . ' a la cuenta ' . $cuentaDestino->idcue . ' perfil: ' . $perfilDestino->numeroper,
+                'empleado_id' => Auth::check() ? Auth::user()->idemp : Empleado::where('nombreemp', 'Laravel')->first()->idemp,
+                'created_at' => now(),
+            ]);
+
+            $movements[] = $this->buildMovementData($usuario, $cuentaDestino, $perfilDestino, 'acomodar');
+        }
+
+        if (empty($movements)) {
+            return ['status' => 'error', 'movements' => []];
+        }
+
+        if ($noMovidos > 0) {
+            return ['status' => 'partial', 'movements' => $movements];
+        }
+
+        return ['status' => 'success', 'movements' => $movements];
+    }
+
     public function mudarClienteAOtraCuenta($usuario)
     {
         $cuentaOrigen = $usuario->cuenta;

@@ -508,6 +508,7 @@
 @include('inventory.usuarios.modals.mover')
 @include('inventory.cuentas.modals.movement-results')
 @include('inventory.cuentas.modals.confirm-move-user-otro-servicio')
+@include('inventory.cuentas.modals.confirm-acomodar-usuarios')
 
 <x-modal name="confirmar-marcar-cuenta-danada" :show="false" maxWidth="lg">
     <div class="modal-header modal-header-danger">
@@ -1092,6 +1093,53 @@
                 showUsuariosToast(error.message || 'No se pudieron eliminar los usuarios.', 'danger');
             }
         }
+
+        // ========================================================================
+        // FUNCIÓN DE MODAL - ACOMODAR USUARIOS DE CUENTA
+        // ========================================================================
+        function abrirModalAcomodarCuenta(idcue, usuariocue) {
+            document.getElementById('confirm_acomodar_cuenta_id').value = idcue;
+            document.getElementById('confirm_acomodar_cuenta_nombre').textContent = usuariocue;
+            document.getElementById('confirm_acomodar_form').action =
+                "{{ route('cuentas.acomodarUsuarios', ':id') }}".replace(':id', idcue);
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-acomodar-usuarios' }));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const acomodarForm = document.getElementById('confirm_acomodar_form');
+            if (acomodarForm) {
+                acomodarForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    fetch(acomodarForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        },
+                        body: new FormData(acomodarForm)
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'No se pudo acomodar los usuarios');
+                        }
+                        return data;
+                    })
+                    .then(data => {
+                        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'confirm-acomodar-usuarios' }));
+                        openMovementResultsModal(data);
+                    })
+                    .catch(error => {
+                        if (typeof showMovementToast === 'function') {
+                            showMovementToast(error.message || 'No se pudo acomodar los usuarios', 'warning');
+                        } else {
+                            showUsuariosToast(error.message || 'No se pudo acomodar los usuarios', 'danger');
+                        }
+                    });
+                });
+            }
+        });
 
         // ========================================================================
         // FUNCIÓN DE MODAL - MOVER USUARIO

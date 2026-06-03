@@ -37,6 +37,7 @@
 @include('inventory.cuentas.modals.confirm-move-all-mesa')
 @include('inventory.cuentas.modals.confirm-move-all-disperso')
 @include('inventory.cuentas.modals.confirm-move-user-otro-servicio')
+@include('inventory.cuentas.modals.confirm-acomodar-usuarios')
 
 <script>
 // Función global para copiar mensaje (debe estar disponible cuando se carga el contenido AJAX)
@@ -136,6 +137,7 @@ function initializePerfilesEventListeners() {
     setupMovementAjaxForm('confirm_move_user_form', 'confirm-move-user');
     setupMovementAjaxForm('confirm_move_otro_servicio_form', 'confirm-move-user-otro-servicio');
     setupMovementAjaxForm('confirm_move_all_disperso_form', 'confirm-move-all-disperso');
+    setupMovementAjaxForm('confirm_acomodar_form', 'confirm-acomodar-usuarios');
 
     // Event listeners para botones de mover usuario
     document.querySelectorAll('#perfiles-container .btn-move-user').forEach(function(button) {
@@ -202,6 +204,21 @@ function initializePerfilesEventListeners() {
             document.getElementById('confirm_move_all_disperso_cuenta').textContent = cuentaNombre;
 
             window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-move-all-disperso' }));
+        });
+    });
+
+    // Event listeners para acomodar usuarios extra
+    document.querySelectorAll('#perfiles-container .btn-acomodar-usuarios').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const cuentaId = this.getAttribute('data-cuenta-id');
+            const cuentaNombre = this.getAttribute('data-cuenta-nombre');
+
+            document.getElementById('confirm_acomodar_cuenta_id').value = cuentaId;
+            document.getElementById('confirm_acomodar_cuenta_nombre').textContent = cuentaNombre;
+            document.getElementById('confirm_acomodar_form').action =
+                "{{ route('cuentas.acomodarUsuarios', ':id') }}".replace(':id', cuentaId);
+
+            window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-acomodar-usuarios' }));
         });
     });
 

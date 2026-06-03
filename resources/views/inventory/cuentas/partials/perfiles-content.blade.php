@@ -1,7 +1,24 @@
 {{-- Contenido de perfiles para AJAX --}}
+@php
+    $totalActivos = $perfiles->sum('usuarios_activos');
+    $maxUsuarios = (int) (optional($cuenta->valor)->pantmaxval ?? 0);
+    $cuentaColapsada = $maxUsuarios > 0 && $totalActivos > $maxUsuarios;
+@endphp
 <div class="row mb-3">
     @if (Auth::user()->hasPermissionTo('usuarios.change'))
         <div class="col-12">
+            @if ($cuentaColapsada)
+                <button
+                    type="button"
+                    class="btn btn-primary mb-2 btn-acomodar-usuarios"
+                    data-cuenta-id="{{ $cuenta->idcue }}"
+                    data-cuenta-nombre="{{ $cuenta->usuariocue }}"
+                    data-excedentes="{{ $totalActivos - $maxUsuarios }}"
+                >
+                    <i class="fas fa-sort-amount-down me-1"></i>
+                    Acomodar usuarios extra ({{ $totalActivos - $maxUsuarios }} {{ ($totalActivos - $maxUsuarios) == 1 ? 'excedente' : 'excedentes' }})
+                </button>
+            @endif
             <button
                 type="button"
                 class="btn btn-danger mb-2 btn-move-all-mesa"

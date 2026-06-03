@@ -315,6 +315,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::patch('/cuentas/{id}/status', 'status')->name('cuentas.status');
         Route::post('/cuentas/mover-clientes', 'moverClientes')->name('cuentas.moverClientes');
         Route::post('/cuentas/dispersar-clientes', 'moverClientesDisperso')->name('cuentas.moverClientesDisperso');
+        Route::post('/cuentas/{id}/acomodar-usuarios', 'acomodarUsuariosCuenta')->name('cuentas.acomodarUsuarios');
         Route::post('/cuentas/{id}/mensaje-clientes', 'enviarMensajeClientes')->name('cuentas.enviarMensajeClientes');
         Route::post('/cuentas/{id}/mensaje-proveedor', 'enviarMensajeProveedor')->name('cuentas.enviarMensajeProveedor');
         Route::post('/cuentas/mensaje-proveedor-inventario', 'enviarInventarioProveedor')->name('cuentas.enviarInventarioProveedor');

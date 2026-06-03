@@ -103,6 +103,14 @@
                     >
                         <i class="fas fa-triangle-exclamation"></i>
                     </button>
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        onclick="event.stopPropagation(); abrirModalAcomodarCuenta({{ json_encode($usuario->idcue) }}, {{ json_encode($usuario->cuenta->usuariocue) }})"
+                        title="Acomodar usuarios excedentes de la cuenta"
+                    >
+                        <i class="fas fa-sort-amount-down"></i>
+                    </button>
                 @endif
                 @if ($diasRestantes <= 3)
                     <button type="button" class="btn btn-rosa-3 btn-sm"
