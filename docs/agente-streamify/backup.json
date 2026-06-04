@@ -1,0 +1,4767 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Obtener el texto del mensaje (soporta varios formatos de Evo API)\nconst msg =\n  $json.body?.data?.message?.conversation ||\n  $json.body?.data?.message?.extendedTextMessage?.text ||\n  $input.first().json.message.content ||\n  \"\";\n\n// Normalizar\nconst texto = msg.trim();\n\n// Detectar mensaje inicial típico del bot\nif (/ok[, ]*buscando correo/i.test(texto)) {\n  return [\n    {\n      esCodigo: false,\n      codigo: null,\n      mensaje: null,\n      tipo: \"buscando\"\n    }\n  ];\n}\n\n// Buscar código de 4 o 6 dígitos\nconst match = texto.match(/\\b\\d{4}\\b|\\b\\d{6}\\b/);\n\nif (match) {\n  return [\n    {\n      esCodigo: true,\n      codigo: match[0],\n      mensaje: null,\n      tipo: \"codigo\"\n    }\n  ];\n}\n\n// Si no es código → lo tratamos como mensaje de error/respuesta del bot\nreturn [\n  {\n    esCodigo: false,\n    codigo: null,\n    mensaje: texto,\n    tipo: \"error\"\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        -1472
+      ],
+      "id": "d23de233-06e2-4838-b08b-2cefdc03c145",
+      "name": "Extraer code"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "codigos",
+          "mode": "list",
+          "cachedResultName": "codigos"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "estado",
+              "value": "ESPERANDO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -1616,
+        -1472
+      ],
+      "id": "1d2ddd6e-9afc-42e2-b6bd-d9307cd5792a",
+      "name": "consultar",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "Z7O4VnXABWDYwHPY",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+                    "rightValue": "573105948236",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "46406346-abc3-4bd4-b3d4-dfcae28f7b7a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "bot"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "72817a3a-7697-47eb-b6b9-ee613eba9dea",
+                    "leftValue": "={{ $('Normalizar').item.json.message.content.trim().toLowerCase() }}",
+                    "rightValue": "=^net\\b",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "comand"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "197e6e0f-8431-4f7f-9c88-5ecb8b0c40df",
+                    "leftValue": "={{ $('Normalizar').item.json.message.content }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "chat"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1904,
+        -1392
+      ],
+      "id": "3d6d8580-7bd9-4f51-be51-014471d533c9",
+      "name": "Switch3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pedir-codigo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1568,
+        -1232
+      ],
+      "id": "9aa2a60a-1391-498d-87df-6e011f217cab",
+      "name": "Clic pedir code",
+      "webhookId": "f761c31a-e7bf-4c42-b367-a6818fff3548"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evoapi.abigailsoft.com/message/sendText/bot-pagos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "68E6084D0489-44B9-909A-632E54ACDD64"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "=573105948236@s.whatsapp.net"
+            },
+            {
+              "name": "text",
+              "value": "={{ $('merge b').item.json.mensaje }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -736,
+        -1408
+      ],
+      "id": "c7f18d6a-6342-4423-a997-c6f1355cda90",
+      "name": "Escribir bot",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evoapi.abigailsoft.com/message/sendText/{{ $('merge b').item.json.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $('merge b').item.json.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('merge b').item.json.telefono }}"
+            },
+            {
+              "name": "text",
+              "value": "=Alguien más está solicitando, espera unos segundos"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -720,
+        -1280
+      ],
+      "id": "a65c31e2-10f4-4a17-9fae-a7f91421a528",
+      "name": "Escribir cliente",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "amount": 8
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1104,
+        -1296
+      ],
+      "id": "b1c8e4dd-8e98-456e-b2a5-bdbc728dfd3d",
+      "name": "Wait1",
+      "webhookId": "92d331b7-e984-4a0d-bbe3-0d777af6634b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f4e214ed-7b6f-481f-8833-0ba38b0f84f9",
+              "leftValue": "={{ $json.estado }}",
+              "rightValue": "esperando",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        -1296
+      ],
+      "id": "f9e14233-9f76-4336-8ad7-e1795011a777",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c961ba5d-9d2d-446d-8f1c-378252a68f52",
+              "name": "telefono",
+              "value": "={{ $json.body.requested_by.phone }}@s.whatsapp.net",
+              "type": "string"
+            },
+            {
+              "id": "d33af7e8-4488-4917-ab14-9aa0172de0fe",
+              "name": "mensaje",
+              "value": "=net {{ $json.body.cuenta.usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "10bf5cc8-5fc8-489e-80cd-8a39510a6334",
+              "name": "telefonoMySQL",
+              "value": "={{ $json.body.requested_by.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "608c6248-23d8-49bb-a047-89aef17f1e45",
+              "name": "usuariocue",
+              "value": "={{ $json.body.cuenta.usuario }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1456,
+        -1232
+      ],
+      "id": "bd542710-df89-49bf-be6d-d99a9f560346",
+      "name": "camino 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.data.telefono + \"@s.whatsapp.net\";\n\nconst telefono = raw;\nconst telefonoMySQL = raw.split(\"@\")[0];\nconst mensaje = $('merge a').first().json.mensaje;\nconst instance = $('merge a').first().json.instance;\nconst apikey = $('merge a').first().json.apikey;\nconst usuariocue = $('merge a').first().json.mensaje.split(\" \")[1];\n\nreturn [\n  {\n    telefono,\n    mensaje,\n    telefonoMySQL,\n    instance,\n    apikey,\n    usuariocue,\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        -1360
+      ],
+      "id": "0a998732-1a29-47d3-a9f9-adf2a34c29ca",
+      "name": "camino 1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/verificar-cliente-cuenta",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "numero",
+              "value": "={{ $json.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1616,
+        -1344
+      ],
+      "id": "b2883c65-8c44-411c-acf0-5b288e433ca1",
+      "name": "validar"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0822d09c-0b3a-497c-b578-a17498669337",
+              "leftValue": "={{ $json.data.puede_pedir_codigo }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1504,
+        -1344
+      ],
+      "id": "58272048-f12b-4182-9f3d-3bd4cf057986",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evoapi.abigailsoft.com/message/sendText/{{ $('merge a').item.json.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apiKey",
+              "value": "={{ $('merge a').item.json.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $json.data.telefono }}@s.whatsapp.net"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.data.motivo }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1344,
+        -1232
+      ],
+      "id": "d7063429-b232-4b06-9f42-9dc250d1813c",
+      "name": "Rechazar",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "asistente-pablin",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2368,
+        -1536
+      ],
+      "id": "314382e6-a353-444c-bc2f-60f4780fdf79",
+      "name": "WhatsApp Verde",
+      "webhookId": "c0e41212-a73b-4566-a6fd-5799fdd9695e"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-azul",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2368,
+        -1424
+      ],
+      "id": "6194ad66-2965-420c-b1d2-61e7e5ad8290",
+      "name": "WhatsApp Azul",
+      "webhookId": "dbeadfb3-d6a2-4cef-aad9-579ac4bfa1fb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7822c08f-5d69-4027-8c7e-c72ee0b8bf1c",
+              "name": "telefono",
+              "value": "={{ $json.telefono }}",
+              "type": "string"
+            },
+            {
+              "id": "00714ead-bef2-4a7c-943e-aa5039a612a4",
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "d6d5ebc8-973d-47db-b6a3-35ae1d6bf967",
+              "name": "telefonoMySQL",
+              "value": "={{ $json.telefonoMySQL }}",
+              "type": "string"
+            },
+            {
+              "id": "0d2eeecf-4149-4d7d-9c61-bf5c154eaec9",
+              "name": "instance",
+              "value": "={{ $json.instance }}",
+              "type": "string"
+            },
+            {
+              "id": "68df1fba-ecf8-441f-88a5-47fc4a47f8f7",
+              "name": "apikey",
+              "value": "={{ $json.apikey }}",
+              "type": "string"
+            },
+            {
+              "id": "096df1d9-a370-4c4a-a64c-668d87d086ce",
+              "name": "usuariocue",
+              "value": "={{ $json.usuariocue }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1216,
+        -1296
+      ],
+      "id": "dd88aff7-4e22-4f0a-805b-3867786367e3",
+      "name": "merge b"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7822c08f-5d69-4027-8c7e-c72ee0b8bf1c",
+              "name": "numero",
+              "value": "={{ $json.contact.numero }}",
+              "type": "string"
+            },
+            {
+              "id": "00714ead-bef2-4a7c-943e-aa5039a612a4",
+              "name": "mensaje",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "4860386e-73c1-4bd5-bd48-9c0201454548",
+              "name": "instance",
+              "value": "={{ $json.instance.name }}",
+              "type": "string"
+            },
+            {
+              "id": "ca14cd20-3519-46a4-b955-67d9ae3a1f73",
+              "name": "apikey",
+              "value": "={{ $json.instance.apikey }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1728,
+        -1344
+      ],
+      "id": "c0ff850f-e241-437c-a0f4-d976adda2989",
+      "name": "merge a"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/registrar-codigo-entregado",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "numero",
+              "value": "={{ $('merge b').item.json.telefonoMySQL }}"
+            },
+            {
+              "name": "usuariocue",
+              "value": "={{ $('merge b').item.json.usuariocue }}"
+            },
+            {
+              "name": "instance",
+              "value": "={{ $('merge b').item.json.instance }}"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $('merge b').item.json.apikey }}"
+            },
+            {
+              "name": "estado",
+              "value": "esperando"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -624,
+        -1408
+      ],
+      "id": "1abc2e29-6540-4c95-b449-e334d9a88e1b",
+      "name": "esperando"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "codigos",
+          "mode": "list",
+          "cachedResultName": "codigos"
+        },
+        "limit": 1,
+        "where": {
+          "values": [
+            {
+              "column": "estado",
+              "value": "ESPERANDO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -992,
+        -1296
+      ],
+      "id": "ce74693a-534d-40e6-abed-b4bb07864d01",
+      "name": "consultar 2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "Z7O4VnXABWDYwHPY",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst body = input.body || {};\nconst data = body.data || {};\nconst msg = data.message || {};\nconst key = data.key || {};\n\nconst fromMe = key.fromMe === true;\n\n// server_url debe ser string, no objeto\nconst server_url = String(body.server_url || \"\").trim();\n\n// numero base\nconst rawJid = String(input.numero || key.remoteJid || body.sender || \"\");\nconst numero = rawJid.split(\"@\")[0].replace(/\\D/g, \"\");\n\n// tipo de mensaje\nlet messageType = \"unknown\";\nif (msg.conversation) messageType = \"texto\";\nelse if (msg.extendedTextMessage) messageType = \"texto\";\nelse if (msg.audioMessage) messageType = \"audio\";\nelse if (msg.imageMessage) messageType = \"imagen\";\nelse if (msg.videoMessage) messageType = \"video\";\nelse if (msg.documentMessage) messageType = \"documento\";\n\n// contenido\nlet content = \"\";\nif (msg.conversation) content = msg.conversation;\nelse if (msg.extendedTextMessage) content = msg.extendedTextMessage.text || \"\";\nelse if (msg.imageMessage) content = msg.imageMessage.caption || \"\";\nelse if (msg.videoMessage) content = msg.videoMessage.caption || \"\";\n\n// ids\nconst messageID = String(key.id || \"\");\nconst chatID = String(body.sender || rawJid || \"\");\n\n// ignorar grupos\nif (chatID.endsWith(\"@g.us\")) {\n  return [];\n}\n\n// instancia\nconst instanceName = String(body.instance || \"\").trim();\n\n// apikey por instancia\nconst apikeys = {\n  \"bot-pagos\": \"68E6084D0489-44B9-909A-632E54ACDD64\",\n  \"default\": \"040E38A519FF-405D-9860-D083DFE9754F\"\n};\nconst apikey = apikeys[instanceName] || apikeys.default;\n\n// empleados\nconst empleados = [\n  \"593961778319\",\n  \"593996464991\",\n  \"593961412826\",\n  \"593961702129\",\n  \"593986740052\",\n  \n  \"573105948236\",\n  \"593960523682\",\n  \"593962159166\",\n  \"593983237958\",\n];\n\nconst esEmpleado = empleados.includes(numero);\nconst tipo = esEmpleado ? \"empleado\" : \"cliente\";\n\nlet color = \"azul\";\nif (instanceName === \"bot-pagos\") color = \"verde\";\n\nreturn [\n  {\n    json: {\n      canal: \"whatsapp\",\n      canal_user_id: numero,\n\n      content,\n\n      instance: {\n        name: instanceName,\n        apikey,\n        server_url,\n        color\n      },\n\n      message: {\n        id: messageID,\n        chat_id: chatID,\n        from: numero,\n        type: messageType,\n        content,\n        fromMe\n      },\n\n      contact: {\n        numero,\n        tipo,\n        esEmpleado\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2224,
+        -1488
+      ],
+      "id": "1066f69c-9203-409a-9157-c9530e75051a",
+      "name": "Normalizar"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.type }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "105ec621-323b-4e1e-8c3f-df7bce34f5f0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "22ed3176-fcf5-4b33-be21-4fcf625d0a9b",
+                    "leftValue": "={{ $json.message.type }}",
+                    "rightValue": "imagen",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "imagen"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "facf4efc-9a53-4ec9-9a55-35414cd6a13d",
+                    "leftValue": "={{ $json.message.type }}",
+                    "rightValue": "texto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "texto"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Otro"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2112,
+        -1520
+      ],
+      "id": "69f8d06c-aa52-4e07-b634-ba7a4c0b63f1",
+      "name": "Tipo mensaje"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.instance.server_url }}/chat/getBase64FromMediaMessage/{{ $json.instance.name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $json.instance.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message.key.id",
+              "value": "={{ $json.message.id }}"
+            },
+            {
+              "name": "convertToMp4",
+              "value": "={{ Boolean(false) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1808,
+        -1776
+      ],
+      "id": "36773f7b-6265-4c0d-9fb4-2b02c27c14c1",
+      "name": "Get audio"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "mimeType": "={{ $json.mimetype }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1568,
+        -1792
+      ],
+      "id": "f139fbe4-df4c-4cc4-9c4a-ab6087d21721",
+      "name": "Convert audio"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1456,
+        -1792
+      ],
+      "id": "f9e06611-c356-421e-b3f3-ccae470f41ae",
+      "name": "Transcribe",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBPlamBZ6NHPVTxU",
+          "name": "OpenAi Pablin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.instance.server_url }}/chat/getBase64FromMediaMessage/{{ $json.instance.name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $json.instance.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message.key.id",
+              "value": "={{ $json.message.id }}"
+            },
+            {
+              "name": "convertToMp4",
+              "value": "={{ Boolean(false) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1808,
+        -1632
+      ],
+      "id": "50f6e4df-a507-4724-b9e4-2270ddfe34e8",
+      "name": "Get imagen"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "mimeType": "={{ $json.mimetype }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1568,
+        -1648
+      ],
+      "id": "8acaf4b7-776a-4c09-8b76-e9eec8cfe824",
+      "name": "Convert image"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Analiza la imagen recibida.\n\n----------------------------------------\n\n1) Primero determina:\n\n¿La imagen contiene comprobante(s) de pago REAL(ES)?\n\nResponde con:\n- es_comprobante: true | false\n\n----------------------------------------\n\n2) Si NO es comprobante:\n\nDevuelve SOLO este JSON:\n\n{\n  \"es_comprobante\": false,\n  \"descripcion\": \"describe claramente lo que aparece en la imagen\",\n  \"tipo_imagen\": \"captura_error | selfie | documento | otra\",\n  \"confianza\": 85\n}\n\n----------------------------------------\n\n3) Si SÍ es comprobante:\n\nIMPORTANTE:\nPuede haber 1 o VARIOS comprobantes en la misma foto.\nDebes detectar TODOS los comprobantes visibles.\nSi hay varios, extrae cada uno y calcula el total.\n\nExtrae por cada comprobante:\n\n- comprobante:\n  Número real del comprobante, transacción, referencia o autorización.\n  Normalmente aparece junto a textos como:\n  \"N° de comprobante\", \"No. comprobante\", \"Número de comprobante\",\n  \"Referencia\", \"Transacción\", \"Código de transacción\", \"ID transacción\".\n  \n  MUY IMPORTANTE:\n  - NO uses títulos como \"Transferencia exitosa\", \"Transferencia realizada\", \"Pago exitoso\", \"Comprobante de pago\".\n  - NO uses el nombre del banco.\n  - NO uses el nombre del beneficiario.\n  - Si no ves un número/código real de comprobante, devuelve null.\n\n- monto\n- banco\n- fecha\n- titular: beneficiario / persona o empresa que recibe el dinero\n- emisor: persona que envía el dinero\n\nReglas para titular y emisor:\n- Si aparece \"A Esteban Trader Academy...\" eso es titular / beneficiario.\n- Si aparece \"De Mero Penarrieta Julio Alberto\", el emisor debe ser \"Mero Penarrieta Julio Alberto\".\n- NO incluyas la palabra \"De\" al inicio del emisor.\n- NO incluyas etiquetas como \"De\", \"A\", \"Para\", \"Beneficiario\", \"Ordenante\", \"Remitente\".\n\nAdemás devuelve resumen global:\n\n- total_comprobantes\n- monto_total_detectado\n- banco_principal\n- fechas_detectadas\n\n----------------------------------------\n\n4) Validaciones visuales:\n\n- legible\n- borroso\n- editado\n- realista\n\n----------------------------------------\n\n5) Detección avanzada:\n\n- qr_detectado\n- qr_valido_visualmente\n- qr_contenido\n\n----------------------------------------\n\n6) Reglas IMPORTANTES:\n\n- NO inventes datos.\n- Si no se ve algo: null.\n- Solo analiza lo visible.\n- Si hay varios comprobantes, NO elijas uno: devuelve todos en comprobantes[] y suma en monto_total_detectado.\n- La confianza mide qué tan seguro estás de la extracción visible.\n- Si la imagen es legible y extraes monto, banco, fecha y datos principales, confianza debe ser entre 80 y 95.\n- Nunca devuelvas confianza 0 si lograste extraer datos.\n\n----------------------------------------\n\n7) Devuelve SOLO JSON válido, sin markdown, sin explicación:\n\nSI ES COMPROBANTE:\n\n{\n  \"es_comprobante\": true,\n  \"total_comprobantes\": number,\n  \"monto_total_detectado\": number|null,\n  \"banco_principal\": \"string|null\",\n  \"fechas_detectadas\": [\"YYYY-MM-DD\"],\n\n  \"comprobantes\": [\n    {\n      \"comprobante\": \"string|null\",\n      \"monto\": number|null,\n      \"banco\": \"string|null\",\n      \"fecha\": \"YYYY-MM-DD|null\",\n      \"titular\": \"string|null\",\n      \"emisor\": \"string|null\"\n    }\n  ],\n\n  \"legible\": true,\n  \"borroso\": false,\n  \"editado\": false,\n  \"realista\": true,\n\n  \"qr_detectado\": true,\n  \"qr_valido_visualmente\": true,\n  \"qr_contenido\": \"string|null\",\n\n  \"confianza\": 85\n}",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1456,
+        -1648
+      ],
+      "id": "9ad9142d-3bf9-4ac3-845e-6e4233da840d",
+      "name": "Analyze",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBPlamBZ6NHPVTxU",
+          "name": "OpenAi Pablin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================\n// 1. OBTENER RESPUESTA OPENAI\n// ==========================\nconst input = $input.first().json;\n\nlet raw =\n  input?.[\"0\"]?.content?.[0]?.text ||\n  input?.content?.[0]?.text ||\n  input?.message?.content ||\n  input?.text ||\n  \"\";\n\nif (typeof raw !== \"string\") {\n  raw = JSON.stringify(raw);\n}\n\nraw = raw\n  .replace(/```json/g, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\n// ==========================\n// 2. PARSEAR JSON\n// ==========================\nlet parsed;\nlet jsonValido = true;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {};\n  jsonValido = false;\n}\n\n// ==========================\n// 3. UTILIDADES\n// ==========================\nconst normalize = (str) => {\n  if (str === null || str === undefined) return null;\n\n  return String(str)\n    .toLowerCase()\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[^\\w\\s.+-]/g, \" \")\n    .replace(/\\s+/g, \" \")\n    .trim() || null;\n};\n\nconst parseNumber = (v) => {\n  if (v === null || v === undefined || v === \"\") return null;\n  if (typeof v === \"number\") return Number.isFinite(v) ? v : null;\n\n  const s = String(v)\n    .replace(/[$\\s]/g, \"\")\n    .replace(/[^0-9,.-]/g, \"\")\n    .replace(\",\", \".\");\n\n  const n = Number(s);\n  return Number.isFinite(n) ? n : null;\n};\n\nconst uniq = (arr) => [...new Set(arr.filter(Boolean))];\nconst safeArray = (v) => Array.isArray(v) ? v : [];\n\n// ==========================\n// LIMPIAR NOMBRE / EMISOR\n// ==========================\nconst cleanPersonName = (v) => {\n  let s = normalize(v);\n  if (!s) return null;\n\n  // Quita etiquetas iniciales repetidas\n  s = s\n    .replace(/^(de|del|desde|emisor|remitente|ordenante|origen)\\s+/i, \"\")\n    .replace(/^(a|para|beneficiario|titular|destinatario|destino)\\s+/i, \"\")\n    .replace(/\\s+/g, \" \")\n    .trim();\n\n  return s || null;\n};\n\n// ==========================\n// LIMPIAR COMPROBANTE\n// ==========================\nconst cleanReceipt = (v) => {\n  if (v === null || v === undefined) return null;\n\n  const original = String(v).trim();\n  if (!original) return null;\n\n  const compact = original\n    .toLowerCase()\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[^a-z0-9]/g, \"\");\n\n  // Frases que NUNCA deben guardarse como número de comprobante\n  const forbidden = [\n    \"transferenciaexitosa\",\n    \"transferenciarealizada\",\n    \"transferenciaaprobada\",\n    \"pagoexitoso\",\n    \"pagorealizado\",\n    \"comprobantepago\",\n    \"comprobantedepago\",\n    \"transferencia\"\n  ];\n\n  if (forbidden.includes(compact)) return null;\n\n  // Prioridad: números de 5+ dígitos\n  const digitMatches = original.match(/\\d{5,}/g);\n  if (digitMatches?.length) {\n    return digitMatches.sort((a, b) => b.length - a.length)[0];\n  }\n\n  // Permitir códigos alfanuméricos solo si tienen números y longitud razonable\n  const alnum = original.replace(/[^a-zA-Z0-9]/g, \"\");\n\n  if (\n    alnum.length >= 6 &&\n    /\\d/.test(alnum) &&\n    !/^[a-zA-Z]+$/.test(alnum)\n  ) {\n    return alnum;\n  }\n\n  return null;\n};\n\n// Busca comprobantes válidos en varios campos por si la IA lo puso en otro lado\nconst findReceiptCandidate = (items, parsed) => {\n  const candidates = [];\n\n  for (const c of items) {\n    candidates.push(c?.comprobante);\n    candidates.push(c?.referencia);\n    candidates.push(c?.transaccion);\n    candidates.push(c?.codigo_transaccion);\n    candidates.push(c?.numero_comprobante);\n  }\n\n  candidates.push(parsed.comprobante);\n  candidates.push(parsed.referencia);\n  candidates.push(parsed.transaccion);\n  candidates.push(parsed.codigo_transaccion);\n  candidates.push(parsed.qr_contenido);\n\n  for (const candidate of candidates) {\n    const cleaned = cleanReceipt(candidate);\n    if (cleaned) return cleaned;\n  }\n\n  return null;\n};\n\n// ==========================\n// 4. DETECTAR TIPO\n// ==========================\nconst esComprobante = parsed.es_comprobante === true;\n\n// ==========================\n// 5. SI ES COMPROBANTE\n// ==========================\nif (esComprobante) {\n  let comprobantes = safeArray(parsed.comprobantes);\n\n  if (!comprobantes.length) {\n    comprobantes = [\n      {\n        comprobante: parsed.comprobante ?? null,\n        monto: parsed.monto ?? null,\n        banco: parsed.banco ?? parsed.banco_principal ?? null,\n        fecha: parsed.fecha ?? null,\n        titular: parsed.titular ?? null,\n        emisor: parsed.emisor ?? null,\n      }\n    ];\n  }\n\n  const comprobantesNorm = comprobantes.map((c) => ({\n    comprobante: cleanReceipt(c?.comprobante),\n    monto: parseNumber(c?.monto),\n    banco: normalize(c?.banco),\n    fecha: c?.fecha || null,\n    titular: cleanPersonName(c?.titular),\n    emisor: cleanPersonName(c?.emisor),\n  }));\n\n  const totalComprobantes =\n    parseNumber(parsed.total_comprobantes) ?? comprobantesNorm.length;\n\n  const montoTotalDetectado =\n    parseNumber(parsed.monto_total_detectado) ??\n    comprobantesNorm.reduce((sum, c) => sum + (c.monto ?? 0), 0);\n\n  const bancoPrincipal =\n    normalize(parsed.banco_principal) ||\n    comprobantesNorm.find((c) => c.banco)?.banco ||\n    normalize(parsed.banco) ||\n    null;\n\n  const fechasDetectadas = uniq([\n    ...safeArray(parsed.fechas_detectadas),\n    ...comprobantesNorm.map((c) => c.fecha),\n    parsed.fecha || null\n  ]);\n\n  // Comprobante principal: el de mayor monto\n  const conMonto = comprobantesNorm.filter((c) => c.monto !== null);\n\n  const principal = conMonto.length\n    ? conMonto.sort((a, b) => (b.monto ?? 0) - (a.monto ?? 0))[0]\n    : comprobantesNorm[0] || {};\n\n  // Si el comprobante principal no tiene número válido, buscar en todos los campos\n  const comprobanteFinal =\n    principal.comprobante ||\n    findReceiptCandidate(comprobantes, parsed);\n\n  const emisorFinal =\n    principal.emisor ||\n    cleanPersonName(parsed.emisor) ||\n    null;\n\n  const titularFinal =\n    principal.titular ||\n    cleanPersonName(parsed.titular) ||\n    null;\n\n  const errores = [];\n\n  if (!jsonValido) errores.push(\"JSON IA inválido\");\n  if (!comprobanteFinal) errores.push(\"Número de comprobante no detectado\");\n  if (!montoTotalDetectado) errores.push(\"Monto no detectado\");\n  if (!bancoPrincipal) errores.push(\"Banco no detectado\");\n  if (!emisorFinal) errores.push(\"Emisor no detectado\");\n\n  const listoParaCargar = errores.length === 0;\n\n  return [\n    {\n      json: {\n        tipo: \"comprobante\",\n        es_comprobante: true,\n        listo_para_cargar: listoParaCargar,\n        errores: errores.join(\", \"),\n\n        data: {\n          comprobante: comprobanteFinal,\n          monto: montoTotalDetectado ?? null,\n          monto_total_detectado: montoTotalDetectado ?? null,\n          total_comprobantes: totalComprobantes ?? 1,\n\n          banco: bancoPrincipal,\n          bancos_detectados: uniq(comprobantesNorm.map((c) => c.banco)),\n\n          fecha: principal.fecha ?? parsed.fecha ?? null,\n          fechas_detectadas: fechasDetectadas,\n\n          titular: titularFinal,\n          emisor: emisorFinal,\n\n          comprobantes: comprobantesNorm\n        },\n\n        validacion: {\n          legible: parsed.legible ?? null,\n          borroso: parsed.borroso ?? null,\n          editado: parsed.editado ?? null,\n          realista: parsed.realista ?? null,\n          confianza: parseNumber(parsed.confianza),\n        },\n\n        qr: {\n          detectado: parsed.qr_detectado ?? false,\n          valido: parsed.qr_valido_visualmente ?? false,\n          contenido: parsed.qr_contenido ?? null,\n        },\n\n        raw\n      }\n    }\n  ];\n}\n\n// ==========================\n// 6. SI NO ES COMPROBANTE\n// ==========================\nconst descripcion = parsed.descripcion || \"No se pudo describir\";\n\nreturn [\n  {\n    json: {\n      tipo: \"imagen\",\n      es_comprobante: false,\n      listo_para_cargar: false,\n      content: \"<imagen>\" + descripcion + \"<imagen>\",\n      tipo_imagen: parsed.tipo_imagen || \"desconocido\",\n      confianza: parseNumber(parsed.confianza),\n      raw\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1344,
+        -1648
+      ],
+      "id": "dc784d94-0417-49ce-bf0b-659cbd7a5fd1",
+      "name": "Parsear1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7e6d9c19-6718-4b53-a8de-7711ad1b1e1b",
+              "leftValue": "={{ $json.es_comprobante }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1232,
+        -1648
+      ],
+      "id": "5a8ffad1-f4e0-4b94-82fb-60ac0f9a1fb8",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        -1344
+      ],
+      "id": "0153b570-512a-464a-a5a2-43ef4ff08485",
+      "name": "Wait5",
+      "webhookId": "6516dd11-1b82-4935-999d-13a1354c57f2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "63e391d1-bf5c-461e-be7b-39ee87653eb1",
+              "leftValue": "={{ $json.data.debe_responder }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        -1344
+      ],
+      "id": "3f0099bc-e300-4df9-9e57-0a8fad40d2e6",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -1232
+      ],
+      "id": "b131259b-b168-4eef-be83-af09e6803166",
+      "name": "DeepSeek1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/context",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        -1344
+      ],
+      "id": "dfb00f37-c886-4a74-82de-7a27e0f550a2",
+      "name": "get context"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/respond",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contenido",
+              "value": "={{ $('Parsear3').item.json.mensaje }}"
+            },
+            {
+              "name": "marcar_leidos",
+              "value": "={{ Boolean(true) }}"
+            },
+            {
+              "name": "instance",
+              "value": "={{ $json.config.instance_name }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $json.config.external_thread_id }}"
+            },
+            {
+              "name": "subagente_codigo",
+              "value": "={{ $json.config.subagente_codigo }}"
+            },
+            {
+              "name": "tipo_remitente",
+              "value": "ia"
+            },
+            {
+              "name": "canal",
+              "value": "whatsapp"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $json.config.instance_apikey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2256,
+        -1264
+      ],
+      "id": "3c2625ad-1e08-46da-80fa-b8e28f317638",
+      "name": "save respond"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=MENSAJE: {{ $json.data.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.data.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.data.historial_reciente) }}\nCONVERSACIÓN: {{ JSON.stringify($json.data.conversacion) }}\n\nClasifica el turno. Devuelve solo JSON.",
+        "options": {
+          "systemMessage": "=Eres el router de Streamify. Solo clasificas. No respondes al cliente.\n\nPRIORIDAD (de mayor a menor):\n1. Pide humano/asesor/persona real → espera_humano (silencio_bot=true, requiere_humano=true)\n2. Pago/comprobante/transferencia/recarga/ya pagué → cobranzas_pago\n3. No entra/error/contraseña/pantalla/no funciona/cuenta → soporte_cliente\n4. Precio/planes/quiero comprar/cuánto cuesta/combos → vendedor_cierre\n5. Compró hace menos de 3 días + duda de entrega o seguimiento → postventa_reciente\n6. Cualquier otro caso o lead nuevo → asistente_no_registrado\n\nREGLA DE CONTEXTO:\n- Si el historial muestra que ya está en un subagente y el mensaje es continuación natural, mantén ese subagente.\n- Si hay cambio claro de tema, reclasifica.\n\nDevuelve SOLO este JSON, sin texto antes ni después:\n{\n  \"subagente_codigo\": \"espera_humano|asistente_no_registrado|vendedor_cierre|soporte_cliente|cobranzas_pago|postventa_reciente\",\n  \"motivo\": \"frase corta en 5 palabras máx\",\n  \"requiere_humano\": false,\n  \"silencio_bot\": false,\n  \"confianza\": 90\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        848,
+        -1344
+      ],
+      "id": "ff69aaed-430f-4485-8724-a4f2eb6f3c23",
+      "name": "Clasificador"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================\n// 🔹 1. OBTENER OUTPUT\n// ==========================\nlet raw = $json.output;\n\n// ==========================\n// 🔹 2. LIMPIAR TEXTO\n// ==========================\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// ==========================\n// 🔹 3. PARSEAR JSON\n// ==========================\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {};\n}\n\n// ==========================\n// 🔹 4. TRAER DATOS DE MERGE\n// ==========================\nconst merge = $('Merge').first().json;\n\n// ==========================\n// 🔹 5. DEVOLVER CORRECTO\n// ==========================\nreturn [\n  {\n    json: {\n      ...parsed,\n\n      content: merge.content,\n\n      instance: {\n        name: merge?.instance?.name,\n        apikey: merge.instance.apikey,\n      },\n      context: {\n        contacto: $('get context').first().json.data.contacto,\n        cliente: $('get context').first().json.data.contacto.cliente,\n        conversacion: $('get context').first().json.data.conversacion,\n        trigger_idmsg: $('get context').first().json.data.trigger_idmsg,\n        ultimo_pendiente_idmsg: $('get context').first().json.data.ultimo_pendiente_idmsg,\n        mensajes_pendientes: $('get context').first().json.data.mensajes_pendientes,\n        mensaje_agrupado: $('get context').first().json.data.mensaje_agrupado,\n        historial_reciente: $('get context').first().json.data.historial_reciente,\n        memorias_contacto: $('get context').first().json.data.memorias_contacto,\n        resumenes: $('get context').first().json.data.resumenes,\n        memoria_negocio: $('get context').first().json.data.memoria_negocio,\n        subagentes: $('get context').first().json.data.subagentes\n      },\n\n      external_thread_id: merge.external_thread_id\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -1344
+      ],
+      "id": "eeab7a98-238d-4b87-9f66-c7e445d164ab",
+      "name": "Parsear2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec86d83e-646c-4d98-b58d-cf09cdc6232c",
+              "leftValue": "={{ $json.requiere_humano }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1d83e85c-bf98-4436-a3cd-e7e2d4921a34",
+              "leftValue": "={{ $json.silencio_bot }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "93c5555a-535b-4766-a159-a4a673e6d51a",
+              "leftValue": "={{ $json.subagente_codigo }}",
+              "rightValue": "espera_humano",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        -1344
+      ],
+      "id": "4c2cac3f-8746-455e-83e3-99698416233a",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/handoff",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "idconv",
+              "value": "={{ $('get context').item.json.data.idconv }}"
+            },
+            {
+              "name": "razon",
+              "value": "={{ $('Parsear2').item.json.motivo }}"
+            },
+            {
+              "name": "subagente_codigo",
+              "value": "={{ $('Parsear2').item.json.subagente_codigo }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        -1424
+      ],
+      "id": "aa789f0c-2688-4acc-b01e-ecb01a110072",
+      "name": "Handoff"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.subagente_codigo }}",
+                    "rightValue": "asistente_no_registrado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c0b1e8b2-f9b4-445b-b41e-abb0218782d1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "asistente"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ad2191ce-feb3-4003-92a8-dc507e9c1978",
+                    "leftValue": "={{ $json.subagente_codigo }}",
+                    "rightValue": "vendedor_cierre",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "vendedor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "976161c5-5389-486a-ac87-8d14d3cf0549",
+                    "leftValue": "={{ $json.subagente_codigo }}",
+                    "rightValue": "soporte_cliente",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "soporte"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2a2af1bf-06a4-488d-97d8-a35cf0b8d7af",
+                    "leftValue": "={{ $json.subagente_codigo }}",
+                    "rightValue": "cobranzas_pago",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cobranzas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cb2f8955-dbd9-415b-9aec-039e30306f6f",
+                    "leftValue": "={{ $json.subagente_codigo }}",
+                    "rightValue": "postventa_reciente",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "postventa"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        -1376
+      ],
+      "id": "c69c3d48-8dfa-4291-bb7b-622398b4a78e",
+      "name": "Subagente"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nAtiende al lead. Devuelve JSON.",
+        "options": {
+          "systemMessage": "Eres el asistente comercial de Streamify. Atiendes leads nuevos.\n\nOBJETIVO: Identificar qué quieren y orientarlos a comprar o resolver su duda rápido.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío. Si ya hay mensajes previos, ve directo al punto.\n- Responde en máximo 3-5 líneas.\n- Si preguntan precio: da el precio directo y pregunta cuántos perfiles o meses.\n- Si ya quieren comprar: pide nombre y apellido si no los tienes en contacto.\n- Si es soporte o pago: deriva internamente (no lo digas al cliente, solo actúa).\n\nFRASES PROHIBIDAS: \"Bienvenido a Streamify\", \"Con mucho gusto\", \"Estaré encantado\", \"¿En qué puedo ayudarte hoy?\"\n\nFLUJO DE IDENTIFICACIÓN:\n1. Buscar cliente por teléfono primero.\n2. Si no existe y quiere comprar: pedir nombre y apellido.\n3. Crear cliente rápido con esos datos.\n4. Continuar al cierre.\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"asistente_no_registrado\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_cliente|crear_cliente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1808,
+        -2048
+      ],
+      "id": "d7de36d0-fb8a-4185-8b36-efced0221758",
+      "name": "Asistente no registrado"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nALERTA: Si el cliente menciona renovar/extender/reactivar, la accion es renovar_venta, NO crear_venta.\n\nCierra la venta. Devuelve JSON.",
+        "options": {
+          "systemMessage": "Eres el vendedor de Streamify. Tu único objetivo: cerrar la venta o renovación.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas por mensaje.\n- Cada mensaje termina con una sola pregunta o CTA.\n- Si el cliente dice precio/cuánto cuesta: responde con precio directo + pregunta meses o perfiles.\n- Si el cliente dice renovar/extender/reactivar: es RENOVACIÓN, no venta nueva.\n- Si saldo no alcanza: di el faltante y pide recarga. No insistas más de 1 vez.\n\nÁRBOL DE DECISIÓN OBLIGATORIO:\nA) ¿Tiene señales de renovación? (renovar, extender, seguir, reactivar, idven disponible)\n   → SÍ: usar renovar_venta. NUNCA crear_venta en este caso.\n   → NO: continuar a B.\nB) ¿Producto de entrega inmediata y saldo suficiente?\n   → SÍ: usar crear_venta.\n   → NO: pedido o informar faltante.\n\nREGLAS ANTI-ERROR:\n- Nunca llames crear_venta si la intención es renovar.\n- Nunca pidas al cliente \"código de compra\", \"idven\" ni IDs técnicos.\n- Si una herramienta falla por segunda vez con el mismo error: escala a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu compra\", \"Permíteme un momento\", \"¿Te puedo ayudar con algo más?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"vendedor_cierre\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"motivo_humano\": null,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1808,
+        -1648
+      ],
+      "id": "b8a5da6e-1fa8-44a3-b236-4b1f9287d464",
+      "name": "Vendedor cierre"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        -1536
+      ],
+      "id": "cb05c593-f616-4e19-aa3e-7cb6c3ce0e9c",
+      "name": "DeepSeek3",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta precios de productos para que puedas informar al cliente.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/metodos-pago",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1984,
+        -1856
+      ],
+      "id": "98a8663f-8235-40e9-b7e4-0cf37dbfd22a",
+      "name": "get metodos-pago"
+    },
+    {
+      "parameters": {
+        "jsCode": "let raw = $json.output ?? $json.text ?? '';\nlet data = null;\n\nconst toText = (v) => {\n  if (v === undefined || v === null) return '';\n  if (typeof v === 'string') return v;\n  try { return JSON.stringify(v); } catch { return String(v); }\n};\n\nraw = toText(raw)\n  .replace(/```json/gi, '')\n  .replace(/```/g, '')\n  .trim();\n\n// 1) intento parse directo\ntry { data = JSON.parse(raw); } catch (_) {}\n\n// 2) extraer bloque JSON dentro de texto mixto\nif (!data) {\n  const first = raw.indexOf('{');\n  const last  = raw.lastIndexOf('}');\n  if (first >= 0 && last > first) {\n    try { data = JSON.parse(raw.slice(first, last + 1)); } catch (_) {}\n  }\n}\n\n// 3) fallback: texto plano sin JSON — tomar solo el último párrafo\n// para evitar enviar razonamiento interno al cliente\nif (!data || typeof data !== 'object') {\n  let replyText = raw;\n  const parts = raw.split(/\\n\\n+/);\n  if (parts.length > 1) {\n    const lastMeaningful = parts.filter(p => p.trim().length > 0).pop();\n    if (lastMeaningful && lastMeaningful.trim().length > 10) {\n      replyText = lastMeaningful.trim();\n    }\n  }\n  data = {\n    subagente_codigo: null,\n    reply_text: replyText || 'Gracias por tu mensaje. Enseguida te ayudo.',\n    accion_tipo: 'ninguna',\n    accion_requerida: false,\n    accion_payload: null,\n    escalar_humano: false,\n    motivo_humano: null,\n    confianza: 0\n  };\n}\n\n// Sanitizar reply_text\nlet texto = toText(data.reply_text).replace(/\\\\n/g, '\\n').trim();\ntexto = texto.replace(/\\n{3,}/g, '\\n\\n');\ntexto = texto.replace(/[\"\\\\]+(?=\\*)/g, '').replace(/(?<=\\*)[\"\\\\]+/g, '');\nif (!texto) texto = 'Gracias por tu mensaje. Enseguida te ayudo.';\nif (texto.length > 4000) texto = texto.slice(0, 3900) + '\\n\\n... (mensaje recortado)';\n\n// Leer Parsear2 con protección — n8n 2.12 puede fallar la referencia en merges\nlet p2 = {};\ntry { p2 = $('Parsear4').first().json ?? {}; } catch (_) { p2 = {}; }\n\nconst instanceObj = p2.instance ?? {};\n\nreturn [{\n  json: {\n    mensaje: texto,\n    meta: {\n      subagente: data.subagente_codigo || null,\n      estado:    data.accion_tipo      || null,\n      confianza: Number(data.confianza || 0)\n    },\n    control: {\n      requiere_accion: data.accion_requerida === true,\n      accion_tipo:     data.accion_tipo     || null,\n      accion_payload:  data.accion_payload  || null,\n      escalar_humano:  data.escalar_humano  === true,\n      motivo_humano:   data.motivo_humano   || null\n    },\n    config: {\n        subagente_codigo: $('Parsear2').first().json.subagente_codigo,\n        motivo: $('Parsear2').first().json.motivo,\n        requiere_humano: false,\n        silencio_bot: false,\n        content: $('Parsear2').first().json.content,\n        instance_name: $('Parsear2').first().json.instance.name,\n        instance_apikey: $('Parsear2').first().json.instance.apikey,\n        external_thread_id: $('Parsear2').first().json.external_thread_id,\n      }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        -1264
+      ],
+      "id": "f16b574d-00ce-41dc-9769-4fe85b69f84d",
+      "name": "Parsear3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        -1152
+      ],
+      "id": "ef0b8079-0aab-42a5-b259-10d8022dca62",
+      "name": "DeepSeek4",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nRECORDATORIO CRÍTICO:\n- Si menciona error de acceso → consulta usuarios-activos PRIMERO.\n- Si tiene servicio activo + error → bug del sistema → crear_soporte.\n- Si servicio vencido → renovación → derivar a pago, sin crear soporte.\n- Si ya probó credenciales y sigue sin entrar → crear_soporte directo.\n\nDiagnostica y devuelve JSON.\",",
+        "options": {
+          "systemMessage": "Eres soporte de Streamify. Resuelves problemas de acceso con el mínimo de mensajes posible.\n\nDIAGNÓSTICO OBLIGATORIO antes de crear soporte:\n\nPASO 1 — ¿El cliente menciona error de acceso o \"no tengo suscripción\"?\n→ Consulta usuarios-activos por teléfono ANTES de responder.\n→ Según resultado:\n   • Servicio ACTIVO pero con error → Es bug del sistema → crear_soporte tipo \"otro\" + handoff\n   • Servicio VENCIDO → No es bug → informar vencimiento + derivar a pago\n   • Nunca tuvo ese servicio → derivar a vendedor\n\nPASO 2 — ¿El cliente dice \"contraseña incorrecta\"?\n→ Turno 1: \"Verifica que sea el correo correcto y la contraseña exacta, sin espacios.\"\n→ Si en el turno 2 sigue sin entrar → crear_soporte tipo \"contrasena incorrecta\"\n\nPASO 3 — Casos de soporte INMEDIATO (sin pasos previos):\n→ \"muchos dispositivos\" → crear_soporte tipo \"muchos dispositivos\"\n→ \"cuenta suspendida/bloqueada\" → crear_soporte tipo \"otro\"\n→ \"demasiadas pantallas\" → crear_soporte tipo \"muchos dispositivos\"\n\nIMPORTANTE:\n- El agente NO puede verificar si una cuenta realmente está caída. Eso lo hace un humano.\n- Si el cliente insiste que no puede entrar y ya probó credenciales: crear_soporte + handoff. No más pasos.\n- Si hay comprobante en el historial: no cobres de nuevo.\n\nTONO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 2 líneas por mensaje.\n- Sin listas, sin pasos numerados con íconos.\n- Sin: \"Entiendo tu frustración\", \"Lamento el inconveniente\", \"Gracias por tu paciencia\".\n- Sí: \"Un momento, verifico.\", \"Creé el ticket #X, lo revisan pronto.\", \"Verifica e intenta.\"\n\nEJEMPLOS DE RESPUESTA CORRECTA:\n✓ \"¿Qué error ves exacto en la pantalla?\"\n✓ \"Verifica correo y contraseña sin espacios. Intenta de nuevo.\"\n✓ \"Tu Netflix está activo pero hay un error. Ticket #X creado, lo revisan en menos de 1 hora.\"\n✓ \"Tu Disney expiró el 15 de abril. ¿Quieres renovar?\"\n✗ \"¡Hola! Lamento el inconveniente. Vamos a revisar paso a paso lo que está pasando con tu cuenta...\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"soporte_cliente\",\n  \"reply_text\": \"respuesta directa, máx 2 líneas, sin listas\",\n  \"accion_tipo\": \"ninguna|crear_soporte|resolver_rapido|validar_servicio|handoff\",\n  \"accion_payload\": {\n    \"tipo\": \"contrasena incorrecta|sin suscripcion|muchos dispositivos|otro\",\n    \"descripcion\": \"descripción técnica breve para el equipo\"\n  },\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1792,
+        -1264
+      ],
+      "id": "b9d4dfb7-88eb-49f8-9130-3c6246e09575",
+      "name": "Soporte cliente",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta precios de productos para que puedas informar al cliente.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/metodos-pago",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1840,
+        -1376
+      ],
+      "id": "cd2529b3-8e57-4ff0-ba4d-b29dcad6a824",
+      "name": "get metodos-pago1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Cuando se cierra la venta creas la venta con esta api.\npayload minimo:\nidcli\nidproducto",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/venta",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "idcli",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `id del cliente`, 'string') }}"
+            },
+            {
+              "name": "idproducto",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `id del producto ya confirmado del cliente para venderle`, 'string') }}"
+            },
+            {
+              "name": "meses",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `cantidad en meses del producto`, 'string') }}"
+            },
+            {
+              "name": "dispositivos",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `cantidad de dispositivos del producto`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        -1456
+      ],
+      "id": "16dea0d8-b160-46bf-a40c-f7e0f17d835f",
+      "name": "crear venta"
+    },
+    {
+      "parameters": {
+        "content": "# Agente de WhatsApp",
+        "height": 352,
+        "width": 1328,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        256,
+        -1440
+      ],
+      "typeVersion": 1,
+      "id": "71c21005-6b59-4377-9529-b44d5b36b5c1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/ingest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $json.mensaje }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $('Normalizar').item.json.message.id }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.message.chat_id }}"
+            },
+            {
+              "name": "numero",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "origen",
+              "value": "n8n"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "debounce_seconds",
+              "value": "35"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            },
+            {
+              "name": "media_base64",
+              "value": "={{ $json.media_base64 }}"
+            },
+            {
+              "name": "media_file_name",
+              "value": "={{ $json.media_file_name }}"
+            },
+            {
+              "name": "media_mime_type",
+              "value": "={{ $json.media_mime_type }}"
+            },
+            {
+              "name": "mensaje_original",
+              "value": "={{ $json.mensaje_original }}"
+            },
+            {
+              "name": "texto_extraido",
+              "value": "={{ $json.texto_extraido }}"
+            },
+            {
+              "name": "media_kind",
+              "value": "={{ $json.media_kind }}"
+            },
+            {
+              "name": "media_transcripcion",
+              "value": "={{ $json.media_transcription }}"
+            },
+            {
+              "name": "media_caption",
+              "value": "={{ $json.media_caption }}"
+            },
+            {
+              "name": "media_analysis_json",
+              "value": "={{ $json.media_analysis_json }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        -1408
+      ],
+      "id": "273d7681-2b26-4d73-a8a2-a5f5ef2d1911",
+      "name": "ingest msg1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5f46f7bb-c814-47f1-9c54-5dea5695bcf5",
+              "leftValue": "={{ $('Normalizar').item.json.message.fromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        -1360
+      ],
+      "id": "c2fa8532-0225-4b55-8864-e7ea6d3b2f4e",
+      "name": "fromMe"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/save-respond",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $('Normalizar').item.json.content }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $('Normalizar').item.json.message.id }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.canal_user_id }}@s.whatsapp.net"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            },
+            {
+              "name": "media_base64",
+              "value": "={{ $json.base64 }}"
+            },
+            {
+              "name": "media_file_name",
+              "value": "={{ $json.fileName }}"
+            },
+            {
+              "name": "media_mime_type",
+              "value": "={{ $json.mimetype }}"
+            },
+            {
+              "name": "from_me",
+              "value": "=true"
+            },
+            {
+              "name": "tipo_remitente",
+              "value": "operador"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        -1264
+      ],
+      "id": "8a699f8d-0840-4ebb-9a47-fe908633e876",
+      "name": "save-respond"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/ingest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $('Normalizar').item.json.message.content }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $('Normalizar').item.json.message.id }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.message.chat_id }}"
+            },
+            {
+              "name": "numero",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "origen",
+              "value": "n8n"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "debounce_seconds",
+              "value": "35"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -496,
+        -1328
+      ],
+      "id": "fb913a23-5170-4cb5-a4fc-8351b3074a10",
+      "name": "ingest msg2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/save-respond",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('consultar').item.json.telefono }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $('Extraer code').item.json.tipo === 'codigo'\n   ? '*Tu código*\\n' + $('Extraer code').item.json.codigo\n   : $('Extraer code').item.json.mensaje }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('consultar').item.json.telefono }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $json.key?.id || $json.message?.key?.id || $json.data?.key?.id || '' }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('consultar').item.json.telefono + '@s.whatsapp.net' }}"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            },
+            {
+              "name": "from_me",
+              "value": "=true"
+            },
+            {
+              "name": "tipo_remitente",
+              "value": "operador"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1072,
+        -1520
+      ],
+      "id": "9bc72672-1c49-4b41-9eee-3105c9bbeb66",
+      "name": "save-respond2"
+    },
+    {
+      "parameters": {
+        "content": "## Si es Comprobante\nsubir comprobante\n",
+        "height": 208,
+        "width": 272,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -832,
+        -1744
+      ],
+      "typeVersion": 1,
+      "id": "ef2b9915-c8cc-468d-99ad-f11ff8c357af",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Contenido para Agente\n**Merge** ",
+        "height": 560,
+        "width": 228
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        -1536
+      ],
+      "typeVersion": 1,
+      "id": "d0371ffd-e7f4-4982-8ad3-65786aa4e63b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/payments/n8n/receipt-intake",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cliente_nombre",
+              "value": "={{ $json.data.emisor }}"
+            },
+            {
+              "name": "cliente_telefono",
+              "value": "=+{{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "banco_nombre",
+              "value": "={{ $json.data.banco }}"
+            },
+            {
+              "name": "valor",
+              "value": "={{ $json.data.monto }}"
+            },
+            {
+              "name": "numcomprobante",
+              "value": "={{ $json.data.comprobante }}"
+            },
+            {
+              "name": "media_base64",
+              "value": "={{ $('Get imagen').item.json.base64 }}"
+            },
+            {
+              "name": "media_mime_type",
+              "value": "={{ $('Get imagen').item.json.mimetype }}"
+            },
+            {
+              "name": "media_file_name",
+              "value": "={{ $('Get imagen').item.json.fileName }}"
+            },
+            {
+              "name": "canal",
+              "value": "whatsapp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -800,
+        -1664
+      ],
+      "id": "6e3ba9f3-9c3e-47e6-bbf5-4a7d73610a07",
+      "name": "Load",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toolDescription": "Identificar cliente por telefono",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `poner el telefono del cliente sin el teléfono de país`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1744,
+        -1856
+      ],
+      "id": "cfb32d81-1a45-4fec-a572-5ed07b04d86b",
+      "name": "get cliente"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente/create",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefonocli",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `telefono con codigo de país y sin espacios`, 'string') }}"
+            },
+            {
+              "name": "nombrecli",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Nomre y apellido del cliente`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1744,
+        -1776
+      ],
+      "id": "58db7752-e54f-4e5b-ab2e-8c87b5a968bb",
+      "name": "post cliente"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta precios de productos para que puedas informar al cliente.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/precios",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1824,
+        -1856
+      ],
+      "id": "a99655de-3c44-4028-b50e-dfcf901cf2e2",
+      "name": "get general precios"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar banco por nombre",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/banco/{nombrebanco}`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1984,
+        -1776
+      ],
+      "id": "d08feaf4-a949-4e48-a948-8bec29396f13",
+      "name": "get banco"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Transferir a humano",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/handoff",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1824,
+        -1776
+      ],
+      "id": "9586eba4-3544-445e-aac4-fad4f8ab3b05",
+      "name": "handoff"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar planes de un servicio especifico:\nhttps://streamify.aaronsoft.es/public/api/v2/precios/servicio/{servicio}",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/precios/servicio/{servicio}`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1904,
+        -1856
+      ],
+      "id": "4567126e-d0f1-400c-a8ca-1ab6cd9fc7f1",
+      "name": "get precios de servicios"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar catalogo completo de productos y combos",
+        "url": "=https://streamify.aaronsoft.es/public/api/v2/catalogo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1904,
+        -1776
+      ],
+      "id": "28827871-0988-47d2-915a-b44d46ac0692",
+      "name": "get catalogo completo"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Toma el item actual y, si existe, el item de Normalizar\nconst current = $input.first()?.json ?? {};\nconst normalizar = $('Normalizar').first()?.json ?? {};\n\n// helpers\nconst clean = (v) => {\n  if (v === undefined || v === null) return undefined;\n  const s = String(v).trim();\n  return s === '' ? undefined : s;\n};\n\nconst asIntIfNumeric = (v) => {\n  if (v === undefined || v === null) return undefined;\n  const s = String(v).trim();\n  if (!/^\\d+$/.test(s)) return undefined;\n  return Number(s);\n};\n\n// prioridad de fuentes (Normalizar -> item actual)\nconst canalUserId =\n  clean(normalizar?.contact?.numero) ||\n  clean(normalizar?.message?.from) ||\n  clean(current?.contact?.numero) ||\n  clean(current?.message?.from);\n\nconst payload = {\n  canal: 'whatsapp',\n  canal_user_id: canalUserId,\n  historial_limite: 10,\n  memoria_limite: 8,\n};\n\n// idconv opcional, si lo tienes en alguna rama\nconst idconv =\n  clean(current?.data?.idconv) ||\n  clean(current?.idconv) ||\n  clean(normalizar?.chat?.idconv) ||\n  clean(normalizar?.idconv);\n\nif (idconv) payload.idconv = idconv;\n\n// trigger_idmsg solo si es id interno numérico\nconst triggerIdMsg =\n  asIntIfNumeric(current?.data?.idmsg) ??\n  asIntIfNumeric(current?.trigger_idmsg) ??\n  asIntIfNumeric(normalizar?.chat?.idmsg);\n\nif (triggerIdMsg !== undefined) payload.trigger_idmsg = triggerIdMsg;\n\n// external_message_id sí puede ser el id externo de WhatsApp\nconst externalMessageId =\n  clean(normalizar?.message?.id) ||\n  clean(current?.message?.id) ||\n  clean(current?.external_message_id);\n\nif (externalMessageId) payload.external_message_id = externalMessageId;\n\n// si no hay nada para resolver conversación, corta limpio\nif (!payload.canal_user_id && !payload.idconv && !payload.external_message_id) {\n  return [\n    {\n      json: {\n        _skip_context: true,\n        reason: 'Sin identificadores para contexto',\n        debug: {\n          from_normalizar_numero: normalizar?.contact?.numero ?? null,\n          from_normalizar_message_from: normalizar?.message?.from ?? null,\n          from_current_data_idconv: current?.data?.idconv ?? null,\n          from_normalizar_message_id: normalizar?.message?.id ?? null,\n        }\n      }\n    }\n  ];\n}\n\nreturn [{ json: payload }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -1344
+      ],
+      "id": "60dcab3c-7ec7-425b-9d6f-5f47e8fae368",
+      "name": "payload"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9c187b1c-be1a-40b8-bba2-2242d7d9ddb3",
+              "name": "content",
+              "value": "=<comprobante>\nmonto: {{ $('Parsear1').item.json.data.monto_total_detectado }}\nbanco: {{ $('Parsear1').item.json.data.banco }}\ntitular: {{ $('Parsear1').item.json.data.titular }}\nemisor: {{ $('Parsear1').item.json.data.emisor }}\n<comprobante>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -688,
+        -1664
+      ],
+      "id": "a4cb94f5-87a1-4c89-947e-f32514239ed4",
+      "name": "Payment content"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar banco por nombre",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/banco/{nombrebanco}`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        -1456
+      ],
+      "id": "393b1b5d-37d0-4432-a787-b45f8d84a86c",
+      "name": "get banco1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar catalogo completo de productos y combos",
+        "url": "=https://streamify.aaronsoft.es/public/api/v2/catalogo",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "servicio",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `ejemplo: netflix, disney, max, spotify, prime, etc`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        -1456
+      ],
+      "id": "4a14549c-32e7-4005-a848-d55dcaf9e397",
+      "name": "get catalogo completo1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta precios de productos para que puedas informar al cliente.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/precios",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        -1376
+      ],
+      "id": "8608230e-e8d4-4a47-b4fe-cc43c5dfe86d",
+      "name": "get general precios1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Identificar cliente por telefono",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `poner el telefono del cliente sin el teléfono de país`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1840,
+        -1456
+      ],
+      "id": "9a581af0-7481-422f-a87b-609f5f4a653b",
+      "name": "get cliente1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Transferir a humano",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/handoff",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        -1376
+      ],
+      "id": "e78249ae-e326-431d-99e0-bf27b562a256",
+      "name": "handoff1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar Últimas recargas del cliente",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente/{idcli}/recargas`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        -1376
+      ],
+      "id": "d9d07242-b633-4052-bc66-39838e42080b",
+      "name": "get recargas del cliente"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Para productos tipo 2 (pedido) o tipo 3 (personalizado).",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/pedido",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "idcli",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `id del cliente`, 'string') }}"
+            },
+            {
+              "name": "idproducto",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `id del producto`, 'string') }}"
+            },
+            {
+              "name": "=notas",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `Notas del pedido, como: cliente quiere x servicio con su propia cuenta`, 'string') }}"
+            },
+            {
+              "name": "datos_extra.usuario",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `usuario proporcionado por el cliente`, 'string') }}"
+            },
+            {
+              "name": "datos_extra.contrasena",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters4_Value', `contraseña proporcionado por el cliente`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        -1456
+      ],
+      "id": "f7417dab-52d4-4bd2-9eee-421299caada7",
+      "name": "crear pedido"
+    },
+    {
+      "parameters": {
+        "toolDescription": "API principal para diagnostico de soporte.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente/usuarios-activos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `poner el telefono del cliente sin el teléfono de país`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1760,
+        -1072
+      ],
+      "id": "04d75ee0-eef2-450a-8a0f-2dccfbb07378",
+      "name": "get usuarios activos de cliente"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Registro de caso para seguimiento humano/técnico.",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/soporte",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "idcli",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `id del cliente`, 'string') }}"
+            },
+            {
+              "name": "idcue",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `id de la cuenta que usa el cliente`, 'string') }}"
+            },
+            {
+              "name": "descripcion",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `descripcion del soporte`, 'string') }}"
+            },
+            {
+              "name": "tipo",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `solo uno de estos tipos:\nsin suscripcion,\ncontrasena incorrecta,\nmuchos dispositivos,\notro`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1920,
+        -1072
+      ],
+      "id": "84b506a1-949d-414b-aede-21e42bd351e5",
+      "name": "crear soporte"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Transferir a humano",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/handoff",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1840,
+        -1072
+      ],
+      "id": "76863797-6b3e-4127-8456-f954093e62c2",
+      "name": "handoff2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Obtener memoria de playbooks",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/memoria-negocio",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "tipo",
+              "value": "soporte"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        -1072
+      ],
+      "id": "c88091ad-c5df-49ff-9b9d-7b7c5b167e6e",
+      "name": "get playbooks"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -848
+      ],
+      "id": "8203eec7-7996-4611-ae6c-17bea9693ed7",
+      "name": "DeepSeek5",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nCONVERSACIÓN: {{ JSON.stringify($json.context.conversacion) }}\n\nGuía el pago o confirma recepción. Devuelve JSON.\n",
+        "options": {
+          "systemMessage": "Eres cobranzas de Streamify. Guías el pago y confirmas recepciones.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 2 líneas por mensaje.\n- Si preguntan cómo pagar: da métodos disponibles + banco concreto según lo que digan.\n- Si ya enviaron comprobante: confirma recepción y di que se valida en breve.\n- No valides tú el comprobante. El flujo verificador lo hace automáticamente.\n- Si hay confusión de monto o rechazo: escalar a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu pago\", \"Permíteme verificar\", \"Gracias por tu comprobante\".\nFRASES CORRECTAS: \"Te paso los datos bancarios.\", \"Recibido, validamos en minutos.\", \"¿A qué banco hiciste la transferencia?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"cobranzas_pago\",\n  \"reply_text\": \"texto directo, máx 2 líneas\",\n  \"accion_tipo\": \"ninguna|consultar_metodos_pago|consultar_banco|confirmar_recepcion|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1728,
+        -960
+      ],
+      "id": "571445d7-4018-4fe8-ace1-908849220828",
+      "name": "Cobranzas"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar banco por nombre",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/banco/{nombrebanco}`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1968,
+        -832
+      ],
+      "id": "01693fd5-38d1-44cf-9d9d-9ae1689e62d0",
+      "name": "get banco2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar Últimas recargas del cliente",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente/{idcli}/recargas`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1888,
+        -832
+      ],
+      "id": "e1b371f1-3e0e-4ed6-8fa6-84b5d8a27368",
+      "name": "get recargas del cliente1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta precios de productos para que puedas informar al cliente.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/metodos-pago",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1808,
+        -832
+      ],
+      "id": "35d6cd4b-f0f8-45a5-a351-0c3cb16950c8",
+      "name": "get metodos-pago2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\n\nAtiende el seguimiento post-compra. Si detectas soporte o pago, rerutea. Devuelve JSON.",
+        "options": {
+          "systemMessage": "Eres el agente de postventa de Streamify. Atiendes a clientes que compraron hace poco.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas.\n- Consulta contexto postventa por teléfono al inicio.\n- Si la duda es técnica real (no entra, error) → rerutear a soporte.\n- Si menciona pago o comprobante → derivar al flujo de pagos.\n- Si pide humano o está molesto → handoff inmediato.\n- Si es seguimiento normal (cuándo llega, cómo usar) → responde directo.\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"postventa_reciente\",\n  \"reply_text\": \"texto directo, máx 2 líneas\",\n  \"accion_tipo\": \"ninguna|consultar_contexto_postventa|enviar_indicaciones_generales|rerutear_soporte|derivar_pago|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1728,
+        -736
+      ],
+      "id": "4b7b4ca2-f37e-4276-98ef-0dbf48a6fd2e",
+      "name": "Postventa"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -624
+      ],
+      "id": "4ce97264-e879-418e-ac84-96524c7184b3",
+      "name": "DeepSeek6",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar contexto de postventa",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/postventa/contexto",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `telefono del cliente`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1808,
+        -608
+      ],
+      "id": "4d206611-9478-4112-9b21-23dcc6541c39",
+      "name": "get contexto postventa"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Transferir a humano",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/handoff",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1888,
+        -608
+      ],
+      "id": "bce00c58-f434-4081-b3b7-cdfc1ef135ee",
+      "name": "handoff3"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consultar memoria",
+        "url": "=https://streamify.aaronsoft.es/public/api/v2/chat/assistant/memoria-general",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "tipo",
+              "value": "postventa"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1968,
+        -608
+      ],
+      "id": "fe5cc25e-a038-4dc5-9e3b-0c906522f54e",
+      "name": "get memoria"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "673f9fa4-98ee-4750-ace4-b1d21784d4a2",
+              "name": "instance.name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}",
+              "type": "string"
+            },
+            {
+              "id": "994e50ca-7ef9-4915-8046-26d5c339e311",
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.canal_user_id }}@s.whatsapp.net",
+              "type": "string"
+            },
+            {
+              "id": "c8a684f4-5e02-4f10-ab76-3d0cbbf06b34",
+              "name": "instance.apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        -1344
+      ],
+      "id": "2399e92d-90c3-47e9-955e-4bfd552fc632",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c8b9eb35-f2e0-4512-bfcc-0e8926a3fe79",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593981266931",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "af74bdac-1b88-4194-ae51-ad687ed316af",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593939794392",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "02ce21ea-d89f-40d8-9e77-9706ffc052dd",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593961702129",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "aae661ce-a21d-43a7-86ca-efbea3296f5b",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593961778319",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2cead9ce-ceba-4f11-aaa7-3f6d1bbf3d81",
+              "leftValue": "={{ $('Normalizar').item.json.contact.tipo }}",
+              "rightValue": "cliente",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1696,
+        -1776
+      ],
+      "id": "41139d0e-6f7b-4743-8fc3-917d91556497",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Renueva una venta ya existente para el mismo cliente usando saldo disponible.\n\nBody esperado:\n```json\n{\n   \"idven\": \"VEN-045\",\n   \"idcli\": \"CLI001\",\n   \"meses\": 2,\n   \"detalles\": [90]\n}\n```\n\n`detalles` es opcional:\n- si se envía: renovación parcial (solo esos `iddet`),\n- si no se envía: renovación completa de todos los detalles activos de la venta.\n\nReglas internas del backend:\n- valida que la venta pertenezca al cliente;\n- toma los detalles activos de la venta original;\n- permite seleccionar detalles puntuales para renovar (`detalles`);\n- calcula el precio mensual base usando el producto mensual exacto si existe; si no, usa la suma de los detalles activos;\n- multiplica por los meses solicitados;\n- verifica saldo del cliente;\n- desactiva solo los detalles renovados en la venta anterior;\n- crea una nueva venta separada con solo los detalles renovados y nuevas fechas;\n- descuenta el saldo del cliente.\n\nUsa esta API solo cuando el cliente ya confirmo que quiere renovar y ya tienes `idven`, `idcli`, `meses` y opcionalmente `detalles` para renovación parcial.",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/venta/renovar",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', `Ejemplo de body esperado\n{\n   \"idven\": \"VEN-045\",\n   \"idcli\": \"1\",\n   \"meses\": 2,\n   \"detalles\": [90, 30, 12]\n}\n\n\\`detalles\\` es opcional:\n- si se envía: renovación parcial (solo esos \\`iddet\\`),\n- si no se envía: renovación completa de todos los detalles activos de la venta.`, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1680,
+        -1376
+      ],
+      "id": "a5396812-145f-4e63-ad99-07d56f7b957d",
+      "name": "renovar venta"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c8b9eb35-f2e0-4512-bfcc-0e8926a3fe79",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593981266931",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "af74bdac-1b88-4194-ae51-ad687ed316af",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593939794392",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "02ce21ea-d89f-40d8-9e77-9706ffc052dd",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593961702129",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "aae661ce-a21d-43a7-86ca-efbea3296f5b",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593961778319",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2cead9ce-ceba-4f11-aaa7-3f6d1bbf3d81",
+              "leftValue": "={{ $('Normalizar').item.json.contact.tipo }}",
+              "rightValue": "cliente",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1696,
+        -1632
+      ],
+      "id": "2d53eb76-a47e-4f21-8455-871daf0fd579",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Aplica cambio de servicio por garantía para clientes con cuenta dañada, extendiendo la vigencia +7 días sobre su fecha anterior. Uso exclusivo de soporte_cliente.\n\nCuándo usarla:\n\nEl cliente reporta falla estructural o cuenta dañada.\nEl cliente tiene suscripción activa o por vencer afectada.\nEl cliente acepta explícitamente la oferta de garantía.\nEl caso es de origen Netflix o Disney (regla actual).\nCuándo NO usarla:\n\nCliente vencido hace tiempo sin incidencia técnica (eso es renovación/cobranzas).\nCliente que nunca compró ese servicio (eso va a vendedor).\nSpotify para cambio automático (Spotify es atención humana).",
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/assistant/postventa/cambio-servicio",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `telefono del cliente`, 'string') }}"
+            },
+            {
+              "name": "iddet",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `id del usuario que usa el cliente (id del detalle de venta)`, 'string') }}"
+            },
+            {
+              "name": "nuevo_servicio",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters2_Value', `servicio a cambiar, una de estas 5: max, prime_video, paramount, crunchyroll, flujo`, 'string') }}"
+            },
+            {
+              "name": "acepta_garantia",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters3_Value', `true o false`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        2000,
+        -1072
+      ],
+      "id": "2a7052e4-e10f-44fc-baaa-4b477c3c7be7",
+      "name": "cambiar servicio a cliente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c8b9eb35-f2e0-4512-bfcc-0e8926a3fe79",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593981266931",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "af74bdac-1b88-4194-ae51-ad687ed316af",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593939794392",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "02ce21ea-d89f-40d8-9e77-9706ffc052dd",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593961702129",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "aae661ce-a21d-43a7-86ca-efbea3296f5b",
+              "leftValue": "={{ $('Normalizar').item.json.contact.numero }}",
+              "rightValue": "593961778319",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2fc59986-421d-4735-a65e-12c53dc1deb4",
+              "leftValue": "={{ $('Normalizar').item.json.contact.tipo }}",
+              "rightValue": "clientess",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -256,
+        -1120
+      ],
+      "id": "00e7cb4d-b6a7-4d67-9fff-3599ffb5b51f",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/ingest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $('Normalizar').item.json.content }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $('Normalizar').item.json.message.id }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.message.chat_id }}"
+            },
+            {
+              "name": "numero",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "origen",
+              "value": "n8n"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "debounce_seconds",
+              "value": "35"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -560,
+        -1040
+      ],
+      "id": "b13a76be-b08d-493a-bdac-e522682f0f48",
+      "name": "ingest msg"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5f46f7bb-c814-47f1-9c54-5dea5695bcf5",
+              "leftValue": "={{ $('Normalizar').item.json.message.fromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -768,
+        -1152
+      ],
+      "id": "f44ef8e6-0c55-4150-9442-7f40b16a2e02",
+      "name": "fromMe1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/save-respond",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $('Normalizar').item.json.content }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $('Normalizar').item.json.message.id }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.canal_user_id }}@s.whatsapp.net"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            },
+            {
+              "name": "from_me",
+              "value": "={{ Boolean(true) }}"
+            },
+            {
+              "name": "tipo_remitente",
+              "value": "empleado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -560,
+        -1168
+      ],
+      "id": "8c84bcd7-90fb-4577-92fd-cb0a7d263569",
+      "name": "save-respond1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1541e09-5ff1-4b65-a156-e2d6b9a28982",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        -1152
+      ],
+      "id": "3d58379a-3966-443e-bd52-b6443c3dd36a",
+      "name": "merge A"
+    },
+    {
+      "parameters": {
+        "jsCode": "const normal = $('Normalizar').first().json;\nconst media = $('Get audio').first().json;\nconst transcription = $json.text || '';\nconst caption = normal.message?.content || '';\n\nconst textoAgente = `<audio>\\nTranscripción: ${transcription}\\n</audio>`;\n\nreturn [{\n  json: {\n    telefono: normal.contact.numero,\n    numero: normal.contact.numero,\n    canal_user_id: normal.contact.numero,\n    canal: 'whatsapp',\n    tipo_contenido: 'audio',\n    external_message_id: normal.message.id,\n    external_thread_id: normal.message.chat_id,\n    instance: normal.instance.name,\n    instance_name: normal.instance.name,\n    instance_apikey: normal.instance.apikey,\n    server_url: normal.instance.server_url,\n    origen: 'n8n',\n    debounce_seconds: 35,\n\n    mensaje: textoAgente,\n    mensaje_original: caption,\n    texto_extraido: transcription,\n    media_kind: 'audio',\n    media_transcription: transcription,\n    media_caption: caption,\n\n    media_base64: media.base64,\n    media_file_name: media.fileName,\n    media_mime_type: media.mimetype,\n\n    from_me: normal.message.fromMe,\n    payload: normal,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -1424
+      ],
+      "id": "96d64418-5ad3-404a-8830-cf0e893f4c1c",
+      "name": "Audio content"
+    },
+    {
+      "parameters": {
+        "jsCode": "const normal = $('Normalizar').first().json;\nconst media = $('Get imagen').first().json;\nconst parsed = $('Parsear1').first().json;\nconst caption = normal.message?.content || '';\n\nlet descripcion = '';\nif (parsed.es_comprobante) {\n  descripcion = [\n    'Posible comprobante de pago.',\n    parsed.data?.monto_total_detectado ? `Monto: ${parsed.data.monto_total_detectado}` : null,\n    parsed.data?.banco ? `Banco: ${parsed.data.banco}` : null,\n    parsed.data?.titular ? `Titular: ${parsed.data.titular}` : null,\n    parsed.data?.emisor ? `Emisor: ${parsed.data.emisor}` : null,\n  ].filter(Boolean).join('\\n');\n} else {\n  descripcion = parsed.content\n    ? String(parsed.content).replace(/<imagen>/gi, '').trim()\n    : (parsed.descripcion || 'Imagen recibida.');\n}\n\nconst parts = ['<imagen>'];\nif (caption) parts.push(`Texto del usuario: ${caption}`);\nif (descripcion) parts.push(`Descripción de la imagen: ${descripcion}`);\nparts.push('</imagen>');\n\nreturn [{\n  json: {\n    telefono: normal.contact.numero,\n    numero: normal.contact.numero,\n    canal_user_id: normal.contact.numero,\n    canal: 'whatsapp',\n    tipo_contenido: 'imagen',\n    external_message_id: normal.message.id,\n    external_thread_id: normal.message.chat_id,\n    instance: normal.instance.name,\n    instance_name: normal.instance.name,\n    instance_apikey: normal.instance.apikey,\n    server_url: normal.instance.server_url,\n    origen: 'n8n',\n    debounce_seconds: 35,\n\n    mensaje: parts.join('\\n'),\n    mensaje_original: caption,\n    texto_extraido: descripcion,\n    media_kind: 'image',\n    media_transcription: descripcion,\n    media_caption: caption,\n    media_analysis_json: parsed,\n\n    media_base64: media.base64,\n    media_file_name: media.fileName,\n    media_mime_type: media.mimetype,\n\n    es_comprobante: parsed.es_comprobante === true,\n    from_me: normal.message.fromMe,\n    payload: normal,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -1280
+      ],
+      "id": "6a6e97d5-3430-4a6a-bb20-6d099467ad23",
+      "name": "Image content"
+    },
+    {
+      "parameters": {
+        "content": "## Subagentes",
+        "height": 1616,
+        "width": 848,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1584,
+        -2080
+      ],
+      "typeVersion": 1,
+      "id": "d91c8125-a3c0-4c7a-9105-2fb5238a2de0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Mensajería ",
+        "height": 992,
+        "width": 2656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2400,
+        -1840
+      ],
+      "typeVersion": 1,
+      "id": "f7ac3e2d-a7d6-470c-8736-88e1e8b4de22",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5f46f7bb-c814-47f1-9c54-5dea5695bcf5",
+              "leftValue": "={{ $('Normalizar').item.json.message.fromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1504,
+        -1472
+      ],
+      "id": "dc44a617-58ee-4ea8-b401-b0d0e00ac220",
+      "name": "fromMe2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/chat/router/ingest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "telefono",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "mensaje",
+              "value": "={{ $('Normalizar').item.json.content }}"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "canal",
+              "value": "=whatsapp"
+            },
+            {
+              "name": "tipo_contenido",
+              "value": "={{ $('Normalizar').item.json.message.type }}"
+            },
+            {
+              "name": "external_message_id",
+              "value": "={{ $('Normalizar').item.json.message.id }}"
+            },
+            {
+              "name": "external_thread_id",
+              "value": "={{ $('Normalizar').item.json.message.chat_id }}"
+            },
+            {
+              "name": "numero",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "origen",
+              "value": "n8n"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $('Normalizar').item.json}}"
+            },
+            {
+              "name": "debounce_seconds",
+              "value": "35"
+            },
+            {
+              "name": "canal_user_id",
+              "value": "={{ $('Normalizar').item.json.contact.numero }}"
+            },
+            {
+              "name": "instance_name",
+              "value": "={{ $('Normalizar').item.json.instance.name }}"
+            },
+            {
+              "name": "instance_apikey",
+              "value": "={{ $('Normalizar').item.json.instance.apikey }}"
+            },
+            {
+              "name": "server_url",
+              "value": "={{ $('Normalizar').item.json.instance.server_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1232,
+        -1440
+      ],
+      "id": "5242c0f2-daa4-481a-a727-e35691d01ce6",
+      "name": "ingest msg3"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        -1104
+      ],
+      "id": "abe764ae-688d-4e17-a33c-8281d39f848c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"x-api-key\": \"\",\n  \"anthropic-version\": \"2023-06-01\",\n  \"content-type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 100,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hola\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2064,
+        -1136
+      ],
+      "id": "123dca20-cc82-4734-bdbd-7d29476dacf7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://api.anthropic.com/v1/models",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"x-api-key\": \"\",\n  \"anthropic-version\": \"2023-06-01\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2064,
+        -976
+      ],
+      "id": "8e195e2b-434c-4e9d-a712-9f73ef8b4d5a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        -1936
+      ],
+      "id": "990d21ab-6429-471b-9fe4-91790f45381d",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Extraer code": {
+      "main": [
+        [
+          {
+            "node": "consultar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar": {
+      "main": [
+        [
+          {
+            "node": "fromMe2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch3": {
+      "main": [
+        [
+          {
+            "node": "Extraer code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "merge a",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "merge A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clic pedir code": {
+      "main": [
+        [
+          {
+            "node": "camino 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escribir bot": {
+      "main": [
+        [
+          {
+            "node": "esperando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escribir cliente": {
+      "main": [
+        [
+          {
+            "node": "ingest msg2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "consultar 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Escribir bot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Escribir cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "camino 2": {
+      "main": [
+        [
+          {
+            "node": "merge b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "camino 1": {
+      "main": [
+        [
+          {
+            "node": "merge b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "camino 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rechazar": {
+      "main": [
+        [
+          {
+            "node": "ingest msg2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Verde": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Azul": {
+      "main": [
+        [
+          {
+            "node": "Normalizar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge b": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge a": {
+      "main": [
+        [
+          {
+            "node": "validar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "esperando": {
+      "main": [
+        [
+          {
+            "node": "ingest msg2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar 2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar": {
+      "main": [
+        [
+          {
+            "node": "Tipo mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo mensaje": {
+      "main": [
+        [
+          {
+            "node": "Get audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get imagen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get audio": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe": {
+      "main": [
+        [
+          {
+            "node": "Audio content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get imagen": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert image": {
+      "main": [
+        [
+          {
+            "node": "Analyze",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze": {
+      "main": [
+        [
+          {
+            "node": "Parsear1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Load",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Image content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait5": {
+      "main": [
+        [
+          {
+            "node": "payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Clasificador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Clasificador",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get context": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificador": {
+      "main": [
+        [
+          {
+            "node": "Parsear2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear2": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Subagente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subagente": {
+      "main": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cobranzas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postventa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Asistente no registrado": {
+      "main": [
+        [
+          {
+            "node": "Parsear3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vendedor cierre": {
+      "main": [
+        [
+          {
+            "node": "Parsear3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get metodos-pago": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear3": {
+      "main": [
+        [
+          {
+            "node": "save respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soporte cliente": {
+      "main": [
+        []
+      ]
+    },
+    "get metodos-pago1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear venta": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ingest msg1": {
+      "main": [
+        []
+      ]
+    },
+    "fromMe": {
+      "main": [
+        [
+          {
+            "node": "ingest msg1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "save-respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save-respond": {
+      "main": [
+        []
+      ]
+    },
+    "Load": {
+      "main": [
+        [
+          {
+            "node": "Payment content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "post cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get general precios": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get banco": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "handoff": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get precios de servicios": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get catalogo completo": {
+      "ai_tool": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "payload": {
+      "main": [
+        [
+          {
+            "node": "get context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Payment content": {
+      "main": [
+        [
+          {
+            "node": "Image content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get banco1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get catalogo completo1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get general precios1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get cliente1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "handoff1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get recargas del cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear pedido": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get usuarios activos de cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "crear soporte": {
+      "ai_tool": [
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "handoff2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get playbooks": {
+      "ai_tool": [
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Cobranzas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cobranzas": {
+      "main": [
+        [
+          {
+            "node": "Parsear3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get banco2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Cobranzas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get recargas del cliente1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Cobranzas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get metodos-pago2": {
+      "ai_tool": [
+        [
+          {
+            "node": "Cobranzas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postventa": {
+      "main": [
+        [
+          {
+            "node": "Parsear3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Postventa",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get contexto postventa": {
+      "ai_tool": [
+        [
+          {
+            "node": "Postventa",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "handoff3": {
+      "ai_tool": [
+        [
+          {
+            "node": "Postventa",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get memoria": {
+      "ai_tool": [
+        [
+          {
+            "node": "Postventa",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Wait5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Convert audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "renovar venta": {
+      "ai_tool": [
+        [
+          {
+            "node": "Vendedor cierre",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "Convert image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cambiar servicio a cliente": {
+      "ai_tool": [
+        [
+          {
+            "node": "Soporte cliente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ingest msg": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fromMe1": {
+      "main": [
+        [
+          {
+            "node": "save-respond1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ingest msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge A": {
+      "main": [
+        [
+          {
+            "node": "fromMe1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio content": {
+      "main": [
+        [
+          {
+            "node": "fromMe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image content": {
+      "main": [
+        [
+          {
+            "node": "fromMe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fromMe2": {
+      "main": [
+        [
+          {
+            "node": "save-respond2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ingest msg3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Clic pedir code": [
+      {
+        "headers": {
+          "host": "autobot.aaronsoft.es",
+          "user-agent": "GuzzleHttp/7",
+          "content-length": "647",
+          "accept": "application/json",
+          "content-type": "application/json",
+          "x-forwarded-for": "82.29.157.199",
+          "x-forwarded-host": "autobot.aaronsoft.es",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "vps-82a11f08",
+          "x-real-ip": "82.29.157.199",
+          "accept-encoding": "gzip"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "event": "netflix.request_code",
+          "trace_id": "netflix-code-NETFLIX-47-20260405-184258",
+          "cuenta": {
+            "idcue": "NETFLIX-47",
+            "usuario": "nadine.youssef_1999@outlook.com",
+            "contrasena": "messigoat10",
+            "servicio_id": "NETFLIX",
+            "servicio": "Netflix Premium",
+            "proveedor": "Alejandro Guevara"
+          },
+          "requested_by": {
+            "type": "cliente",
+            "id": 286,
+            "name": "Pablo Darío Jiménez Elizade",
+            "email": "pablojimenezelizalde@gmail.com",
+            "phone": "593961778319",
+            "country": "Ecuador"
+          },
+          "requested_at": "2026-04-05T18:42:58-05:00",
+          "cliente": {
+            "idcli": 286,
+            "nombre": "Pablo Darío Jiménez Elizade",
+            "email": "pablojimenezelizalde@gmail.com",
+            "telefono": "593961778319",
+            "pais": "Ecuador"
+          }
+        },
+        "webhookUrl": "https://autobot.aaronsoft.es/webhook/pedir-codigo",
+        "executionMode": "production"
+      }
+    ],
+    "WhatsApp Verde": [
+      {
+        "headers": {
+          "host": "autobot.aaronsoft.es",
+          "user-agent": "axios/1.13.2",
+          "content-length": "1031",
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "content-type": "application/json",
+          "x-forwarded-for": "172.29.0.4",
+          "x-forwarded-host": "autobot.aaronsoft.es",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "vps-82a11f08",
+          "x-real-ip": "172.29.0.4"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "event": "messages.upsert",
+          "instance": "bot-pagos",
+          "data": {
+            "key": {
+              "remoteJid": "573105948236@s.whatsapp.net",
+              "remoteJidAlt": "573105948236@s.whatsapp.net",
+              "fromMe": false,
+              "id": "3EB007D89F1F4A47E1855C",
+              "participant": "",
+              "addressingMode": "lid"
+            },
+            "pushName": "BOT STREAMSOFT PERÚ 🇵🇪",
+            "status": "DELIVERY_ACK",
+            "message": {
+              "messageContextInfo": {
+                "threadId": [],
+                "messageSecret": {
+                  "0": 208,
+                  "1": 75,
+                  "2": 175,
+                  "3": 238,
+                  "4": 39,
+                  "5": 168,
+                  "6": 22,
+                  "7": 6,
+                  "8": 124,
+                  "9": 117,
+                  "10": 104,
+                  "11": 248,
+                  "12": 26,
+                  "13": 113,
+                  "14": 166,
+                  "15": 52,
+                  "16": 128,
+                  "17": 207,
+                  "18": 205,
+                  "19": 181,
+                  "20": 72,
+                  "21": 68,
+                  "22": 38,
+                  "23": 149,
+                  "24": 134,
+                  "25": 34,
+                  "26": 11,
+                  "27": 253,
+                  "28": 130,
+                  "29": 53,
+                  "30": 180,
+                  "31": 205
+                }
+              },
+              "conversation": "Ok, buscando correo..."
+            },
+            "contextInfo": null,
+            "messageType": "conversation",
+            "messageTimestamp": 1780522844,
+            "instanceId": "bf50604e-6927-4f89-80f8-a4a7dd5ce4cc",
+            "source": "web"
+          },
+          "destination": "https://autobot.aaronsoft.es/webhook/asistente-pablin",
+          "date_time": "2026-06-03T21:40:44.845Z",
+          "sender": "593961412826@s.whatsapp.net",
+          "server_url": "https://evoapi.abigailsoft.com",
+          "apikey": null
+        },
+        "webhookUrl": "https://autobot.aaronsoft.es/webhook/asistente-pablin",
+        "executionMode": "production"
+      }
+    ],
+    "WhatsApp Azul": [
+      {
+        "headers": {
+          "host": "autobot.aaronsoft.es",
+          "user-agent": "axios/1.13.2",
+          "content-length": "1426",
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "gzip, compress, deflate, br",
+          "content-type": "application/json",
+          "x-forwarded-for": "172.29.0.4",
+          "x-forwarded-host": "autobot.aaronsoft.es",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "vps-82a11f08",
+          "x-real-ip": "172.29.0.4"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "event": "messages.upsert",
+          "instance": "Streamify Azul",
+          "data": {
+            "key": {
+              "remoteJid": "593990216143@s.whatsapp.net",
+              "remoteJidAlt": "593990216143@s.whatsapp.net",
+              "fromMe": false,
+              "id": "3A71A139B46FD9A7AD1B",
+              "participant": "",
+              "addressingMode": "lid"
+            },
+            "pushName": "Sero Sentimiento💔👌🏼",
+            "status": "DELIVERY_ACK",
+            "message": {
+              "conversation": "Y Cua Les Tiene",
+              "messageContextInfo": {
+                "threadId": [],
+                "deviceListMetadata": {
+                  "senderKeyIndexes": [],
+                  "recipientKeyIndexes": [],
+                  "senderKeyHash": {
+                    "0": 227,
+                    "1": 160,
+                    "2": 205,
+                    "3": 227,
+                    "4": 10,
+                    "5": 96,
+                    "6": 250,
+                    "7": 16,
+                    "8": 33,
+                    "9": 114
+                  },
+                  "senderTimestamp": {
+                    "low": 1776987709,
+                    "high": 0,
+                    "unsigned": true
+                  },
+                  "recipientKeyHash": {
+                    "0": 137,
+                    "1": 249,
+                    "2": 27,
+                    "3": 49,
+                    "4": 184,
+                    "5": 44,
+                    "6": 12,
+                    "7": 189,
+                    "8": 186,
+                    "9": 40
+                  },
+                  "recipientTimestamp": {
+                    "low": 1777046548,
+                    "high": 0,
+                    "unsigned": true
+                  }
+                },
+                "deviceListMetadataVersion": 2,
+                "messageSecret": {
+                  "0": 149,
+                  "1": 100,
+                  "2": 96,
+                  "3": 125,
+                  "4": 35,
+                  "5": 170,
+                  "6": 24,
+                  "7": 54,
+                  "8": 163,
+                  "9": 151,
+                  "10": 155,
+                  "11": 186,
+                  "12": 204,
+                  "13": 250,
+                  "14": 44,
+                  "15": 159,
+                  "16": 197,
+                  "17": 207,
+                  "18": 226,
+                  "19": 106,
+                  "20": 117,
+                  "21": 96,
+                  "22": 138,
+                  "23": 208,
+                  "24": 69,
+                  "25": 184,
+                  "26": 204,
+                  "27": 188,
+                  "28": 146,
+                  "29": 203,
+                  "30": 37,
+                  "31": 217
+                }
+              }
+            },
+            "messageType": "conversation",
+            "messageTimestamp": 1777773637,
+            "instanceId": "fd7a283b-2d4c-4765-84a8-de18fae2006b",
+            "source": "ios"
+          },
+          "destination": "https://autobot.aaronsoft.es/webhook/whatsapp-azul",
+          "date_time": "2026-05-03T02:00:37.410Z",
+          "sender": "593996464991@s.whatsapp.net",
+          "server_url": "https://evoapi.abigailsoft.com",
+          "apikey": null
+        },
+        "webhookUrl": "https://autobot.aaronsoft.es/webhook/whatsapp-azul",
+        "executionMode": "production"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2a4787fedcd3a9fda6d63f2231359e551e48f7e0d6a6b433946467fe82f7e7a4"
+  }
+}

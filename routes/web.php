@@ -50,6 +50,10 @@ Route::get('/chat/whatsapp', function () {
 Route::get('/chat/media/{mensaje}', [\App\Http\Controllers\Chat\ChatMediaController::class, 'show'])
     ->name('chat.media')
     ->middleware('auth');
+
+Route::get('/agente/biblioteca', function () {
+    return view('chat.agent-library');
+})->name('agente.biblioteca')->middleware('auth');
 // ===== CHAT MODULE END =====
 use App\Http\Controllers\RecargaController;
 use App\Http\Controllers\ShopController;

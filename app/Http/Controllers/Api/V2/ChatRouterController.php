@@ -441,11 +441,20 @@ class ChatRouterController extends Controller
                 ->orderBy('prioridad')
                 ->get(['id', 'codigo', 'nombre', 'tipo', 'descripcion', 'criterios']);
 
+            $now = now();
             $memoriaNegocio = ChatMemoriaNegocio::query()
                 ->where('activo', true)
                 ->whereIn('visibilidad', ['cliente', 'ambas'])
+                ->where(function ($q) use ($now) {
+                    // sin fecha de inicio, o fecha de inicio ya pasó
+                    $q->whereNull('inicio_at')->orWhere('inicio_at', '<=', $now);
+                })
+                ->where(function ($q) use ($now) {
+                    // sin fecha de fin, o fecha de fin aún no llega
+                    $q->whereNull('fin_at')->orWhere('fin_at', '>=', $now);
+                })
                 ->orderBy('prioridad')
-                ->limit(12)
+                ->limit(15)
                 ->get(['id', 'tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags']);
 
             return response()->json([
