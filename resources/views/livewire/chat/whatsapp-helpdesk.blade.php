@@ -1352,6 +1352,88 @@
         }
 
         /* ================================================
+           MENÚ MÓVIL (3 PUNTOS)
+           ================================================ */
+
+        .wa-mobile-menu-wrap {
+            display: none;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .wa-mobile-menu-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            width: 260px;
+            max-height: 72vh;
+            overflow-y: auto;
+            background: var(--wa-panel);
+            border: 1px solid var(--wa-border);
+            border-radius: var(--wa-radius-lg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            z-index: 200;
+        }
+
+        .wa-menu-divider {
+            height: 1px;
+            background: var(--wa-border);
+            margin: 2px 0;
+        }
+
+        .wa-menu-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 11px 16px;
+            border: 0;
+            background: transparent;
+            color: var(--wa-text);
+            font-size: 14px;
+            cursor: pointer;
+            text-align: left;
+            gap: 8px;
+            transition: var(--wa-transition);
+        }
+
+        .wa-menu-item:active {
+            background: var(--wa-bg);
+        }
+
+        .wa-menu-item.danger {
+            color: #b91c1c;
+        }
+
+        .wa-menu-info {
+            padding: 8px 16px 6px;
+            font-size: 12px;
+            color: var(--wa-text-secondary);
+        }
+
+        .wa-menu-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 10px 14px;
+        }
+
+        .wa-menu-search {
+            padding: 8px 12px 10px;
+            border-top: 1px solid var(--wa-border);
+        }
+
+        .wa-menu-select-row {
+            padding: 6px 14px 10px;
+        }
+
+        .wa-menu-select-label {
+            font-size: 11px;
+            color: var(--wa-text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* ================================================
            RESPONSIVE
            ================================================ */
 
@@ -1373,8 +1455,15 @@
                 overflow: hidden;
             }
 
+            /* ---- Contenedor: altura correcta en móvil ---- */
+            .wa-helpdesk {
+                max-height: calc(100dvh - 56px);
+            }
+
             /* ---- Los 3 paneles ocupan todo el espacio del contenedor ---- */
-            .wa-column:first-child,
+            /* Nota: se usa aside.wa-column:not(.wa-right) en lugar de .wa-column:first-child
+               porque <style> es el primer hijo del .wa-helpdesk y rompe el selector :first-child */
+            aside.wa-column:not(.wa-right),
             .wa-chat,
             .wa-column.wa-right {
                 position: absolute;
@@ -1388,19 +1477,19 @@
             }
 
             /* ---- PANEL: lista (.wa-pane-list) ---- */
-            .wa-pane-list .wa-column:first-child { transform: translateX(0);     z-index: 3; pointer-events: auto; }
-            .wa-pane-list .wa-chat               { transform: translateX(100%);  z-index: 2; }
-            .wa-pane-list .wa-column.wa-right     { transform: translateX(200%); z-index: 1; }
+            .wa-pane-list aside.wa-column:not(.wa-right) { transform: translateX(0);     z-index: 3; pointer-events: auto; }
+            .wa-pane-list .wa-chat                        { transform: translateX(100%);  z-index: 2; }
+            .wa-pane-list .wa-column.wa-right             { transform: translateX(200%); z-index: 1; }
 
             /* ---- PANEL: chat (.wa-pane-chat) ---- */
-            .wa-pane-chat .wa-column:first-child  { transform: translateX(-100%); z-index: 1; }
-            .wa-pane-chat .wa-chat                { transform: translateX(0);     z-index: 3; pointer-events: auto; }
-            .wa-pane-chat .wa-column.wa-right     { transform: translateX(100%);  z-index: 2; }
+            .wa-pane-chat aside.wa-column:not(.wa-right) { transform: translateX(-100%); z-index: 1; }
+            .wa-pane-chat .wa-chat                        { transform: translateX(0);     z-index: 3; pointer-events: auto; }
+            .wa-pane-chat .wa-column.wa-right             { transform: translateX(100%);  z-index: 2; }
 
             /* ---- PANEL: perfil (.wa-pane-profile) ---- */
-            .wa-pane-profile .wa-column:first-child { transform: translateX(-200%); z-index: 1; }
-            .wa-pane-profile .wa-chat               { transform: translateX(-100%); z-index: 2; }
-            .wa-pane-profile .wa-column.wa-right    { transform: translateX(0);     z-index: 3; pointer-events: auto; }
+            .wa-pane-profile aside.wa-column:not(.wa-right) { transform: translateX(-200%); z-index: 1; }
+            .wa-pane-profile .wa-chat                        { transform: translateX(-100%); z-index: 2; }
+            .wa-pane-profile .wa-column.wa-right             { transform: translateX(0);     z-index: 3; pointer-events: auto; }
 
             /* ---- Lista: scroll táctil ---- */
             .wa-list {
@@ -1456,6 +1545,28 @@
             /* ---- Chat info ocupa ancho completo en mobile ---- */
             .wa-chat-info {
                 width: 100%;
+            }
+
+            /* ---- Ocultar secciones del header que van al menú 3 puntos ---- */
+            .wa-chat-actions,
+            .wa-operator-panel,
+            .wa-chat-search {
+                display: none !important;
+            }
+
+            /* ---- Mostrar botón menú 3 puntos ---- */
+            .wa-mobile-menu-wrap {
+                display: flex;
+            }
+
+            /* ---- Header del chat: solo 1 fila compacta ---- */
+            .wa-chat-header {
+                padding: 8px 12px;
+            }
+
+            .wa-chat-title-row {
+                flex-direction: row;
+                align-items: center;
             }
 
             /* ---- Acciones del chat: scroll horizontal ---- */
@@ -1631,7 +1742,7 @@
             <header class="wa-chat-header">
                 <div class="wa-chat-title-row">
                     <div class="wa-chat-info">
-                        <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
+                        <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
                             <button wire:click="backToList" class="wa-icon-btn wa-back" type="button" title="Volver a chats">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                             </button>
@@ -1648,6 +1759,67 @@
                             <button wire:click="$set('mobilePane', 'profile')" class="wa-icon-btn wa-profile-icon-mobile" type="button" title="Ver ficha del contacto">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             </button>
+                            {{-- Menú 3 puntos (solo móvil) --}}
+                            <div class="wa-mobile-menu-wrap" x-data="{ waMenuOpen: false }">
+                                <button @click="waMenuOpen = !waMenuOpen" class="wa-icon-btn" type="button" title="Más opciones">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="5" r="1.2" fill="currentColor" stroke="none"/>
+                                        <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+                                        <circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+                                    </svg>
+                                </button>
+                                <div x-show="waMenuOpen" @click.outside="waMenuOpen = false" class="wa-mobile-menu-panel" style="display:none;">
+                                    {{-- Badges de tipo y estado --}}
+                                    <div class="wa-menu-badges">
+                                        <span class="wa-badge {{ $activeContactIdentity['tone'] }}">{{ $activeContactIdentity['label'] }}</span>
+                                        <span class="wa-badge info">{{ $activeConversation->estado }}</span>
+                                    </div>
+                                    <div class="wa-menu-divider"></div>
+                                    {{-- Acciones --}}
+                                    <button wire:click="takeConversation" @click="waMenuOpen = false" class="wa-menu-item" type="button">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                        Tomar conversación
+                                    </button>
+                                    @if(in_array($activeConversation->estado, ['cerrado', 'cerrada'], true))
+                                        <button wire:click="reopenConversation" @click="waMenuOpen = false" class="wa-menu-item" type="button">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                            Reabrir
+                                        </button>
+                                    @else
+                                        <button wire:click="closeConversation" @click="waMenuOpen = false" class="wa-menu-item" type="button">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            Cerrar conversación
+                                        </button>
+                                    @endif
+                                    <button
+                                        wire:click="clearActiveConversationHistory"
+                                        wire:confirm="¿Seguro que deseas borrar solo el historial del chat seleccionado? Esta acción no se puede deshacer."
+                                        @click="waMenuOpen = false"
+                                        class="wa-menu-item danger"
+                                        type="button"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                                        Limpiar historial
+                                    </button>
+                                    @can('chat.supervisor')
+                                        <div class="wa-menu-divider"></div>
+                                        <div class="wa-menu-select-row">
+                                            <span class="wa-menu-select-label">Asignar operador</span>
+                                            <select wire:change="assignTo($event.target.value)" class="wa-select" style="width: 100%; font-size: 14px;">
+                                                <option value="">Seleccionar…</option>
+                                                @foreach($operators as $operator)
+                                                    <option value="{{ $operator->idemp }}">{{ $operator->nombreemp }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    @endcan
+                                    <div class="wa-menu-divider"></div>
+                                    <div class="wa-menu-info">Operador: <strong>{{ $assignedOperatorName }}</strong></div>
+                                    <div class="wa-menu-search">
+                                        <input wire:model.live.debounce.300ms="activeMessageSearch" class="wa-search" type="search" placeholder="Buscar en conversación" style="font-size:16px;">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="wa-chat-actions">

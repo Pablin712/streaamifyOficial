@@ -6,14 +6,17 @@
 <style>
     /* Modo pantalla completa para el chat */
     #layoutSidenav_content {
+        height: calc(100dvh - 56px) !important;
         min-height: calc(100dvh - 56px) !important;
         max-height: calc(100dvh - 56px) !important;
         overflow: hidden !important;
         background: transparent !important;
+        padding: 0 !important;
     }
     #layoutSidenav_content > main {
         overflow: hidden !important;
         flex: 1 1 0 !important;
+        height: 100% !important;
         min-height: 0 !important;
     }
     /* Ocultar widget IA flotante (tapa el botón Enviar en móvil) */
