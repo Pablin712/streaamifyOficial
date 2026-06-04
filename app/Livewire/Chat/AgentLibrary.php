@@ -90,6 +90,14 @@ class AgentLibrary extends Component
         $this->inicio_at   = $entry->inicio_at?->format('Y-m-d') ?? '';
         $this->fin_at      = $entry->fin_at?->format('Y-m-d') ?? '';
         $this->showModal   = true;
+        $this->js("window.dispatchEvent(new CustomEvent('open-modal', { detail: 'agentLibraryModal' }))");
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->resetForm();
+        $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agentLibraryModal' }))");
     }
 
     public function save(): void
@@ -122,6 +130,7 @@ class AgentLibrary extends Component
 
         $this->showModal = false;
         $this->resetForm();
+        $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agentLibraryModal' }))");
     }
 
     public function toggleActivo(int $id): void
