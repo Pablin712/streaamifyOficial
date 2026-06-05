@@ -208,6 +208,10 @@ Route::get('/admin', HomeController::class);
 Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('login'); // Muestra la vista del login
 Route::post('/admin/login', [LoginController::class, 'login'])->name('login.submit');                      // Procesa el formulario del login
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('logout');    // Cierra la sesión
+Route::post('/modo-concentracion/toggle', function () {
+    session(['modo_concentracion' => !session('modo_concentracion', false)]);
+    return back();
+})->middleware('auth')->name('concentracion.toggle');
 Route::get('/admin/recover', function () {
     return view('auth.recover');
 })->name('recover');
@@ -223,8 +227,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::get('/historial', [HistorialController::class, 'show'])->name('historial');
     Route::post('/historial/clear', [HistorialController::class, 'clear'])->name('historial.clear');
 
-    Route::resource('tareas', TareaController::class);
-    Route::patch('/tareas/{id}/completar', [TareaController::class, 'completar'])->name('tareas.completar');
+    Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
+    Route::delete('/tareas/{id}', [TareaController::class, 'destroy'])->name('tareas.destroy');
     //Route::middleware(['auth:administrador,contador'])->group(function () {
     Route::controller(ContabilidadController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');

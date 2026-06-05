@@ -12,6 +12,7 @@ use App\Models\DetalleVenta;
 use App\Models\Cuenta;
 use App\Models\Historial;
 use App\Models\Mensaje;
+use App\Services\ConcentracionService;
 use App\Services\CuentaService;
 use App\Services\EntregaMensajeService;
 use App\Services\Chat\WhatsAppOutboundService;
@@ -124,13 +125,24 @@ class UsuarioController extends Controller
 
     private function buildUsuariosIndexQuery()
     {
-        return ViewUsuarioActivo::query()
+        $query = ViewUsuarioActivo::query()
             ->from('view_usuarios_activos as vua')
             ->select('vua.*')
             ->with(['cuenta.valor.servicio', 'cuenta.perfiles', 'cliente', 'profile', 'detalle_venta'])
             ->leftJoin('clientes', 'clientes.idcli', '=', 'vua.idcli')
             ->leftJoin('cuentas', 'cuentas.idcue', '=', 'vua.idcue')
             ->leftJoin('detalles_venta', 'detalles_venta.iddet', '=', 'vua.iddet');
+
+        if (session('modo_concentracion')) {
+            $concIds = app(ConcentracionService::class)->getIds(Auth::user()->idemp)['iddet'];
+            if (!empty($concIds)) {
+                $query->whereIn('vua.iddet', $concIds);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        return $query;
     }
 
     // Método para mostrar el formulario de cambio de usuario

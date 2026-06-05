@@ -128,7 +128,7 @@
                             class="employee-photo img-fluid rounded-circle mb-3"
                             style="width: 100px; height: 100px; object-fit: cover;">
                         <h5 class="card-title fw-bold text-primary">{{ $dato['empleado']->nombreemp }}</h5>
-                        <p class="card-text">
+                        <p class="card-text" style="font-size:.85rem;">
                             <strong>Teléfono:</strong> {{ $dato['empleado']->telefonoemp }}<br>
                             <strong>Usuario:</strong> {{ $dato['empleado']->usuarioemp }}<br>
                             <strong>Correo:</strong> {{ $dato['empleado']->email }}<br>
@@ -138,7 +138,6 @@
                             <strong>Gestión de Clientes:</strong> {{ $dato['gestionClientesHoy'] }}<br>
                             <strong>Gestión de Cuentas:</strong> {{ $dato['gestionCuentasHoy'] }}<br>
                             <strong>Gestión de Inventario:</strong> {{ $dato['gestionInventarioHoy'] }}<br>
-                            <strong>Tareas completadas:</strong> {{ $dato['empleado']->num_tareas_completadas }}<br>
                             <strong>Gestión de Recargas:</strong> {{ $dato['gestionRecargasHoy'] }}<br>
                             <strong>Gestión de Productos:</strong> {{ $dato['gestionProductosHoy'] }}<br>
                             <strong>Gestión de Costos:</strong> {{ $dato['gestionCostosHoy'] }}<br>
@@ -149,6 +148,51 @@
                                 Sin rol asignado
                             @endif
                         </p>
+
+                        {{-- ── Progreso de tareas ── --}}
+                        @php
+                            $tipos      = \App\Models\Tarea::TIPOS;
+                            $pendientes = $dato['empleado']->tareas_pendientes ?? 0;
+                            $hoy        = $dato['empleado']->tareas_completadas_hoy ?? 0;
+                            $totalComp  = $dato['empleado']->num_tareas_completadas;
+                            $porTipo    = $dato['tareasPorTipo'];
+                        @endphp
+                        <div style="border-top:1px solid #e5e7eb;padding-top:.65rem;margin-top:.1rem;">
+                            <div style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem;">
+                                📋 Tareas
+                            </div>
+
+                            {{-- Stats --}}
+                            <div style="display:flex;gap:.35rem;margin-bottom:.5rem;">
+                                <div style="flex:1;background:#fef9c3;border:1px solid #fde047;border-radius:.4rem;padding:.35rem .2rem;text-align:center;">
+                                    <div style="font-size:1.15rem;font-weight:800;color:#b45309;line-height:1;">{{ $pendientes }}</div>
+                                    <div style="font-size:.62rem;color:#92400e;margin-top:.1rem;">Pendientes</div>
+                                </div>
+                                <div style="flex:1;background:#dcfce7;border:1px solid #86efac;border-radius:.4rem;padding:.35rem .2rem;text-align:center;">
+                                    <div style="font-size:1.15rem;font-weight:800;color:#15803d;line-height:1;">{{ $hoy }}</div>
+                                    <div style="font-size:.62rem;color:#166534;margin-top:.1rem;">Hoy ✅</div>
+                                </div>
+                                <div style="flex:1;background:#ede9fe;border:1px solid #c4b5fd;border-radius:.4rem;padding:.35rem .2rem;text-align:center;">
+                                    <div style="font-size:1.15rem;font-weight:800;color:#6d28d9;line-height:1;">{{ $totalComp }}</div>
+                                    <div style="font-size:.62rem;color:#5b21b6;margin-top:.1rem;">Total</div>
+                                </div>
+                            </div>
+
+                            {{-- Desglose por tipo --}}
+                            @if(!empty($porTipo))
+                                <div style="display:flex;flex-wrap:wrap;gap:.25rem;justify-content:center;">
+                                    @foreach($porTipo as $tipoKey => $count)
+                                        @php $meta = $tipos[$tipoKey] ?? ['icon' => '📋', 'label' => $tipoKey]; @endphp
+                                        <span title="{{ $meta['label'] }}"
+                                              style="font-size:.68rem;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;padding:.12rem .45rem;font-weight:700;color:#374151;white-space:nowrap;">
+                                            {{ $meta['icon'] }} {{ $count }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div style="font-size:.72rem;color:#9ca3af;text-align:center;font-style:italic;">Sin tareas pendientes</div>
+                            @endif
+                        </div>
                         <div class="action-buttons mt-3">
                             @if (Auth::user()->hasPermissionTo('empleados.update'))
                                 <button onclick="openEditModal('{{ $dato['empleado']->idemp }}')"

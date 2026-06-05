@@ -17,6 +17,7 @@ use App\Models\ChatMensajeCanal;
 use App\Models\ChatWhatsappChannel;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
+use App\Services\ConcentracionService;
 use App\Services\CuentaService;
 use App\Services\BancoService;
 use App\Services\NetflixCodigoService;
@@ -54,6 +55,13 @@ class CuentaController extends Controller
             abort(403, 'No tienes permiso para ver las cuentas.');
         }
         $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
+
+        if (session('modo_concentracion')) {
+            $concIds = app(ConcentracionService::class)->getIds(Auth::user()->idemp)['idcue'];
+            $cuentas = !empty($concIds)
+                ? $cuentas->whereIn('idcue', $concIds)->values()
+                : collect();
+        }
 
         // Separar cuentas individuales y excluirlas de las demás pestañas
         $cuentasIndividuales = $cuentas->filter(fn($c) => $c->tipo_cuenta === 'individual');

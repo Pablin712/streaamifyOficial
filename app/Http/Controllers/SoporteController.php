@@ -7,6 +7,7 @@ use App\Models\Cuenta;
 use App\Models\Empleado;
 use App\Models\Historial;
 use App\Models\Soporte;
+use App\Services\ConcentracionService;
 use App\Models\ViewUsuarioActivo;
 use App\Notifications\NuevoSoporteCliente;
 use Illuminate\Http\Request;
@@ -25,10 +26,20 @@ class SoporteController extends Controller
             abort(403, 'No tienes permiso para ver los soportes.');
         }
 
-        $soportes = Soporte::with(['cliente', 'cuenta.valor.servicio'])
+        $soportesQuery = Soporte::with(['cliente', 'cuenta.valor.servicio'])
             ->orderByRaw("CASE WHEN estado = 'pendiente' THEN 0 ELSE 1 END")
-            ->orderByDesc('created_at')
-            ->get();
+            ->orderByDesc('created_at');
+
+        if (session('modo_concentracion')) {
+            $concIds = app(ConcentracionService::class)->getIds($user->idemp)['idsop'];
+            if (!empty($concIds)) {
+                $soportesQuery->whereIn('idsop', $concIds);
+            } else {
+                $soportesQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $soportes = $soportesQuery->get();
 
         $usuariosActivos = ViewUsuarioActivo::with(['profile'])
             ->whereIn('idcue', $soportes->pluck('idcue')->filter()->unique()->values())

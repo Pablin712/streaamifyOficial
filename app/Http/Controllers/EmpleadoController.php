@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Empleado;
+use App\Models\Tarea;
 use Spatie\Permission\Models\Role;
 use App\Models\Historial;
 use Carbon\Carbon;
 use App\Models\Rol; // Verifica si lo necesitas o se utiliza en el código
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Services\EmpleadoService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -80,6 +82,12 @@ class EmpleadoController extends Controller
                     $query->whereDate('created_at', Carbon::today());
                 },
             ])
+            ->withCount('tareasAsignadas as tareas_pendientes')
+            ->withCount([
+                'tareasCompletadas as tareas_completadas_hoy' => fn($q) => $q
+                    ->where('completada', true)
+                    ->whereDate('fecha_completada', Carbon::today()),
+            ])
             ->get();
     }
     protected function procesarEmpleado(Empleado $empleado, string $fecha)
@@ -98,6 +106,12 @@ class EmpleadoController extends Controller
             'gestionRecargasHoy' => $this->empleadoService->contarGestionRecargasPorDia($empleado->idemp, $fecha),
             'gestionProductosHoy' => $this->empleadoService->contarGestionProductosPorDia($empleado->idemp, $fecha),
             'gestionCostosHoy' => $this->empleadoService->contarGestionCostosPorDia($empleado->idemp, $fecha),
+            'tareasPorTipo' => Tarea::where('assignee_id', $empleado->idemp)
+                ->where('completada', false)
+                ->select('tipo_tarea', DB::raw('COUNT(*) as total'))
+                ->groupBy('tipo_tarea')
+                ->pluck('total', 'tipo_tarea')
+                ->toArray(),
         ];
     }
 

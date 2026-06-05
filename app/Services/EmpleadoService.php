@@ -327,7 +327,7 @@ class EmpleadoService
         }
         $empleado = Empleado::find($idemp);
         // Contar todas las asistencias del empleado para el día, mes y año especificados
-        return $empleado->tareas()
+        return $empleado->tareasCompletadas()
             ->whereDate('fecha_completada', $fecha)
             ->count();
     }

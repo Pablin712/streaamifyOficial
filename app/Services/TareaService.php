@@ -5,179 +5,308 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\Tarea;
 use App\Models\Cuenta;
-use App\Models\Valor;
-use App\Models\Servicio;
-use App\Models\Perfil;
-use App\Models\Costo;
+use App\Models\Soporte;
 use App\Models\ViewUsuarioActivo;
-use App\Models\Producto;
-use App\Notifications\TareasPendientes;
 use App\Services\CuentaService;
-use Illuminate\Support\Facades\Notification;
-use App\Models\Empleado;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class TareaService
 {
-    protected $cuentaService;
+    protected CuentaService $cuentaService;
 
     public function __construct(CuentaService $cuentaService)
     {
         $this->cuentaService = $cuentaService;
     }
-    public function crearOActualizarTareaQuitarUsuarios($usuarios)
+
+    // ─── Punto de entrada principal ──────────────────────────────────────────
+
+    public function sincronizarTareas(): array
     {
-        $usuariosAQuitar = $this->cuentaService->obtenerUsuariosAQuitar($usuarios);
-        $totales = $usuariosAQuitar->count();
+        $usuarios = ViewUsuarioActivo::all();
+        $cuentas  = Cuenta::with(['valor'])->where('activocue', true)->get();
 
-        if ($usuariosAQuitar->isEmpty()) {
-            return null; // No hay usuarios que quitar, no se crea la tarea
-        }
-        // Limitar la cantidad de usuarios en la descripción (ej. mostrar solo 10)
-        $usuariosListado = $usuariosAQuitar->take(10)->map(function ($usuario) {
-            return "==> [Cliente: {$usuario->cliente->nombrecli}, Cuenta: {$usuario->idcue}, Perfil: {$usuario->perfil}]";
-        })->implode("\n");
-        // Mensaje indicando si hay más usuarios
-        $mensajeExtra = $totales > 10 ? "\n... y " . ($totales - 10) . " más usuarios." : '';
+        $creadas = 0;
+        $limpiadas = 0;
 
-        return Tarea::updateOrCreate(
-            ['nombretarea' => 'Quitar Usuarios'], // La tarea no se repite
-            [
-                'descripcion' => '🤖 Laravel dice: Hay ' . $totales . ' usuarios a quitar ' . $usuariosListado . $mensajeExtra,
-                'prioridad' => 'alta',
-                'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
-                'completada_por' => null, // Asegurarse de que no esté completada por nadie
-                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
-            ]
-        );
+        $creadas  += $this->sincronizarCobrarUsuarios($usuarios);
+        $creadas  += $this->sincronizarQuitarUsuarios($usuarios);
+        $creadas  += $this->sincronizarRenovarCuentas($cuentas);
+        $creadas  += $this->sincronizarCuentasCaidas($cuentas);
+        $creadas  += $this->sincronizarColapsosCuentas($cuentas);
+        $creadas  += $this->sincronizarSoportesPendientes();
+        $limpiadas = $this->limpiarTareasObsoletas();
+        $this->limpiarTareasGeneralesAntiguas();
+
+        return compact('creadas', 'limpiadas');
     }
-    public function crearOActualizarTareaCobrarUsuarios($usuarios)
+
+    // ─── Cobrar usuarios ─────────────────────────────────────────────────────
+
+    private function sincronizarCobrarUsuarios(Collection $usuarios): int
     {
-        $usuariosAcobrar = $this->cuentaService->obtenerUsuariosACobrar($usuarios);
-        $totales = $usuariosAcobrar->count();
-        if ($usuariosAcobrar->isEmpty()) {
-            return null; // No hay usuarios que quitar, no se crea la tarea
+        $lista = $this->cuentaService->obtenerUsuariosACobrar($usuarios);
+        $creadas = 0;
+        $limit = Carbon::today()->setHour(23)->setMinute(59);
+
+        foreach ($lista as $u) {
+            $existe = Tarea::where('tipo_tarea', 'cobrar_usuario')
+                ->where('related_model', 'ViewUsuarioActivo')
+                ->where('related_id', (string) $u->iddet)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                Tarea::create([
+                    'tipo_tarea'    => 'cobrar_usuario',
+                    'related_model' => 'ViewUsuarioActivo',
+                    'related_id'    => (string) $u->iddet,
+                    'nombretarea'   => "Cobrar: {$u->nombre_cliente}",
+                    'descripcion'   => "Cliente: {$u->nombre_cliente} | Cuenta: {$u->idcue} | Perfil: {$u->perfil} | Vence: " . Carbon::parse($u->fecha_vencimiento)->format('d/m/Y'),
+                    'prioridad'     => 'media',
+                    'fechalimit'    => $limit,
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
         }
 
-        // Limitar la cantidad de usuarios en la descripción (ej. mostrar solo 10)
-        $usuariosListado = $usuariosAcobrar->take(10)->map(function ($usuario) {
-            return "=> [{$usuario->cliente->nombrecli}]";
-        })->implode("\n");
-        // Mensaje indicando si hay más usuarios
-        $mensajeExtra = $totales > 10 ? "\n... y " . ($totales - 10) . " más usuarios." : '';
+        // Eliminar tareas del pool para usuarios que ya no están en la lista
+        $idsValidos = $lista->pluck('iddet')->map(fn($id) => (string) $id)->toArray();
+        Tarea::where('tipo_tarea', 'cobrar_usuario')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
 
-        return Tarea::updateOrCreate(
-            ['nombretarea' => 'Cobrar Usuarios'], // La tarea no se repite
-            [
-                'descripcion' => '🤖 Laravel dice: Hay ' . $totales . ' usuarios a cobrar💵 ' . $usuariosListado . $mensajeExtra,
-                'prioridad' => 'media',
-                'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
-                'completada_por' => null, // Asegurarse de que no esté completada por nadie
-                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
-            ]
-        );
+        return $creadas;
     }
-    public function crearOActualizarTareaRenovarOEliminarCuentas($cuentas)
-    {
-        $cuentasPorVencer = $this->cuentaService->obtenerCuentasPorVencer($cuentas);
-        $totales = $cuentasPorVencer->count();
 
-        if ($cuentasPorVencer->isEmpty()) {
-            return null; // No hay cuentas por vencer, no se crea la tarea
+    // ─── Quitar usuarios ─────────────────────────────────────────────────────
+
+    private function sincronizarQuitarUsuarios(Collection $usuarios): int
+    {
+        $lista = $this->cuentaService->obtenerUsuariosAQuitar($usuarios);
+        $creadas = 0;
+        $limit = Carbon::today()->setHour(23)->setMinute(59);
+
+        foreach ($lista as $u) {
+            $existe = Tarea::where('tipo_tarea', 'quitar_usuario')
+                ->where('related_model', 'ViewUsuarioActivo')
+                ->where('related_id', (string) $u->iddet)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                Tarea::create([
+                    'tipo_tarea'    => 'quitar_usuario',
+                    'related_model' => 'ViewUsuarioActivo',
+                    'related_id'    => (string) $u->iddet,
+                    'nombretarea'   => "Quitar: {$u->nombre_cliente}",
+                    'descripcion'   => "Cliente: {$u->nombre_cliente} | Cuenta: {$u->idcue} | Perfil: {$u->perfil} | Venció: " . Carbon::parse($u->fecha_vencimiento)->format('d/m/Y'),
+                    'prioridad'     => 'alta',
+                    'fechalimit'    => $limit,
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
         }
 
-        // Limitar la cantidad de cuentas en la descripción (ej. mostrar solo 10)
-        $cuentasListado = $cuentasPorVencer->take(10)->map(function ($cuenta) {
-            return "=> [{$cuenta->idcue}] vence el {$cuenta->fechavencue}";
-        })->implode("\n");
+        $idsValidos = $lista->pluck('iddet')->map(fn($id) => (string) $id)->toArray();
+        Tarea::where('tipo_tarea', 'quitar_usuario')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
 
-        // Mensaje indicando si hay más cuentas
-        $mensajeExtra = $totales > 10 ? "\n... y " . ($totales - 10) . " más cuentas." : '';
-
-        return Tarea::updateOrCreate(
-            ['nombretarea' => 'Renovar o Eliminar Cuentas'], // La tarea no se repite
-            [
-                'descripcion' => "🤖 Laravel dice: Hay $totales cuentas que deben renovarse o eliminarse ⏳\n$cuentasListado$mensajeExtra",
-                'prioridad' => 'alta',
-                'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
-                'completada_por' => null, // Asegurarse de que no esté completada por nadie
-                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
-            ]
-        );
+        return $creadas;
     }
-    public function crearOActualizarTareaArreglarCuentasCaidas($cuentas)
-    {
-        $cuentasCaidas = $this->cuentaService->obtenerCuentasCaidas($cuentas);
-        $totales = $cuentasCaidas->count();
 
-        if ($cuentasCaidas->isEmpty()) {
-            return null; // No hay cuentas caídas, no se crea la tarea
+    // ─── Renovar / eliminar cuentas ───────────────────────────────────────────
+
+    private function sincronizarRenovarCuentas(Collection $cuentas): int
+    {
+        $lista = $this->cuentaService->obtenerCuentasPorVencer($cuentas);
+        $creadas = 0;
+        $limit = Carbon::today()->setHour(23)->setMinute(59);
+
+        foreach ($lista as $c) {
+            $existe = Tarea::where('tipo_tarea', 'renovar_cuenta')
+                ->where('related_model', 'Cuenta')
+                ->where('related_id', $c->idcue)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                Tarea::create([
+                    'tipo_tarea'    => 'renovar_cuenta',
+                    'related_model' => 'Cuenta',
+                    'related_id'    => $c->idcue,
+                    'nombretarea'   => "Renovar cuenta: {$c->idcue}",
+                    'descripcion'   => "Cuenta: {$c->idcue} | Vence: " . Carbon::parse($c->fechavencue)->format('d/m/Y'),
+                    'prioridad'     => 'alta',
+                    'fechalimit'    => $limit,
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
         }
 
-        // Limitar la cantidad de cuentas en la descripción (ej. mostrar solo 10)
-        $cuentasListado = $cuentasCaidas->take(10)->map(function ($cuenta) {
-            return "=> [{$cuenta->idcue}]";
-        })->implode("\n");
+        $idsValidos = $lista->pluck('idcue')->toArray();
+        Tarea::where('tipo_tarea', 'renovar_cuenta')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
 
-        // Mensaje indicando si hay más cuentas
-        $mensajeExtra = $totales > 10 ? "\n... y " . ($totales - 10) . " más cuentas caídas." : '';
-
-        return Tarea::updateOrCreate(
-            ['nombretarea' => 'Arreglar Cuentas Caídas'], // La tarea no se repite
-            [
-                'descripcion' => "🤖 Laravel dice: Hay $totales cuentas caídas ⚠️\n$cuentasListado$mensajeExtra",
-                'prioridad' => 'alta',
-                'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
-                'completada_por' => null, // Asegurarse de que no esté completada por nadie
-                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
-            ]
-        );
+        return $creadas;
     }
-    public function crearOActualizarTareaAjustarEspaciosClientes($cuentas)
-    {
-        $cuentasColapsadas = $this->cuentaService->obtenerCuentasColapsadas($cuentas);
-        $totales = $cuentasColapsadas->count();
 
-        if ($cuentasColapsadas->isEmpty()) {
-            return null; // No hay cuentas colapsadas, no se crea la tarea
+    // ─── Cuentas caídas ───────────────────────────────────────────────────────
+
+    private function sincronizarCuentasCaidas(Collection $cuentas): int
+    {
+        $lista = $this->cuentaService->obtenerCuentasCaidas($cuentas);
+        $creadas = 0;
+        $limit = Carbon::today()->setHour(23)->setMinute(59);
+
+        foreach ($lista as $c) {
+            $existe = Tarea::where('tipo_tarea', 'cuenta_caida')
+                ->where('related_model', 'Cuenta')
+                ->where('related_id', $c->idcue)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                Tarea::create([
+                    'tipo_tarea'    => 'cuenta_caida',
+                    'related_model' => 'Cuenta',
+                    'related_id'    => $c->idcue,
+                    'nombretarea'   => "Cuenta caída: {$c->idcue}",
+                    'descripcion'   => "La cuenta {$c->idcue} está marcada como caída. Requiere revisión.",
+                    'prioridad'     => 'alta',
+                    'fechalimit'    => $limit,
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
         }
 
-        // Limitar la cantidad de cuentas en la descripción (ej. mostrar solo 10)
-        $cuentasListado = $cuentasColapsadas->take(10)->map(function ($cuenta) {
-            return "=> [{$cuenta->idcue}] (usuarios máximos permitido: {$cuenta->valor->pantmaxval})";
-        })->implode("\n");
+        $idsValidos = $lista->pluck('idcue')->toArray();
+        Tarea::where('tipo_tarea', 'cuenta_caida')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
 
-        // Mensaje indicando si hay más cuentas colapsadas
-        $mensajeExtra = $totales > 10 ? "\n... y " . ($totales - 10) . " más cuentas con espacios saturados." : '';
-
-        return Tarea::updateOrCreate(
-            ['nombretarea' => 'Ajustar Espacios de Clientes'], // La tarea no se repite
-            [
-                'descripcion' => "🤖 Laravel dice: Hay $totales cuentas con espacios saturados 📌\n$cuentasListado$mensajeExtra",
-                'prioridad' => 'baja',
-                'completada' => false, // Asegurarse de que la tarea no esté completada
-                'fechalimit' => Carbon::today()->setHour(23)->setMinute(59),
-                'completada_por' => null, // Asegurarse de que no esté completada por nadie
-                'fecha_completada' => null // Asegurarse de que la fecha de completada sea nula
-            ]
-        );
+        return $creadas;
     }
-    public function notificarEmpleadoTareas($tarea)
-    {
-        // Buscar empleados cuyo nombre contenga el texto de la tarea
-        $empleados = Empleado::where('nombreemp', 'LIKE', "%{$tarea->nombretarea}%")->get();
 
-        // Si no hay empleados coincidentes, seleccionar a todos los empleados
-        if ($empleados->isEmpty()) {
-            $empleados = Empleado::all();
+    // ─── Colapso de cuentas ───────────────────────────────────────────────────
+
+    private function sincronizarColapsosCuentas(Collection $cuentas): int
+    {
+        $lista = $this->cuentaService->obtenerCuentasColapsadas($cuentas);
+        $creadas = 0;
+        $limit = Carbon::today()->setHour(23)->setMinute(59);
+
+        foreach ($lista as $c) {
+            $existe = Tarea::where('tipo_tarea', 'colapso_cuenta')
+                ->where('related_model', 'Cuenta')
+                ->where('related_id', $c->idcue)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                Tarea::create([
+                    'tipo_tarea'    => 'colapso_cuenta',
+                    'related_model' => 'Cuenta',
+                    'related_id'    => $c->idcue,
+                    'nombretarea'   => "Espacios saturados: {$c->idcue}",
+                    'descripcion'   => "Cuenta {$c->idcue} superó el máximo de usuarios permitido ({$c->valor->pantmaxval}). Ajustar espacios.",
+                    'prioridad'     => 'baja',
+                    'fechalimit'    => $limit,
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
         }
-        // Enviar la notificación a cada empleado individualmente con su nombre
-        foreach ($empleados as $empleado) {
-            Notification::send($empleado, new TareasPendientes($empleado));
+
+        $idsValidos = $lista->pluck('idcue')->toArray();
+        Tarea::where('tipo_tarea', 'colapso_cuenta')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
+
+        return $creadas;
+    }
+
+    // ─── Soportes pendientes ─────────────────────────────────────────────────
+
+    private function sincronizarSoportesPendientes(): int
+    {
+        if (! class_exists(Soporte::class)) return 0;
+
+        $lista = Soporte::where('estado', 'pendiente')->get();
+        $creadas = 0;
+        $limit = Carbon::today()->setHour(23)->setMinute(59);
+
+        foreach ($lista as $s) {
+            $existe = Tarea::where('tipo_tarea', 'soporte_pendiente')
+                ->where('related_model', 'Soporte')
+                ->where('related_id', (string) $s->idsop)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                Tarea::create([
+                    'tipo_tarea'    => 'soporte_pendiente',
+                    'related_model' => 'Soporte',
+                    'related_id'    => (string) $s->idsop,
+                    'nombretarea'   => "Soporte #{$s->idsop}: {$s->tipo}",
+                    'descripcion'   => "Cuenta: {$s->idcue} | Tipo: {$s->tipo} | " . Str::limit($s->descripcion, 120),
+                    'prioridad'     => 'media',
+                    'fechalimit'    => $limit,
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
         }
-        event(new \Illuminate\Support\Facades\Event('notificacionRecibida'));
+
+        $idsValidos = $lista->pluck('idsop')->map(fn($id) => (string) $id)->toArray();
+        Tarea::where('tipo_tarea', 'soporte_pendiente')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
+
+        return $creadas;
+    }
+
+    // ─── Limpieza ─────────────────────────────────────────────────────────────
+
+    private function limpiarTareasObsoletas(): int
+    {
+        // Tareas completadas hace más de 7 días
+        return Tarea::where('completada', true)
+            ->where('fecha_completada', '<', now()->subDays(7))
+            ->delete();
+    }
+
+    private function limpiarTareasGeneralesAntiguas(): void
+    {
+        // Elimina las 5 tareas generales del sistema anterior
+        $nombres = [
+            'Quitar Usuarios',
+            'Cobrar Usuarios',
+            'Renovar o Eliminar Cuentas',
+            'Arreglar Cuentas Caídas',
+            'Ajustar Espacios de Clientes',
+        ];
+        Tarea::whereIn('nombretarea', $nombres)
+            ->whereNull('tipo_tarea')
+            ->delete();
     }
 }

@@ -58,6 +58,16 @@
 
         <div id="layoutSidenav_content" style="min-height: 100vh; display: flex; flex-direction: column;">
             <main style="flex: 1;">
+                @if(session('modo_concentracion'))
+                    <div class="alert alert-warning alert-dismissible d-flex align-items-center gap-2 mb-0 rounded-0 py-2 px-4" role="alert" style="border:none;border-bottom:2px solid #f0ad4e;">
+                        <i class="fas fa-crosshairs"></i>
+                        <span><strong>Modo concentración activo</strong> — solo ves los registros relacionados con tus tareas pendientes.</span>
+                        <form method="POST" action="{{ route('concentracion.toggle') }}" class="ms-auto mb-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-warning py-0 px-2">Desactivar</button>
+                        </form>
+                    </div>
+                @endif
                 @yield('main')
             </main>
         </div>

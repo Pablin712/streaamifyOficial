@@ -66,13 +66,19 @@ class Empleado extends Authenticatable implements JWTSubject
         );
     }
 
-    public function tareas()
+    public function tareasCompletadas()
     {
         return $this->hasMany(Tarea::class, 'completada_por', 'idemp');
     }
+
+    public function tareasAsignadas()
+    {
+        return $this->hasMany(Tarea::class, 'assignee_id', 'idemp')->where('completada', false);
+    }
+
     public function getNumTareasCompletadasAttribute()
     {
-        return $this->tareas()->where('completada', true)->count();
+        return $this->tareasCompletadas()->where('completada', true)->count();
     }
 
     /**
@@ -81,6 +87,10 @@ class Empleado extends Authenticatable implements JWTSubject
     public function tieneRol($rol)
     {
         return $this->hasRole($rol);
+    }
+    public function isAdmin()
+    {
+        return $this->hasRole('Admin');
     }
     public function getJWTIdentifier()
     {

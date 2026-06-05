@@ -71,6 +71,19 @@
                         </button>
                     </li>
 
+                    <!-- Modo Concentración en móvil -->
+                    @auth
+                    <li>
+                        <form method="POST" action="{{ route('concentracion.toggle') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item {{ session('modo_concentracion') ? 'text-warning fw-semibold' : '' }}">
+                                <i class="fas fa-crosshairs me-2 {{ session('modo_concentracion') ? 'text-warning' : '' }}"></i>
+                                Modo Concentración {{ session('modo_concentracion') ? '(ON)' : '' }}
+                            </button>
+                        </form>
+                    </li>
+                    @endauth
+
                     <li><hr class="dropdown-divider"></li>
 
                     <!-- Usuario en móvil -->
@@ -170,6 +183,22 @@
                         <button class="nav-link btn btn-link navbar-icon-btn" id="toggleDarkMode" title="Cambiar modo de visualización">
                             <i class="fas fa-moon fa-lg" id="darkModeIcon"></i>
                         </button>
+                    </li>
+
+                    <!-- Modo Concentración (Desktop) -->
+                    <li class="nav-item position-relative">
+                        <form method="POST" action="{{ route('concentracion.toggle') }}" class="d-inline">
+                            @csrf
+                            <button type="submit"
+                                class="nav-link btn btn-link navbar-icon-btn {{ session('modo_concentracion') ? 'text-warning' : '' }}"
+                                title="{{ session('modo_concentracion') ? 'Modo concentración activo — clic para desactivar' : 'Activar modo concentración' }}">
+                                <i class="fas fa-crosshairs fa-lg"></i>
+                                @if(session('modo_concentracion'))
+                                    <span class="badge bg-warning text-dark position-absolute"
+                                          style="top:2px;right:2px;font-size:0.55rem;padding:2px 4px;border-radius:3px;">ON</span>
+                                @endif
+                            </button>
+                        </form>
                     </li>
 
                     <!-- Menú de usuario (Desktop) -->
