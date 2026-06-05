@@ -73,6 +73,14 @@
 
                     <!-- Modo Concentración en móvil -->
                     @auth
+                    @if(Auth::user()->hasRole('Trabajador externo'))
+                    <li>
+                        <span class="dropdown-item text-warning fw-semibold" style="cursor:default;">
+                            <i class="fas fa-crosshairs me-2 text-warning"></i>
+                            Modo Concentración <span class="badge bg-warning text-dark ms-1">Siempre activo</span>
+                        </span>
+                    </li>
+                    @else
                     <li>
                         <form method="POST" action="{{ route('concentracion.toggle') }}">
                             @csrf
@@ -82,6 +90,7 @@
                             </button>
                         </form>
                     </li>
+                    @endif
                     @endauth
 
                     <li><hr class="dropdown-divider"></li>
@@ -186,6 +195,16 @@
                     </li>
 
                     <!-- Modo Concentración (Desktop) -->
+                    @if(Auth::user()->hasRole('Trabajador externo'))
+                    <li class="nav-item position-relative">
+                        <span class="nav-link navbar-icon-btn text-warning" style="cursor:default;"
+                              title="Modo concentración siempre activo para tu rol">
+                            <i class="fas fa-crosshairs fa-lg"></i>
+                            <span class="badge bg-warning text-dark position-absolute"
+                                  style="top:2px;right:2px;font-size:0.55rem;padding:2px 4px;border-radius:3px;">🔒</span>
+                        </span>
+                    </li>
+                    @else
                     <li class="nav-item position-relative">
                         <form method="POST" action="{{ route('concentracion.toggle') }}" class="d-inline">
                             @csrf
@@ -200,6 +219,7 @@
                             </button>
                         </form>
                     </li>
+                    @endif
 
                     <!-- Menú de usuario (Desktop) -->
                     <li class="nav-item dropdown">

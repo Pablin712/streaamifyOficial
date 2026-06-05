@@ -121,6 +121,21 @@
     /* ── Form manual ── */
     .tb-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
     @media(max-width:500px){ .tb-form-grid { grid-template-columns:1fr; } }
+
+    /* ── WhatsApp ── */
+    .wsp-bar { display:flex; gap:.4rem; flex-wrap:wrap; align-items:center;
+               background:#f0fdf4; border:1px solid #bbf7d0; border-radius:.5rem;
+               padding:.45rem .7rem; margin-bottom:.75rem; }
+    .tb-btn-wsp       { background:#25d366; color:#fff; }
+    .tb-btn-wsp:hover { background:#128c7e; }
+    .tb-btn-wsp-sel       { background:#dcfce7; color:#166534; border:1.5px solid #86efac; }
+    .tb-btn-wsp-sel:hover { background:#bbf7d0; }
+    .wsp-template-editor { width:100%; padding:.55rem .7rem; background:#fff;
+                           border:1.5px solid #86efac; border-radius:.4rem; margin-top:.35rem; }
+    .wsp-template-editor textarea { width:100%; border:1px solid #d1d5db; border-radius:.35rem;
+                                    padding:.4rem .55rem; font-size:.82rem; resize:vertical; min-height:72px; }
+    .wsp-vars { font-size:.72rem; color:#6b7280; margin:.2rem 0 .4rem; }
+    .task-select-cb { width:1.1rem; height:1.1rem; cursor:pointer; flex-shrink:0; accent-color:#25d366; }
 </style>
 
     {{-- Stats --}}
@@ -249,6 +264,153 @@
 
     {{-- ══════════════════════════════ TAB MIS TAREAS ══════════════════════════════ --}}
     @if($tab === 'mis_tareas')
+        @php $cobrarCount = $misTareas->where('tipo_tarea','cobrar_usuario')->count(); @endphp
+
+        {{-- Barra WhatsApp (solo si hay tareas de cobro y canal activo) --}}
+        @if($cobrarCount > 0 && $tieneCanalWsp)
+        <div x-data="{
+            sel: [],
+            toggle(id) { const i = this.sel.indexOf(id); i>=0 ? this.sel.splice(i,1) : this.sel.push(id); },
+            selectAll() {
+                const ids = {{ $misTareas->where('tipo_tarea','cobrar_usuario')->pluck('id')->values()->toJson() }};
+                this.sel = this.sel.length === ids.length ? [] : [...ids];
+            },
+            enviarSel() {
+                if(!this.sel.length) return;
+                const wireEl = this.$el.closest('[wire\\:id]');
+                if(!wireEl) return;
+                const comp = window.Livewire.find(wireEl.getAttribute('wire:id'));
+                if(!comp) return;
+                comp.enviarWspSeleccionados([...this.sel]).then(()=>{ this.sel = []; });
+            }
+        }">
+            <div class="wsp-bar">
+                <i class="fab fa-whatsapp text-success"></i>
+                <span class="fw-semibold" style="font-size:.82rem;color:#166534;">
+                    WhatsApp cobros ({{ $cobrarCount }})
+                </span>
+
+                {{-- Enviar a todos --}}
+                <button class="tb-btn tb-btn-wsp"
+                        wire:click="enviarWspTodos"
+                        wire:loading.attr="disabled"
+                        wire:target="enviarWspTodos"
+                        title="Enviar mensaje a los {{ $cobrarCount }} clientes con tarea de cobro">
+                    <i class="fab fa-whatsapp fa-xs"></i> Enviar a todos
+                    <span wire:loading wire:target="enviarWspTodos">
+                        <i class="fas fa-spinner fa-spin fa-xs"></i>
+                    </span>
+                </button>
+
+                {{-- Seleccionar todos --}}
+                <button class="tb-btn tb-btn-wsp-sel" x-on:click="selectAll()"
+                        title="Seleccionar / deseleccionar todos">
+                    <i class="fas fa-check-square fa-xs"></i>
+                    <span x-text="sel.length > 0 ? 'Deseleccionar todos' : 'Seleccionar todos'"></span>
+                </button>
+
+                {{-- Enviar seleccionados --}}
+                <button class="tb-btn tb-btn-wsp-sel" x-show="sel.length > 0"
+                        x-on:click="enviarSel()" title="Enviar a los seleccionados">
+                    <i class="fab fa-whatsapp fa-xs"></i>
+                    Enviar (<span x-text="sel.length"></span>)
+                </button>
+
+                {{-- Editar plantilla --}}
+                <button class="tb-btn tb-btn-liberar ms-auto" wire:click="$toggle('showPlantillaEditor')"
+                        title="Configurar plantilla de mensaje">
+                    <i class="fas fa-pen fa-xs"></i> Plantilla
+                </button>
+
+                {{-- Editor de plantilla (inline) --}}
+                @if($showPlantillaEditor)
+                <div class="wsp-template-editor">
+                    <textarea wire:model="plantillaCobro"
+                              placeholder="{{ \App\Livewire\TareasBoard::PLANTILLA_DEFAULT }}"></textarea>
+                    <div class="wsp-vars">
+                        Variables disponibles: <code>{nombre}</code> = nombre del cliente,
+                        <code>{fecha}</code> = fecha de vencimiento.
+                        Si dejas vacío se usa la plantilla por defecto.
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="tb-btn tb-btn-done" wire:click="guardarPlantilla"
+                                wire:loading.attr="disabled" wire:target="guardarPlantilla">
+                            <i class="fas fa-save fa-xs"></i> Guardar
+                        </button>
+                        <button class="tb-btn tb-btn-liberar" wire:click="$toggle('showPlantillaEditor')">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+                @endif
+            </div>
+
+        {{-- Tarjetas con checkbox --}}
+        @if($misTareas->isEmpty())
+            <div class="tb-empty">
+                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                No tienes tareas asignadas.<br>
+                Usa <strong>"Tomar en bloque"</strong> para elegir cuántas tomar de cada tipo.
+            </div>
+        @else
+            @foreach($misTareas as $t)
+                <div class="task-card {{ $t->prioridad }}">
+                    @if($t->tipo_tarea === 'cobrar_usuario')
+                        <input type="checkbox" class="task-select-cb"
+                               :checked="sel.includes({{ $t->id }})"
+                               x-on:change="toggle({{ $t->id }})">
+                    @endif
+                    <div class="task-icon">{{ $t->tipoIcon() }}</div>
+                    <div class="task-body">
+                        <div class="task-title">{{ $t->nombretarea }}</div>
+                        @if($t->descripcion)
+                            <div class="task-desc">{{ $t->descripcion }}</div>
+                        @endif
+                        <div class="task-meta">
+                            <span class="task-pill pill-{{ $t->prioridad }}">{{ ucfirst($t->prioridad) }}</span>
+                            <span class="task-pill pill-tipo">{{ $t->tipoLabel() }}</span>
+                            @if($t->asignado_por && $t->asignado_por !== Auth::user()->idemp)
+                                <span class="task-pill pill-asig">
+                                    Asignada por {{ optional($t->asignadoPorEmp)->nombreemp ?? 'admin' }}
+                                </span>
+                            @endif
+                            @if($t->assigned_at)
+                                <span class="task-pill pill-venc">{{ $t->assigned_at->diffForHumans() }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        @if($t->tipo_tarea === 'cobrar_usuario')
+                            <button class="tb-btn tb-btn-wsp"
+                                    wire:click="enviarWsp({{ $t->id }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="enviarWsp({{ $t->id }})"
+                                    title="Enviar mensaje WhatsApp a este cliente">
+                                <i class="fab fa-whatsapp fa-xs"></i> WA
+                            </button>
+                        @endif
+                        <button class="tb-btn tb-btn-done" wire:click="completar({{ $t->id }})"
+                                wire:loading.attr="disabled" wire:target="completar({{ $t->id }})">
+                            <i class="fas fa-check fa-xs"></i> Completar
+                        </button>
+                        <button class="tb-btn tb-btn-liberar" wire:click="liberar({{ $t->id }})"
+                                wire:confirm="¿Devolver esta tarea al pool?">
+                            <i class="fas fa-undo fa-xs"></i> Devolver
+                        </button>
+                        @if(Auth::user()->hasPermissionTo('tareas.destroy'))
+                            <button class="tb-btn tb-btn-del" wire:click="eliminar({{ $t->id }})"
+                                    wire:confirm="¿Eliminar esta tarea?">
+                                <i class="fas fa-trash fa-xs"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
+        @endif
+        </div>{{-- cierra x-data --}}
+
+        @else
+        {{-- Sin canal WhatsApp activo O sin tareas de cobro: lista normal --}}
         @if($misTareas->isEmpty())
             <div class="tb-empty">
                 <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
@@ -267,7 +429,7 @@
                         <div class="task-meta">
                             <span class="task-pill pill-{{ $t->prioridad }}">{{ ucfirst($t->prioridad) }}</span>
                             <span class="task-pill pill-tipo">{{ $t->tipoLabel() }}</span>
-                            @if($t->asignadoPor && $t->asignadoPor !== Auth::user()->idemp)
+                            @if($t->asignado_por && $t->asignado_por !== Auth::user()->idemp)
                                 <span class="task-pill pill-asig">
                                     Asignada por {{ optional($t->asignadoPorEmp)->nombreemp ?? 'admin' }}
                                 </span>
@@ -295,6 +457,7 @@
                     </div>
                 </div>
             @endforeach
+        @endif
         @endif
     @endif
 

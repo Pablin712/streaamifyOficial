@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Tarea;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ConcentracionService
@@ -85,6 +86,18 @@ class ConcentracionService
 
     public static function isActive(): bool
     {
-        return (bool) session('modo_concentracion', false);
+        if (!Auth::check()) {
+            return false;
+        }
+        /** @var \App\Models\Empleado $user */
+        $user = Auth::user();
+        return $user->hasRole('Trabajador externo') || (bool) session('modo_concentracion', false);
+    }
+
+    public static function isLocked(): bool
+    {
+        if (!Auth::check()) return false;
+        /** @var \App\Models\Empleado $user */
+        return Auth::user()->hasRole('Trabajador externo');
     }
 }

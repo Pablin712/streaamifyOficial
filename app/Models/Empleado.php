@@ -26,12 +26,13 @@ class Empleado extends Authenticatable implements JWTSubject
     public $timestamps = true; // Cambiar a `false` si no quieres que se usen.
 
     protected $fillable = [
-        'nombreemp',     // Nombre del empleado
-        'telefonoemp',   // Teléfono del empleado
-        'usuarioemp',    // Usuario del empleado
-        'passwordemp',   // Contraseña hasheada
+        'nombreemp',
+        'telefonoemp',
+        'usuarioemp',
+        'passwordemp',
         'foto_url',
-        'email'      // Agregar esta columna para permitir asignación masiva
+        'email',
+        'plantilla_cobro',
     ];
 
 

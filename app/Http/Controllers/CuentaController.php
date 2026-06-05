@@ -56,7 +56,7 @@ class CuentaController extends Controller
         }
         $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
 
-        if (session('modo_concentracion')) {
+        if (ConcentracionService::isActive()) {
             $concIds = app(ConcentracionService::class)->getIds(Auth::user()->idemp)['idcue'];
             $cuentas = !empty($concIds)
                 ? $cuentas->whereIn('idcue', $concIds)->values()

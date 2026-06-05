@@ -30,7 +30,7 @@ class SoporteController extends Controller
             ->orderByRaw("CASE WHEN estado = 'pendiente' THEN 0 ELSE 1 END")
             ->orderByDesc('created_at');
 
-        if (session('modo_concentracion')) {
+        if (ConcentracionService::isActive()) {
             $concIds = app(ConcentracionService::class)->getIds($user->idemp)['idsop'];
             if (!empty($concIds)) {
                 $soportesQuery->whereIn('idsop', $concIds);

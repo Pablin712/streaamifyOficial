@@ -133,7 +133,7 @@ class UsuarioController extends Controller
             ->leftJoin('cuentas', 'cuentas.idcue', '=', 'vua.idcue')
             ->leftJoin('detalles_venta', 'detalles_venta.iddet', '=', 'vua.iddet');
 
-        if (session('modo_concentracion')) {
+        if (ConcentracionService::isActive()) {
             $concIds = app(ConcentracionService::class)->getIds(Auth::user()->idemp)['iddet'];
             if (!empty($concIds)) {
                 $query->whereIn('vua.iddet', $concIds);

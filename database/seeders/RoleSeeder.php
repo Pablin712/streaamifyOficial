@@ -31,19 +31,20 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = $this->syncRole('Admin');
-        $bodeguero = $this->syncRole('Bodeguero');
-        $tecnico = $this->syncRole('Tecnico');
-        $contador = $this->syncRole('Contador');
-        $vendedor = $this->syncRole('Vendedor');
-        $trabajador = $this->syncRole('Trabajador');
-        $gerente = $this->syncRole('Gerente');
-        $visitante = $this->syncRole('Visitante');
+        $admin             = $this->syncRole('Admin');
+        $bodeguero         = $this->syncRole('Bodeguero');
+        $tecnico           = $this->syncRole('Tecnico');
+        $contador          = $this->syncRole('Contador');
+        $vendedor          = $this->syncRole('Vendedor');
+        $trabajador        = $this->syncRole('Trabajador');
+        $gerente           = $this->syncRole('Gerente');
+        $visitante         = $this->syncRole('Visitante');
+        $trabajadorExterno = $this->syncRole('Trabajador externo');
 
         //$empleado = Empleado::where('usuarioemp', 'pablinmind')->first();
         //$empleado->assignRole('Admin');
 
-        $this->syncPermission('historial', [$admin, $gerente, $visitante, $trabajador]);
+        $this->syncPermission('historial', [$admin, $gerente, $visitante, $trabajador, $trabajadorExterno]);
         $this->syncPermission('tareas.destroy', [$admin, $gerente, $tecnico]);
         $this->syncPermission('dashboard', [$admin, $gerente, $visitante, $contador]);
         $this->syncPermission('dashboard.store', [$admin, $gerente, $contador]);
@@ -83,7 +84,7 @@ class RoleSeeder extends Seeder
         $this->syncPermission('proveedores.update', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
         $this->syncPermission('proveedores.destroy', [$admin, $gerente, $bodeguero]);
 
-        $this->syncPermission('clientes', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('clientes', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('clientes.create', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('clientes.store', [$admin, $gerente, $trabajador, $vendedor]);
         $this->syncPermission('clientes.storeInVenta', [$admin, $gerente, $trabajador, $vendedor]);
@@ -91,18 +92,18 @@ class RoleSeeder extends Seeder
         $this->syncPermission('clientes.update', [$admin, $gerente, $trabajador, $vendedor]);
         $this->syncPermission('clientes.destroy', [$admin, $gerente]);
 
-        $this->syncPermission('cuentas', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $contador, $tecnico, $visitante]);
+        $this->syncPermission('cuentas', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $contador, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('cuentas.create', [$admin, $gerente, $trabajador, $bodeguero, $visitante]);
         $this->syncPermission('cuentas.store', [$admin, $gerente, $trabajador, $tecnico]);
-        $this->syncPermission('cuentas.status', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico]);
-        $this->syncPermission('cuentas.mensaje', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
-        $this->syncPermission('cuentas.edit', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $visitante]);
-        $this->syncPermission('cuentas.renew', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador]);
-        $this->syncPermission('cuentas.update', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador]);
+        $this->syncPermission('cuentas.status', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $trabajadorExterno]);
+        $this->syncPermission('cuentas.mensaje', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $trabajadorExterno]);
+        $this->syncPermission('cuentas.edit', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
+        $this->syncPermission('cuentas.renew', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador, $trabajadorExterno]);
+        $this->syncPermission('cuentas.update', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $contador, $trabajadorExterno]);
         $this->syncPermission('cuentas.destroy', [$admin, $gerente, $trabajador, $bodeguero]);
-        $this->syncPermission('perfil.update', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico]);
+        $this->syncPermission('perfil.update', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $trabajadorExterno]);
 
-        $this->syncPermission('ventas', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('ventas', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('ventas.create', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('ventas.store', [$admin, $gerente, $trabajador, $vendedor]);
         $this->syncPermission('ventas.storeRenew', [$admin, $gerente, $trabajador, $vendedor]);
@@ -114,10 +115,10 @@ class RoleSeeder extends Seeder
         $this->syncPermission('ventas.destroy', [$admin, $gerente]);
         $this->syncPermission('ventas.sendInvoice', [$admin, $gerente, $trabajador, $vendedor]);
 
-        $this->syncPermission('usuarios', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        $this->syncPermission('usuarios.change', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        $this->syncPermission('usuarios.renew', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante]);
-        $this->syncPermission('usuarios.update', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('usuarios', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
+        $this->syncPermission('usuarios.change', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
+        $this->syncPermission('usuarios.renew', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
+        $this->syncPermission('usuarios.update', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $trabajadorExterno]);
         $this->syncPermission('usuarios.destroy', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
 
         $this->syncPermission('empleados', [$admin, $gerente, $visitante]);
@@ -135,8 +136,8 @@ class RoleSeeder extends Seeder
         $this->syncPermission('mantenimientos.update', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
         $this->syncPermission('mantenimientos.destroy', [$admin, $gerente, $tecnico, $trabajador, $bodeguero]);
 
-        $this->syncPermission('soportes', [$admin, $gerente, $tecnico]);
-        $this->syncPermission('soportes.update', [$admin, $gerente, $tecnico]);
+        $this->syncPermission('soportes', [$admin, $gerente, $tecnico, $trabajadorExterno]);
+        $this->syncPermission('soportes.update', [$admin, $gerente, $tecnico, $trabajadorExterno]);
 
         $this->syncPermission('gestion', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
         $this->syncPermission('categorias.store', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
