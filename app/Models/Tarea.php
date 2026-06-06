@@ -40,6 +40,7 @@ class Tarea extends Model
         'cuenta_caida'     => ['label' => 'Cuenta caída',       'icon' => '⚠️',  'color' => 'danger'],
         'colapso_cuenta'   => ['label' => 'Ajustar espacios',   'icon' => '📌', 'color' => 'secondary'],
         'soporte_pendiente'=> ['label' => 'Soporte pendiente',  'icon' => '🎧', 'color' => 'info'],
+        'agregar_stock'    => ['label' => 'Agregar stock',      'icon' => '📦', 'color' => 'success'],
         'manual'           => ['label' => 'Tarea manual',       'icon' => '📝', 'color' => 'secondary'],
     ];
 

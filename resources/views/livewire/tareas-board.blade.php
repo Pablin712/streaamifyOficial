@@ -214,11 +214,54 @@
 
     {{-- ══════════════════════════════ TAB POOL ══════════════════════════════ --}}
     @if($tab === 'pool')
-        @if($pool->isEmpty())
-            <div class="tb-empty">
-                <i class="fas fa-check-double fa-2x mb-2 d-block"></i>
-                No hay tareas disponibles en el pool. ¡Todo al día!
-            </div>
+        @if($totalPool === 0)
+            @if($tareasDeOtros->isNotEmpty())
+                <div class="tb-empty pb-2">
+                    <i class="fas fa-handshake fa-2x mb-2 d-block" style="color:#6366f1;"></i>
+                    El pool está vacío. ¿Ayudas a un compañero?
+                </div>
+                {{-- ── Tareas asignadas a otros que el empleado puede tomar ── --}}
+                <div style="font-size:.73rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e5e7eb;padding-bottom:.3rem;margin-bottom:.5rem;">
+                    🤝 Tareas de compañeros
+                </div>
+                @foreach($tareasDeOtros as $t)
+                    <div class="task-card {{ $t->prioridad }}" wire:key="ayuda-{{ $t->id }}">
+                        <div class="task-icon">{{ $t->tipoIcon() }}</div>
+                        <div class="task-body">
+                            <div class="task-title">{{ $t->nombretarea }}</div>
+                            @if($t->descripcion)
+                                <div class="task-desc">{{ $t->descripcion }}</div>
+                            @endif
+                            <div class="task-meta">
+                                <span class="task-pill pill-{{ $t->prioridad }}">{{ ucfirst($t->prioridad) }}</span>
+                                <span class="task-pill pill-tipo">{{ $t->tipoLabel() }}</span>
+                                <span class="task-pill pill-asig">
+                                    👤 {{ optional($t->assignee)->nombreemp ?? "Empleado #{$t->assignee_id}" }}
+                                </span>
+                                @if($t->fechalimit)
+                                    @php $venc = $t->fechalimit->isPast(); @endphp
+                                    <span class="task-pill {{ $venc ? 'pill-alta' : 'pill-venc' }}">
+                                        📅 {{ $t->fechalimit->format('d/m') }}{{ $venc ? ' ⚠️' : '' }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="task-actions" x-data>
+                            <button class="tb-btn" style="background:#6366f1;color:#fff;"
+                                    wire:loading.attr="disabled" wire:target="ayudar"
+                                    x-on:click="$wire.ayudar({{ $t->id }})"
+                                    title="Tomar esta tarea para ayudar">
+                                🤝 Ayudar
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <div class="tb-empty">
+                    <i class="fas fa-check-double fa-2x mb-2 d-block"></i>
+                    No hay tareas disponibles en el pool. ¡Todo al día!
+                </div>
+            @endif
         @else
             @foreach($pool as $t)
                 <div class="task-card {{ $t->prioridad }}" wire:key="pool-{{ $t->id }}">
@@ -568,6 +611,7 @@
                     'cuenta_caida'      => 'Por proveedor / servicio',
                     'colapso_cuenta'    => 'Por proveedor / servicio',
                     'soporte_pendiente' => 'Por cuenta y servicio',
+                    'agregar_stock'     => 'Servicios con stock bajo',
                 ];
             @endphp
 

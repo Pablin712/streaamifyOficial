@@ -9,6 +9,7 @@ use App\Models\Soporte;
 use App\Models\ViewUsuarioActivo;
 use App\Services\CuentaService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TareaService
@@ -36,6 +37,7 @@ class TareaService
         $creadas  += $this->sincronizarCuentasCaidas($cuentas);
         $creadas  += $this->sincronizarColapsosCuentas($cuentas);
         $creadas  += $this->sincronizarSoportesPendientes();
+        $creadas  += $this->sincronizarStockServicios();
         $limpiadas = $this->limpiarTareasObsoletas();
         $this->limpiarTareasGeneralesAntiguas();
 
@@ -280,6 +282,69 @@ class TareaService
             ->where('completada', false)
             ->whereNull('assignee_id')
             ->when(count($idsValidos), fn($q) => $q->whereNotIn('related_id', $idsValidos))
+            ->delete();
+
+        return $creadas;
+    }
+
+    // ─── Stock bajo por servicio ─────────────────────────────────────────────
+
+    private function sincronizarStockServicios(): int
+    {
+        $umbral = 3;
+
+        // Por servicio: capacidad total (SUM pantmaxval de cuentas activas) menos usuarios activos
+        $servicios = DB::table('servicios as s')
+            ->join('valores as v', function ($j) {
+                $j->on('v.idser', '=', 's.idser')->where('v.activoval', true);
+            })
+            ->join('cuentas as c', function ($j) {
+                $j->on('c.idval', '=', 'v.idval')->where('c.activocue', true);
+            })
+            ->leftJoin('view_usuarios_activos as vua', function ($j) {
+                $j->on('vua.idcue', '=', 'c.idcue')
+                  ->whereRaw('vua.fecha_vencimiento > NOW()');
+            })
+            ->groupBy('s.idser', 's.nombreser')
+            ->select([
+                's.idser',
+                's.nombreser',
+                DB::raw('CAST(SUM(v.pantmaxval) AS SIGNED) - COUNT(vua.iddet) AS disponibles'),
+            ])
+            ->havingRaw('CAST(SUM(v.pantmaxval) AS SIGNED) - COUNT(vua.iddet) < ?', [$umbral])
+            ->get();
+
+        $creadas = 0;
+
+        foreach ($servicios as $servicio) {
+            $existe = Tarea::where('tipo_tarea', 'agregar_stock')
+                ->where('related_model', 'Servicio')
+                ->where('related_id', $servicio->idser)
+                ->where('completada', false)
+                ->exists();
+
+            if (! $existe) {
+                $disp = max(0, (int) $servicio->disponibles);
+                Tarea::create([
+                    'tipo_tarea'    => 'agregar_stock',
+                    'related_model' => 'Servicio',
+                    'related_id'    => $servicio->idser,
+                    'nombretarea'   => "Stock bajo: {$servicio->nombreser}",
+                    'descripcion'   => "Solo {$disp} espacio(s) disponible(s) para {$servicio->nombreser}. Comprar nuevas cuentas.",
+                    'prioridad'     => $disp <= 0 ? 'alta' : 'media',
+                    'fechalimit'    => Carbon::today()->setHour(23)->setMinute(59),
+                    'completada'    => false,
+                ]);
+                $creadas++;
+            }
+        }
+
+        // Limpiar tareas de servicios que ya recuperaron stock
+        $idsConPocoStock = collect($servicios)->pluck('idser')->toArray();
+        Tarea::where('tipo_tarea', 'agregar_stock')
+            ->where('completada', false)
+            ->whereNull('assignee_id')
+            ->when(!empty($idsConPocoStock), fn($q) => $q->whereNotIn('related_id', $idsConPocoStock))
             ->delete();
 
         return $creadas;

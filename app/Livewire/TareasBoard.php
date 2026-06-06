@@ -39,6 +39,7 @@ class TareasBoard extends Component
         'cuenta_caida'      => 0,
         'colapso_cuenta'    => 0,
         'soporte_pendiente' => 0,
+        'agregar_stock'     => 0,
     ];
 
     // ── WhatsApp ─────────────────────────────────────────────────────────────
@@ -277,6 +278,35 @@ class TareasBoard extends Component
         $this->dispatch('notify', type: 'success', msg: 'Tarea creada.');
     }
 
+    // ─── Ayudar a un compañero (tomar tarea asignada a otro) ─────────────────
+
+    public function ayudar(int $id): void
+    {
+        $empId = $this->user()->idemp;
+
+        $tarea = Tarea::where('id', $id)
+            ->whereNotNull('assignee_id')
+            ->where('assignee_id', '!=', $empId)
+            ->where('completada', false)
+            ->first();
+
+        if (! $tarea) {
+            $this->dispatch('notify', type: 'warning', msg: 'Esta tarea ya no está disponible.');
+            return;
+        }
+
+        $anterior = optional(Empleado::find($tarea->assignee_id))->nombreemp ?? "empleado #{$tarea->assignee_id}";
+
+        $tarea->update([
+            'assignee_id' => $empId,
+            'assigned_at' => now(),
+        ]);
+
+        $this->registrarHistorial("Tarea tomada para ayudar (antes: {$anterior})", $tarea);
+        $this->tab = 'mis_tareas';
+        $this->dispatch('notify', type: 'success', msg: "'{$tarea->nombretarea}' tomada de {$anterior}. ¡Gracias por ayudar!");
+    }
+
     public function eliminar(int $id): void
     {
         if (! $this->user()->hasPermissionTo('tareas.destroy')) {
@@ -351,7 +381,7 @@ class TareasBoard extends Component
             ->pluck('total', 'tipo_tarea')
             ->toArray();
 
-        $empleados = $isAdmin ? Empleado::orderBy('nombreemp')->get(['idemp', 'nombreemp']) : collect();
+        $empleados = $isAdmin ? Empleado::orderBy('nombreemp')->whereHas('roles')->get(['idemp', 'nombreemp']) : collect();
         $tipos     = Tarea::TIPOS;
 
         $tieneCanalWsp = ChatWhatsappChannel::availableForOutbound()->exists();
@@ -360,11 +390,23 @@ class TareasBoard extends Component
             ? $this->resolverDatosWspBatch()
             : [];
 
+        // Tareas de compañeros: solo cuando el pool está vacío y el empleado puede ayudar
+        $tareasDeOtros = ($this->tab === 'pool' && $totalPool === 0)
+            ? Tarea::whereNotNull('assignee_id')
+                ->where('assignee_id', '!=', $empId)
+                ->where('completada', false)
+                ->when($this->filtroTipo, fn($q) => $q->where('tipo_tarea', $this->filtroTipo))
+                ->orderByRaw("CASE WHEN prioridad='alta' THEN 1 WHEN prioridad='media' THEN 2 ELSE 3 END")
+                ->with('assignee:idemp,nombreemp')
+                ->limit(20)
+                ->get()
+            : collect();
+
         return view('livewire.tareas-board', compact(
             'pool', 'misTareas', 'completadas', 'todasAsignadas',
             'totalPool', 'totalMias', 'completadasHoy', 'totalAsignadas',
             'empleados', 'isAdmin', 'tipos', 'disponiblesPorTipo',
-            'tieneCanalWsp', 'datosWspPorTarea'
+            'tieneCanalWsp', 'datosWspPorTarea', 'tareasDeOtros'
         ));
     }
 
