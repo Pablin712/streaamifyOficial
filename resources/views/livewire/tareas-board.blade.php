@@ -158,19 +158,23 @@
     <div class="tb-toolbar">
         {{-- Tabs --}}
         <div class="tb-tabs">
-            <button class="tb-tab {{ $tab==='pool'       ? 'active' : '' }}" wire:click="setTab('pool')">
+            <button class="tb-tab {{ $tab==='pool'       ? 'active' : '' }}" wire:click="setTab('pool')"
+                    wire:loading.class.add="opacity-50" wire:target="setTab">
                 🗂 Pool ({{ $totalPool }})
             </button>
-            <button class="tb-tab {{ $tab==='mis_tareas' ? 'active' : '' }}" wire:click="setTab('mis_tareas')">
+            <button class="tb-tab {{ $tab==='mis_tareas' ? 'active' : '' }}" wire:click="setTab('mis_tareas')"
+                    wire:loading.class.add="opacity-50" wire:target="setTab">
                 ✅ Mis tareas ({{ $totalMias }})
             </button>
             @if($isAdmin)
             <button class="tb-tab {{ $tab==='asignadas'  ? 'active' : '' }}" wire:click="setTab('asignadas')"
+                    wire:loading.class.add="opacity-50" wire:target="setTab"
                     style="{{ $tab==='asignadas' ? '' : 'border-color:#f97316;color:#ea580c;' }}">
                 👥 Asignadas ({{ $totalAsignadas }})
             </button>
             @endif
-            <button class="tb-tab {{ $tab==='completadas'? 'active' : '' }}" wire:click="setTab('completadas')">
+            <button class="tb-tab {{ $tab==='completadas'? 'active' : '' }}" wire:click="setTab('completadas')"
+                    wire:loading.class.add="opacity-50" wire:target="setTab">
                 📋 Historial
             </button>
         </div>
@@ -217,7 +221,7 @@
             </div>
         @else
             @foreach($pool as $t)
-                <div class="task-card {{ $t->prioridad }}">
+                <div class="task-card {{ $t->prioridad }}" wire:key="pool-{{ $t->id }}">
                     <div class="task-icon">{{ $t->tipoIcon() }}</div>
                     <div class="task-body">
                         <div class="task-title">{{ $t->nombretarea }}</div>
@@ -235,14 +239,15 @@
                             @endif
                         </div>
                     </div>
-                    <div class="task-actions">
-                        <button class="tb-btn tb-btn-tomar" wire:click="tomar({{ $t->id }})"
-                                wire:loading.attr="disabled" wire:target="tomar({{ $t->id }})">
+                    <div class="task-actions" x-data>
+                        <button class="tb-btn tb-btn-tomar"
+                                wire:loading.attr="disabled" wire:target="tomar"
+                                x-on:click="$wire.tomar({{ $t->id }})">
                             <i class="fas fa-hand-pointer fa-xs"></i> Tomar
                         </button>
                         @if($isAdmin)
                             <select class="tb-assign-sel"
-                                    wire:change="asignar({{ $t->id }}, $event.target.value)">
+                                    x-on:change="const v=+$event.target.value; if(v>0){$wire.asignar({{ $t->id }},v);$event.target.value='';}">
                                 <option value="">Asignar a…</option>
                                 @foreach($empleados as $emp)
                                     <option value="{{ $emp->idemp }}">{{ $emp->nombreemp }}</option>
@@ -250,15 +255,15 @@
                             </select>
                         @endif
                         @if(Auth::user()->hasPermissionTo('tareas.destroy'))
-                            <button class="tb-btn tb-btn-del" wire:click="eliminar({{ $t->id }})"
-                                    wire:confirm="¿Eliminar esta tarea del pool?">
+                            <button class="tb-btn tb-btn-del"
+                                    x-on:click="if(confirm('¿Eliminar esta tarea del pool?')) $wire.eliminar({{ $t->id }})">
                                 <i class="fas fa-trash fa-xs"></i>
                             </button>
                         @endif
                     </div>
                 </div>
             @endforeach
-            <div class="tb-pagination mt-3">{{ $pool->links('pagination::bootstrap-5') }}</div>
+            <div class="tb-pagination mt-3">{{ $pool->links() }}</div>
         @endif
     @endif
 
@@ -268,84 +273,66 @@
 
         {{-- Barra WhatsApp (solo si hay tareas de cobro y canal activo) --}}
         @if($cobrarCount > 0 && $tieneCanalWsp)
-        <div x-data="{
-            sel: [],
-            toggle(id) { const i = this.sel.indexOf(id); i>=0 ? this.sel.splice(i,1) : this.sel.push(id); },
-            selectAll() {
-                const ids = {{ $misTareas->where('tipo_tarea','cobrar_usuario')->pluck('id')->values()->toJson() }};
-                this.sel = this.sel.length === ids.length ? [] : [...ids];
-            },
-            enviarSel() {
-                if(!this.sel.length) return;
-                const wireEl = this.$el.closest('[wire\\:id]');
-                if(!wireEl) return;
-                const comp = window.Livewire.find(wireEl.getAttribute('wire:id'));
-                if(!comp) return;
-                comp.enviarWspSeleccionados([...this.sel]).then(()=>{ this.sel = []; });
-            }
-        }">
-            <div class="wsp-bar">
-                <i class="fab fa-whatsapp text-success"></i>
-                <span class="fw-semibold" style="font-size:.82rem;color:#166534;">
-                    WhatsApp cobros ({{ $cobrarCount }})
-                </span>
+        @php $allWspData = array_values($datosWspPorTarea); @endphp
+        <div class="wsp-bar">
+            <i class="fab fa-whatsapp text-success"></i>
+            <span class="fw-semibold" style="font-size:.82rem;color:#166534;">
+                WhatsApp cobros ({{ $cobrarCount }})
+            </span>
 
-                {{-- Enviar a todos --}}
-                <button class="tb-btn tb-btn-wsp"
-                        wire:click="enviarWspTodos"
-                        wire:loading.attr="disabled"
-                        wire:target="enviarWspTodos"
-                        title="Enviar mensaje a los {{ $cobrarCount }} clientes con tarea de cobro">
-                    <i class="fab fa-whatsapp fa-xs"></i> Enviar a todos
-                    <span wire:loading wire:target="enviarWspTodos">
-                        <i class="fas fa-spinner fa-spin fa-xs"></i>
-                    </span>
-                </button>
+            {{-- Enviar a todos --}}
+            <button class="tb-btn tb-btn-wsp"
+                    data-tareas="{{ htmlspecialchars(json_encode($allWspData, JSON_UNESCAPED_UNICODE), ENT_QUOTES) }}"
+                    onclick="wspEnviarTodos(this)"
+                    title="Enviar mensaje a los {{ $cobrarCount }} clientes con tarea de cobro">
+                <i class="fab fa-whatsapp fa-xs"></i> Enviar a todos
+            </button>
 
-                {{-- Seleccionar todos --}}
-                <button class="tb-btn tb-btn-wsp-sel" x-on:click="selectAll()"
-                        title="Seleccionar / deseleccionar todos">
-                    <i class="fas fa-check-square fa-xs"></i>
-                    <span x-text="sel.length > 0 ? 'Deseleccionar todos' : 'Seleccionar todos'"></span>
-                </button>
+            {{-- Seleccionar todos --}}
+            <button id="wsp-btn-all-sel" class="tb-btn tb-btn-wsp-sel" onclick="wspSelectAll()"
+                    title="Seleccionar / deseleccionar todos">
+                <i class="fas fa-check-square fa-xs"></i>
+                <span id="wsp-all-sel-label">Seleccionar todos</span>
+            </button>
 
-                {{-- Enviar seleccionados --}}
-                <button class="tb-btn tb-btn-wsp-sel" x-show="sel.length > 0"
-                        x-on:click="enviarSel()" title="Enviar a los seleccionados">
-                    <i class="fab fa-whatsapp fa-xs"></i>
-                    Enviar (<span x-text="sel.length"></span>)
-                </button>
+            {{-- Enviar seleccionados --}}
+            <button id="wsp-btn-sel" class="tb-btn tb-btn-wsp-sel" style="display:none"
+                    onclick="wspEnviarSeleccionados()" title="Enviar a los seleccionados">
+                <i class="fab fa-whatsapp fa-xs"></i>
+                Enviar (<span id="wsp-sel-count">0</span>)
+            </button>
 
-                {{-- Editar plantilla --}}
-                <button class="tb-btn tb-btn-liberar ms-auto" wire:click="$toggle('showPlantillaEditor')"
-                        title="Configurar plantilla de mensaje">
-                    <i class="fas fa-pen fa-xs"></i> Plantilla
-                </button>
+            {{-- Editar plantilla --}}
+            <button class="tb-btn tb-btn-liberar ms-auto" wire:click="$toggle('showPlantillaEditor')"
+                    title="Configurar plantilla de mensaje">
+                <i class="fas fa-pen fa-xs"></i> Plantilla
+            </button>
 
-                {{-- Editor de plantilla (inline) --}}
-                @if($showPlantillaEditor)
-                <div class="wsp-template-editor">
-                    <textarea wire:model="plantillaCobro"
-                              placeholder="{{ \App\Livewire\TareasBoard::PLANTILLA_DEFAULT }}"></textarea>
-                    <div class="wsp-vars">
-                        Variables disponibles: <code>{nombre}</code> = nombre del cliente,
-                        <code>{fecha}</code> = fecha de vencimiento.
-                        Si dejas vacío se usa la plantilla por defecto.
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="tb-btn tb-btn-done" wire:click="guardarPlantilla"
-                                wire:loading.attr="disabled" wire:target="guardarPlantilla">
-                            <i class="fas fa-save fa-xs"></i> Guardar
-                        </button>
-                        <button class="tb-btn tb-btn-liberar" wire:click="$toggle('showPlantillaEditor')">
-                            Cancelar
-                        </button>
-                    </div>
+            {{-- Editor de plantilla (inline) --}}
+            @if($showPlantillaEditor)
+            <div class="wsp-template-editor">
+                <textarea wire:model="plantillaCobro"
+                          placeholder="{{ \App\Livewire\TareasBoard::PLANTILLA_DEFAULT }}"></textarea>
+                <div class="wsp-vars">
+                    Variables disponibles: <code>{nombre}</code> = nombre del cliente,
+                    <code>{fecha}</code> = fecha de vencimiento.
+                    Si dejas vacío se usa la plantilla por defecto.
                 </div>
-                @endif
+                <div class="d-flex gap-2">
+                    <button class="tb-btn tb-btn-done" wire:click="guardarPlantilla"
+                            wire:loading.attr="disabled" wire:target="guardarPlantilla">
+                        <i class="fas fa-save fa-xs"></i> Guardar
+                    </button>
+                    <button class="tb-btn tb-btn-liberar" wire:click="$toggle('showPlantillaEditor')">
+                        Cancelar
+                    </button>
+                </div>
             </div>
+            @endif
+        </div>
+        @endif
 
-        {{-- Tarjetas con checkbox --}}
+        {{-- Tarjetas --}}
         @if($misTareas->isEmpty())
             <div class="tb-empty">
                 <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
@@ -354,11 +341,17 @@
             </div>
         @else
             @foreach($misTareas as $t)
-                <div class="task-card {{ $t->prioridad }}">
-                    @if($t->tipo_tarea === 'cobrar_usuario')
+                @php $wsp = ($tieneCanalWsp && $t->tipo_tarea === 'cobrar_usuario' && isset($datosWspPorTarea[$t->id]))
+                    ? $datosWspPorTarea[$t->id] : null; @endphp
+                <div class="task-card {{ $t->prioridad }}" wire:key="mis-{{ $t->id }}">
+                    @if($wsp)
                         <input type="checkbox" class="task-select-cb"
-                               :checked="sel.includes({{ $t->id }})"
-                               x-on:change="toggle({{ $t->id }})">
+                               data-tid="{{ $t->id }}"
+                               data-nombre="{{ $wsp['nombre'] }}"
+                               data-tel="{{ $wsp['telefono'] }}"
+                               data-idcli="{{ $wsp['idcli'] }}"
+                               data-msg="{{ htmlspecialchars($wsp['mensaje'], ENT_QUOTES) }}"
+                               onchange="wspToggle(this)">
                     @endif
                     <div class="task-icon">{{ $t->tipoIcon() }}</div>
                     <div class="task-body">
@@ -379,85 +372,36 @@
                             @endif
                         </div>
                     </div>
-                    <div class="task-actions">
-                        @if($t->tipo_tarea === 'cobrar_usuario')
+                    <div class="task-actions" x-data>
+                        @if($wsp)
                             <button class="tb-btn tb-btn-wsp"
-                                    wire:click="enviarWsp({{ $t->id }})"
-                                    wire:loading.attr="disabled"
-                                    wire:target="enviarWsp({{ $t->id }})"
-                                    title="Enviar mensaje WhatsApp a este cliente">
+                                    data-nombre="{{ $wsp['nombre'] }}"
+                                    data-tel="{{ $wsp['telefono'] }}"
+                                    data-idcli="{{ $wsp['idcli'] }}"
+                                    data-msg="{{ htmlspecialchars($wsp['mensaje'], ENT_QUOTES) }}"
+                                    onclick="wspAbrirDesdeBtn(this)"
+                                    title="Enviar WhatsApp a este cliente">
                                 <i class="fab fa-whatsapp fa-xs"></i> WA
                             </button>
                         @endif
-                        <button class="tb-btn tb-btn-done" wire:click="completar({{ $t->id }})"
-                                wire:loading.attr="disabled" wire:target="completar({{ $t->id }})">
+                        <button class="tb-btn tb-btn-done"
+                                wire:loading.attr="disabled" wire:target="completar"
+                                x-on:click="$wire.completar({{ $t->id }})">
                             <i class="fas fa-check fa-xs"></i> Completar
                         </button>
-                        <button class="tb-btn tb-btn-liberar" wire:click="liberar({{ $t->id }})"
-                                wire:confirm="¿Devolver esta tarea al pool?">
+                        <button class="tb-btn tb-btn-liberar"
+                                x-on:click="if(confirm('¿Devolver esta tarea al pool?')) $wire.liberar({{ $t->id }})">
                             <i class="fas fa-undo fa-xs"></i> Devolver
                         </button>
                         @if(Auth::user()->hasPermissionTo('tareas.destroy'))
-                            <button class="tb-btn tb-btn-del" wire:click="eliminar({{ $t->id }})"
-                                    wire:confirm="¿Eliminar esta tarea?">
+                            <button class="tb-btn tb-btn-del"
+                                    x-on:click="if(confirm('¿Eliminar esta tarea?')) $wire.eliminar({{ $t->id }})">
                                 <i class="fas fa-trash fa-xs"></i>
                             </button>
                         @endif
                     </div>
                 </div>
             @endforeach
-        @endif
-        </div>{{-- cierra x-data --}}
-
-        @else
-        {{-- Sin canal WhatsApp activo O sin tareas de cobro: lista normal --}}
-        @if($misTareas->isEmpty())
-            <div class="tb-empty">
-                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                No tienes tareas asignadas.<br>
-                Usa <strong>"Tomar en bloque"</strong> para elegir cuántas tomar de cada tipo.
-            </div>
-        @else
-            @foreach($misTareas as $t)
-                <div class="task-card {{ $t->prioridad }}">
-                    <div class="task-icon">{{ $t->tipoIcon() }}</div>
-                    <div class="task-body">
-                        <div class="task-title">{{ $t->nombretarea }}</div>
-                        @if($t->descripcion)
-                            <div class="task-desc">{{ $t->descripcion }}</div>
-                        @endif
-                        <div class="task-meta">
-                            <span class="task-pill pill-{{ $t->prioridad }}">{{ ucfirst($t->prioridad) }}</span>
-                            <span class="task-pill pill-tipo">{{ $t->tipoLabel() }}</span>
-                            @if($t->asignado_por && $t->asignado_por !== Auth::user()->idemp)
-                                <span class="task-pill pill-asig">
-                                    Asignada por {{ optional($t->asignadoPorEmp)->nombreemp ?? 'admin' }}
-                                </span>
-                            @endif
-                            @if($t->assigned_at)
-                                <span class="task-pill pill-venc">{{ $t->assigned_at->diffForHumans() }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="task-actions">
-                        <button class="tb-btn tb-btn-done" wire:click="completar({{ $t->id }})"
-                                wire:loading.attr="disabled" wire:target="completar({{ $t->id }})">
-                            <i class="fas fa-check fa-xs"></i> Completar
-                        </button>
-                        <button class="tb-btn tb-btn-liberar" wire:click="liberar({{ $t->id }})"
-                                wire:confirm="¿Devolver esta tarea al pool?">
-                            <i class="fas fa-undo fa-xs"></i> Devolver
-                        </button>
-                        @if(Auth::user()->hasPermissionTo('tareas.destroy'))
-                            <button class="tb-btn tb-btn-del" wire:click="eliminar({{ $t->id }})"
-                                    wire:confirm="¿Eliminar esta tarea?">
-                                <i class="fas fa-trash fa-xs"></i>
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            @endforeach
-        @endif
         @endif
     @endif
 
@@ -470,7 +414,7 @@
             </div>
         @else
             @foreach($completadas as $t)
-                <div class="task-card baja" style="opacity:.7;">
+                <div class="task-card baja" wire:key="comp-{{ $t->id }}" style="opacity:.7;">
                     <div class="task-icon">✅</div>
                     <div class="task-body">
                         <div class="task-title" style="text-decoration:line-through;color:#6b7280;">
@@ -485,7 +429,7 @@
                     </div>
                 </div>
             @endforeach
-            <div class="tb-pagination mt-3">{{ $completadas->links('pagination::bootstrap-5') }}</div>
+            <div class="tb-pagination mt-3">{{ $completadas->links() }}</div>
         @endif
     @endif
 
@@ -510,7 +454,7 @@
                     </div>
                 @endif
 
-                <div class="task-card {{ $t->prioridad }}">
+                <div class="task-card {{ $t->prioridad }}" wire:key="asig-{{ $t->id }}">
                     <div class="task-icon">{{ $t->tipoIcon() }}</div>
                     <div class="task-body">
                         <div class="task-title">{{ $t->nombretarea }}</div>
@@ -531,10 +475,10 @@
                             @endif
                         </div>
                     </div>
-                    <div class="task-actions">
+                    <div class="task-actions" x-data>
                         {{-- Reasignar a otro empleado --}}
                         <select class="tb-assign-sel"
-                                wire:change="reasignar({{ $t->id }}, $event.target.value)"
+                                x-on:change="const v=+$event.target.value; if(v>0){$wire.reasignar({{ $t->id }},v);$event.target.value='0';}"
                                 style="border-color:#f97316;color:#ea580c;">
                             <option value="0">↔ Reasignar…</option>
                             @foreach($empleados as $emp)
@@ -544,20 +488,20 @@
                             @endforeach
                         </select>
                         {{-- Liberar al pool --}}
-                        <button class="tb-btn tb-btn-liberar" wire:click="liberar({{ $t->id }})"
-                                wire:confirm="¿Devolver esta tarea al pool?">
+                        <button class="tb-btn tb-btn-liberar"
+                                x-on:click="if(confirm('¿Devolver esta tarea al pool?')) $wire.liberar({{ $t->id }})">
                             <i class="fas fa-undo fa-xs"></i> Pool
                         </button>
                         @if(Auth::user()->hasPermissionTo('tareas.destroy'))
-                            <button class="tb-btn tb-btn-del" wire:click="eliminar({{ $t->id }})"
-                                    wire:confirm="¿Eliminar esta tarea?">
+                            <button class="tb-btn tb-btn-del"
+                                    x-on:click="if(confirm('¿Eliminar esta tarea?')) $wire.eliminar({{ $t->id }})">
                                 <i class="fas fa-trash fa-xs"></i>
                             </button>
                         @endif
                     </div>
                 </div>
             @endforeach
-            <div class="tb-pagination mt-3">{{ $todasAsignadas->links('pagination::bootstrap-5') }}</div>
+            <div class="tb-pagination mt-3">{{ $todasAsignadas->links() }}</div>
         @endif
     @endif
 

@@ -8,8 +8,6 @@ use App\Models\Empleado;
 use App\Models\Historial;
 use App\Models\Tarea;
 use App\Models\ViewUsuarioActivo;
-use App\Services\Chat\WhatsAppOutboundService;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -18,6 +16,8 @@ use Livewire\WithPagination;
 class TareasBoard extends Component
 {
     use WithPagination;
+
+    protected string $paginationTheme = 'bootstrap';
 
     public string $tab                     = 'pool';
     public string $filtroTipo              = '';
@@ -42,9 +42,8 @@ class TareasBoard extends Component
     ];
 
     // ── WhatsApp ─────────────────────────────────────────────────────────────
-    public string $plantillaCobro    = '';
+    public string $plantillaCobro      = '';
     public bool   $showPlantillaEditor = false;
-    public array  $selectedTareaIds  = [];
 
     const PLANTILLA_DEFAULT = "Hola {nombre}, te recordamos que tu membresía vence el {fecha}. Por favor renueva para mantener el servicio. ¡Gracias! 🙏";
 
@@ -69,7 +68,6 @@ class TareasBoard extends Component
     public function setTab(string $tab): void
     {
         $this->tab = $tab;
-        $this->selectedTareaIds = [];
         $this->resetPage();
     }
 
@@ -91,7 +89,7 @@ class TareasBoard extends Component
         $tarea = Tarea::where('id', $id)->whereNull('assignee_id')->where('completada', false)->first();
 
         if (! $tarea) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'Esta tarea ya fue tomada por otro empleado.']);
+            $this->dispatch('notify', type: 'warning', msg: 'Esta tarea ya fue tomada por otro empleado.');
             return;
         }
 
@@ -103,7 +101,7 @@ class TareasBoard extends Component
 
         $this->registrarHistorial('Tarea tomada', $tarea);
         $this->tab = 'mis_tareas';
-        $this->dispatch('notify', ['type' => 'success', 'msg' => "'{$tarea->nombretarea}' agregada a tus tareas."]);
+        $this->dispatch('notify', type: 'success', msg: "'{$tarea->nombretarea}' agregada a tus tareas.");
     }
 
     public function liberar(int $id): void
@@ -119,7 +117,7 @@ class TareasBoard extends Component
 
         $tarea->update(['assignee_id' => null, 'asignado_por' => null, 'assigned_at' => null]);
         $this->registrarHistorial('Tarea devuelta al pool', $tarea);
-        $this->dispatch('notify', ['type' => 'info', 'msg' => 'Tarea devuelta al pool.']);
+        $this->dispatch('notify', type: 'info', msg: 'Tarea devuelta al pool.');
     }
 
     // ─── Asignar individual (admins) ──────────────────────────────────────────
@@ -127,9 +125,11 @@ class TareasBoard extends Component
     public function asignar(int $tareaId, int $empId): void
     {
         if (! $this->user()->isAdmin()) {
-            $this->dispatch('notify', ['type' => 'danger', 'msg' => 'Sin permiso para asignar tareas.']);
+            $this->dispatch('notify', type: 'danger', msg: 'Sin permiso para asignar tareas.');
             return;
         }
+        if ($empId <= 0) return;
+
         $tarea = Tarea::where('id', $tareaId)->where('completada', false)->first();
         if (! $tarea) return;
 
@@ -139,7 +139,7 @@ class TareasBoard extends Component
             'assigned_at'  => now(),
         ]);
         $this->registrarHistorial("Tarea asignada al empleado #{$empId}", $tarea);
-        $this->dispatch('notify', ['type' => 'success', 'msg' => 'Tarea asignada.']);
+        $this->dispatch('notify', type: 'success', msg: 'Tarea asignada.');
     }
 
     // ─── Reasignar (admin) ───────────────────────────────────────────────────
@@ -147,7 +147,7 @@ class TareasBoard extends Component
     public function reasignar(int $tareaId, int $nuevoEmpId): void
     {
         if (! $this->user()->isAdmin()) {
-            $this->dispatch('notify', ['type' => 'danger', 'msg' => 'Sin permiso para reasignar.']);
+            $this->dispatch('notify', type: 'danger', msg: 'Sin permiso para reasignar.');
             return;
         }
         if ($nuevoEmpId <= 0) return;
@@ -165,7 +165,7 @@ class TareasBoard extends Component
         ]);
 
         $this->registrarHistorial("Tarea reasignada: {$anterior} → {$nuevo}", $tarea);
-        $this->dispatch('notify', ['type' => 'success', 'msg' => "Reasignada a {$nuevo}."]);
+        $this->dispatch('notify', type: 'success', msg: "Reasignada a {$nuevo}.");
     }
 
     // ─── Toma masiva (recibe valores desde Alpine.js) ────────────────────────
@@ -213,12 +213,12 @@ class TareasBoard extends Component
         $this->tab = ($targetId === $empId) ? 'mis_tareas' : 'pool';
         $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'tareasMasivoModal' }))");
 
-        $this->dispatch('notify', [
-            'type' => $total > 0 ? 'success' : 'warning',
-            'msg'  => $total > 0
+        $this->dispatch('notify',
+            type: $total > 0 ? 'success' : 'warning',
+            msg: $total > 0
                 ? "{$total} tareas asignadas a {$nombre}."
-                : 'No hay tareas disponibles para los tipos seleccionados.',
-        ]);
+                : 'No hay tareas disponibles para los tipos seleccionados.'
+        );
     }
 
     // ─── Completar ────────────────────────────────────────────────────────────
@@ -234,7 +234,7 @@ class TareasBoard extends Component
             ->first();
 
         if (! $tarea) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'No puedes completar esta tarea.']);
+            $this->dispatch('notify', type: 'warning', msg: 'No puedes completar esta tarea.');
             return;
         }
 
@@ -244,7 +244,7 @@ class TareasBoard extends Component
             'fecha_completada' => now(),
         ]);
         $this->registrarHistorial('Tarea completada', $tarea);
-        $this->dispatch('notify', ['type' => 'success', 'msg' => "'{$tarea->nombretarea}' completada. ✅"]);
+        $this->dispatch('notify', type: 'success', msg: "'{$tarea->nombretarea}' completada. ✅");
     }
 
     // ─── Tarea manual ─────────────────────────────────────────────────────────
@@ -274,17 +274,17 @@ class TareasBoard extends Component
         $this->registrarHistorial('Tarea manual creada', $tarea);
         $this->reset(['showFormModal', 'formNombre', 'formDesc', 'formPrioridad', 'formFecha']);
         $this->tab = 'mis_tareas';
-        $this->dispatch('notify', ['type' => 'success', 'msg' => 'Tarea creada.']);
+        $this->dispatch('notify', type: 'success', msg: 'Tarea creada.');
     }
 
     public function eliminar(int $id): void
     {
         if (! $this->user()->hasPermissionTo('tareas.destroy')) {
-            $this->dispatch('notify', ['type' => 'danger', 'msg' => 'Sin permiso para eliminar.']);
+            $this->dispatch('notify', type: 'danger', msg: 'Sin permiso para eliminar.');
             return;
         }
         Tarea::findOrFail($id)->delete();
-        $this->dispatch('notify', ['type' => 'info', 'msg' => 'Tarea eliminada.']);
+        $this->dispatch('notify', type: 'info', msg: 'Tarea eliminada.');
     }
 
     // ─── WhatsApp: plantilla ──────────────────────────────────────────────────
@@ -294,84 +294,7 @@ class TareasBoard extends Component
         $this->validate(['plantillaCobro' => 'nullable|string|max:1000']);
         $this->user()->update(['plantilla_cobro' => $this->plantillaCobro ?: null]);
         $this->showPlantillaEditor = false;
-        $this->dispatch('notify', ['type' => 'success', 'msg' => 'Plantilla guardada.']);
-    }
-
-    // ─── WhatsApp: envío individual ───────────────────────────────────────────
-
-    public function enviarWsp(int $tareaId): void
-    {
-        $tarea = Tarea::where('id', $tareaId)
-            ->where('assignee_id', $this->user()->idemp)
-            ->where('tipo_tarea', 'cobrar_usuario')
-            ->where('completada', false)
-            ->first();
-
-        if (! $tarea) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'Tarea no válida para envío.']);
-            return;
-        }
-
-        [$enviados, $sinTel, $errores] = $this->enviarWspParaIdDets(
-            collect([(int) $tarea->related_id])
-        );
-
-        if ($sinTel > 0) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'Cliente sin teléfono registrado.']);
-        } elseif ($errores > 0) {
-            $this->dispatch('notify', ['type' => 'danger', 'msg' => 'Error al enviar el mensaje.']);
-        } else {
-            $this->dispatch('notify', ['type' => 'success', 'msg' => 'Mensaje enviado por WhatsApp ✅']);
-        }
-    }
-
-    // ─── WhatsApp: envío masivo (todos) ───────────────────────────────────────
-
-    public function enviarWspTodos(): void
-    {
-        $idDets = Tarea::where('assignee_id', $this->user()->idemp)
-            ->where('tipo_tarea', 'cobrar_usuario')
-            ->where('completada', false)
-            ->pluck('related_id')
-            ->filter()
-            ->map(fn($v) => (int) $v)
-            ->values();
-
-        if ($idDets->isEmpty()) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'No tienes tareas de cobro asignadas.']);
-            return;
-        }
-
-        [$enviados, $sinTel, $errores] = $this->enviarWspParaIdDets($idDets);
-        $this->dispatch('notify', $this->buildBulkNotify($enviados, $sinTel, $errores));
-    }
-
-    // ─── WhatsApp: envío seleccionados (llamado desde Alpine) ────────────────
-
-    public function enviarWspSeleccionados(array $tareaIds = []): void
-    {
-        if (empty($tareaIds)) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'No hay tareas seleccionadas.']);
-            return;
-        }
-
-        $idDets = Tarea::whereIn('id', $tareaIds)
-            ->where('assignee_id', $this->user()->idemp)
-            ->where('tipo_tarea', 'cobrar_usuario')
-            ->where('completada', false)
-            ->pluck('related_id')
-            ->filter()
-            ->map(fn($v) => (int) $v)
-            ->values();
-
-        if ($idDets->isEmpty()) {
-            $this->dispatch('notify', ['type' => 'warning', 'msg' => 'No hay tareas de cobro en la selección.']);
-            return;
-        }
-
-        [$enviados, $sinTel, $errores] = $this->enviarWspParaIdDets($idDets);
-        $this->selectedTareaIds = [];
-        $this->dispatch('notify', $this->buildBulkNotify($enviados, $sinTel, $errores));
+        $this->dispatch('notify', type: 'success', msg: 'Plantilla guardada.');
     }
 
     // ─── Render ───────────────────────────────────────────────────────────────
@@ -397,14 +320,14 @@ class TareasBoard extends Component
             ->whereDate('fecha_completada', today())->count();
 
         $pool      = $this->tab === 'pool'
-            ? $poolQuery->paginate(15, pageName: 'poolPage')
+            ? $poolQuery->paginate(15)
             : collect();
         $misTareas = $this->tab === 'mis_tareas'
             ? $misQuery->get()
             : collect();
         $completadas = $this->tab === 'completadas'
             ? Tarea::where('completada_por', $empId)->where('completada', true)
-                ->orderBy('fecha_completada', 'desc')->paginate(20, pageName: 'compPage')
+                ->orderBy('fecha_completada', 'desc')->paginate(20)
             : collect();
 
         $asignadasQuery = $isAdmin
@@ -419,7 +342,7 @@ class TareasBoard extends Component
 
         $totalAsignadas = $isAdmin ? (clone $asignadasQuery)->count() : 0;
         $todasAsignadas = ($isAdmin && $this->tab === 'asignadas')
-            ? $asignadasQuery->paginate(20, pageName: 'asigPage')
+            ? $asignadasQuery->paginate(20)
             : collect();
 
         $disponiblesPorTipo = Tarea::disponibles()
@@ -433,11 +356,15 @@ class TareasBoard extends Component
 
         $tieneCanalWsp = ChatWhatsappChannel::availableForOutbound()->exists();
 
+        $datosWspPorTarea = ($this->tab === 'mis_tareas' && $tieneCanalWsp)
+            ? $this->resolverDatosWspBatch()
+            : [];
+
         return view('livewire.tareas-board', compact(
             'pool', 'misTareas', 'completadas', 'todasAsignadas',
             'totalPool', 'totalMias', 'completadasHoy', 'totalAsignadas',
             'empleados', 'isAdmin', 'tipos', 'disponiblesPorTipo',
-            'tieneCanalWsp'
+            'tieneCanalWsp', 'datosWspPorTarea'
         ));
     }
 
@@ -497,83 +424,64 @@ class TareasBoard extends Component
         };
     }
 
-    // ─── WhatsApp helpers ─────────────────────────────────────────────────────
+    // ─── WhatsApp: pre-computar datos para envío JS ───────────────────────────
 
-    /**
-     * Envía mensajes a una lista de iddet y devuelve [enviados, sinTelefono, errores].
-     *
-     * @param Collection<int> $idDets
-     * @return array{int, int, int}
-     */
-    private function enviarWspParaIdDets(Collection $idDets): array
+    private function resolverDatosWspBatch(): array
     {
-        $canal = ChatWhatsappChannel::availableForOutbound()->first();
-        if (! $canal) {
-            return [0, 0, $idDets->count()];
-        }
+        $empId  = $this->user()->idemp;
+        $tareas = Tarea::where('assignee_id', $empId)
+            ->where('tipo_tarea', 'cobrar_usuario')
+            ->where('completada', false)
+            ->get(['id', 'related_id']);
 
-        $usuarios = ViewUsuarioActivo::whereIn('iddet', $idDets->toArray())
+        if ($tareas->isEmpty()) return [];
+
+        $idDets = $tareas->pluck('related_id')
+            ->filter()
+            ->map(fn($v) => (int) $v)
+            ->toArray();
+
+        $usuarios = ViewUsuarioActivo::whereIn('iddet', $idDets)
             ->with('cliente')
             ->get()
             ->keyBy('iddet');
 
-        $service  = app(WhatsAppOutboundService::class);
-        $enviados = $sinTel = $errores = 0;
+        $idClis = $usuarios->pluck('idcli')->filter()->unique()->toArray();
 
-        foreach ($idDets as $iddet) {
-            $usuario = $usuarios->get($iddet);
-            $phone   = $this->resolverTelefono($usuario);
-
-            if (! $phone) {
-                $sinTel++;
-                continue;
-            }
-
-            $mensaje = $this->buildMensaje($usuario);
-            $result  = $service->sendText($phone, $mensaje, $canal->instance_name, $canal->api_key, $canal->server_url);
-
-            $result['ok'] ? $enviados++ : $errores++;
-        }
-
-        return [$enviados, $sinTel, $errores];
-    }
-
-    private function resolverTelefono(?ViewUsuarioActivo $usuario): ?string
-    {
-        if (! $usuario || ! $usuario->cliente) return null;
-
-        $contacto = ChatContactoCanal::where('idcli', $usuario->idcli)
+        $contactos = empty($idClis) ? collect() : ChatContactoCanal::whereIn('idcli', $idClis)
             ->where('canal', 'whatsapp')
             ->whereNotNull('telefono')
             ->orderByDesc('last_seen_at')
-            ->value('telefono');
+            ->get(['idcli', 'telefono'])
+            ->groupBy('idcli')
+            ->map(fn($g) => $g->first()->telefono);
 
-        return $contacto ?: ($usuario->cliente->telefonocli ?: null);
-    }
-
-    private function buildMensaje(?ViewUsuarioActivo $usuario): string
-    {
         $template = trim($this->user()->plantilla_cobro ?? '') ?: self::PLANTILLA_DEFAULT;
+        $result   = [];
 
-        $nombre = $usuario?->nombre_cliente ?? 'Cliente';
-        $fecha  = $usuario?->fecha_vencimiento
-            ? \Carbon\Carbon::parse($usuario->fecha_vencimiento)->format('d/m/Y')
-            : 'próximamente';
+        foreach ($tareas as $tarea) {
+            $iddet   = (int) $tarea->related_id;
+            $usuario = $usuarios->get($iddet);
+            $idcli   = $usuario?->idcli;
 
-        return str_replace(['{nombre}', '{fecha}'], [$nombre, $fecha], $template);
-    }
+            $nombre = $usuario?->nombre_cliente ?? 'Cliente';
+            $fecha  = $usuario?->fecha_vencimiento
+                ? \Carbon\Carbon::parse($usuario->fecha_vencimiento)->format('d/m/Y')
+                : 'próximamente';
 
-    private function buildBulkNotify(int $enviados, int $sinTel, int $errores): array
-    {
-        $partes = [];
-        if ($enviados > 0) $partes[] = "{$enviados} enviados ✅";
-        if ($sinTel  > 0) $partes[] = "{$sinTel} sin teléfono";
-        if ($errores > 0) $partes[] = "{$errores} con error";
+            $telefono = $idcli
+                ? (string) ($contactos->get($idcli) ?? $usuario?->cliente?->telefonocli ?? '')
+                : '';
 
-        $msg  = implode(', ', $partes) ?: 'Sin resultados';
-        $type = $enviados > 0 ? ($errores > 0 ? 'warning' : 'success') : 'danger';
+            $result[$tarea->id] = [
+                'nombre'   => $nombre,
+                'telefono' => $telefono,
+                'idcli'    => (int) ($idcli ?? 0),
+                'mensaje'  => str_replace(['{nombre}', '{fecha}'], [$nombre, $fecha], $template),
+            ];
+        }
 
-        return ['type' => $type, 'msg' => $msg];
+        return $result;
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
