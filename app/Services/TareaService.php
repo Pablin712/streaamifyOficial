@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Tarea;
 use App\Models\Cuenta;
 use App\Models\Soporte;
+use App\Models\Servicio;
 use App\Models\ViewUsuarioActivo;
 use App\Services\CuentaService;
 use Illuminate\Support\Collection;
@@ -287,50 +288,45 @@ class TareaService
         return $creadas;
     }
 
-    // ─── Stock bajo por servicio ─────────────────────────────────────────────
+    // ─── Stock bajo por servicio (sólo servicios principales) ───────────────
 
     private function sincronizarStockServicios(): int
     {
         $umbral = 3;
 
-        // Por servicio: capacidad total (SUM pantmaxval de cuentas activas) menos usuarios activos
-        $servicios = DB::table('servicios as s')
-            ->join('valores as v', function ($j) {
-                $j->on('v.idser', '=', 's.idser')->where('v.activoval', true);
-            })
-            ->join('cuentas as c', function ($j) {
-                $j->on('c.idval', '=', 'v.idval')->where('c.activocue', true);
-            })
-            ->leftJoin('view_usuarios_activos as vua', function ($j) {
-                $j->on('vua.idcue', '=', 'c.idcue')
-                  ->whereRaw('vua.fecha_vencimiento > NOW()');
-            })
-            ->groupBy('s.idser', 's.nombreser')
-            ->select([
-                's.idser',
-                's.nombreser',
-                DB::raw('CAST(SUM(v.pantmaxval) AS SIGNED) - COUNT(vua.iddet) AS disponibles'),
-            ])
-            ->havingRaw('CAST(SUM(v.pantmaxval) AS SIGNED) - COUNT(vua.iddet) < ?', [$umbral])
-            ->get();
+        // calcularEspaciosPorServicio ya limita a los 8 servicios principales:
+        // NETFLIX, DISNEYP, MAX, PRIME, PARAMOUNT, CRUNCHY, SPOTIFY, MAGIS
+        $espacios = $this->cuentaService->calcularEspaciosPorServicio();
+
+        // Traer nombres de los servicios en una sola query
+        $nombres = Servicio::whereIn('idser', array_keys($espacios))
+            ->pluck('nombreser', 'idser');
 
         $creadas = 0;
+        $idsConPocoStock = [];
 
-        foreach ($servicios as $servicio) {
+        foreach ($espacios as $idser => $disponibles) {
+            if ($disponibles >= $umbral) {
+                continue;
+            }
+
+            $idsConPocoStock[] = $idser;
+            $nombreser = $nombres[$idser] ?? $idser;
+
             $existe = Tarea::where('tipo_tarea', 'agregar_stock')
                 ->where('related_model', 'Servicio')
-                ->where('related_id', $servicio->idser)
+                ->where('related_id', $idser)
                 ->where('completada', false)
                 ->exists();
 
             if (! $existe) {
-                $disp = max(0, (int) $servicio->disponibles);
+                $disp = max(0, (int) $disponibles);
                 Tarea::create([
                     'tipo_tarea'    => 'agregar_stock',
                     'related_model' => 'Servicio',
-                    'related_id'    => $servicio->idser,
-                    'nombretarea'   => "Stock bajo: {$servicio->nombreser}",
-                    'descripcion'   => "Solo {$disp} espacio(s) disponible(s) para {$servicio->nombreser}. Comprar nuevas cuentas.",
+                    'related_id'    => $idser,
+                    'nombretarea'   => "Stock bajo: {$nombreser}",
+                    'descripcion'   => "Solo {$disp} espacio(s) disponible(s) para {$nombreser}. Comprar nuevas cuentas.",
                     'prioridad'     => $disp <= 0 ? 'alta' : 'media',
                     'fechalimit'    => Carbon::today()->setHour(23)->setMinute(59),
                     'completada'    => false,
@@ -339,12 +335,12 @@ class TareaService
             }
         }
 
-        // Limpiar tareas de servicios que ya recuperaron stock
-        $idsConPocoStock = collect($servicios)->pluck('idser')->toArray();
+        // Limpiar tareas de servicios principales que ya recuperaron stock
         Tarea::where('tipo_tarea', 'agregar_stock')
             ->where('completada', false)
             ->whereNull('assignee_id')
             ->when(!empty($idsConPocoStock), fn($q) => $q->whereNotIn('related_id', $idsConPocoStock))
+            ->whereIn('related_id', array_keys($espacios))
             ->delete();
 
         return $creadas;

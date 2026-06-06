@@ -311,10 +311,22 @@
             @endforeach
         </div>
     </div>
-    <div class="card-body p-3">
-        <canvas id="myAreaChart" style="width:100%;height:260px;max-height:260px;"></canvas>
+
+    {{-- Canvas: altura fija, Chart.js responsive llena el ancho --}}
+    <div style="position:relative; height:270px; padding:12px 16px 4px;">
+        <div id="areaChartLoader" style="position:absolute;top:8px;right:16px;font-size:.72rem;color:#6b7280;display:none;z-index:5;">
+            <i class="fas fa-spinner fa-spin me-1"></i> Cargando...
+        </div>
+        <canvas id="myAreaChart" style="cursor:ew-resize;"></canvas>
     </div>
-    <div class="card-footer text-muted">Actualizado automáticamente</div>
+
+    {{-- Leyenda estática en el fondo --}}
+    <div id="areaChartLegend" class="px-3 pt-2 pb-2 d-flex flex-wrap gap-1"
+         style="border-top:1px solid var(--bs-border-color);min-height:36px;"></div>
+
+    <div class="card-footer text-muted" style="font-size:.73rem;">
+        <i class="fas fa-mouse me-1"></i> Rueda del ratón o desliza para navegar · carga historial automáticamente
+    </div>
 </div>
 
 {{-- ══ Bar + Pie ══════════════════════════════════════════ --}}
@@ -372,44 +384,131 @@ document.addEventListener("DOMContentLoaded", function () {
     Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
     Chart.defaults.font.size   = 12;
 
-    /* ── Área Chart ─────────────────────────────────────── */
-    const ctxArea = document.getElementById("myAreaChart").getContext("2d");
+    /* ── Área Chart (ventana deslizante, como bolsas de valores) ──── */
+    const ctxArea  = document.getElementById('myAreaChart').getContext('2d');
+    const canvasEl = document.getElementById('myAreaChart');
+    const loaderEl = document.getElementById('areaChartLoader');
+    const legendEl = document.getElementById('areaChartLegend');
     let myAreaChart;
 
-    function dataset(label, c, data, hidden=false, fill=true) {
+    function dataset(label, c, data, hidden = false, fill = true) {
         return {
-            label, data, hidden,
-            fill, tension: 0.45,
+            label, data, hidden, fill, tension: 0.4,
             backgroundColor: fill ? c.fill : 'transparent',
             borderColor: c.line, borderWidth: 2,
             pointBackgroundColor: c.line,
-            pointRadius: 3, pointHoverRadius: 5,
+            pointRadius: 2, pointHoverRadius: 5,
         };
     }
 
-    function initChart(labels, ingresos, costos, gastos, ganancias, ventas, newCustomers, users, accounts, dangerAccounts, pendingPayments, affectedCustomers) {
-        if (myAreaChart) myAreaChart.destroy();
+    // Cuántos puntos mostrar por intervalo (ventana visible)
+    const WINDOW_SIZES = { '1d': 30, '1w': 20, '1m': 15, '3m': 10, '1y': 8 };
+    const DS_KEYS = [
+        'ingresos', 'costos', 'gastos', 'ganancias',
+        'ventasChart', 'newCustomers', 'users', 'accounts',
+        'dangerAccounts', 'pendingPayments', 'affectedCustomers'
+    ];
+
+    let activeInterval = '1d';
+    let allData        = { labels: [] };   // dataset completo en memoria
+    let windowStart    = 0;                // índice del primer punto visible
+    let hasMore        = false;
+    let loadingOlder   = false;
+    let oldestDate     = null;
+
+    const wSize    = () => WINDOW_SIZES[activeInterval] || 30;
+    const totalPts = () => (allData.labels || []).length;
+
+    /* ── Leyenda estática (fondo) ────────────────────────── */
+    function buildLegend() {
+        legendEl.innerHTML = '';
+        myAreaChart.data.datasets.forEach(ds => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = 'border:none;background:none;padding:2px 8px;cursor:pointer;font-size:.72rem;font-weight:600;border-radius:4px;transition:opacity .15s;';
+            btn.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${ds.borderColor};margin-right:4px;"></span>${ds.label}`;
+            btn.style.opacity = ds.hidden ? '0.35' : '1';
+            btn.addEventListener('click', () => {
+                ds.hidden = !ds.hidden;
+                btn.style.opacity = ds.hidden ? '0.35' : '1';
+                myAreaChart.update('none');
+            });
+            legendEl.appendChild(btn);
+        });
+    }
+
+    /* ── Actualizar la ventana visible ───────────────────── */
+    function updateWindow() {
+        if (!myAreaChart) return;
+        const ws    = wSize();
+        const total = totalPts();
+        const start = Math.max(0, Math.min(windowStart, Math.max(0, total - ws)));
+        const end   = Math.min(start + ws, total);
+        myAreaChart.data.labels = allData.labels.slice(start, end);
+        DS_KEYS.forEach((k, i) => {
+            myAreaChart.data.datasets[i].data = (allData[k] || []).slice(start, end);
+        });
+        myAreaChart.update('none');
+        // Cerca del borde izquierdo (datos más antiguos) → carga más
+        if (start < 5 && hasMore && !loadingOlder) fetchOlderChunk();
+    }
+
+    /* ── Desplazar ventana (delta>0 = más reciente, <0 = más antiguo) ── */
+    function shiftWindow(delta) {
+        const maxStart = Math.max(0, totalPts() - wSize());
+        windowStart = Math.max(0, Math.min(windowStart + delta, maxStart));
+        updateWindow();
+    }
+
+    /* ── Cargar chunk histórico más antiguo ──────────────── */
+    function fetchOlderChunk() {
+        loadingOlder = true;
+        loaderEl.style.display = '';
+        fetch(`{{ route('dashboard.filter') }}?range=${activeInterval}&before=${oldestDate || ''}`)
+            .then(r => r.json())
+            .then(d => {
+                if (!d.labels || !d.labels.length) { hasMore = false; return; }
+                const added = d.labels.length;
+                allData.labels = [...d.labels, ...allData.labels];
+                DS_KEYS.forEach(k => { allData[k] = [...(d[k] || []), ...(allData[k] || [])]; });
+                hasMore      = d.has_more;
+                oldestDate   = d.oldest_date || oldestDate;
+                windowStart += added; // compensar para que la vista no salte
+            })
+            .catch(e => console.error(e))
+            .finally(() => { loadingOlder = false; loaderEl.style.display = 'none'; });
+    }
+
+    /* ── Crear el chart ──────────────────────────────────── */
+    function initChart(interval) {
+        if (myAreaChart) { myAreaChart.destroy(); myAreaChart = null; }
+
+        const ws    = WINDOW_SIZES[interval] || 30;
+        const start = Math.max(0, totalPts() - ws);
+        const sl    = k => (allData[k] || []).slice(start);
 
         myAreaChart = new Chart(ctxArea, {
-            type: "line",
+            type: 'line',
             data: {
-                labels,
+                labels: allData.labels.slice(start),
                 datasets: [
-                    dataset('Ingresos',   C.blue,   ingresos),
-                    dataset('Costos',     C.orange, costos),
-                    dataset('Gastos',     C.red,    gastos),
-                    dataset('Ganancias',  C.green,  ganancias,  true),
-                    dataset('Ventas',     C.yellow, ventas,     true, false),
-                    dataset('Clientes nuevos', C.pink,   newCustomers, true, false),
-                    dataset('Suscripciones',   C.purple, users,    true, false),
-                    dataset('Cuentas',         C.brown,  accounts, true, false),
-                    dataset('Cuentas riesgo',  C.teal,   dangerAccounts, true, false),
-                    dataset('Pagos pendientes',C.indigo, pendingPayments,true, false),
-                    dataset('Clientes afectados',C.orange,affectedCustomers,true,false),
+                    dataset('Ingresos',           C.blue,   sl('ingresos')),
+                    dataset('Costos',             C.orange, sl('costos')),
+                    dataset('Gastos',             C.red,    sl('gastos')),
+                    dataset('Ganancias',          C.green,  sl('ganancias'),         true),
+                    dataset('Ventas',             C.yellow, sl('ventasChart'),       true, false),
+                    dataset('Clientes nuevos',    C.pink,   sl('newCustomers'),      true, false),
+                    dataset('Suscripciones',      C.purple, sl('users'),             true, false),
+                    dataset('Cuentas',            C.brown,  sl('accounts'),          true, false),
+                    dataset('Cuentas riesgo',     C.teal,   sl('dangerAccounts'),    true, false),
+                    dataset('Pagos pendientes',   C.indigo, sl('pendingPayments'),   true, false),
+                    dataset('Clientes afectados', C.orange, sl('affectedCustomers'), true, false),
                 ],
             },
             options: {
-                responsive: true, maintainAspectRatio: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 200 },
                 interaction: { mode: 'index', intersect: false },
                 scales: {
                     x: { grid: { color: gridColor }, ticks: { maxRotation: 45 } },
@@ -417,41 +516,64 @@ document.addEventListener("DOMContentLoaded", function () {
                          ticks: { callback: v => '$' + v.toLocaleString() } },
                 },
                 plugins: {
-                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, padding: 12 } },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ` ${ctx.dataset.label}: ${money(ctx.parsed.y)}`
-                        }
-                    },
+                    legend:  { display: false },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${money(ctx.parsed.y)}` } },
                 },
             },
         });
+
+        buildLegend();
     }
 
+    /* ── Rueda del ratón / touchpad ──────────────────────── */
+    canvasEl.addEventListener('wheel', e => {
+        e.preventDefault();
+        const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        shiftWindow(Math.sign(raw) * 3);
+    }, { passive: false });
+
+    /* ── Deslizamiento táctil ────────────────────────────── */
+    let touchX = 0;
+    canvasEl.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+    canvasEl.addEventListener('touchmove', e => {
+        const dx = touchX - e.touches[0].clientX; // >0 = deslizó a la izquierda = más antiguo
+        if (Math.abs(dx) > 10) {
+            shiftWindow(-Math.sign(dx));
+            touchX = e.touches[0].clientX;
+        }
+    }, { passive: true });
+
+    /* ── Cargar intervalo completo ───────────────────────── */
     function loadChartData(interval) {
-        fetch("{{ route('dashboard.filter') }}?range=" + interval)
+        activeInterval = interval;
+        oldestDate     = null;
+        hasMore        = false;
+        loadingOlder   = false;
+        allData        = { labels: [] };
+        DS_KEYS.forEach(k => (allData[k] = []));
+
+        fetch(`{{ route('dashboard.filter') }}?range=${interval}`)
             .then(r => r.json())
-            .then(d => initChart(
-                d.labels,
-                Object.values(d.ingresos),  Object.values(d.costos),
-                Object.values(d.gastos),    Object.values(d.ganancias),
-                Object.values(d.ventasChart),Object.values(d.newCustomers),
-                Object.values(d.users),     Object.values(d.accounts),
-                Object.values(d.dangerAccounts),Object.values(d.pendingPayments),
-                Object.values(d.affectedCustomers)
-            ))
+            .then(d => {
+                allData.labels = d.labels || [];
+                DS_KEYS.forEach(k => (allData[k] = d[k] || []));
+                hasMore     = d.has_more;
+                oldestDate  = d.oldest_date;
+                windowStart = Math.max(0, allData.labels.length - (WINDOW_SIZES[interval] || 30));
+                initChart(interval);
+            })
             .catch(e => console.error(e));
     }
 
-    document.querySelectorAll(".filter-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-            this.classList.add("active");
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
             loadChartData(this.dataset.interval);
         });
     });
 
-    loadChartData("1d");
+    loadChartData('1d');
 
     /* ── Bar Chart ──────────────────────────────────────── */
     const servicios = ['Netflix','Disney','Prime','Max','Magis','Crunchy','Paramount','Spotify','Otros'];

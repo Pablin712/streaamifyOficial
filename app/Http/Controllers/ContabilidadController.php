@@ -132,34 +132,11 @@ class ContabilidadController extends Controller
     }
     public function filterData(Request $request)
     {
-        $range = $request->query('range', '1m'); // Por defecto, 1 mes
-
-        $ingresosHistorial = $this->dashboardService->getIngresosChartData($range);
-        $costosHistorial = $this->dashboardService->getCostosChartData($range);
-        $gastosHistorial = $this->dashboardService->getGastosChartData($range);
-        $gananciasHistorial = $this->dashboardService->getGananciasChartData($range);
-        $ventasChart = $this->dashboardService->getVentasChartData($range);
-        $newCustomers = $this->dashboardService->getNewCustomersChartData($range);
-        $users = $this->dashboardService->getUsersChartData($range);
-        $accounts = $this->dashboardService->getAccountsChartData($range);
-        $dangerAccounts = $this->dashboardService->getDangerAccountsChartData($range);
-        $pendingPayments = $this->dashboardService->getPendingPaymentsChartData($range);
-        $affectedCustomers = $this->dashboardService->getAffectedCustomersChartData($range);
-        $labels = array_keys($ingresosHistorial);
-        return response()->json([
-            'labels' => $labels,
-            'ingresos' => array_values($ingresosHistorial),
-            'costos' => array_values($costosHistorial),
-            'gastos' => array_values($gastosHistorial),
-            'ganancias' => array_values($gananciasHistorial),
-            'ventasChart' => array_values($ventasChart),
-            'newCustomers' => array_values($newCustomers),
-            'users' => array_values($users),
-            'accounts' => array_values($accounts),
-            'dangerAccounts' => array_values($dangerAccounts),
-            'pendingPayments' => array_values($pendingPayments),
-            'affectedCustomers' => array_values($affectedCustomers)
-        ]);
+        $range  = $request->query('range',  '1m');
+        $limit  = (int) $request->query('limit',  0);
+        $before = $request->query('before', null);
+        $data   = $this->dashboardService->getChartData($range, $limit, $before ?: null);
+        return response()->json($data);
     }
     public function generarPDF(Request $request){
         if (!Gate::allows('dashboard')) {

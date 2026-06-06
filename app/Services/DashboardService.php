@@ -13,7 +13,9 @@ use App\Models\Costo;
 use App\Models\Gasto;
 use App\Models\ViewClientesUsuarios;
 use App\Models\ViewUsuarioActivo;
+use App\Models\Tarea;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
@@ -1134,6 +1136,7 @@ class DashboardService
         // CORREGIDO: Usar fechagas en lugar de created_at para gastos
         $dailyBill = Gasto::whereDate('fechagas', $date)->sum('montogas');
         $dailySales = Venta::whereDate('fechaven', $date)->count();
+        $dailyTasks = Tarea::whereDate('created_at', $date)->count();
         $newCustomers = Cliente::whereDate('created_at', $date)->count();
         $espacios = $this->cuentaService->calcularEspaciosTotales();
         $usuarios_acobrar = $this->cuentaService->contarUsuariosACobrar($usuarios);
@@ -1152,6 +1155,7 @@ class DashboardService
                 'daily_cost' => $dailyCost,
                 'daily_bill' => $dailyBill,
                 'daily_sales' => $dailySales,
+                'daily_tasks' => $dailyTasks,
                 'new_customers' => $newCustomers,
                 'usuarios_a_cobrar' => $usuarios_acobrar,
                 'espacios' => $espacios,
@@ -1310,5 +1314,196 @@ class DashboardService
         $datosAnuales['gastos_totales'] = round($datosAnuales['gastos_totales'], 2);
 
         return $datosAnuales;
+    }
+
+    /**
+     * Datos del gráfico de área con paginación por cursor (carga progresiva).
+     *
+     * @param  string      $interval  '1d' | '1w' | '1m' | '3m' | '1y'
+     * @param  int         $limit     Cantidad de puntos a devolver
+     * @param  string|null $before    Fecha ISO — devuelve datos ANTERIORES a esta fecha
+     * @return array  { labels, ingresos, …, has_more, oldest_date }
+     */
+    public function getChartData(string $interval, int $limit = 60, ?string $before = null): array
+    {
+        Carbon::setLocale('es');
+
+        $labels = $ingresos = $costos = $gastos = $ganancias = [];
+        $ventasChart = $newCustomers = $users = $accounts = [];
+        $dangerAccounts = $pendingPayments = $affectedCustomers = [];
+        $hasMore   = false;
+        $oldestDate = null;
+
+        // Límites razonables por intervalo
+        $defaults = ['1d'=>60,'1w'=>26,'1m'=>18,'3m'=>12,'1y'=>10];
+        $limit = min($limit ?: ($defaults[$interval] ?? 60), 120);
+
+        switch ($interval) {
+
+            /* ── Diario ──────────────────────────────────────────────────── */
+            case '1d':
+                $q = DB::table('daily_statistics')
+                    ->select('date','daily_revenue','daily_cost','daily_bill','daily_sales',
+                             'active_users','accounts','danger_accounts','pending_payments',
+                             'affected_customers','new_customers')
+                    ->orderBy('date', 'DESC')
+                    ->limit($limit + 1);
+                if ($before) $q->where('date', '<', $before);
+
+                $rows = $q->get();
+                $hasMore = $rows->count() > $limit;
+                $rows    = $rows->take($limit)->reverse()->values();
+
+                foreach ($rows as $r) {
+                    $labels[]            = Carbon::parse($r->date)->isoFormat('DD MMM');
+                    $rev = (float)($r->daily_revenue ?? 0);
+                    $cos = (float)($r->daily_cost    ?? 0);
+                    $gas = (float)($r->daily_bill    ?? 0);
+                    $ingresos[]          = $rev;  $costos[]  = $cos;  $gastos[]  = $gas;
+                    $ganancias[]         = $rev - $cos - $gas;
+                    $ventasChart[]       = (int)($r->daily_sales        ?? 0);
+                    $newCustomers[]      = (int)($r->new_customers      ?? 0);
+                    $users[]             = (int)($r->active_users       ?? 0);
+                    $accounts[]          = (int)($r->accounts           ?? 0);
+                    $dangerAccounts[]    = (int)($r->danger_accounts    ?? 0);
+                    $pendingPayments[]   = (int)($r->pending_payments   ?? 0);
+                    $affectedCustomers[] = (int)($r->affected_customers ?? 0);
+                }
+                $oldestDate = $rows->first()?->date;
+                break;
+
+            /* ── Semanal ─────────────────────────────────────────────────── */
+            case '1w':
+                $q = DB::table('daily_statistics')
+                    ->selectRaw("YEARWEEK(date,1) as yw, MIN(date) as week_start,
+                        SUM(daily_revenue) as rev, SUM(daily_cost) as cos,
+                        SUM(daily_bill) as gas, SUM(daily_sales) as sales,
+                        MAX(active_users) as users, MAX(accounts) as accs,
+                        MAX(danger_accounts) as da, MAX(pending_payments) as pp,
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                    ->groupBy(DB::raw('YEARWEEK(date,1)'))
+                    ->orderBy('yw', 'DESC')
+                    ->limit($limit + 1);
+                if ($before) $q->havingRaw('MIN(date) < ?', [$before]);
+
+                $rows = $q->get();
+                $hasMore = $rows->count() > $limit;
+                $rows    = $rows->take($limit)->reverse()->values();
+
+                foreach ($rows as $r) {
+                    $d = Carbon::parse($r->week_start)->startOfWeek();
+                    $labels[]            = 'Sem ' . $d->weekOfYear . ' ' . $d->isoFormat('MMM YY');
+                    $rev = (float)($r->rev ?? 0); $cos = (float)($r->cos ?? 0); $gas = (float)($r->gas ?? 0);
+                    $ingresos[]          = $rev;  $costos[]  = $cos;  $gastos[]  = $gas;
+                    $ganancias[]         = $rev - $cos - $gas;
+                    $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
+                    $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
+                    $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                }
+                $oldestDate = $rows->first()?->week_start;
+                break;
+
+            /* ── Mensual ─────────────────────────────────────────────────── */
+            case '1m':
+                $q = DB::table('daily_statistics')
+                    ->selectRaw("YEAR(date) as yr, MONTH(date) as mo, MIN(date) as period_start,
+                        SUM(daily_revenue) as rev, SUM(daily_cost) as cos,
+                        SUM(daily_bill) as gas, SUM(daily_sales) as sales,
+                        MAX(active_users) as users, MAX(accounts) as accs,
+                        MAX(danger_accounts) as da, MAX(pending_payments) as pp,
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                    ->groupBy('yr', 'mo')
+                    ->orderByRaw('yr DESC, mo DESC')
+                    ->limit($limit + 1);
+                if ($before) $q->havingRaw('MIN(date) < ?', [$before]);
+
+                $rows = $q->get();
+                $hasMore = $rows->count() > $limit;
+                $rows    = $rows->take($limit)->reverse()->values();
+
+                foreach ($rows as $r) {
+                    $labels[]            = Carbon::create($r->yr, $r->mo, 1)->isoFormat('MMMM YYYY');
+                    $rev = (float)($r->rev ?? 0); $cos = (float)($r->cos ?? 0); $gas = (float)($r->gas ?? 0);
+                    $ingresos[]          = $rev;  $costos[]  = $cos;  $gastos[]  = $gas;
+                    $ganancias[]         = $rev - $cos - $gas;
+                    $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
+                    $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
+                    $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                }
+                $oldestDate = $rows->first()?->period_start;
+                break;
+
+            /* ── Trimestral ──────────────────────────────────────────────── */
+            case '3m':
+                $q = DB::table('daily_statistics')
+                    ->selectRaw("YEAR(date) as yr, QUARTER(date) as qt, MIN(date) as period_start,
+                        SUM(daily_revenue) as rev, SUM(daily_cost) as cos,
+                        SUM(daily_bill) as gas, SUM(daily_sales) as sales,
+                        MAX(active_users) as users, MAX(accounts) as accs,
+                        MAX(danger_accounts) as da, MAX(pending_payments) as pp,
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                    ->groupBy('yr', 'qt')
+                    ->orderByRaw('yr DESC, qt DESC')
+                    ->limit($limit + 1);
+                if ($before) $q->havingRaw('MIN(date) < ?', [$before]);
+
+                $rows = $q->get();
+                $hasMore = $rows->count() > $limit;
+                $rows    = $rows->take($limit)->reverse()->values();
+
+                foreach ($rows as $r) {
+                    $labels[]            = "Tr {$r->qt} {$r->yr}";
+                    $rev = (float)($r->rev ?? 0); $cos = (float)($r->cos ?? 0); $gas = (float)($r->gas ?? 0);
+                    $ingresos[]          = $rev;  $costos[]  = $cos;  $gastos[]  = $gas;
+                    $ganancias[]         = $rev - $cos - $gas;
+                    $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
+                    $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
+                    $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                }
+                $oldestDate = $rows->first()?->period_start;
+                break;
+
+            /* ── Anual ───────────────────────────────────────────────────── */
+            case '1y':
+            default:
+                $q = DB::table('daily_statistics')
+                    ->selectRaw("YEAR(date) as yr, MIN(date) as period_start,
+                        SUM(daily_revenue) as rev, SUM(daily_cost) as cos,
+                        SUM(daily_bill) as gas, SUM(daily_sales) as sales,
+                        MAX(active_users) as users, MAX(accounts) as accs,
+                        MAX(danger_accounts) as da, MAX(pending_payments) as pp,
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                    ->groupBy('yr')
+                    ->orderBy('yr', 'DESC')
+                    ->limit($limit + 1);
+                if ($before) $q->havingRaw('MIN(date) < ?', [$before]);
+
+                $rows = $q->get();
+                $hasMore = $rows->count() > $limit;
+                $rows    = $rows->take($limit)->reverse()->values();
+
+                foreach ($rows as $r) {
+                    $labels[]            = (string) $r->yr;
+                    $rev = (float)($r->rev ?? 0); $cos = (float)($r->cos ?? 0); $gas = (float)($r->gas ?? 0);
+                    $ingresos[]          = $rev;  $costos[]  = $cos;  $gastos[]  = $gas;
+                    $ganancias[]         = $rev - $cos - $gas;
+                    $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
+                    $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
+                    $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                }
+                $oldestDate = $rows->first()?->period_start;
+                break;
+        }
+
+        return array_merge(
+            compact('labels','ingresos','costos','gastos','ganancias',
+                    'ventasChart','newCustomers','users','accounts',
+                    'dangerAccounts','pendingPayments','affectedCustomers'),
+            ['has_more' => $hasMore, 'oldest_date' => $oldestDate]
+        );
     }
 }
