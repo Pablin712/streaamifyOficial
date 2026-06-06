@@ -171,7 +171,7 @@ class TareasBoard extends Component
 
     // ─── Toma masiva (recibe valores desde Alpine.js) ────────────────────────
 
-    public function tomarMasivo(array $masivos = []): void
+    public function tomarMasivo(array $masivos = [], int $assigneeId = 0): void
     {
         if (!empty($masivos)) {
             foreach (array_keys($this->masivos) as $k) {
@@ -181,7 +181,8 @@ class TareasBoard extends Component
 
         $empId    = $this->user()->idemp;
         $isAdmin  = $this->user()->isAdmin();
-        $targetId = ($isAdmin && $this->masivoAssigneeId > 0) ? $this->masivoAssigneeId : $empId;
+        // assigneeId viene directo desde Alpine para evitar race conditions con wire:model
+        $targetId = ($isAdmin && $assigneeId > 0) ? $assigneeId : $empId;
 
         $total = 0;
 
@@ -208,10 +209,9 @@ class TareasBoard extends Component
             ? 'tus tareas'
             : (optional(Empleado::find($targetId))->nombreemp ?? 'el empleado');
 
-        $this->masivos          = array_fill_keys(array_keys($this->masivos), 0);
-        $this->masivoAssigneeId = 0;
+        $this->masivos = array_fill_keys(array_keys($this->masivos), 0);
 
-        $this->tab = ($targetId === $empId) ? 'mis_tareas' : 'pool';
+        $this->tab = ($targetId === $empId) ? 'mis_tareas' : 'asignadas';
         $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'tareasMasivoModal' }))");
 
         $this->dispatch('notify',
@@ -220,6 +220,44 @@ class TareasBoard extends Component
                 ? "{$total} tareas asignadas a {$nombre}."
                 : 'No hay tareas disponibles para los tipos seleccionados.'
         );
+    }
+
+    // ─── Liberar todas (admin) ────────────────────────────────────────────────
+
+    public function liberarTodas(): void
+    {
+        if (! $this->user()->isAdmin()) {
+            $this->dispatch('notify', type: 'danger', msg: 'Sin permiso para liberar tareas.');
+            return;
+        }
+
+        $query = Tarea::whereNotNull('assignee_id')->where('completada', false);
+
+        if ($this->filtroEmpleadoAsignadas) {
+            $query->where('assignee_id', $this->filtroEmpleadoAsignadas);
+        }
+
+        $count = (clone $query)->count();
+
+        if ($count === 0) {
+            $this->dispatch('notify', type: 'warning', msg: 'No hay tareas asignadas para devolver.');
+            return;
+        }
+
+        $query->update(['assignee_id' => null, 'asignado_por' => null, 'assigned_at' => null]);
+
+        $filtroDesc = $this->filtroEmpleadoAsignadas
+            ? (optional(Empleado::find($this->filtroEmpleadoAsignadas))->nombreemp ?? "emp#{$this->filtroEmpleadoAsignadas}")
+            : 'todos';
+
+        Historial::create([
+            'accion'      => "Liberación masiva: {$count} tareas devueltas al pool",
+            'descripcion' => json_encode(['count' => $count, 'filtro_empleado' => $filtroDesc]),
+            'empleado_id' => $this->user()->idemp,
+            'created_at'  => now(),
+        ]);
+
+        $this->dispatch('notify', type: 'info', msg: "{$count} tarea(s) devuelta(s) al pool.");
     }
 
     // ─── Completar ────────────────────────────────────────────────────────────

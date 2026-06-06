@@ -229,6 +229,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
     Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
     Route::delete('/tareas/{id}', [TareaController::class, 'destroy'])->name('tareas.destroy');
+    Route::post('/tareas/enviar-cobros-wsp', [TareaController::class, 'enviarCobrosWspMasivo'])->name('tareas.enviarCobrosWspMasivo');
     //Route::middleware(['auth:administrador,contador'])->group(function () {
     Route::controller(ContabilidadController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');

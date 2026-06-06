@@ -188,6 +188,17 @@
                         <option value="{{ $emp->idemp }}">{{ $emp->nombreemp }}</option>
                     @endforeach
                 </select>
+                @if($totalAsignadas > 0)
+                    @php $liberarMsg = "¿Devolver {$totalAsignadas} " . ($totalAsignadas !== 1 ? 'tareas' : 'tarea') . " al pool? Esta acción no se puede deshacer."; @endphp
+                    <button class="btn btn-outline-danger btn-sm"
+                            wire:loading.attr="disabled"
+                            wire:target="liberarTodas"
+                            x-on:click="if(confirm('{{ $liberarMsg }}')) $wire.liberarTodas()">
+                        <span wire:loading wire:target="liberarTodas" class="spinner-border spinner-border-sm me-1"></span>
+                        <i wire:loading.remove wire:target="liberarTodas" class="fas fa-undo me-1"></i>
+                        Devolver todas ({{ $totalAsignadas }})
+                    </button>
+                @endif
             @endif
             <select wire:model.live="filtroTipo" class="form-select form-select-sm" style="max-width:185px;">
                 <option value="">Todos los tipos</option>
@@ -316,19 +327,23 @@
 
         {{-- Barra WhatsApp (solo si hay tareas de cobro y canal activo) --}}
         @if($cobrarCount > 0 && $tieneCanalWsp)
-        @php $allWspData = array_values($datosWspPorTarea); @endphp
+        @php
+            $allWspData  = array_values($datosWspPorTarea);
+            $allWspJson  = json_encode($allWspData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?: '[]';
+            $wspConTel   = collect($allWspData)->filter(fn($r) => !empty($r['telefono']))->count();
+        @endphp
         <div class="wsp-bar">
             <i class="fab fa-whatsapp text-success"></i>
             <span class="fw-semibold" style="font-size:.82rem;color:#166534;">
-                WhatsApp cobros ({{ $cobrarCount }})
+                WhatsApp cobros ({{ $wspConTel }}/{{ $cobrarCount }} con teléfono)
             </span>
 
             {{-- Enviar a todos --}}
             <button class="tb-btn tb-btn-wsp"
-                    data-tareas="{{ htmlspecialchars(json_encode($allWspData, JSON_UNESCAPED_UNICODE), ENT_QUOTES) }}"
+                    data-tareas="{{ htmlspecialchars($allWspJson, ENT_QUOTES) }}"
                     onclick="wspEnviarTodos(this)"
-                    title="Enviar mensaje a los {{ $cobrarCount }} clientes con tarea de cobro">
-                <i class="fab fa-whatsapp fa-xs"></i> Enviar a todos
+                    title="Enviar mensaje a {{ $wspConTel }} clientes con teléfono registrado">
+                <i class="fab fa-whatsapp fa-xs"></i> Enviar a todos ({{ $wspConTel }})
             </button>
 
             {{-- Seleccionar todos --}}
@@ -554,10 +569,11 @@
     <x-modal name="tareasMasivoModal" :show="false" maxWidth="lg">
         <div x-data="{
                 vals: { cobrar_usuario: 0, quitar_usuario: 0, renovar_cuenta: 0, cuenta_caida: 0, colapso_cuenta: 0, soporte_pendiente: 0 },
+                selectedAssignee: 0,
                 get total() { return Object.values(this.vals).reduce((s,v) => s + (parseInt(v)||0), 0); },
                 get tiposActivos() { return Object.values(this.vals).filter(v => (parseInt(v)||0) > 0).length; }
              }"
-             x-on:close-modal.window="if ($event.detail === 'tareasMasivoModal') Object.keys(vals).forEach(k => vals[k] = 0)">
+             x-on:close-modal.window="if ($event.detail === 'tareasMasivoModal') { Object.keys(vals).forEach(k => vals[k] = 0); selectedAssignee = 0; }">
 
         <div class="modal-header">
             <h5 class="modal-title">
@@ -576,13 +592,13 @@
                 cuentas del mismo proveedor juntas, cobros por fecha.
             </p>
 
-            {{-- Admin: selector de empleado destino --}}
+            {{-- Admin: selector de empleado destino (manejado solo en Alpine para evitar race conditions) --}}
             @if($isAdmin)
                 <div class="mb-3 px-1 py-2" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:.5rem;">
                     <label class="form-label fw-semibold mb-1" style="font-size:.8rem;color:#4338ca;">
                         <i class="fas fa-user-check me-1"></i> Asignar a:
                     </label>
-                    <select wire:model.live="masivoAssigneeId" class="form-select form-select-sm">
+                    <select x-model.number="selectedAssignee" class="form-select form-select-sm">
                         <option value="0">👤 Yo mismo ({{ Auth::user()->nombreemp ?? Auth::user()->name }})</option>
                         @foreach($empleados as $emp)
                             @if($emp->idemp !== Auth::user()->idemp)
@@ -590,6 +606,12 @@
                             @endif
                         @endforeach
                     </select>
+                    <div x-show="selectedAssignee > 0"
+                         style="font-size:.74rem;color:#4338ca;margin-top:.35rem;padding-left:.1rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Las tareas se asignarán a
+                        <strong x-text="$el.closest('[x-data]').querySelector('select option:checked').textContent.trim()"></strong>
+                    </div>
                 </div>
             @endif
 
@@ -659,7 +681,8 @@
                         if (!wireEl) return;
                         const comp = window.Livewire.find(wireEl.getAttribute('wire:id'));
                         if (!comp) return;
-                        comp.tomarMasivo(Object.assign({}, vals)).then(() => Object.keys(vals).forEach(k => vals[k] = 0));
+                        comp.tomarMasivo(Object.assign({}, vals), parseInt(selectedAssignee) || 0)
+                            .then(() => { Object.keys(vals).forEach(k => vals[k] = 0); selectedAssignee = 0; });
                     "
                     wire:loading.attr="disabled"
                     wire:target="tomarMasivo"

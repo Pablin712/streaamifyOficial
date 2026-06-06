@@ -117,11 +117,20 @@
 
     // ── Enviar a todos (batch desde data-tareas del botón) ────────────────────
     window.wspEnviarTodos = async function(btnEl) {
+        const btn = btnEl.closest('button') || btnEl;
         let todos = [];
-        try { todos = JSON.parse(btnEl.dataset.tareas || '[]'); } catch(e) {}
+        try { todos = JSON.parse(btn.dataset.tareas || '[]'); } catch(e) {
+            wspToast('⚠️ Error al leer datos. Recarga la página.', 'warning'); return;
+        }
+        if (!todos.length) {
+            wspToast('⚠️ Sin datos de cobro. Recarga la página.', 'warning'); return;
+        }
         const tareas = todos.filter(t => t.telefono);
         const sinTel = todos.length - tareas.length;
-        if (!tareas.length) { wspToast('⚠️ Ningún cliente tiene teléfono registrado.', 'warning'); return; }
+        if (!tareas.length) {
+            wspToast(`⚠️ Ningún cliente tiene teléfono registrado (${todos.length} tareas sin teléfono). Agrega teléfonos en los perfiles de cliente.`, 'warning');
+            return;
+        }
         const confirmMsg = `¿Enviar mensaje a ${tareas.length} cliente${tareas.length !== 1 ? 's' : ''}?`
             + (sinTel > 0 ? ` (${sinTel} sin teléfono serán omitidos)` : '');
         if (!confirm(confirmMsg)) return;
@@ -143,21 +152,32 @@
         wspUpdateSelUI();
     };
 
-    // ── Batch send ────────────────────────────────────────────────────────────
+    // ── Batch send — vía n8n webhook para evitar bloqueo de cuenta ───────────
     async function wspEnviarBatch(tareas) {
-        let enviados = 0, errores = 0;
-        for (const t of tareas) {
-            try {
-                const r = await wspFetch({id_cliente: t.idcli, cliente: t.nombre, telefono: t.telefono, mensaje: t.mensaje, channel_preference: 'verde'});
-                if (!r.ok || !r.data.success) throw new Error('fail');
-                enviados++;
-            } catch(e) { errores++; }
+        wspToast('⏳ Enviando a n8n...', 'success');
+        try {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const resp = await fetch('{{ route("tareas.enviarCobrosWspMasivo") }}', {
+                method: 'POST',
+                headers: {'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    destinatarios: tareas.map(t => ({
+                        nombre:   t.nombre   || '',
+                        telefono: t.telefono || '',
+                        idcli:    t.idcli    || 0,
+                        mensaje:  t.mensaje  || '',
+                    }))
+                })
+            });
+            const data = await resp.json();
+            if (resp.ok && data.success) {
+                wspToast('✅ ' + (data.message || 'Enviado correctamente.'), 'success');
+            } else {
+                wspToast('❌ ' + (data.message || 'Error al enviar.'), 'danger');
+            }
+        } catch(e) {
+            wspToast('❌ Error de conexión al enviar a n8n.', 'danger');
         }
-        const parts = [];
-        if (enviados > 0) parts.push(`${enviados} enviado${enviados !== 1 ? 's' : ''} ✅`);
-        if (errores  > 0) parts.push(`${errores} con error`);
-        const type = enviados > 0 ? (errores > 0 ? 'warning' : 'success') : 'danger';
-        wspToast((type === 'danger' ? '❌ ' : type === 'warning' ? '⚠️ ' : '✅ ') + (parts.join(', ') || 'Sin resultados'), type);
     }
 
     // ── Checkbox toggle ───────────────────────────────────────────────────────
