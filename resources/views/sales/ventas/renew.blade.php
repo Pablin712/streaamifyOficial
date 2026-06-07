@@ -51,19 +51,63 @@
                 </div>
             </div>
 
-            <!-- Campo Banco (visible solo si se marcó como pagado) -->
-            <div class="form-group mb-3" id="banco_field_renew">
-                <label for="banco_id">Banco <span class="text-danger">*</span></label>
-                <select name="banco_id" id="banco_id" class="form-control searchable-select"
-                        data-placeholder="Seleccione un banco...">
-                    <option value="">-- Selecciona un Banco --</option>
-                    @foreach ($bancos as $banco)
-                        <option value="{{ $banco->idban }}"
-                            {{ ($venta->transaccion && $venta->transaccion->banco_id == $banco->idban) ? 'selected' : '' }}>
-                            {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
-                        </option>
-                    @endforeach
-                </select>
+            <!-- Método de pago -->
+            <div id="pago_fields_renew">
+                <div class="form-group mb-3">
+                    <label class="form-label fw-semibold">Método de pago</label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_pago" id="mp_banco_renew" value="banco" checked>
+                            <label class="form-check-label" for="mp_banco_renew">
+                                <i class="fas fa-university me-1 text-primary"></i>Banco
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_pago" id="mp_saldo_renew" value="saldo">
+                            <label class="form-check-label" for="mp_saldo_renew">
+                                <i class="fas fa-wallet me-1 text-success"></i>Saldo del cliente
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banco -->
+                <div class="form-group mb-3" id="banco_field_renew">
+                    <label for="banco_id">Banco <span class="text-danger">*</span></label>
+                    <select name="banco_id" id="banco_id" class="form-control searchable-select"
+                            data-placeholder="Seleccione un banco...">
+                        <option value="">-- Selecciona un Banco --</option>
+                        @foreach ($bancos as $banco)
+                            <option value="{{ $banco->idban }}"
+                                {{ ($venta->transaccion && $venta->transaccion->banco_id == $banco->idban) ? 'selected' : '' }}>
+                                {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Saldo del cliente -->
+                <div class="form-group mb-3" id="saldo_field_renew" style="display:none;">
+                    @php
+                        $saldoCliente = $venta->cliente->saldo ?? 0;
+                        $suficiente   = $saldoCliente >= $totalVenta;
+                    @endphp
+                    <div class="alert {{ $suficiente ? 'alert-success' : 'alert-warning' }}">
+                        <i class="fas fa-wallet me-2"></i>
+                        Saldo disponible: <strong>${{ number_format($saldoCliente, 2) }}</strong>
+                        &nbsp;|&nbsp; Total renovación: <strong>${{ number_format($totalVenta, 2) }}</strong>
+                        @if(!$suficiente)
+                            <br><small class="text-danger">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Saldo insuficiente — faltan <strong>${{ number_format($totalVenta - $saldoCliente, 2) }}</strong>
+                            </small>
+                        @else
+                            <br><small class="text-success">
+                                <i class="fas fa-check-circle me-1"></i>Saldo suficiente
+                            </small>
+                        @endif
+                    </div>
+                </div>
             </div>
 
             <div class="mt-4">
@@ -307,26 +351,37 @@
             this.submit();
         });
 
-        // Toggle del campo Banco según checkbox "¿Se pagó?"
         document.addEventListener('DOMContentLoaded', function() {
-            const sePagoCheckboxRenew = document.getElementById('se_pago_renew');
-            const bancoFieldRenew = document.getElementById('banco_field_renew');
-            const bancoSelectRenew = document.getElementById('banco_id');
+            const sePagoCheckbox = document.getElementById('se_pago_renew');
+            const pagoFields     = document.getElementById('pago_fields_renew');
+            const bancoField     = document.getElementById('banco_field_renew');
+            const saldoField     = document.getElementById('saldo_field_renew');
+            const bancoSelect    = document.getElementById('banco_id');
 
-            function toggleBancoFieldRenew() {
-                if (sePagoCheckboxRenew && sePagoCheckboxRenew.checked) {
-                    bancoFieldRenew.style.display = 'block';
-                    bancoSelectRenew.required = true;
+            // Cambiar método de pago
+            document.querySelectorAll('input[name="metodo_pago"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const esBanco = this.value === 'banco';
+                    bancoField.style.display = esBanco ? 'block' : 'none';
+                    bancoSelect.required = esBanco;
+                    if (!esBanco) bancoSelect.value = '';
+                    saldoField.style.display = esBanco ? 'none' : 'block';
+                });
+            });
+
+            function togglePagoFields() {
+                const sePago = sePagoCheckbox?.checked;
+                pagoFields.style.display = sePago ? 'block' : 'none';
+                if (!sePago) {
+                    bancoSelect.required = false;
                 } else {
-                    bancoFieldRenew.style.display = 'none';
-                    bancoSelectRenew.required = false;
-                    bancoSelectRenew.value = '';
+                    bancoSelect.required = document.getElementById('mp_banco_renew')?.checked ?? true;
                 }
             }
 
-            if (sePagoCheckboxRenew) {
-                sePagoCheckboxRenew.addEventListener('change', toggleBancoFieldRenew);
-                toggleBancoFieldRenew(); // Ejecutar al cargar
+            if (sePagoCheckbox) {
+                sePagoCheckbox.addEventListener('change', togglePagoFields);
+                togglePagoFields();
             }
         });
     </script>

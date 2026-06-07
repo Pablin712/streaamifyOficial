@@ -49,7 +49,9 @@
                         data-placeholder="Buscar cliente por nombre o teléfono...">
                     <option value="">-- Selecciona un Cliente --</option>
                     @foreach ($clientes as $cliente)
-                        <option value="{{ $cliente->idcli }}" {{ request('idcli') == $cliente->idcli ? 'selected' : '' }}>
+                        <option value="{{ $cliente->idcli }}"
+                                data-saldo="{{ $cliente->saldo ?? 0 }}"
+                                {{ request('idcli') == $cliente->idcli ? 'selected' : '' }}>
                             {{ $cliente->nombrecli }} - {{ $cliente->telefonocli }}
                         </option>
                     @endforeach
@@ -70,18 +72,46 @@
                 </div>
             </div>
 
-            <!-- Campo Banco (visible solo si se marcó como pagado) -->
-            <div class="form-group mb-3" id="banco_field_create">
-                <label for="banco_id">Banco <span class="text-danger">*</span></label>
-                <select name="banco_id" id="banco_id" class="form-control searchable-select"
-                        data-placeholder="Seleccione un banco...">
-                    <option value="">-- Selecciona un Banco --</option>
-                    @foreach ($bancos as $banco)
-                        <option value="{{ $banco->idban }}">
-                            {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
-                        </option>
-                    @endforeach
-                </select>
+            <!-- Método de pago (visible solo si se marcó como pagado) -->
+            <div id="pago_fields_create">
+                <div class="form-group mb-3">
+                    <label class="form-label fw-semibold">Método de pago</label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_pago" id="mp_banco" value="banco" checked>
+                            <label class="form-check-label" for="mp_banco">
+                                <i class="fas fa-university me-1 text-primary"></i>Banco
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="metodo_pago" id="mp_saldo" value="saldo">
+                            <label class="form-check-label" for="mp_saldo">
+                                <i class="fas fa-wallet me-1 text-success"></i>Saldo del cliente
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banco -->
+                <div class="form-group mb-3" id="banco_field_create">
+                    <label for="banco_id">Banco <span class="text-danger">*</span></label>
+                    <select name="banco_id" id="banco_id" class="form-control searchable-select"
+                            data-placeholder="Seleccione un banco...">
+                        <option value="">-- Selecciona un Banco --</option>
+                        @foreach ($bancos as $banco)
+                            <option value="{{ $banco->idban }}">
+                                {{ $banco->nombreban }} ({{ ucfirst($banco->tipoban) }}) - ${{ number_format($banco->monto, 2) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Saldo del cliente -->
+                <div class="form-group mb-3" id="saldo_field_create" style="display:none;">
+                    <div id="saldo_info_create" class="alert alert-secondary">
+                        <i class="fas fa-wallet me-2"></i>Selecciona un cliente para ver su saldo disponible.
+                    </div>
+                </div>
             </div>
 
             <div class="mt-4">
@@ -225,24 +255,71 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const sePagoCheckboxCreate = document.getElementById('se_pago_create');
-            const bancoFieldCreate = document.getElementById('banco_field_create');
-            const bancoSelectCreate = document.getElementById('banco_id');
+            const sePagoCheckbox   = document.getElementById('se_pago_create');
+            const pagoFields       = document.getElementById('pago_fields_create');
+            const bancoField       = document.getElementById('banco_field_create');
+            const saldoField       = document.getElementById('saldo_field_create');
+            const bancoSelect      = document.getElementById('banco_id');
+            const saldoInfo        = document.getElementById('saldo_info_create');
+            const totalVentaSpan   = document.getElementById('total-venta');
+
+            // Actualizar panel de saldo
+            function actualizarSaldo() {
+                const clienteOpt = document.querySelector('#idcli option:checked');
+                const saldo = parseFloat(clienteOpt?.dataset?.saldo ?? 0);
+                const total = parseFloat(totalVentaSpan?.textContent ?? 0);
+                const suficiente = saldo >= total;
+                const alertClass = suficiente ? 'alert-success' : 'alert-warning';
+                const faltante = (total - saldo).toFixed(2);
+                saldoInfo.className = `alert ${alertClass}`;
+                saldoInfo.innerHTML =
+                    `<i class="fas fa-wallet me-2"></i>` +
+                    `Saldo disponible: <strong>$${saldo.toFixed(2)}</strong>` +
+                    (total > 0 ? ` &nbsp;|&nbsp; Total venta: <strong>$${total.toFixed(2)}</strong>` : '') +
+                    (!suficiente && total > 0
+                        ? `<br><small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Saldo insuficiente — faltan <strong>$${faltante}</strong></small>`
+                        : (suficiente && total > 0 ? `<br><small class="text-success"><i class="fas fa-check-circle me-1"></i>Saldo suficiente</small>` : ''));
+            }
+
+            // Cambiar método de pago (banco / saldo)
+            document.querySelectorAll('input[name="metodo_pago"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const esBanco = this.value === 'banco';
+                    bancoField.style.display = esBanco ? 'block' : 'none';
+                    bancoSelect.required = esBanco;
+                    if (!esBanco) bancoSelect.value = '';
+                    saldoField.style.display = esBanco ? 'none' : 'block';
+                    if (!esBanco) actualizarSaldo();
+                });
+            });
+
+            // Cuando cambia el cliente, actualizar saldo
+            document.getElementById('idcli').addEventListener('change', function () {
+                const mpSaldo = document.getElementById('mp_saldo');
+                if (mpSaldo?.checked) actualizarSaldo();
+            });
+
+            // Observer: actualizar saldo cuando cambia el total
+            const totalObserver = new MutationObserver(() => {
+                const mpSaldo = document.getElementById('mp_saldo');
+                if (mpSaldo?.checked) actualizarSaldo();
+            });
+            if (totalVentaSpan) totalObserver.observe(totalVentaSpan, { childList: true, characterData: true, subtree: true });
 
             function toggleBancoFieldCreate() {
-                if (sePagoCheckboxCreate && sePagoCheckboxCreate.checked) {
-                    bancoFieldCreate.style.display = 'block';
-                    bancoSelectCreate.required = true;
+                const sePago = sePagoCheckbox?.checked;
+                pagoFields.style.display = sePago ? 'block' : 'none';
+                if (!sePago) {
+                    bancoSelect.required = false;
                 } else {
-                    bancoFieldCreate.style.display = 'none';
-                    bancoSelectCreate.required = false;
-                    bancoSelectCreate.value = '';
+                    const esBanco = document.getElementById('mp_banco')?.checked ?? true;
+                    bancoSelect.required = esBanco;
                 }
             }
 
-            if (sePagoCheckboxCreate) {
-                sePagoCheckboxCreate.addEventListener('change', toggleBancoFieldCreate);
-                toggleBancoFieldCreate(); // Ejecutar al cargar
+            if (sePagoCheckbox) {
+                sePagoCheckbox.addEventListener('change', toggleBancoFieldCreate);
+                toggleBancoFieldCreate();
             }
 
             @if (session('mensaje_entrega'))

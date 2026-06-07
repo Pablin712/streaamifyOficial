@@ -145,12 +145,22 @@ class VentaController extends Controller
 
         // Verificar si se pagó y registrar transacción
         $sePago = $request->has('se_pago') && $request->se_pago == '1';
+        $metodoPago = $request->input('metodo_pago', 'banco'); // 'banco' | 'saldo'
         $transaccionId = null;
+        $clientePago = null;
 
         if ($sePago) {
-            $request->validate([
-                'banco_id' => 'required|exists:bancos,idban'
-            ]);
+            if ($metodoPago === 'saldo') {
+                $clientePago = Cliente::findOrFail($request->idcli);
+                if ($clientePago->saldo < $total_venta) {
+                    return redirect()->back()->withInput()
+                        ->with('error', 'Saldo insuficiente. El cliente tiene $' . number_format($clientePago->saldo, 2) . ' y la venta total es $' . number_format($total_venta, 2) . '.');
+                }
+            } else {
+                $request->validate([
+                    'banco_id' => 'required|exists:bancos,idban'
+                ]);
+            }
         }
 
         $venta = Venta::create([
@@ -199,27 +209,28 @@ class VentaController extends Controller
         }
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
 
-        // Registrar transacción bancaria (ingreso) solo si se pagó
+        // Registrar transacción bancaria (ingreso) o descontar saldo del cliente
         if ($sePago) {
-            try {
-                // Recargar venta con relación cliente para la referencia
-                $venta->load('cliente');
-
-                $transaccion = $this->bancoService->registrarTransaccion(
-                    $request->banco_id,
-                    $total_venta,
-                    'ingreso',
-                    'Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
-                );
-
-                $transaccionId = $transaccion->id;
-                $venta->transaccion_id = $transaccionId;
-                $venta->save();
-            } catch (\Exception $e) {
-                // Si falla la transacción, eliminar la venta y sus detalles
-                $venta->detalles_venta()->delete();
-                $venta->delete();
-                return redirect()->route('ventas.create')->with('error', $e->getMessage());
+            if ($metodoPago === 'saldo') {
+                $clientePago->saldo -= $total_venta;
+                $clientePago->save();
+            } else {
+                try {
+                    $venta->load('cliente');
+                    $transaccion = $this->bancoService->registrarTransaccion(
+                        $request->banco_id,
+                        $total_venta,
+                        'ingreso',
+                        'Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+                    );
+                    $transaccionId = $transaccion->id;
+                    $venta->transaccion_id = $transaccionId;
+                    $venta->save();
+                } catch (\Exception $e) {
+                    $venta->detalles_venta()->delete();
+                    $venta->delete();
+                    return redirect()->route('ventas.create')->with('error', $e->getMessage());
+                }
             }
         }
 
@@ -311,20 +322,29 @@ class VentaController extends Controller
 
         // Verificar si se pagó y registrar transacción
         $sePago = $request->has('se_pago') && $request->se_pago == '1';
+        $metodoPago = $request->input('metodo_pago', 'banco'); // 'banco' | 'saldo'
         $transaccionId = null;
+        $clientePago = null;
 
         if ($sePago) {
-            $request->validate([
-                'banco_id' => 'required|exists:bancos,idban'
-            ]);
-
-            $transaccion = $this->bancoService->registrarTransaccion(
-                $request->banco_id,
-                $total_venta,
-                'ingreso',
-                'Renovación de venta #' . $idvenPasado . ' - Total: $' . number_format($total_venta, 2)
-            );
-            $transaccionId = $transaccion->id;
+            if ($metodoPago === 'saldo') {
+                $clientePago = Cliente::findOrFail($request->idcli);
+                if ($clientePago->saldo < $total_venta) {
+                    return redirect()->back()->withInput()
+                        ->with('error', 'Saldo insuficiente. El cliente tiene $' . number_format($clientePago->saldo, 2) . ' y la renovación total es $' . number_format($total_venta, 2) . '.');
+                }
+            } else {
+                $request->validate([
+                    'banco_id' => 'required|exists:bancos,idban'
+                ]);
+                $transaccion = $this->bancoService->registrarTransaccion(
+                    $request->banco_id,
+                    $total_venta,
+                    'ingreso',
+                    'Renovación de venta #' . $idvenPasado . ' - Total: $' . number_format($total_venta, 2)
+                );
+                $transaccionId = $transaccion->id;
+            }
         }
 
         $ventaNueva = Venta::create([
@@ -343,6 +363,12 @@ class VentaController extends Controller
 
         if ($ventaNueva->cliente->email) {
             //Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
+        }
+
+        // Descontar saldo del cliente si se usó ese método
+        if ($sePago && $metodoPago === 'saldo' && $clientePago) {
+            $clientePago->saldo -= $total_venta;
+            $clientePago->save();
         }
 
         Historial::create([
