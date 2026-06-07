@@ -7,10 +7,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -5936,
-        -1376
+        -6000,
+        -1104
       ],
-      "id": "296cbcf6-1257-4c91-90bf-037ec8d38cf4",
+      "id": "36d07be7-8a16-4d10-822f-f02cf2571fc3",
       "name": "Extraer code"
     },
     {
@@ -36,10 +36,10 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        -5824,
-        -1376
+        -5888,
+        -1104
       ],
-      "id": "27392b68-d1a3-4b0d-a158-bb49c3a37313",
+      "id": "947ef153-f17f-4a00-8c28-6bb5dfe7b264",
       "name": "consultar",
       "alwaysOutputData": true,
       "credentials": {
@@ -133,10 +133,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -6112,
-        -1296
+        -6176,
+        -1024
       ],
-      "id": "b4a391ee-7355-483b-a10c-3ab2e8dc9b2b",
+      "id": "e3ddc8f5-9c18-44d1-a22e-e8fd3428138e",
       "name": "Switch3"
     },
     {
@@ -148,10 +148,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -5776,
-        -1136
+        -5840,
+        -864
       ],
-      "id": "a7d025e8-db03-47bd-9c51-3ec6bb499a4e",
+      "id": "97cbd50a-2477-4d33-9b39-070210453b63",
       "name": "Clic pedir code",
       "webhookId": "f761c31a-e7bf-4c42-b367-a6818fff3548"
     },
@@ -186,10 +186,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4944,
-        -1312
+        -5008,
+        -1040
       ],
-      "id": "eb7b878f-b2e7-4414-9876-8b335184377f",
+      "id": "7f718caf-bb77-474c-b68d-6a4faf483990",
       "name": "Escribir bot",
       "retryOnFail": false
     },
@@ -224,10 +224,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4928,
-        -1184
+        -4992,
+        -912
       ],
-      "id": "bd9c08c9-423d-4fc2-94f7-5af31d5a71b6",
+      "id": "d1644116-ae87-4777-9e01-bec6bcba5e63",
       "name": "Escribir cliente",
       "retryOnFail": false
     },
@@ -238,10 +238,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -5312,
-        -1200
+        -5376,
+        -928
       ],
-      "id": "bacf3d5d-3ee9-456d-a198-8308de83a515",
+      "id": "2419c79e-eb45-4a26-8ab0-28b71f793425",
       "name": "Wait1",
       "webhookId": "92d331b7-e984-4a0d-bbe3-0d777af6634b"
     },
@@ -272,10 +272,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -5088,
-        -1200
+        -5152,
+        -928
       ],
-      "id": "d28cb7eb-4df1-43d6-83e3-1398b7899a21",
+      "id": "d011152e-ecca-4bb1-a5b9-9553c653f565",
       "name": "If1"
     },
     {
@@ -313,10 +313,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -5664,
-        -1136
+        -5728,
+        -864
       ],
-      "id": "0ff058a6-440b-4d3b-b5c3-7caaf6cbc765",
+      "id": "6c62c463-f387-4bc5-bb8e-2621fdc37982",
       "name": "camino 2"
     },
     {
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -5600,
-        -1264
+        -5664,
+        -992
       ],
-      "id": "31c7aebe-2067-44f0-a060-f5ec812783e6",
+      "id": "1f8f9a9e-d5b0-4e80-8dcb-59c9003010bb",
       "name": "camino 1"
     },
     {
@@ -354,10 +354,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -5824,
-        -1248
+        -5888,
+        -976
       ],
-      "id": "7228f8cf-3e95-4a56-bdf4-878f1241c10e",
+      "id": "4e36a6d4-d813-463e-823d-5bad5a91662d",
       "name": "validar"
     },
     {
@@ -388,10 +388,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -5712,
-        -1248
+        -5776,
+        -976
       ],
-      "id": "fa43f1be-9df2-4176-be73-b24c51a835ef",
+      "id": "d00c6ef8-7431-42e9-92bd-0daab2484d8c",
       "name": "If2"
     },
     {
@@ -425,10 +425,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -5552,
-        -1136
+        -5616,
+        -864
       ],
-      "id": "95584d05-935d-41e5-9fef-4c51741aaf23",
+      "id": "095a1f30-9974-4dcd-8d37-27f6a8ab97ed",
       "name": "Rechazar",
       "retryOnFail": false
     },
@@ -441,10 +441,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -6576,
-        -1440
+        -6640,
+        -1168
       ],
-      "id": "45b184ad-e3b0-4b84-98bb-30104b0636d2",
+      "id": "0341dfa9-c919-4541-9ea8-341e19a89d5f",
       "name": "WhatsApp Verde",
       "webhookId": "c0e41212-a73b-4566-a6fd-5799fdd9695e"
     },
@@ -458,10 +458,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -6576,
-        -1328
+        -6640,
+        -1056
       ],
-      "id": "b9438dc5-6716-4981-98bb-64362d8579f2",
+      "id": "d5374b56-1968-49df-8155-f43bb7badfce",
       "name": "WhatsApp Azul",
       "webhookId": "dbeadfb3-d6a2-4cef-aad9-579ac4bfa1fb"
     },
@@ -512,10 +512,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -5424,
-        -1200
+        -5488,
+        -928
       ],
-      "id": "8bc627ef-0393-4459-8726-89677c293c85",
+      "id": "ec4e1304-491d-423a-99a9-35b820242ef7",
       "name": "merge b"
     },
     {
@@ -553,10 +553,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -5936,
-        -1248
+        -6000,
+        -976
       ],
-      "id": "46b2a5fd-3b91-420c-ab1f-66a5bed85e00",
+      "id": "07e9a783-c927-4ec2-aa7a-fb1eafb54533",
       "name": "merge a"
     },
     {
@@ -593,10 +593,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4832,
-        -1312
+        -4896,
+        -1040
       ],
-      "id": "95bd2b86-1804-4e0f-b0fb-e726c2db21e7",
+      "id": "2a8803a0-edc4-494e-be26-847e191d6bfe",
       "name": "esperando"
     },
     {
@@ -622,10 +622,10 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        -5200,
-        -1200
+        -5264,
+        -928
       ],
-      "id": "e290e292-1fd4-41a0-bf3f-c0ca6fb5ea21",
+      "id": "c87712ef-f14a-421a-a38f-cbaf19b0340c",
       "name": "consultar 2",
       "alwaysOutputData": true,
       "credentials": {
@@ -642,10 +642,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6432,
-        -1392
+        -6496,
+        -1120
       ],
-      "id": "e6ff75bf-1d66-49f1-bd84-f9e67e99858e",
+      "id": "5d605b62-e540-4dc6-9718-a9a6c39e14ed",
       "name": "Normalizar"
     },
     {
@@ -736,10 +736,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -6320,
-        -1424
+        -6384,
+        -1152
       ],
-      "id": "7c40a35d-457c-4be0-99d2-39e6c1674021",
+      "id": "8cb04144-cd9b-46a1-a6a3-b3be4ea94d54",
       "name": "Tipo mensaje"
     },
     {
@@ -773,10 +773,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -6016,
-        -1680
+        -6080,
+        -1408
       ],
-      "id": "47f20d1b-d78c-4723-8352-92757639846b",
+      "id": "e1b92480-a715-4fc3-a55f-04cfa34ac716",
       "name": "Get audio"
     },
     {
@@ -790,10 +790,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -5776,
-        -1696
+        -5840,
+        -1424
       ],
-      "id": "9a6ffa81-c510-415b-9b56-690d556ca364",
+      "id": "cdfc868e-6031-48dd-bea3-b8b8c9b4cd60",
       "name": "Convert audio"
     },
     {
@@ -805,10 +805,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        -5664,
-        -1696
+        -5728,
+        -1424
       ],
-      "id": "06acbc21-6cc2-4191-afb9-a1683b88bf70",
+      "id": "b39891e5-1dbd-449b-862c-4b95b38f8396",
       "name": "Transcribe",
       "credentials": {
         "openAiApi": {
@@ -848,10 +848,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -6016,
-        -1536
+        -6080,
+        -1264
       ],
-      "id": "1c871916-80b1-40bf-86c7-ab792e250320",
+      "id": "9e98500f-7862-4989-8b06-f8dd6e8ba44b",
       "name": "Get imagen"
     },
     {
@@ -865,10 +865,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -5776,
-        -1552
+        -5840,
+        -1280
       ],
-      "id": "bd8049ba-5140-4869-8f12-9acf4067db5c",
+      "id": "4fc11c03-5a6c-4c9e-86b8-a9e03e775260",
       "name": "Convert image"
     },
     {
@@ -888,10 +888,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        -5664,
-        -1552
+        -5728,
+        -1280
       ],
-      "id": "624bf326-4a41-42eb-8208-347f9a70feba",
+      "id": "41e78b45-00cf-432e-95d3-4e07bd66354d",
       "name": "Analyze",
       "credentials": {
         "openAiApi": {
@@ -907,10 +907,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -5552,
-        -1552
+        -5616,
+        -1280
       ],
-      "id": "4d07c181-eaf4-4b67-ae77-937c359237a6",
+      "id": "5cff7d97-9211-412d-bcac-120a1ef4dc8c",
       "name": "Parsear1"
     },
     {
@@ -941,10 +941,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -5440,
-        -1552
+        -5504,
+        -1280
       ],
-      "id": "cfbf337e-205b-4475-aff0-6702d6f574be",
+      "id": "0dfc3049-821b-4992-bb24-2189b60435be",
       "name": "If3"
     },
     {
@@ -954,10 +954,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -3808,
-        -1248
+        -3872,
+        -976
       ],
-      "id": "1fd78d7f-bb44-4697-b08d-3d8ecaefb652",
+      "id": "6e569717-3cf7-4aa4-994c-3310f72a2b71",
       "name": "Wait5",
       "webhookId": "6516dd11-1b82-4935-999d-13a1354c57f2"
     },
@@ -989,10 +989,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3472,
-        -1248
+        -3536,
+        -976
       ],
-      "id": "ba39e451-49ac-485e-8eec-49467df9e011",
+      "id": "30f33a81-79ff-4544-bbe0-94c85cb41a31",
       "name": "If4"
     },
     {
@@ -1002,10 +1002,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -3360,
-        -1136
+        -3424,
+        -864
       ],
-      "id": "75cb1c75-7015-4755-b1dd-fda94e413b3c",
+      "id": "7440c2d4-c7e1-47c0-80cd-75e1e215f6af",
       "name": "DeepSeek1",
       "credentials": {
         "deepSeekApi": {
@@ -1026,10 +1026,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -3584,
-        -1248
+        -3648,
+        -976
       ],
-      "id": "f540eb5e-1390-4987-9478-e726873c7cd3",
+      "id": "0c4044e4-089f-4eb2-9c87-6b71353465ea",
       "name": "get context"
     },
     {
@@ -1078,10 +1078,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1952,
-        -1168
+        -2016,
+        -896
       ],
-      "id": "e3041f9c-d005-47da-9d35-eadb79aaecf0",
+      "id": "ed89033a-8250-42b9-87d0-b9fbfb58b56d",
       "name": "save respond"
     },
     {
@@ -1095,10 +1095,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -3360,
-        -1248
+        -3424,
+        -976
       ],
-      "id": "4573ffb7-03a3-46b3-bdba-fdeb8f12691a",
+      "id": "70523731-ea1b-4489-b385-f7e09a7af269",
       "name": "Clasificador"
     },
     {
@@ -1108,10 +1108,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3120,
-        -1248
+        -3184,
+        -976
       ],
-      "id": "edb55733-19a2-4d04-9b4d-105943e7cb86",
+      "id": "e3dd7fa4-cd18-495a-8e0c-a84472df743e",
       "name": "Parsear2"
     },
     {
@@ -1161,10 +1161,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -3008,
-        -1248
+        -3072,
+        -976
       ],
-      "id": "cf6693e5-c1f1-4a19-a13c-8a23504b76e2",
+      "id": "7276aeb2-b221-4ccc-a9b6-d0b2cbc4e9f3",
       "name": "If5"
     },
     {
@@ -1193,10 +1193,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -2864,
-        -1328
+        -2928,
+        -1056
       ],
-      "id": "e0e63284-0ad4-4a48-9cd7-6864f53fc5f7",
+      "id": "cb73af60-f31a-4834-b353-3992f2f2cb4c",
       "name": "Handoff"
     },
     {
@@ -1333,10 +1333,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -2752,
-        -1280
+        -2816,
+        -1008
       ],
-      "id": "0745451e-dd76-425c-b82f-bd1930e76ec3",
+      "id": "6e59a864-ba29-457b-af6e-fde5b1c13923",
       "name": "Subagente"
     },
     {
@@ -1350,27 +1350,27 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -2400,
-        -1952
+        -2464,
+        -1680
       ],
-      "id": "3134b6ee-646a-4a15-8f0c-626f04c4c7f6",
+      "id": "69363fa5-d3ff-433a-b42d-20e8bc1a5b1b",
       "name": "Asistente no registrado"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nALERTA: Si el cliente menciona renovar/extender/reactivar, la accion es renovar_venta, NO crear_venta.\n\nCierra la venta. Devuelve JSON.",
+        "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n={{ $json.context.mensaje_agrupado?.includes('COMPROBANTE_PAGO_RECIBIDO') || ($json.context.mensaje_agrupado?.includes('Monto:') && $json.context.mensaje_agrupado?.includes('Banco:')) ? '🔔 PROTOCOLO COMPROBANTE ACTIVO: Ejecuta los pasos 1→3→4 del protocolo. Llama get_cliente → get_recargas_del_cliente → crea o renueva la venta. NO solo informes.' : '' }}\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nALERTA: Si el cliente menciona renovar/extender/reactivar, la accion es renovar_venta, NO crear_venta.\n\nCierra la venta. Devuelve JSON.",
         "options": {
-          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres el vendedor de Streamify. Tu único objetivo: cerrar la venta o renovación.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas por mensaje.\n- Cada mensaje termina con una sola pregunta o CTA.\n- Si el cliente dice precio/cuánto cuesta: responde con precio directo + pregunta meses o perfiles.\n- Si el cliente dice renovar/extender/reactivar: es RENOVACIÓN, no venta nueva.\n- Si saldo no alcanza: di el faltante y pide recarga. No insistas más de 1 vez.\n\nÁRBOL DE DECISIÓN OBLIGATORIO:\nA) ¿Tiene señales de renovación? (renovar, extender, seguir, reactivar, idven disponible)\n   → SÍ: usar renovar_venta. NUNCA crear_venta en este caso.\n   → NO: continuar a B.\nB) ¿Producto de entrega inmediata y saldo suficiente?\n   → SÍ: usar crear_venta.\n   → NO: pedido o informar faltante.\n\nREGLAS ANTI-ERROR:\n- Nunca llames crear_venta si la intención es renovar.\n- Nunca pidas al cliente \"código de compra\", \"idven\" ni IDs técnicos.\n- Si una herramienta falla por segunda vez con el mismo error: escala a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu compra\", \"Permíteme un momento\", \"¿Te puedo ayudar con algo más?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"vendedor_cierre\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"motivo_humano\": null,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final."
+          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres el vendedor de Streamify. Tu único objetivo: cerrar la venta o renovación.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas por mensaje.\n- Cada mensaje termina con una sola pregunta o CTA.\n- Si el cliente dice precio/cuánto cuesta: responde con precio directo + pregunta meses o perfiles.\n- Si el cliente dice renovar/extender/reactivar: es RENOVACIÓN, no venta nueva.\n- Si saldo no alcanza: di el faltante y pide recarga. No insistas más de 1 vez.\n\nCOMPROBANTE DE PAGO — PROTOCOLO OBLIGATORIO:\nSi el mensaje contiene 'COMPROBANTE_PAGO_RECIBIDO', datos de imagen con monto/banco/emisor, o palabras como 'comprobante', 'transferencia', 'pagué':\n\nPASOS EN ORDEN (OBLIGATORIO, NO OMITIR):\n1. Llama get_cliente con el teléfono del CONTACTO para obtener idcli y saldo actual.\n2. Llama get_recargas_del_cliente/{idcli} para ver recargas recientes del cliente.\n3. Evalúa el resultado:\n   - Recarga aprobada Y saldo suficiente → ejecuta ÁRBOL DE DECISIÓN (crear_venta o renovar_venta).\n   - Recarga pendiente de aprobación → reply_text: \"Tu pago está en revisión, en minutos te confirmo ✅\"\n   - No hay recarga o fue rechazada → reply_text: \"No encontré el pago registrado. ¿Puedes reenviar el comprobante?\"\n4. NUNCA vuelvas a informar el precio si el pago ya está registrado.\n5. NUNCA pidas comprobante de nuevo si ya existe una recarga pendiente o aprobada.\n6. NUNCA respondas solo con texto cuando hay COMPROBANTE_PAGO_RECIBIDO — DEBES usar las herramientas.\n\nÁRBOL DE DECISIÓN OBLIGATORIO:\nA) ¿Tiene señales de renovación? (renovar, extender, seguir, reactivar, idven disponible)\n   → SÍ: usar renovar_venta. NUNCA crear_venta en este caso.\n   → NO: continuar a B.\nB) ¿Producto de entrega inmediata y saldo suficiente?\n   → SÍ: usar crear_venta.\n   → NO: pedido o informar faltante.\n\nREGLAS ANTI-ERROR:\n- Nunca llames crear_venta si la intención es renovar.\n- Nunca pidas al cliente \"código de compra\", \"idven\" ni IDs técnicos.\n- Si una herramienta falla por segunda vez con el mismo error: escala a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu compra\", \"Permíteme un momento\", \"¿Te puedo ayudar con algo más?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"vendedor_cierre\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"motivo_humano\": null,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -2400,
-        -1552
+        -2464,
+        -1280
       ],
-      "id": "173cd4bc-0dc0-4a4d-8fc5-ac611b06f8e7",
+      "id": "d06d6402-e0be-4696-9599-86b9c3820054",
       "name": "Vendedor cierre"
     },
     {
@@ -1380,10 +1380,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -2400,
-        -1840
+        -2464,
+        -1568
       ],
-      "id": "032b1268-e333-4ce0-be5f-f2736cfbc0dd",
+      "id": "ffdbed7f-f92a-447b-8826-a9acb9fba71f",
       "name": "DeepSeek2",
       "credentials": {
         "deepSeekApi": {
@@ -1399,10 +1399,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -2400,
-        -1440
+        -2464,
+        -1168
       ],
-      "id": "16acd404-4c8e-4936-a91c-e4c05c1d0fa0",
+      "id": "2d9a0442-7e62-4393-87d2-f8615e2b7b44",
       "name": "DeepSeek3",
       "credentials": {
         "deepSeekApi": {
@@ -1420,10 +1420,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2224,
-        -1760
+        -2288,
+        -1488
       ],
-      "id": "15cefa6e-9f07-49c5-8175-c06ac490cb3d",
+      "id": "3123d14f-8bee-4ea1-808b-d6f0d80153c1",
       "name": "get metodos-pago"
     },
     {
@@ -1433,10 +1433,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2064,
-        -1168
+        -2128,
+        -896
       ],
-      "id": "35fbb614-6d66-4255-822e-5e803a1e2a46",
+      "id": "587d3eb9-04da-4caf-bc54-e595c84b46e3",
       "name": "Parsear3"
     },
     {
@@ -1446,10 +1446,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -2416,
-        -1056
+        -2480,
+        -784
       ],
-      "id": "3f98e883-2fe1-4c59-8cea-e8cc0111d87d",
+      "id": "245b6ecd-7c7c-40bc-a35e-d3ac5a84227a",
       "name": "DeepSeek4",
       "credentials": {
         "deepSeekApi": {
@@ -1469,10 +1469,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -2416,
-        -1168
+        -2480,
+        -896
       ],
-      "id": "af9e56a4-0cba-49a3-86ef-25694ff48968",
+      "id": "ef751e39-847c-41bd-905b-34138ff57dc7",
       "name": "Soporte cliente"
     },
     {
@@ -1484,10 +1484,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2368,
-        -1280
+        -2432,
+        -1008
       ],
-      "id": "649fcccd-cd09-4b62-ada6-b2879252570d",
+      "id": "68726bd1-b287-4dcf-802b-cf5039ebd5d2",
       "name": "get metodos-pago1"
     },
     {
@@ -1521,10 +1521,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2528,
-        -1360
+        -2592,
+        -1088
       ],
-      "id": "80025845-759d-4bfc-bdb5-46b940ebec84",
+      "id": "753b9e7a-ccc7-438d-b218-f9abe5a65e7d",
       "name": "crear venta"
     },
     {
@@ -1536,11 +1536,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -3952,
-        -1344
+        -4016,
+        -1072
       ],
       "typeVersion": 1,
-      "id": "c132f95a-081a-42c8-8473-ea957603d6a9",
+      "id": "d5606e28-4928-4d28-bf59-935e3864921b",
       "name": "Sticky Note"
     },
     {
@@ -1657,10 +1657,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4144,
-        -1312
+        -4208,
+        -1040
       ],
-      "id": "2c91ee1d-ed67-40a6-92a1-4abe6b7db90b",
+      "id": "5f486397-964a-4181-9d4b-462343ce35ae",
       "name": "ingest msg1"
     },
     {
@@ -1691,10 +1691,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -4288,
-        -1264
+        -4352,
+        -992
       ],
-      "id": "472ac1b1-bda2-49cf-939e-2632117652c2",
+      "id": "90210f71-80d9-4c2a-acf2-a6755cbb4e77",
       "name": "fromMe"
     },
     {
@@ -1775,10 +1775,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4144,
-        -1168
+        -4208,
+        -896
       ],
-      "id": "54c47405-f23b-4b46-a821-1a675a5687d2",
+      "id": "6c14d06d-9022-408c-95ff-90385dd01055",
       "name": "save-respond"
     },
     {
@@ -1859,10 +1859,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4704,
-        -1232
+        -4768,
+        -960
       ],
-      "id": "c9b82944-ef21-41e7-b5f7-51512eb0e098",
+      "id": "612630a6-5f69-41c4-bfa4-729fa42fd6ae",
       "name": "ingest msg2"
     },
     {
@@ -1931,10 +1931,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -5408,
-        -1424
+        -5472,
+        -1152
       ],
-      "id": "846fe43b-2d9a-4dc0-aa54-63452e9ad0c6",
+      "id": "da332fb2-355f-4a05-8c38-05503d67004d",
       "name": "save-respond2"
     },
     {
@@ -1946,11 +1946,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -5040,
-        -1648
+        -5104,
+        -1376
       ],
       "typeVersion": 1,
-      "id": "3ca13f0f-e837-4b95-bf7b-8793a7a1dd11",
+      "id": "94daef51-aa90-4a98-9a93-a8c451653925",
       "name": "Sticky Note2"
     },
     {
@@ -1961,11 +1961,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -4528,
-        -1440
+        -4592,
+        -1168
       ],
       "typeVersion": 1,
-      "id": "90cfee1f-3a3b-47cb-8b62-31f9e5d39b2d",
+      "id": "61d68c7f-364c-4d64-be80-b5db8d5c119e",
       "name": "Sticky Note3"
     },
     {
@@ -2018,12 +2018,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -5008,
-        -1568
+        -5072,
+        -1296
       ],
-      "id": "a5a993fc-0126-4294-ad99-1a062fc2c6eb",
-      "name": "Load",
-      "disabled": false
+      "id": "c8d6400f-1894-44b4-98ec-8e850ebba128",
+      "name": "Load"
     },
     {
       "parameters": {
@@ -2043,10 +2042,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2464,
-        -1760
+        -2528,
+        -1488
       ],
-      "id": "b11d240a-800e-4034-877a-707ed13bb752",
+      "id": "0e15624d-7772-4241-bf00-ccd01cca5117",
       "name": "get cliente"
     },
     {
@@ -2071,10 +2070,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2464,
-        -1680
+        -2528,
+        -1408
       ],
-      "id": "2df4f6a4-59b2-4f7d-8b46-d617cc0d91de",
+      "id": "2ccf205a-873c-433d-bc86-0e0367d6226e",
       "name": "post cliente"
     },
     {
@@ -2086,10 +2085,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2384,
-        -1760
+        -2448,
+        -1488
       ],
-      "id": "bca85d24-e3ae-4f01-bb01-47e5990019e5",
+      "id": "b902b1de-e72b-48ee-b3d1-7cec7d05b17c",
       "name": "get general precios"
     },
     {
@@ -2101,10 +2100,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2224,
-        -1680
+        -2288,
+        -1408
       ],
-      "id": "8d27cb70-3146-474c-b003-b763fac58c7e",
+      "id": "3f5b6e57-67e6-4091-9d4a-b4c2653834e9",
       "name": "get banco"
     },
     {
@@ -2117,10 +2116,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2384,
-        -1680
+        -2448,
+        -1408
       ],
-      "id": "a96ff05d-9daf-49f9-97f4-b6caa5e232a5",
+      "id": "612c55f3-1737-4450-bcbc-a9dade17256e",
       "name": "handoff"
     },
     {
@@ -2132,10 +2131,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2304,
-        -1760
+        -2368,
+        -1488
       ],
-      "id": "6ccae491-43f1-4fab-9c0a-8fcf88ddba87",
+      "id": "4af10fe2-e589-43fd-9f50-f7b318d0c80c",
       "name": "get precios de servicios"
     },
     {
@@ -2147,10 +2146,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2304,
-        -1680
+        -2368,
+        -1408
       ],
-      "id": "f34c8a50-65a3-4e5c-8100-8746019959c5",
+      "id": "08e28388-79dd-4817-afdb-3f97fa31e070",
       "name": "get catalogo completo"
     },
     {
@@ -2160,10 +2159,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3696,
-        -1248
+        -3760,
+        -976
       ],
-      "id": "5a6ee538-97ab-4e88-894d-26c5caee563b",
+      "id": "2aad9e5a-da22-4988-a8ae-09cd1f1e6224",
       "name": "payload"
     },
     {
@@ -2173,7 +2172,7 @@
             {
               "id": "9c187b1c-be1a-40b8-bba2-2242d7d9ddb3",
               "name": "content",
-              "value": "=<comprobante>\nmonto: {{ $('Parsear1').item.json.data.monto_total_detectado }}\nbanco: {{ $('Parsear1').item.json.data.banco }}\ntitular: {{ $('Parsear1').item.json.data.titular }}\nemisor: {{ $('Parsear1').item.json.data.emisor }}\n<comprobante>",
+              "value": "=<comprobante>\nestado: {{ $('Load').item.json?.success === true ? 'registrado' : 'pendiente' }}\nmonto: {{ $('Parsear1').item.json.data.monto_total_detectado }}\nbanco: {{ $('Parsear1').item.json.data.banco }}\ntitular: {{ $('Parsear1').item.json.data.titular }}\nemisor: {{ $('Parsear1').item.json.data.emisor }}\n</comprobante>\nCOMPROBANTE_PAGO_RECIBIDO",
               "type": "string"
             }
           ]
@@ -2183,10 +2182,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -4896,
-        -1568
+        -4960,
+        -1296
       ],
-      "id": "5668d7b0-3c1b-4e60-a571-cd59c11864ac",
+      "id": "882cc6c9-ca67-4fc0-b148-25737ceb23c6",
       "name": "Payment content"
     },
     {
@@ -2198,10 +2197,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2208,
-        -1360
+        -2272,
+        -1088
       ],
-      "id": "807ab1b2-2123-466b-bb04-ba8acb720869",
+      "id": "b14cb0d4-95e2-43ce-a2f4-c1029ba43ba9",
       "name": "get banco1"
     },
     {
@@ -2222,10 +2221,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2288,
-        -1360
+        -2352,
+        -1088
       ],
-      "id": "5435fdc6-6f0b-4deb-a7b4-541cfa487079",
+      "id": "776a7464-de08-44c2-92bc-fa37d535cdf5",
       "name": "get catalogo completo1"
     },
     {
@@ -2237,10 +2236,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2448,
-        -1280
+        -2512,
+        -1008
       ],
-      "id": "1992263b-be73-4a33-95e0-8161ffe34b26",
+      "id": "7a82ff81-377d-4c24-adea-966fd07e0f37",
       "name": "get general precios1"
     },
     {
@@ -2261,10 +2260,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2368,
-        -1360
+        -2432,
+        -1088
       ],
-      "id": "e2a23dd8-3a79-4d66-bcaa-45991d0f3d0b",
+      "id": "048ee92a-c92c-42ce-8b3c-2b8f8d04a0ce",
       "name": "get cliente1"
     },
     {
@@ -2277,10 +2276,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2288,
-        -1280
+        -2352,
+        -1008
       ],
-      "id": "e88f1778-39d2-4706-b101-5417f32aa639",
+      "id": "c5df3817-8754-41c9-a657-8f0d1b24a25b",
       "name": "handoff1"
     },
     {
@@ -2292,10 +2291,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2208,
-        -1280
+        -2272,
+        -1008
       ],
-      "id": "99870a3c-4a94-4158-9566-2897ed57fece",
+      "id": "07b83fe4-c5ad-4080-a28c-89bc364ed9dc",
       "name": "get recargas del cliente"
     },
     {
@@ -2333,10 +2332,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2448,
-        -1360
+        -2512,
+        -1088
       ],
-      "id": "7a4c3425-e6be-4339-af40-d8dc70001c90",
+      "id": "e71f7f75-d791-4f04-aefd-7b229306f418",
       "name": "crear pedido"
     },
     {
@@ -2357,10 +2356,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2448,
-        -976
+        -2512,
+        -704
       ],
-      "id": "d564bcb2-dc59-426b-a487-51d9fe1ecd4d",
+      "id": "c3f4bef4-15ec-429a-acaf-79a3cbaa2bd8",
       "name": "get usuarios activos de cliente"
     },
     {
@@ -2394,10 +2393,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2288,
-        -976
+        -2352,
+        -704
       ],
-      "id": "cf041ffd-1c6d-440b-a4c0-8c1a67178b00",
+      "id": "d43e2c0c-5a61-41ed-bed1-e6632e2279a3",
       "name": "crear soporte"
     },
     {
@@ -2410,10 +2409,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2368,
-        -976
+        -2432,
+        -704
       ],
-      "id": "c56acd8e-c3ba-4057-a999-73e5094cbf35",
+      "id": "cff9b6db-f662-4dd5-a72e-4f63be7a3c25",
       "name": "handoff2"
     },
     {
@@ -2434,10 +2433,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2528,
-        -976
+        -2592,
+        -704
       ],
-      "id": "b7a2d895-350d-4976-ae8e-b59a6af2d1e2",
+      "id": "87922a1b-3654-4a90-bd99-0c8e02c6bd4f",
       "name": "get playbooks"
     },
     {
@@ -2447,10 +2446,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -2480,
-        -752
+        -2544,
+        -480
       ],
-      "id": "e87b6f10-4369-4c3f-bb4e-22a4a9e2296f",
+      "id": "428675c3-18eb-4e46-aef7-919f1371986a",
       "name": "DeepSeek5",
       "credentials": {
         "deepSeekApi": {
@@ -2470,10 +2469,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -2480,
-        -864
+        -2544,
+        -592
       ],
-      "id": "39e36ee5-3320-4a6f-ba68-4994fbd5ea0b",
+      "id": "9e8be050-df55-4662-b9c2-3c1115024a53",
       "name": "Cobranzas"
     },
     {
@@ -2485,10 +2484,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2240,
-        -736
+        -2304,
+        -464
       ],
-      "id": "b1c95df3-3788-4368-a6e6-3df8c4c95385",
+      "id": "3f9302d3-83d5-4db9-98fb-191abdade77b",
       "name": "get banco2"
     },
     {
@@ -2500,10 +2499,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2320,
-        -736
+        -2384,
+        -464
       ],
-      "id": "825ba6be-38b5-46ff-a440-bc62af76cc55",
+      "id": "b61fffc9-e5e3-4c92-893f-99ad872ccf7c",
       "name": "get recargas del cliente1"
     },
     {
@@ -2515,10 +2514,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2400,
-        -736
+        -2464,
+        -464
       ],
-      "id": "bd9adf4e-6d84-43c1-978c-7d081a39d916",
+      "id": "656be793-3a71-47aa-9e13-3098d7b09fe0",
       "name": "get metodos-pago2"
     },
     {
@@ -2532,10 +2531,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -2480,
-        -640
+        -2544,
+        -368
       ],
-      "id": "30bb6a0a-d241-433a-802d-50db22c554cd",
+      "id": "13f94d76-4e7b-43c0-a75d-73c21afcbf46",
       "name": "Postventa"
     },
     {
@@ -2545,10 +2544,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -2480,
-        -528
+        -2544,
+        -256
       ],
-      "id": "be88a606-5424-49c6-b9d2-dac791bf6d49",
+      "id": "8d63db03-93f9-436e-922f-770da3189aba",
       "name": "DeepSeek6",
       "credentials": {
         "deepSeekApi": {
@@ -2575,10 +2574,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2400,
-        -512
+        -2464,
+        -240
       ],
-      "id": "61d9e7d2-c424-45d5-9aeb-441b84f48134",
+      "id": "7326f1dd-e34c-45bf-be99-b217ee78ffc8",
       "name": "get contexto postventa"
     },
     {
@@ -2591,10 +2590,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2320,
-        -512
+        -2384,
+        -240
       ],
-      "id": "efc5fd87-58a8-4717-8813-aa9815fffe42",
+      "id": "e2f77f07-b3be-4f0f-941b-9ca4185759bf",
       "name": "handoff3"
     },
     {
@@ -2615,10 +2614,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2240,
-        -512
+        -2304,
+        -240
       ],
-      "id": "02cbb938-c304-4827-8af0-861ed8f8af57",
+      "id": "311c3f84-f79c-4f6d-ba04-dcc010fa0027",
       "name": "get memoria"
     },
     {
@@ -2650,10 +2649,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -3920,
-        -1248
+        -3984,
+        -976
       ],
-      "id": "fb3cc71b-b36e-4e6c-a797-5d5b17b990dd",
+      "id": "ba5b7e80-8c6a-4a3d-a2aa-a4631a94d6b3",
       "name": "Merge"
     },
     {
@@ -2723,10 +2722,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -5904,
-        -1680
+        -5968,
+        -1408
       ],
-      "id": "61c06b10-00fa-4b38-93ac-bd95265ae42f",
+      "id": "60759982-4144-4deb-934a-d8360b168d90",
       "name": "If7"
     },
     {
@@ -2742,10 +2741,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2528,
-        -1280
+        -2592,
+        -1008
       ],
-      "id": "0efb5dd2-9e1b-49c2-b30f-2699840fd968",
+      "id": "6b5200c3-2fb0-4df0-9bb7-e3601c2efa1f",
       "name": "renovar venta"
     },
     {
@@ -2815,10 +2814,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -5904,
-        -1536
+        -5968,
+        -1264
       ],
-      "id": "2d69cb37-12c0-48f0-adc8-8972f7aba427",
+      "id": "014cb8d7-2f7b-4c92-a731-5f67abca1833",
       "name": "If10"
     },
     {
@@ -2852,10 +2851,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2208,
-        -976
+        -2272,
+        -704
       ],
-      "id": "e0be6b10-a0b9-438c-a14a-5226f229303b",
+      "id": "d8eb6bd4-fa6d-4481-b746-0d1525c6251c",
       "name": "cambiar servicio a cliente"
     },
     {
@@ -2925,10 +2924,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -4464,
-        -1024
+        -4528,
+        -752
       ],
-      "id": "e221968b-a1bb-4200-b522-f3a87b36004b",
+      "id": "a172b1da-a9ca-4f2e-8033-ae95c9bafe32",
       "name": "If6"
     },
     {
@@ -3009,10 +3008,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4768,
-        -944
+        -4832,
+        -672
       ],
-      "id": "e378c473-e50d-43b3-a1aa-2db54ae74353",
+      "id": "0e42b6fa-b988-4e0a-84df-69273fb1bf0f",
       "name": "ingest msg"
     },
     {
@@ -3043,10 +3042,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -4976,
-        -1056
+        -5040,
+        -784
       ],
-      "id": "ae4650f7-5c23-4f5c-824b-aefcfa0bbf3f",
+      "id": "2c67de28-9627-4bd7-8b42-ed8d6e2d327a",
       "name": "fromMe1"
     },
     {
@@ -3115,10 +3114,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -4768,
-        -1072
+        -4832,
+        -800
       ],
-      "id": "b835dcaf-172c-4c88-8584-ddbbaf99dc70",
+      "id": "1ac60fc2-279f-4d05-b9fd-7022fadc3c9c",
       "name": "save-respond1"
     },
     {
@@ -3138,10 +3137,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -5088,
-        -1056
+        -5152,
+        -784
       ],
-      "id": "3cc929c7-6499-4161-9c9e-9f958d3aa53f",
+      "id": "db7135e9-6a5f-405f-98c5-b498ea442476",
       "name": "merge A"
     },
     {
@@ -3151,23 +3150,23 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4464,
-        -1328
+        -4528,
+        -1056
       ],
-      "id": "919d6d02-feff-44b8-b44a-1925fff1725a",
+      "id": "1579e61b-82a2-4762-9443-d4741f21b32e",
       "name": "Audio content"
     },
     {
       "parameters": {
-        "jsCode": "const normal = $('Normalizar').first().json;\nconst media = $('Get imagen').first().json;\nconst parsed = $('Parsear1').first().json;\nconst caption = normal.message?.content || '';\n\nlet descripcion = '';\nif (parsed.es_comprobante) {\n  descripcion = [\n    'Posible comprobante de pago.',\n    parsed.data?.monto_total_detectado ? `Monto: ${parsed.data.monto_total_detectado}` : null,\n    parsed.data?.banco ? `Banco: ${parsed.data.banco}` : null,\n    parsed.data?.titular ? `Titular: ${parsed.data.titular}` : null,\n    parsed.data?.emisor ? `Emisor: ${parsed.data.emisor}` : null,\n  ].filter(Boolean).join('\\n');\n} else {\n  descripcion = parsed.content\n    ? String(parsed.content).replace(/<imagen>/gi, '').trim()\n    : (parsed.descripcion || 'Imagen recibida.');\n}\n\nconst parts = ['<imagen>'];\nif (caption) parts.push(`Texto del usuario: ${caption}`);\nif (descripcion) parts.push(`Descripción de la imagen: ${descripcion}`);\nparts.push('</imagen>');\n\nreturn [{\n  json: {\n    telefono: normal.contact.numero,\n    numero: normal.contact.numero,\n    canal_user_id: normal.contact.numero,\n    canal: 'whatsapp',\n    tipo_contenido: 'imagen',\n    external_message_id: normal.message.id,\n    external_thread_id: normal.message.chat_id,\n    instance: normal.instance.name,\n    instance_name: normal.instance.name,\n    instance_apikey: normal.instance.apikey,\n    server_url: normal.instance.server_url,\n    origen: 'n8n',\n    debounce_seconds: 35,\n\n    mensaje: parts.join('\\n'),\n    mensaje_original: caption,\n    texto_extraido: descripcion,\n    media_kind: 'image',\n    media_transcription: descripcion,\n    media_caption: caption,\n    media_analysis_json: parsed,\n\n    media_base64: media.base64,\n    media_file_name: media.fileName,\n    media_mime_type: media.mimetype,\n\n    es_comprobante: parsed.es_comprobante === true,\n    from_me: normal.message.fromMe,\n    payload: normal,\n  }\n}];\n"
+        "jsCode": "const normal = $('Normalizar').first().json;\nconst media = $('Get imagen').first().json;\nconst parsed = $('Parsear1').first().json;\nconst caption = normal.message?.content || '';\nconst paymentContent = $json.content || null; // viene de Payment content\n\nlet descripcion = '';\nif (parsed.es_comprobante) {\n  descripcion = [\n    '🔔 COMPROBANTE_PAGO_RECIBIDO — ACCION INMEDIATA REQUERIDA',\n    parsed.data?.monto_total_detectado ? `Monto: ${parsed.data.monto_total_detectado}` : null,\n    parsed.data?.banco ? `Banco: ${parsed.data.banco}` : null,\n    parsed.data?.titular ? `Titular: ${parsed.data.titular}` : null,\n    parsed.data?.emisor ? `Emisor: ${parsed.data.emisor}` : null,\n    'Pago registrado. PASOS OBLIGATORIOS: 1) get_cliente 2) get_recargas_del_cliente 3) crear_venta o renovar_venta.',\n  ].filter(Boolean).join('\\n');\n} else {\n  descripcion = parsed.content\n    ? String(parsed.content).replace(/<imagen>/gi, '').trim()\n    : (parsed.descripcion || 'Imagen recibida.');\n}\n\nconst parts = ['<imagen>'];\nif (caption) parts.push(`Texto del usuario: ${caption}`);\nif (descripcion) parts.push(`Descripcion de la imagen: ${descripcion}`);\nif (paymentContent && parsed.es_comprobante) parts.push(paymentContent);\nparts.push('</imagen>');\n\nreturn [{\n  json: {\n    telefono: normal.contact.numero,\n    numero: normal.contact.numero,\n    canal_user_id: normal.contact.numero,\n    canal: 'whatsapp',\n    tipo_contenido: 'imagen',\n    external_message_id: normal.message.id,\n    external_thread_id: normal.message.chat_id,\n    instance: normal.instance.name,\n    instance_name: normal.instance.name,\n    instance_apikey: normal.instance.apikey,\n    server_url: normal.instance.server_url,\n    origen: 'n8n',\n    debounce_seconds: 35,\n\n    mensaje: parts.join('\\n'),\n    mensaje_original: caption,\n    texto_extraido: descripcion,\n    media_kind: 'image',\n    media_transcription: descripcion,\n    media_caption: caption,\n    media_analysis_json: parsed,\n\n    media_base64: media.base64,\n    media_file_name: media.fileName,\n    media_mime_type: media.mimetype,\n\n    es_comprobante: parsed.es_comprobante === true,\n    from_me: normal.message.fromMe,\n    payload: normal,\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4464,
-        -1184
+        -4528,
+        -912
       ],
-      "id": "f40fe94d-85cd-4fbf-8242-486d867f0a5c",
+      "id": "17b177c0-260b-4429-8d00-91ed69463119",
       "name": "Image content"
     },
     {
@@ -3179,11 +3178,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2624,
-        -1984
+        -2688,
+        -1712
       ],
       "typeVersion": 1,
-      "id": "e22fdfd3-f0fe-470f-9968-ef19b0a153fe",
+      "id": "1850c5c5-8b31-45ff-86d6-218b750d31b3",
       "name": "Sticky Note1"
     },
     {
@@ -3195,11 +3194,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -6608,
-        -1744
+        -6672,
+        -1472
       ],
       "typeVersion": 1,
-      "id": "edd73df8-7912-4316-8e45-1e95f1cb62c4",
+      "id": "0b77d5ed-7ea1-4054-8ff4-80783f7953f7",
       "name": "Sticky Note8"
     },
     {
@@ -3230,10 +3229,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -5712,
-        -1376
+        -5776,
+        -1104
       ],
-      "id": "04136a4c-1f2b-4277-b93c-9a3ac736f269",
+      "id": "82782f13-47d8-4ebf-bdf0-3471dc6a30a4",
       "name": "fromMe2"
     },
     {
@@ -3314,10 +3313,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -5408,
-        -1312
+        -5472,
+        -1040
       ],
-      "id": "98f1c175-f23f-4763-af3d-eebce530a40d",
+      "id": "25cb063e-9519-45a8-9e38-1727420b7a81",
       "name": "ingest msg3"
     },
     {
@@ -3329,11 +3328,25 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2160,
-        -736
+        -2224,
+        -464
       ],
-      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "id": "104fa3f6-eacb-4364-9c75-0c4b92083832",
       "name": "consultar_saldo_cliente"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -4832,
+        -1296
+      ],
+      "id": "418c63f8-17a4-459d-888d-a6fce79302b3",
+      "name": "Wait6",
+      "webhookId": "5765e023-98be-45e4-a493-d12ae16bf3f3"
     }
   ],
   "connections": {
@@ -3929,7 +3942,13 @@
     },
     "ingest msg1": {
       "main": [
-        []
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "fromMe": {
@@ -4053,7 +4072,7 @@
       "main": [
         [
           {
-            "node": "Image content",
+            "node": "Wait6",
             "type": "main",
             "index": 0
           }
@@ -4348,7 +4367,13 @@
     },
     "If6": {
       "main": [
-        []
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "ingest msg": {
@@ -4437,6 +4462,17 @@
           {
             "node": "Cobranzas",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait6": {
+      "main": [
+        [
+          {
+            "node": "Image content",
+            "type": "main",
             "index": 0
           }
         ]

@@ -7,10 +7,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1728,
-        -1472
+        -6000,
+        -1104
       ],
-      "id": "d23de233-06e2-4838-b08b-2cefdc03c145",
+      "id": "36d07be7-8a16-4d10-822f-f02cf2571fc3",
       "name": "Extraer code"
     },
     {
@@ -36,10 +36,10 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        -1616,
-        -1472
+        -5888,
+        -1104
       ],
-      "id": "1d2ddd6e-9afc-42e2-b6bd-d9307cd5792a",
+      "id": "947ef153-f17f-4a00-8c28-6bb5dfe7b264",
       "name": "consultar",
       "alwaysOutputData": true,
       "credentials": {
@@ -133,10 +133,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -1904,
-        -1392
+        -6176,
+        -1024
       ],
-      "id": "3d6d8580-7bd9-4f51-be51-014471d533c9",
+      "id": "e3ddc8f5-9c18-44d1-a22e-e8fd3428138e",
       "name": "Switch3"
     },
     {
@@ -148,10 +148,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1568,
-        -1232
+        -5840,
+        -864
       ],
-      "id": "9aa2a60a-1391-498d-87df-6e011f217cab",
+      "id": "97cbd50a-2477-4d33-9b39-070210453b63",
       "name": "Clic pedir code",
       "webhookId": "f761c31a-e7bf-4c42-b367-a6818fff3548"
     },
@@ -186,10 +186,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -736,
-        -1408
+        -5008,
+        -1040
       ],
-      "id": "c7f18d6a-6342-4423-a997-c6f1355cda90",
+      "id": "7f718caf-bb77-474c-b68d-6a4faf483990",
       "name": "Escribir bot",
       "retryOnFail": false
     },
@@ -224,10 +224,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -720,
-        -1280
+        -4992,
+        -912
       ],
-      "id": "a65c31e2-10f4-4a17-9fae-a7f91421a528",
+      "id": "d1644116-ae87-4777-9e01-bec6bcba5e63",
       "name": "Escribir cliente",
       "retryOnFail": false
     },
@@ -238,10 +238,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1104,
-        -1296
+        -5376,
+        -928
       ],
-      "id": "b1c8e4dd-8e98-456e-b2a5-bdbc728dfd3d",
+      "id": "2419c79e-eb45-4a26-8ab0-28b71f793425",
       "name": "Wait1",
       "webhookId": "92d331b7-e984-4a0d-bbe3-0d777af6634b"
     },
@@ -272,10 +272,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -880,
-        -1296
+        -5152,
+        -928
       ],
-      "id": "f9e14233-9f76-4336-8ad7-e1795011a777",
+      "id": "d011152e-ecca-4bb1-a5b9-9553c653f565",
       "name": "If1"
     },
     {
@@ -313,10 +313,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1456,
-        -1232
+        -5728,
+        -864
       ],
-      "id": "bd542710-df89-49bf-be6d-d99a9f560346",
+      "id": "6c62c463-f387-4bc5-bb8e-2621fdc37982",
       "name": "camino 2"
     },
     {
@@ -326,10 +326,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1392,
-        -1360
+        -5664,
+        -992
       ],
-      "id": "0a998732-1a29-47d3-a9f9-adf2a34c29ca",
+      "id": "1f8f9a9e-d5b0-4e80-8dcb-59c9003010bb",
       "name": "camino 1"
     },
     {
@@ -354,10 +354,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1616,
-        -1344
+        -5888,
+        -976
       ],
-      "id": "b2883c65-8c44-411c-acf0-5b288e433ca1",
+      "id": "4e36a6d4-d813-463e-823d-5bad5a91662d",
       "name": "validar"
     },
     {
@@ -388,10 +388,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1504,
-        -1344
+        -5776,
+        -976
       ],
-      "id": "58272048-f12b-4182-9f3d-3bd4cf057986",
+      "id": "d00c6ef8-7431-42e9-92bd-0daab2484d8c",
       "name": "If2"
     },
     {
@@ -425,10 +425,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1344,
-        -1232
+        -5616,
+        -864
       ],
-      "id": "d7063429-b232-4b06-9f42-9dc250d1813c",
+      "id": "095a1f30-9974-4dcd-8d37-27f6a8ab97ed",
       "name": "Rechazar",
       "retryOnFail": false
     },
@@ -441,10 +441,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -2368,
-        -1536
+        -6640,
+        -1168
       ],
-      "id": "314382e6-a353-444c-bc2f-60f4780fdf79",
+      "id": "0341dfa9-c919-4541-9ea8-341e19a89d5f",
       "name": "WhatsApp Verde",
       "webhookId": "c0e41212-a73b-4566-a6fd-5799fdd9695e"
     },
@@ -458,10 +458,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -2368,
-        -1424
+        -6640,
+        -1056
       ],
-      "id": "6194ad66-2965-420c-b1d2-61e7e5ad8290",
+      "id": "d5374b56-1968-49df-8155-f43bb7badfce",
       "name": "WhatsApp Azul",
       "webhookId": "dbeadfb3-d6a2-4cef-aad9-579ac4bfa1fb"
     },
@@ -512,10 +512,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1216,
-        -1296
+        -5488,
+        -928
       ],
-      "id": "dd88aff7-4e22-4f0a-805b-3867786367e3",
+      "id": "ec4e1304-491d-423a-99a9-35b820242ef7",
       "name": "merge b"
     },
     {
@@ -553,10 +553,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -1728,
-        -1344
+        -6000,
+        -976
       ],
-      "id": "c0ff850f-e241-437c-a0f4-d976adda2989",
+      "id": "07e9a783-c927-4ec2-aa7a-fb1eafb54533",
       "name": "merge a"
     },
     {
@@ -593,10 +593,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -624,
-        -1408
+        -4896,
+        -1040
       ],
-      "id": "1abc2e29-6540-4c95-b449-e334d9a88e1b",
+      "id": "2a8803a0-edc4-494e-be26-847e191d6bfe",
       "name": "esperando"
     },
     {
@@ -622,10 +622,10 @@
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        -992,
-        -1296
+        -5264,
+        -928
       ],
-      "id": "ce74693a-534d-40e6-abed-b4bb07864d01",
+      "id": "c87712ef-f14a-421a-a38f-cbaf19b0340c",
       "name": "consultar 2",
       "alwaysOutputData": true,
       "credentials": {
@@ -642,10 +642,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2224,
-        -1488
+        -6496,
+        -1120
       ],
-      "id": "1066f69c-9203-409a-9157-c9530e75051a",
+      "id": "5d605b62-e540-4dc6-9718-a9a6c39e14ed",
       "name": "Normalizar"
     },
     {
@@ -736,10 +736,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -2112,
-        -1520
+        -6384,
+        -1152
       ],
-      "id": "69f8d06c-aa52-4e07-b634-ba7a4c0b63f1",
+      "id": "8cb04144-cd9b-46a1-a6a3-b3be4ea94d54",
       "name": "Tipo mensaje"
     },
     {
@@ -773,10 +773,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1808,
-        -1776
+        -6080,
+        -1408
       ],
-      "id": "36773f7b-6265-4c0d-9fb4-2b02c27c14c1",
+      "id": "e1b92480-a715-4fc3-a55f-04cfa34ac716",
       "name": "Get audio"
     },
     {
@@ -790,10 +790,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -1568,
-        -1792
+        -5840,
+        -1424
       ],
-      "id": "f139fbe4-df4c-4cc4-9c4a-ab6087d21721",
+      "id": "cdfc868e-6031-48dd-bea3-b8b8c9b4cd60",
       "name": "Convert audio"
     },
     {
@@ -805,10 +805,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        -1456,
-        -1792
+        -5728,
+        -1424
       ],
-      "id": "f9e06611-c356-421e-b3f3-ccae470f41ae",
+      "id": "b39891e5-1dbd-449b-862c-4b95b38f8396",
       "name": "Transcribe",
       "credentials": {
         "openAiApi": {
@@ -848,10 +848,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1808,
-        -1632
+        -6080,
+        -1264
       ],
-      "id": "50f6e4df-a507-4724-b9e4-2270ddfe34e8",
+      "id": "9e98500f-7862-4989-8b06-f8dd6e8ba44b",
       "name": "Get imagen"
     },
     {
@@ -865,10 +865,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -1568,
-        -1648
+        -5840,
+        -1280
       ],
-      "id": "8acaf4b7-776a-4c09-8b76-e9eec8cfe824",
+      "id": "4fc11c03-5a6c-4c9e-86b8-a9e03e775260",
       "name": "Convert image"
     },
     {
@@ -888,10 +888,10 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 2.1,
       "position": [
-        -1456,
-        -1648
+        -5728,
+        -1280
       ],
-      "id": "9ad9142d-3bf9-4ac3-845e-6e4233da840d",
+      "id": "41e78b45-00cf-432e-95d3-4e07bd66354d",
       "name": "Analyze",
       "credentials": {
         "openAiApi": {
@@ -907,10 +907,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1344,
-        -1648
+        -5616,
+        -1280
       ],
-      "id": "dc784d94-0417-49ce-bf0b-659cbd7a5fd1",
+      "id": "5cff7d97-9211-412d-bcac-120a1ef4dc8c",
       "name": "Parsear1"
     },
     {
@@ -941,10 +941,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1232,
-        -1648
+        -5504,
+        -1280
       ],
-      "id": "5a8ffad1-f4e0-4b94-82fb-60ac0f9a1fb8",
+      "id": "0dfc3049-821b-4992-bb24-2189b60435be",
       "name": "If3"
     },
     {
@@ -954,10 +954,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        400,
-        -1344
+        -3872,
+        -976
       ],
-      "id": "0153b570-512a-464a-a5a2-43ef4ff08485",
+      "id": "6e569717-3cf7-4aa4-994c-3310f72a2b71",
       "name": "Wait5",
       "webhookId": "6516dd11-1b82-4935-999d-13a1354c57f2"
     },
@@ -989,10 +989,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        736,
-        -1344
+        -3536,
+        -976
       ],
-      "id": "3f0099bc-e300-4df9-9e57-0a8fad40d2e6",
+      "id": "30f33a81-79ff-4544-bbe0-94c85cb41a31",
       "name": "If4"
     },
     {
@@ -1002,10 +1002,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        848,
-        -1232
+        -3424,
+        -864
       ],
-      "id": "b131259b-b168-4eef-be83-af09e6803166",
+      "id": "7440c2d4-c7e1-47c0-80cd-75e1e215f6af",
       "name": "DeepSeek1",
       "credentials": {
         "deepSeekApi": {
@@ -1026,10 +1026,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        624,
-        -1344
+        -3648,
+        -976
       ],
-      "id": "dfb00f37-c886-4a74-82de-7a27e0f550a2",
+      "id": "0c4044e4-089f-4eb2-9c87-6b71353465ea",
       "name": "get context"
     },
     {
@@ -1078,10 +1078,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2256,
-        -1264
+        -2016,
+        -896
       ],
-      "id": "3c2625ad-1e08-46da-80fa-b8e28f317638",
+      "id": "ed89033a-8250-42b9-87d0-b9fbfb58b56d",
       "name": "save respond"
     },
     {
@@ -1095,10 +1095,10 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        848,
-        -1344
+        -3424,
+        -976
       ],
-      "id": "ff69aaed-430f-4485-8724-a4f2eb6f3c23",
+      "id": "70523731-ea1b-4489-b385-f7e09a7af269",
       "name": "Clasificador"
     },
     {
@@ -1108,10 +1108,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1088,
-        -1344
+        -3184,
+        -976
       ],
-      "id": "eeab7a98-238d-4b87-9f66-c7e445d164ab",
+      "id": "e3dd7fa4-cd18-495a-8e0c-a84472df743e",
       "name": "Parsear2"
     },
     {
@@ -1161,10 +1161,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1200,
-        -1344
+        -3072,
+        -976
       ],
-      "id": "4c2cac3f-8746-455e-83e3-99698416233a",
+      "id": "7276aeb2-b221-4ccc-a9b6-d0b2cbc4e9f3",
       "name": "If5"
     },
     {
@@ -1193,10 +1193,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1344,
-        -1424
+        -2928,
+        -1056
       ],
-      "id": "aa789f0c-2688-4acc-b01e-ecb01a110072",
+      "id": "cb73af60-f31a-4834-b353-3992f2f2cb4c",
       "name": "Handoff"
     },
     {
@@ -1333,10 +1333,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        1456,
-        -1376
+        -2816,
+        -1008
       ],
-      "id": "c69c3d48-8dfa-4291-bb7b-622398b4a78e",
+      "id": "6e59a864-ba29-457b-af6e-fde5b1c13923",
       "name": "Subagente"
     },
     {
@@ -1344,16 +1344,16 @@
         "promptType": "define",
         "text": "=={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nAtiende al lead. Devuelve JSON.",
         "options": {
-          "systemMessage": "Eres el asistente comercial de Streamify. Atiendes leads nuevos.\n\nOBJETIVO: Identificar qué quieren y orientarlos a comprar o resolver su duda rápido.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío. Si ya hay mensajes previos, ve directo al punto.\n- Responde en máximo 3-5 líneas.\n- Si preguntan precio: da el precio directo y pregunta cuántos perfiles o meses.\n- Si ya quieren comprar: pide nombre y apellido si no los tienes en contacto.\n- Si es soporte o pago: deriva internamente (no lo digas al cliente, solo actúa).\n\nFRASES PROHIBIDAS: \"Bienvenido a Streamify\", \"Con mucho gusto\", \"Estaré encantado\", \"¿En qué puedo ayudarte hoy?\"\n\nFLUJO DE IDENTIFICACIÓN:\n1. Buscar cliente por teléfono primero.\n2. Si no existe y quiere comprar: pedir nombre y apellido.\n3. Crear cliente rápido con esos datos.\n4. Continuar al cierre.\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"asistente_no_registrado\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_cliente|crear_cliente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres el asistente comercial de Streamify. Atiendes leads nuevos.\n\nOBJETIVO: Identificar qué quieren y orientarlos a comprar o resolver su duda rápido.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío. Si ya hay mensajes previos, ve directo al punto.\n- Responde en máximo 3-5 líneas.\n- Si preguntan precio: da el precio directo y pregunta cuántos perfiles o meses.\n- Si ya quieren comprar: pide nombre y apellido si no los tienes en contacto.\n- Si es soporte o pago: deriva internamente (no lo digas al cliente, solo actúa).\n\nFRASES PROHIBIDAS: \"Bienvenido a Streamify\", \"Con mucho gusto\", \"Estaré encantado\", \"¿En qué puedo ayudarte hoy?\"\n\nFLUJO DE IDENTIFICACIÓN:\n\n1. Buscar cliente por telefono primero.\n\n2. El telefono es el identificador unico del cliente.\n\n3. Si el cliente no existe:\n\n   Solicitar unicamente:\n\n   - nombre\n   - apellido\n\n4. PROHIBIDO solicitar:\n\n   - correo electronico\n   - email\n   - cedula\n   - RUC\n   - direccion\n   - ciudad\n   - fecha de nacimiento\n\n5. Si el cliente ya escribio su nombre completo:\n\n   - no volver a pedirlo\n   - crear cliente inmediatamente\n   - continuar el proceso de venta\n\n6. Guardar unicamente nombre y apellido.\n\n7. Nunca concatenar mensajes para formar nombres.\n\n8. Nunca utilizar historial para completar nombres.\n\n9. Nunca inventar apellidos.\n\n10. Solicitar correo o cedula constituye un error.\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"asistente_no_registrado\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_cliente|crear_cliente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final.\n\nREGLA DE EXTRACCION DE NOMBRE\n\nEjemplos:\n\n\"soy Pablo Dario Jimenez\"\n-> Pablo Dario Jimenez\n\n\"mi nombre es Pablo Dario Jimenez\"\n-> Pablo Dario Jimenez\n\n\"hola soy Pablo Dario Jimenez y quiero Netflix\"\n-> Pablo Dario Jimenez\n\nGuardar unicamente el nombre detectado.\n\nNunca guardar frases completas.\n\nNunca guardar intenciones de compra dentro del nombre."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1808,
-        -2048
+        -2464,
+        -1680
       ],
-      "id": "d7de36d0-fb8a-4185-8b36-efced0221758",
+      "id": "69363fa5-d3ff-433a-b42d-20e8bc1a5b1b",
       "name": "Asistente no registrado"
     },
     {
@@ -1361,16 +1361,16 @@
         "promptType": "define",
         "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nALERTA: Si el cliente menciona renovar/extender/reactivar, la accion es renovar_venta, NO crear_venta.\n\nCierra la venta. Devuelve JSON.",
         "options": {
-          "systemMessage": "Eres el vendedor de Streamify. Tu único objetivo: cerrar la venta o renovación.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas por mensaje.\n- Cada mensaje termina con una sola pregunta o CTA.\n- Si el cliente dice precio/cuánto cuesta: responde con precio directo + pregunta meses o perfiles.\n- Si el cliente dice renovar/extender/reactivar: es RENOVACIÓN, no venta nueva.\n- Si saldo no alcanza: di el faltante y pide recarga. No insistas más de 1 vez.\n\nÁRBOL DE DECISIÓN OBLIGATORIO:\nA) ¿Tiene señales de renovación? (renovar, extender, seguir, reactivar, idven disponible)\n   → SÍ: usar renovar_venta. NUNCA crear_venta en este caso.\n   → NO: continuar a B.\nB) ¿Producto de entrega inmediata y saldo suficiente?\n   → SÍ: usar crear_venta.\n   → NO: pedido o informar faltante.\n\nREGLAS ANTI-ERROR:\n- Nunca llames crear_venta si la intención es renovar.\n- Nunca pidas al cliente \"código de compra\", \"idven\" ni IDs técnicos.\n- Si una herramienta falla por segunda vez con el mismo error: escala a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu compra\", \"Permíteme un momento\", \"¿Te puedo ayudar con algo más?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"vendedor_cierre\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"motivo_humano\": null,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres el vendedor de Streamify. Tu único objetivo: cerrar la venta o renovación.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas por mensaje.\n- Cada mensaje termina con una sola pregunta o CTA.\n- Si el cliente dice precio/cuánto cuesta: responde con precio directo + pregunta meses o perfiles.\n- Si el cliente dice renovar/extender/reactivar: es RENOVACIÓN, no venta nueva.\n- Si saldo no alcanza: di el faltante y pide recarga. No insistas más de 1 vez.\n\nÁRBOL DE DECISIÓN OBLIGATORIO:\nA) ¿Tiene señales de renovación? (renovar, extender, seguir, reactivar, idven disponible)\n   → SÍ: usar renovar_venta. NUNCA crear_venta en este caso.\n   → NO: continuar a B.\nB) ¿Producto de entrega inmediata y saldo suficiente?\n   → SÍ: usar crear_venta.\n   → NO: pedido o informar faltante.\n\nREGLAS ANTI-ERROR:\n- Nunca llames crear_venta si la intención es renovar.\n- Nunca pidas al cliente \"código de compra\", \"idven\" ni IDs técnicos.\n- Si una herramienta falla por segunda vez con el mismo error: escala a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu compra\", \"Permíteme un momento\", \"¿Te puedo ayudar con algo más?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"vendedor_cierre\",\n  \"reply_text\": \"texto directo, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|buscar_producto|confirmar_producto|crear_venta|renovar_venta|crear_pedido|pedir_datos_extra|saldo_insuficiente|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"motivo_humano\": null,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1808,
-        -1648
+        -2464,
+        -1280
       ],
-      "id": "b8a5da6e-1fa8-44a3-b236-4b1f9287d464",
+      "id": "d06d6402-e0be-4696-9599-86b9c3820054",
       "name": "Vendedor cierre"
     },
     {
@@ -1380,10 +1380,29 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        1808,
-        -1536
+        -2464,
+        -1568
       ],
-      "id": "cb05c593-f616-4e19-aa3e-7cb6c3ce0e9c",
+      "id": "ffdbed7f-f92a-447b-8826-a9acb9fba71f",
+      "name": "DeepSeek2",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -2464,
+        -1168
+      ],
+      "id": "2d9a0442-7e62-4393-87d2-f8615e2b7b44",
       "name": "DeepSeek3",
       "credentials": {
         "deepSeekApi": {
@@ -1401,10 +1420,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1984,
-        -1856
+        -2288,
+        -1488
       ],
-      "id": "98a8663f-8235-40e9-b7e4-0cf37dbfd22a",
+      "id": "3123d14f-8bee-4ea1-808b-d6f0d80153c1",
       "name": "get metodos-pago"
     },
     {
@@ -1414,10 +1433,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2144,
-        -1264
+        -2128,
+        -896
       ],
-      "id": "f16b574d-00ce-41dc-9769-4fe85b69f84d",
+      "id": "587d3eb9-04da-4caf-bc54-e595c84b46e3",
       "name": "Parsear3"
     },
     {
@@ -1427,10 +1446,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        1792,
-        -1152
+        -2480,
+        -784
       ],
-      "id": "ef0b8079-0aab-42a5-b259-10d8022dca62",
+      "id": "245b6ecd-7c7c-40bc-a35e-d3ac5a84227a",
       "name": "DeepSeek4",
       "credentials": {
         "deepSeekApi": {
@@ -1444,18 +1463,17 @@
         "promptType": "define",
         "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nMEMORIA NEGOCIO: {{ JSON.stringify($json.context.memoria_negocio) }}\n\nRECORDATORIO CRÍTICO:\n- Si menciona error de acceso → consulta usuarios-activos PRIMERO.\n- Si tiene servicio activo + error → bug del sistema → crear_soporte.\n- Si servicio vencido → renovación → derivar a pago, sin crear soporte.\n- Si ya probó credenciales y sigue sin entrar → crear_soporte directo.\n\nDiagnostica y devuelve JSON.\",",
         "options": {
-          "systemMessage": "Eres soporte de Streamify. Resuelves problemas de acceso con el mínimo de mensajes posible.\n\nDIAGNÓSTICO OBLIGATORIO antes de crear soporte:\n\nPASO 1 — ¿El cliente menciona error de acceso o \"no tengo suscripción\"?\n→ Consulta usuarios-activos por teléfono ANTES de responder.\n→ Según resultado:\n   • Servicio ACTIVO pero con error → Es bug del sistema → crear_soporte tipo \"otro\" + handoff\n   • Servicio VENCIDO → No es bug → informar vencimiento + derivar a pago\n   • Nunca tuvo ese servicio → derivar a vendedor\n\nPASO 2 — ¿El cliente dice \"contraseña incorrecta\"?\n→ Turno 1: \"Verifica que sea el correo correcto y la contraseña exacta, sin espacios.\"\n→ Si en el turno 2 sigue sin entrar → crear_soporte tipo \"contrasena incorrecta\"\n\nPASO 3 — Casos de soporte INMEDIATO (sin pasos previos):\n→ \"muchos dispositivos\" → crear_soporte tipo \"muchos dispositivos\"\n→ \"cuenta suspendida/bloqueada\" → crear_soporte tipo \"otro\"\n→ \"demasiadas pantallas\" → crear_soporte tipo \"muchos dispositivos\"\n\nIMPORTANTE:\n- El agente NO puede verificar si una cuenta realmente está caída. Eso lo hace un humano.\n- Si el cliente insiste que no puede entrar y ya probó credenciales: crear_soporte + handoff. No más pasos.\n- Si hay comprobante en el historial: no cobres de nuevo.\n\nTONO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 2 líneas por mensaje.\n- Sin listas, sin pasos numerados con íconos.\n- Sin: \"Entiendo tu frustración\", \"Lamento el inconveniente\", \"Gracias por tu paciencia\".\n- Sí: \"Un momento, verifico.\", \"Creé el ticket #X, lo revisan pronto.\", \"Verifica e intenta.\"\n\nEJEMPLOS DE RESPUESTA CORRECTA:\n✓ \"¿Qué error ves exacto en la pantalla?\"\n✓ \"Verifica correo y contraseña sin espacios. Intenta de nuevo.\"\n✓ \"Tu Netflix está activo pero hay un error. Ticket #X creado, lo revisan en menos de 1 hora.\"\n✓ \"Tu Disney expiró el 15 de abril. ¿Quieres renovar?\"\n✗ \"¡Hola! Lamento el inconveniente. Vamos a revisar paso a paso lo que está pasando con tu cuenta...\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"soporte_cliente\",\n  \"reply_text\": \"respuesta directa, máx 2 líneas, sin listas\",\n  \"accion_tipo\": \"ninguna|crear_soporte|resolver_rapido|validar_servicio|handoff\",\n  \"accion_payload\": {\n    \"tipo\": \"contrasena incorrecta|sin suscripcion|muchos dispositivos|otro\",\n    \"descripcion\": \"descripción técnica breve para el equipo\"\n  },\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres soporte de Streamify. Resuelves problemas de acceso con el mínimo de mensajes posible.\n\nDIAGNÓSTICO OBLIGATORIO antes de crear soporte:\n\nPASO 1 — ¿El cliente menciona error de acceso o \"no tengo suscripción\"?\n→ Consulta usuarios-activos por teléfono ANTES de responder.\n→ Según resultado:\n   • Servicio ACTIVO pero con error → Es bug del sistema → crear_soporte tipo \"otro\" + handoff\n   • Servicio VENCIDO → No es bug → informar vencimiento + derivar a pago\n   • Nunca tuvo ese servicio → derivar a vendedor\n\nPASO 2 — ¿El cliente dice \"contraseña incorrecta\"?\n→ Turno 1: \"Verifica que sea el correo correcto y la contraseña exacta, sin espacios.\"\n→ Si en el turno 2 sigue sin entrar → crear_soporte tipo \"contrasena incorrecta\"\n\nPASO 3 — Casos de soporte INMEDIATO (sin pasos previos):\n→ \"muchos dispositivos\" → crear_soporte tipo \"muchos dispositivos\"\n→ \"cuenta suspendida/bloqueada\" → crear_soporte tipo \"otro\"\n→ \"demasiadas pantallas\" → crear_soporte tipo \"muchos dispositivos\"\n\nIMPORTANTE:\n- El agente NO puede verificar si una cuenta realmente está caída. Eso lo hace un humano.\n- Si el cliente insiste que no puede entrar y ya probó credenciales: crear_soporte + handoff. No más pasos.\n- Si hay comprobante en el historial: no cobres de nuevo.\n- REGISTRO FORZADO: Si confirmas problema real (servicio activo + error de acceso), SIEMPRE accion_tipo: crear_soporte Y escalar_humano: true. Sin excepciones.\n\nTONO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3 líneas por mensaje.\n- Sin: \"Entiendo tu frustración\", \"Lamento el inconveniente\", \"Gracias por tu paciencia\".\n- Sí: \"Un momento, verifico.\", \"Creé el ticket #X, lo revisan pronto.\", \"Verifica e intenta.\"\n\nEJEMPLOS DE RESPUESTA CORRECTA:\n✓ \"¿Qué error ves exacto en la pantalla?\"\n✓ \"Verifica correo y contraseña sin espacios. Intenta de nuevo.\"\n✓ \"Tu Netflix está activo pero hay un error. Ticket #X creado, lo revisan en menos de 1 hora.\"\n✓ \"Tu Disney expiró el 15 de abril. ¿Quieres renovar?\"\n✗ \"¡Hola! Lamento el inconveniente. Vamos a revisar paso a paso lo que está pasando con tu cuenta...\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"soporte_cliente\",\n  \"reply_text\": \"respuesta directa, máx 3 líneas\",\n  \"accion_tipo\": \"ninguna|crear_soporte|resolver_rapido|validar_servicio|handoff\",\n  \"accion_payload\": {\n    \"tipo\": \"contrasena incorrecta|sin suscripcion|muchos dispositivos|otro\",\n    \"descripcion\": \"descripción técnica breve para el equipo\"\n  },\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1792,
-        -1264
+        -2480,
+        -896
       ],
-      "id": "b9d4dfb7-88eb-49f8-9130-3c6246e09575",
-      "name": "Soporte cliente",
-      "disabled": true
+      "id": "ef751e39-847c-41bd-905b-34138ff57dc7",
+      "name": "Soporte cliente"
     },
     {
       "parameters": {
@@ -1466,10 +1484,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1840,
-        -1376
+        -2432,
+        -1008
       ],
-      "id": "cd2529b3-8e57-4ff0-ba4d-b29dcad6a824",
+      "id": "68726bd1-b287-4dcf-802b-cf5039ebd5d2",
       "name": "get metodos-pago1"
     },
     {
@@ -1503,10 +1521,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1680,
-        -1456
+        -2592,
+        -1088
       ],
-      "id": "16dea0d8-b160-46bf-a40c-f7e0f17d835f",
+      "id": "753b9e7a-ccc7-438d-b218-f9abe5a65e7d",
       "name": "crear venta"
     },
     {
@@ -1518,11 +1536,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        256,
-        -1440
+        -4016,
+        -1072
       ],
       "typeVersion": 1,
-      "id": "71c21005-6b59-4377-9529-b44d5b36b5c1",
+      "id": "d5606e28-4928-4d28-bf59-935e3864921b",
       "name": "Sticky Note"
     },
     {
@@ -1639,10 +1657,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        64,
-        -1408
+        -4208,
+        -1040
       ],
-      "id": "273d7681-2b26-4d73-a8a2-a5f5ef2d1911",
+      "id": "5f486397-964a-4181-9d4b-462343ce35ae",
       "name": "ingest msg1"
     },
     {
@@ -1673,10 +1691,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -80,
-        -1360
+        -4352,
+        -992
       ],
-      "id": "c2fa8532-0225-4b55-8864-e7ea6d3b2f4e",
+      "id": "90210f71-80d9-4c2a-acf2-a6755cbb4e77",
       "name": "fromMe"
     },
     {
@@ -1757,10 +1775,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        64,
-        -1264
+        -4208,
+        -896
       ],
-      "id": "8a699f8d-0840-4ebb-9a47-fe908633e876",
+      "id": "6c14d06d-9022-408c-95ff-90385dd01055",
       "name": "save-respond"
     },
     {
@@ -1841,10 +1859,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -496,
-        -1328
+        -4768,
+        -960
       ],
-      "id": "fb913a23-5170-4cb5-a4fc-8351b3074a10",
+      "id": "612630a6-5f69-41c4-bfa4-729fa42fd6ae",
       "name": "ingest msg2"
     },
     {
@@ -1913,10 +1931,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1072,
-        -1520
+        -5472,
+        -1152
       ],
-      "id": "9bc72672-1c49-4b41-9eee-3105c9bbeb66",
+      "id": "da332fb2-355f-4a05-8c38-05503d67004d",
       "name": "save-respond2"
     },
     {
@@ -1928,11 +1946,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -832,
-        -1744
+        -5104,
+        -1376
       ],
       "typeVersion": 1,
-      "id": "ef2b9915-c8cc-468d-99ad-f11ff8c357af",
+      "id": "94daef51-aa90-4a98-9a93-a8c451653925",
       "name": "Sticky Note2"
     },
     {
@@ -1943,11 +1961,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -320,
-        -1536
+        -4592,
+        -1168
       ],
       "typeVersion": 1,
-      "id": "d0371ffd-e7f4-4982-8ad3-65786aa4e63b",
+      "id": "61d68c7f-364c-4d64-be80-b5db8d5c119e",
       "name": "Sticky Note3"
     },
     {
@@ -2000,12 +2018,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -800,
-        -1664
+        -5072,
+        -1296
       ],
-      "id": "6e3ba9f3-9c3e-47e6-bbf5-4a7d73610a07",
-      "name": "Load",
-      "disabled": true
+      "id": "c8d6400f-1894-44b4-98ec-8e850ebba128",
+      "name": "Load"
     },
     {
       "parameters": {
@@ -2025,10 +2042,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1744,
-        -1856
+        -2528,
+        -1488
       ],
-      "id": "cfb32d81-1a45-4fec-a572-5ed07b04d86b",
+      "id": "0e15624d-7772-4241-bf00-ccd01cca5117",
       "name": "get cliente"
     },
     {
@@ -2053,10 +2070,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1744,
-        -1776
+        -2528,
+        -1408
       ],
-      "id": "58db7752-e54f-4e5b-ab2e-8c87b5a968bb",
+      "id": "2ccf205a-873c-433d-bc86-0e0367d6226e",
       "name": "post cliente"
     },
     {
@@ -2068,10 +2085,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1824,
-        -1856
+        -2448,
+        -1488
       ],
-      "id": "a99655de-3c44-4028-b50e-dfcf901cf2e2",
+      "id": "b902b1de-e72b-48ee-b3d1-7cec7d05b17c",
       "name": "get general precios"
     },
     {
@@ -2083,10 +2100,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1984,
-        -1776
+        -2288,
+        -1408
       ],
-      "id": "d08feaf4-a949-4e48-a948-8bec29396f13",
+      "id": "3f5b6e57-67e6-4091-9d4a-b4c2653834e9",
       "name": "get banco"
     },
     {
@@ -2099,10 +2116,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1824,
-        -1776
+        -2448,
+        -1408
       ],
-      "id": "9586eba4-3544-445e-aac4-fad4f8ab3b05",
+      "id": "612c55f3-1737-4450-bcbc-a9dade17256e",
       "name": "handoff"
     },
     {
@@ -2114,10 +2131,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1904,
-        -1856
+        -2368,
+        -1488
       ],
-      "id": "4567126e-d0f1-400c-a8ca-1ab6cd9fc7f1",
+      "id": "4af10fe2-e589-43fd-9f50-f7b318d0c80c",
       "name": "get precios de servicios"
     },
     {
@@ -2129,10 +2146,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1904,
-        -1776
+        -2368,
+        -1408
       ],
-      "id": "28827871-0988-47d2-915a-b44d46ac0692",
+      "id": "08e28388-79dd-4817-afdb-3f97fa31e070",
       "name": "get catalogo completo"
     },
     {
@@ -2142,10 +2159,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        512,
-        -1344
+        -3760,
+        -976
       ],
-      "id": "60dcab3c-7ec7-425b-9d6f-5f47e8fae368",
+      "id": "2aad9e5a-da22-4988-a8ae-09cd1f1e6224",
       "name": "payload"
     },
     {
@@ -2165,10 +2182,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -688,
-        -1664
+        -4960,
+        -1296
       ],
-      "id": "a4cb94f5-87a1-4c89-947e-f32514239ed4",
+      "id": "882cc6c9-ca67-4fc0-b148-25737ceb23c6",
       "name": "Payment content"
     },
     {
@@ -2180,10 +2197,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        2000,
-        -1456
+        -2272,
+        -1088
       ],
-      "id": "393b1b5d-37d0-4432-a787-b45f8d84a86c",
+      "id": "b14cb0d4-95e2-43ce-a2f4-c1029ba43ba9",
       "name": "get banco1"
     },
     {
@@ -2204,10 +2221,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1920,
-        -1456
+        -2352,
+        -1088
       ],
-      "id": "4a14549c-32e7-4005-a848-d55dcaf9e397",
+      "id": "776a7464-de08-44c2-92bc-fa37d535cdf5",
       "name": "get catalogo completo1"
     },
     {
@@ -2219,10 +2236,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1760,
-        -1376
+        -2512,
+        -1008
       ],
-      "id": "8608230e-e8d4-4a47-b4fe-cc43c5dfe86d",
+      "id": "7a82ff81-377d-4c24-adea-966fd07e0f37",
       "name": "get general precios1"
     },
     {
@@ -2243,10 +2260,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1840,
-        -1456
+        -2432,
+        -1088
       ],
-      "id": "9a581af0-7481-422f-a87b-609f5f4a653b",
+      "id": "048ee92a-c92c-42ce-8b3c-2b8f8d04a0ce",
       "name": "get cliente1"
     },
     {
@@ -2259,10 +2276,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1920,
-        -1376
+        -2352,
+        -1008
       ],
-      "id": "e78249ae-e326-431d-99e0-bf27b562a256",
+      "id": "c5df3817-8754-41c9-a657-8f0d1b24a25b",
       "name": "handoff1"
     },
     {
@@ -2274,10 +2291,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        2000,
-        -1376
+        -2272,
+        -1008
       ],
-      "id": "d9d07242-b633-4052-bc66-39838e42080b",
+      "id": "07b83fe4-c5ad-4080-a28c-89bc364ed9dc",
       "name": "get recargas del cliente"
     },
     {
@@ -2315,10 +2332,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1760,
-        -1456
+        -2512,
+        -1088
       ],
-      "id": "f7417dab-52d4-4bd2-9eee-421299caada7",
+      "id": "e71f7f75-d791-4f04-aefd-7b229306f418",
       "name": "crear pedido"
     },
     {
@@ -2339,10 +2356,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1760,
-        -1072
+        -2512,
+        -704
       ],
-      "id": "04d75ee0-eef2-450a-8a0f-2dccfbb07378",
+      "id": "c3f4bef4-15ec-429a-acaf-79a3cbaa2bd8",
       "name": "get usuarios activos de cliente"
     },
     {
@@ -2376,10 +2393,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1920,
-        -1072
+        -2352,
+        -704
       ],
-      "id": "84b506a1-949d-414b-aede-21e42bd351e5",
+      "id": "d43e2c0c-5a61-41ed-bed1-e6632e2279a3",
       "name": "crear soporte"
     },
     {
@@ -2392,10 +2409,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1840,
-        -1072
+        -2432,
+        -704
       ],
-      "id": "76863797-6b3e-4127-8456-f954093e62c2",
+      "id": "cff9b6db-f662-4dd5-a72e-4f63be7a3c25",
       "name": "handoff2"
     },
     {
@@ -2416,10 +2433,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1680,
-        -1072
+        -2592,
+        -704
       ],
-      "id": "c88091ad-c5df-49ff-9b9d-7b7c5b167e6e",
+      "id": "87922a1b-3654-4a90-bd99-0c8e02c6bd4f",
       "name": "get playbooks"
     },
     {
@@ -2429,10 +2446,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        1728,
-        -848
+        -2544,
+        -480
       ],
-      "id": "8203eec7-7996-4611-ae6c-17bea9693ed7",
+      "id": "428675c3-18eb-4e46-aef7-919f1371986a",
       "name": "DeepSeek5",
       "credentials": {
         "deepSeekApi": {
@@ -2446,16 +2463,16 @@
         "promptType": "define",
         "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\nCONVERSACIÓN: {{ JSON.stringify($json.context.conversacion) }}\n\nGuía el pago o confirma recepción. Devuelve JSON.\n",
         "options": {
-          "systemMessage": "Eres cobranzas de Streamify. Guías el pago y confirmas recepciones.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 2 líneas por mensaje.\n- Si preguntan cómo pagar: da métodos disponibles + banco concreto según lo que digan.\n- Si ya enviaron comprobante: confirma recepción y di que se valida en breve.\n- No valides tú el comprobante. El flujo verificador lo hace automáticamente.\n- Si hay confusión de monto o rechazo: escalar a handoff.\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu pago\", \"Permíteme verificar\", \"Gracias por tu comprobante\".\nFRASES CORRECTAS: \"Te paso los datos bancarios.\", \"Recibido, validamos en minutos.\", \"¿A qué banco hiciste la transferencia?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"cobranzas_pago\",\n  \"reply_text\": \"texto directo, máx 2 líneas\",\n  \"accion_tipo\": \"ninguna|consultar_metodos_pago|consultar_banco|confirmar_recepcion|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres cobranzas de Streamify. Guías el pago y confirmas recepciones.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 2 líneas por mensaje.\n- Si preguntan cómo pagar: da métodos disponibles + banco concreto según lo que digan.\n- No valides tú el comprobante. El flujo verificador lo hace automáticamente.\n- Si hay confusión de monto o rechazo: escalar a handoff.\n\nREGLA CRITICA DE PAGOS\n\nFUENTE DE VERDAD\n\nOrden obligatorio:\n\n1. saldo actual del cliente\n2. pagos acreditados\n3. estado financiero actual\n4. historial de conversacion\n\nSi existe contradiccion entre historial y saldo:\n\nSIEMPRE confiar en el saldo actual.\n\nCOMPROBANTES\n\nCuando el cliente envia una imagen de pago:\n\n1. Revisar saldo actual.\n2. Revisar pagos acreditados.\n3. Revisar renovaciones acreditadas.\n4. Revisar estado financiero.\n\nSI EL SALDO YA AUMENTO\n\nO existe acreditacion.\n\nO existe renovacion acreditada.\n\nEntonces:\n\n- considerar pago aprobado\n- no pedir comprobante nuevamente\n- no pedir pago nuevamente\n- no pedir transferencia nuevamente\n- no pedir captura nuevamente\n- continuar activacion\n- continuar renovacion\n\nSI EL PAGO SIGUE PENDIENTE\n\n- confirmar recepcion\n- informar validacion en proceso\n\nEjemplo: \"Recibido, validamos en breve.\"\n\nSI EL PAGO FUE RECHAZADO\n\n- informar rechazo\n- solicitar nuevo comprobante\n- escalar si corresponde\n\nREGLA ABSOLUTA\n\nSi el historial dice \"PAGO PENDIENTE\" pero el saldo ya aumento:\n\nIGNORAR EL HISTORIAL.\n\nEl saldo tiene prioridad absoluta.\n\nPROHIBIDO\n\n- cobrar nuevamente\n- solicitar otro comprobante\n- ignorar saldo acreditado\n- ignorar renovaciones acreditadas\n\nFRASES PROHIBIDAS: \"Con gusto proceso tu pago\", \"Permíteme verificar\", \"Gracias por tu comprobante\".\nFRASES CORRECTAS: \"Te paso los datos bancarios.\", \"Recibido, validamos en minutos.\", \"¿A qué banco hiciste la transferencia?\"\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"cobranzas_pago\",\n  \"reply_text\": \"texto directo, máx 2 líneas\",\n  \"accion_tipo\": \"ninguna|consultar_metodos_pago|consultar_banco|confirmar_recepcion|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1728,
-        -960
+        -2544,
+        -592
       ],
-      "id": "571445d7-4018-4fe8-ace1-908849220828",
+      "id": "9e8be050-df55-4662-b9c2-3c1115024a53",
       "name": "Cobranzas"
     },
     {
@@ -2467,10 +2484,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1968,
-        -832
+        -2304,
+        -464
       ],
-      "id": "01693fd5-38d1-44cf-9d9d-9ae1689e62d0",
+      "id": "3f9302d3-83d5-4db9-98fb-191abdade77b",
       "name": "get banco2"
     },
     {
@@ -2482,10 +2499,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1888,
-        -832
+        -2384,
+        -464
       ],
-      "id": "e1b371f1-3e0e-4ed6-8fa6-84b5d8a27368",
+      "id": "b61fffc9-e5e3-4c92-893f-99ad872ccf7c",
       "name": "get recargas del cliente1"
     },
     {
@@ -2497,10 +2514,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1808,
-        -832
+        -2464,
+        -464
       ],
-      "id": "35d6cd4b-f0f8-45a5-a351-0c3cb16950c8",
+      "id": "656be793-3a71-47aa-9e13-3098d7b09fe0",
       "name": "get metodos-pago2"
     },
     {
@@ -2508,16 +2525,16 @@
         "promptType": "define",
         "text": "={{ $json.context.historial_reciente?.length > 0 ? '⚠️ CONVERSACIÓN EN CURSO — NO SALUDES, ve directo al punto.' : '✅ Primera interacción.' }}\n\nMENSAJE: {{ $json.context.mensaje_agrupado }}\nHISTORIAL: {{ JSON.stringify($json.context.historial_reciente) }}\nCONTACTO: {{ JSON.stringify($json.context.contacto) }}\n\nAtiende el seguimiento post-compra. Si detectas soporte o pago, rerutea. Devuelve JSON.",
         "options": {
-          "systemMessage": "Eres el agente de postventa de Streamify. Atiendes a clientes que compraron hace poco.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas.\n- Consulta contexto postventa por teléfono al inicio.\n- Si la duda es técnica real (no entra, error) → rerutear a soporte.\n- Si menciona pago o comprobante → derivar al flujo de pagos.\n- Si pide humano o está molesto → handoff inmediato.\n- Si es seguimiento normal (cuándo llega, cómo usar) → responde directo.\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"postventa_reciente\",\n  \"reply_text\": \"texto directo, máx 2 líneas\",\n  \"accion_tipo\": \"ninguna|consultar_contexto_postventa|enviar_indicaciones_generales|rerutear_soporte|derivar_pago|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta."
+          "systemMessage": "REGLA GLOBAL\n\nAntes de solicitar cualquier dato:\n\n1. revisar contexto\n2. revisar historial\n3. revisar memorias\n4. revisar datos existentes\n\nNunca solicitar información ya disponible.\n\nSi existe saldo acreditado:\n\nNO volver a cobrar.\n\nSi existe pago aprobado:\n\nNO volver a pedir comprobante.\n\nSi existe renovacion aprobada:\n\nCONTINUAR el flujo normal.\n\nEres el agente de postventa de Streamify. Atiendes a clientes que compraron hace poco.\n\nCOMPORTAMIENTO:\n- Solo saluda si historial_reciente está vacío.\n- Máximo 3-5 líneas.\n- Consulta contexto postventa por teléfono al inicio.\n- Si la duda es técnica real (no entra, error) → rerutear a soporte.\n- Si menciona pago o comprobante → derivar al flujo de pagos.\n- Si pide humano o está molesto → handoff inmediato.\n- Si es seguimiento normal (cuándo llega, cómo usar) → responde directo.\n\nDevuelve JSON:\n{\n  \"subagente_codigo\": \"postventa_reciente\",\n  \"reply_text\": \"texto directo, máx 2 líneas\",\n  \"accion_tipo\": \"ninguna|consultar_contexto_postventa|enviar_indicaciones_generales|rerutear_soporte|derivar_pago|handoff\",\n  \"accion_requerida\": false,\n  \"accion_payload\": null,\n  \"escalar_humano\": false,\n  \"confianza\": 0.9\n}\n🔴 FORMATO OBLIGATORIO: Tu respuesta debe ser ÚNICAMENTE el bloque JSON especificado. Sin texto antes ni después. Sin explicaciones. Si incluyes texto fuera del JSON, el sistema fallará y el cliente no recibirá respuesta.\n\nFORMATO WHATSAPP:\n- *negrita* para datos clave (precio, servicio, número de ticket)\n- Listas con - para 2+ opciones o pasos\n- Emojis con propósito: ✅ confirmado, ❌ error, 💳 pago, 📋 ticket — máx 1-2 por mensaje\n- Tono: directo y cálido, como asesor real — nunca robótico\n\nBREVEDAD: reply_text máx 3 líneas. Sin introducción, sin relleno, sin resumen final."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1728,
-        -736
+        -2544,
+        -368
       ],
-      "id": "4b7b4ca2-f37e-4276-98ef-0dbf48a6fd2e",
+      "id": "13f94d76-4e7b-43c0-a75d-73c21afcbf46",
       "name": "Postventa"
     },
     {
@@ -2527,10 +2544,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        1728,
-        -624
+        -2544,
+        -256
       ],
-      "id": "4ce97264-e879-418e-ac84-96524c7184b3",
+      "id": "8d63db03-93f9-436e-922f-770da3189aba",
       "name": "DeepSeek6",
       "credentials": {
         "deepSeekApi": {
@@ -2557,10 +2574,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1808,
-        -608
+        -2464,
+        -240
       ],
-      "id": "4d206611-9478-4112-9b21-23dcc6541c39",
+      "id": "7326f1dd-e34c-45bf-be99-b217ee78ffc8",
       "name": "get contexto postventa"
     },
     {
@@ -2573,10 +2590,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1888,
-        -608
+        -2384,
+        -240
       ],
-      "id": "bce00c58-f434-4081-b3b7-cdfc1ef135ee",
+      "id": "e2f77f07-b3be-4f0f-941b-9ca4185759bf",
       "name": "handoff3"
     },
     {
@@ -2597,10 +2614,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1968,
-        -608
+        -2304,
+        -240
       ],
-      "id": "fe5cc25e-a038-4dc5-9e3b-0c906522f54e",
+      "id": "311c3f84-f79c-4f6d-ba04-dcc010fa0027",
       "name": "get memoria"
     },
     {
@@ -2632,10 +2649,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        288,
-        -1344
+        -3984,
+        -976
       ],
-      "id": "2399e92d-90c3-47e9-955e-4bfd552fc632",
+      "id": "ba5b7e80-8c6a-4a3d-a2aa-a4631a94d6b3",
       "name": "Merge"
     },
     {
@@ -2705,10 +2722,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1696,
-        -1776
+        -5968,
+        -1408
       ],
-      "id": "41139d0e-6f7b-4743-8fc3-917d91556497",
+      "id": "60759982-4144-4deb-934a-d8360b168d90",
       "name": "If7"
     },
     {
@@ -2724,10 +2741,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        1680,
-        -1376
+        -2592,
+        -1008
       ],
-      "id": "a5396812-145f-4e63-ad99-07d56f7b957d",
+      "id": "6b5200c3-2fb0-4df0-9bb7-e3601c2efa1f",
       "name": "renovar venta"
     },
     {
@@ -2797,10 +2814,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1696,
-        -1632
+        -5968,
+        -1264
       ],
-      "id": "2d53eb76-a47e-4f21-8455-871daf0fd579",
+      "id": "014cb8d7-2f7b-4c92-a731-5f67abca1833",
       "name": "If10"
     },
     {
@@ -2834,10 +2851,10 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        2000,
-        -1072
+        -2272,
+        -704
       ],
-      "id": "2a7052e4-e10f-44fc-baaa-4b477c3c7be7",
+      "id": "d8eb6bd4-fa6d-4481-b746-0d1525c6251c",
       "name": "cambiar servicio a cliente"
     },
     {
@@ -2892,7 +2909,7 @@
             {
               "id": "2fc59986-421d-4735-a65e-12c53dc1deb4",
               "leftValue": "={{ $('Normalizar').item.json.contact.tipo }}",
-              "rightValue": "clientess",
+              "rightValue": "cliente",
               "operator": {
                 "type": "string",
                 "operation": "equals",
@@ -2907,10 +2924,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -256,
-        -1120
+        -4528,
+        -752
       ],
-      "id": "00e7cb4d-b6a7-4d67-9fff-3599ffb5b51f",
+      "id": "a172b1da-a9ca-4f2e-8033-ae95c9bafe32",
       "name": "If6"
     },
     {
@@ -2991,10 +3008,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -560,
-        -1040
+        -4832,
+        -672
       ],
-      "id": "b13a76be-b08d-493a-bdac-e522682f0f48",
+      "id": "0e42b6fa-b988-4e0a-84df-69273fb1bf0f",
       "name": "ingest msg"
     },
     {
@@ -3025,10 +3042,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -768,
-        -1152
+        -5040,
+        -784
       ],
-      "id": "f44ef8e6-0c55-4150-9442-7f40b16a2e02",
+      "id": "2c67de28-9627-4bd7-8b42-ed8d6e2d327a",
       "name": "fromMe1"
     },
     {
@@ -3097,10 +3114,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -560,
-        -1168
+        -4832,
+        -800
       ],
-      "id": "8c84bcd7-90fb-4577-92fd-cb0a7d263569",
+      "id": "1ac60fc2-279f-4d05-b9fd-7022fadc3c9c",
       "name": "save-respond1"
     },
     {
@@ -3120,10 +3137,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -880,
-        -1152
+        -5152,
+        -784
       ],
-      "id": "3d58379a-3966-443e-bd52-b6443c3dd36a",
+      "id": "db7135e9-6a5f-405f-98c5-b498ea442476",
       "name": "merge A"
     },
     {
@@ -3133,10 +3150,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -256,
-        -1424
+        -4528,
+        -1056
       ],
-      "id": "96d64418-5ad3-404a-8830-cf0e893f4c1c",
+      "id": "1579e61b-82a2-4762-9443-d4741f21b32e",
       "name": "Audio content"
     },
     {
@@ -3146,10 +3163,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -256,
-        -1280
+        -4528,
+        -912
       ],
-      "id": "6a6e97d5-3430-4a6a-bb20-6d099467ad23",
+      "id": "17b177c0-260b-4429-8d00-91ed69463119",
       "name": "Image content"
     },
     {
@@ -3161,11 +3178,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        1584,
-        -2080
+        -2688,
+        -1712
       ],
       "typeVersion": 1,
-      "id": "d91c8125-a3c0-4c7a-9105-2fb5238a2de0",
+      "id": "1850c5c5-8b31-45ff-86d6-218b750d31b3",
       "name": "Sticky Note1"
     },
     {
@@ -3177,11 +3194,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -2400,
-        -1840
+        -6672,
+        -1472
       ],
       "typeVersion": 1,
-      "id": "f7ac3e2d-a7d6-470c-8736-88e1e8b4de22",
+      "id": "0b77d5ed-7ea1-4054-8ff4-80783f7953f7",
       "name": "Sticky Note8"
     },
     {
@@ -3212,10 +3229,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1504,
-        -1472
+        -5776,
+        -1104
       ],
-      "id": "dc44a617-58ee-4ea8-b401-b0d0e00ac220",
+      "id": "82782f13-47d8-4ebf-bdf0-3471dc6a30a4",
       "name": "fromMe2"
     },
     {
@@ -3296,79 +3313,40 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1232,
-        -1440
+        -5472,
+        -1040
       ],
-      "id": "5242c0f2-daa4-481a-a727-e35691d01ce6",
+      "id": "25cb063e-9519-45a8-9e38-1727420b7a81",
       "name": "ingest msg3"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -2304,
-        -1104
-      ],
-      "id": "abe764ae-688d-4e17-a33c-8281d39f848c",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
-        "sendHeaders": true,
-        "specifyHeaders": "json",
-        "jsonHeaders": "{\n  \"x-api-key\": \"\",\n  \"anthropic-version\": \"2023-06-01\",\n  \"content-type\": \"application/json\"\n}",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\n  \"model\": \"claude-sonnet-4-6\",\n  \"max_tokens\": 100,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Hola\"\n    }\n  ]\n}",
+        "toolDescription": "Consultar saldo actual, pagos acreditados y estado financiero del cliente antes de responder sobre pagos.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `https://streamify.aaronsoft.es/public/api/v2/chat/assistant/cliente/{idcli}/estado-financiero`, 'string') }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest",
+      "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.4,
       "position": [
-        -2064,
-        -1136
+        -2224,
+        -464
       ],
-      "id": "123dca20-cc82-4734-bdbd-7d29476dacf7",
-      "name": "HTTP Request"
+      "id": "104fa3f6-eacb-4364-9c75-0c4b92083832",
+      "name": "consultar_saldo_cliente"
     },
     {
       "parameters": {
-        "url": "https://api.anthropic.com/v1/models",
-        "sendHeaders": true,
-        "specifyHeaders": "json",
-        "jsonHeaders": "{\n  \"x-api-key\": \"\",\n  \"anthropic-version\": \"2023-06-01\"\n}",
-        "options": {}
+        "amount": 15
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
       "position": [
-        -2064,
-        -976
+        -4832,
+        -1296
       ],
-      "id": "8e195e2b-434c-4e9d-a712-9f73ef8b4d5a",
-      "name": "HTTP Request1"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
-      "typeVersion": 1,
-      "position": [
-        1808,
-        -1936
-      ],
-      "id": "990d21ab-6429-471b-9fe4-91790f45381d",
-      "name": "DeepSeek Chat Model",
-      "credentials": {
-        "deepSeekApi": {
-          "id": "miOzEyelkvZ6G51F",
-          "name": "DeepSeek account 2"
-        }
-      }
+      "id": "418c63f8-17a4-459d-888d-a6fce79302b3",
+      "name": "Wait6",
+      "webhookId": "5765e023-98be-45e4-a493-d12ae16bf3f3"
     }
   ],
   "connections": {
@@ -3885,6 +3863,17 @@
         ]
       ]
     },
+    "DeepSeek2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Asistente no registrado",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "DeepSeek3": {
       "ai_languageModel": [
         [
@@ -3929,11 +3918,6 @@
         ]
       ]
     },
-    "Soporte cliente": {
-      "main": [
-        []
-      ]
-    },
     "get metodos-pago1": {
       "ai_tool": [
         [
@@ -3958,7 +3942,13 @@
     },
     "ingest msg1": {
       "main": [
-        []
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "fromMe": {
@@ -3977,11 +3967,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "save-respond": {
-      "main": [
-        []
       ]
     },
     "Load": {
@@ -4087,7 +4072,7 @@
       "main": [
         [
           {
-            "node": "Image content",
+            "node": "Wait6",
             "type": "main",
             "index": 0
           }
@@ -4471,23 +4456,23 @@
         ]
       ]
     },
-    "When clicking ‘Execute workflow’": {
-      "main": [
+    "consultar_saldo_cliente": {
+      "ai_tool": [
         [
           {
-            "node": "HTTP Request1",
-            "type": "main",
+            "node": "Cobranzas",
+            "type": "ai_tool",
             "index": 0
           }
         ]
       ]
     },
-    "DeepSeek Chat Model": {
-      "ai_languageModel": [
+    "Wait6": {
+      "main": [
         [
           {
-            "node": "Asistente no registrado",
-            "type": "ai_languageModel",
+            "node": "Image content",
+            "type": "main",
             "index": 0
           }
         ]
@@ -4550,7 +4535,7 @@
         "headers": {
           "host": "autobot.aaronsoft.es",
           "user-agent": "axios/1.13.2",
-          "content-length": "1031",
+          "content-length": "1826",
           "accept": "application/json, text/plain, */*",
           "accept-encoding": "gzip, compress, deflate, br",
           "content-type": "application/json",
@@ -4568,63 +4553,128 @@
           "instance": "bot-pagos",
           "data": {
             "key": {
-              "remoteJid": "573105948236@s.whatsapp.net",
-              "remoteJidAlt": "573105948236@s.whatsapp.net",
+              "remoteJid": "593961778319@s.whatsapp.net",
+              "remoteJidAlt": "593961778319@s.whatsapp.net",
               "fromMe": false,
-              "id": "3EB007D89F1F4A47E1855C",
+              "id": "3EB0ED2DDE9E535896297F",
               "participant": "",
               "addressingMode": "lid"
             },
-            "pushName": "BOT STREAMSOFT PERÚ 🇵🇪",
+            "pushName": "Pablin",
             "status": "DELIVERY_ACK",
             "message": {
               "messageContextInfo": {
                 "threadId": [],
+                "deviceListMetadata": {
+                  "senderKeyIndexes": [],
+                  "recipientKeyIndexes": [],
+                  "senderKeyHash": {
+                    "0": 197,
+                    "1": 65,
+                    "2": 238,
+                    "3": 234,
+                    "4": 208,
+                    "5": 5,
+                    "6": 56,
+                    "7": 72,
+                    "8": 177,
+                    "9": 29
+                  },
+                  "senderTimestamp": {
+                    "low": 1780343204,
+                    "high": 0,
+                    "unsigned": true
+                  },
+                  "senderAccountType": 0,
+                  "receiverAccountType": 0,
+                  "recipientKeyHash": {
+                    "0": 70,
+                    "1": 245,
+                    "2": 150,
+                    "3": 214,
+                    "4": 140,
+                    "5": 254,
+                    "6": 226,
+                    "7": 14,
+                    "8": 105,
+                    "9": 153
+                  },
+                  "recipientTimestamp": {
+                    "low": 1780451636,
+                    "high": 0,
+                    "unsigned": true
+                  }
+                },
+                "deviceListMetadataVersion": 2,
                 "messageSecret": {
-                  "0": 208,
-                  "1": 75,
-                  "2": 175,
-                  "3": 238,
-                  "4": 39,
-                  "5": 168,
-                  "6": 22,
-                  "7": 6,
-                  "8": 124,
-                  "9": 117,
-                  "10": 104,
-                  "11": 248,
-                  "12": 26,
-                  "13": 113,
-                  "14": 166,
-                  "15": 52,
-                  "16": 128,
-                  "17": 207,
-                  "18": 205,
-                  "19": 181,
-                  "20": 72,
-                  "21": 68,
-                  "22": 38,
-                  "23": 149,
-                  "24": 134,
-                  "25": 34,
-                  "26": 11,
-                  "27": 253,
-                  "28": 130,
-                  "29": 53,
-                  "30": 180,
-                  "31": 205
+                  "0": 229,
+                  "1": 58,
+                  "2": 114,
+                  "3": 222,
+                  "4": 49,
+                  "5": 46,
+                  "6": 130,
+                  "7": 121,
+                  "8": 244,
+                  "9": 146,
+                  "10": 52,
+                  "11": 167,
+                  "12": 213,
+                  "13": 47,
+                  "14": 126,
+                  "15": 248,
+                  "16": 161,
+                  "17": 30,
+                  "18": 191,
+                  "19": 132,
+                  "20": 50,
+                  "21": 124,
+                  "22": 137,
+                  "23": 90,
+                  "24": 248,
+                  "25": 92,
+                  "26": 31,
+                  "27": 221,
+                  "28": 190,
+                  "29": 161,
+                  "30": 203,
+                  "31": 84
+                },
+                "limitSharingV2": {
+                  "sharingLimited": false,
+                  "trigger": 0,
+                  "limitSharingSettingTimestamp": {
+                    "low": 0,
+                    "high": 0,
+                    "unsigned": false
+                  },
+                  "initiatedByMe": false
                 }
               },
-              "conversation": "Ok, buscando correo..."
+              "conversation": "Hola, quiero más información!"
             },
-            "contextInfo": null,
+            "contextInfo": {
+              "mentionedJid": [],
+              "groupMentions": [],
+              "statusAttributions": [],
+              "ephemeralSettingTimestamp": {
+                "low": 1780172307,
+                "high": 0,
+                "unsigned": false
+              },
+              "disappearingMode": {
+                "initiator": 0,
+                "trigger": 1,
+                "initiatedByMe": false
+              }
+            },
             "messageType": "conversation",
-            "messageTimestamp": 1780522844,
+            "messageTimestamp": 1780592285,
             "instanceId": "bf50604e-6927-4f89-80f8-a4a7dd5ce4cc",
             "source": "web"
           },
           "destination": "https://autobot.aaronsoft.es/webhook/asistente-pablin",
-          "date_time": "2026-06-03T21:40:44.845Z",
+          "date_time": "2026-06-04T16:58:06.118Z",
           "sender": "593961412826@s.whatsapp.net",
           "server_url": "https://evoapi.abigailsoft.com",
           "apikey": null
