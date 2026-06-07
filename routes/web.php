@@ -402,6 +402,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(SoporteController::class)->group(function () {
         Route::get('/soportes', 'index')->name('soportes.index');
         Route::post('/soportes/{id}/atender', 'atender')->name('soportes.atender');
+        Route::post('/soportes/{id}/whatsapp', 'enviarWhatsapp')->name('soportes.whatsapp');
     });
 
     Route::prefix('gestion-productos')->group(function () {

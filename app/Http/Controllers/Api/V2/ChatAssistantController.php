@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V2;
 use Carbon\Carbon;
 use App\Notifications\ComprasRealizadas;
 use App\Notifications\NuevoSoporteCliente;
+use App\Notifications\PedidosPendientes;
 use App\Http\Controllers\Controller;
 use App\Models\Banco;
 use App\Models\Cuenta;
@@ -1414,6 +1415,20 @@ class ChatAssistantController extends Controller
 
             DB::commit();
 
+            try {
+                $ventaNueva->loadMissing('cliente');
+                $empleados = Empleado::all();
+                if ($empleados->isNotEmpty()) {
+                    Notification::send($empleados, new ComprasRealizadas($ventaNueva));
+                    event('notificacionRecibida');
+                }
+            } catch (\Throwable $notifyError) {
+                Log::warning('No se pudo notificar renovacion por chat assistant', [
+                    'idven' => $ventaNueva->idven ?? null,
+                    'error' => $notifyError->getMessage(),
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Venta renovada correctamente.',
@@ -1505,6 +1520,22 @@ class ChatAssistantController extends Controller
             'fechapedido' => now(),
             'respuesta' => json_encode($payloadRespuesta, JSON_UNESCAPED_UNICODE),
         ]);
+
+        $pedido->setRelation('cliente', $cliente);
+        $pedido->setRelation('producto', $producto);
+
+        try {
+            $empleados = Empleado::all();
+            if ($empleados->isNotEmpty()) {
+                Notification::send($empleados, new PedidosPendientes($pedido));
+                event('notificacionRecibida');
+            }
+        } catch (\Throwable $notifyError) {
+            Log::warning('No se pudo notificar pedido por chat assistant', [
+                'pedido_id' => $pedido->id ?? null,
+                'error' => $notifyError->getMessage(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,

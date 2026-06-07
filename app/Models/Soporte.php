@@ -32,6 +32,11 @@ class Soporte extends Model
         'descripcion',
         'solucion',
         'estado',
+        'whatsapp_enviado_at',
+    ];
+
+    protected $casts = [
+        'whatsapp_enviado_at' => 'datetime',
     ];
 
     public function cliente()

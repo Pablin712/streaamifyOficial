@@ -90,6 +90,7 @@
                                 <th data-type="actions">Descripción</th>
                                 <th data-type="actions">Solución</th>
                                 <th class="sortable" data-type="string" data-col="8">Estado</th>
+                                <th data-type="actions">WhatsApp</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,6 +169,30 @@
                                             <span class="badge bg-success">Atendido</span>
                                         @endif
                                     </td>
+                                    <td>
+                                        @if ($soporte->estado === 'atendido')
+                                            @if ($soporte->whatsapp_enviado_at)
+                                                <div class="d-flex flex-column gap-1">
+                                                    <span class="badge bg-success">
+                                                        <i class="fab fa-whatsapp me-1"></i>Enviado
+                                                    </span>
+                                                    <span class="text-muted" style="font-size:0.7rem;">
+                                                        {{ $soporte->whatsapp_enviado_at->diffForHumans() }}
+                                                    </span>
+                                                </div>
+                                            @else
+                                                @can('soportes.update')
+                                                    <button type="button"
+                                                        class="btn btn-outline-success btn-sm"
+                                                        onclick="enviarWhatsappSoporte({{ $soporte->idsop }}, this)">
+                                                        <i class="fab fa-whatsapp me-1"></i>Enviar
+                                                    </button>
+                                                @endcan
+                                            @endif
+                                        @else
+                                            <span class="text-muted small">—</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -224,10 +249,23 @@
                     <label class="form-label fw-semibold">Cuenta</label>
                     <input type="text" id="attend-support-account" class="form-control" readonly>
                 </div>
-                <div class="mb-0">
+                <div class="mb-3">
                     <label for="attend-support-solution" class="form-label fw-semibold">Solución</label>
                     <textarea id="attend-support-solution" class="form-control" rows="5" required
                         placeholder="Describe la solución aplicada."></textarea>
+                </div>
+                <div class="mb-0">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                            id="attend-support-whatsapp" checked>
+                        <label class="form-check-label" for="attend-support-whatsapp">
+                            <i class="fab fa-whatsapp text-success me-1"></i>
+                            Enviar solución por WhatsApp al cliente
+                        </label>
+                    </div>
+                    <div class="text-muted small mt-1" style="padding-left:2.5rem;">
+                        Se enviará por el último canal de WhatsApp que usó el cliente.
+                    </div>
                 </div>
                 <input type="hidden" id="attend-support-id" value="">
             </div>
@@ -280,7 +318,12 @@
 
             const idsop = document.getElementById('attend-support-id').value;
             const solucion = document.getElementById('attend-support-solution').value.trim();
+            const enviarWhatsapp = document.getElementById('attend-support-whatsapp').checked;
             const url = "{{ route('soportes.atender', ':id') }}".replace(':id', idsop);
+
+            const submitBtn = event.target.querySelector('[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
 
             fetch(url, {
                 method: 'POST',
@@ -290,7 +333,7 @@
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ solucion })
+                body: JSON.stringify({ solucion, enviar_whatsapp: enviarWhatsapp })
             })
                 .then(async response => {
                     const data = await response.json();
@@ -301,11 +344,55 @@
                 })
                 .then(data => {
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'atender-soporte' }));
-                    showAlert(data.message || 'Soporte atendido correctamente.', 'success');
+                    let msg = data.message || 'Soporte atendido correctamente.';
+                    if (enviarWhatsapp && !data.whatsapp_enviado && data.whatsapp_error) {
+                        msg += ' (WhatsApp: ' + data.whatsapp_error + ')';
+                        showAlert(msg, 'warning');
+                    } else {
+                        showAlert(msg, 'success');
+                    }
+                    setTimeout(() => window.location.reload(), 900);
+                })
+                .catch(error => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Guardar solución';
+                    showAlert(error.message || 'No se pudo atender el soporte.', 'danger');
+                });
+        }
+
+        function enviarWhatsappSoporte(idsop, btn) {
+            if (!confirm('¿Enviar la solución por WhatsApp al cliente?')) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            const url = "{{ route('soportes.whatsapp', ':id') }}".replace(':id', idsop);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'No se pudo enviar el mensaje.');
+                    }
+                    return data;
+                })
+                .then(() => {
+                    showAlert('Mensaje de solución enviado por WhatsApp.', 'success');
                     setTimeout(() => window.location.reload(), 700);
                 })
                 .catch(error => {
-                    showAlert(error.message || 'No se pudo atender el soporte.', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fab fa-whatsapp me-1"></i>Enviar';
+                    showAlert(error.message || 'No se pudo enviar el mensaje.', 'danger');
                 });
         }
 
