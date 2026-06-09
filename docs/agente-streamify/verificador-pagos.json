@@ -1,0 +1,350 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "94d871f4-6485-4118-93ec-471171de71c7",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -4080,
+        1024
+      ],
+      "id": "75cf0370-dd8a-46e1-a030-fc0e4ad5ccff",
+      "name": "Verificador",
+      "webhookId": "94d871f4-6485-4118-93ec-471171de71c7"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "994265117094990",
+        "recipientPhoneNumber": "=593961412826",
+        "textBody": "=*{{ $json.message }}*\n{{ $json.notification_text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        -3408,
+        1024
+      ],
+      "id": "19cf2a12-d72c-4a1f-9a22-2f768405942f",
+      "name": "Exitoso",
+      "webhookId": "a2e51a5d-ae98-473e-a60a-9ca0a36c0a7f",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "s09eY6SaZQniDR8T",
+          "name": "Send n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "text": "Analiza este comprobante o conjunto de comprobantes de pago visibles en una sola imagen.\n\n1. Detecta si hay uno o varios comprobantes.\n2. Extrae cada comprobante por separado si existen multiples.\n3. Para cada comprobante extrae:\n- numero de comprobante\n- monto\n- banco\n- fecha\n- titular: beneficiario / receptor / persona o empresa que RECIBE el dinero\n- emisor: ordenante / origen / persona que ENVÍA el dinero\n\nReglas importantes para titular y emisor:\n\n- No confundas titular con emisor.\n- \"titular\" siempre es quien recibe el dinero.\n- \"emisor\" siempre es quien envía el dinero.\n- No incluyas palabras como \"De\", \"A\", \"Para\", \"Origen\", \"Destino\", \"Beneficiario\", \"Ordenante\".\n- Si aparece \"De Pablo Perez\", el emisor debe ser \"Pablo Perez\", sin la palabra \"De\".\n\nRegla especial Banco Guayaquil:\n- En comprobantes de Banco Guayaquil con dos personas y línea vertical, puede aparecer primero la cuenta origen y luego la cuenta destino.\n- La persona asociada a la cuenta destino / receptor debe ir en \"titular\".\n- La persona asociada a la cuenta origen / debitada debe ir en \"emisor\".\n- Si no estás seguro, extrae ambos nombres claramente, pero no inventes.\n\n4. Devuelve tambien un resumen general:\n- total_comprobantes\n- monto_total_detectado\n- banco_principal\n- fechas_detectadas\n\n5. Evalua calidad y antifraude:\n- legible\n- borroso\n- editado\n- realista\n- confianza\n\nReglas:\n- no inventes datos\n- si algo no se ve devuelve null\n- si hay multiples comprobantes suma sus montos en monto_total_detectado\n- devuelve SOLO JSON valido\n\nFormato de salida:\n{\n  \"total_comprobantes\": 1,\n  \"monto_total_detectado\": number|null,\n  \"banco_principal\": \"string|null\",\n  \"fechas_detectadas\": [\"YYYY-MM-DD\"],\n  \"comprobantes\": [\n    {\n      \"comprobante\": \"string|null\",\n      \"monto\": number|null,\n      \"banco\": \"string|null\",\n      \"fecha\": \"YYYY-MM-DD|null\",\n      \"titular\": \"string|null\",\n      \"emisor\": \"string|null\"\n    }\n  ],\n  \"legible\": true/false,\n  \"borroso\": true/false,\n  \"editado\": true/false,\n  \"realista\": true/false,\n  \"confianza\": 0-100\n}",
+        "imageUrls": "=https://streamify.aaronsoft.es/public/api/v2/payments/n8n/recargas/{{ $json.body.idrec }}/comprobante",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -3952,
+        1024
+      ],
+      "id": "f55a68a7-cc8d-434e-9387-5a01eae0fe28",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBPlamBZ6NHPVTxU",
+          "name": "OpenAi Pablin"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================\n// 🔹 1. OBTENER RESPUESTA OPENAI\n// ==========================\nlet raw = $input.first().json['0'].content[0].text;\n\nraw = raw\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// ==========================\n// 🔹 2. PARSEAR JSON\n// ==========================\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = {};\n}\n\n// ==========================\n// 🔹 3. FUNCIONES UTILES\n// ==========================\nconst normalize = (str) =>\n  str?.toLowerCase()\n     ?.normalize(\"NFD\")\n     .replace(/[\\u0300-\\u036f]/g, \"\")\n     .trim() || null;\n\nconst unique = (arr) => [...new Set(arr)];\nconst toNumber = (value) => {\n  const n = Number(value);\n  return Number.isFinite(n) ? n : null;\n};\n\nconst cleanReceiptNumber = (value) =>\n  value ? String(value).replace(/\\s/g, '') : null;\n\nconst splitWords = (str) =>\n  normalize(str)?.split(/\\s+/).filter(Boolean) || [];\nconst cleanPersonName = (value) => {\n  let s = normalize(value);\n  if (!s) return null;\n\n  s = s\n    .replace(/^(de|del|desde|emisor|remitente|ordenante|origen)\\s+/i, \"\")\n    .replace(/^(a|para|beneficiario|titular|destinatario|destino|receptor)\\s+/i, \"\")\n    .replace(/\\s+/g, \" \")\n    .trim();\n\n  return s || null;\n};\n\nconst bestNameMatch = (candidates, expected) => {\n  const cleanExpected = normalize(expected);\n  const cleanCandidates = unique(candidates.map(cleanPersonName).filter(Boolean));\n\n  if (!cleanExpected || !cleanCandidates.length) {\n    return {\n      name: null,\n      ratio: 0,\n    };\n  }\n\n  let best = {\n    name: null,\n    ratio: 0,\n  };\n\n  for (const candidate of cleanCandidates) {\n    const ratio = Math.max(\n      wordMatchRatio(candidate, cleanExpected),\n      wordMatchRatio(cleanExpected, candidate)\n    );\n\n    if (ratio > best.ratio) {\n      best = {\n        name: candidate,\n        ratio,\n      };\n    }\n  }\n\n  return best;\n};\n\nconst safeArray = (value) => Array.isArray(value) ? value : [];\n\nconst toDateOnly = (value) => {\n  if (!value) return null;\n  const date = new Date(value);\n  if (Number.isNaN(date.getTime())) return null;\n  return new Date(date.getFullYear(), date.getMonth(), date.getDate());\n};\n\nconst isWeekend = (date) => {\n  if (!date) return false;\n  const day = date.getDay();\n  return day === 0 || day === 6;\n};\n\nconst wordMatchRatio = (sourceA, sourceB) => {\n  const wordsA = unique(splitWords(sourceA));\n  const wordsB = unique(splitWords(sourceB));\n\n  if (!wordsA.length || !wordsB.length) {\n    return 0;\n  }\n\n  let matches = 0;\n\n  for (const wordB of wordsB) {\n    for (const wordA of wordsA) {\n      if (wordA === wordB) {\n        matches++;\n        break;\n      }\n\n      if (wordA.length >= 4 && wordB.length >= 4) {\n        if (\n          wordA.includes(wordB.slice(0, 4)) ||\n          wordB.includes(wordA.slice(0, 4))\n        ) {\n          matches++;\n          break;\n        }\n      }\n    }\n  }\n\n  return matches / wordsB.length;\n};\n\n// ==========================\n// 🔹 4. DATOS DEL WEBHOOK\n// ==========================\nconst webhook = $('Verificador').first().json.body;\n\nconst comprobanteWebhook = cleanReceiptNumber(webhook.numcomprobante);\nconst montoWebhook = toNumber(\n  webhook.verification_hints?.expected_total_amount ?? webhook.valor\n);\nconst titularWebhook = normalize(webhook.banco?.propietarioban);\nconst fechaWebhook = webhook.created_at;\n\nconst bancoAliasesWebhook = unique(\n  safeArray(\n    webhook.banco_aliases || webhook.verification_hints?.bank_match_terms || []\n  )\n    .map(normalize)\n    .filter(Boolean)\n);\n\nconst allowMultipleReceiptsTotalMatch =\n  webhook.verification_hints?.allow_multiple_receipts_total_match !== false;\n\n// ==========================\n// 🔹 5. NORMALIZAR SALIDA OCR\n// ==========================\n// Soporta formato nuevo:\n// - total_comprobantes\n// - monto_total_detectado\n// - banco_principal\n// - comprobantes[]\n//\n// Y también formato viejo:\n// - comprobante\n// - monto\n// - banco\n// - fecha\n// - titular\n\nlet comprobantes = safeArray(parsed.comprobantes);\n\nif (!comprobantes.length) {\n  comprobantes = [\n    {\n      comprobante: parsed.comprobante ?? null,\n      monto: parsed.monto ?? null,\n      banco: parsed.banco ?? parsed.banco_principal ?? null,\n      fecha: parsed.fecha ?? null,\n      titular: parsed.titular ?? null,\n      emisor: parsed.emisor ?? null,\n    }\n  ];\n}\n\ncomprobantes = comprobantes.map((item) => ({\n  comprobante: cleanReceiptNumber(item?.comprobante),\n  monto: toNumber(item?.monto),\n  banco: normalize(item?.banco),\n  fecha: item?.fecha || null,\n  titular: cleanPersonName(item?.titular),\n  emisor: cleanPersonName(item?.emisor),\n}));\n\nconst totalComprobantes = toNumber(parsed.total_comprobantes) ?? comprobantes.length;\n\nconst bancoPrincipalOCR = normalize(parsed.banco_principal ?? parsed.banco);\nconst montoTotalDetectado =\n  toNumber(parsed.monto_total_detectado) ??\n  comprobantes.reduce((sum, item) => sum + (item.monto ?? 0), 0);\n\nconst fechasDetectadas = unique(\n  [\n    ...safeArray(parsed.fechas_detectadas),\n    ...comprobantes.map((item) => item.fecha).filter(Boolean),\n    parsed.fecha || null,\n  ].filter(Boolean)\n);\n\nconst bancosDetectados = unique(\n  [\n    bancoPrincipalOCR,\n    ...comprobantes.map((item) => item.banco),\n  ].filter(Boolean)\n);\n\nconst comprobantesDetectados = unique(\n  comprobantes.map((item) => item.comprobante).filter(Boolean)\n);\n\nconst titularesDetectados = unique(\n  comprobantes.map((item) => item.titular).filter(Boolean)\n);\n\nconst emisoresDetectados = unique(\n  comprobantes.map((item) => item.emisor).filter(Boolean)\n);\n\nconst personasDetectadas = unique([\n  ...titularesDetectados,\n  ...emisoresDetectados,\n  cleanPersonName(parsed.titular),\n  cleanPersonName(parsed.emisor),\n].filter(Boolean));\n\nconst mejorTitularOCR = titularesDetectados[0] || personasDetectadas[0] || cleanPersonName(parsed.titular);\n\n// ==========================\n// 🔹 6. VALIDACIONES\n// ==========================\nlet aprobado = true;\nlet errores = [];\nlet advertencias = [];\n\n// ✔ comprobante\nif (comprobanteWebhook) {\n  if (!comprobantesDetectados.length) {\n    aprobado = false;\n    errores.push(\"Comprobante no detectado\");\n  } else if (!comprobantesDetectados.includes(comprobanteWebhook)) {\n    aprobado = false;\n    errores.push(\"Comprobante no coincide\");\n  }\n}\n\n// ✔ comprobante sospechoso\nfor (const numero of comprobantesDetectados) {\n  if (numero && /^(\\d)\\1+$/.test(numero)) {\n    aprobado = false;\n    errores.push(\"Comprobante sospechoso\");\n    break;\n  }\n}\n\n// ✔ monto total\nif (montoWebhook === null) {\n  aprobado = false;\n  errores.push(\"Monto webhook inválido\");\n} else {\n  const montoComparar = allowMultipleReceiptsTotalMatch\n    ? montoTotalDetectado\n    : (comprobantes[0]?.monto ?? null);\n\n  if (montoComparar === null || Math.abs(montoComparar - montoWebhook) > 0.01) {\n    aprobado = false;\n    errores.push(\"Monto total no coincide\");\n  }\n}\n\n// ✔ banco por alias\nconst bankMatches =\n  bancosDetectados.length > 0 &&\n  bancoAliasesWebhook.length > 0 &&\n  bancosDetectados.some((bancoDetectado) =>\n    bancoAliasesWebhook.some((alias) =>\n      bancoDetectado === alias ||\n      bancoDetectado.includes(alias) ||\n      alias.includes(bancoDetectado)\n    )\n  );\n\nif (!bankMatches) {\n  aprobado = false;\n  errores.push(\"Banco no coincide\");\n}\n\n// ✔ titular\n// ✔ titular / beneficiario\n// No confiar ciegamente en el campo \"titular\" de la IA.\n// Si la IA invirtió titular/emisor, buscamos cuál persona coincide mejor con el titular esperado del webhook.\nlet titularDetectadoFinal = mejorTitularOCR;\nlet titularRatioFinal = 0;\nlet titularCorregidoDesde = null;\n\nif (titularWebhook) {\n  const bestTitular = bestNameMatch(titularesDetectados, titularWebhook);\n  const bestEmisor = bestNameMatch(emisoresDetectados, titularWebhook);\n  const bestPersona = bestNameMatch(personasDetectadas, titularWebhook);\n\n  titularDetectadoFinal = bestPersona.name || mejorTitularOCR;\n  titularRatioFinal = bestPersona.ratio || 0;\n\n  if (bestEmisor.ratio > bestTitular.ratio && bestEmisor.ratio >= 0.6) {\n    titularCorregidoDesde = \"emisor\";\n    advertencias.push(\"Titular corregido: la IA puso el beneficiario en emisor\");\n  }\n\n  if (titularRatioFinal < 0.6) {\n    aprobado = false;\n    errores.push(`Titular no coincide (${Math.round(titularRatioFinal * 100)}%)`);\n  }\n}\n\n// ✔ fecha\nif (fechasDetectadas.length > 0) {\n  const fechaWebhookDate = toDateOnly(fechaWebhook);\n\n  if (!fechaWebhookDate) {\n    aprobado = false;\n    errores.push(\"Fecha webhook inválida\");\n  } else {\n    const diffs = fechasDetectadas\n      .map((fecha) => toDateOnly(fecha))\n      .filter(Boolean)\n      .map((fechaOcrDate) =>\n        Math.abs((fechaWebhookDate - fechaOcrDate) / (1000 * 60 * 60 * 24))\n      );\n\n    if (!diffs.length) {\n      aprobado = false;\n      errores.push(\"Fecha no detectada\");\n    } else {\n      const minDiffDias = Math.min(...diffs);\n\n      let maxDias = 1;\n      if (\n        isWeekend(fechaWebhookDate) ||\n        fechasDetectadas.some((fecha) => isWeekend(toDateOnly(fecha)))\n      ) {\n        maxDias = 3;\n      }\n\n      maxDias = Math.max(maxDias, 2);\n\n      if (minDiffDias > maxDias) {\n        aprobado = false;\n        errores.push(`Fecha fuera de rango (${minDiffDias} días)`);\n      }\n    }\n  }\n} else {\n  aprobado = false;\n  errores.push(\"Fecha no detectada\");\n}\n\n// ==========================\n// 🚨 7. ANTIFRAUDE (IA)\n// ==========================\nif (parsed.legible === false) {\n  aprobado = false;\n  errores.push(\"Imagen no legible\");\n}\n\nif (parsed.borroso === true) {\n  aprobado = false;\n  errores.push(\"Imagen borrosa\");\n}\n\nif (parsed.editado === true) {\n  aprobado = false;\n  errores.push(\"Posible edición\");\n}\n\nif (parsed.realista === false) {\n  aprobado = false;\n  errores.push(\"No parece real\");\n}\n\nif (parsed.confianza !== undefined && parsed.confianza < 70) {\n  aprobado = false;\n  errores.push(\"Baja confianza IA\");\n}\n\n// ==========================\n// 🧠 8. SCORE ANTIFRAUDE\n// ==========================\nlet score = 100;\n\nif (parsed.borroso) score -= 20;\nif (parsed.editado) score -= 40;\nif (parsed.realista === false) score -= 40;\nif (parsed.legible === false) score -= 30;\n\nif (score < 60) {\n  aprobado = false;\n  errores.push(\"Score antifraude bajo\");\n}\n\n// evitar errores duplicados\nerrores = unique(errores);\n\n// ==========================\n// 🧾 9. RESULTADO FINAL\n// ==========================\nreturn [\n  {\n    json: {\n      aprobado,\n      errores: errores.join(\", \"),\n      advertencias: advertencias.join(\", \"),\n      score,\n\n      data_extraida: {\n        total_comprobantes: totalComprobantes,\n        comprobantes: comprobantesDetectados,\n        monto_total_detectado: montoTotalDetectado,\n        bancos_detectados: bancosDetectados,\n        fechas_detectadas: fechasDetectadas,\n        titulares_detectados: titularesDetectados,\n        emisores_detectados: emisoresDetectados,\n        personas_detectadas: personasDetectadas,\n        \n        titular_detectado_final: titularDetectadoFinal,\n        titularWebhook: titularWebhook,\n        titular_ratio_final: Math.round(titularRatioFinal * 100),\n        titular_corregido_desde: titularCorregidoDesde,\n        \n        banco_aliases_webhook: bancoAliasesWebhook,\n      },\n\n      idrec: webhook.idrec,\n      raw,\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3824,
+        1024
+      ],
+      "id": "8b9388bc-c92c-4be1-8a46-7207ea31d874",
+      "name": "Parsear"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.aprobado }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "62746053-f510-4da7-8be8-8be67d44368d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "aprobado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c769c3a0-8777-498e-b05b-b29a2de83645",
+                    "leftValue": "={{ $json.aprobado }}",
+                    "rightValue": false,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rechazado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -3696,
+        1024
+      ],
+      "id": "e298d181-de5e-47a8-95a4-c71733b5a98a",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://streamify.aaronsoft.es/public/api/v2/payments/n8n/recargas/{{ $('Verificador').item.json.body.idrec }}/aprobar",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -3552,
+        944
+      ],
+      "id": "5904f18d-86ed-4ed8-bff6-20d589f97eb5",
+      "name": "Aprobar recarga"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://streamify.aaronsoft.es/public/api/v2/payments/n8n/recargas/{{ $('Verificador').item.json.body.idrec }}/rechazar",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -3552,
+        1088
+      ],
+      "id": "9ecdfc25-8c51-44e7-b5ed-da8850c540b3",
+      "name": "Rechazar recarga"
+    },
+    {
+      "parameters": {
+        "content": "## Verificador de Pagos\nAnaliza la validez del pago del cliente",
+        "height": 288,
+        "width": 832
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4096,
+        928
+      ],
+      "typeVersion": 1,
+      "id": "d6e86fb1-e9da-41df-a8c1-541e788688d8",
+      "name": "Sticky Note4"
+    }
+  ],
+  "connections": {
+    "Verificador": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Parsear",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Aprobar recarga",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rechazar recarga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aprobar recarga": {
+      "main": [
+        [
+          {
+            "node": "Exitoso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rechazar recarga": {
+      "main": [
+        [
+          {
+            "node": "Exitoso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Verificador": [
+      {
+        "headers": {
+          "host": "autobot.aaronsoft.es",
+          "user-agent": "GuzzleHttp/7",
+          "content-length": "1177",
+          "accept": "application/json",
+          "content-type": "application/json",
+          "x-forwarded-for": "82.29.157.199",
+          "x-forwarded-host": "autobot.aaronsoft.es",
+          "x-forwarded-port": "443",
+          "x-forwarded-proto": "https",
+          "x-forwarded-server": "vps-82a11f08",
+          "x-real-ip": "82.29.157.199",
+          "accept-encoding": "gzip"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "event": "recarga.created",
+          "idrec": 174,
+          "idcli": 1195,
+          "idban": 2,
+          "banco_nombre": "Banco Guayaquil",
+          "banco_aliases": [
+            "banco guayaquil",
+            "guayaquil",
+            "banco del barrio",
+            "del barrio"
+          ],
+          "banco": {
+            "idban": 2,
+            "nombreban": "Banco Guayaquil",
+            "alias": [
+              "banco guayaquil",
+              "guayaquil",
+              "banco del barrio",
+              "del barrio"
+            ],
+            "propietarioban": "Pablo Darío Jiménez Elizalde",
+            "cedulaban": "1004549976",
+            "numeroban": "33111385",
+            "tipoban": "Ahorros",
+            "detalleban": "Cuenta de ahorros, deposita o transfiere en cualquier punto de Banco Guayaquil",
+            "foto": "fotos/guayaquil.jpg",
+            "monto": 655.73,
+            "created_at": "2025-01-30T18:39:28-05:00",
+            "updated_at": "2026-05-10T20:05:09-05:00"
+          },
+          "numcomprobante": "0002450604",
+          "valor": 3.5,
+          "verification_hints": {
+            "allow_bank_alias_match": true,
+            "allow_multiple_receipts_total_match": true,
+            "expected_total_amount": 3.5,
+            "bank_match_terms": [
+              "banco guayaquil",
+              "guayaquil",
+              "banco del barrio",
+              "del barrio"
+            ]
+          },
+          "recarga_url": "https://streamify.aaronsoft.es/public/api/v2/payments/n8n/recargas/174",
+          "foto_url": "https://streamify.aaronsoft.es/public/api/v2/payments/n8n/recargas/174/comprobante",
+          "created_at": "2026-05-11T08:45:52-05:00",
+          "trace_id": "recarga-174-20260511-084552"
+        },
+        "webhookUrl": "https://autobot.aaronsoft.es/webhook/94d871f4-6485-4118-93ec-471171de71c7",
+        "executionMode": "production"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2a4787fedcd3a9fda6d63f2231359e551e48f7e0d6a6b433946467fe82f7e7a4"
+  }
+}

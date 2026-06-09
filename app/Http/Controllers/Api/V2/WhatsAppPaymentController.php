@@ -411,7 +411,11 @@ class WhatsAppPaymentController extends Controller
         if ($clientePorTelefono) {
             $updates = [];
 
-            if (!empty($payload['cliente_nombre']) && empty($clientePorTelefono->nombrecli)) {
+            $nombreExistente = trim((string) ($clientePorTelefono->nombrecli ?? ''));
+            $esNombreGenerico = $nombreExistente === ''
+                || (bool) preg_match('/^Cliente WhatsApp(\s+\d+)?$/i', $nombreExistente);
+
+            if (!empty($payload['cliente_nombre']) && $esNombreGenerico) {
                 $updates['nombrecli'] = trim($payload['cliente_nombre']);
             }
 

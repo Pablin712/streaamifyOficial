@@ -11,6 +11,8 @@ class AgentLibrary extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'bootstrap';
+
     // Lista / filtros
     public string $filtroTipo = '';
     public string $busqueda   = '';
@@ -68,10 +70,20 @@ class AgentLibrary extends Component
         $this->resetPage();
     }
 
+    private function openModal(): void
+    {
+        $this->js("window.dispatchEvent(new CustomEvent('open-modal',{detail:'agentLibraryModal'}))");
+    }
+
+    private function closeModalJs(): void
+    {
+        $this->js("window.dispatchEvent(new CustomEvent('close-modal',{detail:'agentLibraryModal'}))");
+    }
+
     public function openCreate(): void
     {
         $this->resetForm();
-        $this->showModal = true;
+        $this->openModal();
     }
 
     public function openEdit(int $id): void
@@ -89,15 +101,12 @@ class AgentLibrary extends Component
         $this->activo      = $entry->activo;
         $this->inicio_at   = $entry->inicio_at?->format('Y-m-d') ?? '';
         $this->fin_at      = $entry->fin_at?->format('Y-m-d') ?? '';
-        $this->showModal   = true;
-        $this->js("window.dispatchEvent(new CustomEvent('open-modal', { detail: 'agentLibraryModal' }))");
+        $this->openModal();
     }
 
     public function closeModal(): void
     {
-        $this->showModal = false;
         $this->resetForm();
-        $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agentLibraryModal' }))");
     }
 
     public function save(): void
@@ -108,7 +117,7 @@ class AgentLibrary extends Component
 
         $data = [
             'tipo'        => $this->tipo,
-            'clave'       => $this->clave,
+            'clave'       => trim($this->clave),
             'titulo'      => $this->titulo,
             'contenido'   => $this->contenido,
             'resumen'     => $this->resumen ?: null,
@@ -120,17 +129,21 @@ class AgentLibrary extends Component
             'fin_at'      => $this->fin_at ?: null,
         ];
 
-        if ($this->editingId) {
-            ChatMemoriaNegocio::findOrFail($this->editingId)->update($data);
-            $this->dispatch('notify', ['type' => 'success', 'msg' => 'Entrada actualizada.']);
-        } else {
-            ChatMemoriaNegocio::create($data);
-            $this->dispatch('notify', ['type' => 'success', 'msg' => 'Entrada creada.']);
+        try {
+            if ($this->editingId) {
+                ChatMemoriaNegocio::findOrFail($this->editingId)->update($data);
+                $this->dispatch('notify', ['type' => 'success', 'msg' => 'Entrada actualizada.']);
+            } else {
+                ChatMemoriaNegocio::create($data);
+                $this->dispatch('notify', ['type' => 'success', 'msg' => 'Entrada creada.']);
+            }
+        } catch (\Throwable $e) {
+            $this->dispatch('notify', ['type' => 'error', 'msg' => 'Error al guardar: ' . $e->getMessage()]);
+            return;
         }
 
-        $this->showModal = false;
         $this->resetForm();
-        $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'agentLibraryModal' }))");
+        $this->closeModalJs();
     }
 
     public function toggleActivo(int $id): void

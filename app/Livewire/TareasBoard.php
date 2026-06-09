@@ -313,6 +313,7 @@ class TareasBoard extends Component
         $this->registrarHistorial('Tarea manual creada', $tarea);
         $this->reset(['showFormModal', 'formNombre', 'formDesc', 'formPrioridad', 'formFecha']);
         $this->tab = 'mis_tareas';
+        $this->js("window.dispatchEvent(new CustomEvent('close-modal',{detail:'tareaManualModal'}))");
         $this->dispatch('notify', type: 'success', msg: 'Tarea creada.');
     }
 

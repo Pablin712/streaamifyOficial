@@ -117,7 +117,6 @@ class SoporteController extends Controller
 
         $validated = $request->validate([
             'solucion' => ['required', 'string', 'min:5', 'max:2000'],
-            'enviar_whatsapp' => ['sometimes', 'boolean'],
         ]);
 
         $soporte = Soporte::with(['cliente', 'cuenta'])->findOrFail($idsop);
@@ -134,18 +133,9 @@ class SoporteController extends Controller
             'created_at' => now(),
         ]);
 
-        $whatsappEnviado = false;
-        $whatsappError = null;
-
-        if ($validated['enviar_whatsapp'] ?? false) {
-            ['ok' => $whatsappEnviado, 'error' => $whatsappError] = $this->enviarMensajeSolucion($soporte, $user);
-        }
-
         return response()->json([
             'success' => true,
-            'message' => 'Soporte atendido correctamente.' . ($whatsappEnviado ? ' Mensaje WhatsApp enviado.' : ''),
-            'whatsapp_enviado' => $whatsappEnviado,
-            'whatsapp_error' => $whatsappError,
+            'message' => 'Soporte atendido correctamente.',
             'soporte' => $soporte->fresh(['cliente', 'cuenta.valor.servicio']),
         ]);
     }
@@ -168,7 +158,15 @@ class SoporteController extends Controller
             ], 422);
         }
 
-        ['ok' => $ok, 'error' => $error] = $this->enviarMensajeSolucion($soporte, $user);
+        try {
+            ['ok' => $ok, 'error' => $error] = $this->enviarMensajeSolucion($soporte, $user);
+        } catch (\Throwable $e) {
+            Log::error('Excepción en enviarMensajeSolucion', ['idsop' => $idsop, 'error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al intentar enviar el WhatsApp.',
+            ], 500);
+        }
 
         if (!$ok) {
             return response()->json([

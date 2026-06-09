@@ -113,10 +113,7 @@
                 <option value="{{ $k }}">{{ $label }}</option>
             @endforeach
         </select>
-        {{-- Abre modal instantáneamente (x-on:click) y resetea form en paralelo (wire:click) --}}
-        <button class="btn btn-primary" style="white-space:nowrap;"
-                wire:click="openCreate"
-                x-on:click="window.dispatchEvent(new CustomEvent('open-modal',{detail:'agentLibraryModal'}))">
+        <button class="btn btn-primary" style="white-space:nowrap;" wire:click="openCreate">
             <i class="fas fa-plus me-1"></i> Nueva entrada
         </button>
     </div>
@@ -185,12 +182,14 @@
 
 
     {{-- ══════════════════════════════════════════════════════════
-         MODAL — <x-modal> del proyecto
-         Tipo y visibilidad: <label> + radio oculto + wire:model.live
-         CSS :has(input:checked) = selección visual instantánea
-         Texto/contenido: wire:model diferido (enviado al hacer save)
+         MODAL — patrón estándar <x-modal> del proyecto
+         $this->js() abre/cierra DESPUÉS del morph → form siempre fresco
+         wire:key fuerza recreación del DOM al cambiar de entrada
          ══════════════════════════════════════════════════════════ --}}
     <x-modal name="agentLibraryModal" :show="false" maxWidth="xl">
+
+        {{-- wire:key cambia al editar diferente ID → Livewire recrea los inputs --}}
+        <div wire:key="agent-form-{{ $editingId ?? 0 }}">
 
         {{-- Header --}}
         <div class="modal-header">
@@ -395,6 +394,7 @@
             </button>
         </div>
 
+        </div>{{-- /wire:key wrapper --}}
     </x-modal>
 
 </div>

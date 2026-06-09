@@ -251,7 +251,7 @@ class CuentaService
         $hoy = Carbon::today();
         return $usuarios->filter(function ($usuario) use ($hoy) {
             $fechaVencimiento = Carbon::parse($usuario->fecha_vencimiento);
-            return $hoy->diffInDays($fechaVencimiento, false) <= 3;
+            return $hoy->diffInDays($fechaVencimiento, false) === 0;
         });
     }
     public function obtenerUsuariosAQuitar($usuarios)
@@ -299,9 +299,9 @@ class CuentaService
         return $cuentas->filter(function ($cuenta) {
             $fechaVencimiento = Carbon::parse($cuenta->fechavencue)->startOfDay(); // Asegurar que la fecha es sin hora
             $hoy = now()->startOfDay();
-            $cincoDiasDespues = $hoy->copy()->addDays(5);
+            $dosDiasDespues = $hoy->copy()->addDays(2);
 
-            return $fechaVencimiento->lessThanOrEqualTo($cincoDiasDespues);
+            return $fechaVencimiento->lessThanOrEqualTo($dosDiasDespues);
         });
     }
 

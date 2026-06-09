@@ -318,22 +318,24 @@
 
             const idsop = document.getElementById('attend-support-id').value;
             const solucion = document.getElementById('attend-support-solution').value.trim();
-            const enviarWhatsapp = document.getElementById('attend-support-whatsapp').checked;
-            const url = "{{ route('soportes.atender', ':id') }}".replace(':id', idsop);
+            const enviarWhatsapp = document.getElementById('attend-support-whatsapp')?.checked ?? false;
+            const urlAtender = "{{ route('soportes.atender', ':id') }}".replace(':id', idsop);
+            const urlWhatsapp = "{{ route('soportes.whatsapp', ':id') }}".replace(':id', idsop);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             const submitBtn = event.target.querySelector('[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
 
-            fetch(url, {
+            fetch(urlAtender, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': csrfToken,
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ solucion, enviar_whatsapp: enviarWhatsapp })
+                body: JSON.stringify({ solucion })
             })
                 .then(async response => {
                     const data = await response.json();
@@ -344,14 +346,37 @@
                 })
                 .then(data => {
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'atender-soporte' }));
-                    let msg = data.message || 'Soporte atendido correctamente.';
-                    if (enviarWhatsapp && !data.whatsapp_enviado && data.whatsapp_error) {
-                        msg += ' (WhatsApp: ' + data.whatsapp_error + ')';
-                        showAlert(msg, 'warning');
-                    } else {
-                        showAlert(msg, 'success');
+
+                    if (!enviarWhatsapp) {
+                        showAlert(data.message || 'Soporte atendido correctamente.', 'success');
+                        setTimeout(() => window.location.reload(), 700);
+                        return;
                     }
-                    setTimeout(() => window.location.reload(), 900);
+
+                    // Enviar WhatsApp en segundo paso
+                    return fetch(urlWhatsapp, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({})
+                    })
+                        .then(async r => {
+                            const waData = await r.json();
+                            if (waData.success) {
+                                showAlert('Soporte atendido y mensaje WhatsApp enviado.', 'success');
+                            } else {
+                                showAlert('Soporte atendido. WhatsApp: ' + (waData.message || 'no se pudo enviar.'), 'warning');
+                            }
+                            setTimeout(() => window.location.reload(), 900);
+                        })
+                        .catch(() => {
+                            showAlert('Soporte atendido, pero no se pudo enviar el WhatsApp.', 'warning');
+                            setTimeout(() => window.location.reload(), 900);
+                        });
                 })
                 .catch(error => {
                     submitBtn.disabled = false;
