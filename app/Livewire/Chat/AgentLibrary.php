@@ -14,15 +14,17 @@ class AgentLibrary extends Component
     protected string $paginationTheme = 'bootstrap';
 
     // Lista / filtros
-    public string $filtroTipo = '';
-    public string $busqueda   = '';
+    public string $filtroTipo      = '';
+    public string $filtroCategoria = '';
+    public string $busqueda        = '';
 
     // Modal create/edit
     public bool $showModal = false;
     public ?int $editingId  = null;
 
     // Campos del formulario
-    public string $tipo       = 'campaña';
+    public string $tipo       = 'faq';
+    public string $categoria  = 'general';
     public string $clave      = '';
     public string $titulo     = '';
     public string $contenido  = '';
@@ -42,6 +44,7 @@ class AgentLibrary extends Component
 
         return [
             'tipo'        => 'required|in:' . implode(',', array_keys(ChatMemoriaNegocio::TIPOS)),
+            'categoria'   => 'required|in:' . implode(',', array_keys(ChatMemoriaNegocio::CATEGORIAS)),
             'clave'       => $claveRule,
             'titulo'      => 'required|string|max:160',
             'contenido'   => 'required|string',
@@ -70,6 +73,11 @@ class AgentLibrary extends Component
         $this->resetPage();
     }
 
+    public function updatingFiltroCategoria(): void
+    {
+        $this->resetPage();
+    }
+
     private function openModal(): void
     {
         $this->js("window.dispatchEvent(new CustomEvent('open-modal',{detail:'agentLibraryModal'}))");
@@ -91,6 +99,7 @@ class AgentLibrary extends Component
         $entry = ChatMemoriaNegocio::findOrFail($id);
         $this->editingId   = $id;
         $this->tipo        = $entry->tipo;
+        $this->categoria   = $entry->categoria ?? 'general';
         $this->clave       = $entry->clave;
         $this->titulo      = $entry->titulo;
         $this->contenido   = $entry->contenido;
@@ -117,6 +126,7 @@ class AgentLibrary extends Component
 
         $data = [
             'tipo'        => $this->tipo,
+            'categoria'   => $this->categoria,
             'clave'       => trim($this->clave),
             'titulo'      => $this->titulo,
             'contenido'   => $this->contenido,
@@ -164,7 +174,8 @@ class AgentLibrary extends Component
             'editingId', 'clave', 'titulo', 'contenido',
             'resumen', 'tagsInput', 'inicio_at', 'fin_at',
         ]);
-        $this->tipo        = 'campaña';
+        $this->tipo        = 'faq';
+        $this->categoria   = 'general';
         $this->visibilidad = 'cliente';
         $this->prioridad   = 50;
         $this->activo      = true;
@@ -174,19 +185,22 @@ class AgentLibrary extends Component
     public function render()
     {
         $entries = ChatMemoriaNegocio::query()
-            ->when($this->filtroTipo, fn ($q) => $q->where('tipo', $this->filtroTipo))
+            ->when($this->filtroTipo,      fn ($q) => $q->where('tipo', $this->filtroTipo))
+            ->when($this->filtroCategoria, fn ($q) => $q->where('categoria', $this->filtroCategoria))
             ->when($this->busqueda, fn ($q) => $q->where(function ($q2) {
                 $q2->where('titulo', 'like', "%{$this->busqueda}%")
                    ->orWhere('contenido', 'like', "%{$this->busqueda}%")
                    ->orWhere('clave', 'like', "%{$this->busqueda}%");
             }))
+            ->orderBy('categoria')
             ->orderBy('prioridad')
             ->orderBy('tipo')
             ->paginate(12);
 
         return view('livewire.chat.agent-library', [
-            'entries' => $entries,
-            'tipos'   => ChatMemoriaNegocio::TIPOS,
+            'entries'    => $entries,
+            'tipos'      => ChatMemoriaNegocio::TIPOS,
+            'categorias' => ChatMemoriaNegocio::CATEGORIAS,
         ]);
     }
 }

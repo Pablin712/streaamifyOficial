@@ -33,6 +33,34 @@
         .badge-objecion           { background:#fef9c3; color:#78350f; }
         .badge-guion              { background:#f3f4f6; color:#374151; }
         .badge-campana            { background:#fff7ed; color:#c2410c; }
+        .badge-soporte_pasos      { background:#dcfce7; color:#15803d; }
+        .badge-soporte_escalado   { background:#fee2e2; color:#991b1b; }
+
+        /* ── Filtro de categorías ── */
+        .cat-filter { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.85rem; }
+        .cat-pill {
+            padding:.25rem .75rem; border-radius:999px; font-size:.75rem; font-weight:600;
+            border:1.5px solid #e5e7eb; background:var(--bg-card,#fff); cursor:pointer;
+            transition:all .12s; white-space:nowrap; color:var(--text-secondary,#374151);
+        }
+        .cat-pill:hover  { border-color:#a5b4fc; background:#f5f3ff; }
+        .cat-pill.active { border-color:#6366f1; background:#eef2ff; color:#4338ca; }
+
+        /* ── Badge de categoría en tarjeta ── */
+        .badge-cat {
+            display:inline-block; padding:.1rem .45rem; border-radius:.3rem;
+            font-size:.68rem; font-weight:600; letter-spacing:.02em;
+            background:#f3f4f6; color:#6b7280;
+        }
+        .badge-cat-netflix        { background:#fee2e2; color:#b91c1c; }
+        .badge-cat-disney_plus    { background:#dbeafe; color:#1e40af; }
+        .badge-cat-max            { background:#ede9fe; color:#5b21b6; }
+        .badge-cat-paramount_plus { background:#fef3c7; color:#78350f; }
+        .badge-cat-crunchyroll    { background:#fff7ed; color:#c2410c; }
+        .badge-cat-flujo_tv       { background:#dcfce7; color:#166534; }
+        .badge-cat-spotify        { background:#d1fae5; color:#065f46; }
+        .badge-cat-prime_video    { background:#e0f2fe; color:#0369a1; }
+        .badge-cat-soporte        { background:#f3f4f6; color:#374151; }
 
         .vpill { display:inline-flex; align-items:center; gap:.2rem; padding:.12rem .5rem; border-radius:999px; font-size:.71rem; font-weight:700; }
         .vpill.activa    { background:#dcfce7; color:#15803d; }
@@ -101,6 +129,20 @@
         .flow-num  { flex-shrink:0; width:19px; height:19px; border-radius:50%; background:#6366f1; color:#fff; font-size:.68rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
     </style>
 
+    {{-- ─── Filtro de categorías (carpetas) ─── --}}
+    <div class="cat-filter">
+        <button wire:click="$set('filtroCategoria','')"
+                class="cat-pill {{ $filtroCategoria === '' ? 'active' : '' }}">
+            📚 Todas
+        </button>
+        @foreach($categorias as $k => $label)
+            <button wire:click="$set('filtroCategoria','{{ $k }}')"
+                    class="cat-pill {{ $filtroCategoria === $k ? 'active' : '' }}">
+                {{ $label }}
+            </button>
+        @endforeach
+    </div>
+
     {{-- ─── Toolbar ─── --}}
     <div class="lib-toolbar">
         <div class="lib-search">
@@ -131,6 +173,9 @@
                 <div class="lib-card {{ $vigencia }}">
                     <div class="lib-card-head">
                         <span class="badge-tipo badge-{{ str_replace('ñ','n',$e->tipo) }}">{{ $tipos[$e->tipo] ?? $e->tipo }}</span>
+                        @if(($e->categoria ?? 'general') !== 'general')
+                            <span class="badge-cat badge-cat-{{ $e->categoria }}">{{ $categorias[$e->categoria] ?? $e->categoria }}</span>
+                        @endif
                         <span class="vpill {{ $vigencia }}">
                             @if($vigencia==='activa') ✅ Activa
                             @elseif($vigencia==='programada') 🕐 Programada
@@ -212,7 +257,7 @@
                     <i class="fas fa-robot me-1"></i> ¿Cómo usa el agente esta biblioteca?
                 </p>
                 <div class="flow-step"><span class="flow-num">1</span><span>WhatsApp llega → n8n llama <code>GET /api/v2/chat/router/context</code></span></div>
-                <div class="flow-step"><span class="flow-num">2</span><span>La API retorna hasta <strong>15 entradas activas</strong>, filtradas por fecha y ordenadas por prioridad</span></div>
+                <div class="flow-step"><span class="flow-num">2</span><span>La API retorna hasta <strong>40 entradas activas</strong>, filtradas por fecha, ordenadas por categoría y prioridad</span></div>
                 <div class="flow-step"><span class="flow-num">3</span><span>n8n las inyecta como <strong>CONTEXTO DE NEGOCIO</strong> en el prompt del subagente (Vendedor, Soporte, Cobranzas…)</span></div>
                 <div class="flow-step" style="margin-bottom:0;"><span class="flow-num">4</span><span>El agente responde usando ese contexto — sin tocar n8n</span></div>
             </div>
@@ -243,6 +288,21 @@
                         </label>
                     @endforeach
                 </div>
+            </div>
+
+            {{-- 1b. Categoría / Carpeta ── --}}
+            <div class="lib-field">
+                <label class="fw-semibold form-label">
+                    Carpeta / Categoría <span class="text-danger">*</span>
+                </label>
+                <select wire:model="categoria" class="form-select">
+                    @foreach($categorias as $k => $label)
+                        <option value="{{ $k }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+                <span class="lib-hint">
+                    <strong>General</strong> = aplica a todos los agentes. Servicios (Netflix, Disney+…) = solo el agente de Soporte los usa cuando detecta ese servicio.
+                </span>
             </div>
 
             {{-- 2a. Fechas campaña (solo si tipo === 'campaña') --}}
@@ -343,8 +403,8 @@
                     <label class="fw-semibold form-label">Prioridad</label>
                     <input wire:model="prioridad" type="number" min="1" max="999" class="form-control" placeholder="50">
                     <span class="lib-hint">
-                        <strong>1 = máxima.</strong> El contexto se limita a 15 entradas.
-                        Usa 1–10 para precios y políticas críticas, 50+ para info secundaria.
+                        <strong>1 = máxima.</strong> El agente recibe hasta 40 entradas.
+                        Usa 1–10 para políticas críticas, 10–30 para FAQ, 50+ para info secundaria.
                     </span>
                 </div>
                 <div>

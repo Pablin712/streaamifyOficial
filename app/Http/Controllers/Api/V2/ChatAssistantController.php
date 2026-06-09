@@ -1846,10 +1846,10 @@ class ChatAssistantController extends Controller
 
         $memoriaGeneral = \App\Models\ChatMemoriaNegocio::query()
             ->where('activo', true)
-            ->where('clave', 'like', 'general_%')
+            ->where('categoria', 'general')
             ->orderBy('prioridad')
             ->orderBy('clave')
-            ->get(['tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
+            ->get(['tipo', 'categoria', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
             ->map(function ($item) {
                 return [
                     // Compatibilidad para nodos n8n existentes
@@ -1875,10 +1875,14 @@ class ChatAssistantController extends Controller
         if ($tipoSubagente) {
             $memoriaEspecifica = \App\Models\ChatMemoriaNegocio::query()
                 ->where('activo', true)
-                ->where('clave', 'like', $tipoSubagente . '_%')
+                ->where(function ($q) use ($tipoSubagente) {
+                    $q->where('categoria', $tipoSubagente)
+                      ->orWhere('clave', 'like', $tipoSubagente . '_%');
+                })
+                ->where('categoria', '!=', 'general')
                 ->orderBy('prioridad')
                 ->orderBy('clave')
-                ->get(['tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
+                ->get(['tipo', 'categoria', 'clave', 'titulo', 'resumen', 'contenido', 'tags', 'fuente', 'prioridad', 'visibilidad'])
                 ->map(function ($item) {
                     return [
                         // Compatibilidad para nodos n8n existentes

@@ -453,9 +453,10 @@ class ChatRouterController extends Controller
                     // sin fecha de fin, o fecha de fin aún no llega
                     $q->whereNull('fin_at')->orWhere('fin_at', '>=', $now);
                 })
+                ->orderBy('categoria')
                 ->orderBy('prioridad')
-                ->limit(15)
-                ->get(['id', 'tipo', 'clave', 'titulo', 'resumen', 'contenido', 'tags']);
+                ->limit(40)
+                ->get(['id', 'tipo', 'categoria', 'clave', 'titulo', 'resumen', 'contenido', 'tags']);
 
             return response()->json([
                 'success' => true,

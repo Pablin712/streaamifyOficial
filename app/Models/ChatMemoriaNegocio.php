@@ -13,6 +13,7 @@ class ChatMemoriaNegocio extends Model
 
     protected $fillable = [
         'tipo',
+        'categoria',
         'clave',
         'titulo',
         'contenido',
@@ -37,6 +38,21 @@ class ChatMemoriaNegocio extends Model
         'objecion'            => 'Objeción',
         'guion'               => 'Guion',
         'campaña'             => 'Campaña',
+        'soporte_pasos'       => 'Pasos soporte',
+        'soporte_escalado'    => 'Criterio escalado',
+    ];
+
+    public const CATEGORIAS = [
+        'general'        => '🌐 General',
+        'soporte'        => '🔧 Soporte General',
+        'netflix'        => '🔴 Netflix',
+        'disney_plus'    => '🔵 Disney+',
+        'max'            => '🟣 Max (HBO)',
+        'paramount_plus' => '⭐ Paramount+',
+        'crunchyroll'    => '🟠 Crunchyroll',
+        'flujo_tv'       => '📺 Flujo TV',
+        'spotify'        => '🎵 Spotify',
+        'prime_video'    => '🔷 Prime Video',
     ];
 
     protected $casts = [
