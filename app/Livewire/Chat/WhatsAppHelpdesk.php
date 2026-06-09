@@ -103,6 +103,9 @@ class WhatsAppHelpdesk extends Component
         $activeContactIdentity = $this->contactIdentity($activeConversation);
         $conversationsData = $this->conversationList();
 
+        $clientIds = $conversationsData['items']->pluck('idcli')->filter()->unique()->values()->toArray();
+        $conversationLabels = $this->computeConversationLabels($clientIds);
+
         return view('livewire.chat.whatsapp-helpdesk', [
             'conversations' => $conversationsData['items'],
             'conversationsHasMore' => $conversationsData['has_more'],
@@ -121,6 +124,7 @@ class WhatsAppHelpdesk extends Component
                 ->orderByDesc('is_active')
                 ->orderBy('instance_name')
                 ->get(),
+            'conversationLabels' => $conversationLabels,
         ]);
     }
 
@@ -1012,5 +1016,46 @@ class WhatsAppHelpdesk extends Component
         }
 
         return ['label' => 'Activa', 'tone' => 'success'];
+    }
+
+    private function computeConversationLabels(array $clientIds): array
+    {
+        if (empty($clientIds)) {
+            return ['soporte' => [], 'cobrar' => [], 'quitar' => []];
+        }
+
+        $soporteIds = DB::table('soportes')
+            ->whereIn('idcli', $clientIds)
+            ->where('estado', 'pendiente')
+            ->pluck('idcli')
+            ->unique()
+            ->flip()
+            ->toArray();
+
+        $cobrarIds = DB::table('tareas')
+            ->join('view_usuarios_activos as vu', 'vu.iddet', '=', 'tareas.related_id')
+            ->whereIn('vu.idcli', $clientIds)
+            ->where('tareas.tipo_tarea', 'cobrar_usuario')
+            ->where('tareas.completada', false)
+            ->pluck('vu.idcli')
+            ->unique()
+            ->flip()
+            ->toArray();
+
+        $quitarIds = DB::table('tareas')
+            ->join('view_usuarios_activos as vu', 'vu.iddet', '=', 'tareas.related_id')
+            ->whereIn('vu.idcli', $clientIds)
+            ->where('tareas.tipo_tarea', 'quitar_usuario')
+            ->where('tareas.completada', false)
+            ->pluck('vu.idcli')
+            ->unique()
+            ->flip()
+            ->toArray();
+
+        return [
+            'soporte' => $soporteIds,
+            'cobrar'  => $cobrarIds,
+            'quitar'  => $quitarIds,
+        ];
     }
 }

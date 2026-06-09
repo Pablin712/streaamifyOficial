@@ -414,6 +414,9 @@
         .wa-badge.muted { background: #e2e8f0; color: #334155; }
         .wa-badge.bot { background: #f3e8ff; color: #7e22ce; }
         .wa-badge.outline { background: transparent; border: 1px solid var(--wa-border); color: var(--wa-text-secondary); }
+        .wa-badge.soporte { background: #ef4444; color: white; }
+        .wa-badge.cobrar  { background: #fef3c7; color: #92400e; }
+        .wa-badge.quitar  { background: #fed7aa; color: #9a3412; }
 
         .wa-item-footer {
             display: flex;
@@ -1307,6 +1310,9 @@
         :root[data-dark-mode="true"] .wa-badge.warning { background: #3b2c14; color: #f5d187; }
         :root[data-dark-mode="true"] .wa-badge.muted { background: #1f2836; color: #c5cfdb; }
         :root[data-dark-mode="true"] .wa-badge.bot { background: #322046; color: #dbbcff; }
+        :root[data-dark-mode="true"] .wa-badge.soporte { background: #b91c1c; color: #fecaca; }
+        :root[data-dark-mode="true"] .wa-badge.cobrar  { background: #3b2c14; color: #f5d187; }
+        :root[data-dark-mode="true"] .wa-badge.quitar  { background: #431407; color: #fed7aa; }
 
         :root[data-dark-mode="true"] .wa-operator-chip {
             background: #1f2836;
@@ -1661,6 +1667,7 @@
                          default => 'WhatsApp',
                      };
                      $contactIdentity = $this->contactIdentity($conversation);
+                     $convIdcli = $conversation->idcli;
                  @endphp
                  <button type="button" wire:key="conversation-{{ $conversation->idconv }}" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
                      <div class="wa-item-row">
@@ -1693,8 +1700,17 @@
                          <span class="wa-operator-chip" title="{{ $conversation->operadorAsignado?->nombreemp ?: 'Sin asignar' }}">
                              {{ $conversation->operadorAsignado?->nombreemp ?: 'Sin asignar' }}
                          </span>
-                         <div style="display: flex; gap: 6px; align-items: center;">
+                         <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
                              <span class="wa-badge {{ $contactIdentity['tone'] }}">{{ $contactIdentity['label'] }}</span>
+                             @if($convIdcli && isset($conversationLabels['soporte'][$convIdcli]))
+                                 <span class="wa-badge soporte">Soporte</span>
+                             @endif
+                             @if($convIdcli && isset($conversationLabels['cobrar'][$convIdcli]))
+                                 <span class="wa-badge cobrar">Cobrar</span>
+                             @endif
+                             @if($convIdcli && isset($conversationLabels['quitar'][$convIdcli]))
+                                 <span class="wa-badge quitar">Quitar</span>
+                             @endif
                              @if($unread > 0)
                                  <span class="wa-badge danger">{{ $unread }}</span>
                              @endif

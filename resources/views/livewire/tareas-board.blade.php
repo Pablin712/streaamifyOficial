@@ -215,8 +215,7 @@
             </button>
 
             {{-- Tarea manual --}}
-            <button class="btn btn-outline-secondary btn-sm"
-                    wire:click="$set('showFormModal', true)"
+            <button type="button" class="btn btn-outline-secondary btn-sm"
                     x-on:click="window.dispatchEvent(new CustomEvent('open-modal',{detail:'tareaManualModal'}))">
                 <i class="fas fa-plus me-1"></i> Manual
             </button>
@@ -702,10 +701,10 @@
          MODAL: Tarea manual
     ══════════════════════════════════════════════════════════════════════ --}}
     <x-modal name="tareaManualModal" :show="false" maxWidth="md">
+        <form wire:submit.prevent="guardarManual">
         <div class="modal-header">
             <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Nueva tarea manual</h5>
             <button type="button" class="btn-close"
-                    wire:click="$set('showFormModal', false)"
                     onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'tareaManualModal'}))">
             </button>
         </div>
@@ -719,6 +718,7 @@
                 <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
                 <input wire:model="formNombre" type="text" class="form-control"
                        placeholder="Ej: Llamar al proveedor de Netflix">
+                @error('formNombre') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Descripción</label>
@@ -741,17 +741,17 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary"
-                    wire:click="$set('showFormModal', false)"
+            <button type="button" class="btn btn-secondary"
                     onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'tareaManualModal'}))">
                 Cancelar
             </button>
-            <button class="btn btn-primary" wire:click="guardarManual" wire:loading.attr="disabled">
+            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
                 <span wire:loading wire:target="guardarManual" class="spinner-border spinner-border-sm me-1"></span>
                 <i wire:loading.remove wire:target="guardarManual" class="fas fa-save me-1"></i>
                 Crear tarea
             </button>
         </div>
+        </form>
     </x-modal>
 
 </div>

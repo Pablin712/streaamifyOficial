@@ -594,27 +594,30 @@ class VentaController extends Controller
                 'banco_id' => 'required|exists:bancos,idban'
             ]);
 
-            // Si el banco cambió o el monto cambió, anular transacción anterior
-            if ($bancoAnterior && ($bancoAnterior != $request->banco_id || $montoAnterior != $totalVenta)) {
+            $bancoChanged = (int) $bancoAnterior !== (int) $request->banco_id;
+            $montoChanged = (float) $montoAnterior !== (float) $totalVenta;
+
+            if (!$transaccionAnterior || $bancoChanged || $montoChanged) {
+                // Anular transacción anterior si existe antes de crear la nueva
                 if ($transaccionAnterior) {
                     $this->bancoService->anularTransaccion($transaccionAnterior);
                 }
-            }
 
-            // Registrar nueva transacción bancaria (ingreso)
-            try {
-                $transaccion = $this->bancoService->registrarTransaccion(
-                    $request->banco_id,
-                    $totalVenta,
-                    'ingreso',
-                    'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
-                );
+                try {
+                    $transaccion = $this->bancoService->registrarTransaccion(
+                        $request->banco_id,
+                        $totalVenta,
+                        'ingreso',
+                        'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+                    );
 
-                $venta->transaccion_id = $transaccion->id;
-                $venta->save();
-            } catch (\Exception $e) {
-                return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
+                    $venta->transaccion_id = $transaccion->id;
+                    $venta->save();
+                } catch (\Exception $e) {
+                    return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
+                }
             }
+            // mismo banco y mismo monto → transacción existente ya es correcta, sin cambios
         } else {
             // Si no se pagó y había transacción anterior, anularla
             if ($transaccionAnterior) {

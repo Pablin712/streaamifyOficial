@@ -13,6 +13,7 @@ class Soporte extends Model
         'sin suscripcion',
         'contrasena incorrecta',
         'muchos dispositivos',
+        'cuenta pide codigo',
         'otro',
     ];
 
