@@ -29,22 +29,22 @@ class ConcentracionService
             ->values()
             ->toArray();
 
-        // idcue directly from cuenta tasks
+        // idcue directly from cuenta tasks — idcue is a string, never cast to int
         $idcueFromCuentaTasks = $tareas->whereIn('tipo_tarea', ['renovar_cuenta', 'cuenta_caida', 'colapso_cuenta'])
             ->pluck('related_id')
             ->filter()
-            ->map(fn($v) => (int) $v)
+            ->map(fn($v) => (string) $v)
             ->unique()
             ->values()
             ->toArray();
 
-        // idcue via view_usuarios_activos for user tasks
+        // idcue via view_usuarios_activos for user tasks — keep as string
         $idcueFromUsers = !empty($iddetList)
             ? DB::table('view_usuarios_activos')
                 ->whereIn('iddet', $iddetList)
                 ->pluck('idcue')
                 ->filter()
-                ->map(fn($v) => (int) $v)
+                ->map(fn($v) => (string) $v)
                 ->unique()
                 ->values()
                 ->toArray()
@@ -59,13 +59,13 @@ class ConcentracionService
             ->values()
             ->toArray();
 
-        // idcue via soportes for soporte tasks
+        // idcue via soportes for soporte tasks — keep as string
         $idcueFromSoportes = !empty($idSopList)
             ? DB::table('soportes')
                 ->whereIn('idsop', $idSopList)
                 ->pluck('idcue')
                 ->filter()
-                ->map(fn($v) => (int) $v)
+                ->map(fn($v) => (string) $v)
                 ->unique()
                 ->values()
                 ->toArray()

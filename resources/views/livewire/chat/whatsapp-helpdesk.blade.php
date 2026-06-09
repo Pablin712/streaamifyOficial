@@ -414,9 +414,12 @@
         .wa-badge.muted { background: #e2e8f0; color: #334155; }
         .wa-badge.bot { background: #f3e8ff; color: #7e22ce; }
         .wa-badge.outline { background: transparent; border: 1px solid var(--wa-border); color: var(--wa-text-secondary); }
-        .wa-badge.soporte { background: #ef4444; color: white; }
-        .wa-badge.cobrar  { background: #fef3c7; color: #92400e; }
-        .wa-badge.quitar  { background: #fed7aa; color: #9a3412; }
+        .wa-badge.soporte       { background: #ef4444; color: white; }
+        .wa-badge.cobrar        { background: #fef3c7; color: #92400e; }
+        .wa-badge.quitar        { background: #fed7aa; color: #9a3412; }
+        .wa-badge.cuenta-caida  { background: #fca5a5; color: #7f1d1d; }
+        .wa-badge.renovar       { background: #bfdbfe; color: #1e3a8a; }
+        .wa-badge.caida-pro     { background: #fde68a; color: #78350f; }
 
         .wa-item-footer {
             display: flex;
@@ -1310,9 +1313,12 @@
         :root[data-dark-mode="true"] .wa-badge.warning { background: #3b2c14; color: #f5d187; }
         :root[data-dark-mode="true"] .wa-badge.muted { background: #1f2836; color: #c5cfdb; }
         :root[data-dark-mode="true"] .wa-badge.bot { background: #322046; color: #dbbcff; }
-        :root[data-dark-mode="true"] .wa-badge.soporte { background: #b91c1c; color: #fecaca; }
-        :root[data-dark-mode="true"] .wa-badge.cobrar  { background: #3b2c14; color: #f5d187; }
-        :root[data-dark-mode="true"] .wa-badge.quitar  { background: #431407; color: #fed7aa; }
+        :root[data-dark-mode="true"] .wa-badge.soporte      { background: #b91c1c; color: #fecaca; }
+        :root[data-dark-mode="true"] .wa-badge.cobrar       { background: #3b2c14; color: #f5d187; }
+        :root[data-dark-mode="true"] .wa-badge.quitar       { background: #431407; color: #fed7aa; }
+        :root[data-dark-mode="true"] .wa-badge.cuenta-caida { background: #7f1d1d; color: #fecaca; }
+        :root[data-dark-mode="true"] .wa-badge.renovar      { background: #1e3a8a; color: #bfdbfe; }
+        :root[data-dark-mode="true"] .wa-badge.caida-pro    { background: #451a03; color: #fde68a; }
 
         :root[data-dark-mode="true"] .wa-operator-chip {
             background: #1f2836;
@@ -1620,6 +1626,13 @@
                  </div>
              </div>
 
+             @if($concentracionActive)
+                 <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:{{ $concentracionLocked ? '#1e293b' : '#eff6ff' }};border-radius:8px;font-size:12px;font-weight:600;color:{{ $concentracionLocked ? '#93c5fd' : '#1d4ed8' }};">
+                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l6 2.67V11c0 3.8-2.6 7.37-6 8.68-3.4-1.31-6-4.88-6-8.68V7.67L12 5z"/></svg>
+                     {{ $concentracionLocked ? 'Modo concentración (bloqueado)' : 'Modo concentración activo' }}
+                 </div>
+             @endif
+
              <input wire:model.live.debounce.300ms="search" class="wa-search" type="search" placeholder="Buscar cliente, nombre o numero">
 
              <div class="wa-filters">
@@ -1668,6 +1681,7 @@
                      };
                      $contactIdentity = $this->contactIdentity($conversation);
                      $convIdcli = $conversation->idcli;
+                     $convPhone = $conversation->contactoCanal?->telefono_normalizado;
                  @endphp
                  <button type="button" wire:key="conversation-{{ $conversation->idconv }}" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
                      <div class="wa-item-row">
@@ -1702,6 +1716,7 @@
                          </span>
                          <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
                              <span class="wa-badge {{ $contactIdentity['tone'] }}">{{ $contactIdentity['label'] }}</span>
+                             {{-- Labels de cliente --}}
                              @if($convIdcli && isset($conversationLabels['soporte'][$convIdcli]))
                                  <span class="wa-badge soporte">Soporte</span>
                              @endif
@@ -1710,6 +1725,16 @@
                              @endif
                              @if($convIdcli && isset($conversationLabels['quitar'][$convIdcli]))
                                  <span class="wa-badge quitar">Quitar</span>
+                             @endif
+                             @if($convIdcli && isset($conversationLabels['cuenta_caida'][$convIdcli]))
+                                 <span class="wa-badge cuenta-caida">Cuenta Caída</span>
+                             @endif
+                             {{-- Labels de proveedor --}}
+                             @if($convPhone && isset($conversationLabels['renovar'][$convPhone]))
+                                 <span class="wa-badge renovar">Renovar</span>
+                             @endif
+                             @if($convPhone && isset($conversationLabels['caida_pro'][$convPhone]))
+                                 <span class="wa-badge caida-pro">Caída</span>
                              @endif
                              @if($unread > 0)
                                  <span class="wa-badge danger">{{ $unread }}</span>

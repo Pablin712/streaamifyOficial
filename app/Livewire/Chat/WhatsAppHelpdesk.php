@@ -16,6 +16,8 @@ use App\Models\Mensaje;
 use App\Models\QuickResponse;
 use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
+use App\Services\ConcentracionService;
+use App\Support\PhoneNumber;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -107,24 +109,26 @@ class WhatsAppHelpdesk extends Component
         $conversationLabels = $this->computeConversationLabels($clientIds);
 
         return view('livewire.chat.whatsapp-helpdesk', [
-            'conversations' => $conversationsData['items'],
-            'conversationsHasMore' => $conversationsData['has_more'],
-            'conversationsLoaded' => $conversationsData['loaded'],
-            'activeConversation' => $activeConversation,
-            'messages' => $activeMessages['items'],
-            'messagesHasMore' => $activeMessages['has_more'],
-            'messagesLoaded' => $activeMessages['loaded'],
+            'conversations'         => $conversationsData['items'],
+            'conversationsHasMore'  => $conversationsData['has_more'],
+            'conversationsLoaded'   => $conversationsData['loaded'],
+            'activeConversation'    => $activeConversation,
+            'messages'              => $activeMessages['items'],
+            'messagesHasMore'       => $activeMessages['has_more'],
+            'messagesLoaded'        => $activeMessages['loaded'],
             'activeContactIdentity' => $activeContactIdentity,
-            'clientActiveUsers' => $this->clientActiveUsersForConversation($activeConversation),
+            'clientActiveUsers'     => $this->clientActiveUsersForConversation($activeConversation),
             'quickResponseSuggestions' => $this->quickResponseSuggestions(),
-            'quickResponses' => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
-            'operators' => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
-            'settings' => $settings,
-            'whatsappChannels' => ChatWhatsappChannel::query()
+            'quickResponses'        => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
+            'operators'             => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
+            'settings'              => $settings,
+            'whatsappChannels'      => ChatWhatsappChannel::query()
                 ->orderByDesc('is_active')
                 ->orderBy('instance_name')
                 ->get(),
-            'conversationLabels' => $conversationLabels,
+            'conversationLabels'    => $conversationLabels,
+            'concentracionActive'   => ConcentracionService::isActive(),
+            'concentracionLocked'   => ConcentracionService::isLocked(),
         ]);
     }
 
@@ -734,6 +738,34 @@ class WhatsAppHelpdesk extends Component
             ->where('canal_principal', 'whatsapp')
             ->orderByRaw('COALESCE(last_message_at, ultima_actividad, updated_at) DESC');
 
+        // ── Modo concentración ───────────────────────────────────────────────
+        if (ConcentracionService::isActive()) {
+            $operator = $this->operator();
+
+            if (! $operator) {
+                $query->whereRaw('0 = 1');
+            } else {
+                [$allowedClientIds, $allowedProviderPhones] =
+                    $this->concentracionAllowedIds($operator->idemp);
+
+                if (empty($allowedClientIds) && empty($allowedProviderPhones)) {
+                    $query->whereRaw('0 = 1');
+                } else {
+                    $query->where(function ($q) use ($allowedClientIds, $allowedProviderPhones) {
+                        if (! empty($allowedClientIds)) {
+                            $q->whereIn('idcli', $allowedClientIds);
+                        }
+                        if (! empty($allowedProviderPhones)) {
+                            $q->orWhereHas('contactoCanal', function ($cc) use ($allowedProviderPhones) {
+                                $cc->whereIn('telefono_normalizado', $allowedProviderPhones);
+                            });
+                        }
+                    });
+                }
+            }
+        }
+        // ────────────────────────────────────────────────────────────────────
+
         match ($this->filter) {
             'todos' => null,
             'nuevas' => $query->whereIn('estado', ['nueva', 'nuevo', 'abierta', 'abierto']),
@@ -1018,44 +1050,191 @@ class WhatsAppHelpdesk extends Component
         return ['label' => 'Activa', 'tone' => 'success'];
     }
 
-    private function computeConversationLabels(array $clientIds): array
+    /**
+     * Devuelve [allowedClientIds[], allowedProviderPhones[]] para el modo concentración,
+     * construidos directamente desde las tareas sin pasar por conversiones de tipo erróneas.
+     */
+    private function concentracionAllowedIds(int $empId): array
     {
-        if (empty($clientIds)) {
-            return ['soporte' => [], 'cobrar' => [], 'quitar' => []];
+        $tareas = DB::table('tareas')
+            ->where('assignee_id', $empId)
+            ->where('completada', false)
+            ->select(['tipo_tarea', 'related_id'])
+            ->get();
+
+        // ── iddet (cobrar/quitar) → idcli via view_usuarios_activos ──────────
+        $iddetList = $tareas
+            ->whereIn('tipo_tarea', ['cobrar_usuario', 'quitar_usuario'])
+            ->pluck('related_id')
+            ->filter()
+            ->map(fn ($v) => (int) $v)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $clientsFromUsers = ! empty($iddetList)
+            ? DB::table('view_usuarios_activos')
+                ->whereIn('iddet', $iddetList)
+                ->pluck('idcli')
+                ->filter()
+                ->toArray()
+            : [];
+
+        // ── idsop (soporte_pendiente) → idcli via soportes ───────────────────
+        $idsopList = $tareas
+            ->where('tipo_tarea', 'soporte_pendiente')
+            ->pluck('related_id')
+            ->filter()
+            ->map(fn ($v) => (int) $v)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $clientsFromSoportes = ! empty($idsopList)
+            ? DB::table('soportes')
+                ->whereIn('idsop', $idsopList)
+                ->pluck('idcli')
+                ->filter()
+                ->toArray()
+            : [];
+
+        $allowedClientIds = array_values(array_unique(
+            array_merge($clientsFromUsers, $clientsFromSoportes)
+        ));
+
+        // ── idcue (cuenta tasks) → idcli via view_usuarios_activos ───────────
+        // Nota: idcue es string — NO se castea a int
+        $idcueList = $tareas
+            ->whereIn('tipo_tarea', ['renovar_cuenta', 'cuenta_caida', 'colapso_cuenta'])
+            ->pluck('related_id')
+            ->filter()
+            ->map(fn ($v) => (string) $v)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (! empty($idcueList)) {
+            $clientsFromCuentas = DB::table('view_usuarios_activos')
+                ->whereIn('idcue', $idcueList)
+                ->pluck('idcli')
+                ->filter()
+                ->toArray();
+
+            $allowedClientIds = array_values(array_unique(
+                array_merge($allowedClientIds, $clientsFromCuentas)
+            ));
         }
 
-        $soporteIds = DB::table('soportes')
-            ->whereIn('idcli', $clientIds)
-            ->where('estado', 'pendiente')
-            ->pluck('idcli')
+        // ── Proveedores: idcue list → telefonopro normalizado ────────────────
+        $allIdcue = ! empty($idcueList)
+            ? $idcueList
+            : (! empty($iddetList)
+                ? DB::table('view_usuarios_activos')
+                    ->whereIn('iddet', $iddetList)
+                    ->pluck('idcue')
+                    ->filter()
+                    ->map(fn ($v) => (string) $v)
+                    ->unique()
+                    ->values()
+                    ->toArray()
+                : []);
+
+        $allowedProviderPhones = ! empty($allIdcue)
+            ? DB::table('cuentas')
+                ->join('valores', 'valores.idval', '=', 'cuentas.idval')
+                ->join('proveedores', 'proveedores.idpro', '=', 'valores.idpro')
+                ->whereIn('cuentas.idcue', $allIdcue)
+                ->whereNotNull('proveedores.telefonopro')
+                ->pluck('proveedores.telefonopro')
+                ->unique()
+                ->map(fn ($p) => PhoneNumber::canonicalEc($p))
+                ->filter()
+                ->values()
+                ->toArray()
+            : [];
+
+        return [$allowedClientIds, $allowedProviderPhones];
+    }
+
+    private function computeConversationLabels(array $clientIds): array
+    {
+        // ── Labels por idcli (clientes) ──────────────────────────────────────
+
+        $soporteIds = !empty($clientIds)
+            ? DB::table('soportes')
+                ->whereIn('idcli', $clientIds)
+                ->where('estado', 'pendiente')
+                ->pluck('idcli')
+                ->unique()->flip()->toArray()
+            : [];
+
+        $cobrarIds = !empty($clientIds)
+            ? DB::table('tareas')
+                ->join('view_usuarios_activos as vu', 'vu.iddet', '=', 'tareas.related_id')
+                ->whereIn('vu.idcli', $clientIds)
+                ->where('tareas.tipo_tarea', 'cobrar_usuario')
+                ->where('tareas.completada', false)
+                ->pluck('vu.idcli')
+                ->unique()->flip()->toArray()
+            : [];
+
+        $quitarIds = !empty($clientIds)
+            ? DB::table('tareas')
+                ->join('view_usuarios_activos as vu', 'vu.iddet', '=', 'tareas.related_id')
+                ->whereIn('vu.idcli', $clientIds)
+                ->where('tareas.tipo_tarea', 'quitar_usuario')
+                ->where('tareas.completada', false)
+                ->pluck('vu.idcli')
+                ->unique()->flip()->toArray()
+            : [];
+
+        // Clientes con al menos una cuenta caída (caidacue = true)
+        $cuentaCaidaCliIds = !empty($clientIds)
+            ? DB::table('view_usuarios_activos as vu')
+                ->join('cuentas', 'cuentas.idcue', '=', 'vu.idcue')
+                ->whereIn('vu.idcli', $clientIds)
+                ->where('cuentas.caidacue', true)
+                ->pluck('vu.idcli')
+                ->unique()->flip()->toArray()
+            : [];
+
+        // ── Labels por telefono_normalizado (proveedores) ────────────────────
+
+        $renovarPhones = DB::table('tareas')
+            ->join('cuentas', 'cuentas.idcue', '=', 'tareas.related_id')
+            ->join('valores', 'valores.idval', '=', 'cuentas.idval')
+            ->join('proveedores', 'proveedores.idpro', '=', 'valores.idpro')
+            ->where('tareas.tipo_tarea', 'renovar_cuenta')
+            ->where('tareas.completada', false)
+            ->whereNotNull('proveedores.telefonopro')
+            ->pluck('proveedores.telefonopro')
             ->unique()
+            ->map(fn ($p) => \App\Support\PhoneNumber::canonicalEc($p))
+            ->filter()
             ->flip()
             ->toArray();
 
-        $cobrarIds = DB::table('tareas')
-            ->join('view_usuarios_activos as vu', 'vu.iddet', '=', 'tareas.related_id')
-            ->whereIn('vu.idcli', $clientIds)
-            ->where('tareas.tipo_tarea', 'cobrar_usuario')
+        $caidaProPhones = DB::table('tareas')
+            ->join('cuentas', 'cuentas.idcue', '=', 'tareas.related_id')
+            ->join('valores', 'valores.idval', '=', 'cuentas.idval')
+            ->join('proveedores', 'proveedores.idpro', '=', 'valores.idpro')
+            ->where('tareas.tipo_tarea', 'cuenta_caida')
             ->where('tareas.completada', false)
-            ->pluck('vu.idcli')
+            ->whereNotNull('proveedores.telefonopro')
+            ->pluck('proveedores.telefonopro')
             ->unique()
-            ->flip()
-            ->toArray();
-
-        $quitarIds = DB::table('tareas')
-            ->join('view_usuarios_activos as vu', 'vu.iddet', '=', 'tareas.related_id')
-            ->whereIn('vu.idcli', $clientIds)
-            ->where('tareas.tipo_tarea', 'quitar_usuario')
-            ->where('tareas.completada', false)
-            ->pluck('vu.idcli')
-            ->unique()
+            ->map(fn ($p) => \App\Support\PhoneNumber::canonicalEc($p))
+            ->filter()
             ->flip()
             ->toArray();
 
         return [
-            'soporte' => $soporteIds,
-            'cobrar'  => $cobrarIds,
-            'quitar'  => $quitarIds,
+            'soporte'       => $soporteIds,
+            'cobrar'        => $cobrarIds,
+            'quitar'        => $quitarIds,
+            'cuenta_caida'  => $cuentaCaidaCliIds,
+            'renovar'       => $renovarPhones,
+            'caida_pro'     => $caidaProPhones,
         ];
     }
 }
