@@ -458,6 +458,23 @@ class ChatRouterController extends Controller
                 ->limit(40)
                 ->get(['id', 'tipo', 'categoria', 'clave', 'titulo', 'resumen', 'contenido', 'tags']);
 
+            // Imágenes que el agente ya envió en esta conversación (últimos 7 días)
+            // Permite al agente saber qué NO repetir.
+            $imagenesAgente = Mensaje::where('idconv', $conversacion->idconv)
+                ->where('tipo_remitente', 'ia')
+                ->where('tipo_contenido', 'imagen')
+                ->where('created_at', '>=', now()->subDays(7))
+                ->orderByDesc('created_at')
+                ->get(['idmsg', 'metadata', 'created_at'])
+                ->map(fn ($m) => [
+                    'imagen_id'    => data_get($m->metadata, 'imagen_agente_id'),
+                    'imagen_nombre'=> data_get($m->metadata, 'imagen_agente_nombre'),
+                    'enviada_at'   => optional($m->created_at)->toIso8601String(),
+                    'hace_dias'    => (int) now()->diffInDays($m->created_at),
+                ])
+                ->filter(fn ($r) => $r['imagen_id'] !== null)
+                ->values();
+
             return response()->json([
                 'success' => true,
                 'message' => $debeResponder
@@ -483,6 +500,7 @@ class ChatRouterController extends Controller
                     'resumenes' => $resumenes,
                     'memoria_negocio' => $memoriaNegocio,
                     'subagentes' => $subagentes,
+                    'imagenes_agente_recientes' => $imagenesAgente,
                 ],
             ]);
         } catch (\Throwable $e) {

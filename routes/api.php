@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V2\CodigoVerificationController;
 use App\Http\Controllers\Api\V2\ChatAssistantController;
 use App\Http\Controllers\Api\V2\ChatRouterController;
 use App\Http\Controllers\Api\V2\ChatWhatsappChannelController;
+use App\Http\Controllers\Api\V2\ChatAgenteImagenController;
 use App\Http\Controllers\Api\V2\WhatsAppPaymentController;
 use App\Http\Controllers\Api\DailyStatisticsController;
 use App\Http\Controllers\Chat\WhatsAppWebhookController;
@@ -206,6 +207,11 @@ Route::prefix('v2')->group(function () {
         Route::post('/handoff', 'derivarHumano')->name('api.v2.chat.router.handoff');
         Route::post('/memory/summary', 'guardarResumen')->name('api.v2.chat.router.memory.summary');
         Route::post('/memory/contact', 'guardarMemoriaContacto')->name('api.v2.chat.router.memory.contact');
+    });
+
+    Route::prefix('chat/agente')->controller(ChatAgenteImagenController::class)->group(function () {
+        Route::get('/imagenes', 'index')->name('api.v2.chat.agente.imagenes.index');
+        Route::post('/imagenes/{id}/enviar', 'enviar')->name('api.v2.chat.agente.imagenes.enviar');
     });
 
     Route::prefix('chat/assistant')->controller(ChatAssistantController::class)->group(function () {

@@ -17,13 +17,43 @@
             <li class="breadcrumb-item active">Biblioteca del Agente</li>
         </ol>
     </nav>
-    <p class="text-muted mb-4" style="font-size:.88rem;max-width:680px;">
-        Contextos de conocimiento que el agente IA usa para responder con precisión.
-        Incluye FAQs, servicios, políticas, campañas temporales y más.
-        Las campañas activas se inyectan automáticamente según su rango de fechas.
-    </p>
 
-    @livewire('chat.agent-library')
+    {{-- Tabs --}}
+    <ul class="nav nav-tabs mb-4" id="libraryTabs" role="tablist" style="border-bottom:2px solid #e5e7eb;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-conocimiento" data-bs-toggle="tab" data-bs-target="#panel-conocimiento"
+                    type="button" role="tab" style="font-size:.88rem;font-weight:600;">
+                📖 Conocimiento
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-imagenes" data-bs-toggle="tab" data-bs-target="#panel-imagenes"
+                    type="button" role="tab" style="font-size:.88rem;font-weight:600;">
+                🖼 Imágenes
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        {{-- Tab: Conocimiento --}}
+        <div class="tab-pane fade show active" id="panel-conocimiento" role="tabpanel">
+            <p class="text-muted mb-4" style="font-size:.88rem;max-width:680px;">
+                Contextos de conocimiento que el agente IA usa para responder con precisión.
+                Incluye FAQs, servicios, políticas, campañas temporales y más.
+                Las campañas activas se inyectan automáticamente según su rango de fechas.
+            </p>
+            @livewire('chat.agent-library')
+        </div>
+
+        {{-- Tab: Imágenes --}}
+        <div class="tab-pane fade" id="panel-imagenes" role="tabpanel">
+            <p class="text-muted mb-4" style="font-size:.88rem;max-width:680px;">
+                Imágenes que el agente puede enviar a los clientes por WhatsApp.
+                El agente consulta la lista y elige cuál imagen enviar según la conversación.
+            </p>
+            @livewire('chat.agent-library-images')
+        </div>
+    </div>
 
 </div>
 @endsection

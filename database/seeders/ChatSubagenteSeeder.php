@@ -7,6 +7,19 @@ use Illuminate\Database\Seeder;
 
 class ChatSubagenteSeeder extends Seeder
 {
+    // Regla estándar que se inyecta al prompt de todo subagente que puede usar imágenes.
+    // n8n lee esto desde el campo prompt_base del contexto.
+    private const IMAGEN_REGLAS = <<<'RULES'
+
+REGLAS PARA ENVÍO DE IMÁGENES:
+- Tienes las herramientas `obtener_imagenes_agente` y `enviar_imagen_agente`.
+- `obtener_imagenes_agente` devuelve la lista con (id, nombre, descripcion, categoria, tags). Úsala SOLO si el cliente pregunta algo que una imagen podría aclarar mejor (catálogo, precios visuales, pasos de instalación, etc.).
+- ANTES de enviar una imagen, revisa `imagenes_agente_recientes` del contexto. Si esa imagen ya fue enviada en esta conversación (campo imagen_id presente), NO la vuelvas a enviar aunque el cliente la pida de nuevo — redirígela con texto.
+- Máximo UNA imagen por respuesta. Nunca envíes imágenes de forma decorativa o sin motivo claro.
+- No envíes imágenes si en el `historial_reciente` ya hay un mensaje de tipo 'imagen' del agente en los últimos 3 mensajes del bot.
+- Parámetros de `enviar_imagen_agente`: { id, numero: <external_chat_id del contacto>, instance_name: <canal.instance_name>, idconv: <idconv>, caption: <texto breve opcional> }.
+RULES;
+
     public function run(): void
     {
         $subagentes = [
@@ -53,7 +66,7 @@ class ChatSubagenteSeeder extends Seeder
                 'nombre' => 'Asistente No Registrado',
                 'tipo' => 'asistente',
                 'descripcion' => 'Atiende leads nuevos, responde preguntas frecuentes y detecta intención comercial.',
-                'prompt_base' => 'Responde rapido, firme y amable. Estilo formal y elegante. Mensajes cortos, directos, claros, maximo 1-2 emojis por respuesta. Siempre termina con una accion concreta.',
+                'prompt_base' => 'Responde rapido, firme y amable. Estilo formal y elegante. Mensajes cortos, directos, claros, maximo 1-2 emojis por respuesta. Siempre termina con una accion concreta.' . self::IMAGEN_REGLAS,
                 'criterios' => [
                     'requiere_cliente' => false,
                     'estado_relacion' => ['lead'],
@@ -79,6 +92,8 @@ class ChatSubagenteSeeder extends Seeder
                     'consultar_bancos',
                     'consultar_banco_por_nombre',
                     'handoff_humano',
+                    'obtener_imagenes_agente',
+                    'enviar_imagen_agente',
                 ],
                 'prioridad' => 10,
                 'activo' => true,
@@ -88,11 +103,19 @@ class ChatSubagenteSeeder extends Seeder
                 'nombre' => 'Vendedor de Cierre',
                 'tipo' => 'vendedor',
                 'descripcion' => 'Cierra ventas, sugiere plan o combo y conduce a pago.',
-                'prompt_base' => 'Prioriza cierre, claridad, margen y una sola llamada a la accion por mensaje.',
+                'prompt_base' => 'Prioriza cierre, claridad, margen y una sola llamada a la accion por mensaje.' . self::IMAGEN_REGLAS,
                 'criterios' => [
                     'intenciones' => ['precio', 'plan', 'combo', 'comprar', 'descuento'],
                 ],
-                'tools' => ['consultar_precios', 'consultar_planes_por_servicio', 'consultar_combos', 'calcular_descuento_permitido', 'consultar_metodos_pago'],
+                'tools' => [
+                    'consultar_precios',
+                    'consultar_planes_por_servicio',
+                    'consultar_combos',
+                    'calcular_descuento_permitido',
+                    'consultar_metodos_pago',
+                    'obtener_imagenes_agente',
+                    'enviar_imagen_agente',
+                ],
                 'prioridad' => 20,
                 'activo' => true,
             ],
@@ -101,12 +124,18 @@ class ChatSubagenteSeeder extends Seeder
                 'nombre' => 'Soporte Cliente',
                 'tipo' => 'soporte',
                 'descripcion' => 'Atiende clientes ya registrados con incidencias de acceso, servicio o estado.',
-                'prompt_base' => 'Actua como soporte resolutivo, preciso y sereno. Primero diagnostica, luego indica accion.',
+                'prompt_base' => 'Actua como soporte resolutivo, preciso y sereno. Primero diagnostica, luego indica accion.' . self::IMAGEN_REGLAS,
                 'criterios' => [
                     'requiere_cliente' => true,
                     'intenciones' => ['soporte', 'falla', 'no entra', 'contrasena', 'pantalla'],
                 ],
-                'tools' => ['buscar_cliente', 'consultar_historial_cliente', 'consultar_perfiles_disponibles'],
+                'tools' => [
+                    'buscar_cliente',
+                    'consultar_historial_cliente',
+                    'consultar_perfiles_disponibles',
+                    'obtener_imagenes_agente',
+                    'enviar_imagen_agente',
+                ],
                 'prioridad' => 30,
                 'activo' => true,
             ],
@@ -115,11 +144,16 @@ class ChatSubagenteSeeder extends Seeder
                 'nombre' => 'Cobranzas y Pago',
                 'tipo' => 'cobranzas',
                 'descripcion' => 'Guia metodos de pago y datos bancarios. La recepcion/validacion de comprobantes la maneja el flujo verificador de pagos.',
-                'prompt_base' => 'Guia el pago con instrucciones cortas. Para comprobantes, deriva al flujo de subidor/verificador sin duplicar procesos.',
+                'prompt_base' => 'Guia el pago con instrucciones cortas. Para comprobantes, deriva al flujo de subidor/verificador sin duplicar procesos.' . self::IMAGEN_REGLAS,
                 'criterios' => [
                     'intenciones' => ['pagar', 'comprobante', 'transferencia', 'banco'],
                 ],
-                'tools' => ['consultar_metodos_pago', 'consultar_banco_por_nombre'],
+                'tools' => [
+                    'consultar_metodos_pago',
+                    'consultar_banco_por_nombre',
+                    'obtener_imagenes_agente',
+                    'enviar_imagen_agente',
+                ],
                 'prioridad' => 40,
                 'activo' => true,
             ],
