@@ -6,6 +6,7 @@ use App\Models\ChatAgenteImagen;
 use App\Models\ChatMemoriaNegocio;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -30,6 +31,7 @@ class AgentLibraryImages extends Component
     public int    $prioridad   = 50;
     public bool   $activo      = true;
     public $archivo = null;
+    public ?string $archivoActual = null;
 
     protected function rules(): array
     {
@@ -56,39 +58,31 @@ class AgentLibraryImages extends Component
     public function updatingBusqueda(): void    { $this->resetPage(); }
     public function updatingFiltroCategoria(): void { $this->resetPage(); }
 
-    private function openModal(): void
-    {
-        $this->js("window.dispatchEvent(new CustomEvent('open-modal',{detail:'agentImgModal'}))");
-    }
-
-    private function closeModalJs(): void
-    {
-        $this->js("window.dispatchEvent(new CustomEvent('close-modal',{detail:'agentImgModal'}))");
-    }
-
     public function openCreate(): void
     {
         $this->resetForm();
-        $this->openModal();
+        $this->showModal = true;
     }
 
     public function openEdit(int $id): void
     {
         $img = ChatAgenteImagen::findOrFail($id);
-        $this->editingId   = $id;
-        $this->nombre      = $img->nombre;
-        $this->descripcion = $img->descripcion;
-        $this->categoria   = $img->categoria;
-        $this->tagsInput   = implode(', ', $img->tags ?? []);
-        $this->prioridad   = $img->prioridad;
-        $this->activo      = $img->activo;
-        $this->archivo     = null;
-        $this->openModal();
+        $this->editingId     = $id;
+        $this->nombre        = $img->nombre;
+        $this->descripcion   = $img->descripcion;
+        $this->categoria     = $img->categoria;
+        $this->tagsInput     = implode(', ', $img->tags ?? []);
+        $this->prioridad     = $img->prioridad;
+        $this->activo        = $img->activo;
+        $this->archivo       = null;
+        $this->archivoActual = $img->archivo;
+        $this->showModal     = true;
     }
 
     public function closeModal(): void
     {
         $this->resetForm();
+        $this->showModal = false;
     }
 
     public function save(): void
@@ -110,7 +104,7 @@ class AgentLibraryImages extends Component
             if ($this->archivo) {
                 Storage::disk('public')->makeDirectory('agente');
                 $extension = $this->archivo->getClientOriginalExtension();
-                $filename  = \Str::uuid() . '.' . $extension;
+                $filename  = Str::uuid() . '.' . $extension;
                 $this->archivo->storeAs('agente', $filename, 'public');
                 $data['archivo']   = $filename;
                 $data['mime_type'] = $this->archivo->getMimeType();
@@ -137,7 +131,7 @@ class AgentLibraryImages extends Component
         }
 
         $this->resetForm();
-        $this->closeModalJs();
+        $this->showModal = false;
     }
 
     public function toggleActivo(int $id): void
@@ -158,7 +152,7 @@ class AgentLibraryImages extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['editingId', 'nombre', 'descripcion', 'tagsInput', 'archivo']);
+        $this->reset(['editingId', 'nombre', 'descripcion', 'tagsInput', 'archivo', 'archivoActual']);
         $this->categoria = 'general';
         $this->prioridad = 50;
         $this->activo    = true;

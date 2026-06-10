@@ -78,7 +78,7 @@ class ChatAgenteImagenController extends Controller
         $numero       = $request->input('numero');
         $caption      = $request->input('caption', '');
 
-        $mediaUrl = url(Storage::url('agente/' . $imagen->archivo));
+        $mediaUrl = Storage::disk('public')->url('agente/' . $imagen->archivo);
         $mimeType = $imagen->mime_type ?? 'image/jpeg';
         $fileName = basename($imagen->archivo);
 

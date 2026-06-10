@@ -113,7 +113,7 @@
         <div class="img-grid">
             @foreach($imagenes as $img)
                 <div class="img-card {{ $img->activo ? '' : 'inactiva' }}">
-                    @php $thumb = Storage::url('agente/' . $img->archivo); @endphp
+                    @php $thumb = Storage::disk('public')->url('agente/' . $img->archivo); @endphp
                     <img src="{{ $thumb }}" alt="{{ $img->nombre }}" class="img-thumb"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                     <div class="img-thumb-placeholder" style="display:none;">🖼</div>
@@ -164,131 +164,143 @@
 
 
     {{-- ══════════════════════════════════════════════════════════
-         MODAL
+         MODAL — controlado por Livewire ($showModal), sin Alpine
          ══════════════════════════════════════════════════════════ --}}
-    <x-modal name="agentImgModal" :show="false" maxWidth="lg">
-        <div wire:key="img-form-{{ $editingId ?? 0 }}">
+    @if($showModal)
+    <div style="position:fixed;inset:0;z-index:1040;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:1.75rem 1rem;overflow-y:auto;">
+        <div class="modal-dialog modal-lg w-100" style="margin:0;max-width:780px;">
+            <div class="modal-content">
 
-        <div class="modal-header">
-            <h5 class="modal-title">
-                <i class="fas fa-{{ $editingId ? 'pen' : 'image' }} me-2"></i>
-                {{ $editingId ? 'Editar imagen' : 'Agregar imagen al agente' }}
-            </h5>
-            <button type="button" class="btn-close"
-                    onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'agentImgModal'}))"
-                    wire:click="closeModal">
-            </button>
-        </div>
-
-        <div class="modal-body" style="max-height:72vh; overflow-y:auto;">
-
-            @if($errors->any())
-                <div class="alert alert-danger py-2">
-                    <ul class="mb-0 ps-3" style="font-size:.82rem;">
-                        @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
-                    </ul>
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-{{ $editingId ? 'pen' : 'image' }} me-2"></i>
+                        {{ $editingId ? 'Editar imagen' : 'Agregar imagen al agente' }}
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
-            @endif
 
-            {{-- Imagen --}}
-            <div class="mb-3">
-                <label class="fw-semibold form-label">
-                    Imagen <span class="text-danger">*</span>
-                    @if($editingId) <span class="text-muted fw-normal">(deja vacío para mantener la actual)</span> @endif
-                </label>
+                <div class="modal-body" style="max-height:65vh; overflow-y:auto;">
 
-                @if($archivo)
-                    <div class="mb-2 text-center">
-                        <img src="{{ $archivo->temporaryUrl() }}" class="upload-preview" alt="Preview">
-                    </div>
-                @elseif($editingId)
-                    @php $img = \App\Models\ChatAgenteImagen::find($editingId); @endphp
-                    @if($img)
-                        <div class="mb-2 text-center">
-                            <img src="{{ Storage::url('agente/' . $img->archivo) }}" class="upload-preview" alt="Actual">
-                            <div style="font-size:.75rem;color:#9ca3af;margin-top:.25rem;">Imagen actual</div>
+                    @if($errors->any())
+                        <div class="alert alert-danger py-2">
+                            <ul class="mb-0 ps-3" style="font-size:.82rem;">
+                                @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                            </ul>
                         </div>
                     @endif
+
+                    {{-- Imagen --}}
+                    <div class="mb-3">
+                        <label class="fw-semibold form-label">
+                            Imagen <span class="text-danger">*</span>
+                            @if($editingId) <span class="text-muted fw-normal">(deja vacío para mantener la actual)</span> @endif
+                        </label>
+
+                        @if($archivo)
+                            <div class="mb-2 text-center">
+                                <img src="{{ $archivo->temporaryUrl() }}" class="upload-preview" alt="Preview">
+                            </div>
+                        @elseif($archivoActual)
+                            <div class="mb-2 text-center">
+                                <img src="{{ Storage::disk('public')->url('agente/' . $archivoActual) }}" class="upload-preview" alt="Actual">
+                                <div style="font-size:.75rem;color:#9ca3af;margin-top:.25rem;">Imagen actual</div>
+                            </div>
+                        @endif
+
+                        <input type="file" wire:model="archivo" accept="image/jpeg,image/png,image/gif,image/webp"
+                               class="form-control @error('archivo') is-invalid @enderror">
+                        <div wire:loading wire:target="archivo" class="mt-1" style="font-size:.78rem;color:#6366f1;">
+                            <span class="spinner-border spinner-border-sm me-1"></span> Subiendo imagen…
+                        </div>
+                        <span style="font-size:.75rem;color:#6b7280;">JPG, PNG, GIF o WebP. Máx. 5 MB.</span>
+                        @error('archivo') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- Nombre --}}
+                    <div class="mb-3">
+                        <label class="fw-semibold form-label">Nombre <span class="text-danger">*</span></label>
+                        <input wire:model="nombre" type="text" class="form-control @error('nombre') is-invalid @enderror"
+                               placeholder="Ej: Catálogo Netflix enero 2026">
+                        <span style="font-size:.75rem;color:#6b7280;">Nombre interno para identificar la imagen en la lista.</span>
+                        @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- Descripción --}}
+                    <div class="mb-3">
+                        <label class="fw-semibold form-label">Descripción para el agente <span class="text-danger">*</span></label>
+                        <textarea wire:model="descripcion" rows="3"
+                                  class="form-control @error('descripcion') is-invalid @enderror"
+                                  placeholder="Ej: Imagen con los precios actuales de Netflix: perfil 1 pantalla $X, 2 pantallas $Y. Úsala cuando el cliente pregunte por precios de Netflix."></textarea>
+                        <span style="font-size:.75rem;color:#6b7280;">
+                            <strong>El agente lee esto</strong> para decidir cuándo y qué imagen enviar. Sé descriptivo.
+                        </span>
+                        @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- Categoría + Prioridad --}}
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-7">
+                            <label class="fw-semibold form-label">Categoría</label>
+                            <select wire:model="categoria" class="form-select @error('categoria') is-invalid @enderror">
+                                @foreach($categorias as $k => $label)
+                                    <option value="{{ $k }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('categoria') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="fw-semibold form-label">Prioridad</label>
+                            <input wire:model="prioridad" type="number" min="1" max="999" class="form-control @error('prioridad') is-invalid @enderror">
+                            <span style="font-size:.75rem;color:#6b7280;">1 = más prioritaria en la lista.</span>
+                            @error('prioridad') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Tags --}}
+                    <div class="mb-3">
+                        <label class="fw-semibold form-label">Tags <span class="text-muted fw-normal">(opcional)</span></label>
+                        <input wire:model="tagsInput" type="text" class="form-control"
+                               placeholder="netflix, precios, plan-basico">
+                        <span style="font-size:.75rem;color:#6b7280;">Separados por coma.</span>
+                    </div>
+
+                    {{-- Activo --}}
+                    <div class="mb-2">
+                        <label class="d-flex align-items-center gap-2" style="cursor:pointer;">
+                            <input wire:model="activo" type="checkbox" class="form-check-input" style="width:20px;height:20px;">
+                            <span class="fw-medium">Activa</span>
+                            <span style="font-size:.8rem;color:#6b7280;">(el agente solo puede enviar imágenes activas)</span>
+                        </label>
+                    </div>
+
+                </div>
+
+                @if($errors->any())
+                    <div class="px-3 pb-1">
+                        <div class="alert alert-danger py-2 mb-0">
+                            <ul class="mb-0 ps-3" style="font-size:.82rem;">
+                                @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                            </ul>
+                        </div>
+                    </div>
                 @endif
 
-                <input type="file" wire:model="archivo" accept="image/jpeg,image/png,image/gif,image/webp"
-                       class="form-control @error('archivo') is-invalid @enderror">
-                <span style="font-size:.75rem;color:#6b7280;">JPG, PNG, GIF o WebP. Máx. 5 MB.</span>
-                @error('archivo') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            {{-- Nombre --}}
-            <div class="mb-3">
-                <label class="fw-semibold form-label">Nombre <span class="text-danger">*</span></label>
-                <input wire:model="nombre" type="text" class="form-control @error('nombre') is-invalid @enderror"
-                       placeholder="Ej: Catálogo Netflix enero 2026">
-                <span style="font-size:.75rem;color:#6b7280;">Nombre interno para identificar la imagen en la lista.</span>
-                @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            {{-- Descripción --}}
-            <div class="mb-3">
-                <label class="fw-semibold form-label">Descripción para el agente <span class="text-danger">*</span></label>
-                <textarea wire:model="descripcion" rows="3"
-                          class="form-control @error('descripcion') is-invalid @enderror"
-                          placeholder="Ej: Imagen con los precios actuales de Netflix: perfil 1 pantalla $X, 2 pantallas $Y. Úsala cuando el cliente pregunte por precios de Netflix."></textarea>
-                <span style="font-size:.75rem;color:#6b7280;">
-                    <strong>El agente lee esto</strong> para decidir cuándo y qué imagen enviar. Sé descriptivo.
-                </span>
-                @error('descripcion') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-
-            {{-- Categoría + Prioridad --}}
-            <div class="row g-3 mb-3">
-                <div class="col-sm-7">
-                    <label class="fw-semibold form-label">Categoría</label>
-                    <select wire:model="categoria" class="form-select @error('categoria') is-invalid @enderror">
-                        @foreach($categorias as $k => $label)
-                            <option value="{{ $k }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    @error('categoria') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                            wire:click="save"
+                            wire:loading.attr="disabled"
+                            wire:target="save">
+                        <span wire:loading wire:target="save" class="spinner-border spinner-border-sm me-1"></span>
+                        <i wire:loading.remove wire:target="save" class="fas fa-save me-1"></i>
+                        {{ $editingId ? 'Guardar cambios' : 'Agregar imagen' }}
+                    </button>
                 </div>
-                <div class="col-sm-5">
-                    <label class="fw-semibold form-label">Prioridad</label>
-                    <input wire:model="prioridad" type="number" min="1" max="999" class="form-control @error('prioridad') is-invalid @enderror">
-                    <span style="font-size:.75rem;color:#6b7280;">1 = más prioritaria en la lista.</span>
-                    @error('prioridad') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
+
             </div>
-
-            {{-- Tags --}}
-            <div class="mb-3">
-                <label class="fw-semibold form-label">Tags <span class="text-muted fw-normal">(opcional)</span></label>
-                <input wire:model="tagsInput" type="text" class="form-control"
-                       placeholder="netflix, precios, plan-basico">
-                <span style="font-size:.75rem;color:#6b7280;">Separados por coma.</span>
-            </div>
-
-            {{-- Activo --}}
-            <div class="mb-2">
-                <label class="d-flex align-items-center gap-2" style="cursor:pointer;">
-                    <input wire:model="activo" type="checkbox" class="form-check-input" style="width:20px;height:20px;">
-                    <span class="fw-medium">Activa</span>
-                    <span style="font-size:.8rem;color:#6b7280;">(el agente solo puede enviar imágenes activas)</span>
-                </label>
-            </div>
-
         </div>
-
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary"
-                    onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'agentImgModal'}))"
-                    wire:click="closeModal">
-                Cancelar
-            </button>
-            <button type="button" class="btn btn-primary" wire:click="save" wire:loading.attr="disabled">
-                <span wire:loading wire:target="save" class="spinner-border spinner-border-sm me-1"></span>
-                <i wire:loading.remove wire:target="save" class="fas fa-save me-1"></i>
-                {{ $editingId ? 'Guardar cambios' : 'Agregar imagen' }}
-            </button>
-        </div>
-
-        </div>
-    </x-modal>
+    </div>
+    @endif
 </div>

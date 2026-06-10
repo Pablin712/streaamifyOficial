@@ -27,7 +27,7 @@ class ChatAgenteImagen extends Model
 
     public function getUrlPublicaAttribute(): string
     {
-        return Storage::url('agente/' . $this->archivo);
+        return Storage::disk('public')->url('agente/' . $this->archivo);
     }
 
     public function getRutaAbsolutaAttribute(): string
