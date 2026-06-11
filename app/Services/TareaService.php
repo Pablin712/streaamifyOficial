@@ -346,6 +346,21 @@ class TareaService
         return $creadas;
     }
 
+    // ─── Auto-completado desde otros módulos ──────────────────────────────────
+
+    public function completarTareasRelacionadas(string $tipoTarea, string $relatedModel, $relatedId, int $empleadoId): int
+    {
+        return Tarea::where('tipo_tarea', $tipoTarea)
+            ->where('related_model', $relatedModel)
+            ->where('related_id', (string) $relatedId)
+            ->where('completada', false)
+            ->update([
+                'completada'       => true,
+                'completada_por'   => $empleadoId,
+                'fecha_completada' => now(),
+            ]);
+    }
+
     // ─── Limpieza ─────────────────────────────────────────────────────────────
 
     private function limpiarTareasObsoletas(): int

@@ -73,7 +73,7 @@
     // ── Abrir modal individual ────────────────────────────────────────────────
     window.wspAbrirDesdeBtn = function(btn) {
         const d = btn.dataset;
-        wspSingleData = {nombre: d.nombre || '', telefono: d.tel || '', idcli: parseInt(d.idcli || 0), mensaje: d.msg || ''};
+        wspSingleData = {nombre: d.nombre || '', telefono: d.tel || '', idcli: parseInt(d.idcli || 0), mensaje: d.msg || '', tareaId: parseInt(d.tid || 0)};
         if (!wspSingleData.telefono) { wspToast('⚠️ Este cliente no tiene teléfono registrado.', 'warning'); return; }
         document.getElementById('wsp-modal-cliente').textContent  = wspSingleData.nombre   || 'Cliente';
         document.getElementById('wsp-modal-telefono').textContent = wspSingleData.telefono || '—';
@@ -108,6 +108,13 @@
             if (!r.ok || !r.data.success) throw new Error(r.data.message || 'Error al enviar.');
             wspCerrar();
             wspToast('✅ ' + (r.data.message || 'Mensaje enviado.'), 'success');
+            // Auto-completar la tarea de cobro tras envío exitoso
+            if (wspSingleData?.tareaId > 0) {
+                try {
+                    const wireEl = document.querySelector('[wire\\:id]');
+                    if (wireEl) window.Livewire?.find(wireEl.getAttribute('wire:id'))?.completar(wspSingleData.tareaId);
+                } catch(_) {}
+            }
         } catch(e) {
             wspToast('❌ ' + (e.message || 'No se pudo enviar.'), 'danger');
         } finally {

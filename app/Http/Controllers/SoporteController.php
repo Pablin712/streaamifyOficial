@@ -12,6 +12,7 @@ use App\Models\Historial;
 use App\Models\Soporte;
 use App\Services\Chat\WhatsAppOutboundService;
 use App\Services\ConcentracionService;
+use App\Services\TareaService;
 use App\Models\ViewUsuarioActivo;
 use App\Notifications\NuevoSoporteCliente;
 use App\Support\PhoneNumber;
@@ -125,6 +126,8 @@ class SoporteController extends Controller
             'solucion' => $validated['solucion'],
             'estado' => 'atendido',
         ]);
+
+        app(TareaService::class)->completarTareasRelacionadas('soporte_pendiente', 'Soporte', $idsop, $user->idemp);
 
         Historial::create([
             'accion' => 'Atención de soporte',

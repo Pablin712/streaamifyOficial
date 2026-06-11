@@ -6,6 +6,7 @@ use App\Models\ChatContactoCanal;
 use App\Models\ChatWhatsappChannel;
 use App\Models\Empleado;
 use App\Models\Historial;
+use App\Models\Soporte;
 use App\Models\Tarea;
 use App\Models\ViewUsuarioActivo;
 use Illuminate\Support\Facades\Auth;
@@ -429,6 +430,13 @@ class TareasBoard extends Component
             ? $this->resolverDatosWspBatch()
             : [];
 
+        $contextoPorTarea = [];
+        if ($this->tab === 'pool' && $pool->isNotEmpty()) {
+            $contextoPorTarea = $this->resolverContextoPorTareas($pool->getCollection());
+        } elseif ($this->tab === 'mis_tareas' && $misTareas->isNotEmpty()) {
+            $contextoPorTarea = $this->resolverContextoPorTareas($misTareas);
+        }
+
         // Tareas de compañeros: solo cuando el pool está vacío y el empleado puede ayudar
         $tareasDeOtros = ($this->tab === 'pool' && $totalPool === 0)
             ? Tarea::whereNotNull('assignee_id')
@@ -445,7 +453,7 @@ class TareasBoard extends Component
             'pool', 'misTareas', 'completadas', 'todasAsignadas',
             'totalPool', 'totalMias', 'completadasHoy', 'totalAsignadas',
             'empleados', 'isAdmin', 'tipos', 'disponiblesPorTipo',
-            'tieneCanalWsp', 'datosWspPorTarea', 'tareasDeOtros'
+            'tieneCanalWsp', 'datosWspPorTarea', 'tareasDeOtros', 'contextoPorTarea'
         ));
     }
 
@@ -503,6 +511,60 @@ class TareasBoard extends Component
                 ->pluck('id')
                 ->toArray(),
         };
+    }
+
+    // ─── Contexto enriquecido por tarea (cliente, idcli, tipo soporte) ──────────
+
+    private function resolverContextoPorTareas(\Illuminate\Support\Collection $tareas): array
+    {
+        $context = [];
+
+        // soporte_pendiente → Soporte → Cliente
+        $idSops = $tareas->where('tipo_tarea', 'soporte_pendiente')
+            ->pluck('related_id')->filter()->map(fn($v) => (int) $v)->toArray();
+
+        if (!empty($idSops)) {
+            $soportes = Soporte::whereIn('idsop', $idSops)
+                ->with('cliente:idcli,nombrecli')
+                ->get(['idsop', 'idcli', 'idcue', 'tipo']);
+
+            foreach ($tareas->where('tipo_tarea', 'soporte_pendiente') as $t) {
+                $s = $soportes->firstWhere('idsop', (int) $t->related_id);
+                if ($s) {
+                    $context[$t->id] = [
+                        'tipo_tarea' => 'soporte_pendiente',
+                        'idcli'      => $s->idcli,
+                        'cliente'    => $s->cliente?->nombrecli ?? 'Cliente #' . $s->idcli,
+                        'idcue'      => $s->idcue,
+                        'tipo'       => $s->tipo,
+                        'idsop'      => $s->idsop,
+                    ];
+                }
+            }
+        }
+
+        // cobrar_usuario / quitar_usuario → ViewUsuarioActivo → idcli
+        $idDets = $tareas->whereIn('tipo_tarea', ['cobrar_usuario', 'quitar_usuario'])
+            ->pluck('related_id')->filter()->map(fn($v) => (int) $v)->toArray();
+
+        if (!empty($idDets)) {
+            $usuarios = ViewUsuarioActivo::whereIn('iddet', $idDets)
+                ->get(['iddet', 'idcli', 'nombre_cliente', 'idcue']);
+
+            foreach ($tareas->whereIn('tipo_tarea', ['cobrar_usuario', 'quitar_usuario']) as $t) {
+                $u = $usuarios->firstWhere('iddet', (int) $t->related_id);
+                if ($u) {
+                    $context[$t->id] = [
+                        'tipo_tarea' => $t->tipo_tarea,
+                        'idcli'      => $u->idcli,
+                        'cliente'    => $u->nombre_cliente ?? 'Cliente',
+                        'idcue'      => $u->idcue,
+                    ];
+                }
+            }
+        }
+
+        return $context;
     }
 
     // ─── WhatsApp: pre-computar datos para envío JS ───────────────────────────

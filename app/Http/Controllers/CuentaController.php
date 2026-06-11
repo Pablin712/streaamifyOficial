@@ -20,6 +20,7 @@ use App\Models\Mensaje;
 use App\Services\ConcentracionService;
 use App\Services\CuentaService;
 use App\Services\BancoService;
+use App\Services\TareaService;
 use App\Services\NetflixCodigoService;
 use App\Services\Chat\WhatsAppOutboundService;
 use Illuminate\Http\Request;
@@ -391,6 +392,11 @@ class CuentaController extends Controller
         $cuenta = Cuenta::with('valor')->findOrFail($idcue);
         $cuenta->caidacue = !$cuenta->caidacue;
         $cuenta->save();
+
+        // Si se restaura la cuenta (deja de estar caída), completar las tareas relacionadas
+        if (!$cuenta->caidacue) {
+            app(TareaService::class)->completarTareasRelacionadas('cuenta_caida', 'Cuenta', $idcue, Auth::user()->idemp);
+        }
 
         Historial::create([
             'accion' => 'Se actualizó el estado de cuenta con ID: ' . $cuenta->idcue,
@@ -1336,6 +1342,8 @@ class CuentaController extends Controller
             $cuenta->update([
                 'fechavencue' => $request->nuevafechavencue
             ]);
+
+            app(TareaService::class)->completarTareasRelacionadas('renovar_cuenta', 'Cuenta', $idcue, Auth::user()->idemp);
 
             // Procesar pago y crear costo
             $sePago = $request->has('se_pago') && $request->se_pago == '1';

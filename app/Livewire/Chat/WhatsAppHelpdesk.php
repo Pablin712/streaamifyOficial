@@ -93,6 +93,16 @@ class WhatsAppHelpdesk extends Component
     public function mount(): void
     {
         abort_if(Gate::denies('chat.ver'), 403, 'No tienes permiso para acceder al chat.');
+
+        // Pre-filtrar por cliente cuando se llega desde tareas (?idcli=X)
+        $idcli = (int) request()->query('idcli', 0);
+        if ($idcli > 0) {
+            $nombre = DB::table('clientes')->where('idcli', $idcli)->value('nombrecli');
+            if ($nombre) {
+                $this->search = $nombre;
+            }
+        }
+
         $this->lastUnreadConversations = $this->unreadConversationsCount();
         $this->lastActiveMessageFingerprint = $this->activeConversationMessageFingerprint();
     }

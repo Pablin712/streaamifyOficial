@@ -449,5 +449,21 @@
                     showAlert(error.message || 'No se pudo actualizar el estado de la cuenta.', 'danger');
                 });
         }
+
+        // Auto-abrir soporte al venir desde tareas (?open=idsop)
+        (function () {
+            const openId = new URLSearchParams(window.location.search).get('open');
+            if (!openId) return;
+            const tr = document.querySelector(`tr[data-idsop="${openId}"]`);
+            if (!tr) return;
+            setTimeout(() => {
+                tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                tr.style.transition = 'background .4s';
+                tr.style.background = '#fef9c3';
+                setTimeout(() => { tr.style.background = ''; }, 2500);
+                const atenderBtn = tr.querySelector('button[onclick*="openAttendModal"]');
+                if (atenderBtn) setTimeout(() => atenderBtn.click(), 500);
+            }, 300);
+        })();
     </script>
 @endsection

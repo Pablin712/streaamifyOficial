@@ -115,6 +115,16 @@
     }
     .masivo-total-num { font-size:1.3rem; font-weight:700; color:#4338ca; }
 
+    /* ── Contexto de tarea ── */
+    .task-context { display:flex; gap:.3rem; flex-wrap:wrap; margin-top:.28rem; }
+    .pill-ctx-cli  { background:#dbeafe; color:#1e40af; }
+    .pill-ctx-cta  { background:#f3f4f6; color:#374151; }
+    .pill-ctx-tipo { background:#fef3c7; color:#92400e; }
+    .tb-btn-chat   { background:#25d366; color:#fff; }
+    .tb-btn-chat:hover   { background:#128c7e; }
+    .tb-btn-soporte      { background:#6366f1; color:#fff; }
+    .tb-btn-soporte:hover{ background:#4f46e5; }
+
     /* ── Vacío ── */
     .tb-empty { text-align:center; padding:2.5rem 1rem; color:#9ca3af; font-size:.88rem; }
 
@@ -274,6 +284,7 @@
             @endif
         @else
             @foreach($pool as $t)
+                @php $ctx = $contextoPorTarea[$t->id] ?? null; @endphp
                 <div class="task-card {{ $t->prioridad }}" wire:key="pool-{{ $t->id }}">
                     <div class="task-icon">{{ $t->tipoIcon() }}</div>
                     <div class="task-body">
@@ -291,6 +302,19 @@
                                 </span>
                             @endif
                         </div>
+                        @if($ctx)
+                        <div class="task-context">
+                            @if(!empty($ctx['cliente']))
+                                <span class="task-pill pill-ctx-cli">👤 {{ $ctx['cliente'] }}</span>
+                            @endif
+                            @if(!empty($ctx['idcue']))
+                                <span class="task-pill pill-ctx-cta">🏠 Cta #{{ $ctx['idcue'] }}</span>
+                            @endif
+                            @if(!empty($ctx['tipo']))
+                                <span class="task-pill pill-ctx-tipo">🔧 {{ ucfirst($ctx['tipo']) }}</span>
+                            @endif
+                        </div>
+                        @endif
                     </div>
                     <div class="task-actions" x-data>
                         <button class="tb-btn tb-btn-tomar"
@@ -398,8 +422,11 @@
             </div>
         @else
             @foreach($misTareas as $t)
-                @php $wsp = ($tieneCanalWsp && $t->tipo_tarea === 'cobrar_usuario' && isset($datosWspPorTarea[$t->id]))
-                    ? $datosWspPorTarea[$t->id] : null; @endphp
+                @php
+                    $wsp = ($tieneCanalWsp && $t->tipo_tarea === 'cobrar_usuario' && isset($datosWspPorTarea[$t->id]))
+                        ? $datosWspPorTarea[$t->id] : null;
+                    $ctx = $contextoPorTarea[$t->id] ?? null;
+                @endphp
                 <div class="task-card {{ $t->prioridad }}" wire:key="mis-{{ $t->id }}">
                     @if($wsp)
                         <input type="checkbox" class="task-select-cb"
@@ -428,10 +455,36 @@
                                 <span class="task-pill pill-venc">{{ $t->assigned_at->diffForHumans() }}</span>
                             @endif
                         </div>
+                        @if($ctx)
+                        <div class="task-context">
+                            @if(!empty($ctx['cliente']))
+                                <span class="task-pill pill-ctx-cli">👤 {{ $ctx['cliente'] }}</span>
+                            @endif
+                            @if(!empty($ctx['idcue']))
+                                <span class="task-pill pill-ctx-cta">🏠 Cta #{{ $ctx['idcue'] }}</span>
+                            @endif
+                            @if(!empty($ctx['tipo']))
+                                <span class="task-pill pill-ctx-tipo">🔧 {{ ucfirst($ctx['tipo']) }}</span>
+                            @endif
+                        </div>
+                        @endif
                     </div>
                     <div class="task-actions" x-data>
+                        @if($t->tipo_tarea === 'soporte_pendiente' && $ctx)
+                            <a href="{{ route('chat.whatsapp') }}?idcli={{ $ctx['idcli'] }}"
+                               class="tb-btn tb-btn-chat" target="_blank"
+                               title="Abrir chat de {{ $ctx['cliente'] }}">
+                                <i class="fab fa-whatsapp fa-xs"></i> Chat
+                            </a>
+                            <a href="{{ route('soportes.index') }}?open={{ $ctx['idsop'] }}"
+                               class="tb-btn tb-btn-soporte" target="_blank"
+                               title="Ver soporte #{{ $ctx['idsop'] }}">
+                                <i class="fas fa-life-ring fa-xs"></i> Soporte
+                            </a>
+                        @endif
                         @if($wsp)
                             <button class="tb-btn tb-btn-wsp"
+                                    data-tid="{{ $t->id }}"
                                     data-nombre="{{ $wsp['nombre'] }}"
                                     data-tel="{{ $wsp['telefono'] }}"
                                     data-idcli="{{ $wsp['idcli'] }}"

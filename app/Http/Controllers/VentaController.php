@@ -16,6 +16,7 @@ use App\Models\ViewUsuarioActivo;
 use App\Models\Banco;
 use App\Services\BancoService;
 use App\Services\EntregaMensajeService;
+use App\Services\TareaService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -294,6 +295,7 @@ class VentaController extends Controller
         ]);
 
         $idvenPasado = $request->idvenPasado;
+        $oldIdDets = \App\Models\DetalleVenta::where('idven', $idvenPasado)->pluck('iddet')->toArray();
         \App\Models\DetalleVenta::where('idven', $idvenPasado)->update(['activodet' => false]);
         $detalles = json_decode($request->detalles_venta, true);
 
@@ -390,6 +392,13 @@ class VentaController extends Controller
                 'montodet' => $detalle['monto'],
                 'activodet' => true,
             ]);
+        }
+
+        $empleadoId = Auth::user()->idemp;
+        $tareaService = app(TareaService::class);
+        foreach ($oldIdDets as $oldIddet) {
+            $tareaService->completarTareasRelacionadas('cobrar_usuario', 'ViewUsuarioActivo', $oldIddet, $empleadoId);
+            $tareaService->completarTareasRelacionadas('quitar_usuario', 'ViewUsuarioActivo', $oldIddet, $empleadoId);
         }
 
         $mensajeRenovacion = $this->entregaMensajeService->mensajeRenovacionVenta(
