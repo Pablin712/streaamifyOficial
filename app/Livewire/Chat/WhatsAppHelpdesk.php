@@ -12,11 +12,14 @@ use App\Models\ChatContactoCanal;
 use App\Models\ChatWhatsappChannel;
 use App\Models\Conversacion;
 use App\Models\Empleado;
+use App\Models\Historial;
 use App\Models\Mensaje;
 use App\Models\QuickResponse;
+use App\Models\Soporte;
 use App\Services\Chat\ChatSettingsService;
 use App\Services\Chat\WhatsAppHelpdeskService;
 use App\Services\ConcentracionService;
+use App\Services\TareaService;
 use App\Support\PhoneNumber;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -84,6 +87,8 @@ class WhatsAppHelpdesk extends Component
 
     public array $paginators = [];
 
+    public string $soporteSolucion = '';
+
     public int $conversationsLimit = 25;
 
     public int $messagesLimit = 80;
@@ -128,6 +133,7 @@ class WhatsAppHelpdesk extends Component
             'messagesLoaded'        => $activeMessages['loaded'],
             'activeContactIdentity' => $activeContactIdentity,
             'clientActiveUsers'     => $this->clientActiveUsersForConversation($activeConversation),
+            'clientePendingSoporte' => $this->clientePendingSoporte($activeConversation),
             'quickResponseSuggestions' => $this->quickResponseSuggestions(),
             'quickResponses'        => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
             'operators'             => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
@@ -163,6 +169,7 @@ class WhatsAppHelpdesk extends Component
         $this->activeConversationId = $conversation->idconv;
         $this->messagesLimit = 80;
         $this->activeMessageSearch = '';
+        $this->soporteSolucion = '';
         $this->mobilePane = 'chat';
         $this->lastUnreadConversations = $this->unreadConversationsCount();
         $this->lastActiveMessageFingerprint = $this->conversationMessageFingerprint($conversation);
@@ -689,6 +696,54 @@ class WhatsAppHelpdesk extends Component
     public function sendAudio(): void
     {
         $this->sendMessage('audio');
+    }
+
+    public function atenderSoporteDesdeChat(int $idsop): void
+    {
+        $user = $this->operator();
+        abort_if(! $user || ! $user->hasPermissionTo('soportes.update'), 403, 'No tienes permiso para atender soportes.');
+        $this->requireConversation();
+
+        $this->validate([
+            'soporteSolucion' => ['required', 'string', 'min:5', 'max:2000'],
+        ]);
+
+        $soporte = Soporte::with(['cliente', 'cuenta'])->findOrFail($idsop);
+
+        $conversation = $this->activeConversation();
+        $idcli = $conversation?->cliente?->idcli ?? $conversation?->contactoCanal?->idcli;
+        abort_if((int) $soporte->idcli !== (int) $idcli, 403, 'Este soporte no corresponde al cliente activo.');
+
+        $soporte->update([
+            'solucion' => $this->soporteSolucion,
+            'estado'   => 'atendido',
+        ]);
+
+        app(TareaService::class)->completarTareasRelacionadas('soporte_pendiente', 'Soporte', $idsop, $user->idemp);
+
+        Historial::create([
+            'accion'      => 'Atención de soporte',
+            'descripcion' => 'Soporte #' . $soporte->idsop . ' atendido desde chat para cliente ' . ($soporte->cliente?->nombrecli ?? 'N/A'),
+            'empleado_id' => $user->idemp,
+            'created_at'  => now(),
+        ]);
+
+        $this->soporteSolucion = '';
+    }
+
+    private function clientePendingSoporte(?Conversacion $conversation): ?Soporte
+    {
+        $idcli = $conversation?->cliente?->idcli ?? $conversation?->contactoCanal?->idcli;
+
+        if (! $idcli) {
+            return null;
+        }
+
+        return Soporte::with('cuenta.valor.servicio')
+            ->where('idcli', $idcli)
+            ->where('estado', 'pendiente')
+            ->orderByDesc('created_at')
+            ->first();
     }
 
     private function sendMessage(string $type): void

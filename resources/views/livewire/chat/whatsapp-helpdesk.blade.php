@@ -2155,6 +2155,66 @@
                      @endforelse
                  </section>
 
+                 @if($clientePendingSoporte)
+                 <section class="wa-card" style="border-left: 3px solid var(--wa-danger); background: var(--wa-danger-soft);">
+                     <div class="wa-card-title" style="display:flex; align-items:center; gap:8px;">
+                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--wa-danger);flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                         Soporte pendiente
+                         <span class="wa-badge soporte" style="margin-left:auto;">#{{ $clientePendingSoporte->idsop }}</span>
+                     </div>
+
+                     <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; padding-top:2px;">
+                         <div>
+                             <div style="font-size:11px; color:var(--wa-text-secondary); text-transform:uppercase; letter-spacing:0.04em;">Tipo</div>
+                             <div style="font-weight:600; text-transform:capitalize; margin-top:2px;">{{ $clientePendingSoporte->tipo }}</div>
+                         </div>
+
+                         @if($clientePendingSoporte->cuenta?->valor?->servicio)
+                         <div>
+                             <div style="font-size:11px; color:var(--wa-text-secondary); text-transform:uppercase; letter-spacing:0.04em;">Servicio</div>
+                             <div style="margin-top:2px;">{{ $clientePendingSoporte->cuenta->valor->servicio->nombreser }}</div>
+                         </div>
+                         @endif
+
+                         <div>
+                             <div style="font-size:11px; color:var(--wa-text-secondary); text-transform:uppercase; letter-spacing:0.04em;">Descripción del cliente</div>
+                             <div style="margin-top:2px; color:var(--wa-text-secondary); white-space:pre-wrap;">{{ $clientePendingSoporte->descripcion }}</div>
+                         </div>
+                     </div>
+
+                     <div style="border-top:1px solid var(--wa-border); padding-top:10px; margin-top:4px; display:flex; flex-direction:column; gap:6px;">
+                         <div style="font-size:12px; font-weight:600; color:var(--wa-text);">Anotar solución</div>
+
+                         @error('soporteSolucion')
+                             <div style="font-size:12px; color:var(--wa-danger);">{{ $message }}</div>
+                         @enderror
+
+                         <textarea
+                             wire:model="soporteSolucion"
+                             placeholder="Describe cómo se resolvió el problema..."
+                             rows="3"
+                             style="width:100%; resize:vertical; min-height:68px; font-size:13px; padding:8px 10px; border:1px solid var(--wa-border); border-radius:var(--wa-radius-sm); background:var(--wa-panel); color:var(--wa-text); font-family:inherit; line-height:1.5;"
+                         ></textarea>
+
+                         <button
+                             type="button"
+                             wire:click="atenderSoporteDesdeChat({{ $clientePendingSoporte->idsop }})"
+                             wire:loading.attr="disabled"
+                             wire:target="atenderSoporteDesdeChat"
+                             style="width:100%; padding:9px 12px; background:var(--wa-success); color:white; border:none; border-radius:var(--wa-radius-sm); font-size:13px; font-weight:600; cursor:pointer; transition:opacity var(--wa-transition);"
+                             onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"
+                         >
+                             <span wire:loading.remove wire:target="atenderSoporteDesdeChat">✓ Marcar como atendido</span>
+                             <span wire:loading wire:target="atenderSoporteDesdeChat">Guardando...</span>
+                         </button>
+                     </div>
+
+                     <div style="font-size:11px; color:var(--wa-text-tertiary);">
+                         Creado {{ $clientePendingSoporte->created_at?->diffForHumans() }}
+                     </div>
+                 </section>
+                 @endif
+
                  <section class="wa-card">
                      <div class="wa-card-title">Historial de compras</div>
                      @forelse($client?->ventas?->take(6) ?? [] as $sale)
