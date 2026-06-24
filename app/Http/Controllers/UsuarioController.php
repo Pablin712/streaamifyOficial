@@ -12,10 +12,12 @@ use App\Models\DetalleVenta;
 use App\Models\Cuenta;
 use App\Models\Historial;
 use App\Models\Mensaje;
+use App\Models\Proveedor;
 use App\Services\ConcentracionService;
 use App\Services\CuentaService;
 use App\Services\EntregaMensajeService;
 use App\Services\Chat\WhatsAppOutboundService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -56,8 +58,72 @@ class UsuarioController extends Controller
             ->get();
 
         $cuentas = Cuenta::where('activocue', true)->orderBy('idcue')->get();
+        $proveedores = Proveedor::where('activopro', true)->orderBy('nombrepro')->get();
+        $stats = $this->calcularStatsUsuarios(Carbon::today());
 
-        return view('inventory.usuarios.index', compact('usuarios', 'cuentas'));
+        return view('inventory.usuarios.index', compact('usuarios', 'cuentas', 'proveedores', 'stats'));
+    }
+
+    private function calcularStatsUsuarios(Carbon $today): array
+    {
+        $totalUsuarios = DB::table('view_usuarios_activos')->count();
+
+        $cuentaDanada = DB::table('view_usuarios_activos as vua')
+            ->join('cuentas as c', 'c.idcue', '=', 'vua.idcue')
+            ->where('c.caidacue', true)
+            ->where('c.idcue', 'not like', '%-Atencion')
+            ->count();
+
+        $mesaTrabajo = DB::table('view_usuarios_activos as vua')
+            ->join('cuentas as c', 'c.idcue', '=', 'vua.idcue')
+            ->where('c.idcue', 'like', '%-Atencion')
+            ->count();
+
+        $aCobrarHoy = DB::table('view_usuarios_activos')
+            ->whereDate('fecha_vencimiento', $today)
+            ->count();
+
+        $atrasados = DB::table('view_usuarios_activos')
+            ->whereDate('fecha_vencimiento', '<', $today)
+            ->count();
+
+        $proximosVencer = DB::table('view_usuarios_activos')
+            ->whereDate('fecha_vencimiento', '>', $today)
+            ->whereDate('fecha_vencimiento', '<=', $today->copy()->addDays(7))
+            ->count();
+
+        $porServicio = DB::table('view_usuarios_activos as vua')
+            ->join('cuentas as cv', 'cv.idcue', '=', 'vua.idcue')
+            ->join('valores as vl', 'vl.idval', '=', 'cv.idval')
+            ->join('servicios as s', 's.idser', '=', 'vl.idser')
+            ->select('s.idser', 's.nombreser', DB::raw('COUNT(*) as total'))
+            ->groupBy('s.idser', 's.nombreser')
+            ->orderByDesc('total')
+            ->get();
+
+        $servicioTop = $porServicio->first();
+
+        $totalClientes = DB::table('view_usuarios_activos')
+            ->distinct('idcli')
+            ->count('idcli');
+
+        $promedioCliente = $totalClientes > 0
+            ? round($totalUsuarios / $totalClientes, 1)
+            : 0;
+
+        return [
+            'total'             => $totalUsuarios,
+            'cuenta_danada'     => $cuentaDanada,
+            'mesa_trabajo'      => $mesaTrabajo,
+            'requieren_soporte' => $cuentaDanada + $mesaTrabajo,
+            'a_cobrar_hoy'      => $aCobrarHoy,
+            'atrasados'         => $atrasados,
+            'proximos_vencer'   => $proximosVencer,
+            'por_servicio'      => $porServicio,
+            'servicio_top'      => $servicioTop,
+            'total_clientes'    => $totalClientes,
+            'promedio_cliente'  => $promedioCliente,
+        ];
     }
 
     private function getUsuariosAjax(Request $request)
@@ -67,8 +133,21 @@ class UsuarioController extends Controller
         $search = trim((string) $request->input('search', ''));
         $sortBy = (string) $request->input('sort_by', '');
         $sortOrder = strtolower((string) $request->input('sort_order', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $servicio = strtoupper(trim((string) $request->input('servicio', '')));
+        $proveedor = (int) $request->input('proveedor', 0);
 
         $query = $this->buildUsuariosIndexQuery();
+
+        // Filtro por servicio o proveedor (join a valores una sola vez)
+        if (($servicio && $servicio !== 'TODOS') || $proveedor > 0) {
+            $query->join('valores as vf', 'vf.idval', '=', 'cuentas.idval');
+            if ($servicio && $servicio !== 'TODOS') {
+                $query->where('vf.idser', $servicio);
+            }
+            if ($proveedor > 0) {
+                $query->where('vf.idpro', $proveedor);
+            }
+        }
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {

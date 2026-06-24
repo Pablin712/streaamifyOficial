@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cuenta;
 use App\Models\Valor;
+use App\Models\Venta;
 use App\Models\Proveedor;
 use App\Models\Servicio;
 use App\Models\Perfil;
@@ -79,6 +80,11 @@ class CuentaController extends Controller
         $mesa = $this->cuentaService->obtenerMesasDeTrabajo();
 
         $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
+        arsort($espacios_por_servicio); // ordenar de mayor a menor espacios disponibles
+
+        $statsCuentas = $this->calcularStatsCuentas(
+            $cuentas, $cuentasCaidas, $cuentasPorVencer, $cuentasSinOcupar
+        );
 
         // Obtener valores activos para los modales
         $valores = Valor::where('activoval', true)->get();
@@ -101,11 +107,53 @@ class CuentaController extends Controller
             'cuentasCaidas',
             'mesa',
             'espacios_por_servicio',
+            'statsCuentas',
             'valores',
             'servicios',
             'proveedores',
             'bancos'
         ));
+    }
+
+    private function calcularStatsCuentas($cuentas, $cuentasCaidas, $cuentasPorVencer, $cuentasSinOcupar): array
+    {
+        $total = $cuentas->count();
+
+        $totalUsuarios = DB::table('view_usuarios_activos')->count();
+        $promedioUsuarios = $total > 0 ? round($totalUsuarios / $total, 1) : 0;
+
+        $ingresosMes = Venta::whereMonth('fechaven', now()->month)
+            ->whereYear('fechaven', now()->year)
+            ->sum('totalpagoven');
+
+        $totalPorServicio = DB::table('cuentas')
+            ->join('valores', 'valores.idval', '=', 'cuentas.idval')
+            ->where('cuentas.activocue', true)
+            ->where('cuentas.tipo_cuenta', 'completa')
+            ->where('cuentas.caidacue', false)
+            ->where('cuentas.idcue', 'not like', '%-Atencion')
+            ->select('valores.idser', DB::raw('COUNT(*) as total'))
+            ->groupBy('valores.idser')
+            ->pluck('total', 'idser');
+
+        $usuariosPorServicio = DB::table('view_usuarios_activos as vua')
+            ->join('cuentas as cv', 'cv.idcue', '=', 'vua.idcue')
+            ->join('valores as vl', 'vl.idval', '=', 'cv.idval')
+            ->select('vl.idser', DB::raw('COUNT(*) as total'))
+            ->groupBy('vl.idser')
+            ->pluck('total', 'idser');
+
+        return [
+            'total'               => $total,
+            'caidas'              => $cuentasCaidas->count(),
+            'por_vencer'          => $cuentasPorVencer->count(),
+            'sin_ocupar'          => $cuentasSinOcupar->count(),
+            'total_usuarios'      => $totalUsuarios,
+            'promedio_usuarios'   => $promedioUsuarios,
+            'ingresos_mes'        => $ingresosMes,
+            'total_por_servicio'  => $totalPorServicio,
+            'usuarios_por_servicio' => $usuariosPorServicio,
+        ];
     }
 
     public function create()

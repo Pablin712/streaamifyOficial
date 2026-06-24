@@ -150,28 +150,147 @@
             {{ session('success') }}
         </div>
     @endif
-    <p>Revisa las cuentas activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario
+    <p class="mb-3">Revisa las cuentas activas del <strong>Negocio</strong>. Aquí podrás gestionar las cuentas de usuario
         asociadas a los servicios de streaming pertenecientes a Streamify HQ.
     </p>
-    <div class="row">
-        @php
-            $serviciosConfig = [
-                'NETFLIX' => ['color' => 'danger', 'icon' => 'logo_netflix.png'],
-                'DISNEYP' => ['color' => 'primary', 'icon' => 'espn.jpg'],
-                'MAX' => ['color' => 'info', 'icon' => 'max.jpg'],
-                'PRIME' => ['color' => 'success', 'icon' => 'fa-amazon'],
-                'PARAMOUNT' => ['color' => 'primary', 'icon' => 'paramount.jpg'],
-                'CRUNCHY' => ['color' => 'warning', 'icon' => 'crunchy.jpg'],
-                'SPOTIFY' => ['color' => 'success', 'icon' => 'fa-spotify'],
-                'MAGIS' => ['color' => 'dark', 'icon' => 'magis.jpg'],
-            ];
-        @endphp
 
+    @php
+        $serviciosConfig = [
+            'NETFLIX'   => ['color' => 'danger',  'icon' => 'logo_netflix.png', 'label' => 'Netflix'],
+            'DISNEYP'   => ['color' => 'primary', 'icon' => 'espn.jpg',         'label' => 'Disney+'],
+            'MAX'       => ['color' => 'info',    'icon' => 'max.jpg',          'label' => 'Max'],
+            'PRIME'     => ['color' => 'success', 'icon' => 'fa-amazon',        'label' => 'Prime'],
+            'PARAMOUNT' => ['color' => 'primary', 'icon' => 'paramount.jpg',    'label' => 'Paramount'],
+            'CRUNCHY'   => ['color' => 'warning', 'icon' => 'crunchy.jpg',      'label' => 'Crunchyroll'],
+            'SPOTIFY'   => ['color' => 'success', 'icon' => 'fa-spotify',       'label' => 'Spotify'],
+            'MAGIS'     => ['color' => 'dark',    'icon' => 'magis.jpg',        'label' => 'Flujo/Magis'],
+        ];
+    @endphp
+
+    {{-- Fila 1: KPIs principales --}}
+    <div class="row mb-2">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Cuentas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($statsCuentas['total']) }}</div>
+                            <div class="text-xs text-muted mt-1">cuentas activas completas</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-server fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Cuentas Dañadas</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($statsCuentas['caidas']) }}</div>
+                            <div class="text-xs text-muted mt-1">requieren atención</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Por Vencer / Renovar</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($statsCuentas['por_vencer']) }}</div>
+                            <div class="text-xs text-muted mt-1">
+                                + {{ number_format($statsCuentas['sin_ocupar']) }} sin ocupar
+                            </div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-calendar-times fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Ingresos del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ number_format($statsCuentas['ingresos_mes'], 2) }}</div>
+                            <div class="text-xs text-muted mt-1">{{ now()->translatedFormat('F Y') }}</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Fila 2: KPIs secundarios --}}
+    <div class="row mb-3">
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Usuarios Activos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($statsCuentas['total_usuarios']) }}</div>
+                            <div class="text-xs text-muted mt-1">en todas las cuentas</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-users fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Promedio Usuarios / Cuenta</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $statsCuentas['promedio_usuarios'] }}</div>
+                            <div class="text-xs text-muted mt-1">sobre {{ number_format($statsCuentas['total']) }} cuentas</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-chart-bar fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-3">
+            <div class="card border-left-secondary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Sin Ocupar</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($statsCuentas['sin_ocupar']) }}</div>
+                            <div class="text-xs text-muted mt-1">cuentas sin ningún usuario</div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-inbox fa-2x text-gray-300"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Fila 3: Espacios por servicio, ordenados de mayor a menor --}}
+    <div class="row">
         @foreach ($espacios_por_servicio as $servicio => $espacios)
             @if (isset($serviciosConfig[$servicio]))
                 @php
-                    $color = $serviciosConfig[$servicio]['color'];
-                    $icono = $serviciosConfig[$servicio]['icon'];
+                    $color   = $serviciosConfig[$servicio]['color'];
+                    $icono   = $serviciosConfig[$servicio]['icon'];
+                    $label   = $serviciosConfig[$servicio]['label'];
+                    $totalC  = $statsCuentas['total_por_servicio'][$servicio] ?? 0;
+                    $totalU  = $statsCuentas['usuarios_por_servicio'][$servicio] ?? 0;
+                    $promU   = $totalC > 0 ? round($totalU / $totalC, 1) : 0;
                 @endphp
                 <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
                     <div class="card border-left-{{ $color }} shadow h-100 py-1 small">
@@ -179,17 +298,20 @@
                             <div class="row no-gutters align-items-center">
                                 <div class="col mr-2">
                                     <div class="text-xs font-weight-bold text-{{ $color }} text-uppercase mb-1">
-                                        {{ ucfirst($servicio) }}
+                                        {{ $label }}
                                     </div>
                                     <div class="h6 mb-0 font-weight-bold text-gray-800">
-                                        {{ $espacios }} puestos
+                                        {{ $espacios }} puestos libres
+                                    </div>
+                                    <div class="text-xs text-muted mt-1">
+                                        {{ $totalC }} cuentas · {{ $totalU }} usuarios · ~{{ $promU }}/cuenta
                                     </div>
                                 </div>
                                 <div class="col-auto">
                                     @if (Str::startsWith($icono, 'fa-'))
                                         <i class="fab {{ $icono }} fa-2x text-gray-300"></i>
                                     @else
-                                        <img src="{{ asset('images/' . $icono) }}" width="40" height="40">
+                                        <img src="{{ asset('images/' . $icono) }}" width="40" height="40" style="border-radius:6px;object-fit:cover;">
                                     @endif
                                 </div>
                             </div>

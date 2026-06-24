@@ -681,6 +681,14 @@ async function loadServerData(config) {
             ajax: 'true'
         });
 
+        if (config.extraParams) {
+            Object.entries(config.extraParams).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    params.set(key, value);
+                }
+            });
+        }
+
         const response = await fetch(`${config.searchUrl}?${params.toString()}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

@@ -11,6 +11,52 @@
     <link href="{{ asset('css/modal-system.css') }}" rel="stylesheet" />
 
     <style>
+        /* KPI cards */
+        .usuarios-kpi .card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .usuarios-kpi .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.18) !important;
+        }
+        .usuarios-kpi .kpi-number {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .usuarios-kpi .kpi-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .usuarios-kpi .kpi-sub {
+            font-size: 0.75rem;
+            margin-top: 0.2rem;
+        }
+        /* Service filter pills */
+        .servicio-pill {
+            cursor: pointer;
+            border-radius: 999px;
+            padding: 0.3rem 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: var(--bg-light);
+            color: var(--text-primary);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .servicio-pill:hover,
+        .servicio-pill.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+        .proveedor-filter-select {
+            max-width: 220px;
+        }
+
         .btn-rosa-1 {
             background: #f8bbd0;
             color: #fff;
@@ -357,7 +403,250 @@
             {{ session('success') }}
         </div>
     @endif
-    <p>Muestra vista de todos los usuarios y sus fecha de caducidad para controlar actividad.</p>
+    <p class="mb-3">Muestra vista de todos los usuarios y sus fecha de caducidad para controlar actividad.</p>
+
+    @php
+        $serviciosIconos = [
+            'NETFLIX'   => ['color' => 'danger',  'icon' => 'logo_netflix.png', 'label' => 'Netflix'],
+            'DISNEYP'   => ['color' => 'primary', 'icon' => 'espn.jpg',         'label' => 'Disney+'],
+            'MAX'       => ['color' => 'info',    'icon' => 'max.jpg',          'label' => 'Max'],
+            'PRIME'     => ['color' => 'success', 'icon' => 'fa-amazon',        'label' => 'Prime'],
+            'PARAMOUNT' => ['color' => 'primary', 'icon' => 'paramount.jpg',    'label' => 'Paramount'],
+            'CRUNCHY'   => ['color' => 'warning', 'icon' => 'crunchy.jpg',      'label' => 'Crunchyroll'],
+            'SPOTIFY'   => ['color' => 'success', 'icon' => 'fa-spotify',       'label' => 'Spotify'],
+            'MAGIS'     => ['color' => 'dark',    'icon' => 'magis.jpg',        'label' => 'Flujo/Magis'],
+        ];
+    @endphp
+
+    <div class="usuarios-kpi">
+
+        {{-- Fila 1: Métricas principales --}}
+        <div class="row mb-2">
+
+            {{-- Total Usuarios --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-primary mb-1">Usuarios Totales</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['total']) }}</div>
+                                <div class="kpi-sub text-muted">{{ $stats['total_clientes'] }} clientes activos</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Requieren Soporte --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-danger shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-danger mb-1">Requieren Soporte</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['requieren_soporte']) }}</div>
+                                <div class="kpi-sub text-muted">
+                                    <span class="text-danger">{{ $stats['cuenta_danada'] }}</span> dañadas
+                                    &nbsp;·&nbsp;
+                                    <span class="text-warning">{{ $stats['mesa_trabajo'] }}</span> en mesa
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- A Cobrar Hoy --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-success mb-1">A Cobrar Hoy</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['a_cobrar_hoy']) }}</div>
+                                <div class="kpi-sub text-muted">vencen el {{ now()->format('d/m/Y') }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Atrasados a Quitar --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-warning mb-1">Atrasados a Quitar</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['atrasados']) }}</div>
+                                <div class="kpi-sub text-muted">ya vencidos</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- Fila 2: Métricas secundarias --}}
+        <div class="row mb-3">
+
+            {{-- Cuenta Dañada --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-danger shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-danger mb-1">En Cuenta Dañada</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['cuenta_danada']) }}</div>
+                                <div class="kpi-sub text-muted">cuentas caídas activas</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-times-circle fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Mesa de Trabajo --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-warning mb-1">Mesa de Trabajo</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['mesa_trabajo']) }}</div>
+                                <div class="kpi-sub text-muted">en cuenta de atención</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-tools fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Próximos a Vencer --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-info mb-1">Vencen en 7 Días</div>
+                                <div class="kpi-number text-gray-800">{{ number_format($stats['proximos_vencer']) }}</div>
+                                <div class="kpi-sub text-muted">próximos a renovar</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Promedio por Cliente --}}
+            <div class="col-xl-3 col-md-6 mb-3">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="kpi-label text-primary mb-1">Promedio / Cliente</div>
+                                <div class="kpi-number text-gray-800">{{ $stats['promedio_cliente'] }}</div>
+                                <div class="kpi-sub text-muted">
+                                    usuarios activos por cliente
+                                    @if ($stats['servicio_top'])
+                                        &nbsp;·&nbsp;<span class="fw-semibold">{{ $stats['servicio_top']->nombreser }}</span> lidera
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{-- Fila 3: Usuarios por servicio, mayor a menor, solo servicios configurados --}}
+        @php
+            $serviciosConUsuarios = $stats['por_servicio']
+                ->filter(fn($s) => isset($serviciosIconos[$s->idser]))
+                ->values();
+            $idserConUsuarios = $serviciosConUsuarios->pluck('idser')->toArray();
+        @endphp
+        <div class="row mb-1">
+            {{-- Con usuarios, ordenados desc --}}
+            @foreach ($serviciosConUsuarios as $svc)
+                @php
+                    $cfg = $serviciosIconos[$svc->idser];
+                    $svcTotal = $svc->total;
+                    $pct = $stats['total'] > 0 ? round($svcTotal / $stats['total'] * 100) : 0;
+                @endphp
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-left-{{ $cfg['color'] }} shadow h-100 py-1 small">
+                        <div class="card-body py-2">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="kpi-label text-{{ $cfg['color'] }} mb-1">{{ $cfg['label'] }}</div>
+                                    <div class="h6 mb-0 font-weight-bold text-gray-800">{{ number_format($svcTotal) }} usuarios</div>
+                                    <div class="kpi-sub text-muted">{{ $pct }}% del total</div>
+                                </div>
+                                <div class="col-auto">
+                                    @if (Str::startsWith($cfg['icon'], 'fa-'))
+                                        <i class="fab {{ $cfg['icon'] }} fa-2x text-gray-300"></i>
+                                    @else
+                                        <img src="{{ asset('images/' . $cfg['icon']) }}" width="36" height="36" style="border-radius:6px; object-fit:cover;">
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+            {{-- Sin usuarios, al final --}}
+            @foreach ($serviciosIconos as $idser => $cfg)
+                @if (!in_array($idser, $idserConUsuarios))
+                <div class="col-xl-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-left-{{ $cfg['color'] }} shadow h-100 py-1 small">
+                        <div class="card-body py-2">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="kpi-label text-{{ $cfg['color'] }} mb-1">{{ $cfg['label'] }}</div>
+                                    <div class="h6 mb-0 font-weight-bold text-gray-800">0 usuarios</div>
+                                    <div class="kpi-sub text-muted">0% del total</div>
+                                </div>
+                                <div class="col-auto">
+                                    @if (Str::startsWith($cfg['icon'], 'fa-'))
+                                        <i class="fab {{ $cfg['icon'] }} fa-2x text-gray-300"></i>
+                                    @else
+                                        <img src="{{ asset('images/' . $cfg['icon']) }}" width="36" height="36" style="border-radius:6px; object-fit:cover;">
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            @endforeach
+        </div>
+
+    </div>{{-- /.usuarios-kpi --}}
 @endsection
 @section('tablename', 'Usuarios')
 @section('btncrear')
@@ -366,6 +655,50 @@
     @endif
 @endsection
 @section('table1')
+    <!-- Filtros por servicio y proveedor -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <span class="fw-semibold text-primary">
+                    <i class="fas fa-filter me-1"></i> Filtrar por servicio:
+                </span>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-3" id="usuarios-servicio-filter">
+                <button type="button" class="servicio-pill active" data-servicio="">Todos</button>
+                @php
+                    $serviciosFiltro = [
+                        '' => 'Todos',
+                        'NETFLIX'   => 'Netflix',
+                        'DISNEYP'   => 'Disney+',
+                        'MAX'       => 'Max',
+                        'PRIME'     => 'Prime',
+                        'PARAMOUNT' => 'Paramount',
+                        'CRUNCHY'   => 'Crunchyroll',
+                        'MAGIS'     => 'Flujo/Magis',
+                        'SPOTIFY'   => 'Spotify',
+                    ];
+                @endphp
+                @foreach (array_slice($serviciosFiltro, 1) as $idser => $label)
+                    <button type="button" class="servicio-pill" data-servicio="{{ $idser }}">{{ $label }}</button>
+                @endforeach
+            </div>
+
+            @if ($proveedores->count() > 0)
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="fw-semibold text-primary">
+                    <i class="fas fa-truck me-1"></i> Proveedor:
+                </span>
+                <select id="usuarios-proveedor-filter" class="form-select form-select-sm proveedor-filter-select">
+                    <option value="0">Todos los proveedores</option>
+                    @foreach ($proveedores as $prov)
+                        <option value="{{ $prov->idpro }}">{{ $prov->nombrepro }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
+        </div>
+    </div>
+
     <!-- Controles de búsqueda y registros -->
     <div class="row mb-3 align-items-end">
         <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
@@ -1447,6 +1780,60 @@
 
     {{-- Enhanced Table v2 --}}
     <script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
+
+    <script>
+        // ===================================================
+        // FILTROS: SERVICIO Y PROVEEDOR
+        // ===================================================
+        function getTableConfig() {
+            const table = document.getElementById('usuarios-table');
+            return table ? table._config : null;
+        }
+
+        function aplicarFiltrosUsuarios() {
+            const config = getTableConfig();
+            if (!config) return;
+
+            const servicioActivo = document.querySelector('#usuarios-servicio-filter .servicio-pill.active');
+            const proveedorSelect = document.getElementById('usuarios-proveedor-filter');
+
+            config.extraParams = {};
+
+            if (servicioActivo) {
+                const val = servicioActivo.dataset.servicio;
+                if (val) config.extraParams.servicio = val;
+            }
+
+            if (proveedorSelect && proveedorSelect.value !== '0') {
+                config.extraParams.proveedor = proveedorSelect.value;
+            }
+
+            config.currentPage = 1;
+
+            // Disparar recarga usando el input de búsqueda
+            const searchInput = config.searchInput || document.getElementById('usuarios-table-search');
+            if (searchInput) {
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Pills de servicio
+            document.querySelectorAll('#usuarios-servicio-filter .servicio-pill').forEach(pill => {
+                pill.addEventListener('click', function () {
+                    document.querySelectorAll('#usuarios-servicio-filter .servicio-pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    aplicarFiltrosUsuarios();
+                });
+            });
+
+            // Select de proveedor
+            const proveedorSelect = document.getElementById('usuarios-proveedor-filter');
+            if (proveedorSelect) {
+                proveedorSelect.addEventListener('change', aplicarFiltrosUsuarios);
+            }
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
