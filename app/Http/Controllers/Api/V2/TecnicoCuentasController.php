@@ -388,48 +388,67 @@ class TecnicoCuentasController extends Controller
     public function analisisFinanciero()
     {
         try {
-            $servicios = Servicio::with(['valores.cuentas'])->get();
+            $ahora = Carbon::now();
 
-            $analisis = $servicios->map(function($servicio) {
-                $cuentasActivas = Cuenta::whereHas('valor', function($q) use ($servicio) {
-                    $q->where('idser', $servicio->idser);
-                })
-                ->where('activocue', true)
-                ->with(['valor', 'perfiles'])
-                ->get();
+            // Ingresos y usuarios activos agrupados por servicio (2 queries total)
+            $ingresosPorServicio = DB::table('view_usuarios_activos')
+                ->join('detalles_venta', 'view_usuarios_activos.iddet', '=', 'detalles_venta.iddet')
+                ->join('cuentas', 'view_usuarios_activos.idcue', '=', 'cuentas.idcue')
+                ->join('valores', 'cuentas.idval', '=', 'valores.idval')
+                ->join('servicios', 'valores.idser', '=', 'servicios.idser')
+                ->where('view_usuarios_activos.fecha_vencimiento', '>', $ahora)
+                ->select(
+                    'servicios.idser',
+                    'servicios.nombreser',
+                    DB::raw('COUNT(DISTINCT view_usuarios_activos.iddet) as total_usuarios'),
+                    DB::raw('SUM(detalles_venta.montodet) as ingreso_total')
+                )
+                ->groupBy('servicios.idser', 'servicios.nombreser')
+                ->get()
+                ->keyBy('idser');
 
-                $costoTotal = $cuentasActivas->sum(function($cuenta) {
-                    return $cuenta->valor->costoval ?? 0;
-                });
+            // Costos y cuentas activas agrupados por servicio
+            $costosPorServicio = DB::table('cuentas')
+                ->join('valores', 'cuentas.idval', '=', 'valores.idval')
+                ->join('servicios', 'valores.idser', '=', 'servicios.idser')
+                ->where('cuentas.activocue', true)
+                ->select(
+                    'servicios.idser',
+                    'servicios.nombreser',
+                    DB::raw('COUNT(DISTINCT cuentas.idcue) as total_cuentas'),
+                    DB::raw('SUM(valores.costoval) as costo_total')
+                )
+                ->groupBy('servicios.idser', 'servicios.nombreser')
+                ->get()
+                ->keyBy('idser');
 
-                $usuariosActivos = 0;
-                $ingresoTotal = 0;
+            // Unir ambos conjuntos por servicio
+            $todosIds = collect($ingresosPorServicio->keys())
+                ->merge($costosPorServicio->keys())
+                ->unique();
 
-                foreach ($cuentasActivas as $cuenta) {
-                    $usuarios = ViewUsuarioActivo::where('idcue', $cuenta->idcue)
-                        ->where('fecha_vencimiento', '>', Carbon::now())
-                        ->get();
+            $analisis = $todosIds->map(function ($idser) use ($ingresosPorServicio, $costosPorServicio) {
+                $ing = $ingresosPorServicio->get($idser);
+                $cos = $costosPorServicio->get($idser);
 
-                    $usuariosActivos += $usuarios->count();
-
-                    foreach ($usuarios as $usuario) {
-                        $ingresoTotal += $usuario->detalle_venta->precio ?? 0;
-                    }
-                }
-
-                $ganancia = $ingresoTotal - $costoTotal;
-                $margen = $ingresoTotal > 0 ? (($ganancia / $ingresoTotal) * 100) : 0;
+                $nombreser    = $cos?->nombreser ?? $ing?->nombreser ?? $idser;
+                $cuentasActivas = (int)  ($cos?->total_cuentas ?? 0);
+                $costoTotal   = (float) ($cos?->costo_total   ?? 0);
+                $usuariosActivos = (int) ($ing?->total_usuarios ?? 0);
+                $ingresoTotal = (float) ($ing?->ingreso_total  ?? 0);
+                $ganancia     = $ingresoTotal - $costoTotal;
+                $margen       = $ingresoTotal > 0 ? (($ganancia / $ingresoTotal) * 100) : 0;
 
                 return [
-                    'servicio' => $servicio->nombreser,
-                    'cuentas_activas' => $cuentasActivas->count(),
-                    'usuarios_activos' => $usuariosActivos,
-                    'costo_total' => round($costoTotal, 2),
-                    'ingreso_total' => round($ingresoTotal, 2),
-                    'ganancia_neta' => round($ganancia, 2),
+                    'servicio'          => $nombreser,
+                    'cuentas_activas'   => $cuentasActivas,
+                    'usuarios_activos'  => $usuariosActivos,
+                    'costo_total'       => round($costoTotal, 2),
+                    'ingreso_total'     => round($ingresoTotal, 2),
+                    'ganancia_neta'     => round($ganancia, 2),
                     'margen_porcentual' => round($margen, 2),
-                    'ingreso_por_cuenta' => $cuentasActivas->count() > 0
-                        ? round($ingresoTotal / $cuentasActivas->count(), 2)
+                    'ingreso_por_cuenta' => $cuentasActivas > 0
+                        ? round($ingresoTotal / $cuentasActivas, 2)
                         : 0,
                 ];
             })

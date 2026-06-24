@@ -730,7 +730,7 @@ class TecnicoUsuariosController extends Controller
                     ],
                     'venta' => [
                         'idven' => $usuario->idven,
-                        'monto' => $usuario->venta->total ?? null,
+                        'monto' => $usuario->venta->totalpagoven ?? null,
                         'fecha_venta' => $usuario->venta->fechaven ?? null
                     ],
                     'estado_cobro' => $usuario->detalle_venta->estado ?? 'PENDIENTE',

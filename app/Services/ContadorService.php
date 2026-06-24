@@ -1198,8 +1198,7 @@ class ContadorService
         $saldoTotalClientes = Cliente::sum('saldo');
 
         // Top 10 clientes por facturación (suma de montos en detalles_venta)
-        $topClientes = Cliente::select('clientes.*')
-            ->join('ventas', 'clientes.idcli', '=', 'ventas.idcli')
+        $topClientes = Cliente::join('ventas', 'clientes.idcli', '=', 'ventas.idcli')
             ->join('detalles_venta', 'ventas.idven', '=', 'detalles_venta.idven')
             ->selectRaw('clientes.idcli, clientes.nombrecli, clientes.email, clientes.saldo, SUM(detalles_venta.montodet) as total_facturado')
             ->groupBy('clientes.idcli', 'clientes.nombrecli', 'clientes.email', 'clientes.saldo')

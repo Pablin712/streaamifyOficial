@@ -1,0 +1,428 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "path": "44ebbc32-71e5-42b0-b103-d787741a59b9",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-5700, -32],
+      "id": "fe8a1173-d123-4f6e-b351-8bfab496613c",
+      "name": "Webhook",
+      "webhookId": "44ebbc32-71e5-42b0-b103-d787741a59b9"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [-5280, -32],
+      "id": "93ff1d41-64cf-4004-ae22-35230369b69f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.query.message }}",
+        "options": {
+          "systemMessage": "Eres ARIA — Analista de Rendimiento Interno de Streamify HQ, negocio de streaming que revende suscripciones compartidas (Netflix, Disney+, Max, Prime Video, Crunchyroll, Spotify, Flujo/Magis, Paramount) en Ecuador.\n\nActúas con la mentalidad de un equipo compacto:\n• 📊 CFO / Analista financiero: márgenes, costos, rentabilidad, flujo de caja\n• 📈 Estratega de negocios: tendencias, crecimiento, oportunidades por servicio\n• 💼 Manager operacional: KPIs diarios, alertas, eficiencia del inventario\n• 💡 Consultor de inversión: ROI, proyecciones, riesgo-retorno, punto de equilibrio\n\n━━━ MÉTRICAS CLAVE ━━━\n• Ingresos brutos = total cobrado en ventas del período\n• Costo directo = renovaciones de cuentas a proveedores\n• Gastos operativos = comisiones, servicios, otros\n• Ganancia neta = Ingresos − Costos − Gastos\n• Margen neto % = (Ganancia / Ingresos) × 100\n• ARPU = Ingresos / Usuarios activos\n• Ocupación cuenta = Usuarios activos / Capacidad total × 100\n• Churn potencial = Usuarios vencidos sin desactivar / Total activos\n• LTV estimado = ARPU × meses promedio de permanencia\n\n━━━ PROTOCOLO DE ANÁLISIS ━━━\n1. Usa Think para razonar ANTES de responder análisis complejos o estratégicos\n2. Usa Date & Time para confirmar la fecha antes de calcular períodos relativos\n3. Usa Calculator para verificar proyecciones, márgenes, ROI, punto de equilibrio\n4. Sin período especificado → usa 'monthly' por defecto\n5. Para análisis completo del negocio: Reporte General + Análisis Financiero por Servicio\n6. Para salud operacional: Estadísticas Usuarios + Ocupación Cuentas + Clientes con Deuda\n7. Para análisis de flujo de caja: Proyección de Ingresos + Agenda de Cobros + Resumen de Ventas\n8. Siempre contextualiza los números (¿bueno o malo para este tipo de negocio?)\n9. Identifica anomalías: servicios que crecen o caen, cuentas bajo el punto de equilibrio\n10. Cierra cualquier análisis con recomendaciones concretas y accionables\n\n━━━ FORMATO DE RESPUESTA ━━━\n• Secciones claras con títulos en negrita\n• Números: $1,250.00 | 350 usuarios | 87.5% | $15.50/usuario\n• Siempre incluir margen % y ARPU en análisis de rentabilidad\n• Tablas markdown cuando compares múltiples servicios o períodos\n• Cierra análisis con: 📌 **Conclusión** y 🎯 **Recomendación**\n• Prioriza insights sobre datos crudos — el dueño quiere entender, no solo ver números",
+          "maxIterations": 30
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [-5520, -32],
+      "id": "6d18b7d2-c4b0-4845-a954-c0002c08db99",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [-5520, 100],
+      "id": "1e59f219-87a6-41e0-b0ec-e68d5b3a0bd6",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "miOzEyelkvZ6G51F",
+          "name": "DeepSeek account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.query.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [-5380, 100],
+      "id": "28cdd60b-8156-45c3-b71f-52e997647dce",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [-5860, 280],
+      "id": "1cc4bc80-bbb3-4691-9ac6-d4273d2bc4d2",
+      "name": "Think1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [-5680, 280],
+      "id": "809ccc9a-2d1d-412f-83a6-7e2f0a6b6fa8",
+      "name": "Calculator1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTimeTool",
+      "typeVersion": 2,
+      "position": [-5500, 280],
+      "id": "7077f053-529e-475a-8368-cfc71d1e7391",
+      "name": "Date & Time1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Reporte ejecutivo completo del negocio Streamify HQ para el período solicitado. Combina ventas, usuarios, cuentas y clientes en un solo informe.\n\nRETORNA:\n- resumen_ventas: ingresos totales, costos, gastos, ganancia neta, margen %, cantidad de ventas, ticket promedio\n- resumen_usuarios: total activos, vencidos pendientes, distribución por servicio\n- resumen_cuentas: total cuentas, ocupación, dañadas, por vencer\n- resumen_clientes: total activos, nuevos en el período, retención estimada\n- top_servicios: ranking de servicios por ingresos generados\n- alertas: situaciones que requieren atención inmediata\n\nUSO: Ideal como PRIMER PUNTO de análisis general. Llama este endpoint cuando pidan un análisis del negocio, dashboard, cómo va el negocio, o estado general. Es la herramienta más completa.\n\nPERÍODOS: 'daily' (hoy), 'weekly' (esta semana), 'monthly' (este mes, DEFAULT), 'yearly' (este año)",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/reportes/general",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "periodo",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('periodo', `Período del reporte: 'daily' (hoy), 'weekly' (esta semana), 'monthly' (este mes, DEFAULT), 'yearly' (este año). Si no se especifica, usar 'monthly'.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5900, 440],
+      "id": "aaa00001-0001-0001-0001-000000000001",
+      "name": "Reporte General del Negocio"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Estadísticas financieras detalladas de ventas para el período solicitado. La fuente más rica de datos financieros del negocio con desglose por empleado y método de pago.\n\nRETORNA:\n- periodo: fechas de inicio y fin del análisis\n- ingresos: total_ventas, cantidad_transacciones, ticket_promedio\n- costos: renovaciones a proveedores\n- gastos: comisiones, gastos operativos\n- ganancia_neta: ingresos - costos - gastos\n- margen_neto_pct: porcentaje de ganancia\n- clientes_nuevos: captados en el período\n- ventas_por_servicio: Netflix, Disney, Max... con cantidad y monto cada uno\n- ventas_por_empleado: qué vendió cada empleado (permite evaluar rendimiento del equipo)\n- ventas_por_metodo_pago: Banco Pichincha, Banco Guayaquil, Efectivo, etc.\n- ventas_por_dia: evolución día a día del período\n\nUSO: Para análisis financiero profundo, calcular ARPU (cruzar con usuarios activos), evaluar rendimiento de vendedores, analizar tendencias diarias, comparar métodos de pago.\n\nPERÍODOS: 'daily', 'weekly', 'monthly' (DEFAULT), 'yearly', 'custom' (requiere fecha_inicio y fecha_fin en YYYY-MM-DD)",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/ventas/resumen",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "periodo",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('periodo', `Período: 'daily', 'weekly', 'monthly' (DEFAULT), 'yearly', 'custom'. Si es 'custom' se necesita fecha_inicio y fecha_fin.`, 'string') }}"
+            },
+            {
+              "name": "fecha_inicio",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fecha_inicio', `Solo si periodo='custom'. Formato YYYY-MM-DD. Ejemplo: '2026-01-01'`, 'string') }}"
+            },
+            {
+              "name": "fecha_fin",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fecha_fin', `Solo si periodo='custom'. Formato YYYY-MM-DD. Debe ser >= fecha_inicio. Ejemplo: '2026-06-30'`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5700, 440],
+      "id": "aaa00002-0002-0002-0002-000000000002",
+      "name": "Resumen de Ventas Detallado"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Análisis financiero por cada servicio de streaming: cuánto cuesta mantener cada servicio vs. cuánto genera. La herramienta más importante para evaluar rentabilidad por línea de negocio.\n\nRETORNA POR CADA SERVICIO (Netflix, Disney+, Max, Prime, Crunchyroll, Spotify, Flujo/Magis, Paramount), ordenado de mayor a menor ganancia:\n- servicio: nombre del servicio\n- cuentas_activas: cuentas que se tienen actualmente en ese servicio\n- usuarios_activos: suscriptores asignados en esas cuentas\n- costo_total: suma de costos de renovación de cuentas (lo que se paga a proveedores)\n- ingreso_total: suma de lo que cobran los clientes activos de ese servicio\n- ganancia_neta: ingreso_total - costo_total\n- margen_porcentual: porcentaje de ganancia sobre ingresos\n- ingreso_por_cuenta: ingreso promedio que genera cada cuenta del servicio\n\nUSO: Para saber cuál servicio es más rentable, cuál está en negativo, qué servicios expandir o reducir. Fundamental para decisiones de inversión en nuevas cuentas. Combina con Calculator para proyectar ROI de comprar más cuentas de un servicio específico.\n\nSIN PARÁMETROS — retorna todos los servicios automáticamente.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/tech-accounts/analisis-financiero",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5500, 440],
+      "id": "aaa00003-0003-0003-0003-000000000003",
+      "name": "Análisis Financiero por Servicio"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Desglosa los ingresos del período por cada servicio de streaming. Perspectiva temporal de qué servicios generaron más revenue en el período.\n\nRETORNA POR CADA SERVICIO, ordenado de mayor a menor ingreso:\n- servicio: nombre (Netflix, Spotify, etc.)\n- cantidad_ventas: número de suscripciones vendidas/renovadas en el período\n- total_ingresos: monto total generado por ese servicio en el período\n- ingreso_promedio: precio promedio cobrado por suscripción\n- porcentaje_del_total: qué % del total de ingresos representa este servicio\n\nUSO: Para comparar qué servicios generan más dinero en el período, detectar cuáles crecen vs. los que caen, analizar concentración de ingresos (riesgo si un servicio supera el 50% del total). Complementa al Análisis Financiero por Servicio que es más permanente.\n\nPERÍODOS: 'daily', 'weekly', 'monthly' (DEFAULT), 'yearly'\nOPCIONAL: 'fecha' para una fecha específica en formato YYYY-MM-DD",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/ventas/ingresos-por-servicio",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "periodo",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('periodo', `Período: 'daily', 'weekly', 'monthly' (DEFAULT), 'yearly'`, 'string') }}"
+            },
+            {
+              "name": "fecha",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fecha', `Fecha específica opcional en YYYY-MM-DD. Vacío = usa el período completo.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5300, 440],
+      "id": "aaa00004-0004-0004-0004-000000000004",
+      "name": "Ingresos por Servicio"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Proyección de ingresos futuros basada en suscripciones activas y sus fechas de vencimiento. Estima cuánto dinero entrará si los clientes renuevan.\n\nRETORNA:\n- periodo_proyectado: rango de fechas de la proyección\n- ingresos_esperados: monto total si todos los vencimientos renuevan\n- usuarios_con_vencimiento: cuántos usuarios vencen en el período proyectado\n- desglose_por_servicio: proyección por cada streaming\n- desglose_por_semana: distribución semanal del flujo de caja esperado\n- ingreso_minimo_garantizado: clientes ya cobrados con vigencia en el período\n- ingreso_potencial_maximo: si todos los que vencen renuevan\n\nUSO: Para proyectar flujo de caja, planificar gastos del próximo mes, evaluar si hay capacidad de inversión en nuevas cuentas. Combina con Calculator para calcular cuántas cuentas nuevas se pueden comprar si X% de clientes renuevan.\n\nPERÍODOS: 'next_week' (próxima semana) o 'next_month' (próximo mes, DEFAULT)",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/ventas/proyeccion",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "periodo",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('periodo', `Período de proyección: 'next_week' (próxima semana) o 'next_month' (próximo mes, DEFAULT)`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5900, 600],
+      "id": "aaa00005-0005-0005-0005-000000000005",
+      "name": "Proyección de Ingresos"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Estadísticas sobre la base de clientes de Streamify HQ: captación, retención y comportamiento.\n\nRETORNA:\n- total_clientes: número total de clientes registrados en el sistema\n- clientes_activos: clientes con al menos un servicio vigente actualmente\n- clientes_nuevos_mes: captados en el mes actual\n- clientes_sin_servicios: clientes registrados pero sin servicio activo (churned)\n- promedio_servicios_por_cliente: cuántos servicios tiene en promedio cada cliente activo\n- clientes_por_servicio: cuántos clientes tiene cada servicio\n- distribucion_por_pais: si hay clientes en otros países\n- clientes_recurrentes: con historial de varios meses\n- top_clientes_por_gasto: los mejores clientes por volumen de compra histórico\n\nMÉTRICAS DERIVADAS A CALCULAR:\n- Tasa de churn = clientes_perdidos / clientes_inicio_mes × 100\n- LTV promedio = ARPU × (1 / tasa_churn_mensual)\n\nUSO: Para análisis de la base de clientes, calcular valor del negocio como activo, identificar concentración de riesgo en pocos clientes grandes.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/clientes/estadisticas",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5700, 600],
+      "id": "aaa00006-0006-0006-0006-000000000006",
+      "name": "Estadísticas de Clientes"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lista de clientes con pagos atrasados: suscripciones vencidas hace X días que aún no renovaron ni se dieron de baja. Son el churn real del negocio.\n\nRETORNA POR CADA CLIENTE MOROSO:\n- cliente: nombre, teléfono, email, telegram_id\n- servicios_vencidos: qué servicios tiene vencidos y desde cuándo\n- dias_de_atraso: días que lleva sin pagar el servicio más atrasado\n- deuda_estimada: monto de los servicios vencidos\n- es_cliente_recurrente: si ha renovado antes (distingue morosos habituales de nuevos)\n\nRESUMEN GLOBAL:\n- total_clientes_morosos: cuántos clientes están en mora\n- monto_total_en_riesgo: suma de deudas potenciales\n- distribucion_por_servicio: qué servicios tienen más morosos\n- distribucion_por_dias: cuántos llevan 3-7 días, 7-15 días, +15 días\n\nUSO: Para gestión de cobranzas, análisis de riesgo de cartera, detectar patrones (¿hay un servicio con más morosidad?). Un moroso de +7 días es churn probable.\n\nPARÁMETRO dias_minimos: días de atraso mínimos para incluir. Default: 3. Usar 7 para riesgo alto, 1 para ver todos los vencidos.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/clientes/morosos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "dias_minimos",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('dias_minimos', `Días mínimos de atraso. Default: 3. Usar 1 para todos los vencidos, 7 para alto riesgo.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5500, 600],
+      "id": "aaa00007-0007-0007-0007-000000000007",
+      "name": "Clientes con Deuda"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Distribución de cómo pagan los clientes: qué bancos y métodos de pago usan. Importante para operaciones de cobranza.\n\nRETORNA POR CADA MÉTODO DE PAGO:\n- metodo: nombre (Banco Pichincha, Banco Guayaquil, Efectivo, etc.)\n- cantidad_transacciones: número de pagos usando este método en el período\n- monto_total: suma de lo cobrado por este método\n- porcentaje_del_total: participación % sobre el total de ingresos\n- ticket_promedio: monto promedio por transacción\n\nRESUMEN:\n- metodo_principal: el método más usado por cantidad y monto\n- concentracion: si un banco supera el 70% hay riesgo operacional (¿qué pasa si ese banco tiene problemas?)\n\nUSO: Para entender canales de cobro, detectar tendencias (¿están migrando a transferencias?), planificar qué cuentas bancarias mantener activas. También sirve para saber cuál banco priorizar para publicitar.\n\nPERÍODOS: 'daily', 'weekly', 'monthly' (DEFAULT), 'yearly'",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/metodos-pago/estadisticas",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "periodo",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('periodo', `Período: 'daily', 'weekly', 'monthly' (DEFAULT), 'yearly'`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5300, 600],
+      "id": "aaa00008-0008-0008-0008-000000000008",
+      "name": "Métodos de Pago"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Estado detallado de ocupación y uso de cada cuenta del inventario. Muestra qué tan eficientemente se usa cada cuenta.\n\nRETORNA:\n- resumen_global:\n  - promedio_ocupacion: % promedio de ocupación de todas las cuentas combinadas\n  - promedio_usuarios_por_cuenta: usuarios promedio por cuenta activa\n  - cuentas_rentables: cuentas que tienen suficientes usuarios para cubrir su costo (usuarios >= capacidad_minima)\n  - total_cuentas: número total de cuentas evaluadas\n\n- detalle_por_cuenta (por cada cuenta individual):\n  - id: identificador (ej: NETFLIX#001)\n  - servicio: Netflix, Spotify, etc.\n  - tipo: Premium, Familiar, etc.\n  - usuarios_activos: cuántos usuarios tiene asignados ahora mismo\n  - capacidad_maxima: máximos perfiles/usuarios que admite\n  - capacidad_minima: mínimo de usuarios para ser rentable\n  - porcentaje_ocupacion: usuarios_activos / capacidad_maxima × 100\n  - espacios_disponibles: perfiles libres para vender a nuevos clientes\n  - es_rentable: true si usuarios_activos >= capacidad_minima\n\nUSO: Para identificar cuentas subutilizadas (espacios a vender agresivamente), cuentas no rentables (debajo del mínimo), y el % de ocupación global. Si hay muchos espacios libres = capacidad ociosa = oportunidad de crecimiento sin costo adicional.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/tech-accounts/estadisticas-uso",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5900, 760],
+      "id": "aaa00009-0009-0009-0009-000000000009",
+      "name": "Ocupación de Cuentas"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Snapshot rápido del inventario técnico de cuentas: cuántas hay, cuáles están vencidas, cuáles dañadas.\n\nRETORNA:\n- activas: total de cuentas activas en el sistema\n- vigentes: cuentas con fecha de vencimiento futura (OK, funcionando)\n- vencidas: cuentas cuya fecha de vencimiento ya pasó (requieren renovación o eliminación urgente)\n- por_vencer_7_dias: cuentas que vencen en los próximos 7 días (decisión urgente de renovar o no)\n- danadas: cuentas con problemas técnicos/caídas que afectan a los usuarios asignados\n\nUSO: Para ver de un vistazo la salud del inventario. Las cuentas dañadas impactan directamente la experiencia de clientes. Las vencidas son costo sin retorno. Usar junto con Ocupación de Cuentas para análisis más profundo.\n\nSIN PARÁMETROS.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/tech-accounts/resumen",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5700, 760],
+      "id": "aaa00010-0010-0010-0010-000000000010",
+      "name": "Resumen de Cuentas"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Métricas de los usuarios (suscriptores) activos del negocio en tiempo real. Diferencia usuarios vigentes de los que se vencieron sin renovar.\n\nRETORNA:\n- activos_vigentes: usuarios con suscripción activa Y fecha de vencimiento futura (los que efectivamente pagan y tienen servicio)\n- vencidos_sin_desactivar: usuarios marcados activos pero con fecha ya vencida (churn no procesado — ya no pagan pero siguen contando como activos)\n- total_registros_activos: suma de ambos grupos\n- por_servicio: lista de cada servicio con su cantidad de usuarios vigentes:\n  - servicio: nombre (Netflix, Spotify, etc.)\n  - cantidad: usuarios activos vigentes en ese servicio\n\nMÉTRICA CLAVE: vencidos_sin_desactivar / total_registros_activos = tasa de churn actual. Si supera 10% hay una alerta de retención.\n\nCÁLCULO RECOMENDADO: ARPU = ingresos_mes (de Resumen de Ventas) / activos_vigentes\n\nUSO: Para calcular ARPU, evaluar salud de la base de suscriptores, detectar qué servicios tienen más churn.\n\nSIN PARÁMETROS.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/tech-usuarios/estadisticas",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5500, 760],
+      "id": "aaa00011-0011-0011-0011-000000000011",
+      "name": "Estadísticas de Usuarios"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Agenda financiera del día: lista de clientes cuyos servicios vencen HOY con montos esperados. Permite conocer el flujo de caja potencial del día.\n\nRETORNA:\n- fecha: fecha de hoy\n- total_clientes: cuántos clientes distintos vencen hoy\n- total_servicios: cuántos servicios en total vencen (un cliente puede tener varios)\n- clientes (por cada cliente):\n  - nombre, teléfono, email, telegram_chat_id\n  - servicios_vencen_hoy: lista con servicio, fecha_vencimiento, monto por cada servicio\n  - total_servicios: cuántos servicios vencen a este cliente\n  - monto_total: suma total que debería cobrarle hoy\n\nCÁLCULO CLAVE: Suma de todos los monto_total = ingreso potencial máximo del día. Comparar con ventas reales del día (Resumen de Ventas con periodo='daily') = tasa de conversión de renovaciones.\n\nUSO: Para saber cuánto puede entrar hoy, cuántos clientes contactar, y si el día va bien o mal vs. expectativa.\n\nFILTRO OPCIONAL: servicio — para ver solo los de un streaming específico",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/tech-accounts/clientes-vencen-hoy",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "servicio",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('servicio', `Filtrar por servicio: NETFLIX, DISNEYP, MAX, PRIME, CRUNCHY, SPOTIFY, MAGIS, PARAMOUNT. Vacío = todos los servicios.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5300, 760],
+      "id": "aaa00012-0012-0012-0012-000000000012",
+      "name": "Agenda de Cobros del Día"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Evaluación financiera de qué cuentas conviene renovar y cuáles no, para cuentas que vencen hoy o en los próximos 2 días.\n\nRETORNA:\n- cuentas_a_renovar: cuentas donde SÍ conviene pagar la renovación:\n  - idcue: ID de la cuenta\n  - servicio: nombre del streaming\n  - usuarios_activos: cuántos usuarios tiene ahora\n  - usuarios_que_siguen: usuarios con vencimiento posterior a la cuenta (los que quedarían sin servicio)\n  - costo_renovacion: cuánto cuesta renovarla\n  - ingreso_estimado: ingresos esperados de esos usuarios\n  - margen_estimado: ingreso_estimado - costo_renovacion\n  - rentable: true si el margen es positivo\n\n- cuentas_a_no_renovar: cuentas que NO conviene renovar (pocos usuarios, pérdida neta)\n  - usuarios_afectados: cuántos usuarios quedan sin cuenta si no se renueva\n\n- resumen_financiero:\n  - total_costo_si_renueva_todas: cuánto costaría renovar todo\n  - total_costo_recomendado: cuánto cuesta solo las recomendadas\n  - ingreso_esperado_de_recomendadas: ingresos esperados\n  - ahorro_por_no_renovar_otras: lo que se ahorra descartando las no rentables\n  - ganancia_neta_estimada: margen final\n\nUSO: Decisión clave de fin de mes. Filtrar por servicio para analizar uno a la vez si hay muchas cuentas.\n\nFILTRO OPCIONAL: servicio (NETFLIX, SPOTIFY, etc.)",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/accountant/cuentas/evaluar-renovacion",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "servicio",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('servicio', `Filtrar por servicio: NETFLIX, DISNEYP, MAX, PRIME, CRUNCHY, SPOTIFY, MAGIS, PARAMOUNT. Vacío = analiza todos los servicios.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5900, 920],
+      "id": "aaa00013-0013-0013-0013-000000000013",
+      "name": "Análisis de Renovación de Cuentas"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Explorador de usuarios activos con filtros para análisis detallado. Permite hacer drill-down sobre suscriptores específicos por servicio o cliente.\n\nRETORNA POR CADA USUARIO:\n- iddet: ID único del usuario en el sistema\n- cliente: nombre, whatsapp, telegram_id\n- servicio: Netflix, Disney+, Max, etc.\n- cuenta: id (ej: NETFLIX#001), usuario, contraseña, estado activa/inactiva, si está caída\n- perfil: número de perfil, pin de acceso\n- vencimiento: fecha exacta, días_restantes, estado (vigente / por_vencer / vencido)\n- venta: id de venta, monto pagado, fecha de la venta\n- estado_cobro: COBRADO o PENDIENTE\n- activo: true/false\n\n- pagination: total_en_BD, count_retornados, limit, offset, has_more\n\nFILTROS DISPONIBLES:\n- servicio: 'NETFLIX', 'MAX', 'DISNEYP', 'PRIME', 'CRUNCHY', 'SPOTIFY', 'MAGIS', 'PARAMOUNT'\n- cliente: nombre parcial case-insensitive (buscar 'Juan' encuentra 'Juan Pérez')\n- limit: registros por página, default 50, máximo 200\n- offset: paginación (0, 200, 400...)\n\nUSO: Cuando necesitas datos de usuarios específicos: ver todos los de Netflix, buscar la situación de un cliente, calcular ingresos pendientes de un grupo. Si has_more=true, hacer nueva llamada con offset=offset+limit para la siguiente página.",
+        "url": "https://streamify.aaronsoft.es/public/api/v2/tech-usuarios/listar",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "servicio",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('servicio', `Filtrar por servicio: NETFLIX, MAX, DISNEYP, PRIME, CRUNCHY, SPOTIFY, MAGIS, PARAMOUNT. Vacío = todos.`, 'string') }}"
+            },
+            {
+              "name": "cliente",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('cliente', `Buscar por nombre parcial de cliente (case insensitive). Vacío = todos los clientes.`, 'string') }}"
+            },
+            {
+              "name": "limit",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('limit', `Registros por página. Default: 50. Máximo: 200. Para análisis completo usar 200.`, 'string') }}"
+            },
+            {
+              "name": "offset",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('offset', `Inicio de paginación. Default: 0. Segunda página con limit=200 → offset=200.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [-5700, 920],
+      "id": "aaa00014-0014-0014-0014-000000000014",
+      "name": "Explorador de Usuarios"
+    },
+    {
+      "parameters": {
+        "content": "## 🧠 ARIA — Analista de Rendimiento Interno\n**Streamify HQ · Agente Analítico v2**\n\n**🔧 Infraestructura:**\nThink · Calculator · Date & Time · Memory\n\n**💰 Finanzas y Ventas:**\n→ Reporte General del Negocio (all-in-one)\n→ Resumen de Ventas Detallado (con empleados y métodos pago)\n→ Análisis Financiero por Servicio (costo vs ingreso vs margen)\n→ Ingresos por Servicio (comparativa por período)\n→ Proyección de Ingresos (next_week / next_month)\n→ Métodos de Pago (distribución de bancos)\n\n**👥 Clientes:**\n→ Estadísticas de Clientes (base, retención, LTV)\n→ Clientes con Deuda (morosos por días de atraso)\n→ Agenda de Cobros del Día (flujo de caja diario)\n\n**📦 Inventario de Cuentas:**\n→ Resumen de Cuentas (snapshot rápido)\n→ Ocupación de Cuentas (% uso, espacios libres)\n→ Análisis de Renovación (qué renovar y cuánto cuesta)\n\n**👤 Suscriptores:**\n→ Estadísticas de Usuarios (activos, vencidos, por servicio)\n→ Explorador de Usuarios (drill-down con filtros)",
+        "height": 620,
+        "width": 960,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-5980, -120],
+      "typeVersion": 1,
+      "id": "34fe6acf-c950-418a-bb33-9c460ff4e5cb",
+      "name": "Sticky Note - Agente Analítico"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{"node": "AI Agent1", "type": "main", "index": 0}]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [{"node": "Respond to Webhook", "type": "main", "index": 0}]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [{"node": "AI Agent1", "type": "ai_languageModel", "index": 0}]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [{"node": "AI Agent1", "type": "ai_memory", "index": 0}]
+      ]
+    },
+    "Think1": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Calculator1": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Date & Time1": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Reporte General del Negocio": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Resumen de Ventas Detallado": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Análisis Financiero por Servicio": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Ingresos por Servicio": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Proyección de Ingresos": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Estadísticas de Clientes": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Clientes con Deuda": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Métodos de Pago": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Ocupación de Cuentas": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Resumen de Cuentas": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Estadísticas de Usuarios": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Agenda de Cobros del Día": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Análisis de Renovación de Cuentas": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]},
+    "Explorador de Usuarios": {"ai_tool": [[{"node": "AI Agent1", "type": "ai_tool", "index": 0}]]}
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2a4787fedcd3a9fda6d63f2231359e551e48f7e0d6a6b433946467fe82f7e7a4"
+  }
+}
