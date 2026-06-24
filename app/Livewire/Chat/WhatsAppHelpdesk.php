@@ -89,6 +89,8 @@ class WhatsAppHelpdesk extends Component
 
     public string $soporteSolucion = '';
 
+    public string $soporteNotice = '';
+
     public int $conversationsLimit = 25;
 
     public int $messagesLimit = 80;
@@ -134,6 +136,7 @@ class WhatsAppHelpdesk extends Component
             'activeContactIdentity' => $activeContactIdentity,
             'clientActiveUsers'     => $this->clientActiveUsersForConversation($activeConversation),
             'clientePendingSoporte' => $this->clientePendingSoporte($activeConversation),
+            'soporteNotice'         => $this->soporteNotice,
             'quickResponseSuggestions' => $this->quickResponseSuggestions(),
             'quickResponses'        => QuickResponse::query()->orderBy('orden')->orderBy('comando')->get(),
             'operators'             => Empleado::query()->orderBy('nombreemp')->get(['idemp', 'nombreemp']),
@@ -170,6 +173,7 @@ class WhatsAppHelpdesk extends Component
         $this->messagesLimit = 80;
         $this->activeMessageSearch = '';
         $this->soporteSolucion = '';
+        $this->soporteNotice = '';
         $this->mobilePane = 'chat';
         $this->lastUnreadConversations = $this->unreadConversationsCount();
         $this->lastActiveMessageFingerprint = $this->conversationMessageFingerprint($conversation);
@@ -701,8 +705,16 @@ class WhatsAppHelpdesk extends Component
     public function atenderSoporteDesdeChat(int $idsop): void
     {
         $user = $this->operator();
-        abort_if(! $user || ! $user->hasPermissionTo('soportes.update'), 403, 'No tienes permiso para atender soportes.');
-        $this->requireConversation();
+
+        if (! $user || Gate::forUser($user)->denies('chat.responder')) {
+            $this->addError('soporteSolucion', 'No tienes permiso para atender soportes desde el chat.');
+            return;
+        }
+
+        if (! $this->activeConversation()) {
+            $this->addError('soporteSolucion', 'Selecciona una conversación activa primero.');
+            return;
+        }
 
         $this->validate([
             'soporteSolucion' => ['required', 'string', 'min:5', 'max:2000'],
@@ -712,7 +724,11 @@ class WhatsAppHelpdesk extends Component
 
         $conversation = $this->activeConversation();
         $idcli = $conversation?->cliente?->idcli ?? $conversation?->contactoCanal?->idcli;
-        abort_if((int) $soporte->idcli !== (int) $idcli, 403, 'Este soporte no corresponde al cliente activo.');
+
+        if ((int) $soporte->idcli !== (int) $idcli) {
+            $this->addError('soporteSolucion', 'Este soporte no corresponde al cliente activo.');
+            return;
+        }
 
         $soporte->update([
             'solucion' => $this->soporteSolucion,
@@ -729,6 +745,7 @@ class WhatsAppHelpdesk extends Component
         ]);
 
         $this->soporteSolucion = '';
+        $this->soporteNotice = 'Soporte #' . $soporte->idsop . ' marcado como atendido correctamente.';
     }
 
     private function clientePendingSoporte(?Conversacion $conversation): ?Soporte

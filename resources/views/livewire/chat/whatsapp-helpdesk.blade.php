@@ -2155,6 +2155,15 @@
                      @endforelse
                  </section>
 
+                 @if($soporteNotice)
+                 <section class="wa-card" style="border-left: 3px solid var(--wa-success); background: var(--wa-success-soft);">
+                     <div style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#065f46;">
+                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+                         {{ $soporteNotice }}
+                     </div>
+                 </section>
+                 @endif
+
                  @if($clientePendingSoporte)
                  <section class="wa-card" style="border-left: 3px solid var(--wa-danger); background: var(--wa-danger-soft);">
                      <div class="wa-card-title" style="display:flex; align-items:center; gap:8px;">
