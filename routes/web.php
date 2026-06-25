@@ -380,6 +380,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
     Route::controller(EmpleadoController::class)->group(function () {
         Route::get('/empleados', 'index')->name('empleados');
+        Route::get('/empleados/rendimiento', 'rendimiento')->name('empleados.rendimiento');
         Route::get('/empleados/create', 'create')->name('empleados.create');
         Route::post('/empleados/createstore', 'store')->name('empleados.store');
         Route::get('/empleados/{id}/edit', 'edit')->name('empleados.edit');

@@ -56,6 +56,7 @@
                                 @if (Auth::user()->hasPermissionTo('empleados'))
                                     <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
                                     <a class="nav-link" href="{{ route('asistencias.index') }}">Control</a>
+                                    <a class="nav-link" href="{{ route('empleados.rendimiento') }}">Rendimiento</a>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('roles.index'))
                                     <a class="nav-link" href="{{ route('roles.index') }}">Roles</a>

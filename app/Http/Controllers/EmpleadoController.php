@@ -115,6 +115,102 @@ class EmpleadoController extends Controller
         ];
     }
 
+    public function rendimiento(Request $request)
+    {
+        if (!Gate::allows('empleados')) {
+            abort(403);
+        }
+
+        $periodo = $request->get('periodo', 'semana');
+        $desde = match($periodo) {
+            'hoy'  => Carbon::today(),
+            'mes'  => Carbon::now()->startOfMonth(),
+            default => Carbon::now()->startOfWeek(),
+        };
+        $dias = match($periodo) {
+            'hoy'  => 1,
+            'mes'  => max(1, Carbon::today()->day),
+            default => max(1, Carbon::now()->dayOfWeekIso),
+        };
+
+        $puntosPorTipo = [
+            'cobrar_usuario'    => 1,
+            'quitar_usuario'    => 9,
+            'renovar_cuenta'    => 5,
+            'cuenta_caida'      => 8,
+            'colapso_cuenta'    => 5,
+            'soporte_pendiente' => 9,
+            'agregar_stock'     => 2,
+            'manual'            => 1,
+        ];
+
+        $tiposConfig = [
+            'cobrar_usuario'    => ['label' => 'Cobrar usuario',  'color' => '#f59e0b'],
+            'quitar_usuario'    => ['label' => 'Quitar usuario',  'color' => '#ef4444'],
+            'renovar_cuenta'    => ['label' => 'Renovar cuenta',  'color' => '#3b82f6'],
+            'cuenta_caida'      => ['label' => 'Cuenta caída',    'color' => '#dc2626'],
+            'colapso_cuenta'    => ['label' => 'Ajustar espacio', 'color' => '#8b5cf6'],
+            'soporte_pendiente' => ['label' => 'Soporte',         'color' => '#06b6d4'],
+            'agregar_stock'     => ['label' => 'Agregar stock',   'color' => '#10b981'],
+            'manual'            => ['label' => 'Manual',          'color' => '#64748b'],
+        ];
+
+        $niveles = [
+            ['min' => 0,   'label' => 'Sin actividad',  'bg' => '#94a3b8', 'text' => '#fff'],
+            ['min' => 50,  'label' => 'Poco esfuerzo',  'bg' => '#fbbf24', 'text' => '#000'],
+            ['min' => 150, 'label' => 'Medio tiempo',   'bg' => '#3b82f6', 'text' => '#fff'],
+            ['min' => 300, 'label' => 'Trabajo normal', 'bg' => '#10b981', 'text' => '#fff'],
+            ['min' => 500, 'label' => 'Buen trabajo',   'bg' => '#8b5cf6', 'text' => '#fff'],
+            ['min' => 700, 'label' => 'Extra ⭐',       'bg' => '#f43f5e', 'text' => '#fff'],
+        ];
+
+        $empleados = Empleado::whereHas('roles')->with('roles')->get();
+
+        $data = $empleados->map(function ($emp) use ($desde, $puntosPorTipo, $niveles, $dias) {
+            $tareas = Tarea::where('completada_por', $emp->idemp)
+                ->where('completada', true)
+                ->where('fecha_completada', '>=', $desde)
+                ->get(['id', 'nombretarea', 'tipo_tarea', 'fecha_completada', 'assigned_at']);
+
+            $puntos = $tareas->sum(fn($t) => $puntosPorTipo[$t->tipo_tarea] ?? 0);
+            $promDiario = $dias > 0 ? (int) round($puntos / $dias) : 0;
+            $nivel = collect($niveles)->last(fn($n) => $promDiario >= $n['min']) ?? $niveles[0];
+
+            $porTipo = [];
+            foreach (array_keys($puntosPorTipo) as $tipo) {
+                $porTipo[$tipo] = $tareas->where('tipo_tarea', $tipo)->count();
+            }
+
+            $sospechosas = $tareas->filter(function ($t) {
+                if (!$t->assigned_at || !$t->fecha_completada) return false;
+                return $t->fecha_completada->diffInSeconds($t->assigned_at) < 60;
+            })->count();
+
+            $ventas = DB::table('ventas')
+                ->where('idemp', $emp->idemp)
+                ->where('fechaven', '>=', $desde->toDateString())
+                ->count();
+
+            return [
+                'id'           => $emp->idemp,
+                'nombre'       => $emp->nombreemp,
+                'foto'         => $emp->foto_url,
+                'roles'        => $emp->roles->pluck('name')->toArray(),
+                'puntos'       => $puntos,
+                'prom_diario'  => $promDiario,
+                'nivel'        => $nivel,
+                'total_tareas' => $tareas->count(),
+                'por_tipo'     => $porTipo,
+                'ventas'       => $ventas,
+                'sospechosas'  => $sospechosas,
+            ];
+        })->sortByDesc('puntos')->values();
+
+        return view('employee.rendimiento', compact(
+            'data', 'periodo', 'dias', 'desde', 'tiposConfig', 'niveles', 'puntosPorTipo'
+        ));
+    }
+
     /**
      * Show the form for creating a new resource.
      */
