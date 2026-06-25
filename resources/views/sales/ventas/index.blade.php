@@ -29,6 +29,7 @@
             <strong>Es necesario realizar más de 5 ventas al día.</strong>
         </p>
     </div>
+    @if(empty($isLocked))
     <!-- Estadísticas -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
@@ -183,6 +184,8 @@
             </div>
         </div>
     </div>
+
+    @endif {{-- /isLocked stats --}}
 
     <!-- Botón crear venta -->
     @if (Auth::user()->hasPermissionTo('ventas.create'))

@@ -15,6 +15,7 @@ use App\Models\Historial;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Banco;
 use App\Services\BancoService;
+use App\Services\ConcentracionService;
 use App\Services\EntregaMensajeService;
 use App\Services\TareaService;
 use Illuminate\Http\Request;
@@ -44,18 +45,25 @@ class VentaController extends Controller
             return $this->getVentasAjax($request);
         }
 
-        // Vista normal: solo estadísticas, NO cargar todas las ventas
-        $hoy = Carbon::today();
-        $ingresos_dia = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
-        $ventas_dia = Venta::whereDate('fechaven', $hoy)->count();
+        $isLocked = ConcentracionService::isLocked();
 
-        $autenticados = Cliente::whereNotNull('email')
-            ->whereNotNull('password')
-            ->count();
-
-        $recargasPendientes = Recarga::where('idestado', 1)->count();
-        $pedidosPendientes = Pedido::where('idestado', 1)->count();
-        $ventasLaravel = Venta::whereDate('fechaven', $hoy)->where('idemp', 10)->count();
+        // Estadísticas del negocio: solo para roles internos
+        if ($isLocked) {
+            $ingresos_dia       = 0;
+            $ventas_dia         = 0;
+            $autenticados       = 0;
+            $recargasPendientes = 0;
+            $pedidosPendientes  = 0;
+            $ventasLaravel      = 0;
+        } else {
+            $hoy = Carbon::today();
+            $ingresos_dia       = Venta::whereDate('fechaven', $hoy)->sum('totalpagoven');
+            $ventas_dia         = Venta::whereDate('fechaven', $hoy)->count();
+            $autenticados       = Cliente::whereNotNull('email')->whereNotNull('password')->count();
+            $recargasPendientes = Recarga::where('idestado', 1)->count();
+            $pedidosPendientes  = Pedido::where('idestado', 1)->count();
+            $ventasLaravel      = Venta::whereDate('fechaven', $hoy)->where('idemp', 10)->count();
+        }
 
         return view('sales.ventas.index', compact(
             'ingresos_dia',
@@ -63,7 +71,8 @@ class VentaController extends Controller
             'autenticados',
             'recargasPendientes',
             'pedidosPendientes',
-            'ventasLaravel'
+            'ventasLaravel',
+            'isLocked'
         ));
     }
 

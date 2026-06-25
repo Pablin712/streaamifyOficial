@@ -7,6 +7,7 @@ use App\Models\ViewClientesUsuarios;
 use App\Models\Historial;
 use App\Support\ClienteAuth;
 use App\Services\ClienteMensajeMasivoService;
+use App\Services\ConcentracionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -46,18 +47,26 @@ class ClienteController extends Controller
             return $this->getClientesAjax($request);
         }
 
-        $autenticados = Cliente::whereNotNull('email')
-            ->whereNotNull('password')
-            ->count();
+        $isLocked = ConcentracionService::isLocked();
 
-        $segmentosMensajeMasivo = $this->clienteMensajeMasivoService->getSegmentSummary();
+        $autenticados = $isLocked ? null : Cliente::whereNotNull('email')->whereNotNull('password')->count();
+        $segmentosMensajeMasivo = $isLocked ? [] : $this->clienteMensajeMasivoService->getSegmentSummary();
 
-        return view('sales.clientes.index', compact('autenticados', 'segmentosMensajeMasivo'));
+        return view('sales.clientes.index', compact('autenticados', 'segmentosMensajeMasivo', 'isLocked'));
     }
 
     /**
      * Obtener clientes paginados para AJAX
      */
+    private function allowedClientIds(): ?array
+    {
+        if (! ConcentracionService::isActive()) {
+            return null;
+        }
+        $ids = app(ConcentracionService::class)->getIds(Auth::user()->idemp);
+        return $ids['idcli'];
+    }
+
     private function getClientesAjax(Request $request)
     {
         $perPage = $request->input('per_page', 20);
@@ -67,6 +76,15 @@ class ClienteController extends Controller
         $sortOrder = $request->input('sort_order', 'desc');
 
         $query = Cliente::with('viewClienteUsuario');
+
+        $allowedIds = $this->allowedClientIds();
+        if ($allowedIds !== null) {
+            if (empty($allowedIds)) {
+                $query->whereRaw('0 = 1');
+            } else {
+                $query->whereIn('idcli', $allowedIds);
+            }
+        }
 
         // Búsqueda
         if ($search) {

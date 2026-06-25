@@ -33,10 +33,12 @@
                             <div class="sb-nav-link-icon"><i class="fas fa-comments"></i></div>
                             Chat WhatsApp
                         </a>
+                        @if (! Auth::user()->hasRole('Trabajador externo'))
                         <a class="nav-link" href="{{ route('agente.biblioteca') }}">
                             <div class="sb-nav-link-icon"><i class="fas fa-book"></i></div>
                             Biblioteca del Agente
                         </a>
+                        @endif
                     @endif
                     <div class="sb-sidenav-menu-heading">Negocio</div>
                     {{-- Reemplazamos @canany(['empleados', 'roles.index']) --}}

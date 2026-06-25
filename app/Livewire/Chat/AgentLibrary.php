@@ -3,6 +3,7 @@
 namespace App\Livewire\Chat;
 
 use App\Models\ChatMemoriaNegocio;
+use App\Services\ConcentracionService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -61,6 +62,7 @@ class AgentLibrary extends Component
     public function mount(): void
     {
         Gate::authorize('chat.ver');
+        abort_if(ConcentracionService::isLocked(), 403, 'Los trabajadores externos no tienen acceso a la Biblioteca del Agente.');
     }
 
     public function updatingBusqueda(): void

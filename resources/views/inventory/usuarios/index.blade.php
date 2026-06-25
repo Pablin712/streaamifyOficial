@@ -418,6 +418,7 @@
         ];
     @endphp
 
+    @if($stats)
     <div class="usuarios-kpi">
 
         {{-- Fila 1: Métricas principales --}}
@@ -647,6 +648,7 @@
         </div>
 
     </div>{{-- /.usuarios-kpi --}}
+    @endif
 @endsection
 @section('tablename', 'Usuarios')
 @section('btncrear')

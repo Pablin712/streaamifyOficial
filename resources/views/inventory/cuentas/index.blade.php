@@ -167,6 +167,7 @@
         ];
     @endphp
 
+    @if($statsCuentas)
     {{-- Fila 1: KPIs principales --}}
     <div class="row mb-2">
         <div class="col-xl-3 col-md-6 mb-3">
@@ -321,6 +322,7 @@
             @endif
         @endforeach
     </div>
+    @endif {{-- /statsCuentas --}}
 @endsection
 
 @section('btncrear')

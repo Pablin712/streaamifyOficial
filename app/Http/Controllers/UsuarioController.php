@@ -59,7 +59,8 @@ class UsuarioController extends Controller
 
         $cuentas = Cuenta::where('activocue', true)->orderBy('idcue')->get();
         $proveedores = Proveedor::where('activopro', true)->orderBy('nombrepro')->get();
-        $stats = $this->calcularStatsUsuarios(Carbon::today());
+        // Estadísticas globales: información sensible, oculta para trabajadores externos
+        $stats = ConcentracionService::isLocked() ? null : $this->calcularStatsUsuarios(Carbon::today());
 
         return view('inventory.usuarios.index', compact('usuarios', 'cuentas', 'proveedores', 'stats'));
     }

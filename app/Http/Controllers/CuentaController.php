@@ -56,13 +56,20 @@ class CuentaController extends Controller
         if (!Gate::allows('cuentas')) {
             abort(403, 'No tienes permiso para ver las cuentas.');
         }
-        $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado = Auth::user());
+        $empleado = Auth::user();
 
         if (ConcentracionService::isActive()) {
-            $concIds = app(ConcentracionService::class)->getIds(Auth::user()->idemp)['idcue'];
-            $cuentas = !empty($concIds)
-                ? $cuentas->whereIn('idcue', $concIds)->values()
-                : collect();
+            $concIds = app(ConcentracionService::class)->getIds($empleado->idemp)['idcue'];
+            if (!empty($concIds)) {
+                // Trabajador externo no tiene permisos de servicio (netflix, disney…),
+                // por eso se parte de todas las cuentas activas y se filtra por idcue.
+                $cuentas = $this->cuentaService->obtenerCuentas()
+                    ->whereIn('idcue', $concIds)->values();
+            } else {
+                $cuentas = collect();
+            }
+        } else {
+            $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado);
         }
 
         // Separar cuentas individuales y excluirlas de las demás pestañas
@@ -82,9 +89,10 @@ class CuentaController extends Controller
         $espacios_por_servicio = $this->cuentaService->calcularEspaciosPorServicio();
         arsort($espacios_por_servicio); // ordenar de mayor a menor espacios disponibles
 
-        $statsCuentas = $this->calcularStatsCuentas(
-            $cuentas, $cuentasCaidas, $cuentasPorVencer, $cuentasSinOcupar
-        );
+        // Las estadísticas globales son información sensible del negocio; no se muestran a externos
+        $statsCuentas = ConcentracionService::isLocked()
+            ? null
+            : $this->calcularStatsCuentas($cuentas, $cuentasCaidas, $cuentasPorVencer, $cuentasSinOcupar);
 
         // Obtener valores activos para los modales
         $valores = Valor::where('activoval', true)->get();

@@ -23,6 +23,7 @@
         <p class="text-muted">Muestra la tabla de clientes, el número de usuarios que posee y lo facturado en el mes actual.</p>
     </div>
 
+    @if(empty($isLocked))
     <!-- Estadísticas -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
@@ -42,6 +43,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Alert Container para mensajes dinámicos -->
     <div id="alert-container"></div>
