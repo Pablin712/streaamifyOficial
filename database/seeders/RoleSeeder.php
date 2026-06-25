@@ -71,8 +71,8 @@ class RoleSeeder extends Seeder
         $this->syncPermission('servicios.destroy', [$admin, $gerente, $bodeguero]);
 
         $this->syncPermission('valores', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
-        $this->syncPermission('valores.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
-        $this->syncPermission('valores.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('valores.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
+        $this->syncPermission('valores.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $trabajadorExterno]);
         $this->syncPermission('valores.edit', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('valores.update', [$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
         $this->syncPermission('valores.destroy', [$admin, $gerente, $bodeguero]);
@@ -93,8 +93,8 @@ class RoleSeeder extends Seeder
         $this->syncPermission('clientes.destroy', [$admin, $gerente]);
 
         $this->syncPermission('cuentas', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $contador, $tecnico, $visitante, $trabajadorExterno]);
-        $this->syncPermission('cuentas.create', [$admin, $gerente, $trabajador, $bodeguero, $visitante]);
-        $this->syncPermission('cuentas.store', [$admin, $gerente, $trabajador, $tecnico]);
+        $this->syncPermission('cuentas.create', [$admin, $gerente, $trabajador, $bodeguero, $visitante, $trabajadorExterno]);
+        $this->syncPermission('cuentas.store', [$admin, $gerente, $trabajador, $tecnico, $trabajadorExterno]);
         $this->syncPermission('cuentas.status', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $trabajadorExterno]);
         $this->syncPermission('cuentas.mensaje', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $trabajadorExterno]);
         $this->syncPermission('cuentas.edit', [$admin, $gerente, $trabajador, $bodeguero, $vendedor, $tecnico, $visitante, $trabajadorExterno]);

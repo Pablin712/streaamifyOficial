@@ -330,7 +330,7 @@
     <div id="alert-container"></div>
 
     <div id="btncrear" class="d-flex flex-wrap gap-2 align-items-center mb-3">
-        @if (Auth::user()->hasPermissionTo('cuentas.create'))
+        @if ($canCreateCuenta)
             <button onclick="openCreateModal()" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Crear Cuenta
             </button>
@@ -338,7 +338,7 @@
                 <i class="fas fa-file-pdf"></i> Reporte PDF
             </a>
         @endif
-        @if (Auth::user()->hasPermissionTo('valores.create'))
+        @if ($canCreateValor)
             <button onclick="abrirModalCrearValorDesdeCuentas()" class="btn btn-primary">
                 <i class="fas fa-layer-group"></i> Crear Valor
             </button>

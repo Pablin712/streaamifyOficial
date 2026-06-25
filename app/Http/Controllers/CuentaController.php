@@ -58,8 +58,12 @@ class CuentaController extends Controller
         }
         $empleado = Auth::user();
 
+        $concIds = null;
+        $hasAgregarStock = false;
         if (ConcentracionService::isActive()) {
-            $concIds = app(ConcentracionService::class)->getIds($empleado->idemp)['idcue'];
+            $concIdsAll = app(ConcentracionService::class)->getIds($empleado->idemp);
+            $concIds = $concIdsAll['idcue'];
+            $hasAgregarStock = $concIdsAll['all_providers'] ?? false;
             if (!empty($concIds)) {
                 // Trabajador externo no tiene permisos de servicio (netflix, disney…),
                 // por eso se parte de todas las cuentas activas y se filtra por idcue.
@@ -71,6 +75,11 @@ class CuentaController extends Controller
         } else {
             $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado);
         }
+
+        // Para trabajadores externos: botones de crear solo si tienen tarea agregar_stock
+        $isLocked = ConcentracionService::isLocked();
+        $canCreateCuenta = $isLocked ? $hasAgregarStock : $empleado->can('cuentas.create');
+        $canCreateValor  = $isLocked ? $hasAgregarStock : $empleado->can('valores.create');
 
         // Separar cuentas individuales y excluirlas de las demás pestañas
         $cuentasIndividuales = $cuentas->filter(fn($c) => $c->tipo_cuenta === 'individual');
@@ -119,7 +128,9 @@ class CuentaController extends Controller
             'valores',
             'servicios',
             'proveedores',
-            'bancos'
+            'bancos',
+            'canCreateCuenta',
+            'canCreateValor'
         ));
     }
 
