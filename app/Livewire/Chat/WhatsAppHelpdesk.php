@@ -1133,107 +1133,43 @@ class WhatsAppHelpdesk extends Component
     }
 
     /**
-     * Devuelve [allowedClientIds[], allowedProviderPhones[]] para el modo concentración,
-     * construidos directamente desde las tareas sin pasar por conversiones de tipo erróneas.
+     * Devuelve [allowedClientIds[], allowedProviderPhones[]] para el modo concentración.
+     * Delega la lógica de filtrado a ConcentracionService.getIds() para mantener
+     * las reglas centralizadas (RequisitosV7.2).
      */
     private function concentracionAllowedIds(int $empId): array
     {
-        $tareas = DB::table('tareas')
-            ->where('assignee_id', $empId)
-            ->where('completada', false)
-            ->select(['tipo_tarea', 'related_id'])
-            ->get();
+        $ids = app(ConcentracionService::class)->getIds($empId);
 
-        // ── iddet (cobrar/quitar) → idcli via view_usuarios_activos ──────────
-        $iddetList = $tareas
-            ->whereIn('tipo_tarea', ['cobrar_usuario', 'quitar_usuario'])
-            ->pluck('related_id')
-            ->filter()
-            ->map(fn ($v) => (int) $v)
-            ->unique()
-            ->values()
-            ->toArray();
+        $allowedClientIds = $ids['idcli'];
 
-        $clientsFromUsers = ! empty($iddetList)
-            ? DB::table('view_usuarios_activos')
-                ->whereIn('iddet', $iddetList)
-                ->pluck('idcli')
+        if ($ids['all_providers']) {
+            // agregar_stock → todos los proveedores activos
+            $allowedProviderPhones = DB::table('proveedores')
+                ->where('activopro', true)
+                ->whereNotNull('telefonopro')
+                ->pluck('telefonopro')
+                ->unique()
+                ->map(fn($p) => PhoneNumber::canonicalEc($p))
                 ->filter()
-                ->toArray()
-            : [];
-
-        // ── idsop (soporte_pendiente) → idcli via soportes ───────────────────
-        $idsopList = $tareas
-            ->where('tipo_tarea', 'soporte_pendiente')
-            ->pluck('related_id')
-            ->filter()
-            ->map(fn ($v) => (int) $v)
-            ->unique()
-            ->values()
-            ->toArray();
-
-        $clientsFromSoportes = ! empty($idsopList)
-            ? DB::table('soportes')
-                ->whereIn('idsop', $idsopList)
-                ->pluck('idcli')
-                ->filter()
-                ->toArray()
-            : [];
-
-        $allowedClientIds = array_values(array_unique(
-            array_merge($clientsFromUsers, $clientsFromSoportes)
-        ));
-
-        // ── idcue (cuenta tasks) → idcli via view_usuarios_activos ───────────
-        // Nota: idcue es string — NO se castea a int
-        $idcueList = $tareas
-            ->whereIn('tipo_tarea', ['renovar_cuenta', 'cuenta_caida', 'colapso_cuenta'])
-            ->pluck('related_id')
-            ->filter()
-            ->map(fn ($v) => (string) $v)
-            ->unique()
-            ->values()
-            ->toArray();
-
-        if (! empty($idcueList)) {
-            $clientsFromCuentas = DB::table('view_usuarios_activos')
-                ->whereIn('idcue', $idcueList)
-                ->pluck('idcli')
-                ->filter()
+                ->values()
                 ->toArray();
-
-            $allowedClientIds = array_values(array_unique(
-                array_merge($allowedClientIds, $clientsFromCuentas)
-            ));
-        }
-
-        // ── Proveedores: idcue list → telefonopro normalizado ────────────────
-        $allIdcue = ! empty($idcueList)
-            ? $idcueList
-            : (! empty($iddetList)
-                ? DB::table('view_usuarios_activos')
-                    ->whereIn('iddet', $iddetList)
-                    ->pluck('idcue')
-                    ->filter()
-                    ->map(fn ($v) => (string) $v)
-                    ->unique()
-                    ->values()
-                    ->toArray()
-                : []);
-
-        $allowedProviderPhones = ! empty($allIdcue)
-            ? DB::table('cuentas')
+        } elseif (! empty($ids['idcue_providers'])) {
+            // renovar_cuenta + colapso_cuenta → solo proveedores de esas cuentas
+            $allowedProviderPhones = DB::table('cuentas')
                 ->join('valores', 'valores.idval', '=', 'cuentas.idval')
                 ->join('proveedores', 'proveedores.idpro', '=', 'valores.idpro')
-                ->whereIn('cuentas.idcue', $allIdcue)
+                ->whereIn('cuentas.idcue', $ids['idcue_providers'])
                 ->whereNotNull('proveedores.telefonopro')
                 ->pluck('proveedores.telefonopro')
                 ->unique()
-                ->map(fn ($p) => PhoneNumber::canonicalEc($p))
+                ->map(fn($p) => PhoneNumber::canonicalEc($p))
                 ->filter()
                 ->values()
-                ->toArray()
-            : [];
+                ->toArray();
+        } else {
+            $allowedProviderPhones = [];
+        }
 
         return [$allowedClientIds, $allowedProviderPhones];
     }

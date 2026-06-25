@@ -63,14 +63,14 @@ class RoleSeeder extends Seeder
         $this->syncPermission('tipos.update', [$admin, $gerente, $contador, $bodeguero, $trabajador]);
         $this->syncPermission('tipos.destroy', [$admin, $gerente]);
 
-        $this->syncPermission('servicios', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('servicios', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('servicios.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('servicios.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
         $this->syncPermission('servicios.edit', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('servicios.update', [$admin, $gerente, $bodeguero, $trabajador, $vendedor]);
         $this->syncPermission('servicios.destroy', [$admin, $gerente, $bodeguero]);
 
-        $this->syncPermission('valores', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
+        $this->syncPermission('valores', [$admin, $gerente, $contador, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('valores.create', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico, $visitante]);
         $this->syncPermission('valores.store', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $tecnico]);
         $this->syncPermission('valores.edit', [$admin, $gerente, $bodeguero, $trabajador, $vendedor, $visitante]);
@@ -138,6 +138,15 @@ class RoleSeeder extends Seeder
 
         $this->syncPermission('soportes', [$admin, $gerente, $tecnico, $trabajadorExterno]);
         $this->syncPermission('soportes.update', [$admin, $gerente, $tecnico, $trabajadorExterno]);
+
+        // Permisos de chat (consolidados aquí para todos los roles relevantes)
+        $this->syncPermission('chat.ver', [$admin, $gerente, $trabajador, $tecnico, $vendedor, $trabajadorExterno]);
+        $this->syncPermission('chat.responder', [$admin, $gerente, $trabajador, $tecnico, $vendedor, $trabajadorExterno]);
+        $this->syncPermission('chat.cerrar', [$admin, $gerente, $trabajador, $tecnico, $trabajadorExterno]);
+        $this->syncPermission('chat.transferir', [$admin, $gerente, $trabajador]);
+        $this->syncPermission('chat.supervisor', [$admin, $gerente]);
+        $this->syncPermission('chat.admin', [$admin]);
+        $this->syncPermission('chat.ver_estadisticas', [$admin, $gerente]);
 
         $this->syncPermission('gestion', [$admin, $gerente, $trabajador, $vendedor, $bodeguero, $visitante]);
         $this->syncPermission('categorias.store', [$admin, $gerente, $trabajador, $vendedor, $bodeguero]);
