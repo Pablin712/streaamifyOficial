@@ -32,18 +32,25 @@ class CalendarController extends Controller
 
         $empleado = Auth::user();
         $isLocked = ConcentracionService::isLocked();
+        $concAll  = $isLocked
+            ? app(\App\Services\ConcentracionService::class)->getIds($empleado->idemp)
+            : null;
 
         if ($isLocked) {
-            $concIds = app(\App\Services\ConcentracionService::class)->getIds($empleado->idemp)['idcue'];
-            $cuentas = !empty($concIds)
-                ? $this->cuentaService->obtenerCuentas()->whereIn('idcue', $concIds)->values()
+            $cuentaIds = $concAll['idcue'];
+            $cuentas = !empty($cuentaIds)
+                ? $this->cuentaService->obtenerCuentas()->whereIn('idcue', $cuentaIds)->values()
                 : collect();
         } else {
             $cuentas = $this->cuentaService->obtenerCuentasSegunPermiso($empleado);
         }
         $this->cuentaService->asignarUsuarios($cuentas);
 
-        $usuarios = ViewUsuarioActivo::all();
+        $usuarios = $isLocked
+            ? (! empty($concAll['iddet'])
+                ? ViewUsuarioActivo::whereIn('iddet', $concAll['iddet'])->get()
+                : collect())
+            : ViewUsuarioActivo::all();
 
         // Trabajador externo: solo sus tareas asignadas, sin datos financieros del negocio
         if ($isLocked) {
@@ -108,7 +115,8 @@ class CalendarController extends Controller
         return view('administration.calendar', compact(
             'cuentas', 'usuarios', 'tareas',
             'ventas', 'gastos', 'costos',
-            'estadisticas', 'clientesNuevos'
+            'estadisticas', 'clientesNuevos',
+            'isLocked'
         ));
     }
 }

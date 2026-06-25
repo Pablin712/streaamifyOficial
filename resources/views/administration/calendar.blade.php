@@ -6,7 +6,11 @@
 @endsection
 @section('breadcrumb2', 'Calendario')
 @section('introduccion')
-    Visualiza vencimientos, ventas, gastos y estadísticas por día. Activa o desactiva filtros con los botones superiores y haz clic en cualquier día para ver el detalle.
+    @if($isLocked)
+        Visualiza los vencimientos y tareas asignadas a ti. Haz clic en cualquier día para ver el detalle.
+    @else
+        Visualiza vencimientos, ventas, gastos y estadísticas por día. Activa o desactiva filtros con los botones superiores y haz clic en cualquier día para ver el detalle.
+    @endif
 @endsection
 
 @section('styles')
@@ -279,6 +283,7 @@
             <button class="cal-filter-btn f-cuentas active" data-filter="cuentas">
                 <span class="dot"></span>Cuentas
             </button>
+            @if(!$isLocked)
             <button class="cal-filter-btn f-ventas active" data-filter="ventas">
                 <span class="dot"></span>Ventas
             </button>
@@ -291,6 +296,7 @@
             <button class="cal-filter-btn f-stats active" data-filter="stats">
                 <span class="dot"></span>Estadísticas
             </button>
+            @endif
             <button class="cal-filter-btn f-tareas active" data-filter="tareas">
                 <span class="dot"></span>Tareas
             </button>
@@ -312,10 +318,12 @@
     <div class="cal-legend d-flex flex-wrap gap-3 mt-3 px-1">
         <span><span class="dot" style="background:var(--cal-clientes);"></span>Venc. clientes</span>
         <span><span class="dot" style="background:var(--cal-cuentas);"></span>Venc. cuentas</span>
+        @if(!$isLocked)
         <span><span class="dot" style="background:var(--cal-ventas);"></span>Ventas</span>
         <span><span class="dot" style="background:var(--cal-gastos);"></span>Gastos</span>
         <span><span class="dot" style="background:var(--cal-costos);"></span>Costos</span>
         <span><span class="dot" style="background:var(--cal-stats);"></span>Estadísticas</span>
+        @endif
         <span><span class="dot" style="background:var(--cal-tareas);"></span>Tareas</span>
         <span><span class="dot" style="background:#dc2626;"></span>Vencido</span>
     </div>
