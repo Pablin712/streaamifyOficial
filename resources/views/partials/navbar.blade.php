@@ -1,3 +1,51 @@
+<style>
+/* ── Avatar en navbar ──────────────────────────────────────── */
+.nav-avatar-sm {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,.35);
+    flex-shrink: 0;
+}
+.nav-avatar-initials-sm {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .62rem; font-weight: 800; color: #fff;
+    letter-spacing: .04em;
+    border: 2px solid rgba(255,255,255,.35);
+    flex-shrink: 0;
+    user-select: none;
+}
+.nav-avatar-lg {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(99,102,241,.25);
+    flex-shrink: 0;
+}
+.nav-avatar-initials-lg {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800; color: #fff;
+    letter-spacing: .04em;
+    flex-shrink: 0;
+    user-select: none;
+}
+.nav-user-header {
+    background: var(--bs-secondary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.navbar-user-pill {
+    gap: 8px;
+    padding: 4px 10px 4px 4px !important;
+    border-radius: 999px !important;
+}
+.navbar-user-pill::after { margin-left: 2px !important; }
+</style>
 <nav class="sb-topnav navbar navbar-expand-lg navbar-light">
     <div class="container-fluid">
         <!-- Logo / Nombre de la app -->
@@ -96,8 +144,18 @@
                     <li><hr class="dropdown-divider"></li>
 
                     <!-- Usuario en móvil -->
-                    <li class="dropdown-header">
-                        <i class="fas fa-user me-2"></i>{{ Auth::user()->nombreemp }}
+                    <li>
+                        <div class="d-flex align-items-center gap-3 px-3 py-3" style="background:var(--bs-secondary-bg); border-top:1px solid var(--bs-border-color); border-bottom:1px solid var(--bs-border-color);">
+                            @if(Auth::user()->foto_url)
+                                <img src="{{ asset('storage/' . Auth::user()->foto_url) }}" class="nav-avatar-sm" alt="">
+                            @else
+                                <div class="nav-avatar-initials-sm">{{ strtoupper(mb_substr(Auth::user()->nombreemp, 0, 2)) }}</div>
+                            @endif
+                            <div class="overflow-hidden">
+                                <div class="fw-bold text-truncate" style="font-size:.85rem;">{{ Auth::user()->nombreemp }}</div>
+                                <div class="text-muted text-truncate" style="font-size:.7rem;">{{ Auth::user()->roles->pluck('name')->join(' · ') ?: 'Sin rol' }}</div>
+                            </div>
+                        </div>
                     </li>
                     <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
                             <i class="fas fa-cog me-2"></i> Ajustes
@@ -223,36 +281,65 @@
 
                     <!-- Menú de usuario (Desktop) -->
                     <li class="nav-item dropdown">
-                        <button class="nav-link dropdown-toggle navbar-user-btn" id="userDropdown"
+                        <button class="nav-link dropdown-toggle navbar-user-pill" id="userDropdown"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user fa-fw me-1"></i>
-                            <span>{{ Auth::user()->nombreemp }}</span>
+                            @if(Auth::user()->foto_url)
+                                <img src="{{ asset('storage/' . Auth::user()->foto_url) }}" class="nav-avatar-sm" alt="">
+                            @else
+                                <div class="nav-avatar-initials-sm">{{ strtoupper(mb_substr(Auth::user()->nombreemp, 0, 2)) }}</div>
+                            @endif
+                            <span class="d-none d-xl-inline fw-semibold" style="font-size:.85rem; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                {{ explode(' ', Auth::user()->nombreemp)[0] }}
+                            </span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li><a class="dropdown-item" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
-                                    <i class="fas fa-cog me-2"></i> Ajustes
-                                </a></li>
+
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 overflow-hidden p-0" style="min-width:260px; border-radius:14px !important;">
+
+                            {{-- Profile header --}}
+                            <li class="nav-user-header">
+                                <div class="d-flex align-items-center gap-3 px-3 py-3">
+                                    @if(Auth::user()->foto_url)
+                                        <img src="{{ asset('storage/' . Auth::user()->foto_url) }}" class="nav-avatar-lg" alt="">
+                                    @else
+                                        <div class="nav-avatar-initials-lg">{{ strtoupper(mb_substr(Auth::user()->nombreemp, 0, 2)) }}</div>
+                                    @endif
+                                    <div class="overflow-hidden">
+                                        <div class="fw-bold text-truncate" style="font-size:.9rem;">{{ Auth::user()->nombreemp }}</div>
+                                        <div class="text-muted text-truncate" style="font-size:.73rem;">
+                                            {{ Auth::user()->roles->pluck('name')->join(' · ') ?: 'Sin rol' }}
+                                        </div>
+                                        <div class="text-muted text-truncate" style="font-size:.7rem; opacity:.7;">{{ Auth::user()->email }}</div>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li class="px-2 pt-2">
+                                <a class="dropdown-item rounded-3 py-2" href="{{ route('empleados.edit', Auth::user()->idemp) }}">
+                                    <i class="fas fa-cog me-2 text-muted" style="width:16px;"></i> Ajustes de perfil
+                                </a>
+                            </li>
 
                             @if (Auth::user()->hasPermissionTo('historial'))
-                                <li><a class="dropdown-item" href="{{ route('historial') }}">
-                                        <i class="fas fa-history me-2"></i> Actividad
-                                    </a></li>
+                            <li class="px-2">
+                                <a class="dropdown-item rounded-3 py-2" href="{{ route('historial') }}">
+                                    <i class="fas fa-history me-2 text-muted" style="width:16px;"></i> Mi actividad
+                                </a>
+                            </li>
                             @endif
 
                             @if (Auth::user()->hasRole('Admin'))
-                                <li><a class="dropdown-item" href="{{ route('sistema.index') }}">
-                                        <i class="fas fa-palette me-2"></i> Sistema
-                                    </a></li>
+                            <li class="px-2">
+                                <a class="dropdown-item rounded-3 py-2" href="{{ route('sistema.index') }}">
+                                    <i class="fas fa-palette me-2 text-muted" style="width:16px;"></i> Sistema
+                                </a>
+                            </li>
                             @endif
 
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-
-                            <li>
-                                <a class="dropdown-item" href="{{ route('logout') }}"
+                            <li class="px-2 pb-2 pt-1">
+                                <hr class="dropdown-divider my-1">
+                                <a class="dropdown-item rounded-3 py-2 text-danger" href="{{ route('logout') }}"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    <i class="fas fa-sign-out-alt me-2" style="width:16px;"></i> Cerrar sesión
                                 </a>
                             </li>
 

@@ -142,7 +142,8 @@
 }
 
 /* Botón de usuario */
-.navbar-user-btn {
+.navbar-user-btn,
+.navbar-user-pill {
     background-color: var(--bg-card) !important;
     border: 1px solid var(--border-color) !important;
     color: var(--text-primary) !important;
@@ -156,7 +157,8 @@
     align-items: center;
 }
 
-.navbar-user-btn:hover {
+.navbar-user-btn:hover,
+.navbar-user-pill:hover {
     background-color: var(--bg-hover) !important;
     border-color: var(--primary-color) !important;
     color: var(--primary-color) !important;
@@ -164,17 +166,20 @@
     box-shadow: var(--shadow-hover);
 }
 
-.navbar-user-btn:focus {
+.navbar-user-btn:focus,
+.navbar-user-pill:focus {
     box-shadow: 0 0 0 0.2rem var(--primary-color);
     outline: 0;
 }
 
-.navbar-user-btn::after {
+.navbar-user-btn::after,
+.navbar-user-pill::after {
     border-top-color: var(--text-primary);
     transition: var(--transition-fast);
 }
 
-.navbar-user-btn:hover::after {
+.navbar-user-btn:hover::after,
+.navbar-user-pill:hover::after {
     border-top-color: var(--primary-color);
 }
 
@@ -332,10 +337,12 @@
 /* MODO CLARO: Botones con fondo semi-transparente oscuro para contraste */
 [data-dark-mode="false"] .navbar-icon-btn,
 [data-dark-mode="false"] .navbar-user-btn,
+[data-dark-mode="false"] .navbar-user-pill,
 [data-dark-mode="false"] #sidebarToggle,
 [data-dark-mode="false"] .btn-navbar-menu,
 :root:not([data-dark-mode="true"]) .navbar-icon-btn,
 :root:not([data-dark-mode="true"]) .navbar-user-btn,
+:root:not([data-dark-mode="true"]) .navbar-user-pill,
 :root:not([data-dark-mode="true"]) #sidebarToggle,
 :root:not([data-dark-mode="true"]) .btn-navbar-menu {
     background-color: rgba(255, 255, 255, 0.95) !important;
@@ -346,10 +353,12 @@
 
 [data-dark-mode="false"] .navbar-icon-btn:hover,
 [data-dark-mode="false"] .navbar-user-btn:hover,
+[data-dark-mode="false"] .navbar-user-pill:hover,
 [data-dark-mode="false"] #sidebarToggle:hover,
 [data-dark-mode="false"] .btn-navbar-menu:hover,
 :root:not([data-dark-mode="true"]) .navbar-icon-btn:hover,
 :root:not([data-dark-mode="true"]) .navbar-user-btn:hover,
+:root:not([data-dark-mode="true"]) .navbar-user-pill:hover,
 :root:not([data-dark-mode="true"]) #sidebarToggle:hover,
 :root:not([data-dark-mode="true"]) .btn-navbar-menu:hover {
     background-color: rgba(255, 255, 255, 1) !important;
@@ -368,6 +377,7 @@
 /* Mejorar contraste en dark mode */
 [data-dark-mode="true"] .navbar-icon-btn,
 [data-dark-mode="true"] .navbar-user-btn,
+[data-dark-mode="true"] .navbar-user-pill,
 [data-dark-mode="true"] #sidebarToggle,
 [data-dark-mode="true"] .btn-navbar-menu {
     background-color: #1f2937 !important;
@@ -377,6 +387,7 @@
 
 [data-dark-mode="true"] .navbar-icon-btn:hover,
 [data-dark-mode="true"] .navbar-user-btn:hover,
+[data-dark-mode="true"] .navbar-user-pill:hover,
 [data-dark-mode="true"] #sidebarToggle:hover,
 [data-dark-mode="true"] .btn-navbar-menu:hover {
     background-color: #273449 !important;
@@ -390,6 +401,8 @@
 [data-dark-mode="true"] .navbar .dropdown-header,
 [data-dark-mode="true"] .navbar-user-btn,
 [data-dark-mode="true"] .navbar-user-btn span,
+[data-dark-mode="true"] .navbar-user-pill,
+[data-dark-mode="true"] .navbar-user-pill span,
 [data-dark-mode="true"] .btn-navbar-menu {
     color: #e5edf7 !important;
 }

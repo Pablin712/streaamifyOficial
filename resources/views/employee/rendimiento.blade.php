@@ -127,7 +127,7 @@
                 <div class="d-flex align-items-center gap-3 mb-3">
                     <div class="position-relative">
                         @if($emp['foto'])
-                            <img src="{{ asset($emp['foto']) }}" class="emp-avatar" alt="">
+                            <img src="{{ asset('storage/' . $emp['foto']) }}" class="emp-avatar" alt="">
                         @else
                             <div class="emp-initials">{{ strtoupper(mb_substr($emp['nombre'], 0, 2)) }}</div>
                         @endif
