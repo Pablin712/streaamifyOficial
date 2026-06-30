@@ -23,7 +23,8 @@ class DonnaBusinessDataToolController extends Controller
         $channelId = (int) $request->input('channel_id');
         $type      = $request->input('type');       // product, service, faq, policy, table
         $query     = $request->input('query', '');
-        $limit     = (int) $request->input('limit', 10);
+        $maxLimit  = max(1, (int) config('services.donna.knowledge_max_limit', 15));
+        $limit     = max(1, min((int) $request->input('limit', 10), $maxLimit));
         $start     = microtime(true);
 
         $items = DonnaKnowledgeItem::where('client_id', $clientId)

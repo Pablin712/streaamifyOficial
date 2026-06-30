@@ -72,6 +72,14 @@ return [
         'personal_payment_url'   => env('DONNA_PERSONAL_PAYMENT_URL', env('APP_URL') . '/donna'),
         'google_default_timezone'=> env('DONNA_GOOGLE_DEFAULT_TIMEZONE', 'America/Guayaquil'),
         'expose_google_token'    => env('DONNA_EXPOSE_GOOGLE_ACCESS_TOKEN', false),
+        // Búsqueda semántica de la base de conocimientos (knowledge_items.embedding_json)
+        'embedding_model'        => env('DONNA_EMBEDDING_MODEL', 'text-embedding-3-small'),
+        'embedding_min_score'    => (float) env('DONNA_EMBEDDING_MIN_SCORE', 0.15),
+        'knowledge_max_limit'    => (int) env('DONNA_KNOWLEDGE_MAX_LIMIT', 15),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
     ],
 
     'netflix_code' => [

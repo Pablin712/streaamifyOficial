@@ -7,6 +7,7 @@ use App\Models\DonnaIntegration;
 use App\Models\DonnaKnowledgeBase;
 use App\Models\DonnaKnowledgeItem;
 use App\Models\DonnaSubscription;
+use App\Services\Donna\DonnaEmbeddingService;
 use App\Services\Donna\Google\DonnaBusinessKnowledgeSheetService;
 use App\Services\Donna\Google\DonnaGoogleTokenService;
 use Illuminate\Http\Request;
@@ -18,7 +19,34 @@ class ClienteDonnaKnowledgeController extends Controller
     public function __construct(
         private DonnaBusinessKnowledgeSheetService $sheetService,
         private DonnaGoogleTokenService            $tokenService,
+        private DonnaEmbeddingService              $embeddingService,
     ) {}
+
+    /**
+     * Genera (o regenera) el embedding semántico del ítem y lo persiste.
+     * Nunca lanza excepción hacia afuera: si OpenAI falla o no está
+     * configurado, el ítem se guarda igual y la búsqueda cae a keyword-match
+     * para ese ítem puntual (ver DonnaKnowledgeService::scoreItems).
+     */
+    private function refreshEmbedding(DonnaKnowledgeItem $item): void
+    {
+        try {
+            $vector = $this->embeddingService->embed($item->embeddingSourceText());
+
+            if ($vector !== null) {
+                $item->forceFill([
+                    'embedding_json'       => $vector,
+                    'embedding_model'      => $this->embeddingService->model(),
+                    'embedding_updated_at' => now(),
+                ])->save();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('DonnaKnowledge: no se pudo generar embedding', [
+                'item_id' => $item->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+    }
 
     private function getBusinessSub(int $clientId): ?DonnaSubscription
     {
@@ -103,6 +131,7 @@ class ClienteDonnaKnowledgeController extends Controller
             'is_active'         => true,
         ]);
 
+        $this->refreshEmbedding($item);
         $synced = $this->trySheetSync($cliente->idcli, $item, 'create');
 
         return response()->json(['success' => true, 'item' => $item, 'sheet_synced' => $synced]);
@@ -130,6 +159,7 @@ class ClienteDonnaKnowledgeController extends Controller
             'source_url'   => $validated['source_url'] ?? null,
         ]);
 
+        $this->refreshEmbedding($item);
         $synced = $this->trySheetSync($cliente->idcli, $item, 'update');
 
         return response()->json(['success' => true, 'item' => $item, 'sheet_synced' => $synced]);

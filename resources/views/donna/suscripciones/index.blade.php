@@ -170,6 +170,9 @@
                         @if (Auth::user()->hasPermissionTo('donna.suscripciones.store'))
                             <td>
                                 <div class="d-flex gap-1 flex-wrap">
+                                    <a href="{{ route('donna.suscripciones.config', $sub->id) }}" class="btn btn-outline-primary btn-sm" title="Configurar agente">
+                                        <i class="bi bi-sliders"></i>
+                                    </a>
                                     <button type="button" class="btn btn-success btn-sm"
                                         onclick="openRenewModal({{ $sub->id }}, '{{ addslashes($sub->cliente?->nombrecli ?? '') }}', '{{ $sub->expires_at?->format('Y-m-d') }}')">
                                         <i class="fas fa-redo" title="Renovar"></i>

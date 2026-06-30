@@ -66,6 +66,7 @@ use App\Http\Controllers\AlyssonController;
 use App\Http\Controllers\SistemaController;
 use App\Http\Controllers\DonnaPlanController;
 use App\Http\Controllers\DonnaSubscriptionController;
+use App\Http\Controllers\DonnaAgentConfigController;
 use App\Http\Controllers\DonnaRequestController;
 use App\Http\Controllers\DonnaDashboardController;
 use App\Http\Controllers\ClienteDonnaController;
@@ -391,6 +392,11 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('/empleados/{id}', 'destroy')->name('empleados.destroy');
     });
 
+    Route::controller(\App\Http\Controllers\HorarioController::class)->group(function () {
+        Route::post('/horarios', 'store')->name('horarios.store');
+        Route::delete('/horarios/{id}', 'destroy')->name('horarios.destroy');
+    });
+
     Route::controller(MantenimientoController::class)->group(function () {
         Route::get('/mantenimientos', 'index')->name('mantenimientos');
         Route::get('/mantenimientos/create', 'create')->name('mantenimientos.create');
@@ -450,6 +456,10 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/suscripciones/{id}', [DonnaSubscriptionController::class, 'show'])->name('donna.suscripciones.show');
         Route::post('/suscripciones/{id}/suspend', [DonnaSubscriptionController::class, 'suspend'])->name('donna.suscripciones.suspend');
         Route::post('/suscripciones/{id}/renew', [DonnaSubscriptionController::class, 'renew'])->name('donna.suscripciones.renew');
+
+        // Configuración del agente
+        Route::get('/suscripciones/{id}/config', [DonnaAgentConfigController::class, 'edit'])->name('donna.suscripciones.config');
+        Route::post('/suscripciones/{id}/config', [DonnaAgentConfigController::class, 'update'])->name('donna.suscripciones.config.update');
 
         // Solicitudes
         Route::get('/solicitudes', [DonnaRequestController::class, 'index'])->name('donna.solicitudes.index');
