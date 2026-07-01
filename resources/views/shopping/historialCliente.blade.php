@@ -1215,137 +1215,28 @@
                             <i class="bi bi-sliders me-1"></i> Personalizar a Donna
                         </h6>
 
-                        @if(session('donna_config_success'))
-                            <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
-                                <i class="bi bi-check-circle-fill me-1"></i>{{ session('donna_config_success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-
-                        <div class="accordion mb-4" id="accordionSystemMsg">
-                            <div class="accordion-item border rounded-3 overflow-hidden">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed fw-semibold" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseSystemMsg"
-                                            style="font-size:0.9rem;">
-                                        <i class="bi bi-eye me-2" style="color:#274698;"></i>
-                                        Ver el prompt que recibe Donna ahora mismo
-                                    </button>
-                                </h2>
-                                <div id="collapseSystemMsg" class="accordion-collapse collapse">
-                                    <div class="accordion-body p-3">
-                                        <p class="small text-muted mb-2">
-                                            Este es el texto exacto que Donna recibe como instrucciones al inicio de cada conversación:
-                                        </p>
-                                        <textarea class="form-control font-monospace" rows="12" readonly
-                                                  style="background:#f8f9fa;resize:none;font-size:0.77rem;line-height:1.5;">{{ $donnaSystemPreview }}</textarea>
-                                        @if($donnaConfigPersonal?->main_prompt)
-                                            <div class="alert alert-warning py-2 small mt-2 mb-0">
-                                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                                Estás usando un <strong>prompt personalizado completo</strong>. El contenido de abajo reemplaza el prompt por defecto.
-                                            </div>
-                                        @endif
-                                    </div>
+                        <div class="p-3 rounded-3 mb-3 d-flex flex-wrap justify-content-between align-items-start gap-2"
+                             style="background:#f4f6ff;border:1px solid #c5cae9;">
+                            <div class="small">
+                                <div class="mb-1">
+                                    <i class="bi bi-robot me-1" style="color:#274698;"></i>
+                                    Agente: <strong id="dpSumAgentName">{{ $donnaConfigPersonal?->agent_name ?: 'Donna' }}</strong>
+                                    &nbsp;·&nbsp;
+                                    <i class="bi bi-globe me-1"></i>
+                                    <strong id="dpSumTimezone">{{ $donnaConfigPersonal?->timezone ?? 'America/Guayaquil' }}</strong>
+                                </div>
+                                <div class="text-muted" id="dpSumContext">
+                                    @if($donnaConfigPersonal?->personal_context)
+                                        <i class="bi bi-person-lines-fill me-1"></i>{{ Str::limit($donnaConfigPersonal->personal_context, 100) }}
+                                    @else
+                                        <i class="bi bi-exclamation-circle me-1"></i>Sin contexto personal definido todavía.
+                                    @endif
                                 </div>
                             </div>
-                        </div>
-
-                        <form method="POST" action="{{ route('cliente.donna.config') }}">
-                            @csrf
-                            @php
-                                $whP = $donnaConfigPersonal?->working_hours_json ?? [];
-                            @endphp
-
-                            {{-- Variables del agente --}}
-                            <div class="p-3 rounded-3 mb-4" style="background:#f4f6ff;border:1px solid #c5cae9;">
-                                <div class="fw-semibold small mb-3" style="color:#274698;">
-                                    <i class="bi bi-sliders me-1"></i>Variables del agente
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-robot me-1"></i>Nombre del agente
-                                        </label>
-                                        <input type="text" name="agent_name" class="form-control form-control-sm"
-                                               maxlength="80" placeholder="Donna"
-                                               value="{{ old('agent_name', $donnaConfigPersonal?->agent_name) }}">
-                                        <div class="form-text">Cómo se presenta en Telegram.</div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-globe me-1"></i>Zona horaria
-                                        </label>
-                                        @php
-                                            $tzP = old('timezone', $donnaConfigPersonal?->timezone ?? 'America/Guayaquil');
-                                            $tzOptions = [
-                                                'America/Guayaquil'   => 'Guayaquil / Lima (UTC-5)',
-                                                'America/Bogota'      => 'Bogotá (UTC-5)',
-                                                'America/Mexico_City' => 'Ciudad de México (UTC-6)',
-                                                'America/New_York'    => 'New York (UTC-5/-4)',
-                                                'America/Los_Angeles' => 'Los Ángeles (UTC-8/-7)',
-                                                'America/Santiago'    => 'Santiago (UTC-4/-3)',
-                                                'America/Argentina/Buenos_Aires' => 'Buenos Aires (UTC-3)',
-                                                'Europe/Madrid'       => 'Madrid (UTC+1/+2)',
-                                                'UTC'                 => 'UTC',
-                                            ];
-                                        @endphp
-                                        <select name="timezone" class="form-select form-select-sm">
-                                            @foreach($tzOptions as $tzVal => $tzLabel)
-                                                <option value="{{ $tzVal }}" @selected($tzP === $tzVal)>{{ $tzLabel }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-clock me-1"></i>Horario desde
-                                        </label>
-                                        <input type="time" name="wh_start" class="form-control form-control-sm"
-                                               value="{{ old('wh_start', $whP['start'] ?? '09:00') }}">
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-clock me-1"></i>Horario hasta
-                                        </label>
-                                        <input type="time" name="wh_end" class="form-control form-control-sm"
-                                               value="{{ old('wh_end', $whP['end'] ?? '20:00') }}">
-                                        <div class="form-text">Donna no agendará fuera de este rango.</div>
-                                    </div>
-                                    <div class="col-sm-4">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-cup-hot me-1"></i>Horario almuerzo
-                                        </label>
-                                        <input type="time" name="wh_lunch" class="form-control form-control-sm"
-                                               value="{{ old('wh_lunch', $whP['lunch'] ?? '13:00') }}">
-                                        <div class="form-text">Hora bloqueada para eventos.</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Contexto personal --}}
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold mb-1">
-                                    <i class="bi bi-person-lines-fill me-1" style="color:#274698;"></i>
-                                    Cuéntale de ti a Donna
-                                    <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.7rem;">Recomendado</span>
-                                </label>
-                                <p class="text-muted small mb-2">
-                                    Tu profesión, proyectos activos, preferencias de comunicación, etc. Donna usará esto para entenderte mejor.
-                                </p>
-                                <textarea name="personal_context" id="personal_context_input"
-                                          class="form-control" rows="5" maxlength="1000"
-                                          placeholder="Ejemplo: Soy diseñador freelance. Prefiero respuestas cortas y directas. No interrumpir los martes por la tarde."
-                                >{{ $donnaConfigPersonal?->personal_context }}</textarea>
-                                <div class="d-flex justify-content-end mt-1">
-                                    <span class="text-muted small">
-                                        <span id="personal_context_count">{{ strlen($donnaConfigPersonal?->personal_context ?? '') }}</span>/1000
-                                    </span>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">
-                                <i class="bi bi-save me-1"></i>Guardar cambios
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill flex-shrink-0" onclick="abrirModalDonnaPersonal()">
+                                <i class="bi bi-pencil me-1"></i>Editar
                             </button>
-                        </form>
+                        </div>
                         @endif
                         </div>{{-- /donna-personal-pane --}}
                         @endif
@@ -1427,96 +1318,27 @@
 
                         {{-- Modo prueba / producción --}}
                         @if($canalWhatsapp)
-                        <div class="p-3 rounded-3 mb-4" style="background:#f4f6ff;border:1px solid #c5cae9;">
-                            <div class="fw-semibold small mb-1" style="color:#274698;">
-                                <i class="bi bi-toggle2-on me-1"></i>Modo de Donna Business
+                        <div class="p-3 rounded-3 mb-4 d-flex flex-wrap justify-content-between align-items-start gap-2"
+                             style="background:#f4f6ff;border:1px solid #c5cae9;">
+                            <div class="small">
+                                <div class="fw-semibold mb-1" style="color:#274698;">
+                                    <i class="bi bi-toggle2-on me-1"></i>Modo de Donna Business
+                                    <span class="badge rounded-pill ms-1" id="dtmSumBadge"
+                                          style="background: {{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? '#E4B100' : '#1a7a4a' }}; color: {{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? '#1D1D1B' : '#fff' }};">
+                                        {{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'Prueba' : 'Producción' }}
+                                    </span>
+                                </div>
+                                <div class="text-muted" id="dtmSumDetail">
+                                    @if(($canalWhatsapp->donna_mode ?? 'production') === 'test')
+                                        Responde solo a {{ count($canalWhatsapp->test_numbers_json ?? []) }} número(s) de prueba.
+                                    @else
+                                        Responde a todos tus clientes{{ ($canalWhatsapp->exclude_groups_in_production ?? true) ? ', excepto grupos' : '' }}.
+                                    @endif
+                                </div>
                             </div>
-                            <p class="text-muted small mb-3">
-                                Usa <strong>modo prueba</strong> para verificar que Donna responde bien antes de lanzarla a tus clientes reales:
-                                mientras esté activo, solo contestará a los números que agregues abajo. Cambia a <strong>modo producción</strong>
-                                cuando quieras que responda a todos tus clientes.
-                            </p>
-
-                            <form method="POST" action="{{ route('cliente.donna.test-mode') }}" id="donnaTestModeForm">
-                                @csrf
-                                <div class="d-flex flex-wrap gap-3 mb-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="donna_mode" id="mode_production" value="production"
-                                               {{ ($canalWhatsapp->donna_mode ?? 'production') !== 'test' ? 'checked' : '' }}
-                                               onchange="toggleDonnaModePanels()">
-                                        <label class="form-check-label small fw-semibold" for="mode_production">
-                                            Producción <span class="text-muted fw-normal">(responde a todos tus clientes)</span>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="donna_mode" id="mode_test" value="test"
-                                               {{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'checked' : '' }}
-                                               onchange="toggleDonnaModePanels()">
-                                        <label class="form-check-label small fw-semibold" for="mode_test">
-                                            Prueba <span class="text-muted fw-normal">(solo números de la lista)</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {{-- Panel producción --}}
-                                <div id="donna_mode_production_panel" style="{{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'display:none;' : '' }}">
-                                    <div class="form-check form-switch mb-2">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="exclude_groups_in_production"
-                                               name="exclude_groups_in_production" value="1"
-                                               {{ ($canalWhatsapp->exclude_groups_in_production ?? true) ? 'checked' : '' }}>
-                                        <label class="form-check-label small" for="exclude_groups_in_production">
-                                            No responder en grupos de WhatsApp
-                                        </label>
-                                    </div>
-                                    <label class="form-label fw-semibold small mb-1">Números que NO deben recibir respuesta (opcional)</label>
-                                    <div id="donna_excluded_list" class="mb-2">
-                                        @foreach($canalWhatsapp->excluded_numbers_json ?? [] as $num)
-                                            <div class="d-flex gap-2 mb-2">
-                                                <input type="text" name="excluded_numbers[]" class="form-control form-control-sm" value="{{ $num }}">
-                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDonnaNumberRow('donna_excluded_list', 'excluded_numbers[]')">
-                                        <i class="fas fa-plus me-1"></i>Agregar número a excluir
-                                    </button>
-                                </div>
-
-                                {{-- Panel prueba --}}
-                                <div id="donna_mode_test_panel" style="{{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? '' : 'display:none;' }}">
-                                    <label class="form-label fw-semibold small mb-1">Números de prueba autorizados</label>
-                                    <div class="form-text mb-2">
-                                        <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
-                                        Si no agregas ningún número, Donna no responderá a nadie mientras esté en modo prueba.
-                                    </div>
-                                    <div id="donna_test_list" class="mb-2">
-                                        @foreach($canalWhatsapp->test_numbers_json ?? [] as $num)
-                                            <div class="d-flex gap-2 mb-2">
-                                                <input type="text" name="test_numbers[]" class="form-control form-control-sm" value="{{ $num }}">
-                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDonnaNumberRow('donna_test_list', 'test_numbers[]')">
-                                        <i class="fas fa-plus me-1"></i>Agregar número de prueba
-                                    </button>
-                                </div>
-
-                                <div class="form-text mt-3 mb-3">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    Escribe el número completo con código de país, solo dígitos (ej: <code>593999999999</code>).
-                                    También puedes escribirlo con espacios, guiones o "+" (ej: <code>+593 99 999 9999</code>) —
-                                    el sistema lo normaliza automáticamente al guardar.
-                                </div>
-
-                                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold btn-sm">
-                                    <i class="bi bi-save me-1"></i>Guardar modo
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill flex-shrink-0" onclick="abrirModalDonnaTestMode()">
+                                <i class="bi bi-pencil me-1"></i>Editar
+                            </button>
                         </div>
                         @endif
 
@@ -1541,7 +1363,7 @@
                         </div>
                         @endif
 
-                        {{-- Formulario de configuración Business --}}
+                        {{-- Configuración Business (resumen) --}}
                         @if($subBusiness->status === 'active')
                         <hr class="my-4">
 
@@ -1549,329 +1371,60 @@
                             <i class="bi bi-sliders me-1"></i> Configurar Donna Business
                         </h6>
 
-                        @if(session('donna_business_config_success'))
-                            <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
-                                <i class="bi bi-check-circle-fill me-1"></i>{{ session('donna_business_config_success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
-                        @if(session('donna_business_error'))
-                            <div class="alert alert-danger alert-dismissible fade show py-2 small mb-3">
-                                <i class="bi bi-x-circle-fill me-1"></i>{{ session('donna_business_error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
+                        @php
+                            $whBSum = $donnaConfigBusiness?->working_hours_json ?? [];
+                        @endphp
 
-                        <div class="accordion mb-4" id="accordionBusinessSystemMsg">
-                            <div class="accordion-item border rounded-3 overflow-hidden">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed fw-semibold" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#collapseBusinessSystemMsg"
-                                            style="font-size:0.9rem;">
-                                        <i class="bi bi-eye me-2" style="color:#E4B100;"></i>
-                                        Ver el prompt que recibe Donna Business ahora mismo
-                                    </button>
-                                </h2>
-                                <div id="collapseBusinessSystemMsg" class="accordion-collapse collapse">
-                                    <div class="accordion-body p-3">
-                                        <p class="small text-muted mb-2">
-                                            Este es el texto exacto que Donna Business recibe como instrucciones al inicio de cada conversación con tus clientes:
-                                        </p>
-                                        <textarea class="form-control font-monospace" rows="12" readonly
-                                                  style="background:#f8f9fa;resize:none;font-size:0.77rem;line-height:1.5;">{{ $donnaBusinessSystemPreview }}</textarea>
+                        <div class="p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
+                            <div class="row g-3 small">
+                                <div class="col-md-6">
+                                    <div class="mb-1">
+                                        <i class="bi bi-robot me-1" style="color:#E4B100;"></i>Agente:
+                                        <strong id="dbSumAgentName">{{ $donnaConfigBusiness?->agent_name ?: 'Donna' }}</strong>
+                                    </div>
+                                    <div class="mb-1">
+                                        <i class="bi bi-building me-1" style="color:#E4B100;"></i>Negocio:
+                                        <strong id="dbSumBusinessName">{{ $donnaConfigBusiness?->business_name ?: 'Sin definir' }}</strong>
+                                    </div>
+                                    <div class="mb-1">
+                                        <i class="bi bi-translate me-1"></i>Idioma: <strong id="dbSumLanguage">{{ strtoupper($donnaConfigBusiness?->language ?? 'ES') }}</strong>
+                                        &nbsp;·&nbsp;
+                                        <i class="bi bi-emoji-smile me-1"></i>Tono: <span id="dbSumTone">{{ $donnaConfigBusiness?->tone ?: 'profesional, amable y directa' }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-1">
+                                        <i class="bi bi-clock me-1"></i>Horario:
+                                        <span id="dbSumHours">{{ ($whBSum['start'] ?? '09:00') . ' – ' . ($whBSum['end'] ?? '20:00') }}</span>
+                                        (<span id="dbSumTimezone">{{ $donnaConfigBusiness?->timezone ?? 'America/Guayaquil' }}</span>)
+                                    </div>
+                                    @if($googleOk)
+                                    <div class="mb-1">
+                                        <i class="bi bi-calendar3 me-1"></i>Calendar:
+                                        <span id="dbSumCalendar">{{ $donnaConfigBusiness?->calendar_enabled ? 'Activo' : 'Inactivo' }}</span>
+                                        &nbsp;·&nbsp;
+                                        <i class="bi bi-table me-1"></i>Sheets:
+                                        <span id="dbSumSheets">{{ $donnaConfigBusiness?->sheets_enabled ? 'Activo' : 'Inactivo' }}</span>
+                                    </div>
+                                    @endif
+                                    <div class="text-muted" id="dbSumPromptStatus">
                                         @if($donnaConfigBusiness?->main_prompt)
-                                            <div class="alert alert-warning py-2 small mt-2 mb-0">
-                                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                                Estás usando un <strong>prompt personalizado completo</strong>. El contenido de abajo reemplaza el prompt por defecto.
-                                            </div>
+                                            <i class="bi bi-exclamation-triangle me-1 text-warning"></i>Usando prompt personalizado completo
+                                        @else
+                                            <i class="bi bi-check2-circle me-1"></i>Usando configuración predeterminada
                                         @endif
                                     </div>
                                 </div>
                             </div>
+                            <div class="d-flex gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="abrirModalDonnaBusinessGeneral()">
+                                    <i class="bi bi-pencil me-1"></i>Editar configuración
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" onclick="abrirModalDonnaBusinessPrompt()">
+                                    <i class="bi bi-code-square me-1"></i>Prompt avanzado
+                                </button>
+                            </div>
                         </div>
-
-                        <form method="POST" action="{{ route('cliente.donna.config-business') }}" id="businessConfigForm">
-                            @csrf
-                            @php
-                                $whB  = $donnaConfigBusiness?->working_hours_json ?? [];
-                                $tzB  = old('timezone', $donnaConfigBusiness?->timezone ?? 'America/Guayaquil');
-                                $tzOptions = [
-                                    'America/Guayaquil'   => 'Guayaquil / Lima (UTC-5)',
-                                    'America/Bogota'      => 'Bogotá (UTC-5)',
-                                    'America/Mexico_City' => 'Ciudad de México (UTC-6)',
-                                    'America/New_York'    => 'New York (UTC-5/-4)',
-                                    'America/Los_Angeles' => 'Los Ángeles (UTC-8/-7)',
-                                    'America/Santiago'    => 'Santiago (UTC-4/-3)',
-                                    'America/Argentina/Buenos_Aires' => 'Buenos Aires (UTC-3)',
-                                    'Europe/Madrid'       => 'Madrid (UTC+1/+2)',
-                                    'UTC'                 => 'UTC',
-                                ];
-                            @endphp
-
-                            {{-- Identidad del agente --}}
-                            <div class="row g-3 mb-3">
-                                <div class="col-sm-6">
-                                    <label class="form-label fw-semibold small mb-1">
-                                        <i class="bi bi-robot me-1" style="color:#E4B100;"></i>Nombre del agente
-                                    </label>
-                                    <input type="text" name="agent_name" id="biz_agent_name" class="form-control form-control-sm"
-                                           maxlength="80" placeholder="Donna"
-                                           value="{{ old('agent_name', $donnaConfigBusiness?->agent_name) }}">
-                                    <div class="form-text">Cómo se presenta el agente ante tus clientes.</div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label fw-semibold small mb-1">
-                                        <i class="bi bi-building me-1" style="color:#E4B100;"></i>Nombre del negocio
-                                    </label>
-                                    <input type="text" name="business_name" id="biz_business_name" class="form-control form-control-sm"
-                                           maxlength="120" placeholder="Mi Empresa"
-                                           value="{{ old('business_name', $donnaConfigBusiness?->business_name) }}">
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label fw-semibold small mb-1">
-                                        <i class="bi bi-translate me-1"></i>Idioma de respuesta
-                                    </label>
-                                    <select name="language" class="form-select form-select-sm">
-                                        @php $lang = old('language', $donnaConfigBusiness?->language ?? 'es'); @endphp
-                                        <option value="es" @selected($lang === 'es')>Español</option>
-                                        <option value="en" @selected($lang === 'en')>English</option>
-                                        <option value="pt" @selected($lang === 'pt')>Português</option>
-                                    </select>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label fw-semibold small mb-1">
-                                        <i class="bi bi-emoji-smile me-1"></i>Tono del agente
-                                    </label>
-                                    <input type="text" name="tone" class="form-control form-control-sm"
-                                           maxlength="200" placeholder="profesional, amable y directa"
-                                           value="{{ old('tone', $donnaConfigBusiness?->tone) }}">
-                                    <div class="form-text">Describe cómo quieres que hable el agente.</div>
-                                </div>
-                            </div>
-
-                            {{-- Horarios --}}
-                            <div class="p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
-                                <div class="fw-semibold small mb-3" style="color:#8a6218;">
-                                    <i class="bi bi-clock me-1"></i>Horarios y zona horaria
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-sm-6 col-lg-3">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-globe me-1"></i>Zona horaria
-                                        </label>
-                                        <select name="timezone" id="biz_timezone" class="form-select form-select-sm">
-                                            @foreach($tzOptions as $tzVal => $tzLabel)
-                                                <option value="{{ $tzVal }}" @selected($tzB === $tzVal)>{{ $tzLabel }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-sm-6 col-lg-3">
-                                        <label class="form-label fw-semibold small mb-1">Horario desde</label>
-                                        <input type="time" name="wh_start" id="biz_wh_start" class="form-control form-control-sm"
-                                               value="{{ old('wh_start', $whB['start'] ?? '09:00') }}">
-                                    </div>
-                                    <div class="col-sm-6 col-lg-3">
-                                        <label class="form-label fw-semibold small mb-1">Horario hasta</label>
-                                        <input type="time" name="wh_end" id="biz_wh_end" class="form-control form-control-sm"
-                                               value="{{ old('wh_end', $whB['end'] ?? '20:00') }}">
-                                        <div class="form-text">Donna no agendará fuera de este rango.</div>
-                                    </div>
-                                    <div class="col-sm-6 col-lg-3">
-                                        <label class="form-label fw-semibold small mb-1">Almuerzo</label>
-                                        <input type="time" name="wh_lunch" id="biz_wh_lunch" class="form-control form-control-sm"
-                                               value="{{ old('wh_lunch', $whB['lunch'] ?? '13:00') }}">
-                                        <div class="form-text">Hora bloqueada para citas.</div>
-                                    </div>
-                                </div>
-                                <div class="row g-3 mt-1 align-items-end">
-                                    <div class="col-sm-6 col-lg-4">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-hourglass-split me-1"></i>Tiempo de espera de respuesta
-                                        </label>
-                                        <div class="input-group input-group-sm">
-                                            <input type="number" name="wait_seconds" id="biz_wait_seconds"
-                                                   class="form-control form-control-sm"
-                                                   min="3" max="60" step="1"
-                                                   value="{{ old('wait_seconds', $donnaConfigBusiness?->wait_seconds ?? 35) }}">
-                                            <span class="input-group-text">seg</span>
-                                        </div>
-                                        <div class="form-text">
-                                            Donna espera este tiempo antes de responder, agrupando mensajes consecutivos del cliente en una sola respuesta (3–60 seg).
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 col-lg-8">
-                                        <label class="form-label fw-semibold small mb-1">
-                                            <i class="bi bi-chat-text me-1"></i>Extensión de las respuestas
-                                        </label>
-                                        @php $curStyle = old('response_style', $donnaConfigBusiness?->response_style ?? 'concise'); @endphp
-                                        <div class="d-flex flex-wrap gap-2">
-                                            @foreach([
-                                                'concise'  => ['label' => 'Directa', 'icon' => 'bi-lightning-charge', 'desc' => 'Máx. 2 oraciones'],
-                                                'moderate' => ['label' => 'Moderada', 'icon' => 'bi-chat-dots', 'desc' => 'Máx. 80 palabras'],
-                                                'detailed' => ['label' => 'Detallada', 'icon' => 'bi-journals', 'desc' => 'Sin límite estricto'],
-                                            ] as $val => $opt)
-                                            <label class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 cursor-pointer"
-                                                   style="border:1.5px solid {{ $curStyle === $val ? '#E4B100' : '#dee2e6' }};background:{{ $curStyle === $val ? '#fffbea' : '#fff' }};cursor:pointer;"
-                                                   id="style_label_{{ $val }}">
-                                                <input type="radio" name="response_style" value="{{ $val }}"
-                                                       class="d-none response-style-radio"
-                                                       @checked($curStyle === $val)>
-                                                <i class="bi {{ $opt['icon'] }} fs-5" style="color:{{ $curStyle === $val ? '#b45309' : '#6c757d' }};"></i>
-                                                <div>
-                                                    <div class="fw-semibold small">{{ $opt['label'] }}</div>
-                                                    <div class="text-muted" style="font-size:0.7rem;">{{ $opt['desc'] }}</div>
-                                                </div>
-                                            </label>
-                                            @endforeach
-                                        </div>
-                                        <div class="form-text">Predeterminado: Directa — respuestas cortas salvo que necesite más detalle.</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Funciones de Google --}}
-                            @if($googleOk)
-                            <div class="p-3 rounded-3 mb-3" style="background:#f0f7ff;border:1px solid #bdd7f5;">
-                                <div class="fw-semibold small mb-3" style="color:#0d47a1;">
-                                    <i class="bi bi-google me-1"></i>Funciones de Google
-                                </div>
-                                <div class="row g-3">
-                                    {{-- Google Calendar --}}
-                                    <div class="col-sm-6">
-                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 h-100"
-                                             style="background:#fff;border:1px solid #e2e8f0;">
-                                            <div class="form-check form-switch mt-1 mb-0">
-                                                <input class="form-check-input" type="checkbox"
-                                                       name="calendar_enabled" id="biz_cal_enabled" value="1"
-                                                       @checked($donnaConfigBusiness?->calendar_enabled)>
-                                            </div>
-                                            <div>
-                                                <label class="form-check-label fw-semibold small" for="biz_cal_enabled">
-                                                    <i class="bi bi-calendar3 me-1" style="color:#1a73e8;"></i>Google Calendar
-                                                </label>
-                                                <p class="text-muted mb-0" style="font-size:0.72rem;">
-                                                    Permite a Donna agendar, consultar y cancelar citas directamente en tu Google Calendar.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {{-- Google Sheets / Base de conocimientos --}}
-                                    <div class="col-sm-6">
-                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 h-100"
-                                             style="background:#fff;border:1px solid #e2e8f0;">
-                                            <div class="form-check form-switch mt-1 mb-0">
-                                                <input class="form-check-input" type="checkbox"
-                                                       name="sheets_enabled" id="biz_sheets_enabled" value="1"
-                                                       @checked($donnaConfigBusiness?->sheets_enabled)>
-                                            </div>
-                                            <div>
-                                                <label class="form-check-label fw-semibold small" for="biz_sheets_enabled">
-                                                    <i class="bi bi-table me-1" style="color:#0f9d58;"></i>Google Sheets — Base de Conocimientos
-                                                </label>
-                                                <p class="text-muted mb-0" style="font-size:0.72rem;">
-                                                    Sincroniza tu base de conocimientos a una hoja de Google Sheets que Donna puede consultar.
-                                                </p>
-                                                @if($sheetOk && $donnaConfigBusiness?->spreadsheet_id)
-                                                    <a href="https://docs.google.com/spreadsheets/d/{{ $donnaConfigBusiness->spreadsheet_id }}"
-                                                       target="_blank" class="d-inline-flex align-items-center gap-1 mt-2"
-                                                       style="font-size:0.72rem;color:#0f9d58;">
-                                                        <i class="bi bi-box-arrow-up-right"></i>Ver hoja de conocimientos
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                            {{-- Descripción del negocio --}}
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold small mb-1">
-                                    <i class="bi bi-card-text me-1"></i>Descripción del negocio
-                                    <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Recomendado</span>
-                                </label>
-                                <p class="text-muted small mb-2">
-                                    Cuéntale a Donna qué hace tu negocio: productos, servicios, horarios de atención, ubicación, preguntas frecuentes.
-                                </p>
-                                <textarea name="business_description" class="form-control" rows="5"
-                                          maxlength="2000" id="business_description_input"
-                                          placeholder="Ejemplo: Somos una tienda de ropa casual ubicada en Guayaquil. Atendemos de lunes a sábado de 9am a 7pm. Enviamos a todo el país...">{{ old('business_description', $donnaConfigBusiness?->business_description) }}</textarea>
-                                <div class="d-flex justify-content-end mt-1">
-                                    <span class="text-muted small">
-                                        <span id="business_desc_count">{{ strlen($donnaConfigBusiness?->business_description ?? '') }}</span>/2000
-                                    </span>
-                                </div>
-                            </div>
-
-                            {{-- Prompt personalizado: dos columnas --}}
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold small mb-1">
-                                    <i class="bi bi-code-square me-1"></i>Prompt personalizado completo
-                                    <span class="badge bg-warning text-dark border ms-1" style="font-size:0.65rem;">Avanzado</span>
-                                </label>
-                                <p class="text-muted small mb-2">
-                                    Si lo dejas vacío, Donna usa su configuración predeterminada combinada con los campos de arriba.
-                                    Escribe aquí solo si necesitas control total del comportamiento del agente.
-                                </p>
-                                <div class="row g-3 align-items-start">
-                                    <div class="col-lg-8">
-                                        <textarea name="main_prompt" id="biz_main_prompt"
-                                                  class="form-control font-monospace" rows="14"
-                                                  maxlength="5000" style="font-size:0.8rem;resize:vertical;"
-                                                  placeholder="Deja vacío para usar la configuración por defecto...">{{ old('main_prompt', $donnaConfigBusiness?->main_prompt) }}</textarea>
-                                        <div class="d-flex justify-content-between mt-2">
-                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
-                                                    onclick="resetBusinessPrompt()"
-                                                    title="Elimina el prompt personalizado y vuelve al comportamiento predeterminado de Donna">
-                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurar prompt predeterminado
-                                            </button>
-                                            <span class="text-muted small align-self-center">
-                                                <span id="biz_prompt_count">{{ strlen($donnaConfigBusiness?->main_prompt ?? '') }}</span>/5000
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div class="p-3 rounded-3 h-100" style="background:#f8f9fc;border:1px solid #e2e5f0;">
-                                            <div class="fw-semibold small mb-2" style="color:#274698;">
-                                                <i class="bi bi-braces me-1"></i>Variables disponibles
-                                            </div>
-                                            <p class="text-muted" style="font-size:0.72rem;">Haz clic en una variable para insertarla en el prompt.</p>
-                                            <div class="d-flex flex-column gap-2">
-                                                @php
-                                                    $bizVars = [
-                                                        ['key' => '{{agent_name}}',    'label' => 'Nombre del agente',  'icon' => 'bi-robot',       'color' => '#E4B100'],
-                                                        ['key' => '{{business_name}}', 'label' => 'Nombre del negocio', 'icon' => 'bi-building',     'color' => '#274698'],
-                                                        ['key' => '{{timezone}}',      'label' => 'Zona horaria',       'icon' => 'bi-globe',        'color' => '#5a3c9a'],
-                                                        ['key' => '{{now}}',           'label' => 'Fecha y hora actual','icon' => 'bi-calendar3',    'color' => '#1a7a4a'],
-                                                        ['key' => '{{working_hours}}', 'label' => 'Horario de atención','icon' => 'bi-clock',        'color' => '#b45309'],
-                                                        ['key' => '{{lunch_break}}',   'label' => 'Horario de almuerzo','icon' => 'bi-cup-hot',      'color' => '#0369a1'],
-                                                    ];
-                                                @endphp
-                                                @foreach($bizVars as $bv)
-                                                <button type="button"
-                                                        class="btn btn-sm text-start rounded-2 d-flex align-items-center gap-2"
-                                                        style="background:#fff;border:1px solid #e2e5f0;font-size:0.75rem;"
-                                                        onclick="insertBizVar('{{ $bv['key'] }}')"
-                                                        title="Insertar {{ $bv['key'] }}">
-                                                    <i class="bi {{ $bv['icon'] }} flex-shrink-0" style="color:{{ $bv['color'] }};font-size:0.85rem;"></i>
-                                                    <span class="flex-grow-1">
-                                                        <code style="font-size:0.72rem;color:{{ $bv['color'] }};">{{ $bv['key'] }}</code><br>
-                                                        <span class="text-muted" style="font-size:0.68rem;">{{ $bv['label'] }}</span>
-                                                    </span>
-                                                    <i class="bi bi-plus-circle text-muted flex-shrink-0" style="font-size:0.75rem;"></i>
-                                                </button>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-warning rounded-pill px-4 fw-bold" style="color:#1D1D1B;">
-                                <i class="bi bi-save me-1"></i>Guardar configuración
-                            </button>
-                        </form>
                         @endif
 
                         {{-- ══ BASE DE CONOCIMIENTOS ═══════════════════════════ --}}
@@ -1912,64 +1465,62 @@
                             </button>
                         </div>
 
-                        @if($donnaKnowledgeItems->isEmpty())
-                            <div class="text-center py-4 rounded-3" style="background:#f9f9f9;border:1px dashed #e9ecef;">
-                                <i class="bi bi-book fs-3 d-block mb-2 text-muted"></i>
-                                <div class="text-muted small mb-2">Tu base de conocimientos está vacía.</div>
-                                <div class="text-muted small">Agrega productos, preguntas frecuentes o políticas para que Donna pueda responder a tus clientes.</div>
-                            </div>
-                        @else
-                            <div class="accordion" id="accordionKnowledge">
-                                @foreach($tiposLabel as $tipo => $meta)
-                                    @php $items = $itemsPorTipo->get($tipo, collect()); @endphp
-                                    @if($items->isNotEmpty())
-                                    <div class="accordion-item border rounded-3 mb-2 overflow-hidden">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed fw-semibold py-2" type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target="#collapse-knowledge-{{ $tipo }}"
-                                                    style="font-size:0.88rem;">
-                                                <i class="bi {{ $meta['icon'] }} me-2" style="color:{{ $meta['color'] }};"></i>
-                                                {{ $meta['label'] }}
-                                                <span class="badge ms-2 rounded-pill" style="background:{{ $meta['color'] }};font-size:0.7rem;">{{ $items->count() }}</span>
-                                            </button>
-                                        </h2>
-                                        <div id="collapse-knowledge-{{ $tipo }}" class="accordion-collapse collapse">
-                                            <div class="accordion-body p-2">
-                                                <div class="d-flex flex-column gap-2">
-                                                    @foreach($items as $item)
-                                                    <div class="d-flex align-items-start gap-2 p-2 rounded-2" style="background:#f8f9fc;border:1px solid #e9ecef;" id="knowledge-item-{{ $item->id }}">
-                                                        <div class="flex-grow-1 min-width-0">
-                                                            <div class="fw-semibold small">{{ $item->title }}</div>
-                                                            <div class="text-muted small mt-1" style="white-space:pre-line;font-size:0.78rem;">{{ Str::limit($item->content_text, 180) }}</div>
-                                                            @if($item->source_url)
-                                                                <a href="{{ $item->source_url }}" target="_blank" class="small text-primary mt-1 d-inline-block">
-                                                                    <i class="bi bi-link-45deg me-1"></i>Fuente
-                                                                </a>
-                                                            @endif
-                                                        </div>
-                                                        <div class="d-flex gap-1 flex-shrink-0">
-                                                            <button type="button" class="btn btn-outline-primary btn-sm p-1"
-                                                                    style="font-size:0.72rem;"
-                                                                    onclick="editarKnowledge({{ $item->id }}, '{{ addslashes($item->type) }}', '{{ addslashes($item->title) }}', {{ json_encode($item->content_text) }}, '{{ addslashes($item->source_url ?? '') }}')">
-                                                                <i class="bi bi-pencil"></i>
-                                                            </button>
-                                                            <button type="button" class="btn btn-outline-danger btn-sm p-1"
-                                                                    style="font-size:0.72rem;"
-                                                                    onclick="eliminarKnowledge({{ $item->id }})">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </div>
+                        <div id="donnaKnowledgeEmptyState" class="text-center py-4 rounded-3"
+                             style="background:#f9f9f9;border:1px dashed #e9ecef;{{ $donnaKnowledgeItems->isNotEmpty() ? ' display:none;' : '' }}">
+                            <i class="bi bi-book fs-3 d-block mb-2 text-muted"></i>
+                            <div class="text-muted small mb-2">Tu base de conocimientos está vacía.</div>
+                            <div class="text-muted small">Agrega productos, preguntas frecuentes o políticas para que Donna pueda responder a tus clientes.</div>
+                        </div>
+
+                        <div class="accordion" id="accordionKnowledge" style="{{ $donnaKnowledgeItems->isEmpty() ? 'display:none;' : '' }}">
+                            @foreach($tiposLabel as $tipo => $meta)
+                                @php $items = $itemsPorTipo->get($tipo, collect()); @endphp
+                                <div class="accordion-item border rounded-3 mb-2 overflow-hidden" id="knowledge-type-{{ $tipo }}"
+                                     style="{{ $items->isEmpty() ? 'display:none;' : '' }}">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed fw-semibold py-2" type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#collapse-knowledge-{{ $tipo }}"
+                                                style="font-size:0.88rem;">
+                                            <i class="bi {{ $meta['icon'] }} me-2" style="color:{{ $meta['color'] }};"></i>
+                                            {{ $meta['label'] }}
+                                            <span class="badge ms-2 rounded-pill" id="knowledge-count-{{ $tipo }}" style="background:{{ $meta['color'] }};font-size:0.7rem;">{{ $items->count() }}</span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-knowledge-{{ $tipo }}" class="accordion-collapse collapse">
+                                        <div class="accordion-body p-2">
+                                            <div class="d-flex flex-column gap-2" id="knowledge-list-{{ $tipo }}">
+                                                @foreach($items as $item)
+                                                <div class="d-flex align-items-start gap-2 p-2 rounded-2" style="background:#f8f9fc;border:1px solid #e9ecef;" id="knowledge-item-{{ $item->id }}">
+                                                    <div class="flex-grow-1 min-width-0">
+                                                        <div class="fw-semibold small">{{ $item->title }}</div>
+                                                        <div class="text-muted small mt-1" style="white-space:pre-line;font-size:0.78rem;">{{ Str::limit($item->content_text, 180) }}</div>
+                                                        @if($item->source_url)
+                                                            <a href="{{ $item->source_url }}" target="_blank" class="small text-primary mt-1 d-inline-block">
+                                                                <i class="bi bi-link-45deg me-1"></i>Fuente
+                                                            </a>
+                                                        @endif
                                                     </div>
-                                                    @endforeach
+                                                    <div class="d-flex gap-1 flex-shrink-0">
+                                                        <button type="button" class="btn btn-outline-primary btn-sm p-1"
+                                                                style="font-size:0.72rem;"
+                                                                onclick="editarKnowledge({{ $item->id }}, '{{ addslashes($item->type) }}', '{{ addslashes($item->title) }}', {{ json_encode($item->content_text) }}, '{{ addslashes($item->source_url ?? '') }}')">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm p-1"
+                                                                style="font-size:0.72rem;"
+                                                                onclick="eliminarKnowledge({{ $item->id }})">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
+                                                @endforeach
                                             </div>
                                         </div>
                                     </div>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @endif
+                                </div>
+                            @endforeach
+                        </div>
                         {{-- ══ FIN BASE DE CONOCIMIENTOS ═══════════════════════ --}}
 
                         </div>{{-- /donna-business-pane --}}
@@ -1987,6 +1538,505 @@
 
         </div>
     </div>
+
+    {{-- ══════════════ Modales de configuración Donna ══════════════ --}}
+
+    @if($subPersonal)
+    {{-- Modal: Configurar Donna Personal --}}
+    <div class="modal fade" id="donnaPersonalModal" tabindex="-1" aria-labelledby="donnaPersonalModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#f4f6ff;border-bottom:2px solid #274698;">
+                    <h5 class="modal-title fw-bold" id="donnaPersonalModalLabel">
+                        <i class="bi bi-sliders me-2" style="color:#274698;"></i>Configurar Donna Personal
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="donnaPersonalForm" onsubmit="submitDonnaPersonalConfig(event)">
+                    <div class="modal-body">
+                        <div id="donnaPersonalModalError" class="alert alert-danger py-2 small d-none"></div>
+
+                        <div class="accordion mb-3" id="accordionSystemMsg">
+                            <div class="accordion-item border rounded-3 overflow-hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseSystemMsg"
+                                            style="font-size:0.85rem;">
+                                        <i class="bi bi-eye me-2" style="color:#274698;"></i>
+                                        Ver el prompt que recibe Donna ahora mismo
+                                    </button>
+                                </h2>
+                                <div id="collapseSystemMsg" class="accordion-collapse collapse">
+                                    <div class="accordion-body p-3">
+                                        <textarea class="form-control font-monospace" rows="10" readonly
+                                                  style="background:#f8f9fa;resize:none;font-size:0.75rem;line-height:1.5;">{{ $donnaSystemPreview }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @php
+                            $whP = $donnaConfigPersonal?->working_hours_json ?? [];
+                            $tzOptionsPersonal = [
+                                'America/Guayaquil'   => 'Guayaquil / Lima (UTC-5)',
+                                'America/Bogota'      => 'Bogotá (UTC-5)',
+                                'America/Mexico_City' => 'Ciudad de México (UTC-6)',
+                                'America/New_York'    => 'New York (UTC-5/-4)',
+                                'America/Los_Angeles' => 'Los Ángeles (UTC-8/-7)',
+                                'America/Santiago'    => 'Santiago (UTC-4/-3)',
+                                'America/Argentina/Buenos_Aires' => 'Buenos Aires (UTC-3)',
+                                'Europe/Madrid'       => 'Madrid (UTC+1/+2)',
+                                'UTC'                 => 'UTC',
+                            ];
+                        @endphp
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold small mb-1">
+                                    <i class="bi bi-robot me-1"></i>Nombre del agente
+                                </label>
+                                <input type="text" name="agent_name" id="dp_agent_name" class="form-control form-control-sm"
+                                       maxlength="80" placeholder="Donna" value="{{ $donnaConfigPersonal?->agent_name }}">
+                                <div class="form-text">Cómo se presenta en Telegram.</div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold small mb-1">
+                                    <i class="bi bi-globe me-1"></i>Zona horaria
+                                </label>
+                                <select name="timezone" id="dp_timezone" class="form-select form-select-sm">
+                                    @foreach($tzOptionsPersonal as $tzVal => $tzLabel)
+                                        <option value="{{ $tzVal }}" @selected(($donnaConfigPersonal?->timezone ?? 'America/Guayaquil') === $tzVal)>{{ $tzLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label fw-semibold small mb-1">Horario desde</label>
+                                <input type="time" name="wh_start" class="form-control form-control-sm" value="{{ $whP['start'] ?? '09:00' }}">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label fw-semibold small mb-1">Horario hasta</label>
+                                <input type="time" name="wh_end" class="form-control form-control-sm" value="{{ $whP['end'] ?? '20:00' }}">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label fw-semibold small mb-1">Horario almuerzo</label>
+                                <input type="time" name="wh_lunch" class="form-control form-control-sm" value="{{ $whP['lunch'] ?? '13:00' }}">
+                            </div>
+                        </div>
+
+                        <label class="form-label fw-semibold mb-1">
+                            <i class="bi bi-person-lines-fill me-1" style="color:#274698;"></i>Cuéntale de ti a Donna
+                            <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.7rem;">Recomendado</span>
+                        </label>
+                        <p class="text-muted small mb-2">
+                            Tu profesión, proyectos activos, preferencias de comunicación, etc. Donna usará esto para entenderte mejor.
+                        </p>
+                        <textarea name="personal_context" id="dp_personal_context"
+                                  class="form-control" rows="5" maxlength="1000"
+                                  placeholder="Ejemplo: Soy diseñador freelance. Prefiero respuestas cortas y directas. No interrumpir los martes por la tarde."
+                        >{{ $donnaConfigPersonal?->personal_context }}</textarea>
+                        <div class="d-flex justify-content-end mt-1">
+                            <span class="text-muted small"><span id="dp_context_count">{{ strlen($donnaConfigPersonal?->personal_context ?? '') }}</span>/1000</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="donnaPersonalSubmitBtn" class="btn btn-primary btn-sm rounded-pill fw-semibold">
+                            <i class="bi bi-save me-1"></i>Guardar cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($subBusiness)
+    {{-- Modal: Configuración general Donna Business --}}
+    <div class="modal fade" id="donnaBusinessGeneralModal" tabindex="-1" aria-labelledby="donnaBusinessGeneralModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#fffbea;border-bottom:2px solid #E4B100;">
+                    <h5 class="modal-title fw-bold" id="donnaBusinessGeneralModalLabel">
+                        <i class="bi bi-sliders me-2" style="color:#E4B100;"></i>Configuración general — Donna Business
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="donnaBusinessGeneralForm" onsubmit="submitDonnaBusinessGeneral(event)">
+                    <div class="modal-body">
+                        <div id="donnaBusinessGeneralModalError" class="alert alert-danger py-2 small d-none"></div>
+
+                        @php
+                            $whB = $donnaConfigBusiness?->working_hours_json ?? [];
+                            $tzOptionsBusiness = [
+                                'America/Guayaquil'   => 'Guayaquil / Lima (UTC-5)',
+                                'America/Bogota'      => 'Bogotá (UTC-5)',
+                                'America/Mexico_City' => 'Ciudad de México (UTC-6)',
+                                'America/New_York'    => 'New York (UTC-5/-4)',
+                                'America/Los_Angeles' => 'Los Ángeles (UTC-8/-7)',
+                                'America/Santiago'    => 'Santiago (UTC-4/-3)',
+                                'America/Argentina/Buenos_Aires' => 'Buenos Aires (UTC-3)',
+                                'Europe/Madrid'       => 'Madrid (UTC+1/+2)',
+                                'UTC'                 => 'UTC',
+                            ];
+                        @endphp
+
+                        {{-- Identidad --}}
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold small mb-1">
+                                    <i class="bi bi-robot me-1" style="color:#E4B100;"></i>Nombre del agente
+                                </label>
+                                <input type="text" name="agent_name" id="biz_agent_name" class="form-control form-control-sm"
+                                       maxlength="80" placeholder="Donna" value="{{ $donnaConfigBusiness?->agent_name }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold small mb-1">
+                                    <i class="bi bi-building me-1" style="color:#E4B100;"></i>Nombre del negocio
+                                </label>
+                                <input type="text" name="business_name" id="biz_business_name" class="form-control form-control-sm"
+                                       maxlength="120" placeholder="Mi Empresa" value="{{ $donnaConfigBusiness?->business_name }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold small mb-1"><i class="bi bi-translate me-1"></i>Idioma de respuesta</label>
+                                <select name="language" id="biz_language" class="form-select form-select-sm">
+                                    <option value="es" @selected(($donnaConfigBusiness?->language ?? 'es') === 'es')>Español</option>
+                                    <option value="en" @selected(($donnaConfigBusiness?->language ?? 'es') === 'en')>English</option>
+                                    <option value="pt" @selected(($donnaConfigBusiness?->language ?? 'es') === 'pt')>Português</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label fw-semibold small mb-1"><i class="bi bi-emoji-smile me-1"></i>Tono del agente</label>
+                                <input type="text" name="tone" id="biz_tone" class="form-control form-control-sm"
+                                       maxlength="200" placeholder="profesional, amable y directa" value="{{ $donnaConfigBusiness?->tone }}">
+                            </div>
+                        </div>
+
+                        {{-- Horarios --}}
+                        <div class="p-3 rounded-3 mb-3" style="background:#fffbea;border:1px solid #ffe082;">
+                            <div class="fw-semibold small mb-3" style="color:#8a6218;"><i class="bi bi-clock me-1"></i>Horarios y zona horaria</div>
+                            <div class="row g-3">
+                                <div class="col-sm-6 col-lg-3">
+                                    <label class="form-label fw-semibold small mb-1"><i class="bi bi-globe me-1"></i>Zona horaria</label>
+                                    <select name="timezone" id="biz_timezone" class="form-select form-select-sm">
+                                        @foreach($tzOptionsBusiness as $tzVal => $tzLabel)
+                                            <option value="{{ $tzVal }}" @selected(($donnaConfigBusiness?->timezone ?? 'America/Guayaquil') === $tzVal)>{{ $tzLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <label class="form-label fw-semibold small mb-1">Horario desde</label>
+                                    <input type="time" name="wh_start" id="biz_wh_start" class="form-control form-control-sm" value="{{ $whB['start'] ?? '09:00' }}">
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <label class="form-label fw-semibold small mb-1">Horario hasta</label>
+                                    <input type="time" name="wh_end" id="biz_wh_end" class="form-control form-control-sm" value="{{ $whB['end'] ?? '20:00' }}">
+                                </div>
+                                <div class="col-sm-6 col-lg-3">
+                                    <label class="form-label fw-semibold small mb-1">Almuerzo</label>
+                                    <input type="time" name="wh_lunch" id="biz_wh_lunch" class="form-control form-control-sm" value="{{ $whB['lunch'] ?? '13:00' }}">
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-1 align-items-end">
+                                <div class="col-sm-6 col-lg-4">
+                                    <label class="form-label fw-semibold small mb-1"><i class="bi bi-hourglass-split me-1"></i>Tiempo de espera</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" name="wait_seconds" id="biz_wait_seconds" class="form-control form-control-sm"
+                                               min="3" max="60" step="1" value="{{ $donnaConfigBusiness?->wait_seconds ?? 35 }}">
+                                        <span class="input-group-text">seg</span>
+                                    </div>
+                                    <div class="form-text">Agrupa mensajes consecutivos del cliente (3–60 seg).</div>
+                                </div>
+                                <div class="col-sm-6 col-lg-8">
+                                    <label class="form-label fw-semibold small mb-1"><i class="bi bi-chat-text me-1"></i>Extensión de las respuestas</label>
+                                    @php $curStyle = $donnaConfigBusiness?->response_style ?? 'concise'; @endphp
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach([
+                                            'concise'  => ['label' => 'Directa', 'icon' => 'bi-lightning-charge', 'desc' => 'Máx. 2 oraciones'],
+                                            'moderate' => ['label' => 'Moderada', 'icon' => 'bi-chat-dots', 'desc' => 'Máx. 80 palabras'],
+                                            'detailed' => ['label' => 'Detallada', 'icon' => 'bi-journals', 'desc' => 'Sin límite estricto'],
+                                        ] as $val => $opt)
+                                        <label class="d-flex align-items-center gap-2 px-3 py-2 rounded-3 cursor-pointer"
+                                               style="border:1.5px solid {{ $curStyle === $val ? '#E4B100' : '#dee2e6' }};background:{{ $curStyle === $val ? '#fffbea' : '#fff' }};cursor:pointer;"
+                                               id="style_label_{{ $val }}">
+                                            <input type="radio" name="response_style" value="{{ $val }}" class="d-none response-style-radio" @checked($curStyle === $val)>
+                                            <i class="bi {{ $opt['icon'] }} fs-5" style="color:{{ $curStyle === $val ? '#b45309' : '#6c757d' }};"></i>
+                                            <div>
+                                                <div class="fw-semibold small">{{ $opt['label'] }}</div>
+                                                <div class="text-muted" style="font-size:0.7rem;">{{ $opt['desc'] }}</div>
+                                            </div>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Funciones de Google --}}
+                        @if($googleOk)
+                        <div class="p-3 rounded-3 mb-3" style="background:#f0f7ff;border:1px solid #bdd7f5;">
+                            <div class="fw-semibold small mb-3" style="color:#0d47a1;"><i class="bi bi-google me-1"></i>Funciones de Google</div>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-start gap-3 p-3 rounded-3 h-100" style="background:#fff;border:1px solid #e2e8f0;">
+                                        <div class="form-check form-switch mt-1 mb-0">
+                                            <input class="form-check-input" type="checkbox" name="calendar_enabled" id="biz_cal_enabled" value="1"
+                                                   @checked($donnaConfigBusiness?->calendar_enabled)>
+                                        </div>
+                                        <div>
+                                            <label class="form-check-label fw-semibold small" for="biz_cal_enabled">
+                                                <i class="bi bi-calendar3 me-1" style="color:#1a73e8;"></i>Google Calendar
+                                            </label>
+                                            <p class="text-muted mb-0" style="font-size:0.72rem;">Permite a Donna agendar, consultar y cancelar citas.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-start gap-3 p-3 rounded-3 h-100" style="background:#fff;border:1px solid #e2e8f0;">
+                                        <div class="form-check form-switch mt-1 mb-0">
+                                            <input class="form-check-input" type="checkbox" name="sheets_enabled" id="biz_sheets_enabled" value="1"
+                                                   @checked($donnaConfigBusiness?->sheets_enabled)>
+                                        </div>
+                                        <div>
+                                            <label class="form-check-label fw-semibold small" for="biz_sheets_enabled">
+                                                <i class="bi bi-table me-1" style="color:#0f9d58;"></i>Google Sheets — Base de Conocimientos
+                                            </label>
+                                            <p class="text-muted mb-0" style="font-size:0.72rem;">Sincroniza tu base de conocimientos a una hoja.</p>
+                                            @if($sheetOk && $donnaConfigBusiness?->spreadsheet_id)
+                                                <a href="https://docs.google.com/spreadsheets/d/{{ $donnaConfigBusiness->spreadsheet_id }}"
+                                                   target="_blank" class="d-inline-flex align-items-center gap-1 mt-2" style="font-size:0.72rem;color:#0f9d58;">
+                                                    <i class="bi bi-box-arrow-up-right"></i>Ver hoja
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Descripción del negocio --}}
+                        <label class="form-label fw-semibold small mb-1">
+                            <i class="bi bi-card-text me-1"></i>Descripción del negocio
+                            <span class="badge bg-success-subtle text-success border ms-1" style="font-size:0.65rem;">Recomendado</span>
+                        </label>
+                        <textarea name="business_description" id="biz_business_description" class="form-control" rows="4" maxlength="2000"
+                                  placeholder="Ejemplo: Somos una tienda de ropa casual ubicada en Guayaquil. Atendemos de lunes a sábado de 9am a 7pm...">{{ $donnaConfigBusiness?->business_description }}</textarea>
+                        <div class="d-flex justify-content-end mt-1">
+                            <span class="text-muted small"><span id="biz_desc_count">{{ strlen($donnaConfigBusiness?->business_description ?? '') }}</span>/2000</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="donnaBusinessGeneralSubmitBtn" class="btn btn-sm rounded-pill fw-bold" style="background:#E4B100;color:#1D1D1B;">
+                            <i class="bi bi-save me-1"></i>Guardar configuración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Prompt avanzado Donna Business --}}
+    <div class="modal fade" id="donnaBusinessPromptModal" tabindex="-1" aria-labelledby="donnaBusinessPromptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#fffbea;border-bottom:2px solid #E4B100;">
+                    <h5 class="modal-title fw-bold" id="donnaBusinessPromptModalLabel">
+                        <i class="bi bi-code-square me-2" style="color:#E4B100;"></i>Prompt avanzado — Donna Business
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="donnaBusinessPromptForm" onsubmit="submitDonnaBusinessPrompt(event)">
+                    <div class="modal-body">
+                        <div id="donnaBusinessPromptModalError" class="alert alert-danger py-2 small d-none"></div>
+
+                        <div class="accordion mb-3" id="accordionBusinessSystemMsg">
+                            <div class="accordion-item border rounded-3 overflow-hidden">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed fw-semibold" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapseBusinessSystemMsg"
+                                            style="font-size:0.85rem;">
+                                        <i class="bi bi-eye me-2" style="color:#E4B100;"></i>
+                                        Ver el prompt que recibe Donna Business ahora mismo
+                                    </button>
+                                </h2>
+                                <div id="collapseBusinessSystemMsg" class="accordion-collapse collapse">
+                                    <div class="accordion-body p-3">
+                                        <textarea class="form-control font-monospace" rows="10" readonly
+                                                  style="background:#f8f9fa;resize:none;font-size:0.75rem;line-height:1.5;">{{ $donnaBusinessSystemPreview }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-muted small mb-2">
+                            Si lo dejas vacío, Donna usa su configuración predeterminada combinada con la Configuración general.
+                            Escribe aquí solo si necesitas control total del comportamiento del agente.
+                        </p>
+                        <div class="row g-3 align-items-start">
+                            <div class="col-lg-8">
+                                <textarea name="main_prompt" id="biz_main_prompt"
+                                          class="form-control font-monospace" rows="14"
+                                          maxlength="5000" style="font-size:0.8rem;resize:vertical;"
+                                          placeholder="Deja vacío para usar la configuración por defecto...">{{ $donnaConfigBusiness?->main_prompt }}</textarea>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill"
+                                            onclick="resetBusinessPrompt()"
+                                            title="Elimina el prompt personalizado y vuelve al comportamiento predeterminado de Donna">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurar prompt predeterminado
+                                    </button>
+                                    <span class="text-muted small align-self-center">
+                                        <span id="biz_prompt_count">{{ strlen($donnaConfigBusiness?->main_prompt ?? '') }}</span>/5000
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="p-3 rounded-3 h-100" style="background:#f8f9fc;border:1px solid #e2e5f0;">
+                                    <div class="fw-semibold small mb-2" style="color:#274698;"><i class="bi bi-braces me-1"></i>Variables disponibles</div>
+                                    <p class="text-muted" style="font-size:0.72rem;">Haz clic en una variable para insertarla en el prompt.</p>
+                                    <div class="d-flex flex-column gap-2">
+                                        @php
+                                            $bizVars = [
+                                                ['key' => '{{agent_name}}',    'label' => 'Nombre del agente',  'icon' => 'bi-robot',       'color' => '#E4B100'],
+                                                ['key' => '{{business_name}}', 'label' => 'Nombre del negocio', 'icon' => 'bi-building',     'color' => '#274698'],
+                                                ['key' => '{{timezone}}',      'label' => 'Zona horaria',       'icon' => 'bi-globe',        'color' => '#5a3c9a'],
+                                                ['key' => '{{now}}',           'label' => 'Fecha y hora actual','icon' => 'bi-calendar3',    'color' => '#1a7a4a'],
+                                                ['key' => '{{working_hours}}', 'label' => 'Horario de atención','icon' => 'bi-clock',        'color' => '#b45309'],
+                                                ['key' => '{{lunch_break}}',   'label' => 'Horario de almuerzo','icon' => 'bi-cup-hot',      'color' => '#0369a1'],
+                                            ];
+                                        @endphp
+                                        @foreach($bizVars as $bv)
+                                        <button type="button"
+                                                class="btn btn-sm text-start rounded-2 d-flex align-items-center gap-2"
+                                                style="background:#fff;border:1px solid #e2e5f0;font-size:0.75rem;"
+                                                onclick="insertBizVar('{{ $bv['key'] }}')"
+                                                title="Insertar {{ $bv['key'] }}">
+                                            <i class="bi {{ $bv['icon'] }} flex-shrink-0" style="color:{{ $bv['color'] }};font-size:0.85rem;"></i>
+                                            <span class="flex-grow-1">
+                                                <code style="font-size:0.72rem;color:{{ $bv['color'] }};">{{ $bv['key'] }}</code><br>
+                                                <span class="text-muted" style="font-size:0.68rem;">{{ $bv['label'] }}</span>
+                                            </span>
+                                            <i class="bi bi-plus-circle text-muted flex-shrink-0" style="font-size:0.75rem;"></i>
+                                        </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="donnaBusinessPromptSubmitBtn" class="btn btn-sm rounded-pill fw-bold" style="background:#E4B100;color:#1D1D1B;">
+                            <i class="bi bi-save me-1"></i>Guardar prompt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @if($canalWhatsapp)
+    {{-- Modal: Modo prueba / producción --}}
+    <div class="modal fade" id="donnaTestModeModal" tabindex="-1" aria-labelledby="donnaTestModeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#f4f6ff;border-bottom:2px solid #274698;">
+                    <h5 class="modal-title fw-bold" id="donnaTestModeModalLabel">
+                        <i class="bi bi-toggle2-on me-2" style="color:#274698;"></i>Modo de Donna Business
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="donnaTestModeForm" onsubmit="submitDonnaTestMode(event)">
+                    <div class="modal-body">
+                        <div id="donnaTestModeModalError" class="alert alert-danger py-2 small d-none"></div>
+
+                        <p class="text-muted small mb-3">
+                            Usa <strong>modo prueba</strong> para verificar que Donna responde bien antes de lanzarla a tus clientes reales:
+                            mientras esté activo, solo contestará a los números que agregues abajo. Cambia a <strong>modo producción</strong>
+                            cuando quieras que responda a todos tus clientes.
+                        </p>
+
+                        <div class="d-flex flex-wrap gap-3 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="donna_mode" id="mode_production" value="production"
+                                       {{ ($canalWhatsapp->donna_mode ?? 'production') !== 'test' ? 'checked' : '' }}
+                                       onchange="toggleDonnaModePanels()">
+                                <label class="form-check-label small fw-semibold" for="mode_production">
+                                    Producción <span class="text-muted fw-normal">(responde a todos tus clientes)</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="donna_mode" id="mode_test" value="test"
+                                       {{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'checked' : '' }}
+                                       onchange="toggleDonnaModePanels()">
+                                <label class="form-check-label small fw-semibold" for="mode_test">
+                                    Prueba <span class="text-muted fw-normal">(solo números de la lista)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Panel producción --}}
+                        <div id="donna_mode_production_panel" style="{{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'display:none;' : '' }}">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" role="switch" id="exclude_groups_in_production"
+                                       name="exclude_groups_in_production" value="1"
+                                       {{ ($canalWhatsapp->exclude_groups_in_production ?? true) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="exclude_groups_in_production">No responder en grupos de WhatsApp</label>
+                            </div>
+                            <label class="form-label fw-semibold small mb-1">Números que NO deben recibir respuesta (opcional)</label>
+                            <div id="donna_excluded_list" class="mb-2">
+                                @foreach($canalWhatsapp->excluded_numbers_json ?? [] as $num)
+                                    <div class="d-flex gap-2 mb-2">
+                                        <input type="text" name="excluded_numbers[]" class="form-control form-control-sm" value="{{ $num }}">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDonnaNumberRow('donna_excluded_list', 'excluded_numbers[]')">
+                                <i class="fas fa-plus me-1"></i>Agregar número a excluir
+                            </button>
+                        </div>
+
+                        {{-- Panel prueba --}}
+                        <div id="donna_mode_test_panel" style="{{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? '' : 'display:none;' }}">
+                            <label class="form-label fw-semibold small mb-1">Números de prueba autorizados</label>
+                            <div class="form-text mb-2">
+                                <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                                Si no agregas ningún número, Donna no responderá a nadie mientras esté en modo prueba.
+                            </div>
+                            <div id="donna_test_list" class="mb-2">
+                                @foreach($canalWhatsapp->test_numbers_json ?? [] as $num)
+                                    <div class="d-flex gap-2 mb-2">
+                                        <input type="text" name="test_numbers[]" class="form-control form-control-sm" value="{{ $num }}">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDonnaNumberRow('donna_test_list', 'test_numbers[]')">
+                                <i class="fas fa-plus me-1"></i>Agregar número de prueba
+                            </button>
+                        </div>
+
+                        <div class="form-text mt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Escribe el número completo con código de país, solo dígitos (ej: <code>593999999999</code>).
+                            También puedes escribirlo con espacios, guiones o "+" (ej: <code>+593 99 999 9999</code>) —
+                            el sistema lo normaliza automáticamente al guardar.
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="donnaTestModeSubmitBtn" class="btn btn-primary btn-sm rounded-pill fw-semibold">
+                            <i class="bi bi-save me-1"></i>Guardar modo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+    @endif
+    {{-- ══════════════ Fin modales de configuración Donna ══════════════ --}}
 
     {{-- Modal Knowledge Base (Bootstrap, no Alpine) --}}
     <div class="modal fade" id="knowledgeItemModal" tabindex="-1" aria-labelledby="knowledgeModalTitle" aria-hidden="true">
@@ -2398,8 +2448,8 @@
             });
 
             // Contador caracteres contexto personal Donna
-            const pcInput = document.getElementById('personal_context_input');
-            const pcCount = document.getElementById('personal_context_count');
+            const pcInput = document.getElementById('dp_personal_context');
+            const pcCount = document.getElementById('dp_context_count');
             if (pcInput && pcCount) {
                 pcInput.addEventListener('input', () => pcCount.textContent = pcInput.value.length);
             }
@@ -2419,8 +2469,8 @@
             });
 
             // Contador caracteres descripción negocio (Business)
-            const bdInput = document.getElementById('business_description_input');
-            const bdCount = document.getElementById('business_desc_count');
+            const bdInput = document.getElementById('biz_business_description');
+            const bdCount = document.getElementById('biz_desc_count');
             if (bdInput && bdCount) {
                 bdInput.addEventListener('input', () => bdCount.textContent = bdInput.value.length);
             }
@@ -2484,8 +2534,191 @@
             list.appendChild(row);
         }
 
+        // ── Notificación toast (mismo patrón que shopping/index.blade.php) ──
+        function showToast(type, message) {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            const bootstrapToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+            bootstrapToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        // ── Helper genérico: enviar un form de configuración Donna sin recargar ──
+        async function submitDonnaConfigForm({ form, url, submitBtnId, errorBoxId, onSuccess }) {
+            const btn = document.getElementById(submitBtnId);
+            const errorBox = document.getElementById(errorBoxId);
+            if (errorBox) errorBox.classList.add('d-none');
+            if (btn) btn.disabled = true;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: new FormData(form),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    if (onSuccess) onSuccess(data.data || {});
+                    showToast('success', data.message || 'Guardado correctamente.');
+                    return true;
+                }
+
+                if (errorBox) {
+                    errorBox.textContent = data.message || 'No se pudo guardar. Revisa los datos e intenta de nuevo.';
+                    errorBox.classList.remove('d-none');
+                } else {
+                    showToast('danger', data.message || 'No se pudo guardar.');
+                }
+                return false;
+            } catch (e) {
+                const msg = 'Error de conexión. Intenta nuevamente.';
+                if (errorBox) {
+                    errorBox.textContent = msg;
+                    errorBox.classList.remove('d-none');
+                } else {
+                    showToast('danger', msg);
+                }
+                return false;
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        // ── Donna Personal: modal de configuración ──────────────────
+        function abrirModalDonnaPersonal() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('donnaPersonalModal')).show();
+        }
+
+        async function submitDonnaPersonalConfig(event) {
+            event.preventDefault();
+            const ok = await submitDonnaConfigForm({
+                form: event.target,
+                url: '{{ route('cliente.donna.config') }}',
+                submitBtnId: 'donnaPersonalSubmitBtn',
+                errorBoxId: 'donnaPersonalModalError',
+                onSuccess: (data) => {
+                    document.getElementById('dpSumAgentName').textContent = data.agent_name || 'Donna';
+                    document.getElementById('dpSumTimezone').textContent = data.timezone || 'America/Guayaquil';
+                    const ctxEl = document.getElementById('dpSumContext');
+                    if (data.personal_context) {
+                        ctxEl.innerHTML = '<i class="bi bi-person-lines-fill me-1"></i>' +
+                            (data.personal_context.length > 100 ? data.personal_context.slice(0, 100) + '…' : data.personal_context);
+                    } else {
+                        ctxEl.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Sin contexto personal definido todavía.';
+                    }
+                    bootstrap.Modal.getInstance(document.getElementById('donnaPersonalModal'))?.hide();
+                },
+            });
+            return ok;
+        }
+
+        // ── Donna Business: modal de configuración general ──────────
+        function abrirModalDonnaBusinessGeneral() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('donnaBusinessGeneralModal')).show();
+        }
+
+        async function submitDonnaBusinessGeneral(event) {
+            event.preventDefault();
+            await submitDonnaConfigForm({
+                form: event.target,
+                url: '{{ route('cliente.donna.config-business') }}',
+                submitBtnId: 'donnaBusinessGeneralSubmitBtn',
+                errorBoxId: 'donnaBusinessGeneralModalError',
+                onSuccess: (data) => {
+                    document.getElementById('dbSumAgentName').textContent = data.agent_name || 'Donna';
+                    document.getElementById('dbSumBusinessName').textContent = data.business_name || 'Sin definir';
+                    document.getElementById('dbSumLanguage').textContent = (data.language || 'es').toUpperCase();
+                    document.getElementById('dbSumTone').textContent = data.tone || 'profesional, amable y directa';
+                    const wh = data.working_hours_json || {};
+                    document.getElementById('dbSumHours').textContent = (wh.start || '09:00') + ' – ' + (wh.end || '20:00');
+                    document.getElementById('dbSumTimezone').textContent = data.timezone || 'America/Guayaquil';
+                    const calEl = document.getElementById('dbSumCalendar');
+                    if (calEl) calEl.textContent = data.calendar_enabled ? 'Activo' : 'Inactivo';
+                    const sheetEl = document.getElementById('dbSumSheets');
+                    if (sheetEl) sheetEl.textContent = data.sheets_enabled ? 'Activo' : 'Inactivo';
+                    bootstrap.Modal.getInstance(document.getElementById('donnaBusinessGeneralModal'))?.hide();
+                },
+            });
+        }
+
+        // ── Donna Business: modal de prompt avanzado ─────────────────
+        function abrirModalDonnaBusinessPrompt() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('donnaBusinessPromptModal')).show();
+        }
+
+        async function submitDonnaBusinessPrompt(event) {
+            event.preventDefault();
+            await submitDonnaConfigForm({
+                form: event.target,
+                url: '{{ route('cliente.donna.config-business') }}',
+                submitBtnId: 'donnaBusinessPromptSubmitBtn',
+                errorBoxId: 'donnaBusinessPromptModalError',
+                onSuccess: (data) => {
+                    const statusEl = document.getElementById('dbSumPromptStatus');
+                    statusEl.innerHTML = data.main_prompt
+                        ? '<i class="bi bi-exclamation-triangle me-1 text-warning"></i>Usando prompt personalizado completo'
+                        : '<i class="bi bi-check2-circle me-1"></i>Usando configuración predeterminada';
+                    bootstrap.Modal.getInstance(document.getElementById('donnaBusinessPromptModal'))?.hide();
+                },
+            });
+        }
+
+        // ── Donna Business: modal de modo prueba/producción ──────────
+        function abrirModalDonnaTestMode() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('donnaTestModeModal')).show();
+        }
+
+        async function submitDonnaTestMode(event) {
+            event.preventDefault();
+            await submitDonnaConfigForm({
+                form: event.target,
+                url: '{{ route('cliente.donna.test-mode') }}',
+                submitBtnId: 'donnaTestModeSubmitBtn',
+                errorBoxId: 'donnaTestModeModalError',
+                onSuccess: (data) => {
+                    const isTest = data.donna_mode === 'test';
+                    document.getElementById('dtmSumBadge').textContent = isTest ? 'Prueba' : 'Producción';
+                    document.getElementById('dtmSumBadge').style.background = isTest ? '#E4B100' : '#1a7a4a';
+                    document.getElementById('dtmSumBadge').style.color = isTest ? '#1D1D1B' : '#fff';
+                    document.getElementById('dtmSumDetail').textContent = isTest
+                        ? `Responde solo a ${(data.test_numbers_json || []).length} número(s) de prueba.`
+                        : `Responde a todos tus clientes${data.exclude_groups_in_production ? ', excepto grupos' : ''}.`;
+                    bootstrap.Modal.getInstance(document.getElementById('donnaTestModeModal'))?.hide();
+                },
+            });
+        }
+
         // ── Knowledge Base ─────────────────────────────────────────
         let knowledgeEditId = null;
+
+        const KNOWLEDGE_TYPES = {
+            product: { icon: 'bi-box-seam',        label: 'Productos',             color: '#274698' },
+            service: { icon: 'bi-tools',           label: 'Servicios',             color: '#5a3c9a' },
+            faq:     { icon: 'bi-question-circle', label: 'Preguntas frecuentes',  color: '#1a7a4a' },
+            policy:  { icon: 'bi-shield-check',    label: 'Políticas',             color: '#b45309' },
+            table:   { icon: 'bi-table',           label: 'Datos / Tablas',        color: '#0369a1' },
+        };
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str ?? '';
+            return div.innerHTML;
+        }
+
+        function jsStrLiteral(str) {
+            return "'" + String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+        }
 
         function _knowModal() {
             return bootstrap.Modal.getOrCreateInstance(document.getElementById('knowledgeItemModal'));
@@ -2508,6 +2741,56 @@
             document.getElementById('knowledge_content_count').textContent = content.length;
             document.getElementById('knowledge_source_url').value = sourceUrl || '';
             _knowModal().show();
+        }
+
+        // Actualiza contador de un tipo y muestra/oculta su acordeón + el estado vacío general.
+        function refreshKnowledgeTypeVisibility(type) {
+            const list = document.getElementById(`knowledge-list-${type}`);
+            const wrapper = document.getElementById(`knowledge-type-${type}`);
+            const badge = document.getElementById(`knowledge-count-${type}`);
+            if (!list || !wrapper || !badge) return;
+
+            const count = list.children.length;
+            badge.textContent = String(count);
+            wrapper.style.display = count > 0 ? '' : 'none';
+
+            const totalItems = Object.keys(KNOWLEDGE_TYPES)
+                .reduce((sum, t) => sum + (document.getElementById(`knowledge-list-${t}`)?.children.length || 0), 0);
+
+            const emptyState = document.getElementById('donnaKnowledgeEmptyState');
+            const accordion = document.getElementById('accordionKnowledge');
+            if (emptyState) emptyState.style.display = totalItems > 0 ? 'none' : '';
+            if (accordion) accordion.style.display = totalItems > 0 ? '' : 'none';
+        }
+
+        function buildKnowledgeItemRow(item) {
+            const row = document.createElement('div');
+            row.className = 'd-flex align-items-start gap-2 p-2 rounded-2';
+            row.style.cssText = 'background:#f8f9fc;border:1px solid #e9ecef;';
+            row.id = `knowledge-item-${item.id}`;
+
+            const preview = item.content_text.length > 180 ? item.content_text.slice(0, 180) + '…' : item.content_text;
+            const sourceHtml = item.source_url
+                ? `<a href="${escapeHtml(item.source_url)}" target="_blank" class="small text-primary mt-1 d-inline-block"><i class="bi bi-link-45deg me-1"></i>Fuente</a>`
+                : '';
+
+            row.innerHTML = `
+                <div class="flex-grow-1 min-width-0">
+                    <div class="fw-semibold small">${escapeHtml(item.title)}</div>
+                    <div class="text-muted small mt-1" style="white-space:pre-line;font-size:0.78rem;">${escapeHtml(preview)}</div>
+                    ${sourceHtml}
+                </div>
+                <div class="d-flex gap-1 flex-shrink-0">
+                    <button type="button" class="btn btn-outline-primary btn-sm p-1" style="font-size:0.72rem;"
+                            onclick="editarKnowledge(${item.id}, ${jsStrLiteral(item.type)}, ${jsStrLiteral(item.title)}, ${JSON.stringify(item.content_text)}, ${jsStrLiteral(item.source_url || '')})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm p-1" style="font-size:0.72rem;"
+                            onclick="eliminarKnowledge(${item.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>`;
+            return row;
         }
 
         async function submitKnowledge(e) {
@@ -2536,13 +2819,24 @@
                 });
                 const data = await r.json();
                 if (data.success) {
+                    const item = data.item;
+                    const existingRow = document.getElementById(`knowledge-item-${item.id}`);
+                    const previousType = existingRow ? existingRow.closest('[id^="knowledge-type-"]')?.id.replace('knowledge-type-', '') : null;
+
+                    if (existingRow) existingRow.remove();
+                    if (previousType && previousType !== item.type) refreshKnowledgeTypeVisibility(previousType);
+
+                    const targetList = document.getElementById(`knowledge-list-${item.type}`);
+                    if (targetList) targetList.appendChild(buildKnowledgeItemRow(item));
+                    refreshKnowledgeTypeVisibility(item.type);
+
                     _knowModal().hide();
-                    setTimeout(() => location.reload(), 300);
+                    showToast('success', knowledgeEditId ? 'Ítem actualizado.' : 'Ítem agregado a la base de conocimientos.');
                 } else {
-                    alert(data.message || 'Error al guardar.');
+                    showToast('danger', data.message || 'Error al guardar.');
                 }
             } catch {
-                alert('Error de conexión.');
+                showToast('danger', 'Error de conexión.');
             } finally {
                 btn.disabled = false;
             }
@@ -2557,12 +2851,16 @@
                 });
                 const data = await r.json();
                 if (data.success) {
-                    document.getElementById(`knowledge-item-${id}`)?.remove();
+                    const row = document.getElementById(`knowledge-item-${id}`);
+                    const type = row?.closest('[id^="knowledge-type-"]')?.id.replace('knowledge-type-', '');
+                    row?.remove();
+                    if (type) refreshKnowledgeTypeVisibility(type);
+                    showToast('success', 'Ítem eliminado.');
                 } else {
-                    alert('Error al eliminar.');
+                    showToast('danger', 'Error al eliminar.');
                 }
             } catch {
-                alert('Error de conexión.');
+                showToast('danger', 'Error de conexión.');
             }
         }
     </script>

@@ -307,3 +307,27 @@ Para que Donna Business deje de depender de coincidencia literal de palabras y e
 4. **Afinar `DONNA_EMBEDDING_MIN_SCORE`** con datos reales si se nota que trae de más (bajar threshold) o de menos (subirlo) — 0.15 es un punto de partida razonable pero no está calibrado contra el dominio real de ningún cliente todavía.
 5. Sigue pendiente (no se tocó en este cambio): troceo automático de documentos largos / subida de PDF. Hoy el conocimiento sigue cargándose a mano en bloques de hasta 5000 caracteres por ítem (`ClienteDonnaKnowledgeController::store`, validación `content_text => max:5000`). Para catálogos extensos esto sigue siendo trabajo manual de armado de la KB, aunque la búsqueda en sí ya sea semántica.
 6. Costo operativo: cada guardado/edición de ítem genera 1 llamada a la API de embeddings, y cada búsqueda del agente genera 1 llamada más (para vectorizar la pregunta del cliente final). Con `text-embedding-3-small` el costo es marginal (~$0.02 por millón de tokens), pero requiere una cuenta de OpenAI con billing activo asociada a la `OPENAI_API_KEY`.
+
+---
+
+## 9. UX del panel del cliente: guardado sin recarga + modales (implementado 2026-06-30)
+
+Motivo: el dueño reportó que probando Donna, cada vez que guardaba un cambio en su configuración (Personal o Business) la página completa se recargaba — lento y tedioso para iterar — y que el formulario de Business (identidad, horarios, funciones de Google, descripción, prompt avanzado) se sentía amontonado dentro de la pestaña.
+
+### Cambios
+- **`app/Http/Controllers/ClienteDonnaController.php`** — `saveConfig()`, `saveBusinessConfig()`, `saveTestMode()` ahora responden JSON (`{success, message, data}`) cuando el request lo pide (`Accept: application/json`), vía un helper nuevo `jsonOrBack()`. El `back()->with(...)` clásico se mantiene como fallback si algún día se envía el form sin JS.
+- **`resources/views/shopping/historialCliente.blade.php`** — los 3 formularios grandes (Configurar Donna Personal, Configuración general + Prompt avanzado de Donna Business, Modo prueba/producción) se sacaron de la pestaña y se movieron a modales Bootstrap (mismo patrón que ya usaba la modal de Knowledge Base). En la pestaña solo queda una tarjeta de resumen por sección (valores actuales + badges) con botón "Editar" que abre el modal correspondiente.
+- Los 4 formularios (los 3 anteriores + Knowledge Base, que ya era modal pero hacía `location.reload()` tras guardar) ahora usan `fetch()` y **no recargan la página**: al guardar, se cierra el modal, se actualiza el resumen en el DOM con los valores recién guardados, y se muestra un toast de confirmación.
+- Se copió la función `showToast(type, message)` que ya existía en `resources/views/shopping/index.blade.php` (mismo layout `layouts.cliente`, no había ningún helper global) — mismo nombre/comportamiento, para no inventar un patrón nuevo.
+- La lista de Base de Conocimientos se reestructuró para que cada tipo (producto/servicio/FAQ/política/tabla) tenga siempre su contenedor en el DOM (oculto si está vacío) en vez de generarse solo si tiene ítems — así JS puede agregar/editar/quitar un ítem y mostrar/ocultar secciones sin reconstruir el árbol completo.
+
+### Verificado
+- Blade compila sin errores de sintaxis (`blade.compiler->compileString` + `php -l` sobre el resultado).
+- `php -l` sin errores en los 2 controllers tocados.
+- Sin IDs duplicados entre los nuevos modales (verificado con grep por cada id crítico).
+- Sin `location.reload()` ni `alert()` restantes en toda la sección Donna del archivo.
+- Rutas registradas (`route:list`).
+
+### Pendiente
+- Prueba manual en navegador (no se hizo en esta sesión, no hay browser disponible): abrir el panel del cliente, editar cada modal (Personal, Business general, Business prompt, Modo prueba, Knowledge Base) y confirmar que no hay recarga, que el resumen se actualiza y que el toast aparece.
+- El fallback no-JS (`back()->with($flashKey, ...)`) ya no tiene dónde mostrarse en la vista para estos 3 formularios (se quitaron los `@if(session(...))` de alerts inline al convertir a modal) — aceptable porque el flujo real siempre pasa por `fetch()`, pero si algún día se rompe el JS de la página, el mensaje de éxito/error quedaría silencioso.

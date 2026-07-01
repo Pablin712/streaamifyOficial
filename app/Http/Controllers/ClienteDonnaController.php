@@ -260,7 +260,7 @@ class ClienteDonnaController extends Controller
             ->first();
 
         if (!$sub) {
-            return back()->with('donna_error', 'No tienes una suscripción Donna Personal activa.');
+            return $this->jsonOrBack($request, false, 'donna_error', 'No tienes una suscripción Donna Personal activa.');
         }
 
         $wh = array_filter([
@@ -269,7 +269,7 @@ class ClienteDonnaController extends Controller
             'lunch' => $request->input('wh_lunch') ?: null,
         ]);
 
-        DonnaAgentConfig::updateOrCreate(
+        $config = DonnaAgentConfig::updateOrCreate(
             ['client_id' => $cliente->idcli, 'service_type' => 'personal'],
             [
                 'subscription_id'    => $sub->id,
@@ -281,7 +281,11 @@ class ClienteDonnaController extends Controller
             ]
         );
 
-        return back()->with('donna_config_success', 'Configuración de Donna actualizada. Los cambios se aplican en el próximo mensaje.');
+        return $this->jsonOrBack(
+            $request, true, 'donna_config_success',
+            'Configuración de Donna actualizada. Los cambios se aplican en el próximo mensaje.',
+            collect($config)->only(['agent_name', 'personal_context', 'timezone', 'working_hours_json'])->all()
+        );
     }
 
     public function saveBusinessConfig(Request $request)
@@ -309,7 +313,7 @@ class ClienteDonnaController extends Controller
             ->first();
 
         if (!$sub) {
-            return back()->with('donna_business_error', 'No tienes una suscripción Donna Business activa.');
+            return $this->jsonOrBack($request, false, 'donna_business_error', 'No tienes una suscripción Donna Business activa.');
         }
 
         $wh = array_filter([
@@ -344,9 +348,18 @@ class ClienteDonnaController extends Controller
         // Si se habilitó Sheets y no hay spreadsheet, crear uno con la KB
         if ($sheetsEnabled && !$config->spreadsheet_id) {
             $this->setupBusinessSheet($cliente->idcli, $config);
+            $config->refresh();
         }
 
-        return back()->with('donna_business_config_success', 'Configuración de Donna Business actualizada.');
+        return $this->jsonOrBack(
+            $request, true, 'donna_business_config_success',
+            'Configuración de Donna Business actualizada.',
+            collect($config)->only([
+                'agent_name', 'business_name', 'business_description', 'tone', 'language',
+                'timezone', 'working_hours_json', 'calendar_enabled', 'sheets_enabled',
+                'main_prompt', 'wait_seconds', 'response_style', 'spreadsheet_id',
+            ])->all()
+        );
     }
 
     public function saveTestMode(Request $request)
@@ -368,7 +381,7 @@ class ClienteDonnaController extends Controller
             ->first();
 
         if (!$channel) {
-            return back()->with('donna_business_error', 'No tienes un canal WhatsApp de Donna Business configurado todavía.');
+            return $this->jsonOrBack($request, false, 'donna_business_error', 'No tienes un canal WhatsApp de Donna Business configurado todavía.');
         }
 
         // Normaliza cada número tal como lo escribió el cliente (con o sin +, espacios,
@@ -396,7 +409,25 @@ class ClienteDonnaController extends Controller
             ? 'Modo prueba activado. Donna solo responderá a los números que agregaste.'
             : 'Modo producción activado. Donna responderá a todos los números' . (($data['exclude_groups_in_production'] ?? true) ? ', excepto grupos' : '') . '.';
 
-        return back()->with('donna_success', $msg);
+        return $this->jsonOrBack(
+            $request, true, 'donna_success', $msg,
+            collect($channel->fresh())->only([
+                'donna_mode', 'test_numbers_json', 'excluded_numbers_json', 'exclude_groups_in_production',
+            ])->all()
+        );
+    }
+
+    /**
+     * Responde en JSON si el cliente lo pidió (fetch desde un modal, sin recargar
+     * la página), o con el flujo clásico back()->with(...) si fue un submit normal.
+     */
+    private function jsonOrBack(Request $request, bool $success, string $flashKey, string $message, array $data = [])
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['success' => $success, 'message' => $message, 'data' => $data], $success ? 200 : 422);
+        }
+
+        return back()->with($flashKey, $message);
     }
 
     private function setupBusinessSheet(int $clientId, DonnaAgentConfig $config): void
