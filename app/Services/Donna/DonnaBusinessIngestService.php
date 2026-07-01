@@ -67,6 +67,17 @@ class DonnaBusinessIngestService
         }
         $senderName        = $data['sender_name'] ?? null;
 
+        // 3.1 Modo prueba / producción del canal
+        if ($channel->donna_mode === 'test') {
+            if (!$channel->isTestModeNumberAllowed($senderIdentifier)) {
+                $this->storeMessage($channel, $sub, null, $data, 'blocked_service_inactive', 'test_mode_number_not_allowed');
+                return $this->blocked('test_mode_number_not_allowed', 'Donna está en modo prueba y este número no está en la lista de prueba.', $channel->client_id);
+            }
+        } elseif ($channel->isExcludedInProduction($senderIdentifier, $remoteJid)) {
+            $this->storeMessage($channel, $sub, null, $data, 'blocked_service_inactive', 'excluded_number');
+            return $this->blocked('excluded_number', 'Este número o grupo está excluido de las respuestas de Donna.', $channel->client_id);
+        }
+
         $conversation = DonnaConversation::firstOrCreate(
             ['channel_id' => $channel->id, 'external_chat_id' => $remoteJid],
             [

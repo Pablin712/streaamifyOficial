@@ -1425,6 +1425,101 @@
                             </div>
                         @endif
 
+                        {{-- Modo prueba / producción --}}
+                        @if($canalWhatsapp)
+                        <div class="p-3 rounded-3 mb-4" style="background:#f4f6ff;border:1px solid #c5cae9;">
+                            <div class="fw-semibold small mb-1" style="color:#274698;">
+                                <i class="bi bi-toggle2-on me-1"></i>Modo de Donna Business
+                            </div>
+                            <p class="text-muted small mb-3">
+                                Usa <strong>modo prueba</strong> para verificar que Donna responde bien antes de lanzarla a tus clientes reales:
+                                mientras esté activo, solo contestará a los números que agregues abajo. Cambia a <strong>modo producción</strong>
+                                cuando quieras que responda a todos tus clientes.
+                            </p>
+
+                            <form method="POST" action="{{ route('cliente.donna.test-mode') }}" id="donnaTestModeForm">
+                                @csrf
+                                <div class="d-flex flex-wrap gap-3 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="donna_mode" id="mode_production" value="production"
+                                               {{ ($canalWhatsapp->donna_mode ?? 'production') !== 'test' ? 'checked' : '' }}
+                                               onchange="toggleDonnaModePanels()">
+                                        <label class="form-check-label small fw-semibold" for="mode_production">
+                                            Producción <span class="text-muted fw-normal">(responde a todos tus clientes)</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="donna_mode" id="mode_test" value="test"
+                                               {{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'checked' : '' }}
+                                               onchange="toggleDonnaModePanels()">
+                                        <label class="form-check-label small fw-semibold" for="mode_test">
+                                            Prueba <span class="text-muted fw-normal">(solo números de la lista)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {{-- Panel producción --}}
+                                <div id="donna_mode_production_panel" style="{{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? 'display:none;' : '' }}">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="exclude_groups_in_production"
+                                               name="exclude_groups_in_production" value="1"
+                                               {{ ($canalWhatsapp->exclude_groups_in_production ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label small" for="exclude_groups_in_production">
+                                            No responder en grupos de WhatsApp
+                                        </label>
+                                    </div>
+                                    <label class="form-label fw-semibold small mb-1">Números que NO deben recibir respuesta (opcional)</label>
+                                    <div id="donna_excluded_list" class="mb-2">
+                                        @foreach($canalWhatsapp->excluded_numbers_json ?? [] as $num)
+                                            <div class="d-flex gap-2 mb-2">
+                                                <input type="text" name="excluded_numbers[]" class="form-control form-control-sm" value="{{ $num }}">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDonnaNumberRow('donna_excluded_list', 'excluded_numbers[]')">
+                                        <i class="fas fa-plus me-1"></i>Agregar número a excluir
+                                    </button>
+                                </div>
+
+                                {{-- Panel prueba --}}
+                                <div id="donna_mode_test_panel" style="{{ ($canalWhatsapp->donna_mode ?? 'production') === 'test' ? '' : 'display:none;' }}">
+                                    <label class="form-label fw-semibold small mb-1">Números de prueba autorizados</label>
+                                    <div class="form-text mb-2">
+                                        <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                                        Si no agregas ningún número, Donna no responderá a nadie mientras esté en modo prueba.
+                                    </div>
+                                    <div id="donna_test_list" class="mb-2">
+                                        @foreach($canalWhatsapp->test_numbers_json ?? [] as $num)
+                                            <div class="d-flex gap-2 mb-2">
+                                                <input type="text" name="test_numbers[]" class="form-control form-control-sm" value="{{ $num }}">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addDonnaNumberRow('donna_test_list', 'test_numbers[]')">
+                                        <i class="fas fa-plus me-1"></i>Agregar número de prueba
+                                    </button>
+                                </div>
+
+                                <div class="form-text mt-3 mb-3">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Escribe el número completo con código de país, solo dígitos (ej: <code>593999999999</code>).
+                                    También puedes escribirlo con espacios, guiones o "+" (ej: <code>+593 99 999 9999</code>) —
+                                    el sistema lo normaliza automáticamente al guardar.
+                                </div>
+
+                                <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold btn-sm">
+                                    <i class="bi bi-save me-1"></i>Guardar modo
+                                </button>
+                            </form>
+                        </div>
+                        @endif
+
                         {{-- Funciones activas (solo lectura) --}}
                         @php
                             $googleOk = $donnaIntegracion && $donnaIntegracion->isActive();
@@ -2364,6 +2459,29 @@
             if (!confirm('¿Eliminar el prompt personalizado y volver al comportamiento predeterminado de Donna?')) return;
             ta.value = '';
             ta.dispatchEvent(new Event('input'));
+        }
+
+        // ── Modo prueba / producción de Donna Business ─────────────────────
+        function toggleDonnaModePanels() {
+            const isTest = document.getElementById('mode_test')?.checked;
+            const prodPanel = document.getElementById('donna_mode_production_panel');
+            const testPanel = document.getElementById('donna_mode_test_panel');
+            if (prodPanel) prodPanel.style.display = isTest ? 'none' : '';
+            if (testPanel) testPanel.style.display = isTest ? '' : 'none';
+        }
+
+        function addDonnaNumberRow(listId, inputName, value = '') {
+            const list = document.getElementById(listId);
+            if (!list) return;
+            const row = document.createElement('div');
+            row.className = 'd-flex gap-2 mb-2';
+            row.innerHTML = `
+                <input type="text" name="${inputName}" class="form-control form-control-sm"
+                       placeholder="Ej: 593999999999" maxlength="30" value="${value.replace(/"/g, '&quot;')}">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>`;
+            list.appendChild(row);
         }
 
         // ── Knowledge Base ─────────────────────────────────────────

@@ -186,6 +186,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::post('/donna/config', 'saveConfig')->name('cliente.donna.config');
         Route::post('/donna/config-business', 'saveBusinessConfig')->name('cliente.donna.config-business');
         Route::post('/donna/connect-whatsapp', 'connectWhatsApp')->name('cliente.donna.connect-whatsapp');
+        Route::post('/donna/test-mode', 'saveTestMode')->name('cliente.donna.test-mode');
     });
     Route::controller(ClienteDonnaKnowledgeController::class)->group(function () {
         Route::post('/donna/knowledge', 'store')->name('cliente.donna.knowledge.store');

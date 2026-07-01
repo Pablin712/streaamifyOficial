@@ -197,6 +197,35 @@ Verificado: `php -l` sin errores en el controller, rutas registradas (`route:lis
 
 **Pendiente de probar manualmente en navegador** (no se hizo, ya que está fuera del alcance de esta sesión de código): abrir `/admin/donna/suscripciones/{id}/config` con un usuario real y confirmar que el formulario carga y guarda correctamente para una suscripción Business existente.
 
+---
+
+## 8. Modo prueba / producción por número (implementado 2026-06-30)
+
+Idea del dueño: antes de lanzar Donna Business a producción con un cliente nuevo, poder probarla primero solo con números controlados, sin arriesgarse a que responda mal a un cliente final real.
+
+### Diseño
+- El modo es una propiedad del **canal** (`donna_channels`), no de la configuración del agente — tiene sentido porque un canal = una instancia de WhatsApp concreta.
+- No se tocó el workflow de n8n: el mecanismo reutiliza el `allowed:false` que `ingest` ya devuelve para `service_expired`/`channel_inactive`, que n8n ya sabe cortar antes de llamar a la IA.
+- Se descartó meter esta lógica en `DonnaBusinessShouldRespondController` (el endpoint "debe responder") porque ese endpoint no recibe `sender_identifier` — solo compara `conversation_id`/`message_id` para el debounce. `DonnaBusinessIngestService::ingest()` ya tiene toda la información necesaria y es el lugar donde ya viven los demás bloqueos.
+
+### Cambios
+- **Migración** `2026_06_30_000002_add_test_mode_to_donna_channels_table.php` (ya aplicada) — agrega a `donna_channels`: `donna_mode` (`production`|`test`, default `production`), `test_numbers_json` (lista blanca, modo prueba), `excluded_numbers_json` (lista negra, modo producción), `exclude_groups_in_production` (boolean, default `true`).
+- **`app/Models/DonnaChannel.php`** — `normalizeIdentifier()` (deja solo dígitos, quita `+`, espacios, guiones, sufijos `@s.whatsapp.net`/`@g.us`), `isTestModeNumberAllowed()`, `isExcludedInProduction()` (detecta grupos por el sufijo `@g.us` del JID).
+- **`app/Services/Donna/DonnaBusinessIngestService.php`** — nuevo paso 3.1: si `donna_mode=test` y el remitente no está en la lista blanca → bloqueado (`test_mode_number_not_allowed`); si `donna_mode=production` y el remitente/chat está en la lista negra o es un grupo con `exclude_groups_in_production=true` → bloqueado (`excluded_number`). Mismo patrón que los bloqueos existentes: se guarda el mensaje igual para auditoría, pero no se llama a la IA.
+- **`app/Http/Controllers/ClienteDonnaController.php::saveTestMode()`** + ruta `POST /cliente/donna/test-mode` (`cliente.donna.test-mode`) — el cliente cambia de modo y edita la lista correspondiente. **Normaliza cada número al guardar** (acepta `+593 99 999 9999`, `0999999999`, etc. y los reduce a solo dígitos) y descarta entradas de menos de 8 dígitos.
+- **UI en `resources/views/shopping/historialCliente.blade.php`** (pestaña Donna Business, debajo del estado del canal WhatsApp) — selector Producción/Prueba, lista dinámica de números (mismo patrón de agregar/quitar fila que ya usa `donna/planes` para características), switch "no responder en grupos" (solo en producción), y texto de ayuda explicando el formato de número esperado y que se normaliza automáticamente.
+
+### Verificado
+- `php -l` sin errores en los 3 archivos PHP tocados.
+- Vista compila sin errores de sintaxis (Blade → PHP).
+- Migración corrida (`donna_channels` tiene las 4 columnas nuevas).
+- Ruta registrada (`route:list`).
+- Lógica de normalización y matching probada en tinker: números con `+`/espacios matchean correctamente contra el formato normalizado; grupos (`@g.us`) se excluyen en producción cuando el switch está activo; números fuera de la lista blanca se bloquean en modo prueba.
+
+### Pendiente
+- Probar el flujo completo end-to-end con un mensaje real de WhatsApp (no se hizo, requiere un canal Evolution API activo).
+- No hay UI de esto en el panel **admin** todavía — solo en el panel del cliente. Si el equipo de soporte necesita activar modo prueba por un cliente sin que este lo haga, habría que agregarlo a la futura pantalla de administración de canales (punto 6 pendiente de la sección 6).
+
 ### Plan de prueba concreto para activar/validar un canal de WhatsApp ahora mismo
 Dado que la arquitectura ya soporta multi-tenant, para probar Donna Business en el WhatsApp de un cliente nuevo (de forma controlada, sin esperar a resolver todo lo de arriba):
 

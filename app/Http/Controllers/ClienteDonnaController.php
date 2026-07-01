@@ -349,6 +349,56 @@ class ClienteDonnaController extends Controller
         return back()->with('donna_business_config_success', 'Configuración de Donna Business actualizada.');
     }
 
+    public function saveTestMode(Request $request)
+    {
+        $request->validate([
+            'donna_mode'                    => 'required|in:production,test',
+            'test_numbers'                  => 'nullable|array|max:30',
+            'test_numbers.*'                => 'nullable|string|max:30',
+            'excluded_numbers'               => 'nullable|array|max:30',
+            'excluded_numbers.*'             => 'nullable|string|max:30',
+            'exclude_groups_in_production'   => 'nullable|boolean',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+
+        $channel = DonnaChannel::where('client_id', $cliente->idcli)
+            ->where('service_type', 'business')
+            ->where('channel_type', 'whatsapp')
+            ->first();
+
+        if (!$channel) {
+            return back()->with('donna_business_error', 'No tienes un canal WhatsApp de Donna Business configurado todavía.');
+        }
+
+        // Normaliza cada número tal como lo escribió el cliente (con o sin +, espacios,
+        // guiones, paréntesis) a solo dígitos, para que la comparación en el backend
+        // siempre funcione sin importar el formato que haya usado.
+        $normalize = fn (string $field) => collect($request->input($field, []))
+            ->map(fn ($n) => DonnaChannel::normalizeIdentifier($n))
+            ->filter(fn ($n) => strlen($n) >= 8)
+            ->unique()
+            ->values()
+            ->all();
+
+        $data = ['donna_mode' => $request->donna_mode];
+
+        if ($request->donna_mode === 'test') {
+            $data['test_numbers_json'] = $normalize('test_numbers') ?: null;
+        } else {
+            $data['excluded_numbers_json'] = $normalize('excluded_numbers') ?: null;
+            $data['exclude_groups_in_production'] = $request->boolean('exclude_groups_in_production');
+        }
+
+        $channel->update($data);
+
+        $msg = $request->donna_mode === 'test'
+            ? 'Modo prueba activado. Donna solo responderá a los números que agregaste.'
+            : 'Modo producción activado. Donna responderá a todos los números' . (($data['exclude_groups_in_production'] ?? true) ? ', excepto grupos' : '') . '.';
+
+        return back()->with('donna_success', $msg);
+    }
+
     private function setupBusinessSheet(int $clientId, DonnaAgentConfig $config): void
     {
         $integ = DonnaIntegration::where('client_id', $clientId)
