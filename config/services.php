@@ -76,6 +76,8 @@ return [
         'embedding_model'        => env('DONNA_EMBEDDING_MODEL', 'text-embedding-3-small'),
         'embedding_min_score'    => (float) env('DONNA_EMBEDDING_MIN_SCORE', 0.15),
         'knowledge_max_limit'    => (int) env('DONNA_KNOWLEDGE_MAX_LIMIT', 15),
+        // Importar base de conocimientos desde un documento (PDF/Word/TXT)
+        'knowledge_import_model' => env('DONNA_KNOWLEDGE_IMPORT_MODEL', 'gpt-4o-mini'),
     ],
 
     'openai' => [

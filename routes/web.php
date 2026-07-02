@@ -192,6 +192,8 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::post('/donna/knowledge', 'store')->name('cliente.donna.knowledge.store');
         Route::put('/donna/knowledge/{id}', 'update')->name('cliente.donna.knowledge.update');
         Route::delete('/donna/knowledge/{id}', 'destroy')->name('cliente.donna.knowledge.destroy');
+        Route::post('/donna/knowledge/import/extract', 'importExtract')->name('cliente.donna.knowledge.import.extract');
+        Route::post('/donna/knowledge/import/confirm', 'importConfirm')->name('cliente.donna.knowledge.import.confirm');
     });
     Route::controller(DonnaGoogleController::class)->group(function () {
         Route::get('/donna/google/connect', 'redirect')->name('cliente.donna.google.connect');

@@ -1457,7 +1457,18 @@
                             $itemsPorTipo = $donnaKnowledgeItems->groupBy('type');
                         @endphp
 
-                        <div class="d-flex justify-content-end mb-3">
+                        <div class="d-flex justify-content-end gap-2 mb-3">
+                            @if(filled(config('services.openai.api_key')))
+                                <button type="button" class="btn btn-sm rounded-pill fw-semibold btn-outline-secondary"
+                                        onclick="abrirModalImportarDocumento()">
+                                    <i class="bi bi-file-earmark-arrow-up me-1"></i>Importar desde documento
+                                </button>
+                            @else
+                                <button type="button" class="btn btn-sm rounded-pill fw-semibold btn-outline-secondary" disabled
+                                        title="La importación automática no está disponible todavía. Contacta al equipo de Streamify.">
+                                    <i class="bi bi-file-earmark-arrow-up me-1"></i>Importar desde documento
+                                </button>
+                            @endif
                             <button type="button" class="btn btn-sm rounded-pill fw-semibold"
                                     style="background:#E4B100;color:#1D1D1B;"
                                     onclick="abrirModalKnowledge()">
@@ -2098,6 +2109,73 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Importar documento (paso 1) --}}
+    <div class="modal fade" id="knowledgeImportModal" tabindex="-1" aria-labelledby="knowledgeImportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#fffbea;border-bottom:2px solid #E4B100;">
+                    <h5 class="modal-title fw-bold" id="knowledgeImportModalLabel">
+                        <i class="bi bi-file-earmark-arrow-up me-2" style="color:#b45309;"></i>Importar desde documento
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="knowledgeImportForm" onsubmit="submitKnowledgeImportExtract(event)">
+                    <div class="modal-body">
+                        <div id="knowledgeImportError" class="alert alert-danger py-2 small d-none"></div>
+
+                        <p class="text-muted small mb-3">
+                            Sube un documento con tu catálogo, precios, horarios o políticas (.txt, .pdf o .docx, máx. 8MB).
+                            Streamify va a leerlo y proponerte ítems ya redactados y organizados — podrás revisarlos y
+                            editarlos antes de agregarlos a la base de conocimientos.
+                        </p>
+
+                        <input type="file" name="file" id="knowledge_import_file" class="form-control" accept=".txt,.pdf,.docx" required>
+                        <div class="form-text">Formatos aceptados: TXT, PDF, Word (.docx). No se admite el formato .doc antiguo.</div>
+
+                        <div id="knowledgeImportSpinner" class="d-none text-center py-3">
+                            <div class="spinner-border text-warning" role="status"></div>
+                            <div class="text-muted small mt-2">Analizando el documento con IA, puede tardar unos segundos…</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="knowledgeImportExtractBtn" class="btn btn-sm rounded-pill fw-semibold" style="background:#E4B100;color:#1D1D1B;">
+                            <i class="bi bi-magic me-1"></i>Analizar documento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Revisar ítems importados (paso 2) --}}
+    <div class="modal fade" id="knowledgeImportReviewModal" tabindex="-1" aria-labelledby="knowledgeImportReviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header" style="background:#fffbea;border-bottom:2px solid #E4B100;">
+                    <h5 class="modal-title fw-bold" id="knowledgeImportReviewModalLabel">
+                        <i class="bi bi-list-check me-2" style="color:#b45309;"></i>Revisar ítems propuestos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="knowledgeImportReviewError" class="alert alert-danger py-2 small d-none"></div>
+                    <p class="text-muted small mb-3">
+                        Revisa lo que Streamify entendió del documento. Puedes editar el tipo, título o contenido de
+                        cada ítem, o quitar los que no quieras agregar. Nada se guarda hasta que confirmes abajo.
+                    </p>
+                    <div id="knowledgeImportReviewList" class="d-flex flex-column gap-2"></div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #e9ecef;">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="knowledgeImportConfirmBtn" class="btn btn-sm rounded-pill fw-bold" style="background:#E4B100;color:#1D1D1B;" onclick="submitKnowledgeImportConfirm()">
+                        <i class="bi bi-check2-circle me-1"></i>Importar ítems
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2861,6 +2939,154 @@
                 }
             } catch {
                 showToast('danger', 'Error de conexión.');
+            }
+        }
+
+        // ── Importar base de conocimientos desde un documento ───────
+        let knowledgeImportProposedItems = [];
+
+        function _knowImportModal() {
+            return bootstrap.Modal.getOrCreateInstance(document.getElementById('knowledgeImportModal'));
+        }
+
+        function _knowImportReviewModal() {
+            return bootstrap.Modal.getOrCreateInstance(document.getElementById('knowledgeImportReviewModal'));
+        }
+
+        function abrirModalImportarDocumento() {
+            document.getElementById('knowledgeImportForm').reset();
+            document.getElementById('knowledgeImportError').classList.add('d-none');
+            document.getElementById('knowledgeImportSpinner').classList.add('d-none');
+            _knowImportModal().show();
+        }
+
+        async function submitKnowledgeImportExtract(event) {
+            event.preventDefault();
+            const errorBox = document.getElementById('knowledgeImportError');
+            const spinner  = document.getElementById('knowledgeImportSpinner');
+            const btn      = document.getElementById('knowledgeImportExtractBtn');
+            const fileInput = document.getElementById('knowledge_import_file');
+
+            errorBox.classList.add('d-none');
+
+            if (!fileInput.files.length) return;
+
+            spinner.classList.remove('d-none');
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                const r = await fetch('{{ route('cliente.donna.knowledge.import.extract') }}', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData,
+                });
+                const data = await r.json();
+
+                if (data.success) {
+                    knowledgeImportProposedItems = data.items;
+                    renderKnowledgeImportReview();
+                    _knowImportModal().hide();
+                    _knowImportReviewModal().show();
+                } else {
+                    errorBox.textContent = data.message || 'No se pudo analizar el documento.';
+                    errorBox.classList.remove('d-none');
+                }
+            } catch {
+                errorBox.textContent = 'Error de conexión. Intenta nuevamente.';
+                errorBox.classList.remove('d-none');
+            } finally {
+                spinner.classList.add('d-none');
+                btn.disabled = false;
+            }
+        }
+
+        function renderKnowledgeImportReview() {
+            const list = document.getElementById('knowledgeImportReviewList');
+            list.innerHTML = '';
+
+            knowledgeImportProposedItems.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'p-2 rounded-2';
+                row.style.cssText = 'background:#f8f9fc;border:1px solid #e9ecef;';
+                row.dataset.index = index;
+                row.innerHTML = `
+                    <div class="row g-2 align-items-start">
+                        <div class="col-sm-3">
+                            <select class="form-select form-select-sm" data-field="type">
+                                <option value="product">📦 Producto</option>
+                                <option value="service">🔧 Servicio</option>
+                                <option value="faq">❓ Pregunta frecuente</option>
+                                <option value="policy">🛡️ Política</option>
+                                <option value="table">📊 Datos / Tabla</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control form-control-sm mb-2" maxlength="200" data-field="title" placeholder="Título">
+                            <textarea class="form-control form-control-sm" rows="2" maxlength="5000" data-field="content_text" placeholder="Contenido"></textarea>
+                        </div>
+                        <div class="col-sm-1 text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm p-1" title="Quitar" onclick="this.closest('[data-index]').remove()">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                row.querySelector('[data-field="type"]').value = item.type;
+                row.querySelector('[data-field="title"]').value = item.title;
+                row.querySelector('[data-field="content_text"]').value = item.content_text;
+                list.appendChild(row);
+            });
+        }
+
+        async function submitKnowledgeImportConfirm() {
+            const errorBox = document.getElementById('knowledgeImportReviewError');
+            const btn = document.getElementById('knowledgeImportConfirmBtn');
+            errorBox.classList.add('d-none');
+
+            const rows = document.querySelectorAll('#knowledgeImportReviewList [data-index]');
+            const items = Array.from(rows).map(row => ({
+                type: row.querySelector('[data-field="type"]').value,
+                title: row.querySelector('[data-field="title"]').value.trim(),
+                content_text: row.querySelector('[data-field="content_text"]').value.trim(),
+            })).filter(item => item.title && item.content_text);
+
+            if (!items.length) {
+                errorBox.textContent = 'No queda ningún ítem para importar.';
+                errorBox.classList.remove('d-none');
+                return;
+            }
+
+            btn.disabled = true;
+            try {
+                const r = await fetch('{{ route('cliente.donna.knowledge.import.confirm') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ items }),
+                });
+                const data = await r.json();
+
+                if (data.success) {
+                    const affectedTypes = new Set();
+                    data.items.forEach(item => {
+                        const targetList = document.getElementById(`knowledge-list-${item.type}`);
+                        if (targetList) targetList.appendChild(buildKnowledgeItemRow(item));
+                        affectedTypes.add(item.type);
+                    });
+                    affectedTypes.forEach(type => refreshKnowledgeTypeVisibility(type));
+
+                    _knowImportReviewModal().hide();
+                    showToast('success', `${data.items.length} ítem(s) agregado(s) a la base de conocimientos.`);
+                } else {
+                    errorBox.textContent = data.message || 'No se pudo importar.';
+                    errorBox.classList.remove('d-none');
+                }
+            } catch {
+                errorBox.textContent = 'Error de conexión. Intenta nuevamente.';
+                errorBox.classList.remove('d-none');
+            } finally {
+                btn.disabled = false;
             }
         }
     </script>

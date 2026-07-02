@@ -9,3 +9,6 @@ ln -s /home/u557565149/domains/streamify.aaronsoft.es/public_html/storage/app/pu
 
 # 3. Verificar
 ls -la ~/domains/streamify.aaronsoft.es/public_html/public/storage
+
+# 4. Para instalar dependencias de composer
+php -d extension=sodium.so $(which composer) install

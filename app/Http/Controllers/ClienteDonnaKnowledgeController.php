@@ -7,6 +7,7 @@ use App\Models\DonnaIntegration;
 use App\Models\DonnaKnowledgeBase;
 use App\Models\DonnaKnowledgeItem;
 use App\Models\DonnaSubscription;
+use App\Services\Donna\DonnaDocumentImportService;
 use App\Services\Donna\DonnaEmbeddingService;
 use App\Services\Donna\Google\DonnaBusinessKnowledgeSheetService;
 use App\Services\Donna\Google\DonnaGoogleTokenService;
@@ -20,6 +21,7 @@ class ClienteDonnaKnowledgeController extends Controller
         private DonnaBusinessKnowledgeSheetService $sheetService,
         private DonnaGoogleTokenService            $tokenService,
         private DonnaEmbeddingService              $embeddingService,
+        private DonnaDocumentImportService         $importService,
     ) {}
 
     /**
@@ -178,5 +180,92 @@ class ClienteDonnaKnowledgeController extends Controller
         $this->trySheetSync($cliente->idcli, $item, 'delete');
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Paso 1 de la importación: recibe un archivo (txt/pdf/docx), extrae su
+     * texto y lo manda a la IA para proponer ítems. No toca la base de datos
+     * — el cliente revisa/edita los ítems propuestos antes de confirmarlos
+     * en importConfirm().
+     */
+    public function importExtract(Request $request)
+    {
+        if (!$this->importService->enabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La importación automática no está disponible todavía. Contacta al equipo de Streamify.',
+            ], 422);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:txt,pdf,docx|max:8192',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+        if (!$this->getBusinessSub($cliente->idcli)) {
+            return response()->json(['success' => false, 'message' => 'No tienes una suscripción Donna Business.'], 403);
+        }
+
+        try {
+            $text = $this->importService->extractText($request->file('file'));
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $items = $this->importService->structureIntoItems($text);
+
+        if (empty($items)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo generar ningún ítem a partir del documento. Intenta con un archivo con más texto o más claro.',
+            ], 422);
+        }
+
+        return response()->json(['success' => true, 'items' => $items]);
+    }
+
+    /**
+     * Paso 2 de la importación: recibe la lista de ítems ya revisados/editados
+     * por el cliente y los crea en bloque, igual que store() pero en loop.
+     * El sync a Google Sheets se hace una sola vez al final (sincroniza todos
+     * los ítems del cliente de una), no por cada ítem.
+     */
+    public function importConfirm(Request $request)
+    {
+        $validated = $request->validate([
+            'items'                     => 'required|array|min:1|max:40',
+            'items.*.type'              => 'required|in:product,service,faq,policy,table',
+            'items.*.title'             => 'required|string|max:200',
+            'items.*.content_text'      => 'required|string|max:5000',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+        $sub = $this->getBusinessSub($cliente->idcli);
+
+        if (!$sub) {
+            return response()->json(['success' => false, 'message' => 'No tienes una suscripción Donna Business.'], 403);
+        }
+
+        $base = $this->getOrCreateBase($cliente->idcli, $sub->id);
+
+        $created = [];
+        foreach ($validated['items'] as $itemData) {
+            $item = DonnaKnowledgeItem::create([
+                'knowledge_base_id' => $base->id,
+                'client_id'         => $cliente->idcli,
+                'service_id'        => $sub->id,
+                'type'              => $itemData['type'],
+                'title'             => $itemData['title'],
+                'content_text'      => $itemData['content_text'],
+                'is_active'         => true,
+            ]);
+
+            $this->refreshEmbedding($item);
+            $created[] = $item;
+        }
+
+        $synced = $this->trySheetSync($cliente->idcli, $created[0], 'import');
+
+        return response()->json(['success' => true, 'items' => $created, 'sheet_synced' => $synced]);
     }
 }

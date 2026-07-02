@@ -331,3 +331,34 @@ Motivo: el dueño reportó que probando Donna, cada vez que guardaba un cambio e
 ### Pendiente
 - Prueba manual en navegador (no se hizo en esta sesión, no hay browser disponible): abrir el panel del cliente, editar cada modal (Personal, Business general, Business prompt, Modo prueba, Knowledge Base) y confirmar que no hay recarga, que el resumen se actualiza y que el toast aparece.
 - El fallback no-JS (`back()->with($flashKey, ...)`) ya no tiene dónde mostrarse en la vista para estos 3 formularios (se quitaron los `@if(session(...))` de alerts inline al convertir a modal) — aceptable porque el flujo real siempre pasa por `fetch()`, pero si algún día se rompe el JS de la página, el mensaje de éxito/error quedaría silencioso.
+
+---
+
+## 10. Importar base de conocimientos desde documento (implementado 2026-06-30)
+
+Motivo: cargar la base de conocimientos ítem por ítem es la principal fricción para dejar un cliente nuevo listo para producción — el dueño lo notó probando Donna con un solo ítem cargado (el agente respondía "reservado" por falta de información). Se agregó una forma de subir un documento (TXT/PDF/Word) y que el sistema extraiga el texto, lo estructure en ítems con IA, y los proponga para revisión antes de crearlos.
+
+### Diseño
+- **Revisión obligatoria antes de guardar** — nada se escribe en BD hasta que el cliente confirma explícitamente los ítems propuestos (editables) en un modal de revisión. Evita que una mala lectura de IA (precio, política) llegue directo a lo que Donna le dice a un cliente final.
+- **Extracción en PHP + estructuración con OpenAI**, reutilizando el patrón defensivo ya usado por `DonnaEmbeddingService` (nunca lanza excepción hacia el flujo principal, degrada con `[]`/mensaje claro si OpenAI falla o no está configurado).
+- **Sin almacenamiento permanente del archivo** — se lee del path temporal de la subida dentro del mismo request, no se persiste a `storage/`.
+- Reutiliza `ClienteDonnaKnowledgeController` existente (`getBusinessSub()`, `getOrCreateBase()`, `refreshEmbedding()`, `trySheetSync()`) en vez de un controller nuevo.
+
+### Cambios
+- **Composer**: `smalot/pdfparser` (PDF) y `phpoffice/phpword` (`.docx`) — instalados y verificados (`class_exists` OK para ambos).
+- **`app/Services/Donna/DonnaDocumentImportService.php`** (nuevo) — `extractText()` despacha por extensión (txt/pdf/docx, `.doc` legacy explícitamente rechazado), `structureIntoItems()` llama a OpenAI Chat Completions (`gpt-4o-mini` por defecto, `response_format: json_object`) y sanitiza cada ítem devuelto (recorta a los mismos límites que `store()`, corrige `type` inválido a `faq` en vez de descartar). Límites: archivo 8MB, texto 20 000 caracteres, 40 ítems por importación.
+- **`ClienteDonnaKnowledgeController`** — `importExtract()` (sube y analiza, no guarda nada) e `importConfirm()` (crea los ítems ya revisados/editados por el cliente, en loop, con un solo `trySheetSync()` al final en vez de uno por ítem).
+- **Rutas**: `POST cliente/donna/knowledge/import/extract` y `POST cliente/donna/knowledge/import/confirm`.
+- **`config/services.php`**: nueva clave `donna.knowledge_import_model` (`DONNA_KNOWLEDGE_IMPORT_MODEL`, default `gpt-4o-mini`).
+- **UI** (`historialCliente.blade.php`): botón "Importar desde documento" junto a "Agregar ítem" (deshabilitado con tooltip si no hay `OPENAI_API_KEY`), modal de subida con spinner, modal de revisión con filas editables (tipo/título/contenido, quitar por fila) que al confirmar reutiliza `buildKnowledgeItemRow()`/`refreshKnowledgeTypeVisibility()` ya existentes — se insertan en la lista sin recargar la página, mismo patrón que el resto de Knowledge Base.
+
+### Verificado
+- `php -l` sin errores en servicio y controller.
+- Blade compila sin errores de sintaxis.
+- Sin IDs duplicados, rutas registradas (`route:list`).
+- **Prueba end-to-end real** (no solo estática): se armó un catálogo de prueba en `.txt` (2 productos, horario, política de cambios, envíos) y se corrió `extractText()` + `structureIntoItems()` contra la API real de OpenAI — devolvió 5 ítems bien tipados (`product`/`faq`/`policy`) con texto normalizado y estructurado correctamente, sin inventar datos que no estaban en el original.
+
+### Pendiente
+- Prueba manual en navegador del flujo completo subida→revisión→confirmación→aparece en la lista (no se hizo, no hay navegador en esta sesión — sí se probó el backend real con una llamada directa a los servicios).
+- No se probó con un PDF ni un DOCX real (solo TXT) — las rutas de código para esos formatos están escritas pero no ejercitadas contra un archivo real todavía.
+- Sin límite de importaciones por cliente/día — un cliente podría re-subir el mismo documento varias veces y generar llamadas a OpenAI repetidas; de bajo riesgo/costo con `gpt-4o-mini`, pero vale la pena vigilar si se abusa.
