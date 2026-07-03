@@ -119,7 +119,7 @@ class RoleSeeder extends Seeder
         $this->syncPermission('usuarios.change', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('usuarios.renew', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $visitante, $trabajadorExterno]);
         $this->syncPermission('usuarios.update', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $trabajadorExterno]);
-        $this->syncPermission('usuarios.destroy', [$admin, $gerente, $trabajador, $vendedor, $tecnico]);
+        $this->syncPermission('usuarios.destroy', [$admin, $gerente, $trabajador, $vendedor, $tecnico, $trabajadorExterno]);
 
         $this->syncPermission('empleados', [$admin, $gerente, $visitante]);
         $this->syncPermission('empleados.create', [$admin, $gerente, $visitante]);
