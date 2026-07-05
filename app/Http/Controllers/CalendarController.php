@@ -160,6 +160,7 @@ class CalendarController extends Controller
                 'estado'      => $this->estadoHorario($h, $asistenciasPasadas),
                 'es_mio'      => $h->empleado_id === $empleado->idemp,
                 'notas'       => $h->notas,
+                'recurrencia_id' => $h->recurrencia_id,
             ];
         })->values()->toArray();
 

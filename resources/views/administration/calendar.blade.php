@@ -1169,11 +1169,15 @@
             ? `Conectado (real) — ${sesiones.length} sesiones`
             : 'Conectado (real)';
         const canDel = item.id && (item.es_mio || DATA.isAdmin);
+        const esSerie = canDel && !!item.recurrencia_id;
 
         document.getElementById('modalHorDetBody').innerHTML = `
             <div class="hd-row">
                 <i class="bi bi-calendar-event"></i>
-                <div><div class="hd-label">Agendado</div><div class="hd-value">${esc(agendado)}</div></div>
+                <div><div class="hd-label">Agendado</div><div class="hd-value">
+                    ${esc(agendado)}
+                    ${esSerie ? '<span class="badge bg-secondary-subtle text-secondary ms-2"><i class="bi bi-arrow-repeat me-1"></i>Serie recurrente</span>' : ''}
+                </div></div>
             </div>
             <div class="hd-row">
                 <i class="bi bi-wifi"></i>
@@ -1190,13 +1194,28 @@
                 <i class="bi bi-sticky"></i>
                 <div><div class="hd-label">Notas</div><div class="hd-value fw-normal">${esc(item.notas)}</div></div>
             </div>` : ''}
-            ${canDel ? `<button class="btn btn-outline-danger btn-sm w-100 mt-3" id="hd-del-btn" data-id="${item.id}"><i class="bi bi-x-circle me-1"></i>Cancelar horario</button>` : ''}
+            ${canDel && !esSerie ? `<button class="btn btn-outline-danger btn-sm w-100 mt-3" id="hd-del-btn" data-id="${item.id}"><i class="bi bi-x-circle me-1"></i>Cancelar horario</button>` : ''}
+            ${esSerie ? `
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-outline-danger btn-sm w-50" id="hd-del-uno" data-id="${item.id}"><i class="bi bi-x-circle me-1"></i>Solo este día</button>
+                <button class="btn btn-danger btn-sm w-50" id="hd-del-serie" data-id="${item.id}"><i class="bi bi-x-circle-fill me-1"></i>Este y los futuros</button>
+            </div>` : ''}
         `;
 
         const delBtn = document.getElementById('hd-del-btn');
         if (delBtn) delBtn.addEventListener('click', function () {
             if (!confirm('¿Cancelar este horario agendado?')) return;
-            deleteHorario(this.dataset.id);
+            deleteHorario(this.dataset.id, 'uno');
+        });
+        const delUnoBtn = document.getElementById('hd-del-uno');
+        if (delUnoBtn) delUnoBtn.addEventListener('click', function () {
+            if (!confirm('¿Cancelar solo esta ocurrencia de la serie?')) return;
+            deleteHorario(this.dataset.id, 'uno');
+        });
+        const delSerieBtn = document.getElementById('hd-del-serie');
+        if (delSerieBtn) delSerieBtn.addEventListener('click', function () {
+            if (!confirm('¿Cancelar esta y todas las ocurrencias futuras de esta serie recurrente?')) return;
+            deleteHorario(this.dataset.id, 'serie');
         });
 
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'modalHorDetalle' }));
@@ -1237,6 +1256,18 @@
                </div>`
             : '';
 
+        const DIA_LETRAS = ['L','M','X','J','V','S','D'];
+        const diaAnchor  = date.getDay() === 0 ? 7 : date.getDay(); // isoWeekday: 1=lun..7=dom
+        const diasBtns = DIA_LETRAS.map((l, i) => {
+            const dia = i + 1;
+            return `<button type="button" class="btn btn-sm btn-outline-secondary ha-dia-btn${dia === diaAnchor ? ' active' : ''}" data-dia="${dia}">${l}</button>`;
+        }).join('');
+
+        const hastaDefault = new Date(date);
+        hastaDefault.setDate(hastaDefault.getDate() + 7 * 8); // sugerencia: 8 semanas
+        const hastaMax = new Date(date);
+        hastaMax.setDate(hastaMax.getDate() + 365);
+
         document.getElementById('modalAgendarBody').innerHTML = `
         ${empSel}
         <div class="row g-3 mb-3">
@@ -1250,6 +1281,23 @@
             </div>
         </div>
         <div class="mb-3">
+            <label class="form-label fw-semibold small">Repetir</label>
+            <select class="form-select form-select-sm" id="ha-repetir">
+                <option value="no">No se repite</option>
+                <option value="semanal">Cada semana (mismo día)</option>
+                <option value="dias_semana">Días específicos de la semana</option>
+            </select>
+        </div>
+        <div class="mb-3" id="ha-dias-wrap" style="display:none;">
+            <label class="form-label fw-semibold small d-block">Días de la semana</label>
+            <div class="d-flex gap-1 flex-wrap" id="ha-dias-picker">${diasBtns}</div>
+        </div>
+        <div class="mb-3" id="ha-hasta-wrap" style="display:none;">
+            <label class="form-label fw-semibold small">Repetir hasta</label>
+            <input type="date" class="form-control form-control-sm" id="ha-hasta"
+                   min="${dateStr}" max="${ymd(hastaMax)}" value="${ymd(hastaDefault)}">
+        </div>
+        <div class="mb-3">
             <label class="form-label fw-semibold small">Notas (opcional)</label>
             <input type="text" class="form-control form-control-sm" id="ha-notas" maxlength="300" placeholder="Descripción...">
         </div>
@@ -1257,6 +1305,17 @@
             <i class="bi bi-calendar-check me-2"></i>Guardar horario
         </button>
         <div id="ha-msg" class="mt-2 small text-center"></div>`;
+
+        document.getElementById('ha-repetir').addEventListener('change', function () {
+            const diasWrap  = document.getElementById('ha-dias-wrap');
+            const hastaWrap = document.getElementById('ha-hasta-wrap');
+            diasWrap.style.display  = this.value === 'dias_semana' ? '' : 'none';
+            hastaWrap.style.display = this.value === 'no' ? 'none' : '';
+        });
+
+        document.querySelectorAll('.ha-dia-btn').forEach(btn => {
+            btn.addEventListener('click', () => btn.classList.toggle('active'));
+        });
 
         document.getElementById('ha-save').addEventListener('click', function() {
             saveHorario(this.dataset.fecha, this);
@@ -1266,17 +1325,34 @@
     }
 
     function saveHorario(fecha, btn) {
-        const empId  = document.getElementById('ha-emp')?.value || null;
-        const inicio = document.getElementById('ha-inicio')?.value || null;
-        const fin    = document.getElementById('ha-fin')?.value || null;
-        const notas  = document.getElementById('ha-notas')?.value || null;
-        const msg    = document.getElementById('ha-msg');
+        const empId   = document.getElementById('ha-emp')?.value || null;
+        const inicio  = document.getElementById('ha-inicio')?.value || null;
+        const fin     = document.getElementById('ha-fin')?.value || null;
+        const notas   = document.getElementById('ha-notas')?.value || null;
+        const repetir = document.getElementById('ha-repetir')?.value || 'no';
+        const hasta   = document.getElementById('ha-hasta')?.value || null;
+        const dias    = Array.from(document.querySelectorAll('.ha-dia-btn.active')).map(b => parseInt(b.dataset.dia, 10));
+        const msg     = document.getElementById('ha-msg');
+
+        if (repetir === 'dias_semana' && dias.length === 0) {
+            msg.innerHTML = '<span class="text-danger">Elige al menos un día de la semana.</span>';
+            return;
+        }
+        if (repetir !== 'no' && !hasta) {
+            msg.innerHTML = '<span class="text-danger">Indica hasta cuándo se repite.</span>';
+            return;
+        }
 
         const body = { fecha };
         if (empId)  body.empleado_id = empId;
         if (inicio) body.hora_inicio = inicio;
         if (fin)    body.hora_fin    = fin;
         if (notas)  body.notas       = notas;
+        if (repetir !== 'no') {
+            body.repetir = repetir;
+            body.repetir_hasta = hasta;
+            if (repetir === 'dias_semana') body.dias_semana = dias;
+        }
 
         btn.disabled = true;
         fetch('/admin/horarios', {
@@ -1290,12 +1366,22 @@
         }).then(r => r.json()).then(d => {
             btn.disabled = false;
             if (d.success) {
-                msg.innerHTML = '<span class="text-success"><i class="bi bi-check2-circle me-1"></i>Horario agendado.</span>';
-                DATA.horarios.push({
-                    id: d.id, empleado_id: d.empleado_id, nombre: d.nombre,
-                    fecha, hora_inicio: d.hora_inicio, hora_fin: d.hora_fin,
-                    sesiones: [], estado: 'programado', es_mio: d.es_mio, notas: d.notas,
-                });
+                const count = d.count || 1;
+                msg.innerHTML = count > 1
+                    ? `<span class="text-success"><i class="bi bi-check2-circle me-1"></i>${count} horarios agendados (serie).</span>`
+                    : '<span class="text-success"><i class="bi bi-check2-circle me-1"></i>Horario agendado.</span>';
+
+                if (Array.isArray(d.horarios) && d.horarios.length) {
+                    d.horarios.forEach(h => DATA.horarios.push(h));
+                } else {
+                    DATA.horarios.push({
+                        id: d.id, empleado_id: d.empleado_id, nombre: d.nombre,
+                        fecha, hora_inicio: d.hora_inicio, hora_fin: d.hora_fin,
+                        sesiones: [], estado: 'programado', es_mio: d.es_mio, notas: d.notas,
+                        recurrencia_id: d.recurrencia_id || null,
+                    });
+                }
+
                 setTimeout(() => {
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'modalAgendar' }));
                     renderWeek();
@@ -1309,13 +1395,15 @@
         });
     }
 
-    function deleteHorario(id) {
-        fetch(`/admin/horarios/${id}`, {
+    function deleteHorario(id, alcance) {
+        const qs = alcance === 'serie' ? '?alcance=serie' : '';
+        fetch(`/admin/horarios/${id}${qs}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken() },
         }).then(r => r.json()).then(d => {
             if (d.success) {
-                DATA.horarios = DATA.horarios.filter(h => h.id != id);
+                const idsBorrados = Array.isArray(d.ids) ? d.ids.map(String) : [String(id)];
+                DATA.horarios = DATA.horarios.filter(h => !idsBorrados.includes(String(h.id)));
                 window.dispatchEvent(new CustomEvent('close-modal', { detail: 'modalHorDetalle' }));
                 renderWeek();
             }

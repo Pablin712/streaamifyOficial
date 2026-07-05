@@ -10,7 +10,7 @@ class Horario extends Model
 
     protected $fillable = [
         'empleado_id', 'fecha', 'hora_inicio', 'hora_fin',
-        'notas', 'creado_por', 'cancelado',
+        'notas', 'creado_por', 'cancelado', 'recurrencia_id',
     ];
 
     protected $casts = [
