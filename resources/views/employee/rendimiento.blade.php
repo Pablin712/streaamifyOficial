@@ -106,6 +106,50 @@
     @endif
 </div>
 
+{{-- Top empleados que más se conectan --}}
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 p-md-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <h6 class="fw-bold mb-0">
+            <i class="bi bi-wifi me-2 text-primary"></i>Top empleados que más se conectan
+        </h6>
+        <span class="badge bg-secondary-subtle text-secondary">
+            {{ $periodo === 'hoy' ? 'Hoy' : ($periodo === 'mes' ? 'Este mes' : 'Esta semana') }}
+        </span>
+    </div>
+    @if($topConectados->isEmpty() || $topConectados->sum(fn($e) => $e['conexion']['total_minutos']) == 0)
+        <p class="text-muted small mb-0">Sin registros de conexión en este período.</p>
+    @else
+        <canvas id="chartConexion" style="max-height:200px;" class="mb-3"></canvas>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr class="text-muted" style="font-size:.75rem; text-transform:uppercase; letter-spacing:.05em;">
+                        <th style="width:36px;">#</th>
+                        <th>Empleado</th>
+                        <th class="text-end">Tiempo conectado</th>
+                        <th class="text-end">Días activo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($topConectados as $i => $emp)
+                    @php
+                        $totalMin = (int) round($emp['conexion']['total_minutos']);
+                        $horas = intdiv($totalMin, 60);
+                        $mins  = $totalMin % 60;
+                    @endphp
+                    <tr>
+                        <td class="text-muted fw-bold">{{ $i + 1 }}{{ $i < 3 ? ['🥇','🥈','🥉'][$i] : '' }}</td>
+                        <td class="fw-semibold">{{ $emp['nombre'] }}</td>
+                        <td class="text-end">{{ $horas }}h {{ str_pad($mins, 2, '0', STR_PAD_LEFT) }}m</td>
+                        <td class="text-end text-muted">{{ $emp['conexion']['dias_conectado'] }} / {{ $dias }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
 {{-- Employee cards --}}
 @if($data->isEmpty())
     <div class="text-center text-muted py-5">
@@ -279,13 +323,57 @@
 <script>
 (function () {
     const empData = @json($data);
+    const topConectados = @json($topConectados);
     if (!empData.length) return;
 
     const TIPO_COLORS = @json(collect($tiposConfig)->map(fn($v) => $v['color']));
+    const palette = ['#f43f5e','#8b5cf6','#10b981','#3b82f6','#f59e0b','#06b6d4','#64748b','#ec4899','#84cc16','#fb923c'];
+
+    // ── Top empleados conectados — horizontal bar chart (horas) ──────────
+    const conexionCanvas = document.getElementById('chartConexion');
+    if (conexionCanvas && topConectados.some(e => e.conexion.total_minutos > 0)) {
+        new Chart(conexionCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: topConectados.map(e => e.nombre),
+                datasets: [{
+                    label: 'Horas conectado',
+                    data: topConectados.map(e => Math.round((e.conexion.total_minutos / 60) * 100) / 100),
+                    backgroundColor: '#0ea5e9cc',
+                    borderColor: '#0ea5e9',
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: c => ` ${c.parsed.x}h conectado — ${topConectados[c.dataIndex].conexion.dias_conectado} día(s) activo`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(128,128,128,.1)' },
+                        ticks: { font: { size: 11 } },
+                        title: { display: true, text: 'Horas', font: { size: 11 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { size: 12, weight: '600' } }
+                    }
+                }
+            }
+        });
+    }
 
     // ── Horizontal comparison bar chart ──────────────────────────────────
     const ctx = document.getElementById('chartComparacion').getContext('2d');
-    const palette = ['#f43f5e','#8b5cf6','#10b981','#3b82f6','#f59e0b','#06b6d4','#64748b','#ec4899','#84cc16','#fb923c'];
 
     new Chart(ctx, {
         type: 'bar',

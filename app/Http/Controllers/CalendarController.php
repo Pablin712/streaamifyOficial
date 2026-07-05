@@ -141,48 +141,60 @@ class CalendarController extends Controller
             ->when(!$isAdmin, fn($q) => $q->where('empleado_id', $empleado->idemp))
             ->get();
 
-        $horariosData = $horariosBrutos->map(fn($h) => [
-            'id'          => $h->id,
-            'empleado_id' => $h->empleado_id,
-            'nombre'      => $h->empleado->nombreemp ?? '—',
-            'fecha'       => $h->fecha->format('Y-m-d'),
-            'hora_inicio' => $h->hora_inicio ? substr($h->hora_inicio, 0, 5) : null,
-            'hora_fin'    => $h->hora_fin    ? substr($h->hora_fin, 0, 5)    : null,
-            'estado'      => $this->estadoHorario($h, $asistenciasPasadas),
-            'es_mio'      => $h->empleado_id === $empleado->idemp,
-            'notas'       => $h->notas,
-        ])->values()->toArray();
+        // Sesiones reales de conexión por empleado+fecha: los pings llegan cada 5 min
+        // mientras el panel está abierto, así que un salto mayor al umbral (almuerzo,
+        // dormir, etc.) corta la sesión en vez de mostrar un solo tramo continuo falso.
+        $sesionesPorEmpFecha = $this->calcularSesiones($asistenciasPasadas);
 
-        // Extras: días con asistencias pero sin horario agendado
+        $horariosData = $horariosBrutos->map(function ($h) use ($asistenciasPasadas, $empleado, $sesionesPorEmpFecha) {
+            $key      = $h->empleado_id . '|' . $h->fecha->format('Y-m-d');
+            $sesiones = ($sesionesPorEmpFecha[$key] ?? collect())->values()->all();
+            return [
+                'id'          => $h->id,
+                'empleado_id' => $h->empleado_id,
+                'nombre'      => $h->empleado->nombreemp ?? '—',
+                'fecha'       => $h->fecha->format('Y-m-d'),
+                'hora_inicio' => $h->hora_inicio ? substr($h->hora_inicio, 0, 5) : null,
+                'hora_fin'    => $h->hora_fin    ? substr($h->hora_fin, 0, 5)    : null,
+                'sesiones'    => $sesiones,
+                'estado'      => $this->estadoHorario($h, $asistenciasPasadas),
+                'es_mio'      => $h->empleado_id === $empleado->idemp,
+                'notas'       => $h->notas,
+            ];
+        })->values()->toArray();
+
+        // Extras: días con asistencias pero sin horario agendado.
+        // Se emite UNA tarjeta por cada sesión real de conexión (no una sola franja
+        // desde el primer hasta el último ping), para que los huecos se vean.
         $empNames = collect(DB::table('empleados')->select('idemp', 'nombreemp')->get())
             ->pluck('nombreemp', 'idemp');
 
         $horariosPorEmpFecha = $horariosBrutos->groupBy(
             fn($h) => $h->empleado_id . '|' . $h->fecha->format('Y-m-d')
         );
-        $extrasData = $asistenciasPasadas
-            ->groupBy(fn($a) => $a->empleado_id . '|' . substr($a->created_at, 0, 10))
-            ->filter(fn($asis, $key) => !isset($horariosPorEmpFecha[$key]))
-            ->map(function ($asis, $key) use ($empNames, $empleado) {
+        $extrasData = $sesionesPorEmpFecha
+            ->filter(fn($sesiones, $key) => !isset($horariosPorEmpFecha[$key]))
+            ->flatMap(function ($sesiones, $key) use ($empNames, $empleado) {
                 [$empId, $fecha] = explode('|', $key, 2);
-                return [
+                return $sesiones->map(fn($s) => [
                     'id'          => null,
                     'empleado_id' => (int) $empId,
                     'nombre'      => $empNames[(int) $empId] ?? '—',
                     'fecha'       => $fecha,
-                    'hora_inicio' => null,
-                    'hora_fin'    => null,
+                    'hora_inicio' => $s['inicio'],
+                    'hora_fin'    => $s['fin'],
+                    'sesiones'    => [$s],
                     'estado'      => 'extra',
                     'es_mio'      => (int) $empId === $empleado->idemp,
                     'notas'       => null,
-                ];
+                ]);
             })
             ->values()
             ->toArray();
 
         // Lista de empleados activos para el filtro admin
         $empleadosActivos = $isAdmin
-            ? Empleado::whereHas('roles')->get(['idemp', 'nombreemp'])
+            ? Empleado::whereHas('roles')->orderBy('idemp')->get(['idemp', 'nombreemp'])
                 ->map(fn($e) => ['id' => $e->idemp, 'nombre' => $e->nombreemp])
                 ->values()->toArray()
             : [];
@@ -194,6 +206,55 @@ class CalendarController extends Controller
             'isLocked', 'isAdmin',
             'horariosData', 'extrasData', 'empleadosActivos'
         ));
+    }
+
+    /**
+     * Agrupa los pings de asistencia (uno cada 5 min mientras el panel está abierto)
+     * en sesiones reales de conexión por empleado+fecha. Un salto entre pings mayor
+     * a $gapMinutos (almuerzo, dormir, desconexión, etc.) cierra la sesión actual y
+     * abre una nueva, en vez de reportar un único tramo continuo del primer al
+     * último ping del día.
+     *
+     * @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, array{inicio:string,fin:string}>>
+     */
+    private function calcularSesiones($asistenciasPasadas, int $gapMinutos = 15)
+    {
+        $toMinutos = fn(string $hhmm) => ((int) substr($hhmm, 0, 2)) * 60 + (int) substr($hhmm, 3, 2);
+
+        return $asistenciasPasadas
+            ->groupBy(fn($a) => $a->empleado_id . '|' . substr($a->created_at, 0, 10))
+            ->map(function ($asis) use ($gapMinutos, $toMinutos) {
+                $horas = $asis->pluck('created_at')
+                    ->map(fn($c) => substr($c, 11, 5))
+                    ->unique()
+                    ->sort()
+                    ->values();
+
+                $sesiones = collect();
+                $inicio   = $horas->first();
+                $anterior = $inicio;
+
+                foreach ($horas as $i => $hora) {
+                    if ($i === 0) continue;
+                    if ($toMinutos($hora) - $toMinutos($anterior) > $gapMinutos) {
+                        $sesiones->push($this->sesionRango($inicio, $anterior));
+                        $inicio = $hora;
+                    }
+                    $anterior = $hora;
+                }
+                $sesiones->push($this->sesionRango($inicio, $anterior));
+
+                return $sesiones;
+            });
+    }
+
+    /** Convierte un par inicio/fin en un rango visible; si es un ping aislado, le da 5 min de ancho mínimo. */
+    private function sesionRango(string $inicio, string $fin): array
+    {
+        if ($inicio === $fin) {
+            $fin = Carbon::createFromFormat('H:i', $fin)->addMinutes(5)->format('H:i');
+        }
+        return ['inicio' => $inicio, 'fin' => $fin];
     }
 
     private function estadoHorario(Horario $h, $asistencias): string

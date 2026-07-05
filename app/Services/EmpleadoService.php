@@ -42,6 +42,16 @@ class EmpleadoService
     public function obtenerLapsosDeAsistenciasPorDia(int $idemp, string $fecha)
     {
         $asistencias = $this->obtenerAsistenciasPorDia($idemp, $fecha);
+        return $this->calcularLapsos($asistencias);
+    }
+
+    /**
+     * Agrupa una colección de asistencias (ya filtradas, normalmente de un mismo día)
+     * en lapsos de conexión real: deduplica pings del mismo intervalo de 30s (múltiples
+     * pestañas) y corta el lapso cuando el salto entre pings supera los 5 minutos.
+     */
+    private function calcularLapsos($asistencias): array
+    {
         $lapsos = [];
         $total_conexion = 0;
 
@@ -141,6 +151,35 @@ class EmpleadoService
             'lapsos' => $lapsos,
             'total_conexion' => round($total_conexion, 2),
             'horas_conexion' => round($total_conexion / 60, 2),
+        ];
+    }
+
+    /**
+     * Total de tiempo realmente conectado (suma de lapsos, con huecos descontados)
+     * de un empleado dentro de un rango de fechas — usado por el ranking de
+     * "top empleados que más se conectan" en Rendimiento.
+     */
+    public function obtenerConexionEnRango(int $idemp, string $desde, string $hasta): array
+    {
+        $asistencias = Asistencia::where('empleado_id', $idemp)
+            ->whereBetween('created_at', [
+                Carbon::parse($desde)->startOfDay(),
+                Carbon::parse($hasta)->endOfDay(),
+            ])
+            ->orderBy('created_at')
+            ->get();
+
+        $porDia = $asistencias->groupBy(fn($a) => $a->created_at->format('Y-m-d'));
+
+        $totalMinutos = 0.0;
+        foreach ($porDia as $grupoDelDia) {
+            $totalMinutos += $this->calcularLapsos($grupoDelDia)['total_conexion'];
+        }
+
+        return [
+            'total_minutos'  => round($totalMinutos, 2),
+            'total_horas'    => round($totalMinutos / 60, 2),
+            'dias_conectado' => $porDia->count(),
         ];
     }
     public function obtenerVentasPorDia(int $idemp, string $fecha)

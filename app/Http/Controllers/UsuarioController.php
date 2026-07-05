@@ -16,6 +16,7 @@ use App\Models\Proveedor;
 use App\Services\ConcentracionService;
 use App\Services\CuentaService;
 use App\Services\EntregaMensajeService;
+use App\Services\TareaService;
 use App\Services\Chat\WhatsAppOutboundService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -649,6 +650,10 @@ class UsuarioController extends Controller
                 'created_at' => now(),
             ]);
 
+            if ($request->estado === 'COBRADO') {
+                app(TareaService::class)->completarTareasRelacionadas('cobrar_usuario', 'ViewUsuarioActivo', $iddet, Auth::user()->idemp);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Estado actualizado correctamente',
@@ -682,6 +687,10 @@ class UsuarioController extends Controller
             'created_at' => now(),
         ]);
 
+        if (!$detalle->activodet) {
+            app(TareaService::class)->completarTareasRelacionadas('quitar_usuario', 'ViewUsuarioActivo', $iddet, Auth::user()->idemp);
+        }
+
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Usuario eliminado con éxito.', 'iddet' => $iddet]);
         }
@@ -701,6 +710,7 @@ class UsuarioController extends Controller
         }
         if (!empty($ids)) {
             $detalles = DetalleVenta::whereIn('iddet', $ids)->get();
+            $tareaService = app(TareaService::class);
             foreach ($detalles as $detalle) {
                 $detalle->activodet = !$detalle->activodet;
                 $detalle->save();
@@ -711,6 +721,10 @@ class UsuarioController extends Controller
                     'empleado_id' => Auth::user()->idemp,
                     'created_at' => now(),
                 ]);
+
+                if (!$detalle->activodet) {
+                    $tareaService->completarTareasRelacionadas('quitar_usuario', 'ViewUsuarioActivo', $detalle->iddet, Auth::user()->idemp);
+                }
             }
         }
 

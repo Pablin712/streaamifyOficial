@@ -179,78 +179,149 @@
 .stat-card .stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
 .empty-day { text-align: center; padding: 32px 16px; color: var(--bs-secondary-color); font-size: .85rem; }
 
-/* ── Grid semanal (tab 2) ───────────────────────────────── */
-.w-outer { overflow-x: auto; padding-bottom: 4px; }
-.w-grid {
+/* ── Grid semanal — línea de tiempo por horas (tab 2) ───── */
+:root {
+    --hg-row-h: 36px;
+    /* Paleta categórica por empleado — 8 colores fijos, no cíclicos entre sí.
+       Fondos SÓLIDOS (no transparentes): las franjas van en capa superior al
+       mapa de calor y no deben mezclarse ópticamente con él. */
+    --emp-1-border:#2a78d6; --emp-1-bg:#d2e2f4;
+    --emp-2-border:#1baf7a; --emp-2-bg:#cfede1;
+    --emp-3-border:#eda100; --emp-3-bg:#f9eac9;
+    --emp-4-border:#008300; --emp-4-bg:#cae4c9;
+    --emp-5-border:#4a3aa7; --emp-5-bg:#d8d5ea;
+    --emp-6-border:#e34948; --emp-6-bg:#f7d8d7;
+    --emp-7-border:#e87ba4; --emp-7-bg:#f8e2ea;
+    --emp-8-border:#eb6834; --emp-8-bg:#f9ded3;
+}
+[data-bs-theme="dark"] {
+    --emp-1-border:#3987e5; --emp-1-bg:#243d5a;
+    --emp-2-border:#199e70; --emp-2-bg:#1a4435;
+    --emp-3-border:#c98500; --emp-3-bg:#523c11;
+    --emp-4-border:#008300; --emp-4-bg:#123c11;
+    --emp-5-border:#9085e9; --emp-5-bg:#403c5c;
+    --emp-6-border:#e66767; --emp-6-bg:#5b3332;
+    --emp-7-border:#d55181; --emp-7-bg:#562c3a;
+    --emp-8-border:#d95926; --emp-8-bg:#572e1d;
+}
+.hg-outer { border: 1px solid var(--bs-border-color); border-radius: 12px; overflow: hidden; }
+.hg-hscroll { overflow-x: auto; }
+.hg-header, .hg-allday, .hg-body { min-width: 830px; }
+.hg-header {
     display: grid;
-    grid-template-columns: repeat(7, minmax(140px, 1fr));
-    gap: 10px;
-    min-width: 800px;
-}
-.w-col { border-radius: 12px; overflow: hidden; border: 1px solid var(--bs-border-color); }
-.w-col.w-libre { border-color: rgba(16,185,129,.35); border-style: dashed; }
-.w-col.w-libre .w-col-header { background: rgba(16,185,129,.07) !important; }
-.w-libre-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: .6rem; font-weight: 700; letter-spacing: .05em;
-    color: #059669; background: rgba(16,185,129,.15);
-    border-radius: 999px; padding: 2px 8px; margin-top: 4px;
-}
-.w-col-header {
-    padding: 12px 8px 10px;
-    text-align: center;
-    transition: background .3s;
+    grid-template-columns: 52px repeat(7, minmax(110px, 1fr));
     border-bottom: 1px solid var(--bs-border-color);
+    background: var(--bs-tertiary-bg);
 }
-.w-col-weekday { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--bs-secondary-color); }
-.w-col-daynum { font-size: 1.4rem; font-weight: 800; line-height: 1.1; }
-.w-col-month { font-size: .65rem; color: var(--bs-secondary-color); }
-.w-col.w-today .w-col-header { box-shadow: inset 0 -3px 0 var(--bs-primary); }
-.w-col.w-today .w-col-daynum { color: var(--bs-primary); }
-.w-col-body { padding: 8px; background: var(--bs-body-bg); min-height: 140px; }
-.w-item {
-    border-radius: 8px;
-    padding: 7px 8px;
-    margin-bottom: 6px;
-    font-size: .76rem;
+.hg-corner { border-right: 1px solid var(--bs-border-color); }
+.hg-day-head {
+    padding: 8px 6px;
+    text-align: center;
+    border-right: 1px solid var(--bs-border-color);
+    transition: background .3s;
     position: relative;
 }
-.w-item:last-child { margin-bottom: 0; }
-.w-item-name { font-weight: 700; font-size: .78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.w-item-time { font-size: .68rem; opacity: .75; }
-.w-item-badge {
-    display: inline-block;
-    padding: 1px 6px;
-    border-radius: 999px;
-    font-size: .6rem;
-    font-weight: 700;
-    margin-top: 3px;
-    color: #fff;
+.hg-day-head:last-child { border-right: none; }
+.hg-day-head.hg-today { box-shadow: inset 0 -3px 0 var(--bs-primary); }
+.hg-day-head.hg-today .hg-daynum { color: var(--bs-primary); }
+.hg-weekday { font-size: .63rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--bs-secondary-color); }
+.hg-daynum { font-size: 1.15rem; font-weight: 800; line-height: 1.15; }
+.hg-month { font-size: .6rem; color: var(--bs-secondary-color); }
+.hg-libre-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: .56rem; font-weight: 700; letter-spacing: .04em;
+    color: #059669; background: rgba(16,185,129,.15);
+    border-radius: 999px; padding: 1px 6px; margin-top: 2px;
 }
-.w-item-del {
-    position: absolute; top: 5px; right: 5px;
-    background: none; border: none; padding: 0;
-    color: inherit; opacity: .4; cursor: pointer; font-size: .75rem;
-    line-height: 1;
+.hg-add-btn {
+    position: absolute; top: 4px; right: 4px;
+    border: none; background: transparent; color: var(--bs-secondary-color);
+    opacity: .5; cursor: pointer; font-size: .8rem; padding: 2px 4px; border-radius: 4px;
 }
-.w-item-del:hover { opacity: 1; }
-.w-empty { text-align: center; padding: 16px 8px; font-size: .72rem; color: var(--bs-secondary-color); }
-.w-add-btn {
-    width: 100%; border-radius: 6px;
-    border: 1.5px dashed var(--bs-border-color);
-    background: transparent; color: var(--bs-secondary-color);
-    padding: 5px; font-size: .72rem; cursor: pointer;
-    margin-top: 6px; transition: all .2s;
+.hg-add-btn:hover { opacity: 1; background: var(--bs-tertiary-bg); color: var(--bs-primary); }
+
+/* Fila "todo el día" */
+.hg-allday {
+    display: grid;
+    grid-template-columns: 52px repeat(7, minmax(110px, 1fr));
+    border-bottom: 2px solid var(--bs-border-color);
+    background: var(--bs-body-bg);
 }
-.w-add-btn:hover { border-color: var(--bs-primary); color: var(--bs-primary); background: var(--bs-tertiary-bg); }
-/* Heat map legend */
+.hg-allday-label {
+    font-size: .6rem; color: var(--bs-secondary-color); font-weight: 700;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    border-right: 1px solid var(--bs-border-color); padding: 4px 2px;
+}
+.hg-allday-cell {
+    border-right: 1px solid var(--bs-border-color);
+    padding: 4px; min-height: 30px; display: flex; flex-direction: column; gap: 3px;
+}
+.hg-allday-cell:last-child { border-right: none; }
+.hg-allday-item {
+    border-radius: 6px; padding: 3px 6px; font-size: .68rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Cuerpo con scroll y eje de horas */
+.hg-scroll { max-height: 560px; overflow-y: auto; position: relative; }
+.hg-body {
+    display: grid;
+    grid-template-columns: 52px repeat(7, minmax(110px, 1fr));
+    position: relative;
+}
+.hg-gutter { position: relative; border-right: 1px solid var(--bs-border-color); }
+.hg-hour-label {
+    position: absolute; left: 0; right: 4px; text-align: right;
+    font-size: .62rem; color: var(--bs-secondary-color); transform: translateY(-50%);
+}
+.hg-day-col {
+    position: relative;
+    border-right: 1px solid var(--bs-border-color);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        var(--bs-border-color) 0, var(--bs-border-color) 1px,
+        transparent 1px, transparent var(--hg-row-h)
+    );
+}
+.hg-day-col:last-child { border-right: none; }
+.hg-day-col.hg-today-col { background-color: rgba(13,110,253,.035); }
+/* Capas del día: mapa de calor al fondo (z=1) < línea "ahora" (z=5) < franjas de horario (z=10) */
+.hg-heat { position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none; }
+.hg-now-line {
+    position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid #ef4444; z-index: 5; pointer-events: none;
+}
+.hg-now-line::before {
+    content: ''; position: absolute; left: -4px; top: -4px; width: 8px; height: 8px;
+    border-radius: 50%; background: #ef4444;
+}
+.hg-block {
+    position: absolute; z-index: 10; border-radius: 6px; font-size: .68rem; line-height: 1.15;
+    padding: 3px 5px; overflow: hidden; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    border-left: 3px solid transparent; transition: filter .15s;
+    color: var(--bs-body-color);
+}
+.hg-block:hover { filter: brightness(0.96); }
+.hg-block-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hg-block-time { opacity: .78; font-size: .62rem; }
+/* Punto de estado (Programado/Confirmado/Ausente/Extra), independiente del color por empleado */
+.hg-block-dot, .emp-pill-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin-right: 4px; flex-shrink: 0; vertical-align: middle;
+}
+
+/* Leyenda mapa de calor / filtros */
 .hm-legend { display: flex; align-items: center; gap: 4px; font-size: .7rem; color: var(--bs-secondary-color); }
 .hm-swatch { width: 14px; height: 14px; border-radius: 3px; }
 /* Employee filter */
 .emp-pill { transition: all .15s; }
 .emp-pill.active { box-shadow: 0 0 0 2px var(--bs-primary); }
-/* Modal agendar */
+/* Modal agendar / detalle */
 .modal-header-hor { background: linear-gradient(135deg, #4c1d95 0%, #6366f1 100%); color: #fff; }
+.hd-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--bs-border-color); }
+.hd-row:last-child { border-bottom: none; }
+.hd-row i { width: 20px; text-align: center; color: var(--bs-secondary-color); margin-top: 2px; }
+.hd-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--bs-secondary-color); font-weight: 700; }
+.hd-value { font-size: .88rem; font-weight: 600; }
 </style>
 @endsection
 
@@ -390,7 +461,7 @@
                 </button>
                 <button class="btn btn-sm btn-outline-primary rounded-pill px-3 ms-1" id="thisWeekBtn">Esta semana</button>
             </div>
-            {{-- Leyenda estados --}}
+            {{-- Leyenda estados (el punto de color dentro de cada bloque) --}}
             <div class="d-flex flex-wrap gap-3" style="font-size:.72rem;">
                 <span class="d-flex align-items-center gap-1">
                     <span style="width:10px;height:10px;border-radius:50%;background:var(--h-prog);display:inline-block;"></span>Programado
@@ -407,7 +478,8 @@
             </div>
         </div>
 
-        {{-- Filtro por empleado (solo admin/gerente) --}}
+        {{-- Filtro por empleado (solo admin/gerente) — el color de cada pill es el mismo
+             color de fondo con el que se pintan sus franjas en la línea de tiempo --}}
         @if($isAdmin)
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3 p-3 rounded-3" style="background:var(--bs-tertiary-bg);">
             <span class="small fw-semibold" style="color:var(--bs-secondary-color);">
@@ -415,35 +487,45 @@
             </span>
             <button class="btn btn-sm btn-outline-secondary rounded-pill emp-pill active" data-wid="all">Todos</button>
             @foreach($empleadosActivos as $emp)
+            @php $empSlot = ($loop->index % 8) + 1; @endphp
             <button class="btn btn-sm btn-outline-secondary rounded-pill emp-pill" data-wid="{{ $emp['id'] }}">
-                {{ $emp['nombre'] }}
+                <span class="emp-pill-dot" style="background:var(--emp-{{ $empSlot }}-border);"></span>{{ $emp['nombre'] }}
             </button>
             @endforeach
         </div>
+        <div class="small text-muted mb-2 px-1">
+            <i class="bi bi-info-circle me-1"></i>El color de fondo de cada franja identifica al empleado (mismo color que su filtro); el punto pequeño indica el estado.
+        </div>
         @endif
 
-        {{-- Grid semanal --}}
-        <div class="w-outer">
-            <div class="w-grid" id="weekGrid"></div>
+        {{-- Grid semanal — línea de tiempo por horas --}}
+        <div class="hg-outer">
+            <div class="hg-hscroll">
+                <div class="hg-header" id="hgHeader"></div>
+                <div class="hg-allday" id="hgAllday"></div>
+                <div class="hg-scroll" id="hgScroll">
+                    <div class="hg-body" id="hgBody"></div>
+                </div>
+            </div>
         </div>
 
         {{-- Leyenda mapa de calor --}}
         @if($isAdmin)
         <div class="d-flex align-items-center gap-3 mt-3 px-1 flex-wrap">
-            <span class="small text-muted fw-semibold">Mapa de calor:</span>
+            <span class="small text-muted fw-semibold"><i class="bi bi-thermometer-half me-1"></i>Mapa de calor (empleados simultáneos por hora):</span>
             <div class="hm-legend">
-                <span class="hm-swatch" style="background:rgba(34,197,94,.12);border:1px solid #ddd;"></span> 0–1
+                <span class="hm-swatch" style="background:rgba(34,197,94,.10);border:1px solid #ddd;"></span> 0
             </div>
             <div class="hm-legend">
-                <span class="hm-swatch" style="background:rgba(34,197,94,.35);"></span> 2–3
+                <span class="hm-swatch" style="background:rgba(34,197,94,.30);"></span> 1
             </div>
             <div class="hm-legend">
-                <span class="hm-swatch" style="background:rgba(34,197,94,.58);"></span> 4–6
+                <span class="hm-swatch" style="background:rgba(34,197,94,.55);"></span> 2–3
             </div>
             <div class="hm-legend">
-                <span class="hm-swatch" style="background:rgba(34,197,94,.82);"></span> 7+
+                <span class="hm-swatch" style="background:rgba(34,197,94,.85);"></span> 4+
             </div>
-            <span class="small text-muted ms-1">(color según estado dominante del día)</span>
+            <span class="small text-muted ms-1">Las zonas sin color = ningún empleado trabajando (hueco).</span>
         </div>
         @endif
     </div>{{-- /tab-hor --}}
@@ -472,6 +554,18 @@
         <button type="button" class="btn-close btn-close-white" x-on:click="show = false" aria-label="Cerrar"></button>
     </div>
     <div class="modal-body p-4" id="modalAgendarBody"></div>
+</x-modal>
+
+{{-- ── Modal: detalle de un horario (tab 2) ───────────────── --}}
+<x-modal name="modalHorDetalle" maxWidth="sm">
+    <div class="modal-header modal-header-hor border-0 py-3 px-4">
+        <div>
+            <h5 class="modal-title fw-bold mb-0" id="modalHorDetTitle"><i class="bi bi-person-badge me-2"></i>Detalle del horario</h5>
+            <small id="modalHorDetFecha" style="opacity:.7;"></small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" x-on:click="show = false" aria-label="Cerrar"></button>
+    </div>
+    <div class="modal-body p-4" id="modalHorDetBody"></div>
 </x-modal>
 
 @endsection
@@ -825,7 +919,7 @@
     render();
 
     /* ══════════════════════════════════════════════════════════
-       TAB 2 — HORARIOS SEMANAL
+       TAB 2 — HORARIOS SEMANAL (línea de tiempo por horas)
     ══════════════════════════════════════════════════════════ */
     const ESTADO_CFG = {
         programado: { label:'Programado', bg:'#fef3c7', color:'#92400e', badge:'#d97706' },
@@ -834,16 +928,22 @@
         extra:      { label:'Extra',       bg:'#dbeafe', color:'#1d4ed8', badge:'#2563eb' },
     };
 
-    // RGB components for heat map blending
-    const ESTADO_RGB = {
-        programado: [251, 191, 36],
-        confirmado: [34,  197, 94],
-        ausente:    [239,  68, 68],
-        extra:      [ 59, 130, 246],
-    };
+    const ROW_H = 36; // px por hora — debe coincidir con --hg-row-h en CSS
+    const EMP_PALETTE_SLOTS = 8; // debe coincidir con --emp-1..8 en CSS
+
+    // Color por empleado (identidad) — independiente del estado. Mismo orden que
+    // $empleadosActivos en el backend, así el índice coincide con el de los pills de filtro.
+    const empColorIndex = {};
+    (DATA.empleados || []).forEach((e, i) => { empColorIndex[e.id] = i % EMP_PALETTE_SLOTS; });
+
+    function empColorVars(empId) {
+        const idx = (empColorIndex[empId] ?? 0) + 1;
+        return { bg: `var(--emp-${idx}-bg)`, border: `var(--emp-${idx}-border)` };
+    }
 
     let weekStart    = getMondayOf(today);
     let selectedEmps = []; // empty = todos
+    let itemRegistry = []; // items renderizados en la semana actual, para abrir el detalle al hacer click
 
     function getMondayOf(d) {
         const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -869,108 +969,257 @@
         ];
     }
 
-    function heatMapBg(items, isPast) {
-        if (!items.length) return '';
-        const count = items.length;
-        // intensity: 1→0.15, 2→0.28, 4→0.45, 7→0.65, 10+→0.85
-        const intensity = Math.min(0.12 + Math.log(count + 1) / Math.log(11) * 0.75, 0.85);
+    function timeToMin(t) {
+        if (!t) return null;
+        const parts = t.split(':');
+        const h = parseInt(parts[0], 10), m = parseInt(parts[1] || '0', 10);
+        if (isNaN(h)) return null;
+        return h * 60 + (isNaN(m) ? 0 : m);
+    }
 
-        let rgb;
-        if (!isPast) {
-            rgb = ESTADO_RGB.programado;
-        } else {
-            // tally by estado
-            const tally = { confirmado: 0, ausente: 0, extra: 0 };
-            items.forEach(h => { if (tally[h.estado] !== undefined) tally[h.estado]++; });
-            const dominant = Object.entries(tally).sort((a,b) => b[1]-a[1])[0][0];
-            rgb = ESTADO_RGB[dominant] || ESTADO_RGB.confirmado;
-        }
-        return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${intensity.toFixed(2)})`;
+    // Asigna "carriles" (lanes) a los items de un mismo día para que los horarios
+    // que se cruzan entre empleados se vean lado a lado en vez de superpuestos.
+    function assignLanes(items) {
+        const sorted = [...items].sort((a, b) => a.startMin - b.startMin);
+        const laneEnds = [];
+        sorted.forEach(it => {
+            let lane = laneEnds.findIndex(end => end <= it.startMin);
+            if (lane === -1) { lane = laneEnds.length; laneEnds.push(it.endMin); }
+            else { laneEnds[lane] = it.endMin; }
+            it.lane = lane;
+        });
+        const totalLanes = laneEnds.length || 1;
+        sorted.forEach(it => it.totalLanes = totalLanes);
+        return sorted;
+    }
+
+    // Cuenta empleados distintos activos por hora (0-23), para el mapa de calor
+    function heatCounts(timed, allday) {
+        const sets = Array.from({ length: 24 }, () => new Set());
+        timed.forEach(it => {
+            const startH = Math.max(0, Math.floor(it.startMin / 60));
+            const endH   = Math.min(24, Math.ceil(it.endMin / 60));
+            for (let h = startH; h < endH; h++) sets[h].add(it.empleado_id);
+        });
+        allday.forEach(it => { for (let h = 0; h < 24; h++) sets[h].add(it.empleado_id); });
+        return sets.map(s => s.size);
+    }
+
+    function heatColor(count) {
+        if (!count)      return 'transparent';
+        if (count === 1) return 'rgba(34,197,94,.30)';
+        if (count <= 3)  return 'rgba(34,197,94,.55)';
+        return 'rgba(34,197,94,.85)';
     }
 
     function renderWeek() {
-        const grid   = document.getElementById('weekGrid');
         const days   = getWeekDays(weekStart);
         const today0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const nowMin = today.getHours() * 60 + today.getMinutes();
 
-        // Week title
         const d0 = days[0], d6 = days[6];
         document.getElementById('weekTitle').textContent =
             `${d0.getDate()} ${MESES_SHORT[d0.getMonth()]} — ${d6.getDate()} ${MESES_SHORT[d6.getMonth()]} ${d6.getFullYear()}`;
 
-        grid.innerHTML = '';
-        days.forEach(date => {
+        itemRegistry = [];
+
+        // Clasifica los horarios/extras de cada día en "con hora definida" vs "todo el día"
+        const perDay = days.map(date => {
             const dateStr = ymd(date);
-            const isPast  = date < today0;
-            const isToday = date.getTime() === today0.getTime();
-            const items   = horariosForDay(dateStr);
-            const bg      = DATA.isAdmin ? heatMapBg(items, isPast) : '';
-
-            const isLibre = items.length === 0;
-            const col = document.createElement('div');
-            col.className = 'w-col'
-                + (isToday  ? ' w-today' : '')
-                + (isLibre && !isPast ? ' w-libre' : '');
-
-            // Días futuros libres: sugerir como oportunidad de conexión
-            const libreBadge = isLibre && !isPast
-                ? `<div class="w-libre-badge"><i class="bi bi-circle-fill" style="font-size:.45rem;"></i>Disponible</div>`
-                : '';
-
-            // Header
-            col.innerHTML = `
-            <div class="w-col-header" style="${bg ? 'background:'+bg+';' : 'background:var(--bs-tertiary-bg);'}">
-                <div class="w-col-weekday">${DIAS_SHORT[date.getDay()]}</div>
-                <div class="w-col-daynum">${date.getDate()}</div>
-                <div class="w-col-month">${MESES_SHORT[date.getMonth()]}</div>
-                ${libreBadge}
-            </div>
-            <div class="w-col-body">
-                <div id="witems-${dateStr}">
-                    ${items.length
-                        ? items.map(h => buildWeekItem(h)).join('')
-                        : isPast
-                            ? `<div class="w-empty"><i class="bi bi-dash-circle opacity-25 d-block mb-1"></i>Sin actividad</div>`
-                            : `<div class="w-empty" style="color:#059669;"><i class="bi bi-person-plus-fill opacity-50 d-block mb-1 fs-6"></i>Nadie agendado</div>`
-                    }
-                </div>
-                ${!isPast ? `<button class="w-add-btn" data-fecha="${dateStr}">
-                    <i class="bi bi-plus-lg me-1"></i>Agendar
-                </button>` : ''}
-            </div>`;
-
-            const addBtn = col.querySelector('.w-add-btn');
-            if (addBtn) addBtn.addEventListener('click', () => openAgendarModal(dateStr, date));
-
-            grid.appendChild(col);
-        });
-
-        // Delete buttons (delegated on grid)
-        grid.querySelectorAll('[data-wdel]').forEach(btn => {
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const id = btn.dataset.wdel;
-                if (!confirm('¿Cancelar este horario agendado?')) return;
-                deleteHorario(id, btn.closest('.w-item'));
+            const raw     = horariosForDay(dateStr);
+            const timed   = [];
+            const allday  = [];
+            raw.forEach(h => {
+                const sMin = timeToMin(h.hora_inicio);
+                const eMin = timeToMin(h.hora_fin);
+                if (sMin !== null && eMin !== null && eMin > sMin) {
+                    timed.push({ ...h, startMin: sMin, endMin: eMin });
+                } else {
+                    allday.push(h);
+                }
             });
+            return { date, dateStr, timed: assignLanes(timed), allday };
         });
+
+        renderHgHeader(perDay, today0);
+        renderHgAllday(perDay);
+        renderHgBody(perDay, today0, nowMin);
     }
 
-    function buildWeekItem(h) {
-        const cfg    = ESTADO_CFG[h.estado] || ESTADO_CFG.programado;
-        const horario = h.hora_inicio
-            ? `<div class="w-item-time"><i class="bi bi-clock me-1"></i>${h.hora_inicio}${h.hora_fin ? '–'+h.hora_fin : ''}</div>`
-            : '';
-        const canDel = h.id && (h.es_mio || DATA.isAdmin);
-        return `
-        <div class="w-item" style="background:${cfg.bg};color:${cfg.color};" id="wi-${h.id}">
-            ${canDel ? `<button class="w-item-del" data-wdel="${h.id}" title="Cancelar"><i class="bi bi-x-lg"></i></button>` : ''}
-            ${DATA.isAdmin ? `<div class="w-item-name" title="${esc(h.nombre)}">${esc(h.nombre)}</div>` : '<div class="w-item-name">Yo</div>'}
-            ${horario}
-            ${h.notas ? `<div class="w-item-time" style="font-style:italic;">${esc(h.notas)}</div>` : ''}
-            <span class="w-item-badge" style="background:${cfg.badge};">${cfg.label}</span>
-        </div>`;
+    function renderHgHeader(perDay, today0) {
+        let html = '<div class="hg-corner"></div>';
+        perDay.forEach(({ date, dateStr, timed, allday }) => {
+            const isToday = date.getTime() === today0.getTime();
+            const isPast  = date < today0;
+            const isLibre = timed.length === 0 && allday.length === 0;
+            const libreBadge = isLibre && !isPast
+                ? `<div class="hg-libre-badge"><i class="bi bi-circle-fill" style="font-size:.4rem;"></i>Libre</div>` : '';
+            const addBtn = !isPast
+                ? `<button class="hg-add-btn" data-fecha="${dateStr}" title="Agendar horario"><i class="bi bi-plus-lg"></i></button>` : '';
+            html += `
+            <div class="hg-day-head${isToday ? ' hg-today' : ''}">
+                ${addBtn}
+                <div class="hg-weekday">${DIAS_SHORT[date.getDay()]}</div>
+                <div class="hg-daynum">${date.getDate()}</div>
+                <div class="hg-month">${MESES_SHORT[date.getMonth()]}</div>
+                ${libreBadge}
+            </div>`;
+        });
+        document.getElementById('hgHeader').innerHTML = html;
     }
+
+    function renderHgAllday(perDay) {
+        let html = '<div class="hg-allday-label">Todo<br>el día</div>';
+        perDay.forEach(({ allday }) => {
+            if (!allday.length) { html += '<div class="hg-allday-cell"></div>'; return; }
+            let cell = '<div class="hg-allday-cell">';
+            allday.forEach(h => {
+                const cfg    = ESTADO_CFG[h.estado] || ESTADO_CFG.programado;
+                const colors = DATA.isAdmin ? empColorVars(h.empleado_id) : { bg: cfg.bg, border: cfg.badge };
+                const idx    = itemRegistry.push(h) - 1;
+                cell += `<div class="hg-allday-item" data-ridx="${idx}" title="${esc(h.nombre)}" style="background:${colors.bg};border-left:3px solid ${colors.border};">
+                    <span class="hg-block-dot" style="background:${cfg.badge};"></span>${esc(h.nombre)}
+                </div>`;
+            });
+            cell += '</div>';
+            html += cell;
+        });
+        document.getElementById('hgAllday').innerHTML = html;
+    }
+
+    function renderHgBody(perDay, today0, nowMin) {
+        const totalH = ROW_H * 24;
+
+        let gutter = `<div class="hg-gutter" style="height:${totalH}px;">`;
+        for (let h = 0; h < 24; h++) {
+            gutter += `<div class="hg-hour-label" style="top:${h * ROW_H}px;">${pad(h)}:00</div>`;
+        }
+        gutter += '</div>';
+
+        let cols = '';
+        perDay.forEach(({ date, timed, allday }) => {
+            const isToday = date.getTime() === today0.getTime();
+            let col = `<div class="hg-day-col${isToday ? ' hg-today-col' : ''}" style="height:${totalH}px;">`;
+
+            if (DATA.isAdmin) {
+                const counts = heatCounts(timed, allday);
+                counts.forEach((c, h) => {
+                    const color = heatColor(c);
+                    if (color !== 'transparent') {
+                        col += `<div class="hg-heat" style="top:${h * ROW_H}px;height:${ROW_H}px;background:${color};" title="${c} empleado(s) trabajando — ${pad(h)}:00"></div>`;
+                    }
+                });
+            }
+
+            if (isToday && nowMin >= 0 && nowMin <= 1440) {
+                col += `<div class="hg-now-line" style="top:${(nowMin / 60 * ROW_H).toFixed(1)}px;"></div>`;
+            }
+
+            timed.forEach(h => {
+                const cfg    = ESTADO_CFG[h.estado] || ESTADO_CFG.programado;
+                const colors = DATA.isAdmin ? empColorVars(h.empleado_id) : { bg: cfg.bg, border: cfg.badge };
+                const top    = (h.startMin / 60) * ROW_H;
+                const height = Math.max(((h.endMin - h.startMin) / 60) * ROW_H, 20);
+                const width  = 100 / h.totalLanes;
+                const left   = h.lane * width;
+                const idx    = itemRegistry.push(h) - 1;
+                col += `
+                <div class="hg-block" data-ridx="${idx}"
+                     style="top:${top}px;height:${height}px;left:calc(${left}% + 2px);width:calc(${width}% - 4px);
+                            background:${colors.bg};border-left-color:${colors.border};">
+                    <div class="hg-block-name"><span class="hg-block-dot" style="background:${cfg.badge};"></span>${esc(h.nombre)}</div>
+                    <div class="hg-block-time">${h.hora_inicio}–${h.hora_fin}</div>
+                </div>`;
+            });
+
+            col += '</div>';
+            cols += col;
+        });
+
+        document.getElementById('hgBody').innerHTML = gutter + cols;
+
+        // Auto-scroll a horario laboral (07:00) solo la primera vez que se pinta
+        const scrollBox = document.getElementById('hgScroll');
+        if (scrollBox && !scrollBox.dataset.scrolled) {
+            scrollBox.scrollTop = 7 * ROW_H;
+            scrollBox.dataset.scrolled = '1';
+        }
+    }
+
+    /* ── Detalle de un horario al hacer click (bloque o "todo el día") ── */
+    function openHorDetalle(item) {
+        const cfg   = ESTADO_CFG[item.estado] || ESTADO_CFG.programado;
+        const parts = item.fecha.split('-');
+        const label = `${parseInt(parts[2])} de ${MESES[parseInt(parts[1]) - 1]} de ${parts[0]}`;
+
+        document.getElementById('modalHorDetTitle').innerHTML = `<i class="bi bi-person-badge me-2"></i>${esc(item.nombre)}`;
+        document.getElementById('modalHorDetFecha').textContent = label;
+
+        const esExtra  = item.estado === 'extra';
+        const agendado = (!esExtra && item.hora_inicio && item.hora_fin)
+            ? `${item.hora_inicio} – ${item.hora_fin}`
+            : (esExtra ? 'Sin horario agendado (trabajó sin turno asignado)' : 'Todo el día / sin hora definida');
+
+        // Sesiones reales de conexión (separadas por huecos, no un solo tramo continuo)
+        const sesiones = Array.isArray(item.sesiones) ? item.sesiones : [];
+        const realHtml = sesiones.length
+            ? sesiones.map(s => `<div>${esc(s.inicio)} – ${esc(s.fin)}</div>`).join('')
+            : '<div class="text-muted">Sin registro de conexión</div>';
+        const realLabel = sesiones.length > 1
+            ? `Conectado (real) — ${sesiones.length} sesiones`
+            : 'Conectado (real)';
+        const canDel = item.id && (item.es_mio || DATA.isAdmin);
+
+        document.getElementById('modalHorDetBody').innerHTML = `
+            <div class="hd-row">
+                <i class="bi bi-calendar-event"></i>
+                <div><div class="hd-label">Agendado</div><div class="hd-value">${esc(agendado)}</div></div>
+            </div>
+            <div class="hd-row">
+                <i class="bi bi-wifi"></i>
+                <div><div class="hd-label">${esc(realLabel)}</div><div class="hd-value">${realHtml}</div></div>
+            </div>
+            <div class="hd-row">
+                <i class="bi bi-flag"></i>
+                <div><div class="hd-label">Estado</div><div class="hd-value">
+                    <span style="background:${cfg.badge};color:#fff;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:700;">${cfg.label}</span>
+                </div></div>
+            </div>
+            ${item.notas ? `
+            <div class="hd-row">
+                <i class="bi bi-sticky"></i>
+                <div><div class="hd-label">Notas</div><div class="hd-value fw-normal">${esc(item.notas)}</div></div>
+            </div>` : ''}
+            ${canDel ? `<button class="btn btn-outline-danger btn-sm w-100 mt-3" id="hd-del-btn" data-id="${item.id}"><i class="bi bi-x-circle me-1"></i>Cancelar horario</button>` : ''}
+        `;
+
+        const delBtn = document.getElementById('hd-del-btn');
+        if (delBtn) delBtn.addEventListener('click', function () {
+            if (!confirm('¿Cancelar este horario agendado?')) return;
+            deleteHorario(this.dataset.id);
+        });
+
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'modalHorDetalle' }));
+    }
+
+    // Delegación de clicks: bloques con hora, items "todo el día" y botón "+" del header
+    document.getElementById('hgBody').addEventListener('click', e => {
+        const blk = e.target.closest('.hg-block');
+        if (!blk) return;
+        const item = itemRegistry[+blk.dataset.ridx];
+        if (item) openHorDetalle(item);
+    });
+    document.getElementById('hgAllday').addEventListener('click', e => {
+        const el = e.target.closest('.hg-allday-item');
+        if (!el) return;
+        const item = itemRegistry[+el.dataset.ridx];
+        if (item) openHorDetalle(item);
+    });
+    document.getElementById('hgHeader').addEventListener('click', e => {
+        const btn = e.target.closest('.hg-add-btn');
+        if (!btn) return;
+        openAgendarModal(btn.dataset.fecha, new Date(btn.dataset.fecha));
+    });
 
     /* ── Modal: agendar ────────────────────────────────────── */
     function openAgendarModal(dateStr, date) {
@@ -1045,7 +1294,7 @@
                 DATA.horarios.push({
                     id: d.id, empleado_id: d.empleado_id, nombre: d.nombre,
                     fecha, hora_inicio: d.hora_inicio, hora_fin: d.hora_fin,
-                    estado: 'programado', es_mio: d.es_mio, notas: d.notas,
+                    sesiones: [], estado: 'programado', es_mio: d.es_mio, notas: d.notas,
                 });
                 setTimeout(() => {
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: 'modalAgendar' }));
@@ -1060,14 +1309,14 @@
         });
     }
 
-    function deleteHorario(id, itemEl) {
+    function deleteHorario(id) {
         fetch(`/admin/horarios/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken() },
         }).then(r => r.json()).then(d => {
             if (d.success) {
                 DATA.horarios = DATA.horarios.filter(h => h.id != id);
-                itemEl?.remove();
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'modalHorDetalle' }));
                 renderWeek();
             }
         });

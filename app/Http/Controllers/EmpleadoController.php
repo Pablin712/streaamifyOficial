@@ -165,8 +165,10 @@ class EmpleadoController extends Controller
         ];
 
         $empleados = Empleado::whereHas('roles')->with('roles')->get();
+        $hoyStr    = Carbon::today()->format('Y-m-d');
+        $desdeStr  = $desde->format('Y-m-d');
 
-        $data = $empleados->map(function ($emp) use ($desde, $puntosPorTipo, $niveles, $dias) {
+        $data = $empleados->map(function ($emp) use ($desde, $puntosPorTipo, $niveles, $dias, $desdeStr, $hoyStr) {
             $tareas = Tarea::where('completada_por', $emp->idemp)
                 ->where('completada', true)
                 ->where('fecha_completada', '>=', $desde)
@@ -191,6 +193,8 @@ class EmpleadoController extends Controller
                 ->where('fechaven', '>=', $desde->toDateString())
                 ->count();
 
+            $conexion = $this->empleadoService->obtenerConexionEnRango($emp->idemp, $desdeStr, $hoyStr);
+
             return [
                 'id'           => $emp->idemp,
                 'nombre'       => $emp->nombreemp,
@@ -203,11 +207,14 @@ class EmpleadoController extends Controller
                 'por_tipo'     => $porTipo,
                 'ventas'       => $ventas,
                 'sospechosas'  => $sospechosas,
+                'conexion'     => $conexion,
             ];
         })->sortByDesc('puntos')->values();
 
+        $topConectados = $data->sortByDesc(fn($e) => $e['conexion']['total_minutos'])->values();
+
         return view('employee.rendimiento', compact(
-            'data', 'periodo', 'dias', 'desde', 'tiposConfig', 'niveles', 'puntosPorTipo'
+            'data', 'topConectados', 'periodo', 'dias', 'desde', 'tiposConfig', 'niveles', 'puntosPorTipo'
         ));
     }
 
