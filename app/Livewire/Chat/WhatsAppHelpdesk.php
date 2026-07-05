@@ -827,10 +827,12 @@ class WhatsAppHelpdesk extends Component
             if (! $operator) {
                 $query->whereRaw('0 = 1');
             } else {
-                [$allowedClientIds, $allowedProviderPhones] =
+                [$allowedClientIds, $allowedProviderPhones, $allClientes] =
                     $this->concentracionAllowedIds($operator->idemp);
 
-                if (empty($allowedClientIds) && empty($allowedProviderPhones)) {
+                if ($allClientes) {
+                    // Tarea general activa (vender / atender_clientes): todos los chats de clientes
+                } elseif (empty($allowedClientIds) && empty($allowedProviderPhones)) {
                     $query->whereRaw('0 = 1');
                 } else {
                     $query->where(function ($q) use ($allowedClientIds, $allowedProviderPhones) {
@@ -1142,6 +1144,7 @@ class WhatsAppHelpdesk extends Component
         $ids = app(ConcentracionService::class)->getIds($empId);
 
         $allowedClientIds = $ids['idcli'];
+        $allClientes = $ids['all_clientes'] ?? false;
 
         if ($ids['all_providers']) {
             // agregar_stock → todos los proveedores activos
@@ -1171,7 +1174,7 @@ class WhatsAppHelpdesk extends Component
             $allowedProviderPhones = [];
         }
 
-        return [$allowedClientIds, $allowedProviderPhones];
+        return [$allowedClientIds, $allowedProviderPhones, $allClientes];
     }
 
     private function computeConversationLabels(array $clientIds): array

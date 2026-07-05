@@ -64,7 +64,10 @@ class CuentaController extends Controller
             $concIdsAll = app(ConcentracionService::class)->getIds($empleado->idemp);
             $concIds = $concIdsAll['idcue'];
             $hasAgregarStock = $concIdsAll['all_providers'] ?? false;
-            if (!empty($concIds)) {
+            if ($concIdsAll['all_cuentas'] ?? false) {
+                // Tarea general activa (atender_clientes / administrar_cuentas): sin filtro de cuentas
+                $cuentas = $this->cuentaService->obtenerCuentas();
+            } elseif (!empty($concIds)) {
                 // Trabajador externo no tiene permisos de servicio (netflix, disney…),
                 // por eso se parte de todas las cuentas activas y se filtra por idcue.
                 $cuentas = $this->cuentaService->obtenerCuentas()

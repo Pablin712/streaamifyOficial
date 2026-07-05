@@ -37,6 +37,11 @@ class ConcentracionService
 
         $hasAgregarStock = $tareas->where('tipo_tarea', 'agregar_stock')->isNotEmpty();
 
+        // ─── Tareas generales (rol temporal, RequisitosV7.4) ─────────────────
+        $hasVender        = $tareas->where('tipo_tarea', 'general_vender')->isNotEmpty();
+        $hasAtender       = $tareas->where('tipo_tarea', 'general_atender_clientes')->isNotEmpty();
+        $hasAdminCuentas  = $tareas->where('tipo_tarea', 'general_administrar_cuentas')->isNotEmpty();
+
         // ─── iddet: direct user tasks (cobrar + quitar) ──────────────────────
         $iddetCobrar = $tareas->where('tipo_tarea', 'cobrar_usuario')
             ->pluck('related_id')->filter()->map(fn($v) => (int) $v)->unique()->values()->toArray();
@@ -133,8 +138,42 @@ class ConcentracionService
             'idsop'           => $allIdSop,
             'idcli'           => $allowedClientIds,
             'idcue_providers' => $idcueForProviders,
-            'all_providers'   => $hasAgregarStock,
+            // agregar_stock y el rol temporal "administrar cuentas" necesitan hablar con todos los proveedores
+            'all_providers'   => $hasAgregarStock || $hasAdminCuentas,
+            // Tareas generales: desbloquean el alcance completo de un dominio sin filtrar por IDs
+            'all_cuentas'     => $hasAtender || $hasAdminCuentas,
+            'all_usuarios'    => $hasAtender,
+            'all_soportes'    => $hasAtender,
+            'all_clientes'    => $hasVender || $hasAtender,
         ];
+    }
+
+    /**
+     * Indica si el empleado tiene, mediante una tarea general activa (RequisitosV7.4),
+     * un permiso de escritura adicional que su rol no otorga por sí solo.
+     */
+    public static function abilityGrantedByGeneralTask(int $empId, string $ability): bool
+    {
+        $tiposQueOtorgan = array_keys(array_filter(
+            Tarea::GENERAL_PERMISSIONS,
+            fn($permisos) => in_array($ability, $permisos, true)
+        ));
+
+        if (empty($tiposQueOtorgan)) {
+            return false;
+        }
+
+        static $activosPorEmpleado = [];
+
+        if (! array_key_exists($empId, $activosPorEmpleado)) {
+            $activosPorEmpleado[$empId] = Tarea::where('assignee_id', $empId)
+                ->where('completada', false)
+                ->whereIn('tipo_tarea', Tarea::GENERAL_TYPES)
+                ->pluck('tipo_tarea')
+                ->all();
+        }
+
+        return ! empty(array_intersect($tiposQueOtorgan, $activosPorEmpleado[$empId]));
     }
 
     public static function isActive(): bool

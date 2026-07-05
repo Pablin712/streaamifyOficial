@@ -31,6 +31,10 @@ class TareasBoard extends Component
     public string $formPrioridad = 'media';
     public string $formFecha     = '';
 
+    // ── Modal tarea general (rol temporal) ───────────────────────────────────
+    public string $generalTipo  = '';
+    public int    $generalEmpId = 0;
+
     // ── Modal tomar masivo ───────────────────────────────────────────────────
     public int   $masivoAssigneeId = 0;
     public array $masivos = [
@@ -142,6 +146,45 @@ class TareasBoard extends Component
         ]);
         $this->registrarHistorial("Tarea asignada al empleado #{$empId}", $tarea);
         $this->dispatch('notify', type: 'success', msg: 'Tarea asignada.');
+    }
+
+    // ─── Asignar tarea general / rol temporal (admins) ───────────────────────
+
+    public function asignarGeneral(): void
+    {
+        if (! $this->user()->isAdmin()) {
+            $this->dispatch('notify', type: 'danger', msg: 'Sin permiso para asignar tareas generales.');
+            return;
+        }
+        if (! in_array($this->generalTipo, Tarea::GENERAL_TYPES, true) || $this->generalEmpId <= 0) {
+            $this->dispatch('notify', type: 'warning', msg: 'Selecciona un tipo y un empleado.');
+            return;
+        }
+
+        $yaExiste = Tarea::where('tipo_tarea', $this->generalTipo)
+            ->where('assignee_id', $this->generalEmpId)
+            ->where('completada', false)
+            ->exists();
+
+        if ($yaExiste) {
+            $this->dispatch('notify', type: 'warning', msg: 'Ese empleado ya tiene esa tarea general activa.');
+            return;
+        }
+
+        $tarea = Tarea::create([
+            'tipo_tarea'   => $this->generalTipo,
+            'nombretarea'  => Tarea::TIPOS[$this->generalTipo]['label'],
+            'prioridad'    => 'media',
+            'assignee_id'  => $this->generalEmpId,
+            'asignado_por' => $this->user()->idemp,
+            'assigned_at'  => now(),
+            'completada'   => false,
+        ]);
+
+        $this->registrarHistorial('Tarea general asignada al empleado #' . $this->generalEmpId, $tarea);
+        $this->reset(['generalTipo', 'generalEmpId']);
+        $this->js("window.dispatchEvent(new CustomEvent('close-modal', { detail: 'tareaGeneralModal' }))");
+        $this->dispatch('notify', type: 'success', msg: 'Tarea general asignada.');
     }
 
     // ─── Reasignar (admin) ───────────────────────────────────────────────────
@@ -423,6 +466,9 @@ class TareasBoard extends Component
 
         $empleados = $isAdmin ? Empleado::orderBy('nombreemp')->whereHas('roles')->get(['idemp', 'nombreemp']) : collect();
         $tipos     = Tarea::TIPOS;
+        $tiposGenerales = $isAdmin
+            ? collect(Tarea::GENERAL_TYPES)->mapWithKeys(fn($tipo) => [$tipo => Tarea::TIPOS[$tipo]])->toArray()
+            : [];
 
         $tieneCanalWsp = ChatWhatsappChannel::availableForOutbound()->exists();
 
@@ -452,7 +498,7 @@ class TareasBoard extends Component
         return view('livewire.tareas-board', compact(
             'pool', 'misTareas', 'completadas', 'todasAsignadas',
             'totalPool', 'totalMias', 'completadasHoy', 'totalAsignadas',
-            'empleados', 'isAdmin', 'tipos', 'disponiblesPorTipo',
+            'empleados', 'isAdmin', 'tipos', 'tiposGenerales', 'disponiblesPorTipo',
             'tieneCanalWsp', 'datosWspPorTarea', 'tareasDeOtros', 'contextoPorTarea'
         ));
     }

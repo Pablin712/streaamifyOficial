@@ -42,6 +42,32 @@ class Tarea extends Model
         'soporte_pendiente'=> ['label' => 'Soporte pendiente',  'icon' => '🎧', 'color' => 'info'],
         'agregar_stock'    => ['label' => 'Agregar stock',      'icon' => '📦', 'color' => 'success'],
         'manual'           => ['label' => 'Tarea manual',       'icon' => '📝', 'color' => 'secondary'],
+
+        // Tareas generales: rol temporal, solo asignable por Admin/Gerente (RequisitosV7.4)
+        'general_vender'              => ['label' => 'Rol temporal: Vender',              'icon' => '🛒', 'color' => 'primary'],
+        'general_atender_clientes'    => ['label' => 'Rol temporal: Atender clientes',    'icon' => '🎧', 'color' => 'info'],
+        'general_administrar_cuentas' => ['label' => 'Rol temporal: Administrar cuentas', 'icon' => '🗄️', 'color' => 'success'],
+    ];
+
+    // Tipos de tarea "general": dan acceso amplio y sin filtrar a un dominio mientras estén activas
+    const GENERAL_TYPES = [
+        'general_vender',
+        'general_atender_clientes',
+        'general_administrar_cuentas',
+    ];
+
+    // Permisos de escritura adicionales que otorga cada tarea general (ver ConcentracionService::abilityGrantedByGeneralTask)
+    const GENERAL_PERMISSIONS = [
+        'general_vender' => [
+            'ventas.create', 'ventas.store', 'ventas.storeRenew', 'ventas.storeCliente',
+            'ventas.status', 'ventas.edit', 'ventas.renew', 'ventas.update', 'ventas.sendInvoice',
+            'clientes.create', 'clientes.store', 'clientes.edit', 'clientes.update',
+        ],
+        'general_atender_clientes' => [],
+        'general_administrar_cuentas' => [
+            'servicios.create', 'servicios.store', 'servicios.edit', 'servicios.update',
+            'valores.edit', 'valores.update',
+        ],
     ];
 
     // ─── Relaciones ───────────────────────────────────────────────────────────

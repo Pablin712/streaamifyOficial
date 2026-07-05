@@ -64,6 +64,9 @@ class ClienteController extends Controller
             return null;
         }
         $ids = app(ConcentracionService::class)->getIds(Auth::user()->idemp);
+        if ($ids['all_clientes'] ?? false) {
+            return null;
+        }
         return $ids['idcli'];
     }
 

@@ -38,11 +38,14 @@ class SoporteController extends Controller
             ->orderByDesc('created_at');
 
         if (ConcentracionService::isActive()) {
-            $concIds = app(ConcentracionService::class)->getIds($user->idemp)['idsop'];
-            if (!empty($concIds)) {
-                $soportesQuery->whereIn('idsop', $concIds);
-            } else {
-                $soportesQuery->whereRaw('1 = 0');
+            $concIdsAll = app(ConcentracionService::class)->getIds($user->idemp);
+            if (! ($concIdsAll['all_soportes'] ?? false)) {
+                $concIds = $concIdsAll['idsop'];
+                if (!empty($concIds)) {
+                    $soportesQuery->whereIn('idsop', $concIds);
+                } else {
+                    $soportesQuery->whereRaw('1 = 0');
+                }
             }
         }
 

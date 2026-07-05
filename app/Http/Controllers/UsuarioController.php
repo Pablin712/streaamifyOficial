@@ -214,11 +214,14 @@ class UsuarioController extends Controller
             ->leftJoin('detalles_venta', 'detalles_venta.iddet', '=', 'vua.iddet');
 
         if (ConcentracionService::isActive()) {
-            $concIds = app(ConcentracionService::class)->getIds(Auth::user()->idemp)['iddet'];
-            if (!empty($concIds)) {
-                $query->whereIn('vua.iddet', $concIds);
-            } else {
-                $query->whereRaw('1 = 0');
+            $concIdsAll = app(ConcentracionService::class)->getIds(Auth::user()->idemp);
+            if (! ($concIdsAll['all_usuarios'] ?? false)) {
+                $concIds = $concIdsAll['iddet'];
+                if (!empty($concIds)) {
+                    $query->whereIn('vua.iddet', $concIds);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
             }
         }
 

@@ -229,6 +229,14 @@
                     x-on:click="window.dispatchEvent(new CustomEvent('open-modal',{detail:'tareaManualModal'}))">
                 <i class="fas fa-plus me-1"></i> Manual
             </button>
+
+            {{-- Tarea general / rol temporal (solo admins) --}}
+            @if($isAdmin)
+                <button type="button" class="btn btn-outline-primary btn-sm"
+                        x-on:click="window.dispatchEvent(new CustomEvent('open-modal',{detail:'tareaGeneralModal'}))">
+                    <i class="fas fa-user-shield me-1"></i> Rol temporal
+                </button>
+            @endif
         </div>
     </div>
 
@@ -806,5 +814,55 @@
         </div>
         </form>
     </x-modal>
+
+    {{-- ═════════════════════ MODAL: TAREA GENERAL (ROL TEMPORAL) ═════════════════════ --}}
+    @if($isAdmin)
+    <x-modal name="tareaGeneralModal" :show="false" maxWidth="md">
+        <form wire:submit.prevent="asignarGeneral">
+        <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-user-shield me-2"></i>Asignar rol temporal</h5>
+            <button type="button" class="btn-close"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'tareaGeneralModal'}))">
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:.81rem;color:#6b7280;margin-bottom:.9rem;">
+                Da acceso amplio y sin filtrar a un dominio mientras la tarea esté activa,
+                sin cambiar el rol real del empleado. El propio empleado la marca completada
+                cuando termina.
+            </p>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Tipo de rol temporal <span class="text-danger">*</span></label>
+                <select wire:model="generalTipo" class="form-select">
+                    <option value="">Selecciona…</option>
+                    @foreach($tiposGenerales as $k => $meta)
+                        <option value="{{ $k }}">{{ $meta['icon'] }} {{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Empleado <span class="text-danger">*</span></label>
+                <select wire:model="generalEmpId" class="form-select">
+                    <option value="0">Selecciona…</option>
+                    @foreach($empleados as $emp)
+                        <option value="{{ $emp->idemp }}">{{ $emp->nombreemp }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary"
+                    onclick="window.dispatchEvent(new CustomEvent('close-modal',{detail:'tareaGeneralModal'}))">
+                Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                <span wire:loading wire:target="asignarGeneral" class="spinner-border spinner-border-sm me-1"></span>
+                <i wire:loading.remove wire:target="asignarGeneral" class="fas fa-save me-1"></i>
+                Asignar
+            </button>
+        </div>
+        </form>
+    </x-modal>
+    @endif
 
 </div>

@@ -40,7 +40,9 @@ class CalendarController extends Controller
             ? app(\App\Services\ConcentracionService::class)->getIds($empleado->idemp)
             : null;
 
-        if ($isLocked) {
+        if ($isLocked && ($concAll['all_cuentas'] ?? false)) {
+            $cuentas = $this->cuentaService->obtenerCuentas();
+        } elseif ($isLocked) {
             $cuentaIds = $concAll['idcue'];
             $cuentas = !empty($cuentaIds)
                 ? $this->cuentaService->obtenerCuentas()->whereIn('idcue', $cuentaIds)->values()
@@ -50,11 +52,13 @@ class CalendarController extends Controller
         }
         $this->cuentaService->asignarUsuarios($cuentas);
 
-        $usuarios = $isLocked
-            ? (! empty($concAll['iddet'])
-                ? ViewUsuarioActivo::whereIn('iddet', $concAll['iddet'])->get()
-                : collect())
-            : ViewUsuarioActivo::all();
+        $usuarios = ! $isLocked
+            ? ViewUsuarioActivo::all()
+            : (($concAll['all_usuarios'] ?? false)
+                ? ViewUsuarioActivo::all()
+                : (! empty($concAll['iddet'])
+                    ? ViewUsuarioActivo::whereIn('iddet', $concAll['iddet'])->get()
+                    : collect()));
 
         // Trabajador externo: solo sus tareas asignadas, sin datos financieros del negocio
         if ($isLocked) {
