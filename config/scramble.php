@@ -1,7 +1,5 @@
 <?php
 
-use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
-
 return [
     /*
      * Document only API v2 endpoints for Android app integration.
@@ -128,7 +126,6 @@ return [
 
     'middleware' => [
         'web',
-        RestrictedDocsAccess::class,
     ],
 
     'extensions' => [],
