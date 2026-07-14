@@ -295,6 +295,13 @@ class WhatsAppHelpdeskService
             $storedUrl = asset(Storage::url($path));
             $mimeType = $file->getMimeType();
             $fileName = $file->getClientOriginalName();
+
+            // El sniffer de PHP detecta las grabaciones de audio-only del navegador
+            // (contenedor webm/mp4 sin pista de video) como "video/*". Se corrige para
+            // que WhatsApp/Evolution reciban el mime real de audio.
+            if ($type === 'audio' && str_starts_with((string) $mimeType, 'video/')) {
+                $mimeType = 'audio/'.substr($mimeType, strlen('video/'));
+            }
         }
 
         $content = trim(strip_tags($content));
