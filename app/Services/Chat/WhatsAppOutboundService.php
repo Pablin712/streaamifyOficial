@@ -36,6 +36,21 @@ class WhatsAppOutboundService
     }
 
     /**
+     * Envía una nota de voz (audio) usando el endpoint dedicado de Evolution API,
+     * que convierte el archivo (mp3/wav/ogg/etc.) a Opus/OGG con ptt:true del lado
+     * del servidor de Evolution. A diferencia de sendMedia, esto sí llega como nota
+     * de voz reproducible nativa de WhatsApp.
+     */
+    public function sendVoiceNote(string $number, string $mediaUrl, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    {
+        if (! $apiKey || ! $instance) {
+            return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
+        }
+
+        return $this->sendVoiceNoteViaEvolution($number, $mediaUrl, $instance, $apiKey, $serverUrl);
+    }
+
+    /**
      * Resuelve canal WhatsApp por nombre de instancia
      */
     public function resolveChannelByInstance(?string $instance): ?ChatWhatsappChannel
@@ -89,6 +104,33 @@ class WhatsAppOutboundService
                     'caption' => $caption,
                     'media' => $mediaUrl,
                     'fileName' => $fileName ?: 'archivo',
+                ]);
+
+            return [
+                'ok' => $response->successful(),
+                'external_message_id' => $response->json('key.id') ?? $response->json('message.key.id'),
+                'status' => $response->status(),
+                'error' => $response->successful() ? null : $response->body(),
+            ];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function sendVoiceNoteViaEvolution(string $number, string $mediaUrl, string $instance, string $apiKey, ?string $serverUrl): array
+    {
+        $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'apikey' => $apiKey,
+                ])
+                ->post("{$baseUrl}/message/sendWhatsAppAudio/{$instance}", [
+                    'number' => $this->formatNumber($number),
+                    'audio' => $mediaUrl,
+                    'encoding' => true,
                 ]);
 
             return [

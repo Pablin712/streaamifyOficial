@@ -728,7 +728,14 @@ class WhatsAppHelpdeskService
             return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl);
         }
 
-            // Media: enviar el archivo real por Evo API (imagen/audio/video/documento)
+            // Audio: endpoint dedicado de nota de voz. Evolution convierte el archivo
+            // (wav/mp3/etc.) a Opus/OGG con ptt:true de su lado; sendMedia genérico no
+            // llega como nota de voz reproducible al destinatario.
+            if ($type === 'audio') {
+                return $this->outbound->sendVoiceNote($number, $mediaUrl, $instance, $apiKey, $serverUrl);
+            }
+
+            // Media: enviar el archivo real por Evo API (imagen/video/documento)
             return $this->outbound->sendMedia(
                 $number,
                 $mediaUrl,
