@@ -90,6 +90,14 @@ class Mensaje extends Model
     }
 
     /**
+     * Reacciones con emoji a este mensaje (una por autor_tipo: cliente/empleado)
+     */
+    public function reacciones()
+    {
+        return $this->hasMany(MensajeReaccion::class, 'idmsg', 'idmsg');
+    }
+
+    /**
      * Marcar como leído
      */
     public function marcarComoLeido()

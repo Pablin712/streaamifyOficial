@@ -58,6 +58,8 @@ class WhatsAppHelpdesk extends Component
 
     public ?int $replyingToIdmsg = null;
 
+    public ?int $reactionPickerForIdmsg = null;
+
     public string $mobilePane = 'list';
 
     public bool $showSettingsModal = false;
@@ -431,6 +433,36 @@ class WhatsAppHelpdesk extends Component
         if ($this->replyingToIdmsg === $idmsg) {
             $this->replyingToIdmsg = null;
         }
+    }
+
+    /** Paleta fija de reacciones rápidas, mismas que usa WhatsApp. */
+    public const EMOJIS_REACCION = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+    public function reactToMessage(int $idmsg, string $emoji): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para reaccionar a mensajes.');
+        $this->requireConversation();
+        abort_unless(in_array($emoji, self::EMOJIS_REACCION, true), 422, 'Emoji no permitido.');
+
+        $mensaje = Mensaje::query()
+            ->where('idmsg', $idmsg)
+            ->where('idconv', $this->activeConversation()?->idconv)
+            ->first();
+
+        if (! $mensaje) {
+            return;
+        }
+
+        $yaReaccione = $mensaje->reacciones()->where('autor_tipo', 'empleado')->where('emoji', $emoji)->exists();
+
+        app(WhatsAppHelpdeskService::class)->reactToMessage($mensaje, $yaReaccione ? '' : $emoji);
+
+        $this->reactionPickerForIdmsg = null;
+    }
+
+    public function toggleReactionPicker(?int $idmsg): void
+    {
+        $this->reactionPickerForIdmsg = $this->reactionPickerForIdmsg === $idmsg ? null : $idmsg;
     }
 
     public function highlightMessageContent(?string $content, ?string $term = null): string
@@ -1109,7 +1141,7 @@ class WhatsAppHelpdesk extends Component
 
         $messagesQuery = Mensaje::query()
             ->where('idconv', $conversation->idconv)
-            ->with(['empleado', 'cliente', 'replyTo'])
+            ->with(['empleado', 'cliente', 'replyTo', 'reacciones'])
             ->orderByDesc('idmsg');
 
         if (trim($this->activeMessageSearch) !== '') {

@@ -732,10 +732,34 @@
             opacity: 1;
         }
 
-        .wa-delete-trigger {
+        .wa-react-trigger {
             position: absolute;
             top: -10px;
             right: 20px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--wa-border);
+            background: var(--wa-panel);
+            font-size: 12px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--wa-transition);
+            box-shadow: var(--wa-shadow-sm);
+        }
+
+        .wa-bubble:hover .wa-react-trigger {
+            opacity: 1;
+        }
+
+        .wa-delete-trigger {
+            position: absolute;
+            top: -10px;
+            right: 50px;
             width: 24px;
             height: 24px;
             border-radius: 50%;
@@ -755,6 +779,50 @@
 
         .wa-bubble:hover .wa-delete-trigger {
             opacity: 1;
+        }
+
+        .wa-reaction-picker {
+            position: absolute;
+            top: -46px;
+            right: -10px;
+            display: flex;
+            gap: 2px;
+            background: var(--wa-panel);
+            border: 1px solid var(--wa-border);
+            border-radius: 999px;
+            padding: 4px 6px;
+            box-shadow: var(--wa-shadow-sm);
+            z-index: 5;
+        }
+
+        .wa-reaction-picker-btn {
+            border: 0;
+            background: transparent;
+            font-size: 17px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 50%;
+            transition: var(--wa-transition);
+        }
+
+        .wa-reaction-picker-btn:hover {
+            background: var(--wa-bg);
+        }
+
+        .wa-reactions {
+            display: flex;
+            gap: 3px;
+            margin-top: 4px;
+        }
+
+        .wa-reaction-chip {
+            background: var(--wa-panel);
+            border: 1px solid var(--wa-border);
+            border-radius: 999px;
+            padding: 1px 6px;
+            font-size: 13px;
+            box-shadow: var(--wa-shadow-sm);
         }
 
         .wa-deleted-notice {
@@ -2385,6 +2453,7 @@
                         <div class="wa-bubble">
                             @if(!$message->eliminado_at)
                                 <button type="button" class="wa-reply-trigger" title="Responder" wire:click="startReply({{ $message->idmsg }})">↩</button>
+                                <button type="button" class="wa-react-trigger" title="Reaccionar" wire:click="toggleReactionPicker({{ $message->idmsg }})">😀</button>
                                 @if($message->tipo_remitente === 'empleado')
                                     <button
                                         type="button"
@@ -2393,6 +2462,14 @@
                                         wire:click="deleteMessage({{ $message->idmsg }})"
                                         wire:confirm="¿Borrar este mensaje? Se intentará borrar también en WhatsApp, pero eso solo funciona si no pasó mucho tiempo desde que se envió."
                                     >🗑</button>
+                                @endif
+
+                                @if($reactionPickerForIdmsg === $message->idmsg)
+                                    <div class="wa-reaction-picker">
+                                        @foreach(\App\Livewire\Chat\WhatsAppHelpdesk::EMOJIS_REACCION as $emojiOpcion)
+                                            <button type="button" class="wa-reaction-picker-btn" wire:click="reactToMessage({{ $message->idmsg }}, '{{ $emojiOpcion }}')">{{ $emojiOpcion }}</button>
+                                        @endforeach
+                                    </div>
                                 @endif
                             @endif
 
@@ -2422,6 +2499,14 @@
 
                                 @if($message->contenido !== '')
                                     <div>{!! $this->highlightMessageContent($message->contenido) !!}</div>
+                                @endif
+
+                                @if($message->reacciones->isNotEmpty())
+                                    <div class="wa-reactions">
+                                        @foreach($message->reacciones as $reaccion)
+                                            <span class="wa-reaction-chip" title="{{ $reaccion->autor_tipo === 'empleado' ? 'Tu reacción' : 'Reacción del cliente' }}">{{ $reaccion->emoji }}</span>
+                                        @endforeach
+                                    </div>
                                 @endif
                             @endif
                         </div>

@@ -11,6 +11,7 @@ use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Empleado;
 use App\Models\Mensaje;
+use App\Models\MensajeReaccion;
 use App\Support\PhoneNumber;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -464,6 +465,48 @@ class WhatsAppHelpdeskService
         $mensaje->update(['eliminado_at' => now()]);
 
         return $dispatch ?? ['ok' => false, 'error' => 'No se pudo confirmar el borrado en WhatsApp.'];
+    }
+
+    /**
+     * Reacciona (o quita la reacción, con $emoji = '') a un mensaje desde el panel.
+     * Best-effort del lado de WhatsApp, igual que borrar: si Evolution falla, la
+     * reacción del empleado igual queda reflejada localmente.
+     */
+    public function reactToMessage(Mensaje $mensaje, string $emoji): array
+    {
+        $emoji = trim($emoji);
+        $dispatch = null;
+
+        if ($mensaje->external_id) {
+            $conversation = Conversacion::query()->with('contactoCanal')->find($mensaje->idconv);
+            $creds = $conversation ? $this->resolveOutboundCredentials($conversation) : null;
+
+            if ($creds) {
+                $dispatch = $this->outbound->sendReaction(
+                    $creds['number'],
+                    $mensaje->external_id,
+                    $emoji,
+                    $mensaje->tipo_remitente !== 'cliente',
+                    $creds['instance'],
+                    $creds['apiKey'],
+                    $creds['serverUrl']
+                );
+            }
+        }
+
+        if ($emoji === '') {
+            MensajeReaccion::query()
+                ->where('idmsg', $mensaje->idmsg)
+                ->where('autor_tipo', 'empleado')
+                ->delete();
+        } else {
+            MensajeReaccion::query()->updateOrCreate(
+                ['idmsg' => $mensaje->idmsg, 'autor_tipo' => 'empleado'],
+                ['emoji' => $emoji]
+            );
+        }
+
+        return $dispatch ?? ['ok' => false, 'error' => 'No se pudo confirmar la reacción en WhatsApp.'];
     }
 
     /**

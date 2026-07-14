@@ -73,6 +73,18 @@ class WhatsAppOutboundService
     }
 
     /**
+     * Reacciona con un emoji a un mensaje. $emoji = "" quita la reacción.
+     */
+    public function sendReaction(string $number, string $externalId, string $emoji, bool $fromMe, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    {
+        if (! $apiKey || ! $instance) {
+            return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
+        }
+
+        return $this->sendReactionViaEvolution($number, $externalId, $emoji, $fromMe, $instance, $apiKey, $serverUrl);
+    }
+
+    /**
      * Resuelve canal WhatsApp por nombre de instancia
      */
     public function resolveChannelByInstance(?string $instance): ?ChatWhatsappChannel
@@ -180,6 +192,35 @@ class WhatsAppOutboundService
                     'id' => $externalId,
                     'remoteJid' => $this->formatNumber($number),
                     'fromMe' => $fromMe,
+                ]);
+
+            return [
+                'ok' => $response->successful(),
+                'status' => $response->status(),
+                'error' => $response->successful() ? null : $response->body(),
+            ];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function sendReactionViaEvolution(string $number, string $externalId, string $emoji, bool $fromMe, string $instance, string $apiKey, ?string $serverUrl): array
+    {
+        $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
+
+        try {
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'apikey' => $apiKey,
+                ])
+                ->post("{$baseUrl}/message/sendReaction/{$instance}", [
+                    'key' => [
+                        'remoteJid' => $this->formatNumber($number),
+                        'fromMe' => $fromMe,
+                        'id' => $externalId,
+                    ],
+                    'reaction' => $emoji,
                 ]);
 
             return [

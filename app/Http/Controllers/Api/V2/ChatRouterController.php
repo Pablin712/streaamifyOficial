@@ -13,6 +13,7 @@ use App\Models\ChatWhatsappChannel;
 use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
+use App\Models\MensajeReaccion;
 use App\Models\Proveedor;
 use App\Services\Chat\WhatsAppOutboundService;
 use App\Support\PhoneNumber;
@@ -76,6 +77,12 @@ class ChatRouterController extends Controller
                 'success' => false,
                 'message' => 'Mensaje fromMe detectado. Usa /api/v2/chat/router/save-respond para registrar outbound.',
             ], 422);
+        }
+
+        // Una reaccion con emoji no es un mensaje nuevo -- solo anota uno existente.
+        // Se maneja aparte, antes de la validacion que exige contenido/media.
+        if ($request->filled('reaction_to_external_id')) {
+            return $this->handleReaction($request);
         }
 
         $validator = Validator::make($request->all(), [
@@ -362,6 +369,47 @@ class ChatRouterController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Procesa una reaccion con emoji a un mensaje ya existente (no crea mensaje nuevo).
+     * $request trae reaction_to_external_id (external_id del mensaje reaccionado),
+     * reaction_emoji ("" significa que se quito la reaccion) y from_me.
+     */
+    private function handleReaction(Request $request)
+    {
+        $externalId = trim((string) $request->input('reaction_to_external_id'));
+        $emoji = (string) $request->input('reaction_emoji', '');
+        $fromMe = filter_var($request->input('from_me'), FILTER_VALIDATE_BOOLEAN);
+
+        $mensaje = Mensaje::query()->where('external_id', $externalId)->first();
+
+        if (! $mensaje) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mensaje reaccionado no encontrado localmente.',
+            ], 404);
+        }
+
+        $autorTipo = $fromMe ? 'empleado' : 'cliente';
+
+        if ($emoji === '') {
+            MensajeReaccion::query()
+                ->where('idmsg', $mensaje->idmsg)
+                ->where('autor_tipo', $autorTipo)
+                ->delete();
+        } else {
+            MensajeReaccion::query()->updateOrCreate(
+                ['idmsg' => $mensaje->idmsg, 'autor_tipo' => $autorTipo],
+                ['emoji' => $emoji]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reacción procesada.',
+            'data' => ['idmsg' => $mensaje->idmsg],
+        ]);
     }
 
     public function contextoConversacion(Request $request)
