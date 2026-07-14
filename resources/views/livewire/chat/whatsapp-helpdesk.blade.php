@@ -656,12 +656,119 @@
         }
 
         .wa-bubble {
+            position: relative;
             border-radius: var(--wa-radius-lg);
             padding: 10px 14px;
             background: var(--wa-panel);
             box-shadow: var(--wa-shadow-sm);
             max-width: 100%;
             word-wrap: break-word;
+        }
+
+        /* Responder a un mensaje (hilo/cita estilo WhatsApp) */
+        .wa-reply-trigger {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--wa-border);
+            background: var(--wa-panel);
+            color: var(--wa-text-secondary);
+            font-size: 13px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--wa-transition);
+            box-shadow: var(--wa-shadow-sm);
+        }
+
+        .wa-bubble:hover .wa-reply-trigger {
+            opacity: 1;
+        }
+
+        .wa-quoted {
+            border-left: 3px solid var(--wa-accent);
+            background: rgba(0,0,0,0.05);
+            border-radius: 6px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            font-size: 12.5px;
+            overflow: hidden;
+        }
+
+        .wa-quoted-author {
+            font-weight: 600;
+            color: var(--wa-accent);
+            margin-bottom: 2px;
+        }
+
+        .wa-quoted-text {
+            color: var(--wa-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wa-message.empleado .wa-quoted,
+        .wa-message.ia .wa-quoted {
+            background: rgba(255,255,255,0.15);
+            border-left-color: white;
+        }
+
+        .wa-message.empleado .wa-quoted-author,
+        .wa-message.ia .wa-quoted-author {
+            color: white;
+        }
+
+        .wa-message.empleado .wa-quoted-text,
+        .wa-message.ia .wa-quoted-text {
+            color: rgba(255,255,255,0.85);
+        }
+
+        /* Barra "respondiendo a..." arriba del composer */
+        .wa-reply-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--wa-space-2);
+            background: var(--wa-bg);
+            border-left: 3px solid var(--wa-accent);
+            border-radius: var(--wa-radius-md);
+            padding: 6px 10px;
+            margin-bottom: 8px;
+        }
+
+        .wa-reply-bar-content {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .wa-reply-bar-author {
+            font-weight: 600;
+            font-size: 12.5px;
+            color: var(--wa-accent);
+        }
+
+        .wa-reply-bar-text {
+            font-size: 12.5px;
+            color: var(--wa-text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wa-reply-bar-cancel {
+            border: 0;
+            background: transparent;
+            color: var(--wa-text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
         .wa-message.cliente .wa-bubble {
@@ -2080,6 +2187,20 @@
                         $dateKey = optional($message->created_at)->format('Y-m-d');
                         $type = $message->tipo ?: $message->tipo_contenido;
                         $mediaUrl = $message->media_playable_url;
+                        $quotedPreview = null;
+                        if ($message->replyTo) {
+                            $quotedText = trim((string) $message->replyTo->contenido);
+                            if ($quotedText === '') {
+                                $quotedText = match ($message->replyTo->tipo_contenido) {
+                                    'imagen' => '📷 Imagen',
+                                    'audio' => '🎤 Audio',
+                                    'video' => '🎬 Video',
+                                    'documento', 'archivo' => '📄 Documento',
+                                    default => '',
+                                };
+                            }
+                            $quotedPreview = \Illuminate\Support\Str::limit($quotedText, 80);
+                        }
                     @endphp
                     @if($dateKey !== $lastDate)
                         <div class="wa-date-divider">{{ optional($message->created_at)->format('d/m/Y') }}</div>
@@ -2087,6 +2208,13 @@
                     @endif
                     <article class="wa-message {{ $message->tipo_remitente }}">
                         <div class="wa-bubble">
+                            <button type="button" class="wa-reply-trigger" title="Responder" wire:click="startReply({{ $message->idmsg }})">↩</button>
+                            @if($message->replyTo)
+                                <div class="wa-quoted">
+                                    <div class="wa-quoted-author">{{ $message->replyTo->nombre_remitente }}</div>
+                                    <div class="wa-quoted-text">{{ $quotedPreview }}</div>
+                                </div>
+                            @endif
                             @if($type === 'imagen' && $mediaUrl)
                                 <img src="{{ $mediaUrl }}" class="wa-media" alt="Imagen recibida">
                             @elseif($type === 'sticker' && $mediaUrl)
@@ -2121,6 +2249,31 @@
                 @error('imageUpload') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
                 @error('audioUpload') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
                 <span class="wa-record-error" id="wa-record-error" style="display: none;"></span>
+
+                @if($replyingToIdmsg)
+                    @php $replyingToMessage = $messages->firstWhere('idmsg', $replyingToIdmsg); @endphp
+                    @if($replyingToMessage)
+                        @php
+                            $replyingToText = trim((string) $replyingToMessage->contenido);
+                            if ($replyingToText === '') {
+                                $replyingToText = match ($replyingToMessage->tipo_contenido) {
+                                    'imagen' => '📷 Imagen',
+                                    'audio' => '🎤 Audio',
+                                    'video' => '🎬 Video',
+                                    'documento', 'archivo' => '📄 Documento',
+                                    default => '',
+                                };
+                            }
+                        @endphp
+                        <div class="wa-reply-bar">
+                            <div class="wa-reply-bar-content">
+                                <div class="wa-reply-bar-author">Respondiendo a {{ $replyingToMessage->nombre_remitente }}</div>
+                                <div class="wa-reply-bar-text">{{ \Illuminate\Support\Str::limit($replyingToText, 100) }}</div>
+                            </div>
+                            <button type="button" class="wa-reply-bar-cancel" title="Cancelar respuesta" wire:click="cancelReply">✕</button>
+                        </div>
+                    @endif
+                @endif
 
                 @if($quickResponseSuggestions->isNotEmpty() && str_starts_with(trim((string) $messageText), '/'))
                     <div class="wa-quick-suggestions" style="margin-bottom: 8px; border: 1px solid var(--wa-border); border-radius: 10px; background: #fff; max-height: 220px; overflow-y: auto;">

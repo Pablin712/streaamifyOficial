@@ -271,13 +271,19 @@ class WhatsAppHelpdeskService
     /**
      * Envía un mensaje de operador al usuario
      */
-    public function sendOperatorMessage(Conversacion $conversation, Empleado $operator, string $type, string $content = '', ?UploadedFile $file = null): Mensaje
+    public function sendOperatorMessage(Conversacion $conversation, Empleado $operator, string $type, string $content = '', ?UploadedFile $file = null, ?int $replyToIdmsg = null): Mensaje
     {
         $type = $this->normalizeType($type);
 
         if (! $this->settings->isTypeAllowed($type)) {
             throw new \InvalidArgumentException('Tipo de mensaje no permitido');
         }
+
+        // Responder a un mensaje (hilo/cita estilo WhatsApp): solo si pertenece a la
+        // misma conversación y ya tiene external_id (si no, Evolution no puede citarlo).
+        $replyToMensaje = $replyToIdmsg
+            ? Mensaje::query()->where('idmsg', $replyToIdmsg)->where('idconv', $conversation->idconv)->first()
+            : null;
 
         // Manejar archivos
         $storedUrl = null;
@@ -319,7 +325,7 @@ class WhatsAppHelpdeskService
             throw new \InvalidArgumentException('Mensaje vacío');
         }
 
-        $result = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType, $fileName) {
+        $result = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType, $fileName, $replyToMensaje) {
             // 1. Crear mensaje
             $message = Mensaje::create([
                 'idconv' => $conversation->idconv,
@@ -330,6 +336,7 @@ class WhatsAppHelpdeskService
                 'tipo' => $type, // Para compatibilidad con tests existentes
                 'media_url' => $storedUrl,
                 'mime_type' => $mimeType,
+                'reply_to_idmsg' => $replyToMensaje?->idmsg,
                 'leido' => true,
             ]);
 
@@ -376,6 +383,11 @@ class WhatsAppHelpdeskService
         });
 
         $result['audio_base64'] = $audioBase64;
+        $result['quoted'] = ($replyToMensaje && $replyToMensaje->external_id) ? [
+            'id' => $replyToMensaje->external_id,
+            'fromMe' => $replyToMensaje->tipo_remitente !== 'cliente',
+            'preview' => $this->buildQuotedPreview($replyToMensaje),
+        ] : null;
 
         app()->terminating(function () use ($result) {
             $conversation = Conversacion::query()->with('contactoCanal')->find($result['conversation_id']);
@@ -392,7 +404,8 @@ class WhatsAppHelpdeskService
                 $result['external_media_url'],
                 $result['mime_type'],
                 $result['file_name'],
-                $result['audio_base64']
+                $result['audio_base64'],
+                $result['quoted']
             );
 
             $dispatchOk = (bool) ($dispatch['ok'] ?? false);
@@ -692,7 +705,7 @@ class WhatsAppHelpdeskService
     /**
      * Envía mensaje a WhatsApp vía Evolution o n8n
      */
-    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null, ?string $audioBase64 = null): array
+    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null, ?string $audioBase64 = null, ?array $quoted = null): array
     {
         $contacto = $conversation->contactoCanal;
 
@@ -737,7 +750,7 @@ class WhatsAppHelpdeskService
 
             // Si es texto (o no hay media disponible), enviar directo por Evo API
         if ($type === 'texto' || ! $mediaUrl) {
-            return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl);
+            return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl, quoted: $quoted);
         }
 
             // Audio: endpoint dedicado de nota de voz. Evolution convierte el archivo
@@ -750,7 +763,7 @@ class WhatsAppHelpdeskService
                     return ['ok' => false, 'error' => 'No se pudo preparar el audio para enviar.'];
                 }
 
-                return $this->outbound->sendVoiceNote($number, $audioBase64, $instance, $apiKey, $serverUrl);
+                return $this->outbound->sendVoiceNote($number, $audioBase64, $instance, $apiKey, $serverUrl, $quoted);
             }
 
             // Media: enviar el archivo real por Evo API (imagen/video/documento)
@@ -763,8 +776,29 @@ class WhatsAppHelpdeskService
                 $content,
                 $instance,
                 $apiKey,
-                $serverUrl
+                $serverUrl,
+                $quoted
             );
+    }
+
+    /**
+     * Texto corto para mostrar/mandar como cita de un mensaje respondido (hilo estilo WhatsApp).
+     */
+    private function buildQuotedPreview(Mensaje $mensaje): string
+    {
+        $texto = trim((string) $mensaje->contenido);
+
+        if ($texto !== '') {
+            return $texto;
+        }
+
+        return match ($mensaje->tipo_contenido) {
+            'imagen' => '📷 Imagen',
+            'audio' => '🎤 Audio',
+            'video' => '🎬 Video',
+            'documento', 'archivo' => '📄 Documento',
+            default => ' ',
+        };
     }
 
     /**

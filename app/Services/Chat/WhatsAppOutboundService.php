@@ -13,26 +13,29 @@ class WhatsAppOutboundService
 {
     /**
      * Envía mensaje de texto directo por Evolution API
+     *
+     * $quoted (opcional): ['id' => external_id del mensaje citado, 'fromMe' => bool, 'preview' => string]
+     * para que el mensaje se vea como respuesta a otro, estilo WhatsApp.
      */
-    public function sendText(string $number, string $message, ?string $instance, ?string $apiKey, ?string $serverUrl = null, array $options = []): array
+    public function sendText(string $number, string $message, ?string $instance, ?string $apiKey, ?string $serverUrl = null, array $options = [], ?array $quoted = null): array
     {
         if (! $apiKey || ! $instance) {
             return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
         }
 
-        return $this->sendViaEvolution($number, $message, $instance, $apiKey, $serverUrl);
+        return $this->sendViaEvolution($number, $message, $instance, $apiKey, $serverUrl, $quoted);
     }
 
     /**
      * Envía media (imagen/audio/video/documento) por Evolution API
      */
-    public function sendMedia(string $number, string $mediaUrl, string $mimeType, string $type, ?string $fileName, string $caption, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    public function sendMedia(string $number, string $mediaUrl, string $mimeType, string $type, ?string $fileName, string $caption, ?string $instance, ?string $apiKey, ?string $serverUrl = null, ?array $quoted = null): array
     {
         if (! $apiKey || ! $instance) {
             return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
         }
 
-        return $this->sendMediaViaEvolution($number, $mediaUrl, $mimeType, $type, $fileName, $caption, $instance, $apiKey, $serverUrl);
+        return $this->sendMediaViaEvolution($number, $mediaUrl, $mimeType, $type, $fileName, $caption, $instance, $apiKey, $serverUrl, $quoted);
     }
 
     /**
@@ -46,13 +49,13 @@ class WhatsAppOutboundService
      * dominio para audio (aunque para imágenes sí funciona), así que evitamos que
      * Evolution tenga que descargar nada y viaja directo en el POST.
      */
-    public function sendVoiceNote(string $number, string $base64Audio, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    public function sendVoiceNote(string $number, string $base64Audio, ?string $instance, ?string $apiKey, ?string $serverUrl = null, ?array $quoted = null): array
     {
         if (! $apiKey || ! $instance) {
             return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
         }
 
-        return $this->sendVoiceNoteViaEvolution($number, $base64Audio, $instance, $apiKey, $serverUrl);
+        return $this->sendVoiceNoteViaEvolution($number, $base64Audio, $instance, $apiKey, $serverUrl, $quoted);
     }
 
     /**
@@ -71,17 +74,17 @@ class WhatsAppOutboundService
 
     // --- Métodos privados simples ---
 
-    private function sendViaEvolution(string $number, string $message, string $instance, string $apiKey, ?string $serverUrl): array
+    private function sendViaEvolution(string $number, string $message, string $instance, string $apiKey, ?string $serverUrl, ?array $quoted = null): array
     {
         $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
 
         try {
             $response = Http::timeout(20)
                 ->withHeader('apiKey', $apiKey)
-                ->post("{$baseUrl}/message/sendText/{$instance}", [
+                ->post("{$baseUrl}/message/sendText/{$instance}", array_merge([
                     'number' => $this->formatNumber($number),
                     'text' => $message,
-                ]);
+                ], $this->buildQuotedPayload($quoted, $number)));
 
             return [
                 'ok' => $response->successful(),
@@ -92,7 +95,7 @@ class WhatsAppOutboundService
         }
     }
 
-    private function sendMediaViaEvolution(string $number, string $mediaUrl, string $mimeType, string $type, ?string $fileName, string $caption, string $instance, string $apiKey, ?string $serverUrl): array
+    private function sendMediaViaEvolution(string $number, string $mediaUrl, string $mimeType, string $type, ?string $fileName, string $caption, string $instance, string $apiKey, ?string $serverUrl, ?array $quoted = null): array
     {
         $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
 
@@ -102,14 +105,14 @@ class WhatsAppOutboundService
                     'Content-Type' => 'application/json',
                     'apikey' => $apiKey,
                 ])
-                ->post("{$baseUrl}/message/sendMedia/{$instance}", [
+                ->post("{$baseUrl}/message/sendMedia/{$instance}", array_merge([
                     'number' => $this->formatNumber($number),
                     'mediatype' => $this->mapMediaType($type),
                     'mimetype' => $mimeType,
                     'caption' => $caption,
                     'media' => $mediaUrl,
                     'fileName' => $fileName ?: 'archivo',
-                ]);
+                ], $this->buildQuotedPayload($quoted, $number)));
 
             return [
                 'ok' => $response->successful(),
@@ -122,7 +125,7 @@ class WhatsAppOutboundService
         }
     }
 
-    private function sendVoiceNoteViaEvolution(string $number, string $base64Audio, string $instance, string $apiKey, ?string $serverUrl): array
+    private function sendVoiceNoteViaEvolution(string $number, string $base64Audio, string $instance, string $apiKey, ?string $serverUrl, ?array $quoted = null): array
     {
         $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
 
@@ -132,11 +135,11 @@ class WhatsAppOutboundService
                     'Content-Type' => 'application/json',
                     'apikey' => $apiKey,
                 ])
-                ->post("{$baseUrl}/message/sendWhatsAppAudio/{$instance}", [
+                ->post("{$baseUrl}/message/sendWhatsAppAudio/{$instance}", array_merge([
                     'number' => $this->formatNumber($number),
                     'audio' => $base64Audio,
                     'encoding' => true,
-                ]);
+                ], $this->buildQuotedPayload($quoted, $number)));
 
             return [
                 'ok' => $response->successful(),
@@ -147,6 +150,31 @@ class WhatsAppOutboundService
         } catch (\Throwable $e) {
             return ['ok' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Arma el campo "quoted" que espera Evolution API para que un mensaje saliente
+     * se vea como respuesta a otro (hilo/cita estilo WhatsApp). $quoted trae
+     * ['id' => external_id del mensaje citado, 'fromMe' => bool, 'preview' => string].
+     */
+    private function buildQuotedPayload(?array $quoted, string $number): array
+    {
+        if (! $quoted || empty($quoted['id'])) {
+            return [];
+        }
+
+        return [
+            'quoted' => [
+                'key' => [
+                    'id' => $quoted['id'],
+                    'remoteJid' => $this->formatNumber($number),
+                    'fromMe' => (bool) ($quoted['fromMe'] ?? false),
+                ],
+                'message' => [
+                    'conversation' => $quoted['preview'] ?? '',
+                ],
+            ],
+        ];
     }
 
     private function mapMediaType(string $type): string

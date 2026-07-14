@@ -47,6 +47,8 @@ class WhatsAppHelpdesk extends Component
 
     public ?TemporaryUploadedFile $audioUpload = null;
 
+    public ?int $replyingToIdmsg = null;
+
     public string $mobilePane = 'list';
 
     public bool $showSettingsModal = false;
@@ -304,6 +306,27 @@ class WhatsAppHelpdesk extends Component
 
         $identity = $this->contactIdentity($conversation->fresh(['contactoCanal']));
         $this->settingsNotice = 'Contacto clasificado como '.$identity['label'].'.';
+    }
+
+    public function startReply(int $idmsg): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para responder.');
+        $this->requireConversation();
+
+        $pertenece = Mensaje::query()
+            ->where('idmsg', $idmsg)
+            ->where('idconv', $this->activeConversation()?->idconv)
+            ->exists();
+
+        if ($pertenece) {
+            $this->replyingToIdmsg = $idmsg;
+            $this->dispatch('chat-focus-composer');
+        }
+    }
+
+    public function cancelReply(): void
+    {
+        $this->replyingToIdmsg = null;
     }
 
     public function highlightMessageContent(?string $content): string
@@ -806,12 +829,14 @@ class WhatsAppHelpdesk extends Component
             $this->operator(),
             $type,
             $this->messageText,
-            $file
+            $file,
+            $this->replyingToIdmsg
         );
 
         $this->messageText = '';
         $this->imageUpload = null;
         $this->audioUpload = null;
+        $this->replyingToIdmsg = null;
 
         $this->dispatch('chat-clear-composer');
         $this->dispatch('chat-scroll-bottom');
@@ -948,7 +973,7 @@ class WhatsAppHelpdesk extends Component
 
         $messagesQuery = Mensaje::query()
             ->where('idconv', $conversation->idconv)
-            ->with(['empleado', 'cliente'])
+            ->with(['empleado', 'cliente', 'replyTo'])
             ->orderByDesc('idmsg');
 
         if (trim($this->activeMessageSearch) !== '') {

@@ -86,6 +86,7 @@ class ChatRouterController extends Controller
             'tipo_contenido' => 'nullable|in:texto,imagen,archivo,audio,video,documento,sticker',
             'external_message_id' => 'nullable|string|max:191',
             'external_thread_id' => 'nullable|string|max:191',
+            'reply_to_external_id' => 'nullable|string|max:191',
             'telefono' => 'nullable|string|max:40',
             'numero' => 'nullable|string|max:40',
             'nombre' => 'nullable|string|max:120',
@@ -262,6 +263,13 @@ class ChatRouterController extends Controller
                     }
                 }
 
+                // Si el cliente respondio a otro mensaje (cita estilo WhatsApp), resolvemos
+                // a que idmsg local corresponde ese stanzaId. Puede ser tanto un mensaje
+                // entrante anterior como uno saliente (external_id ya se guarda en ambos casos).
+                $replyToIdmsg = $request->filled('reply_to_external_id')
+                    ? Mensaje::query()->where('external_id', $request->input('reply_to_external_id'))->value('idmsg')
+                    : null;
+
                 $mensaje = Mensaje::create([
                     'idconv' => $conversacion->idconv,
                     'tipo_remitente' => 'cliente',
@@ -276,6 +284,8 @@ class ChatRouterController extends Controller
                     'media_url' => $storedMediaUrl,
                     'mime_type' => $resolvedMediaMimeType,
                     'media_file_name' => $request->input('media_file_name'),
+                    'external_id' => $request->input('external_message_id'),
+                    'reply_to_idmsg' => $replyToIdmsg,
                     'media_transcription' => $request->input('media_transcription') ?: ($textoExtraido ?: null),
                     'media_caption' => $request->input('media_caption') ?: ($mensajeOriginal ?: null),
                     'media_analysis_json' => $request->input('media_analysis_json'),

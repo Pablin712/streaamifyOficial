@@ -35,6 +35,7 @@ class Mensaje extends Model
         'media_caption',
         'media_analysis_json',
         'external_id',
+        'reply_to_idmsg',
         'delivered_at',
         'read_at',
         'error_message',
@@ -76,6 +77,14 @@ class Mensaje extends Model
     public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'idemp', 'idemp');
+    }
+
+    /**
+     * Mensaje al que responde este (hilo/cita estilo WhatsApp)
+     */
+    public function replyTo()
+    {
+        return $this->belongsTo(Mensaje::class, 'reply_to_idmsg', 'idmsg');
     }
 
     /**
