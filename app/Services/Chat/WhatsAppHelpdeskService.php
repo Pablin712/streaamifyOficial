@@ -282,6 +282,7 @@ class WhatsAppHelpdeskService
         // Manejar archivos
         $storedUrl = null;
             $mimeType = null;
+            $fileName = null;
 
         if ($file) {
             $folder = match ($type) {
@@ -293,6 +294,7 @@ class WhatsAppHelpdeskService
             $path = $file->store($folder, 'public');
             $storedUrl = asset(Storage::url($path));
             $mimeType = $file->getMimeType();
+            $fileName = $file->getClientOriginalName();
         }
 
         $content = trim(strip_tags($content));
@@ -301,7 +303,7 @@ class WhatsAppHelpdeskService
             throw new \InvalidArgumentException('Mensaje vacío');
         }
 
-        $result = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType) {
+        $result = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType, $fileName) {
             // 1. Crear mensaje
             $message = Mensaje::create([
                 'idconv' => $conversation->idconv,
@@ -349,6 +351,8 @@ class WhatsAppHelpdeskService
                 'type' => $type,
                 'content' => $content,
                 'media_url' => $storedUrl,
+                'mime_type' => $mimeType,
+                'file_name' => $fileName,
             ];
         });
 
@@ -364,7 +368,9 @@ class WhatsAppHelpdeskService
                 $conversation,
                 $result['type'],
                 $result['content'],
-                $result['media_url']
+                $result['media_url'],
+                $result['mime_type'],
+                $result['file_name']
             );
 
             $dispatchOk = (bool) ($dispatch['ok'] ?? false);
@@ -664,7 +670,7 @@ class WhatsAppHelpdeskService
     /**
      * Envía mensaje a WhatsApp vía Evolution o n8n
      */
-    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl): array
+    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null): array
     {
         $contacto = $conversation->contactoCanal;
 
@@ -707,13 +713,23 @@ class WhatsAppHelpdeskService
                 return ['ok' => false, 'error' => 'No hay número destino en el contacto.'];
             }
 
-            // Si es texto, enviar directo por Evo API
-        if ($type === 'texto') {
+            // Si es texto (o no hay media disponible), enviar directo por Evo API
+        if ($type === 'texto' || ! $mediaUrl) {
             return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl);
         }
 
-            // Media: por ahora también se procesa como texto/dispatch directo
-            return $this->outbound->sendText($number, $content, $instance, $apiKey, $serverUrl);
+            // Media: enviar el archivo real por Evo API (imagen/audio/video/documento)
+            return $this->outbound->sendMedia(
+                $number,
+                $mediaUrl,
+                $mimeType ?: 'application/octet-stream',
+                $type,
+                $fileName,
+                $content,
+                $instance,
+                $apiKey,
+                $serverUrl
+            );
     }
 
     /**

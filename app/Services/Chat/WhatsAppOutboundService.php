@@ -24,6 +24,18 @@ class WhatsAppOutboundService
     }
 
     /**
+     * Envía media (imagen/audio/video/documento) por Evolution API
+     */
+    public function sendMedia(string $number, string $mediaUrl, string $mimeType, string $type, ?string $fileName, string $caption, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    {
+        if (! $apiKey || ! $instance) {
+            return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
+        }
+
+        return $this->sendMediaViaEvolution($number, $mediaUrl, $mimeType, $type, $fileName, $caption, $instance, $apiKey, $serverUrl);
+    }
+
+    /**
      * Resuelve canal WhatsApp por nombre de instancia
      */
     public function resolveChannelByInstance(?string $instance): ?ChatWhatsappChannel
@@ -58,6 +70,47 @@ class WhatsAppOutboundService
         } catch (\Throwable $e) {
             return ['ok' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    private function sendMediaViaEvolution(string $number, string $mediaUrl, string $mimeType, string $type, ?string $fileName, string $caption, string $instance, string $apiKey, ?string $serverUrl): array
+    {
+        $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'apikey' => $apiKey,
+                ])
+                ->post("{$baseUrl}/message/sendMedia/{$instance}", [
+                    'number' => $this->formatNumber($number),
+                    'mediatype' => $this->mapMediaType($type),
+                    'mimetype' => $mimeType,
+                    'caption' => $caption,
+                    'media' => $mediaUrl,
+                    'fileName' => $fileName ?: 'archivo',
+                ]);
+
+            return [
+                'ok' => $response->successful(),
+                'external_message_id' => $response->json('key.id') ?? $response->json('message.key.id'),
+                'status' => $response->status(),
+                'error' => $response->successful() ? null : $response->body(),
+            ];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function mapMediaType(string $type): string
+    {
+        return match ($type) {
+            'imagen' => 'image',
+            'audio' => 'audio',
+            'video' => 'video',
+            'documento', 'archivo' => 'document',
+            default => 'document',
+        };
     }
 
     private function formatNumber(string $number): string

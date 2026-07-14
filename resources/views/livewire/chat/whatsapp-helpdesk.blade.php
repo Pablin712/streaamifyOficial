@@ -830,6 +830,153 @@
         }
 
         /* ================================================
+           GRABACIÓN DE AUDIO (estilo WhatsApp)
+           ================================================ */
+
+        .wa-mic-btn.recording {
+            background: var(--wa-danger);
+            border-color: var(--wa-danger);
+            color: white;
+        }
+
+        .wa-record-bar {
+            display: none;
+            align-items: center;
+            gap: var(--wa-space-2);
+            flex: 1;
+            height: 44px;
+            padding: 0 var(--wa-space-3);
+            border-radius: var(--wa-radius-lg);
+            background: var(--wa-danger-soft);
+            border: 1px solid var(--wa-danger);
+            user-select: none;
+            touch-action: none;
+        }
+
+        .wa-record-bar.active {
+            display: flex;
+        }
+
+        .wa-record-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--wa-danger);
+            flex-shrink: 0;
+            animation: wa-record-pulse 1s ease-in-out infinite;
+        }
+
+        .wa-record-bar.paused .wa-record-dot {
+            animation: none;
+            opacity: 0.5;
+        }
+
+        @keyframes wa-record-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .wa-record-time {
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--wa-danger);
+            min-width: 38px;
+            flex-shrink: 0;
+        }
+
+        .wa-record-wave {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 24px;
+            overflow: hidden;
+        }
+
+        .wa-record-wave span {
+            width: 3px;
+            border-radius: 2px;
+            background: var(--wa-danger);
+            opacity: 0.65;
+            height: 6px;
+            animation: wa-record-bar-bounce 0.9s ease-in-out infinite;
+        }
+
+        .wa-record-bar.paused .wa-record-wave span {
+            animation-play-state: paused;
+            opacity: 0.35;
+        }
+
+        .wa-record-wave span:nth-child(2) { animation-delay: 0.1s; }
+        .wa-record-wave span:nth-child(3) { animation-delay: 0.2s; }
+        .wa-record-wave span:nth-child(4) { animation-delay: 0.3s; }
+        .wa-record-wave span:nth-child(5) { animation-delay: 0.4s; }
+        .wa-record-wave span:nth-child(6) { animation-delay: 0.3s; }
+        .wa-record-wave span:nth-child(7) { animation-delay: 0.2s; }
+        .wa-record-wave span:nth-child(8) { animation-delay: 0.1s; }
+
+        @keyframes wa-record-bar-bounce {
+            0%, 100% { height: 6px; }
+            50% { height: 20px; }
+        }
+
+        .wa-record-hint {
+            font-size: 12px;
+            color: var(--wa-danger);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .wa-record-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            font-size: 15px;
+            transition: var(--wa-transition);
+        }
+
+        .wa-record-cancel {
+            background: transparent;
+            color: var(--wa-danger);
+        }
+
+        .wa-record-cancel:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .wa-record-pause {
+            background: transparent;
+            color: var(--wa-text-secondary);
+        }
+
+        .wa-record-pause:hover {
+            background: var(--wa-bg);
+        }
+
+        .wa-record-send {
+            background: var(--wa-accent);
+            color: white;
+        }
+
+        .wa-record-send:hover {
+            background: var(--wa-accent-hover);
+        }
+
+        .wa-record-error {
+            font-size: 12px;
+            color: var(--wa-danger);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* ================================================
            PANEL DERECHO FICHA CLIENTE
            ================================================ */
 
@@ -1963,6 +2110,7 @@
                 @error('messageText') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
                 @error('imageUpload') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
                 @error('audioUpload') <span style="color: var(--wa-danger); font-size: 12px; display: block; margin-bottom: 8px;">{{ $message }}</span> @enderror
+                <span class="wa-record-error" id="wa-record-error" style="display: none;"></span>
 
                 @if($quickResponseSuggestions->isNotEmpty() && str_starts_with(trim((string) $messageText), '/'))
                     <div class="wa-quick-suggestions" style="margin-bottom: 8px; border: 1px solid var(--wa-border); border-radius: 10px; background: #fff; max-height: 220px; overflow-y: auto;">
@@ -1982,24 +2130,37 @@
                     </div>
                 @endif
 
-                <div class="wa-compose-row">
+                <div class="wa-compose-row" id="wa-compose-row">
                     @if($settings['chat_allow_image'])
-                        <label class="wa-attach-btn" title="Adjuntar imagen">
+                        <label class="wa-attach-btn" id="wa-image-attach-btn" title="Adjuntar imagen (o pega con Ctrl+V)">
                             📷
                             <input wire:model="imageUpload" class="wa-file-input" type="file" accept="image/*">
                         </label>
                     @endif
 
                     @if($settings['chat_allow_audio'])
-                        <label class="wa-attach-btn" title="Subir audio">
+                        <button type="button" id="wa-mic-btn" class="wa-attach-btn wa-mic-btn" title="Grabar nota de voz">
                             🎤
-                            <input wire:model="audioUpload" class="wa-file-input" type="file" accept="audio/*">
-                        </label>
+                        </button>
                     @endif
 
                     @if($settings['chat_allow_text'])
-                        <textarea wire:model.live="messageText" wire:keydown="markTyping" class="wa-textarea" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                        <textarea wire:model.live="messageText" wire:keydown="markTyping" id="wa-composer-textarea" class="wa-textarea" placeholder="Escribe un mensaje... (pega una imagen con Ctrl+V)" rows="1"></textarea>
                         <button wire:click="sendText" class="wa-send" type="button" data-chat-send>Enviar</button>
+                    @endif
+
+                    @if($settings['chat_allow_audio'])
+                        <div class="wa-record-bar" id="wa-record-bar">
+                            <button type="button" class="wa-record-action wa-record-cancel" id="wa-record-cancel" title="Cancelar">✕</button>
+                            <span class="wa-record-dot"></span>
+                            <span class="wa-record-time" id="wa-record-time">0:00</span>
+                            <div class="wa-record-wave">
+                                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <span class="wa-record-hint" id="wa-record-hint">◀ Desliza para cancelar</span>
+                            <button type="button" class="wa-record-action wa-record-pause" id="wa-record-pause" title="Pausar">⏸</button>
+                            <button type="button" class="wa-record-action wa-record-send" id="wa-record-send" title="Enviar nota de voz">➤</button>
+                        </div>
                     @endif
                 </div>
 
@@ -2532,6 +2693,251 @@
                     const end = textarea.value.length;
                     textarea.setSelectionRange(end, end);
                 }
+            });
+
+            function showRecordError(message) {
+                const box = document.getElementById('wa-record-error');
+                if (!(box instanceof HTMLElement)) return;
+                box.textContent = message;
+                box.style.display = 'block';
+                setTimeout(() => { box.style.display = 'none'; }, 4000);
+            }
+
+            const bindComposerMediaControls = () => {
+                const composerRow = document.getElementById('wa-compose-row');
+                if (!(composerRow instanceof HTMLElement) || composerRow.dataset.mediaBound === 'true') {
+                    return;
+                }
+                composerRow.dataset.mediaBound = 'true';
+
+                // --- Pegar imagen desde el portapapeles ---
+                const textarea = document.getElementById('wa-composer-textarea');
+                if (textarea instanceof HTMLTextAreaElement) {
+                    textarea.addEventListener('paste', (event) => {
+                        const items = event.clipboardData ? event.clipboardData.items : null;
+                        if (!items) return;
+
+                        for (const item of items) {
+                            if (item.type && item.type.startsWith('image/')) {
+                                const blob = item.getAsFile();
+                                if (!blob) continue;
+                                event.preventDefault();
+
+                                const ext = (item.type.split('/')[1] || 'png').split('+')[0];
+                                const file = new File([blob], `pegado-${Date.now()}.${ext}`, { type: item.type });
+
+                                @this.upload('imageUpload', file, () => {}, (error) => {
+                                    showRecordError(typeof error === 'string' ? error : 'No se pudo pegar la imagen.');
+                                });
+
+                                break;
+                            }
+                        }
+                    });
+                }
+
+                // --- Grabación de nota de voz (estilo WhatsApp) ---
+                const micBtn = document.getElementById('wa-mic-btn');
+                const recordBar = document.getElementById('wa-record-bar');
+
+                if (!(micBtn instanceof HTMLElement) || !(recordBar instanceof HTMLElement)) {
+                    return;
+                }
+
+                const recordTime = document.getElementById('wa-record-time');
+                const recordHint = document.getElementById('wa-record-hint');
+                const cancelBtn = document.getElementById('wa-record-cancel');
+                const pauseBtn = document.getElementById('wa-record-pause');
+                const sendBtn = document.getElementById('wa-record-send');
+                const imageBtn = document.getElementById('wa-image-attach-btn');
+                const sendTextBtn = composerRow.querySelector('[data-chat-send]');
+
+                let mediaRecorder = null;
+                let mediaStream = null;
+                let chunks = [];
+                let startedAt = 0;
+                let pausedElapsed = 0;
+                let timerInterval = null;
+                let dragStartX = null;
+                let cancelled = false;
+                const CANCEL_THRESHOLD = 80;
+
+                const formatTime = (totalSeconds) => {
+                    const m = Math.floor(totalSeconds / 60);
+                    const s = Math.floor(totalSeconds % 60);
+                    return `${m}:${String(s).padStart(2, '0')}`;
+                };
+
+                const setComposerVisible = (visible) => {
+                    [imageBtn, micBtn, textarea, sendTextBtn].forEach((el) => {
+                        if (el) el.style.display = visible ? '' : 'none';
+                    });
+                    recordBar.classList.toggle('active', !visible);
+                };
+
+                const stopStream = () => {
+                    if (mediaStream) {
+                        mediaStream.getTracks().forEach((track) => track.stop());
+                        mediaStream = null;
+                    }
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                };
+
+                const resetRecordBar = () => {
+                    stopStream();
+                    mediaRecorder = null;
+                    chunks = [];
+                    recordBar.classList.remove('paused');
+                    recordBar.style.transform = '';
+                    if (recordTime) recordTime.textContent = '0:00';
+                    if (recordHint) recordHint.style.display = '';
+                    if (pauseBtn) pauseBtn.textContent = '⏸';
+                    setComposerVisible(true);
+                };
+
+                const startRecording = async () => {
+                    let stream;
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    } catch (error) {
+                        showRecordError('No se pudo acceder al micrófono. Revisa los permisos del navegador.');
+                        return;
+                    }
+
+                    mediaStream = stream;
+                    chunks = [];
+                    cancelled = false;
+                    pausedElapsed = 0;
+                    startedAt = Date.now();
+
+                    try {
+                        mediaRecorder = new MediaRecorder(stream);
+                    } catch (error) {
+                        showRecordError('Tu navegador no soporta grabación de audio.');
+                        stopStream();
+                        return;
+                    }
+
+                    mediaRecorder.addEventListener('dataavailable', (event) => {
+                        if (event.data && event.data.size > 0) {
+                            chunks.push(event.data);
+                        }
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        const wasCancelled = cancelled;
+                        const recordedChunks = chunks;
+                        const recordedType = mediaRecorder.mimeType || 'audio/webm';
+                        stopStream();
+                        resetRecordBar();
+
+                        if (wasCancelled || recordedChunks.length === 0) {
+                            return;
+                        }
+
+                        const blob = new Blob(recordedChunks, { type: recordedType });
+                        const ext = recordedType.includes('ogg') ? 'ogg' : (recordedType.includes('mp4') ? 'm4a' : 'webm');
+                        const file = new File([blob], `nota-voz-${Date.now()}.${ext}`, { type: recordedType });
+
+                        @this.upload('audioUpload', file, () => {
+                            @this.call('sendAudio');
+                        }, (error) => {
+                            showRecordError(typeof error === 'string' ? error : 'No se pudo enviar la nota de voz.');
+                        });
+                    });
+
+                    mediaRecorder.start();
+                    setComposerVisible(false);
+                    if (recordTime) recordTime.textContent = '0:00';
+                    timerInterval = setInterval(() => {
+                        const elapsed = pausedElapsed + (Date.now() - startedAt) / 1000;
+                        if (recordTime) recordTime.textContent = formatTime(elapsed);
+                    }, 250);
+                };
+
+                const stopAndSend = () => {
+                    if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
+                    cancelled = false;
+                    if (mediaRecorder.state === 'paused') {
+                        mediaRecorder.resume();
+                    }
+                    mediaRecorder.stop();
+                };
+
+                const cancelRecording = () => {
+                    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                        resetRecordBar();
+                        return;
+                    }
+                    cancelled = true;
+                    if (mediaRecorder.state === 'paused') {
+                        mediaRecorder.resume();
+                    }
+                    mediaRecorder.stop();
+                };
+
+                const togglePause = () => {
+                    if (!mediaRecorder) return;
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.pause();
+                        pausedElapsed += (Date.now() - startedAt) / 1000;
+                        recordBar.classList.add('paused');
+                        if (pauseBtn) pauseBtn.textContent = '▶';
+                    } else if (mediaRecorder.state === 'paused') {
+                        mediaRecorder.resume();
+                        startedAt = Date.now();
+                        recordBar.classList.remove('paused');
+                        if (pauseBtn) pauseBtn.textContent = '⏸';
+                    }
+                };
+
+                micBtn.addEventListener('click', () => {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+                        showRecordError('Tu navegador no soporta grabación de audio.');
+                        return;
+                    }
+                    startRecording();
+                });
+
+                if (cancelBtn) cancelBtn.addEventListener('click', cancelRecording);
+                if (sendBtn) sendBtn.addEventListener('click', stopAndSend);
+                if (pauseBtn) pauseBtn.addEventListener('click', togglePause);
+
+                // Deslizar para cancelar (gesto estilo WhatsApp)
+                recordBar.addEventListener('pointerdown', (event) => {
+                    if (event.target === cancelBtn || event.target === pauseBtn || event.target === sendBtn) return;
+                    dragStartX = event.clientX;
+                });
+
+                recordBar.addEventListener('pointermove', (event) => {
+                    if (dragStartX === null) return;
+                    const delta = event.clientX - dragStartX;
+                    if (delta < 0) {
+                        recordBar.style.transform = `translateX(${Math.max(delta, -CANCEL_THRESHOLD * 1.5)}px)`;
+                        if (recordHint) recordHint.style.display = delta < -20 ? 'none' : '';
+                    }
+                    if (delta <= -CANCEL_THRESHOLD) {
+                        dragStartX = null;
+                        cancelRecording();
+                    }
+                });
+
+                const endDrag = () => {
+                    dragStartX = null;
+                    recordBar.style.transform = '';
+                };
+
+                recordBar.addEventListener('pointerup', endDrag);
+                recordBar.addEventListener('pointerleave', endDrag);
+            };
+
+            bindComposerMediaControls();
+
+            Livewire.hook('morphed', () => {
+                bindComposerMediaControls();
             });
 
             Livewire.on('chat-notification-sound', () => {
