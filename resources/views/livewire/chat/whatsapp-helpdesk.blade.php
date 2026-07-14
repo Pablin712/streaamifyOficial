@@ -329,10 +329,11 @@
         .wa-item.active {
             background: var(--wa-accent-soft);
             border-left: 3px solid var(--wa-accent);
+            box-shadow: var(--wa-shadow-md);
         }
 
         .wa-item.pinned {
-            background: var(--wa-bg);
+            background: var(--wa-accent-soft);
         }
 
         .wa-item-wrapper {
@@ -509,7 +510,7 @@
         .wa-chat-header {
             background: var(--wa-panel);
             border-bottom: 1px solid var(--wa-border);
-            padding: var(--wa-space-4);
+            padding: var(--wa-space-3) var(--wa-space-4);
             position: sticky;
             top: 0;
             z-index: 10;
@@ -557,34 +558,6 @@
         .wa-chat-search-meta {
             font-size: 11px;
             color: var(--wa-text-tertiary);
-            font-weight: 700;
-        }
-
-        .wa-operator-panel {
-            margin-top: var(--wa-space-3);
-            padding: 12px;
-            border-radius: var(--wa-radius-md);
-            border: 1px solid var(--wa-border);
-            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .wa-operator-main {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--wa-text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .wa-operator-value {
-            color: var(--wa-text);
-            font-size: 13px;
             font-weight: 700;
         }
 
@@ -668,7 +641,7 @@
             padding: var(--wa-space-5) var(--wa-space-6);
             display: flex;
             flex-direction: column;
-            gap: var(--wa-space-3);
+            gap: var(--wa-space-2);
             background: var(--wa-bg);
         }
 
@@ -1807,11 +1780,6 @@
             border-left-color: #60a5fa;
         }
 
-        :root[data-dark-mode="true"] .wa-operator-panel {
-            background: linear-gradient(180deg, #1a2331 0%, #151d2a 100%);
-            border-color: #2a3240;
-        }
-
         :root[data-dark-mode="true"] .wa-load-older {
             background: #1a2331;
             border-color: #334155;
@@ -2159,7 +2127,7 @@
 
             /* ---- Ocultar secciones del header que van al menú 3 puntos ---- */
             .wa-chat-actions,
-            .wa-operator-panel,
+            .wa-chat-header .wa-profile-meta-line,
             .wa-chat-search {
                 display: none !important;
             }
@@ -2410,7 +2378,7 @@
                 $clientInitial = strtoupper(substr($activeName, 0, 1));
             @endphp
 
-            <header class="wa-chat-header">
+            <header class="wa-chat-header" x-data="{ waSearchOpen: {{ trim($activeMessageSearch) !== '' ? 'true' : 'false' }} }">
                 <div class="wa-chat-title-row">
                     <div class="wa-chat-info">
                         <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
@@ -2497,6 +2465,12 @@
                         <button wire:click="$set('mobilePane', 'profile')" class="wa-action wa-profile-btn-mobile" type="button" title="Ver ficha del cliente">
                             👤 Ver perfil
                         </button>
+                        <button
+                            type="button"
+                            class="wa-icon-btn"
+                            title="Buscar en esta conversación"
+                            @click="waSearchOpen = !waSearchOpen; if (waSearchOpen) $nextTick(() => $refs.waChatSearchInput.focus())"
+                        >🔍</button>
                         <span class="wa-badge {{ $activeContactIdentity['tone'] }}">{{ $activeContactIdentity['label'] }}</span>
                         <span class="wa-badge info">{{ $activeConversation->estado }}</span>
                         <button wire:click="takeConversation" class="wa-action" type="button">Tomar</button>
@@ -2525,19 +2499,18 @@
                     </div>
                 </div>
 
-                <div class="wa-operator-panel">
-                    <div class="wa-operator-main">
-                        Operador
-                        <span class="wa-operator-value">{{ $assignedOperatorName }}</span>
-                    </div>
-                    <div style="display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                        <span class="wa-badge {{ $isTyping ? 'success' : 'muted' }}">{{ $typingLabel }}</span>
-                        <span class="wa-badge muted">{{ $messagesLoaded }} mensajes cargados</span>
-                    </div>
+                <div class="wa-profile-meta-line" style="margin-top: 8px;">
+                    <span>Operador: <strong>{{ $assignedOperatorName }}</strong></span>
+                    <span class="wa-profile-meta-sep">·</span>
+                    <span>{{ $messagesLoaded }} mensajes</span>
+                    @if($isTyping)
+                        <span class="wa-profile-meta-sep">·</span>
+                        <span class="wa-badge success">{{ $typingLabel }}</span>
+                    @endif
                 </div>
 
-                <div class="wa-chat-search">
-                    <input wire:model.live.debounce.300ms="activeMessageSearch" class="wa-search" type="search" placeholder="Buscar dentro de esta conversación">
+                <div class="wa-chat-search" x-show="waSearchOpen" style="display:none;">
+                    <input x-ref="waChatSearchInput" wire:model.live.debounce.300ms="activeMessageSearch" class="wa-search" type="search" placeholder="Buscar dentro de esta conversación">
                     <span class="wa-chat-search-meta">{{ trim($activeMessageSearch) !== '' ? 'Filtro activo' : 'Sin filtro' }}</span>
                 </div>
             </header>
