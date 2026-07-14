@@ -60,6 +60,10 @@ class WhatsAppHelpdesk extends Component
 
     public ?int $reactionPickerForIdmsg = null;
 
+    public ?int $forwardingIdmsg = null;
+
+    public string $forwardSearch = '';
+
     public string $mobilePane = 'list';
 
     public bool $showSettingsModal = false;
@@ -463,6 +467,75 @@ class WhatsAppHelpdesk extends Component
     public function toggleReactionPicker(?int $idmsg): void
     {
         $this->reactionPickerForIdmsg = $this->reactionPickerForIdmsg === $idmsg ? null : $idmsg;
+    }
+
+    public function startForward(int $idmsg): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para reenviar mensajes.');
+        $this->requireConversation();
+
+        $mensaje = Mensaje::query()
+            ->where('idmsg', $idmsg)
+            ->where('idconv', $this->activeConversation()?->idconv)
+            ->whereNull('eliminado_at')
+            ->first();
+
+        if (! $mensaje) {
+            return;
+        }
+
+        $this->forwardingIdmsg = $idmsg;
+        $this->forwardSearch = '';
+    }
+
+    public function cancelForward(): void
+    {
+        $this->forwardingIdmsg = null;
+        $this->forwardSearch = '';
+    }
+
+    public function forwardCandidates()
+    {
+        $query = Conversacion::query()
+            ->with(['cliente', 'contactoCanal'])
+            ->where('canal_principal', 'whatsapp')
+            ->orderByRaw('COALESCE(last_message_at, ultima_actividad, updated_at) DESC');
+
+        $term = trim($this->forwardSearch);
+
+        if ($term !== '') {
+            $search = '%'.$term.'%';
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('cliente', function ($client) use ($search) {
+                    $client->where('nombrecli', 'like', $search)
+                        ->orWhere('telefonocli', 'like', $search);
+                })->orWhereHas('contactoCanal', function ($contact) use ($search) {
+                    $contact->where('canal_user_id', 'like', $search)
+                        ->orWhere('telefono_normalizado', 'like', $search)
+                        ->orWhere('nombre_canal', 'like', $search);
+                });
+            });
+        }
+
+        return $query->limit(20)->get();
+    }
+
+    public function forwardTo(int $targetIdconv): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para reenviar mensajes.');
+
+        if (! $this->forwardingIdmsg) {
+            return;
+        }
+
+        $original = Mensaje::query()->where('idmsg', $this->forwardingIdmsg)->first();
+        $target = Conversacion::query()->where('canal_principal', 'whatsapp')->find($targetIdconv);
+
+        if ($original && $target) {
+            app(WhatsAppHelpdeskService::class)->forwardMessage($original, $target, $this->operator());
+        }
+
+        $this->cancelForward();
     }
 
     public function highlightMessageContent(?string $content, ?string $term = null): string

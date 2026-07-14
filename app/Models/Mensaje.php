@@ -174,4 +174,40 @@ class Mensaje extends Model
         // (necesario para que Evolution API pueda descargarlo al reenviarlo por WhatsApp).
         return URL::temporarySignedRoute('chat.media', now()->addDays(7), ['mensaje' => $this->idmsg]);
     }
+
+    /**
+     * Ruta relativa (en el disco 'public') del archivo de media de este mensaje.
+     * media_url se guarda en dos formatos distintos según la dirección del mensaje:
+     * saliente = URL absoluta (asset(Storage::url(...))), entrante = URL relativa
+     * (Storage::url(...)) -- esto normaliza ambos casos de vuelta a la ruta relativa.
+     */
+    public function resolveRelativeMediaPath(): ?string
+    {
+        $raw = trim((string) ($this->media_url ?: $this->archivo_url));
+
+        if ($raw === '' || Str::startsWith($raw, ['data:', 'blob:'])) {
+            return null;
+        }
+
+        $value = $raw;
+
+        // URL absoluta: extraer el path
+        if (Str::startsWith($value, ['http://', 'https://'])) {
+            $path = (string) parse_url($value, PHP_URL_PATH);
+            $value = $path !== '' ? $path : $value;
+        }
+
+        $value = ltrim($value, '/');
+
+        // Formatos esperados: storage/chat/... o public/storage/chat/...
+        if (Str::startsWith($value, 'public/storage/')) {
+            return ltrim(Str::after($value, 'public/storage/'), '/');
+        }
+
+        if (Str::startsWith($value, 'storage/')) {
+            return ltrim(Str::after($value, 'storage/'), '/');
+        }
+
+        return $value !== '' ? $value : null;
+    }
 }

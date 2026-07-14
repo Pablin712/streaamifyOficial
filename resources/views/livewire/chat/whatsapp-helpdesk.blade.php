@@ -781,6 +781,31 @@
             opacity: 1;
         }
 
+        .wa-forward-trigger {
+            position: absolute;
+            top: -10px;
+            right: 80px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--wa-border);
+            background: var(--wa-panel);
+            color: var(--wa-text-secondary);
+            font-size: 13px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--wa-transition);
+            box-shadow: var(--wa-shadow-sm);
+        }
+
+        .wa-bubble:hover .wa-forward-trigger {
+            opacity: 1;
+        }
+
         .wa-reaction-picker {
             position: absolute;
             top: -46px;
@@ -1684,6 +1709,23 @@
             color: var(--wa-text);
         }
 
+        .wa-forward-candidate {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border: 0;
+            border-radius: var(--wa-radius-md);
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+            transition: var(--wa-transition);
+        }
+
+        .wa-forward-candidate:hover {
+            background: var(--wa-bg);
+        }
+
         /* ================================================
            AJUSTES EXTRA DARK MODE (ALTO CONTRASTE)
            ================================================ */
@@ -2454,6 +2496,7 @@
                             @if(!$message->eliminado_at)
                                 <button type="button" class="wa-reply-trigger" title="Responder" wire:click="startReply({{ $message->idmsg }})">↩</button>
                                 <button type="button" class="wa-react-trigger" title="Reaccionar" wire:click="toggleReactionPicker({{ $message->idmsg }})">😀</button>
+                                <button type="button" class="wa-forward-trigger" title="Reenviar" wire:click="startForward({{ $message->idmsg }})">↪</button>
                                 @if($message->tipo_remitente === 'empleado')
                                     <button
                                         type="button"
@@ -2912,6 +2955,45 @@
              </div>
          @endif
      </aside>
+
+     <!-- Modal Reenviar mensaje -->
+     @if($forwardingIdmsg)
+     <div class="wa-modal-overlay" wire:click.self="cancelForward">
+         <div class="wa-modal" style="max-width: 420px;">
+             <div class="wa-modal-header">
+                 <h2 class="wa-modal-title">↪ Reenviar mensaje</h2>
+                 <button wire:click="cancelForward" class="wa-modal-close">×</button>
+             </div>
+
+             <input wire:model.live.debounce.300ms="forwardSearch" class="wa-search" type="search" placeholder="Buscar conversación..." style="margin-bottom: 12px;">
+
+             <div style="display: flex; flex-direction: column; gap: 4px; max-height: 360px; overflow-y: auto;">
+                 @forelse($this->forwardCandidates() as $candidate)
+                     @php
+                         $candidateName = $candidate->cliente?->nombrecli
+                             ?: $candidate->contactoCanal?->nombre
+                             ?: $candidate->contactoCanal?->nombre_canal
+                             ?: $candidate->contactoCanal?->telefono_normalizado
+                             ?: 'Contacto';
+                         $candidateNumber = $candidate->contactoCanal?->telefono_normalizado
+                             ?: $candidate->contactoCanal?->canal_user_id
+                             ?: $candidate->cliente?->telefonocli
+                             ?: '';
+                     @endphp
+                     <button type="button" wire:click="forwardTo({{ $candidate->idconv }})" class="wa-forward-candidate">
+                         <span class="wa-avatar" style="width: 28px; height: 28px; font-size: 11px; flex-shrink: 0;">{{ strtoupper(substr($candidateName, 0, 1)) }}</span>
+                         <span style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
+                             <span style="font-weight: 600; font-size: 13px;">{{ $candidateName }}</span>
+                             <span style="font-size: 12px; color: var(--wa-text-secondary);">{{ $candidateNumber }}</span>
+                         </span>
+                     </button>
+                 @empty
+                     <div style="padding: 16px; text-align: center; color: var(--wa-text-secondary); font-size: 13px;">Sin resultados.</div>
+                 @endforelse
+             </div>
+         </div>
+     </div>
+     @endif
 
      <!-- Modal Configuracion -->
      @if($showSettingsModal)

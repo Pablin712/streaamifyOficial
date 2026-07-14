@@ -434,6 +434,149 @@ class WhatsAppHelpdeskService
     }
 
     /**
+     * Reenvía un mensaje (propio o de cliente) a otra conversación, reusando el mismo
+     * archivo físico ya guardado (no se duplica en disco). No lleva cita/quoted.
+     */
+    public function forwardMessage(Mensaje $original, Conversacion $target, Empleado $operator): Mensaje
+    {
+        $type = $this->normalizeType($original->tipo_contenido);
+
+        if (! $this->settings->isTypeAllowed($type)) {
+            throw new \InvalidArgumentException('Tipo de mensaje no permitido');
+        }
+
+        if ($original->eliminado_at) {
+            throw new \InvalidArgumentException('No se puede reenviar un mensaje eliminado.');
+        }
+
+        // Para media, "contenido" trae el texto interno del agente IA, no algo para
+        // reenviar tal cual -- se usa el caption real (si hay).
+        $content = $type === 'texto'
+            ? trim((string) $original->contenido)
+            : trim((string) $original->media_caption);
+
+        $storedUrl = null;
+        $mimeType = $original->mime_type;
+        $fileName = $original->media_file_name;
+        $audioBase64 = null;
+
+        if ($type !== 'texto') {
+            $relativePath = $original->resolveRelativeMediaPath();
+
+            if (! $relativePath || ! Storage::disk('public')->exists($relativePath)) {
+                throw new \InvalidArgumentException('El archivo original ya no está disponible para reenviar.');
+            }
+
+            $storedUrl = asset(Storage::url($relativePath));
+
+            if ($type === 'audio') {
+                $audioBase64 = base64_encode(Storage::disk('public')->get($relativePath));
+            }
+        }
+
+        if ($content === '' && ! $storedUrl) {
+            throw new \InvalidArgumentException('Mensaje vacío');
+        }
+
+        $result = DB::transaction(function () use ($target, $operator, $type, $content, $storedUrl, $mimeType, $fileName) {
+            $message = Mensaje::create([
+                'idconv' => $target->idconv,
+                'tipo_remitente' => 'empleado',
+                'idemp' => $operator->idemp,
+                'contenido' => $content,
+                'tipo_contenido' => $type,
+                'tipo' => $type,
+                'media_url' => $storedUrl,
+                'mime_type' => $mimeType,
+                'media_file_name' => $fileName,
+                'leido' => true,
+            ]);
+
+            $canalMensaje = ChatMensajeCanal::create([
+                'idmsg' => $message->idmsg,
+                'idconv' => $target->idconv,
+                'contacto_canal_id' => $target->canal_contacto_id,
+                'canal' => 'whatsapp',
+                'direccion' => 'outbound',
+                'external_status' => 'accepted',
+                'media_url' => $storedUrl,
+                'payload' => [
+                    'dispatch' => [
+                        'queued_at' => now()->toIso8601String(),
+                    ],
+                ],
+            ]);
+
+            $target->update([
+                'estado' => 'atendiendo',
+                'assigned_to' => $target->assigned_to ?: $operator->idemp,
+                'ultimo_idemp' => $operator->idemp,
+                'ultima_actividad' => now(),
+                'last_message_at' => now(),
+            ]);
+
+            event(new ChatMessageSent($target, $message));
+
+            return [
+                'message' => $message,
+                'conversation_id' => (int) $target->idconv,
+                'canal_mensaje_id' => (int) $canalMensaje->id,
+                'type' => $type,
+                'content' => $content,
+                'media_url' => $storedUrl,
+                'external_media_url' => $storedUrl ? $message->media_playable_url : null,
+                'mime_type' => $mimeType,
+                'file_name' => $fileName,
+            ];
+        });
+
+        $result['audio_base64'] = $audioBase64;
+        $result['quoted'] = null;
+
+        app()->terminating(function () use ($result) {
+            $conversation = Conversacion::query()->with('contactoCanal')->find($result['conversation_id']);
+            $canalMensaje = ChatMensajeCanal::query()->find($result['canal_mensaje_id']);
+
+            if (!$conversation || !$canalMensaje) {
+                return;
+            }
+
+            $dispatch = $this->sendMessageToWhatsApp(
+                $conversation,
+                $result['type'],
+                $result['content'],
+                $result['external_media_url'],
+                $result['mime_type'],
+                $result['file_name'],
+                $result['audio_base64'],
+                $result['quoted']
+            );
+
+            $dispatchOk = (bool) ($dispatch['ok'] ?? false);
+
+            $canalMensaje->update([
+                'external_status' => $dispatchOk ? 'sent' : 'failed',
+                'external_message_id' => $dispatch['external_message_id'] ?? $canalMensaje->external_message_id,
+                'payload' => array_merge($canalMensaje->payload ?? [], [
+                    'dispatch' => [
+                        'ok' => $dispatchOk,
+                        'status' => $dispatch['status'] ?? null,
+                        'error' => $dispatch['error'] ?? null,
+                        'sent_at' => now()->toIso8601String(),
+                    ],
+                ]),
+            ]);
+
+            $result['message']->update([
+                'external_id' => $dispatch['external_message_id'] ?? null,
+                'error_message' => $dispatchOk ? null : ($dispatch['error'] ?? 'Error enviando WhatsApp.'),
+            ]);
+        });
+
+        return $result['message'];
+    }
+
+    /**
      * Borra (para todos) un mensaje que mandó un empleado. Best-effort del lado de
      * WhatsApp: si Evolution no puede borrarlo (ej. fuera de la ventana de tiempo que
      * permite WhatsApp), igual se oculta del panel de Streamify.
