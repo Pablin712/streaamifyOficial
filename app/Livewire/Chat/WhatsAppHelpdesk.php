@@ -1456,7 +1456,11 @@ class WhatsAppHelpdesk extends Component
             return ['proveedor' => null, 'groups' => collect(), 'total' => 0];
         }
 
-        $cuentas = $proveedor->cuentas()->with(['valor.servicio'])->orderBy('fechavencue')->get();
+        $cuentas = $proveedor->cuentas()->with(['valor.servicio'])->orderBy('fechavencue')->get()
+            // Las cuentas "...Atencion" son mesas de trabajo internas (buffer para mover
+            // clientes), no credenciales reales del proveedor -- mismo criterio que ya usa
+            // CuentaService::obtenerCuentas() para excluirlas de los listados generales.
+            ->reject(fn ($cuenta) => str_ends_with($cuenta->idcue, 'Atencion'));
 
         $search = trim($this->providerAccountSearch);
         if ($search !== '') {
