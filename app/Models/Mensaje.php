@@ -120,6 +120,31 @@ class Mensaje extends Model
     }
 
     /**
+     * Texto corto para mostrar/mandar como cita de este mensaje cuando otro lo responde
+     * (hilo estilo WhatsApp). Para media, "contenido" suele traer el texto interno que
+     * arma el agente IA (ej. "<audio>\nTranscripción: ...\n</audio>"), no una
+     * descripción para humanos ni un caption real -- no debe mostrarse tal cual.
+     */
+    public function getQuotedPreviewAttribute(): string
+    {
+        $label = match ($this->tipo_contenido) {
+            'imagen' => '📷 Imagen',
+            'audio' => '🎤 Audio',
+            'video' => '🎬 Video',
+            'documento', 'archivo' => '📄 Documento',
+            default => null,
+        };
+
+        if ($label !== null) {
+            return $label;
+        }
+
+        $texto = trim((string) $this->contenido);
+
+        return $texto !== '' ? $texto : ' ';
+    }
+
+    /**
      * URL reproducible para media, compatible con despliegues en subcarpeta (/public).
      */
     public function getMediaPlayableUrlAttribute(): ?string

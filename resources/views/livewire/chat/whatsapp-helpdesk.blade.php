@@ -2187,20 +2187,7 @@
                         $dateKey = optional($message->created_at)->format('Y-m-d');
                         $type = $message->tipo ?: $message->tipo_contenido;
                         $mediaUrl = $message->media_playable_url;
-                        $quotedPreview = null;
-                        if ($message->replyTo) {
-                            $quotedText = trim((string) $message->replyTo->contenido);
-                            if ($quotedText === '') {
-                                $quotedText = match ($message->replyTo->tipo_contenido) {
-                                    'imagen' => '📷 Imagen',
-                                    'audio' => '🎤 Audio',
-                                    'video' => '🎬 Video',
-                                    'documento', 'archivo' => '📄 Documento',
-                                    default => '',
-                                };
-                            }
-                            $quotedPreview = \Illuminate\Support\Str::limit($quotedText, 80);
-                        }
+                        $quotedPreview = $message->replyTo ? \Illuminate\Support\Str::limit($message->replyTo->quoted_preview, 80) : null;
                     @endphp
                     @if($dateKey !== $lastDate)
                         <div class="wa-date-divider">{{ optional($message->created_at)->format('d/m/Y') }}</div>
@@ -2253,22 +2240,10 @@
                 @if($replyingToIdmsg)
                     @php $replyingToMessage = $messages->firstWhere('idmsg', $replyingToIdmsg); @endphp
                     @if($replyingToMessage)
-                        @php
-                            $replyingToText = trim((string) $replyingToMessage->contenido);
-                            if ($replyingToText === '') {
-                                $replyingToText = match ($replyingToMessage->tipo_contenido) {
-                                    'imagen' => '📷 Imagen',
-                                    'audio' => '🎤 Audio',
-                                    'video' => '🎬 Video',
-                                    'documento', 'archivo' => '📄 Documento',
-                                    default => '',
-                                };
-                            }
-                        @endphp
                         <div class="wa-reply-bar">
                             <div class="wa-reply-bar-content">
                                 <div class="wa-reply-bar-author">Respondiendo a {{ $replyingToMessage->nombre_remitente }}</div>
-                                <div class="wa-reply-bar-text">{{ \Illuminate\Support\Str::limit($replyingToText, 100) }}</div>
+                                <div class="wa-reply-bar-text">{{ \Illuminate\Support\Str::limit($replyingToMessage->quoted_preview, 100) }}</div>
                             </div>
                             <button type="button" class="wa-reply-bar-cancel" title="Cancelar respuesta" wire:click="cancelReply">✕</button>
                         </div>

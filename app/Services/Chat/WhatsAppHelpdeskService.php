@@ -386,7 +386,7 @@ class WhatsAppHelpdeskService
         $result['quoted'] = ($replyToMensaje && $replyToMensaje->external_id) ? [
             'id' => $replyToMensaje->external_id,
             'fromMe' => $replyToMensaje->tipo_remitente !== 'cliente',
-            'preview' => $this->buildQuotedPreview($replyToMensaje),
+            'preview' => $replyToMensaje->quoted_preview,
         ] : null;
 
         app()->terminating(function () use ($result) {
@@ -779,26 +779,6 @@ class WhatsAppHelpdeskService
                 $serverUrl,
                 $quoted
             );
-    }
-
-    /**
-     * Texto corto para mostrar/mandar como cita de un mensaje respondido (hilo estilo WhatsApp).
-     */
-    private function buildQuotedPreview(Mensaje $mensaje): string
-    {
-        $texto = trim((string) $mensaje->contenido);
-
-        if ($texto !== '') {
-            return $texto;
-        }
-
-        return match ($mensaje->tipo_contenido) {
-            'imagen' => '📷 Imagen',
-            'audio' => '🎤 Audio',
-            'video' => '🎬 Video',
-            'documento', 'archivo' => '📄 Documento',
-            default => ' ',
-        };
     }
 
     /**
