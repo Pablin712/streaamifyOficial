@@ -4,6 +4,7 @@ namespace App\Livewire\Chat;
 
 use Carbon\Carbon;
 use App\Models\Chat\ChatSetting;
+use App\Models\ChatEtiqueta;
 use App\Models\ChatMemoriaContacto;
 use App\Models\ChatMemoriaNegocio;
 use App\Models\ChatMemoriaResumen;
@@ -36,6 +37,14 @@ class WhatsAppHelpdesk extends Component
     use WithFileUploads;
 
     public string $filter = 'todos';
+
+    public ?int $etiquetaFilter = null;
+
+    public bool $showEtiquetaCreator = false;
+
+    public string $newEtiquetaNombre = '';
+
+    public string $newEtiquetaColor = '';
 
     public string $search = '';
 
@@ -150,6 +159,7 @@ class WhatsAppHelpdesk extends Component
             'conversationLabels'    => $conversationLabels,
             'concentracionActive'   => ConcentracionService::isActive(),
             'concentracionLocked'   => ConcentracionService::isLocked(),
+            'allEtiquetas'          => ChatEtiqueta::query()->orderBy('nombre')->get(),
         ]);
     }
 
@@ -159,6 +169,11 @@ class WhatsAppHelpdesk extends Component
     }
 
     public function updatingFilter(): void
+    {
+        $this->conversationsLimit = 25;
+    }
+
+    public function updatingEtiquetaFilter(): void
     {
         $this->conversationsLimit = 25;
     }
@@ -327,6 +342,59 @@ class WhatsAppHelpdesk extends Component
     public function cancelReply(): void
     {
         $this->replyingToIdmsg = null;
+    }
+
+    public function toggleEtiquetaFiltro(?int $etiquetaId): void
+    {
+        $this->etiquetaFilter = $this->etiquetaFilter === $etiquetaId ? null : $etiquetaId;
+        $this->conversationsLimit = 25;
+    }
+
+    public function toggleEtiquetaEnConversacion(int $etiquetaId): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para etiquetar conversaciones.');
+        $this->requireConversation();
+
+        $this->activeConversation()?->etiquetas()->toggle($etiquetaId);
+    }
+
+    public function toggleEtiquetaCreator(): void
+    {
+        $this->showEtiquetaCreator = ! $this->showEtiquetaCreator;
+        $this->newEtiquetaNombre = '';
+        $this->newEtiquetaColor = ChatEtiqueta::PALETA[0];
+    }
+
+    public function guardarNuevaEtiqueta(): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para crear etiquetas.');
+        $this->requireConversation();
+
+        $nombre = trim($this->newEtiquetaNombre);
+
+        abort_if($nombre === '' || mb_strlen($nombre) > 30, 422, 'Nombre de etiqueta inválido.');
+        abort_unless(in_array($this->newEtiquetaColor, ChatEtiqueta::PALETA, true), 422, 'Color de etiqueta inválido.');
+
+        $etiqueta = ChatEtiqueta::query()->firstOrCreate(
+            ['nombre' => $nombre],
+            ['color' => $this->newEtiquetaColor]
+        );
+
+        $this->activeConversation()?->etiquetas()->syncWithoutDetaching([$etiqueta->id]);
+
+        $this->showEtiquetaCreator = false;
+        $this->newEtiquetaNombre = '';
+    }
+
+    public function eliminarEtiqueta(int $etiquetaId): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para eliminar etiquetas.');
+
+        ChatEtiqueta::query()->where('id', $etiquetaId)->delete();
+
+        if ($this->etiquetaFilter === $etiquetaId) {
+            $this->etiquetaFilter = null;
+        }
     }
 
     public function highlightMessageContent(?string $content): string
@@ -845,7 +913,7 @@ class WhatsAppHelpdesk extends Component
     private function conversationQuery()
     {
         $query = Conversacion::query()
-            ->with(['cliente', 'contactoCanal', 'ultimoMensaje', 'operadorAsignado', 'operadorEscribiendo'])
+            ->with(['cliente', 'contactoCanal', 'ultimoMensaje', 'operadorAsignado', 'operadorEscribiendo', 'etiquetas'])
             ->where('canal_principal', 'whatsapp')
             ->orderByRaw('COALESCE(last_message_at, ultima_actividad, updated_at) DESC');
 
@@ -916,6 +984,12 @@ class WhatsAppHelpdesk extends Component
                         ->orWhere('telefono_normalizado', 'like', $search)
                         ->orWhere('nombre_canal', 'like', $search);
                 });
+            });
+        }
+
+        if ($this->etiquetaFilter) {
+            $query->whereHas('etiquetas', function ($q) {
+                $q->where('chat_etiquetas.id', $this->etiquetaFilter);
             });
         }
 

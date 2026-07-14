@@ -74,6 +74,21 @@ class Conversacion extends Model
     }
 
     /**
+     * Etiquetas manuales asignadas a esta conversación (estilo WhatsApp Business)
+     */
+    public function etiquetas()
+    {
+        return $this->belongsToMany(
+            ChatEtiqueta::class,
+            'chat_conversacion_etiqueta',
+            'conversacion_id',
+            'etiqueta_id',
+            'idconv',
+            'id'
+        );
+    }
+
+    /**
      * Mensajes de la conversación
      */
     public function mensajes()

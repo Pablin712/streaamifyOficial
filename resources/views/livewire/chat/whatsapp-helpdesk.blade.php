@@ -220,6 +220,10 @@
             display: none;
         }
 
+        .wa-etiqueta-filters {
+            margin-top: 6px;
+        }
+
         .wa-filter {
             padding: 7px 12px;
             border-radius: var(--wa-radius-sm);
@@ -1258,6 +1262,85 @@
         .wa-type-btn.active.bot { background: #f3e8ff; border-color: #d8b4fe; color: #7e22ce; }
         .wa-type-btn.active.muted { background: #e2e8f0; border-color: #cbd5e1; color: #334155; }
 
+        /* Etiquetas manuales de conversación (estilo WhatsApp Business) */
+        .wa-tag-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            min-height: 20px;
+            padding: 2px 8px;
+            border-radius: var(--wa-radius-full);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+            border: 0;
+            cursor: pointer;
+            transition: var(--wa-transition);
+        }
+
+        .wa-tag-add {
+            background: transparent;
+            border: 1px dashed var(--wa-border);
+            color: var(--wa-text-secondary);
+        }
+
+        .wa-tag-add:hover {
+            border-color: var(--wa-accent);
+            color: var(--wa-accent);
+        }
+
+        .wa-tag-unassigned {
+            background: transparent;
+        }
+
+        .wa-tag-filter {
+            opacity: 0.55;
+        }
+
+        .wa-tag-filter.active {
+            opacity: 1;
+            outline: 2px solid var(--wa-text);
+            outline-offset: 1px;
+        }
+
+        .wa-etiqueta-creator {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 10px;
+            border: 1px solid var(--wa-border);
+            border-radius: var(--wa-radius-md);
+            background: var(--wa-bg);
+        }
+
+        .wa-etiqueta-input {
+            padding: 8px 10px;
+            border-radius: var(--wa-radius-sm);
+            border: 1px solid var(--wa-border);
+            font-size: 13px;
+        }
+
+        .wa-etiqueta-palette {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .wa-etiqueta-swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .wa-etiqueta-swatch.active {
+            border-color: var(--wa-text);
+        }
+
         .wa-tag {
             display: inline-flex;
             padding: 4px 8px;
@@ -1915,6 +1998,20 @@
                      </button>
                  @endforeach
              </div>
+
+             @if($allEtiquetas->isNotEmpty())
+                 <div class="wa-filters wa-etiqueta-filters">
+                     @foreach($allEtiquetas as $etiqueta)
+                         <button
+                             wire:click="toggleEtiquetaFiltro({{ $etiqueta->id }})"
+                             class="wa-tag-chip wa-tag-filter {{ $etiquetaFilter === $etiqueta->id ? 'active' : '' }}"
+                             style="background: {{ $etiqueta->color }};"
+                         >
+                             {{ $etiqueta->nombre }}
+                         </button>
+                     @endforeach
+                 </div>
+             @endif
          </div>
 
          <div class="wa-list" id="wa-conversations-list">
@@ -2000,6 +2097,9 @@
                              @if($convPhone && isset($conversationLabels['caida_pro'][$convPhone]))
                                  <span class="wa-badge caida-pro">Caída</span>
                              @endif
+                             @foreach($conversation->etiquetas as $etiqueta)
+                                 <span class="wa-tag-chip" style="background: {{ $etiqueta->color }};">{{ $etiqueta->nombre }}</span>
+                             @endforeach
                              @if($unread > 0)
                                  <span class="wa-badge danger">{{ $unread }}</span>
                              @endif
@@ -2384,6 +2484,71 @@
                              </button>
                          @endforeach
                      </div>
+                 </div>
+                 <div>
+                     <div class="wa-card-title" style="margin-bottom: 8px;">Etiquetas</div>
+                     <div class="wa-type-actions">
+                         @foreach($activeConversation->etiquetas as $etiqueta)
+                             <button
+                                 type="button"
+                                 wire:click="toggleEtiquetaEnConversacion({{ $etiqueta->id }})"
+                                 class="wa-tag-chip wa-tag-assigned"
+                                 style="background: {{ $etiqueta->color }};"
+                                 title="Quitar etiqueta"
+                             >
+                                 {{ $etiqueta->nombre }} ✕
+                             </button>
+                         @endforeach
+                         <button type="button" wire:click="toggleEtiquetaCreator" class="wa-tag-chip wa-tag-add">
+                             + Etiqueta
+                         </button>
+                     </div>
+
+                     @if($showEtiquetaCreator)
+                         <div class="wa-etiqueta-creator">
+                             <input
+                                 type="text"
+                                 wire:model="newEtiquetaNombre"
+                                 maxlength="30"
+                                 placeholder="Nombre de la etiqueta"
+                                 class="wa-etiqueta-input"
+                             >
+                             <div class="wa-etiqueta-palette">
+                                 @foreach(\App\Models\ChatEtiqueta::PALETA as $colorOpcion)
+                                     <button
+                                         type="button"
+                                         wire:click="$set('newEtiquetaColor', '{{ $colorOpcion }}')"
+                                         class="wa-etiqueta-swatch {{ $newEtiquetaColor === $colorOpcion ? 'active' : '' }}"
+                                         style="background: {{ $colorOpcion }};"
+                                     ></button>
+                                 @endforeach
+                             </div>
+                             <div style="display: flex; gap: 8px;">
+                                 <button type="button" wire:click="guardarNuevaEtiqueta" class="wa-action primary">Crear</button>
+                                 <button type="button" wire:click="toggleEtiquetaCreator" class="wa-action">Cancelar</button>
+                             </div>
+                         </div>
+                     @endif
+
+                     @php
+                         $etiquetasAsignadasIds = $activeConversation->etiquetas->pluck('id');
+                         $etiquetasDisponibles = $allEtiquetas->reject(fn ($e) => $etiquetasAsignadasIds->contains($e->id));
+                     @endphp
+                     @if($etiquetasDisponibles->isNotEmpty())
+                         <div class="wa-type-actions" style="margin-top: 6px;">
+                             @foreach($etiquetasDisponibles as $etiqueta)
+                                 <button
+                                     type="button"
+                                     wire:click="toggleEtiquetaEnConversacion({{ $etiqueta->id }})"
+                                     class="wa-tag-chip wa-tag-unassigned"
+                                     style="border: 1px solid {{ $etiqueta->color }}; color: {{ $etiqueta->color }};"
+                                     title="Asignar etiqueta"
+                                 >
+                                     {{ $etiqueta->nombre }}
+                                 </button>
+                             @endforeach
+                         </div>
+                     @endif
                  </div>
              </div>
 
