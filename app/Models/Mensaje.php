@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class Mensaje extends Model
@@ -124,7 +125,9 @@ class Mensaje extends Model
             return $raw;
         }
 
-        // Forzamos route() para evitar problemas de /public en producción
-        return route('chat.media', ['mensaje' => $this->idmsg]);
+        // URL firmada: el hosting bloquea el acceso directo a /storage, así que
+        // servimos el archivo a través de una ruta de Laravel sin requerir sesión
+        // (necesario para que Evolution API pueda descargarlo al reenviarlo por WhatsApp).
+        return URL::temporarySignedRoute('chat.media', now()->addDays(7), ['mensaje' => $this->idmsg]);
     }
 }

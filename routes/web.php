@@ -49,7 +49,7 @@ Route::get('/chat/whatsapp', function () {
 
 Route::get('/chat/media/{mensaje}', [\App\Http\Controllers\Chat\ChatMediaController::class, 'show'])
     ->name('chat.media')
-    ->middleware('auth');
+    ->middleware('signed');
 
 Route::get('/agente/biblioteca', function () {
     return view('chat.agent-library');

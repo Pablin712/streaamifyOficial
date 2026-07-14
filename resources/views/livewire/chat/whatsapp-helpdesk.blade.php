@@ -857,6 +857,16 @@
             display: flex;
         }
 
+        /* El estado "grabando" se controla con una clase en #wa-compose-row (protegido con
+           wire:ignore.self) en vez de estilos inline en cada hijo, porque wire:poll re-renderiza
+           el composer cada pocos segundos y borraría cualquier style/class puesto directo en los
+           hijos, cancelando la grabación en curso. */
+        .wa-compose-row.wa-recording-active > .wa-attach-btn,
+        .wa-compose-row.wa-recording-active > .wa-textarea,
+        .wa-compose-row.wa-recording-active > .wa-send {
+            display: none;
+        }
+
         .wa-record-dot {
             width: 10px;
             height: 10px;
@@ -2130,7 +2140,7 @@
                     </div>
                 @endif
 
-                <div class="wa-compose-row" id="wa-compose-row">
+                <div class="wa-compose-row" id="wa-compose-row" wire:ignore.self>
                     @if($settings['chat_allow_image'])
                         <label class="wa-attach-btn" id="wa-image-attach-btn" title="Adjuntar imagen (o pega con Ctrl+V)">
                             📷
@@ -2150,7 +2160,7 @@
                     @endif
 
                     @if($settings['chat_allow_audio'])
-                        <div class="wa-record-bar" id="wa-record-bar">
+                        <div class="wa-record-bar" id="wa-record-bar" wire:ignore>
                             <button type="button" class="wa-record-action wa-record-cancel" id="wa-record-cancel" title="Cancelar">✕</button>
                             <span class="wa-record-dot"></span>
                             <span class="wa-record-time" id="wa-record-time">0:00</span>
@@ -2749,8 +2759,6 @@
                 const cancelBtn = document.getElementById('wa-record-cancel');
                 const pauseBtn = document.getElementById('wa-record-pause');
                 const sendBtn = document.getElementById('wa-record-send');
-                const imageBtn = document.getElementById('wa-image-attach-btn');
-                const sendTextBtn = composerRow.querySelector('[data-chat-send]');
 
                 let mediaRecorder = null;
                 let mediaStream = null;
@@ -2769,9 +2777,9 @@
                 };
 
                 const setComposerVisible = (visible) => {
-                    [imageBtn, micBtn, textarea, sendTextBtn].forEach((el) => {
-                        if (el) el.style.display = visible ? '' : 'none';
-                    });
+                    // Clase en el padre (protegido con wire:ignore.self) en vez de estilos
+                    // inline en cada hijo, para que sobreviva a los re-renders de wire:poll.
+                    composerRow.classList.toggle('wa-recording-active', !visible);
                     recordBar.classList.toggle('active', !visible);
                 };
 

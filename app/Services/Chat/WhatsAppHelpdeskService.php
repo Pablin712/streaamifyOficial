@@ -351,6 +351,9 @@ class WhatsAppHelpdeskService
                 'type' => $type,
                 'content' => $content,
                 'media_url' => $storedUrl,
+                // URL firmada servida por Laravel: el hosting bloquea /storage directo,
+                // así que Evolution API necesita esta ruta para poder descargar el archivo.
+                'external_media_url' => $storedUrl ? $message->media_playable_url : null,
                 'mime_type' => $mimeType,
                 'file_name' => $fileName,
             ];
@@ -368,7 +371,7 @@ class WhatsAppHelpdeskService
                 $conversation,
                 $result['type'],
                 $result['content'],
-                $result['media_url'],
+                $result['external_media_url'],
                 $result['mime_type'],
                 $result['file_name']
             );
