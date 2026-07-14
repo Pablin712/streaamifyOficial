@@ -40,14 +40,19 @@ class WhatsAppOutboundService
      * que convierte el archivo (mp3/wav/ogg/etc.) a Opus/OGG con ptt:true del lado
      * del servidor de Evolution. A diferencia de sendMedia, esto sí llega como nota
      * de voz reproducible nativa de WhatsApp.
+     *
+     * Se manda el audio en base64 puro (sin prefijo data:...;base64,) en vez de una
+     * URL: el hosting bloquea con 403 el fetch que hace Evolution hacia nuestro
+     * dominio para audio (aunque para imágenes sí funciona), así que evitamos que
+     * Evolution tenga que descargar nada y viaja directo en el POST.
      */
-    public function sendVoiceNote(string $number, string $mediaUrl, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    public function sendVoiceNote(string $number, string $base64Audio, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
     {
         if (! $apiKey || ! $instance) {
             return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
         }
 
-        return $this->sendVoiceNoteViaEvolution($number, $mediaUrl, $instance, $apiKey, $serverUrl);
+        return $this->sendVoiceNoteViaEvolution($number, $base64Audio, $instance, $apiKey, $serverUrl);
     }
 
     /**
@@ -117,7 +122,7 @@ class WhatsAppOutboundService
         }
     }
 
-    private function sendVoiceNoteViaEvolution(string $number, string $mediaUrl, string $instance, string $apiKey, ?string $serverUrl): array
+    private function sendVoiceNoteViaEvolution(string $number, string $base64Audio, string $instance, string $apiKey, ?string $serverUrl): array
     {
         $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
 
@@ -129,7 +134,7 @@ class WhatsAppOutboundService
                 ])
                 ->post("{$baseUrl}/message/sendWhatsAppAudio/{$instance}", [
                     'number' => $this->formatNumber($number),
-                    'audio' => $mediaUrl,
+                    'audio' => $base64Audio,
                     'encoding' => true,
                 ]);
 

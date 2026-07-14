@@ -283,6 +283,7 @@ class WhatsAppHelpdeskService
         $storedUrl = null;
             $mimeType = null;
             $fileName = null;
+            $audioBase64 = null;
 
         if ($file) {
             $folder = match ($type) {
@@ -301,6 +302,14 @@ class WhatsAppHelpdeskService
             // que WhatsApp/Evolution reciban el mime real de audio.
             if ($type === 'audio' && str_starts_with((string) $mimeType, 'video/')) {
                 $mimeType = 'audio/'.substr($mimeType, strlen('video/'));
+            }
+
+            // El audio se manda en base64 puro en vez de URL: el hosting bloquea con
+            // 403 el fetch que hace Evolution hacia nuestro dominio para archivos de
+            // audio (aunque para imágenes sí funciona), así que evitamos que Evolution
+            // tenga que descargar nada.
+            if ($type === 'audio') {
+                $audioBase64 = base64_encode(Storage::disk('public')->get($path));
             }
         }
 
@@ -366,6 +375,8 @@ class WhatsAppHelpdeskService
             ];
         });
 
+        $result['audio_base64'] = $audioBase64;
+
         app()->terminating(function () use ($result) {
             $conversation = Conversacion::query()->with('contactoCanal')->find($result['conversation_id']);
             $canalMensaje = ChatMensajeCanal::query()->find($result['canal_mensaje_id']);
@@ -380,7 +391,8 @@ class WhatsAppHelpdeskService
                 $result['content'],
                 $result['external_media_url'],
                 $result['mime_type'],
-                $result['file_name']
+                $result['file_name'],
+                $result['audio_base64']
             );
 
             $dispatchOk = (bool) ($dispatch['ok'] ?? false);
@@ -680,7 +692,7 @@ class WhatsAppHelpdeskService
     /**
      * Envía mensaje a WhatsApp vía Evolution o n8n
      */
-    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null): array
+    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null, ?string $audioBase64 = null): array
     {
         $contacto = $conversation->contactoCanal;
 
@@ -730,9 +742,15 @@ class WhatsAppHelpdeskService
 
             // Audio: endpoint dedicado de nota de voz. Evolution convierte el archivo
             // (wav/mp3/etc.) a Opus/OGG con ptt:true de su lado; sendMedia genérico no
-            // llega como nota de voz reproducible al destinatario.
+            // llega como nota de voz reproducible al destinatario. Se manda en base64
+            // (no URL) porque el hosting bloquea con 403 el fetch de Evolution hacia
+            // nuestro dominio para audio.
             if ($type === 'audio') {
-                return $this->outbound->sendVoiceNote($number, $mediaUrl, $instance, $apiKey, $serverUrl);
+                if (! $audioBase64) {
+                    return ['ok' => false, 'error' => 'No se pudo preparar el audio para enviar.'];
+                }
+
+                return $this->outbound->sendVoiceNote($number, $audioBase64, $instance, $apiKey, $serverUrl);
             }
 
             // Media: enviar el archivo real por Evo API (imagen/video/documento)
