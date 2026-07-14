@@ -13,6 +13,7 @@ use App\Models\ChatWhatsappChannel;
 use App\Models\Cliente;
 use App\Models\Conversacion;
 use App\Models\Mensaje;
+use App\Models\Proveedor;
 use App\Services\Chat\WhatsAppOutboundService;
 use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
@@ -175,7 +176,7 @@ class ChatRouterController extends Controller
                         'idcli' => $cliente?->idcli,
                         'estado_relacion' => $cliente ? 'cliente' : 'lead',
                         'origen' => $request->input('origen', 'n8n'),
-                        'metadata' => $this->buildChannelMetadata($request),
+                        'metadata' => array_merge($this->buildChannelMetadata($request), $this->proveedorMetadataTag($telefono)),
                         'last_seen_at' => now(),
                     ]
                 );
@@ -203,14 +204,14 @@ class ChatRouterController extends Controller
                         'last_message_at' => now(),
                         'mensajes_no_leidos' => 0,
                         'requiere_humano' => false,
-                        'metadata' => [
+                        'metadata' => array_merge([
                             'canal_user_id' => $canalUserId,
                             'instance' => $request->input('instance') ?: $whatsappChannel?->instance_name,
                             'apikey' => $request->input('apikey') ?: $whatsappChannel?->api_key,
                             'server_url' => $request->input('server_url') ?: $whatsappChannel?->server_url,
                             'whatsapp_channel_id' => $whatsappChannel?->id,
                             'whatsapp_color' => $whatsappColor,
-                        ],
+                        ], $this->proveedorMetadataTag($telefono)),
                     ]
                 );
 
@@ -579,7 +580,7 @@ class ChatRouterController extends Controller
                             'idcli' => $cliente?->idcli,
                             'estado_relacion' => $cliente ? 'cliente' : 'lead',
                             'origen' => $request->input('origen', 'n8n'),
-                            'metadata' => $this->buildChannelMetadata($request),
+                            'metadata' => array_merge($this->buildChannelMetadata($request), $this->proveedorMetadataTag($telefono)),
                             'last_seen_at' => now(),
                         ]
                     );
@@ -605,6 +606,7 @@ class ChatRouterController extends Controller
                             'last_message_at' => now(),
                             'mensajes_no_leidos' => 0,
                             'requiere_humano' => false,
+                            'metadata' => $this->proveedorMetadataTag($telefono),
                         ]
                     );
 
@@ -928,7 +930,7 @@ class ChatRouterController extends Controller
                             'idcli' => $cliente?->idcli,
                             'estado_relacion' => $cliente ? 'cliente' : 'lead',
                             'origen' => $request->input('origen', 'n8n'),
-                            'metadata' => $this->buildChannelMetadata($request),
+                            'metadata' => array_merge($this->buildChannelMetadata($request), $this->proveedorMetadataTag($telefono)),
                             'last_seen_at' => now(),
                         ]
                     );
@@ -944,6 +946,7 @@ class ChatRouterController extends Controller
                             'last_message_at' => now(),
                             'mensajes_no_leidos' => 0,
                             'requiere_humano' => false,
+                            'metadata' => $this->proveedorMetadataTag($telefono),
                         ]
                     );
                     $conversacion->load('contactoCanal');
@@ -1418,6 +1421,46 @@ class ChatRouterController extends Controller
         }
 
         return Cliente::buscarPorTelefonoNormalizado($telefono);
+    }
+
+    /**
+     * Si el telefono coincide con un proveedor registrado, arma el tag de metadata
+     * para que el contacto/conversacion se cree ya clasificado como "proveedor" y el
+     * agente IA (o el panel) no lo trate como cliente nuevo. Solo se usa en los
+     * valores por defecto de firstOrCreate (primera vez que se ve el numero); nunca
+     * se debe mezclar en los fill()/update() de cada mensaje, porque pisaria una
+     * reclasificacion manual hecha despues por un empleado en el panel.
+     */
+    private function proveedorMetadataTag(?string $telefono): array
+    {
+        return $this->resolveProveedorByPhone($telefono) ? ['tipo_contacto' => 'proveedor'] : [];
+    }
+
+    private function resolveProveedorByPhone(?string $telefono): ?Proveedor
+    {
+        $digits = preg_replace('/\D/', '', (string) $telefono);
+
+        if (strlen($digits) < 7) {
+            return null;
+        }
+
+        $suffix = substr($digits, -9);
+
+        return Proveedor::query()
+            ->where('activopro', true)
+            ->get(['idpro', 'nombrepro', 'telefonopro'])
+            ->first(function (Proveedor $proveedor) use ($suffix) {
+                $provDigits = preg_replace('/\D/', '', (string) $proveedor->telefonopro);
+
+                if (strlen($provDigits) < 7) {
+                    return false;
+                }
+
+                $provSuffix = substr($provDigits, -9);
+                $len = min(strlen($suffix), strlen($provSuffix));
+
+                return $len >= 7 && substr($suffix, -$len) === substr($provSuffix, -$len);
+            });
     }
 
     private function resolveTriggerMessageId(Request $request, int $idconv): ?int
