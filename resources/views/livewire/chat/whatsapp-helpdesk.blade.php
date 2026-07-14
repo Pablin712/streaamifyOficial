@@ -331,6 +331,43 @@
             border-left: 3px solid var(--wa-accent);
         }
 
+        .wa-item.pinned {
+            background: var(--wa-bg);
+        }
+
+        .wa-item-wrapper {
+            position: relative;
+        }
+
+        .wa-pin-btn {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 0;
+            background: var(--wa-panel);
+            box-shadow: var(--wa-shadow-sm);
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--wa-transition);
+        }
+
+        .wa-item-wrapper:hover .wa-pin-btn {
+            opacity: 1;
+        }
+
+        .wa-pin-btn.active {
+            opacity: 1;
+            background: var(--wa-accent-soft);
+        }
+
         .wa-item-row {
             display: flex;
             justify-content: space-between;
@@ -2045,7 +2082,8 @@
                      $convIdcli = $conversation->idcli;
                      $convPhone = $conversation->contactoCanal?->telefono_normalizado;
                  @endphp
-                 <button type="button" wire:key="conversation-{{ $conversation->idconv }}" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }}">
+                 <div class="wa-item-wrapper" wire:key="conversation-{{ $conversation->idconv }}">
+                 <button type="button" wire:click="selectConversation({{ $conversation->idconv }})" class="wa-item {{ $activeConversationId === $conversation->idconv ? 'active' : '' }} {{ $conversation->pinned_at ? 'pinned' : '' }}">
                      <div class="wa-item-row">
                          <div class="wa-avatar">{{ $initial }}</div>
                          <div class="wa-conversation-content">
@@ -2111,6 +2149,13 @@
                          </div>
                      </div>
                  </button>
+                 <button
+                     type="button"
+                     wire:click.stop="togglePin({{ $conversation->idconv }})"
+                     class="wa-pin-btn {{ $conversation->pinned_at ? 'active' : '' }}"
+                     title="{{ $conversation->pinned_at ? 'Desfijar conversación' : 'Fijar conversación' }}"
+                 >📌</button>
+                 </div>
              @empty
                  <div class="wa-empty">No hay conversaciones.</div>
              @endforelse

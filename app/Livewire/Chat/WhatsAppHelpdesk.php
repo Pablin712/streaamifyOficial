@@ -398,6 +398,19 @@ class WhatsAppHelpdesk extends Component
         }
     }
 
+    public function togglePin(int $idconv): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para fijar conversaciones.');
+
+        $conversation = Conversacion::query()
+            ->where('canal_principal', 'whatsapp')
+            ->findOrFail($idconv);
+
+        $conversation->update([
+            'pinned_at' => $conversation->pinned_at ? null : now(),
+        ]);
+    }
+
     public function highlightMessageContent(?string $content, ?string $term = null): string
     {
         $value = (string) $content;
@@ -916,6 +929,8 @@ class WhatsAppHelpdesk extends Component
         $query = Conversacion::query()
             ->with(['cliente', 'contactoCanal', 'ultimoMensaje', 'operadorAsignado', 'operadorEscribiendo', 'etiquetas'])
             ->where('canal_principal', 'whatsapp')
+            ->orderByRaw('pinned_at IS NULL')
+            ->orderByDesc('pinned_at')
             ->orderByRaw('COALESCE(last_message_at, ultima_actividad, updated_at) DESC');
 
         // ── Modo concentración ───────────────────────────────────────────────

@@ -30,6 +30,7 @@ class Conversacion extends Model
         'prioridad',
         'requiere_humano',
         'closed_at',
+        'pinned_at',
         'metadata',
     ];
 
@@ -39,6 +40,7 @@ class Conversacion extends Model
         'last_message_at' => 'datetime',
         'operator_typing_at' => 'datetime',
         'closed_at' => 'datetime',
+        'pinned_at' => 'datetime',
         'requiere_humano' => 'boolean',
     ];
 
