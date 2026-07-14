@@ -140,6 +140,7 @@ class WhatsAppHelpdesk extends Component
             'conversations'         => $conversationsData['items'],
             'conversationsHasMore'  => $conversationsData['has_more'],
             'conversationsLoaded'   => $conversationsData['loaded'],
+            'matchedMessages'       => $conversationsData['matched_messages'],
             'activeConversation'    => $activeConversation,
             'messages'              => $activeMessages['items'],
             'messagesHasMore'       => $activeMessages['has_more'],
@@ -397,7 +398,7 @@ class WhatsAppHelpdesk extends Component
         }
     }
 
-    public function highlightMessageContent(?string $content): string
+    public function highlightMessageContent(?string $content, ?string $term = null): string
     {
         $value = (string) $content;
 
@@ -406,7 +407,7 @@ class WhatsAppHelpdesk extends Component
         }
 
         $escaped = e($value);
-        $term = trim($this->activeMessageSearch);
+        $term = trim($term ?? $this->activeMessageSearch);
 
         if ($term === '') {
             return nl2br($escaped);
@@ -974,8 +975,9 @@ class WhatsAppHelpdesk extends Component
         };
 
         if ($this->search !== '') {
-            $search = '%'.trim($this->search).'%';
-            $query->where(function ($q) use ($search) {
+            $searchTerm = trim($this->search);
+            $search = '%'.$searchTerm.'%';
+            $query->where(function ($q) use ($search, $searchTerm) {
                 $q->whereHas('cliente', function ($client) use ($search) {
                     $client->where('nombrecli', 'like', $search)
                         ->orWhere('telefonocli', 'like', $search);
@@ -984,6 +986,14 @@ class WhatsAppHelpdesk extends Component
                         ->orWhere('telefono_normalizado', 'like', $search)
                         ->orWhere('nombre_canal', 'like', $search);
                 });
+
+                // Buscar tambien por contenido de mensajes (busqueda global), pero solo
+                // con 3+ caracteres para no barrer toda la tabla mensajes en cada letra.
+                if (mb_strlen($searchTerm) >= 3) {
+                    $q->orWhereHas('mensajes', function ($m) use ($search) {
+                        $m->where('contenido', 'like', $search);
+                    });
+                }
             });
         }
 
@@ -1010,10 +1020,25 @@ class WhatsAppHelpdesk extends Component
             $conversations = $conversations->take($this->conversationsLimit);
         }
 
+        $matchedMessages = collect();
+        $searchTerm = trim($this->search);
+
+        if (mb_strlen($searchTerm) >= 3) {
+            $search = '%'.$searchTerm.'%';
+            $matchedMessages = Mensaje::query()
+                ->whereIn('idconv', $conversations->pluck('idconv'))
+                ->where('contenido', 'like', $search)
+                ->orderByDesc('idmsg')
+                ->get()
+                ->groupBy('idconv')
+                ->map(fn ($grupo) => $grupo->first());
+        }
+
         return [
             'items' => $conversations->values(),
             'has_more' => $hasMore,
             'loaded' => $conversations->count(),
+            'matched_messages' => $matchedMessages,
         ];
     }
 

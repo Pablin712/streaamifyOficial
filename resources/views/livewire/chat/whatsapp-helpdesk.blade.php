@@ -1980,7 +1980,7 @@
                  </div>
              @endif
 
-             <input wire:model.live.debounce.300ms="search" class="wa-search" type="search" placeholder="Buscar cliente, nombre o numero">
+             <input wire:model.live.debounce.300ms="search" class="wa-search" type="search" placeholder="Buscar cliente, número o mensaje">
 
              <div class="wa-filters">
                  @foreach([
@@ -2030,6 +2030,7 @@
                          ?: $conversation->cliente?->telefonocli
                          ?: 'Sin numero';
                      $lastMessage = $conversation->ultimoMensaje;
+                     $matchedMessage = $matchedMessages->get($conversation->idconv);
                      $unread = (int) ($conversation->unread_count ?: $conversation->mensajes_no_leidos);
                      $initial = strtoupper(substr($displayName, 0, 1));
                      $channelColor = data_get($conversation->metadata, 'whatsapp_color')
@@ -2060,14 +2061,18 @@
                                 </span>
                             </div>
                              <div class="wa-preview">
-                                 {{ $lastMessage?->contenido ?: match($lastMessage?->tipo_contenido) {
-                                     'imagen' => '📷 Imagen',
-                                     'audio' => '🎤 Audio',
-                                     'sticker' => '🧩 Sticker',
-                                     'documento', 'archivo' => '📄 Documento',
-                                     'video' => '🎬 Video',
-                                     default => 'Sin mensajes',
-                                 } }}
+                                 @if($matchedMessage)
+                                     🔎 {!! $this->highlightMessageContent($matchedMessage->contenido, $search) !!}
+                                 @else
+                                     {{ $lastMessage?->contenido ?: match($lastMessage?->tipo_contenido) {
+                                         'imagen' => '📷 Imagen',
+                                         'audio' => '🎤 Audio',
+                                         'sticker' => '🧩 Sticker',
+                                         'documento', 'archivo' => '📄 Documento',
+                                         'video' => '🎬 Video',
+                                         default => 'Sin mensajes',
+                                     } }}
+                                 @endif
                              </div>
                          </div>
                      </div>
