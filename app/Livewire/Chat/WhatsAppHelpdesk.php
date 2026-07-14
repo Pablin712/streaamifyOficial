@@ -781,8 +781,9 @@ class WhatsAppHelpdesk extends Component
             $this->validate([
                 // video/webm y video/mp4 incluidos porque el sniffer de PHP (finfo) detecta
                 // grabaciones de audio-only del navegador (MediaRecorder) como contenedor de
-                // video, aunque no tengan pista de video real.
-                'audioUpload' => ['required', 'file', 'mimetypes:audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4,video/webm,video/mp4', 'max:'.$maxKb],
+                // video, aunque no tengan pista de video real. audio/x-wav y audio/wave son
+                // variantes que reporta finfo para WAV segun la version de libmagic.
+                'audioUpload' => ['required', 'file', 'mimetypes:audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave,audio/ogg,audio/webm,audio/mp4,video/webm,video/mp4', 'max:'.$maxKb],
             ]);
         }
 

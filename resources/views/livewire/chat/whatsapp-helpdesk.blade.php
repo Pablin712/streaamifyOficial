@@ -2760,14 +2760,25 @@
                 const pauseBtn = document.getElementById('wa-record-pause');
                 const sendBtn = document.getElementById('wa-record-send');
 
-                let mediaRecorder = null;
+                // Grabamos PCM crudo con Web Audio API y lo empaquetamos como WAV en vez de
+                // usar MediaRecorder: Chrome/Edge solo graban a WebM/Opus, que WhatsApp no
+                // reproduce (los audios nativos de WhatsApp son OGG/Opus con ptt:true), y este
+                // hosting no tiene ffmpeg ni exec para convertir el archivo en el servidor.
+                // WAV es más pesado pero lo reproduce cualquier cliente de WhatsApp sin problema.
                 let mediaStream = null;
-                let chunks = [];
+                let audioContext = null;
+                let sourceNode = null;
+                let processorNode = null;
+                let silentGain = null;
+                let pcmChunks = [];
+                let recordingSampleRate = 44100;
                 let startedAt = 0;
                 let pausedElapsed = 0;
                 let timerInterval = null;
                 let dragStartX = null;
                 let cancelled = false;
+                let isPaused = false;
+                let isRecording = false;
                 const CANCEL_THRESHOLD = 80;
 
                 const formatTime = (totalSeconds) => {
@@ -2783,7 +2794,71 @@
                     recordBar.classList.toggle('active', !visible);
                 };
 
+                const encodeWav = (chunks, sampleRate) => {
+                    let totalLength = 0;
+                    chunks.forEach((chunk) => { totalLength += chunk.length; });
+
+                    const pcm16 = new Int16Array(totalLength);
+                    let offset = 0;
+                    chunks.forEach((chunk) => {
+                        for (let i = 0; i < chunk.length; i++) {
+                            const s = Math.max(-1, Math.min(1, chunk[i]));
+                            pcm16[offset++] = s < 0 ? s * 0x8000 : s * 0x7fff;
+                        }
+                    });
+
+                    const blockAlign = 2;
+                    const byteRate = sampleRate * blockAlign;
+                    const dataSize = pcm16.length * 2;
+                    const buffer = new ArrayBuffer(44 + dataSize);
+                    const view = new DataView(buffer);
+
+                    const writeString = (pos, str) => {
+                        for (let i = 0; i < str.length; i++) {
+                            view.setUint8(pos + i, str.charCodeAt(i));
+                        }
+                    };
+
+                    writeString(0, 'RIFF');
+                    view.setUint32(4, 36 + dataSize, true);
+                    writeString(8, 'WAVE');
+                    writeString(12, 'fmt ');
+                    view.setUint32(16, 16, true);
+                    view.setUint16(20, 1, true);
+                    view.setUint16(22, 1, true);
+                    view.setUint32(24, sampleRate, true);
+                    view.setUint32(28, byteRate, true);
+                    view.setUint16(32, blockAlign, true);
+                    view.setUint16(34, 16, true);
+                    writeString(36, 'data');
+                    view.setUint32(40, dataSize, true);
+
+                    let pcmOffset = 44;
+                    for (let i = 0; i < pcm16.length; i++, pcmOffset += 2) {
+                        view.setInt16(pcmOffset, pcm16[i], true);
+                    }
+
+                    return new Blob([buffer], { type: 'audio/wav' });
+                };
+
                 const stopStream = () => {
+                    if (processorNode) {
+                        processorNode.disconnect();
+                        processorNode.onaudioprocess = null;
+                        processorNode = null;
+                    }
+                    if (sourceNode) {
+                        sourceNode.disconnect();
+                        sourceNode = null;
+                    }
+                    if (silentGain) {
+                        silentGain.disconnect();
+                        silentGain = null;
+                    }
+                    if (audioContext) {
+                        audioContext.close().catch(() => {});
+                        audioContext = null;
+                    }
                     if (mediaStream) {
                         mediaStream.getTracks().forEach((track) => track.stop());
                         mediaStream = null;
@@ -2792,12 +2867,12 @@
                         clearInterval(timerInterval);
                         timerInterval = null;
                     }
+                    isRecording = false;
                 };
 
                 const resetRecordBar = () => {
                     stopStream();
-                    mediaRecorder = null;
-                    chunks = [];
+                    pcmChunks = [];
                     recordBar.classList.remove('paused');
                     recordBar.style.transform = '';
                     if (recordTime) recordTime.textContent = '0:00';
@@ -2816,48 +2891,36 @@
                     }
 
                     mediaStream = stream;
-                    chunks = [];
+                    pcmChunks = [];
                     cancelled = false;
+                    isPaused = false;
                     pausedElapsed = 0;
                     startedAt = Date.now();
 
                     try {
-                        mediaRecorder = new MediaRecorder(stream);
+                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                        audioContext = new AudioContextClass();
+                        recordingSampleRate = audioContext.sampleRate;
+                        sourceNode = audioContext.createMediaStreamSource(stream);
+                        processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+                        processorNode.onaudioprocess = (event) => {
+                            if (isPaused || cancelled) return;
+                            pcmChunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+                        };
+                        // El processor solo dispara onaudioprocess si está conectado al destino;
+                        // usamos una ganancia en 0 para no escuchar el propio micrófono (feedback).
+                        silentGain = audioContext.createGain();
+                        silentGain.gain.value = 0;
+                        sourceNode.connect(processorNode);
+                        processorNode.connect(silentGain);
+                        silentGain.connect(audioContext.destination);
                     } catch (error) {
                         showRecordError('Tu navegador no soporta grabación de audio.');
                         stopStream();
                         return;
                     }
 
-                    mediaRecorder.addEventListener('dataavailable', (event) => {
-                        if (event.data && event.data.size > 0) {
-                            chunks.push(event.data);
-                        }
-                    });
-
-                    mediaRecorder.addEventListener('stop', () => {
-                        const wasCancelled = cancelled;
-                        const recordedChunks = chunks;
-                        const recordedType = mediaRecorder.mimeType || 'audio/webm';
-                        stopStream();
-                        resetRecordBar();
-
-                        if (wasCancelled || recordedChunks.length === 0) {
-                            return;
-                        }
-
-                        const blob = new Blob(recordedChunks, { type: recordedType });
-                        const ext = recordedType.includes('ogg') ? 'ogg' : (recordedType.includes('mp4') ? 'm4a' : 'webm');
-                        const file = new File([blob], `nota-voz-${Date.now()}.${ext}`, { type: recordedType });
-
-                        @this.upload('audioUpload', file, () => {
-                            @this.call('sendAudio');
-                        }, (error) => {
-                            showRecordError(typeof error === 'string' ? error : 'No se pudo enviar la nota de voz.');
-                        });
-                    });
-
-                    mediaRecorder.start();
+                    isRecording = true;
                     setComposerVisible(false);
                     if (recordTime) recordTime.textContent = '0:00';
                     timerInterval = setInterval(() => {
@@ -2866,36 +2929,50 @@
                     }, 250);
                 };
 
-                const stopAndSend = () => {
-                    if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
-                    cancelled = false;
-                    if (mediaRecorder.state === 'paused') {
-                        mediaRecorder.resume();
+                const finishRecording = () => {
+                    const wasCancelled = cancelled;
+                    const recordedChunks = pcmChunks;
+                    const sampleRate = recordingSampleRate;
+                    resetRecordBar();
+
+                    if (wasCancelled || recordedChunks.length === 0) {
+                        return;
                     }
-                    mediaRecorder.stop();
+
+                    const blob = encodeWav(recordedChunks, sampleRate);
+                    const file = new File([blob], `nota-voz-${Date.now()}.wav`, { type: 'audio/wav' });
+
+                    @this.upload('audioUpload', file, () => {
+                        @this.call('sendAudio');
+                    }, (error) => {
+                        showRecordError(typeof error === 'string' ? error : 'No se pudo enviar la nota de voz.');
+                    });
+                };
+
+                const stopAndSend = () => {
+                    if (!isRecording) return;
+                    cancelled = false;
+                    finishRecording();
                 };
 
                 const cancelRecording = () => {
-                    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                    if (!isRecording) {
                         resetRecordBar();
                         return;
                     }
                     cancelled = true;
-                    if (mediaRecorder.state === 'paused') {
-                        mediaRecorder.resume();
-                    }
-                    mediaRecorder.stop();
+                    finishRecording();
                 };
 
                 const togglePause = () => {
-                    if (!mediaRecorder) return;
-                    if (mediaRecorder.state === 'recording') {
-                        mediaRecorder.pause();
+                    if (!isRecording) return;
+                    if (!isPaused) {
+                        isPaused = true;
                         pausedElapsed += (Date.now() - startedAt) / 1000;
                         recordBar.classList.add('paused');
                         if (pauseBtn) pauseBtn.textContent = '▶';
-                    } else if (mediaRecorder.state === 'paused') {
-                        mediaRecorder.resume();
+                    } else {
+                        isPaused = false;
                         startedAt = Date.now();
                         recordBar.classList.remove('paused');
                         if (pauseBtn) pauseBtn.textContent = '⏸';
@@ -2903,7 +2980,8 @@
                 };
 
                 micBtn.addEventListener('click', () => {
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !AudioContextClass) {
                         showRecordError('Tu navegador no soporta grabación de audio.');
                         return;
                     }
