@@ -1275,17 +1275,17 @@
         }
 
         .wa-client-avatar {
-            width: 64px;
-            height: 64px;
+            width: 44px;
+            height: 44px;
             border-radius: var(--wa-radius-full);
             background: var(--wa-accent-soft);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 24px;
+            font-size: 16px;
             color: var(--wa-accent);
-            margin: 0 auto 12px;
+            flex-shrink: 0;
         }
 
         .wa-client-name {
@@ -1338,7 +1338,7 @@
             border: 1px solid rgba(148, 163, 184, 0.24);
             box-shadow: 0 18px 40px rgba(37, 99, 235, 0.08);
             display: grid;
-            gap: 10px;
+            gap: 8px;
             text-align: left;
         }
 
@@ -1355,7 +1355,7 @@
         }
 
         .wa-profile-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
             color: var(--wa-text);
             line-height: 1.1;
@@ -1661,6 +1661,52 @@
             0% { transform: scale(.94); }
             60% { transform: scale(1.04); }
             100% { transform: scale(1); }
+        }
+
+        /* Cuentas de proveedor: a diferencia de .wa-account-card (pensada para ~5
+           cuentas de un cliente), un proveedor tiene en promedio ~20 cuentas y
+           creciendo -- lista compacta con scroll propio + buscador en vez de una
+           card grande por cuenta. */
+        .wa-provider-accounts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 380px;
+            overflow-y: auto;
+        }
+
+        .wa-provider-service-heading {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--wa-text-tertiary);
+            margin-top: 6px;
+        }
+
+        .wa-provider-service-heading:first-child {
+            margin-top: 0;
+        }
+
+        .wa-provider-account-row {
+            border: 1px solid var(--wa-border);
+            border-radius: var(--wa-radius-sm);
+            padding: 8px;
+            display: grid;
+            gap: 4px;
+        }
+
+        .wa-provider-account-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wa-provider-account-id {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--wa-text);
         }
 
         .wa-empty {
@@ -2715,11 +2761,6 @@
                          </div>
                      </div>
                  </div>
-                 <div class="wa-profile-meta-line">
-                     <span>Primer contacto: <strong>{{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</strong></span>
-                     <span class="wa-profile-meta-sep">·</span>
-                     <span>Asignado a: <strong>{{ $assignedOperatorName }}</strong></span>
-                 </div>
                  <details class="wa-collapsible" wire:ignore.self>
                      <summary class="wa-card-title">Cambiar clasificación</summary>
                      <div class="wa-type-actions">
@@ -2806,8 +2847,14 @@
                      <summary class="wa-card-title">Información</summary>
                      <div class="wa-card-value">Origen: {{ $activeConversation->origen ?: 'WhatsApp' }}</div>
                      <div style="font-size: 12px; color: var(--wa-text-secondary);">ID canal: {{ $activeConversation->contactoCanal?->canal_user_id ?: 'Sin dato' }}</div>
+                     <div class="wa-profile-meta-line" style="margin-top: 4px;">
+                         <span>Primer contacto: <strong>{{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</strong></span>
+                         <span class="wa-profile-meta-sep">·</span>
+                         <span>Asignado a: <strong>{{ $assignedOperatorName }}</strong></span>
+                     </div>
                  </details>
 
+                 @if($activeContactIdentity['type'] !== 'proveedor')
                  <details class="wa-card wa-collapsible" wire:ignore.self open>
                      <summary class="wa-card-title">Usuarios activos del cliente ({{ $clientActiveUsers->count() }})</summary>
 
@@ -2867,6 +2914,47 @@
                          <span style="color: var(--wa-text-secondary); font-size: 13px;">No tiene usuarios activos registrados.</span>
                      @endforelse
                  </details>
+                 @else
+                 <details class="wa-card wa-collapsible" wire:ignore.self open>
+                     <summary class="wa-card-title">Cuentas de este proveedor ({{ $providerAccounts['total'] ?? 0 }})</summary>
+
+                     @if(! ($providerAccounts['proveedor'] ?? null))
+                         <span style="color: var(--wa-text-secondary); font-size: 13px;">
+                             No se encontró un proveedor con este número. Podés revisarlo en
+                             <a href="{{ route('proveedores') }}" target="_blank">Proveedores ↗</a>.
+                         </span>
+                     @else
+                         <input type="search" wire:model.live.debounce.300ms="providerAccountSearch" class="wa-search" placeholder="Buscar por servicio, usuario o ID...">
+
+                         <div class="wa-provider-accounts-list">
+                             @forelse($providerAccounts['groups'] as $serviceCode => $cuentasDelServicio)
+                                 <div class="wa-provider-service-heading">{{ $cuentasDelServicio->first()['service_name'] }} ({{ $cuentasDelServicio->count() }})</div>
+                                 @foreach($cuentasDelServicio as $item)
+                                     <div class="wa-provider-account-row" wire:key="provider-account-{{ $item['idcue'] }}">
+                                         <div class="wa-provider-account-main">
+                                             <span class="wa-status-pill {{ $item['estado']['tone'] }}">{{ $item['estado']['label'] }}</span>
+                                             <span class="wa-provider-account-id">{{ $item['idcue'] }}</span>
+                                             <span style="margin-left:auto; font-size:11px; color:var(--wa-text-tertiary);">Vence {{ $item['vencimiento'] ? \Carbon\Carbon::parse($item['vencimiento'])->format('d/m/Y') : '-' }}</span>
+                                         </div>
+                                         <div class="wa-copy-row">
+                                             <span>Usuario: {{ $item['usuario'] ?: '-' }}</span>
+                                             @if($item['usuario'])<button type="button" class="wa-copy-chip" data-copy-value="{{ $item['usuario'] }}" data-copy-label-default="Copiar usuario" data-copy-label-copied="Copiado">Copiar</button>@endif
+                                         </div>
+                                         <div class="wa-copy-row">
+                                             <span>Clave: {{ $item['contrasena'] ?: '-' }}</span>
+                                             @if($item['contrasena'])<button type="button" class="wa-copy-chip" data-copy-value="{{ $item['contrasena'] }}" data-copy-label-default="Copiar clave" data-copy-label-copied="Copiado">Copiar</button>@endif
+                                         </div>
+                                     </div>
+                                 @endforeach
+                             @empty
+                                 <span style="color: var(--wa-text-secondary); font-size: 13px;">Sin cuentas activas de este proveedor.</span>
+                             @endforelse
+                         </div>
+
+                         <a href="{{ route('cuentas') }}" target="_blank" class="wa-action" style="text-align:center;">Ver todas en Cuentas ↗</a>
+                     @endif
+                 </details>
+                 @endif
 
                  @if($soporteNotice)
                  <section class="wa-card" style="border-left: 3px solid var(--wa-success); background: var(--wa-success-soft);">

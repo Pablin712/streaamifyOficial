@@ -15,6 +15,7 @@ use App\Models\Conversacion;
 use App\Models\Empleado;
 use App\Models\Historial;
 use App\Models\Mensaje;
+use App\Models\Proveedor;
 use App\Models\QuickResponse;
 use App\Models\Soporte;
 use App\Services\Chat\ChatSettingsService;
@@ -63,6 +64,8 @@ class WhatsAppHelpdesk extends Component
     public ?int $forwardingIdmsg = null;
 
     public string $forwardSearch = '';
+
+    public string $providerAccountSearch = '';
 
     public string $mobilePane = 'list';
 
@@ -153,6 +156,7 @@ class WhatsAppHelpdesk extends Component
             'messagesLoaded'        => $activeMessages['loaded'],
             'activeContactIdentity' => $activeContactIdentity,
             'clientActiveUsers'     => $this->clientActiveUsersForConversation($activeConversation),
+            'providerAccounts'      => $this->providerAccountsForConversation($activeConversation, $activeContactIdentity),
             'clientePendingSoporte' => $this->clientePendingSoporte($activeConversation),
             'soporteNotice'         => $this->soporteNotice,
             'quickResponseSuggestions' => $this->quickResponseSuggestions(),
@@ -198,6 +202,7 @@ class WhatsAppHelpdesk extends Component
         $this->activeMessageSearch = '';
         $this->soporteSolucion = '';
         $this->soporteNotice = '';
+        $this->providerAccountSearch = '';
         $this->mobilePane = 'chat';
         $this->lastUnreadConversations = $this->unreadConversationsCount();
         $this->lastActiveMessageFingerprint = $this->conversationMessageFingerprint($conversation);
@@ -1422,6 +1427,70 @@ class WhatsAppHelpdesk extends Component
         }
 
         return ['label' => 'Activa', 'tone' => 'success'];
+    }
+
+    /**
+     * Cuentas que un proveedor nos provee (Proveedor -> Valor -> Cuenta), para mostrar
+     * en la ficha del contacto cuando la conversación activa es de un proveedor (a
+     * diferencia de un cliente, un proveedor no tiene Cliente/usuarios propios, tiene
+     * las cuentas que él nos suministra, en promedio ~20 por proveedor y creciendo).
+     * No existe FK conversación->proveedor en la base de datos, así que se resuelve
+     * comparando teléfonos igual que concentracionAllowedIds()/computeConversationLabels().
+     */
+    private function providerAccountsForConversation(?Conversacion $conversation, array $contactIdentity): ?array
+    {
+        if (($contactIdentity['type'] ?? null) !== 'proveedor') {
+            return null;
+        }
+
+        $phone = PhoneNumber::canonicalEc(
+            $conversation?->contactoCanal?->telefono_normalizado
+                ?: $conversation?->contactoCanal?->canal_user_id
+        );
+
+        $proveedor = $phone
+            ? Proveedor::all()->first(fn ($p) => $phone !== null && PhoneNumber::canonicalEc($p->telefonopro) === $phone)
+            : null;
+
+        if (! $proveedor) {
+            return ['proveedor' => null, 'groups' => collect(), 'total' => 0];
+        }
+
+        $cuentas = $proveedor->cuentas()->with(['valor.servicio'])->orderBy('fechavencue')->get();
+
+        $search = trim($this->providerAccountSearch);
+        if ($search !== '') {
+            $needle = strtolower($search);
+            $cuentas = $cuentas->filter(function ($cuenta) use ($needle) {
+                $haystack = strtolower(
+                    $cuenta->idcue . ' ' .
+                    $cuenta->usuariocue . ' ' .
+                    ($cuenta->valor?->servicio?->nombreser ?? $cuenta->valor?->idser ?? '')
+                );
+
+                return str_contains($haystack, $needle);
+            });
+        }
+
+        $items = $cuentas->map(function ($cuenta) {
+            $serviceCode = strtoupper((string) ($cuenta->valor?->idser ?? 'SERVICIO'));
+
+            return [
+                'service_code' => $serviceCode,
+                'service_name' => (string) ($cuenta->valor?->servicio?->nombreser ?? $serviceCode),
+                'idcue' => $cuenta->idcue,
+                'usuario' => trim((string) $cuenta->usuariocue),
+                'contrasena' => trim((string) $cuenta->contrasenacue),
+                'vencimiento' => $cuenta->fechavencue,
+                'estado' => $this->resolveAccountStatus($cuenta->caidacue, $cuenta->activocue, $cuenta->fechavencue),
+            ];
+        });
+
+        return [
+            'proveedor' => $proveedor,
+            'groups' => $items->groupBy('service_code'),
+            'total' => $items->count(),
+        ];
     }
 
     /**
