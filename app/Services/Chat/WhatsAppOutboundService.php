@@ -59,6 +59,20 @@ class WhatsAppOutboundService
     }
 
     /**
+     * Borra un mensaje ya enviado para todos (delete for everyone). Solo tiene efecto
+     * real dentro de la ventana de tiempo que WhatsApp permite para esto; fuera de esa
+     * ventana Evolution devuelve error, pero igual se oculta del lado de Streamify.
+     */
+    public function deleteMessage(string $number, string $externalId, bool $fromMe, ?string $instance, ?string $apiKey, ?string $serverUrl = null): array
+    {
+        if (! $apiKey || ! $instance) {
+            return ['ok' => false, 'error' => 'No hay credenciales para Evolution API'];
+        }
+
+        return $this->deleteMessageViaEvolution($number, $externalId, $fromMe, $instance, $apiKey, $serverUrl);
+    }
+
+    /**
      * Resuelve canal WhatsApp por nombre de instancia
      */
     public function resolveChannelByInstance(?string $instance): ?ChatWhatsappChannel
@@ -144,6 +158,32 @@ class WhatsAppOutboundService
             return [
                 'ok' => $response->successful(),
                 'external_message_id' => $response->json('key.id') ?? $response->json('message.key.id'),
+                'status' => $response->status(),
+                'error' => $response->successful() ? null : $response->body(),
+            ];
+        } catch (\Throwable $e) {
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function deleteMessageViaEvolution(string $number, string $externalId, bool $fromMe, string $instance, string $apiKey, ?string $serverUrl): array
+    {
+        $baseUrl = rtrim($serverUrl ?: config('services.evoapi.base_url'), '/');
+
+        try {
+            $response = Http::timeout(20)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'apikey' => $apiKey,
+                ])
+                ->delete("{$baseUrl}/chat/deleteMessageForEveryone/{$instance}", [
+                    'id' => $externalId,
+                    'remoteJid' => $this->formatNumber($number),
+                    'fromMe' => $fromMe,
+                ]);
+
+            return [
+                'ok' => $response->successful(),
                 'status' => $response->status(),
                 'error' => $response->successful() ? null : $response->body(),
             ];

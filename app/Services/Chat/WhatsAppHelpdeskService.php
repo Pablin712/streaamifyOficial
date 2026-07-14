@@ -433,6 +433,40 @@ class WhatsAppHelpdeskService
     }
 
     /**
+     * Borra (para todos) un mensaje que mandó un empleado. Best-effort del lado de
+     * WhatsApp: si Evolution no puede borrarlo (ej. fuera de la ventana de tiempo que
+     * permite WhatsApp), igual se oculta del panel de Streamify.
+     */
+    public function deleteOperatorMessage(Mensaje $mensaje): array
+    {
+        if ($mensaje->tipo_remitente !== 'empleado') {
+            throw new \InvalidArgumentException('Solo se pueden borrar mensajes enviados por un empleado.');
+        }
+
+        $dispatch = null;
+
+        if (! $mensaje->eliminado_at && $mensaje->external_id) {
+            $conversation = Conversacion::query()->with('contactoCanal')->find($mensaje->idconv);
+            $creds = $conversation ? $this->resolveOutboundCredentials($conversation) : null;
+
+            if ($creds) {
+                $dispatch = $this->outbound->deleteMessage(
+                    $creds['number'],
+                    $mensaje->external_id,
+                    true,
+                    $creds['instance'],
+                    $creds['apiKey'],
+                    $creds['serverUrl']
+                );
+            }
+        }
+
+        $mensaje->update(['eliminado_at' => now()]);
+
+        return $dispatch ?? ['ok' => false, 'error' => 'No se pudo confirmar el borrado en WhatsApp.'];
+    }
+
+    /**
      * Asigna conversación a operador
      */
     public function assign(Conversacion $conversation, Empleado $operator, ?Empleado $target = null): void
@@ -703,50 +737,71 @@ class WhatsAppHelpdeskService
     }
 
     /**
-     * Envía mensaje a WhatsApp vía Evolution o n8n
+     * Resuelve numero/instance/apiKey/serverUrl para mandar por Evolution API a partir
+     * de una conversación. Devuelve null si no hay contacto o no hay número destino.
      */
-    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null, ?string $audioBase64 = null, ?array $quoted = null): array
+    private function resolveOutboundCredentials(Conversacion $conversation): ?array
     {
         $contacto = $conversation->contactoCanal;
 
         if (! $contacto) {
+            return null;
+        }
+
+        $contactMetadata = is_array($contacto->metadata) ? $contacto->metadata : [];
+        $conversationMetadata = is_array($conversation->metadata) ? $conversation->metadata : [];
+
+        $number = (string) ($contacto->canal_user_id ?: $contacto->telefono_normalizado ?: '');
+        $instance = $contactMetadata['instance']
+            ?? $conversationMetadata['instance']
+            ?? null;
+        $apiKey = $contactMetadata['apikey']
+            ?? $conversationMetadata['apikey']
+            ?? null;
+        $serverUrl = $contactMetadata['server_url']
+            ?? $conversationMetadata['server_url']
+            ?? null;
+
+        $channelId = $contactMetadata['whatsapp_channel_id']
+            ?? $conversationMetadata['whatsapp_channel_id']
+            ?? null;
+
+        $channel = null;
+        if ($channelId) {
+            $channel = ChatWhatsappChannel::query()->find($channelId);
+        }
+
+        if (! $channel && $instance) {
+            $channel = $this->outbound->resolveChannelByInstance((string) $instance);
+        }
+
+        $instance = $instance ?: $channel?->instance_name;
+        $apiKey = $apiKey ?: $channel?->api_key;
+        $serverUrl = $serverUrl ?: $channel?->server_url;
+
+        if ($number === '') {
+            return null;
+        }
+
+        return compact('number', 'instance', 'apiKey', 'serverUrl');
+    }
+
+    /**
+     * Envía mensaje a WhatsApp vía Evolution o n8n
+     */
+    private function sendMessageToWhatsApp(Conversacion $conversation, string $type, string $content, ?string $mediaUrl, ?string $mimeType = null, ?string $fileName = null, ?string $audioBase64 = null, ?array $quoted = null): array
+    {
+        if (! $conversation->contactoCanal) {
             return ['ok' => false, 'error' => 'Conversación sin contacto asociado'];
         }
 
-            $contactMetadata = is_array($contacto->metadata) ? $contacto->metadata : [];
-            $conversationMetadata = is_array($conversation->metadata) ? $conversation->metadata : [];
+        $creds = $this->resolveOutboundCredentials($conversation);
 
-            $number = (string) ($contacto->canal_user_id ?: $contacto->telefono_normalizado ?: '');
-            $instance = $contactMetadata['instance']
-                ?? $conversationMetadata['instance']
-                ?? null;
-            $apiKey = $contactMetadata['apikey']
-                ?? $conversationMetadata['apikey']
-                ?? null;
-            $serverUrl = $contactMetadata['server_url']
-                ?? $conversationMetadata['server_url']
-                ?? null;
+        if (! $creds) {
+            return ['ok' => false, 'error' => 'No hay número destino en el contacto.'];
+        }
 
-            $channelId = $contactMetadata['whatsapp_channel_id']
-                ?? $conversationMetadata['whatsapp_channel_id']
-                ?? null;
-
-            $channel = null;
-            if ($channelId) {
-                $channel = ChatWhatsappChannel::query()->find($channelId);
-            }
-
-            if (! $channel && $instance) {
-                $channel = $this->outbound->resolveChannelByInstance((string) $instance);
-            }
-
-            $instance = $instance ?: $channel?->instance_name;
-            $apiKey = $apiKey ?: $channel?->api_key;
-            $serverUrl = $serverUrl ?: $channel?->server_url;
-
-            if ($number === '') {
-                return ['ok' => false, 'error' => 'No hay número destino en el contacto.'];
-            }
+        ['number' => $number, 'instance' => $instance, 'apiKey' => $apiKey, 'serverUrl' => $serverUrl] = $creds;
 
             // Si es texto (o no hay media disponible), enviar directo por Evo API
         if ($type === 'texto' || ! $mediaUrl) {

@@ -732,6 +732,42 @@
             opacity: 1;
         }
 
+        .wa-delete-trigger {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid var(--wa-border);
+            background: var(--wa-panel);
+            color: var(--wa-danger);
+            font-size: 12px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--wa-transition);
+            box-shadow: var(--wa-shadow-sm);
+        }
+
+        .wa-bubble:hover .wa-delete-trigger {
+            opacity: 1;
+        }
+
+        .wa-deleted-notice {
+            font-style: italic;
+            color: var(--wa-text-tertiary);
+            font-size: 13px;
+        }
+
+        .wa-message.empleado .wa-deleted-notice,
+        .wa-message.ia .wa-deleted-notice {
+            color: rgba(255,255,255,0.75);
+        }
+
         .wa-quoted {
             border-left: 3px solid var(--wa-accent);
             background: rgba(0,0,0,0.05);
@@ -2101,6 +2137,8 @@
                              <div class="wa-preview">
                                  @if($matchedMessage)
                                      🔎 {!! $this->highlightMessageContent($matchedMessage->contenido, $search) !!}
+                                 @elseif($lastMessage?->eliminado_at)
+                                     🚫 Mensaje eliminado
                                  @else
                                      {{ $lastMessage?->contenido ?: match($lastMessage?->tipo_contenido) {
                                          'imagen' => '📷 Imagen',
@@ -2345,30 +2383,46 @@
                     @endif
                     <article class="wa-message {{ $message->tipo_remitente }}">
                         <div class="wa-bubble">
-                            <button type="button" class="wa-reply-trigger" title="Responder" wire:click="startReply({{ $message->idmsg }})">↩</button>
-                            @if($message->replyTo)
-                                <div class="wa-quoted">
-                                    <div class="wa-quoted-author">{{ $message->replyTo->nombre_remitente }}</div>
-                                    <div class="wa-quoted-text">{{ $quotedPreview }}</div>
-                                </div>
-                            @endif
-                            @if($type === 'imagen' && $mediaUrl)
-                                <img src="{{ $mediaUrl }}" class="wa-media" alt="Imagen recibida">
-                            @elseif($type === 'sticker' && $mediaUrl)
-                                <img src="{{ $mediaUrl }}" class="wa-media" style="max-width: 180px;" alt="Sticker recibido">
-                            @elseif($type === 'audio' && $mediaUrl)
-                                <audio controls preload="metadata">
-                                    <source src="{{ $mediaUrl }}" type="{{ str_contains((string) $message->mime_type, 'audio/') ? strtok((string) $message->mime_type, ';') : 'audio/ogg' }}">
-                                    Tu navegador no soporta este audio.
-                                </audio>
-                            @elseif($type === 'video' && $mediaUrl)
-                                <a href="{{ $mediaUrl }}" target="_blank" rel="noopener noreferrer" style="color: inherit;">🎬 Abrir video</a>
-                            @elseif(in_array($type, ['documento', 'archivo'], true) && $mediaUrl)
-                                <a href="{{ $mediaUrl }}" target="_blank" rel="noopener noreferrer" style="color: inherit;">📄 Abrir documento</a>
+                            @if(!$message->eliminado_at)
+                                <button type="button" class="wa-reply-trigger" title="Responder" wire:click="startReply({{ $message->idmsg }})">↩</button>
+                                @if($message->tipo_remitente === 'empleado')
+                                    <button
+                                        type="button"
+                                        class="wa-delete-trigger"
+                                        title="Borrar mensaje"
+                                        wire:click="deleteMessage({{ $message->idmsg }})"
+                                        wire:confirm="¿Borrar este mensaje? Se intentará borrar también en WhatsApp, pero eso solo funciona si no pasó mucho tiempo desde que se envió."
+                                    >🗑</button>
+                                @endif
                             @endif
 
-                            @if($message->contenido !== '')
-                                <div>{!! $this->highlightMessageContent($message->contenido) !!}</div>
+                            @if($message->eliminado_at)
+                                <div class="wa-deleted-notice">🚫 Mensaje eliminado</div>
+                            @else
+                                @if($message->replyTo)
+                                    <div class="wa-quoted">
+                                        <div class="wa-quoted-author">{{ $message->replyTo->nombre_remitente }}</div>
+                                        <div class="wa-quoted-text">{{ $quotedPreview }}</div>
+                                    </div>
+                                @endif
+                                @if($type === 'imagen' && $mediaUrl)
+                                    <img src="{{ $mediaUrl }}" class="wa-media" alt="Imagen recibida">
+                                @elseif($type === 'sticker' && $mediaUrl)
+                                    <img src="{{ $mediaUrl }}" class="wa-media" style="max-width: 180px;" alt="Sticker recibido">
+                                @elseif($type === 'audio' && $mediaUrl)
+                                    <audio controls preload="metadata">
+                                        <source src="{{ $mediaUrl }}" type="{{ str_contains((string) $message->mime_type, 'audio/') ? strtok((string) $message->mime_type, ';') : 'audio/ogg' }}">
+                                        Tu navegador no soporta este audio.
+                                    </audio>
+                                @elseif($type === 'video' && $mediaUrl)
+                                    <a href="{{ $mediaUrl }}" target="_blank" rel="noopener noreferrer" style="color: inherit;">🎬 Abrir video</a>
+                                @elseif(in_array($type, ['documento', 'archivo'], true) && $mediaUrl)
+                                    <a href="{{ $mediaUrl }}" target="_blank" rel="noopener noreferrer" style="color: inherit;">📄 Abrir documento</a>
+                                @endif
+
+                                @if($message->contenido !== '')
+                                    <div>{!! $this->highlightMessageContent($message->contenido) !!}</div>
+                                @endif
                             @endif
                         </div>
                         <div class="wa-message-time">

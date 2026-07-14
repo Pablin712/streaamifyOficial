@@ -41,6 +41,7 @@ class Mensaje extends Model
         'error_message',
         'leido',
         'leido_at',
+        'eliminado_at',
         'respondido_por_ai',
         'metadata',
     ];
@@ -53,6 +54,7 @@ class Mensaje extends Model
         'leido_at' => 'datetime',
         'delivered_at' => 'datetime',
         'read_at' => 'datetime',
+        'eliminado_at' => 'datetime',
     ];
 
     /**

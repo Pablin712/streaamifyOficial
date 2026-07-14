@@ -411,6 +411,28 @@ class WhatsAppHelpdesk extends Component
         ]);
     }
 
+    public function deleteMessage(int $idmsg): void
+    {
+        abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para borrar mensajes.');
+        $this->requireConversation();
+
+        $mensaje = Mensaje::query()
+            ->where('idmsg', $idmsg)
+            ->where('idconv', $this->activeConversation()?->idconv)
+            ->where('tipo_remitente', 'empleado')
+            ->first();
+
+        if (! $mensaje) {
+            return;
+        }
+
+        app(WhatsAppHelpdeskService::class)->deleteOperatorMessage($mensaje);
+
+        if ($this->replyingToIdmsg === $idmsg) {
+            $this->replyingToIdmsg = null;
+        }
+    }
+
     public function highlightMessageContent(?string $content, ?string $term = null): string
     {
         $value = (string) $content;
