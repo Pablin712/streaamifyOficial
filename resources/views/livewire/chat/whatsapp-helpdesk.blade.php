@@ -1268,7 +1268,7 @@
            ================================================ */
 
         .wa-client-header {
-            padding: var(--wa-space-5) var(--wa-space-4);
+            padding: var(--wa-space-4);
             background: var(--wa-panel);
             border-bottom: 1px solid var(--wa-border);
             text-align: center;
@@ -1303,10 +1303,10 @@
             overflow-y: auto;
             min-height: 0;
             flex: 1;
-            padding: var(--wa-space-4);
+            padding: var(--wa-space-3) var(--wa-space-4);
             display: flex;
             flex-direction: column;
-            gap: var(--wa-space-3);
+            gap: var(--wa-space-2);
         }
 
         .wa-card {
@@ -1332,13 +1332,13 @@
         }
 
         .wa-profile-card {
-            padding: 16px;
+            padding: 14px;
             border-radius: 18px;
             background: radial-gradient(circle at top left, #ffffff 0%, #eef4ff 45%, #f8fafc 100%);
             border: 1px solid rgba(148, 163, 184, 0.24);
             box-shadow: 0 18px 40px rgba(37, 99, 235, 0.08);
             display: grid;
-            gap: 14px;
+            gap: 10px;
             text-align: left;
         }
 
@@ -1370,33 +1370,70 @@
             align-items: center;
         }
 
-        .wa-profile-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
+        /* Línea compacta de metadatos (reemplaza el viejo grid de 2 cajas grandes
+           "Primer contacto"/"Asignación" -- esos datos se consultan poco, no
+           necesitan tanto espacio fijo siempre visible). */
+        .wa-profile-meta-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 10px;
+            font-size: 12px;
+            color: var(--wa-text-secondary);
         }
 
-        .wa-profile-stat {
-            padding: 12px;
-            border-radius: 14px;
-            background: rgba(255,255,255,0.76);
-            border: 1px solid rgba(226, 232, 240, 0.9);
-        }
-
-        .wa-profile-stat-label {
-            font-size: 11px;
-            color: var(--wa-text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            font-weight: 700;
-        }
-
-        .wa-profile-stat-value {
-            margin-top: 4px;
-            font-size: 13px;
-            font-weight: 700;
+        .wa-profile-meta-line strong {
             color: var(--wa-text);
-            word-break: break-word;
+            font-weight: 700;
+        }
+
+        .wa-profile-meta-sep {
+            color: var(--wa-text-tertiary);
+        }
+
+        /* Secciones colapsables tipo <details> dentro de la ficha del cliente:
+           sin marcador nativo, summary reutiliza el look de .wa-card-title con
+           un chevron que rota al abrir. Se usan con wire:ignore.self porque el
+           root de este componente tiene wire:poll.3s -- sin eso Livewire
+           borraría el atributo "open" (estado que solo vive en el DOM) en el
+           siguiente re-render automático, igual que ya pasaba con el composer
+           de audio (ver wa-compose-row). */
+        .wa-collapsible {
+            cursor: default;
+        }
+
+        .wa-collapsible > summary {
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .wa-collapsible > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .wa-collapsible > summary::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+            border-right: 2px solid var(--wa-text-tertiary);
+            border-bottom: 2px solid var(--wa-text-tertiary);
+            transform: rotate(45deg);
+            transition: transform .18s ease;
+        }
+
+        .wa-collapsible[open] > summary::after {
+            transform: rotate(-135deg);
+        }
+
+        /* .wa-card ya espacia sus hijos con flex+gap; esto es solo para
+           collapsibles sueltos (fuera de una .wa-card) como el de clasificación. */
+        .wa-collapsible:not(.wa-card) > summary ~ * {
+            margin-top: 6px;
         }
 
         .wa-type-actions {
@@ -1507,16 +1544,6 @@
             border-color: var(--wa-text);
         }
 
-        .wa-tag {
-            display: inline-flex;
-            padding: 4px 8px;
-            background: var(--wa-accent-soft);
-            color: var(--wa-accent);
-            border-radius: var(--wa-radius-sm);
-            font-size: 12px;
-            font-weight: 500;
-        }
-
         .wa-purchase-item {
             display: flex;
             justify-content: space-between;
@@ -1533,9 +1560,9 @@
             border: 1px solid var(--wa-border);
             border-radius: var(--wa-radius-md);
             background: linear-gradient(165deg, #ffffff 0%, #f8fbff 100%);
-            padding: 10px;
+            padding: 9px;
             display: grid;
-            gap: 8px;
+            gap: 6px;
             transition: transform .18s ease, box-shadow .18s ease;
         }
 
@@ -1594,7 +1621,7 @@
 
         .wa-account-meta {
             display: grid;
-            gap: 6px;
+            gap: 5px;
             font-size: 12px;
             color: var(--wa-text-secondary);
         }
@@ -1603,7 +1630,7 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .wa-copy-chip {
@@ -1765,11 +1792,6 @@
             background: radial-gradient(circle at top left, #1b2432 0%, #151e2a 48%, #121a24 100%);
             border-color: #2c3a4d;
             box-shadow: 0 16px 34px rgba(0, 0, 0, 0.45);
-        }
-
-        :root[data-dark-mode="true"] .wa-profile-stat {
-            background: rgba(23, 31, 44, 0.92);
-            border-color: #2e3d52;
         }
 
         :root[data-dark-mode="true"] .wa-type-btn {
@@ -2693,18 +2715,13 @@
                          </div>
                      </div>
                  </div>
-                 <div class="wa-profile-grid">
-                     <div class="wa-profile-stat">
-                         <div class="wa-profile-stat-label">Primer contacto</div>
-                         <div class="wa-profile-stat-value">{{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</div>
-                     </div>
-                     <div class="wa-profile-stat">
-                         <div class="wa-profile-stat-label">Asignación</div>
-                         <div class="wa-profile-stat-value">{{ $assignedOperatorName }}</div>
-                     </div>
+                 <div class="wa-profile-meta-line">
+                     <span>Primer contacto: <strong>{{ \Carbon\Carbon::parse($firstContact)->format('d/m/Y H:i') }}</strong></span>
+                     <span class="wa-profile-meta-sep">·</span>
+                     <span>Asignado a: <strong>{{ $assignedOperatorName }}</strong></span>
                  </div>
-                 <div>
-                     <div class="wa-card-title" style="margin-bottom: 8px;">Clasificación del contacto</div>
+                 <details class="wa-collapsible" wire:ignore.self>
+                     <summary class="wa-card-title">Cambiar clasificación</summary>
                      <div class="wa-type-actions">
                          @foreach($contactTypeOptions as $typeKey => $typeOption)
                              <button
@@ -2716,7 +2733,7 @@
                              </button>
                          @endforeach
                      </div>
-                 </div>
+                 </details>
                  <div>
                      <div class="wa-card-title" style="margin-bottom: 8px;">Etiquetas</div>
                      <div class="wa-type-actions">
@@ -2785,14 +2802,14 @@
              </div>
 
              <div class="wa-panel-scroll">
-                 <section class="wa-card">
-                     <div class="wa-card-title">Información</div>
+                 <details class="wa-card wa-collapsible" wire:ignore.self>
+                     <summary class="wa-card-title">Información</summary>
                      <div class="wa-card-value">Origen: {{ $activeConversation->origen ?: 'WhatsApp' }}</div>
-                     <div style="font-size: 12px; color: var(--wa-text-secondary); margin-top: 8px;">ID canal: {{ $activeConversation->contactoCanal?->canal_user_id ?: 'Sin dato' }}</div>
-                 </section>
+                     <div style="font-size: 12px; color: var(--wa-text-secondary);">ID canal: {{ $activeConversation->contactoCanal?->canal_user_id ?: 'Sin dato' }}</div>
+                 </details>
 
-                 <section class="wa-card">
-                     <div class="wa-card-title">Usuarios activos del cliente ({{ $clientActiveUsers->count() }})</div>
+                 <details class="wa-card wa-collapsible" wire:ignore.self open>
+                     <summary class="wa-card-title">Usuarios activos del cliente ({{ $clientActiveUsers->count() }})</summary>
 
                      @forelse($clientActiveUsers as $activeUser)
                          <div class="wa-account-card">
@@ -2849,7 +2866,7 @@
                      @empty
                          <span style="color: var(--wa-text-secondary); font-size: 13px;">No tiene usuarios activos registrados.</span>
                      @endforelse
-                 </section>
+                 </details>
 
                  @if($soporteNotice)
                  <section class="wa-card" style="border-left: 3px solid var(--wa-success); background: var(--wa-success-soft);">
@@ -2920,8 +2937,8 @@
                  </section>
                  @endif
 
-                 <section class="wa-card">
-                     <div class="wa-card-title">Historial de compras</div>
+                 <details class="wa-card wa-collapsible" wire:ignore.self>
+                     <summary class="wa-card-title">Historial de compras</summary>
                      @forelse($client?->ventas?->take(6) ?? [] as $sale)
                          <div class="wa-purchase-item">
                              <span>{{ optional($sale->fechaven)->format('d/m/Y') ?: $sale->idven }}</span>
@@ -2930,23 +2947,12 @@
                      @empty
                          <span style="color: var(--wa-text-secondary); font-size: 13px;">Sin compras registradas.</span>
                      @endforelse
-                 </section>
+                 </details>
 
-                 <section class="wa-card">
-                     <div class="wa-card-title">Notas internas</div>
+                 <details class="wa-card wa-collapsible" wire:ignore.self>
+                     <summary class="wa-card-title">Notas internas</summary>
                      <span style="color: var(--wa-text-secondary); font-size: 13px;">{{ data_get($activeConversation->metadata, 'notas') ?: 'Sin notas.' }}</span>
-                 </section>
-
-                 <section class="wa-card">
-                     <div class="wa-card-title">Tags</div>
-                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                         @forelse((array) data_get($activeConversation->metadata, 'tags', []) as $tag)
-                             <span class="wa-tag">{{ $tag }}</span>
-                         @empty
-                             <span style="color: var(--wa-text-secondary); font-size: 13px;">Sin tags.</span>
-                         @endforelse
-                     </div>
-                 </section>
+                 </details>
              </div>
          @else
              <div class="wa-empty">
