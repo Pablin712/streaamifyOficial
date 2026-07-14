@@ -2980,7 +2980,7 @@
                              ?: $candidate->cliente?->telefonocli
                              ?: '';
                      @endphp
-                     <button type="button" wire:click="forwardTo({{ $candidate->idconv }})" class="wa-forward-candidate">
+                     <button type="button" wire:key="forward-candidate-{{ $candidate->idconv }}" wire:click="forwardTo({{ $candidate->idconv }})" class="wa-forward-candidate">
                          <span class="wa-avatar" style="width: 28px; height: 28px; font-size: 11px; flex-shrink: 0;">{{ strtoupper(substr($candidateName, 0, 1)) }}</span>
                          <span style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
                              <span style="font-weight: 600; font-size: 13px;">{{ $candidateName }}</span>

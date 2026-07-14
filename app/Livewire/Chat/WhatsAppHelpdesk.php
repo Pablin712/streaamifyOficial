@@ -524,15 +524,35 @@ class WhatsAppHelpdesk extends Component
     {
         abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para reenviar mensajes.');
 
+        \Illuminate\Support\Facades\Log::info('forward.debug.start', [
+            'forwardingIdmsg' => $this->forwardingIdmsg,
+            'targetIdconv' => $targetIdconv,
+            'operator' => $this->operator()?->idemp,
+        ]);
+
         if (! $this->forwardingIdmsg) {
+            \Illuminate\Support\Facades\Log::warning('forward.debug.no_forwarding_idmsg');
             return;
         }
 
         $original = Mensaje::query()->where('idmsg', $this->forwardingIdmsg)->first();
         $target = Conversacion::query()->where('canal_principal', 'whatsapp')->find($targetIdconv);
 
+        \Illuminate\Support\Facades\Log::info('forward.debug.resolved', [
+            'original_found' => (bool) $original,
+            'target_found' => (bool) $target,
+        ]);
+
         if ($original && $target) {
-            app(WhatsAppHelpdeskService::class)->forwardMessage($original, $target, $this->operator());
+            try {
+                $nuevo = app(WhatsAppHelpdeskService::class)->forwardMessage($original, $target, $this->operator());
+                \Illuminate\Support\Facades\Log::info('forward.debug.success', ['new_idmsg' => $nuevo->idmsg]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('forward.debug.exception', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
         }
 
         $this->cancelForward();
