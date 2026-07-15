@@ -15,6 +15,8 @@ class Historial extends Model
         'accion',
         'descripcion',
         'empleado_id',
+        'idcli',
+        'iddet',
     ];
 
     // Deshabilitar el manejo de updated_at

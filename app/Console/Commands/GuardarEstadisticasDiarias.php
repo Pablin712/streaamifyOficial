@@ -74,6 +74,8 @@ class GuardarEstadisticasDiarias extends Command
                     ['Gastos del día', '$' . number_format($result['data']['daily_bill'], 2)],
                     ['Ventas del día', number_format($result['data']['daily_sales'])],
                     ['Balance', '$' . number_format($result['data']['balance'], 2)],
+                    ['Usuarios removidos', number_format($result['data']['usuarios_removidos'])],
+                    ['Clientes perdidos', number_format($result['data']['clientes_perdidos'])],
                 ]
             );
 

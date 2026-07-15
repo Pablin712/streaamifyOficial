@@ -14,6 +14,7 @@ use App\Models\Gasto;
 use App\Models\ViewClientesUsuarios;
 use App\Models\ViewUsuarioActivo;
 use App\Models\Tarea;
+use App\Models\Historial;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -64,6 +65,38 @@ class DashboardService
             'cliente_mas_facturado' => ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first(),
             'cuentas' => $cuentas,
             'espacios' => $espacios,
+        ] + $this->calcularChurnDiario(Carbon::today()->toDateString());
+    }
+
+    /**
+     * Calcula el churn (rotación de clientes) de una fecha puntual a partir del historial
+     * de "Cuenta-Quitada". clientes_perdidos cuenta, de los clientes con una remoción ese día,
+     * cuántos quedaron sin usuarios activos actualmente (usuarios=0).
+     */
+    private function calcularChurnDiario(string $date): array
+    {
+        $usuariosRemovidos = Historial::where('accion', 'Cuenta-Quitada')
+            ->whereDate('created_at', $date)
+            ->count();
+
+        $clientesConRemocion = Historial::where('accion', 'Cuenta-Quitada')
+            ->whereDate('created_at', $date)
+            ->whereNotNull('idcli')
+            ->distinct()
+            ->pluck('idcli');
+
+        $clientesPerdidos = 0;
+        if ($clientesConRemocion->isNotEmpty()) {
+            $clientesConUsuariosActivos = ViewUsuarioActivo::whereIn('idcli', $clientesConRemocion)
+                ->distinct()
+                ->pluck('idcli');
+
+            $clientesPerdidos = $clientesConRemocion->diff($clientesConUsuariosActivos)->count();
+        }
+
+        return [
+            'usuarios_removidos' => $usuariosRemovidos,
+            'clientes_perdidos' => $clientesPerdidos,
         ];
     }
 
@@ -1142,6 +1175,7 @@ class DashboardService
         $usuarios_acobrar = $this->cuentaService->contarUsuariosACobrar($usuarios);
         $cliente_mas_facturado = ViewClientesUsuarios::orderByDesc('facturado')->select('nombre_cliente', 'facturado')->first();
         $total_customers = ViewClientesUsuarios::count();
+        $churn = $this->calcularChurnDiario($date);
 
         DailyStatistic::updateOrCreate(
             ['date' => $date], // Fecha única
@@ -1161,6 +1195,8 @@ class DashboardService
                 'espacios' => $espacios,
                 'cliente_mas_facturado' => $cliente_mas_facturado->nombre_cliente ?? '',
                 'total_customers' => $total_customers,
+                'usuarios_removidos' => $churn['usuarios_removidos'],
+                'clientes_perdidos' => $churn['clientes_perdidos'],
             ]
         );
 
@@ -1176,6 +1212,8 @@ class DashboardService
                 'daily_bill' => $dailyBill,
                 'daily_sales' => $dailySales,
                 'balance' => $dailyRevenue - $dailyCost - $dailyBill,
+                'usuarios_removidos' => $churn['usuarios_removidos'],
+                'clientes_perdidos' => $churn['clientes_perdidos'],
             ]
         ];
     }
@@ -1331,6 +1369,7 @@ class DashboardService
         $labels = $ingresos = $costos = $gastos = $ganancias = [];
         $ventasChart = $newCustomers = $users = $accounts = [];
         $dangerAccounts = $pendingPayments = $affectedCustomers = [];
+        $clientesPerdidos = [];
         $hasMore   = false;
         $oldestDate = null;
 
@@ -1345,7 +1384,7 @@ class DashboardService
                 $q = DB::table('daily_statistics')
                     ->select('date','daily_revenue','daily_cost','daily_bill','daily_sales',
                              'active_users','accounts','danger_accounts','pending_payments',
-                             'affected_customers','new_customers')
+                             'affected_customers','new_customers','clientes_perdidos')
                     ->orderBy('date', 'DESC')
                     ->limit($limit + 1);
                 if ($before) $q->where('date', '<', $before);
@@ -1368,6 +1407,7 @@ class DashboardService
                     $dangerAccounts[]    = (int)($r->danger_accounts    ?? 0);
                     $pendingPayments[]   = (int)($r->pending_payments   ?? 0);
                     $affectedCustomers[] = (int)($r->affected_customers ?? 0);
+                    $clientesPerdidos[]  = (int)($r->clientes_perdidos  ?? 0);
                 }
                 $oldestDate = $rows->first()?->date;
                 break;
@@ -1380,7 +1420,8 @@ class DashboardService
                         SUM(daily_bill) as gas, SUM(daily_sales) as sales,
                         MAX(active_users) as users, MAX(accounts) as accs,
                         MAX(danger_accounts) as da, MAX(pending_payments) as pp,
-                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc,
+                        SUM(clientes_perdidos) as cp")
                     ->groupBy(DB::raw('YEARWEEK(date,1)'))
                     ->orderBy('yw', 'DESC')
                     ->limit($limit + 1);
@@ -1399,7 +1440,7 @@ class DashboardService
                     $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
                     $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
                     $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
-                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0); $clientesPerdidos[]  = (int)($r->cp   ?? 0);
                 }
                 $oldestDate = $rows->first()?->week_start;
                 break;
@@ -1412,7 +1453,8 @@ class DashboardService
                         SUM(daily_bill) as gas, SUM(daily_sales) as sales,
                         MAX(active_users) as users, MAX(accounts) as accs,
                         MAX(danger_accounts) as da, MAX(pending_payments) as pp,
-                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc,
+                        SUM(clientes_perdidos) as cp")
                     ->groupBy('yr', 'mo')
                     ->orderByRaw('yr DESC, mo DESC')
                     ->limit($limit + 1);
@@ -1430,7 +1472,7 @@ class DashboardService
                     $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
                     $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
                     $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
-                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0); $clientesPerdidos[]  = (int)($r->cp   ?? 0);
                 }
                 $oldestDate = $rows->first()?->period_start;
                 break;
@@ -1443,7 +1485,8 @@ class DashboardService
                         SUM(daily_bill) as gas, SUM(daily_sales) as sales,
                         MAX(active_users) as users, MAX(accounts) as accs,
                         MAX(danger_accounts) as da, MAX(pending_payments) as pp,
-                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc,
+                        SUM(clientes_perdidos) as cp")
                     ->groupBy('yr', 'qt')
                     ->orderByRaw('yr DESC, qt DESC')
                     ->limit($limit + 1);
@@ -1461,7 +1504,7 @@ class DashboardService
                     $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
                     $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
                     $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
-                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0); $clientesPerdidos[]  = (int)($r->cp   ?? 0);
                 }
                 $oldestDate = $rows->first()?->period_start;
                 break;
@@ -1475,7 +1518,8 @@ class DashboardService
                         SUM(daily_bill) as gas, SUM(daily_sales) as sales,
                         MAX(active_users) as users, MAX(accounts) as accs,
                         MAX(danger_accounts) as da, MAX(pending_payments) as pp,
-                        MAX(affected_customers) as ac, SUM(new_customers) as nc")
+                        MAX(affected_customers) as ac, SUM(new_customers) as nc,
+                        SUM(clientes_perdidos) as cp")
                     ->groupBy('yr')
                     ->orderBy('yr', 'DESC')
                     ->limit($limit + 1);
@@ -1493,7 +1537,7 @@ class DashboardService
                     $ventasChart[]       = (int)($r->sales ?? 0); $newCustomers[]      = (int)($r->nc ?? 0);
                     $users[]             = (int)($r->users ?? 0); $accounts[]          = (int)($r->accs ?? 0);
                     $dangerAccounts[]    = (int)($r->da    ?? 0); $pendingPayments[]   = (int)($r->pp   ?? 0);
-                    $affectedCustomers[] = (int)($r->ac    ?? 0);
+                    $affectedCustomers[] = (int)($r->ac    ?? 0); $clientesPerdidos[]  = (int)($r->cp   ?? 0);
                 }
                 $oldestDate = $rows->first()?->period_start;
                 break;
@@ -1502,7 +1546,8 @@ class DashboardService
         return array_merge(
             compact('labels','ingresos','costos','gastos','ganancias',
                     'ventasChart','newCustomers','users','accounts',
-                    'dangerAccounts','pendingPayments','affectedCustomers'),
+                    'dangerAccounts','pendingPayments','affectedCustomers',
+                    'clientesPerdidos'),
             ['has_more' => $hasMore, 'oldest_date' => $oldestDate]
         );
     }

@@ -33,6 +33,8 @@ class DailyStatistic extends Model
         'daily_sales',
         'daily_tasks',
         'new_customers',
+        'usuarios_removidos',
+        'clientes_perdidos',
     ];
 
     /**

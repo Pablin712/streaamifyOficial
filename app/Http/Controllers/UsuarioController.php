@@ -680,10 +680,13 @@ class UsuarioController extends Controller
         $detalle->activodet = !$detalle->activodet;
         $detalle->save();
 
+        $cliente = $detalle->venta->cliente;
         Historial::create([
-            'accion' => 'Cuenta-Quitada',
-            'descripcion' => 'Cliente: ' . $detalle->venta->cliente->nombrecli . ' - Usuario que se quitó: ' . json_encode($detalle),
+            'accion' => $detalle->activodet ? 'Cuenta-Reactivada' : 'Cuenta-Quitada',
+            'descripcion' => 'Cliente: ' . $cliente->nombrecli . ' - Usuario que se ' . ($detalle->activodet ? 'reactivó' : 'quitó') . ': ' . json_encode($detalle),
             'empleado_id' => Auth::user()->idemp,
+            'idcli' => $cliente->idcli,
+            'iddet' => $detalle->iddet,
             'created_at' => now(),
         ]);
 
@@ -715,10 +718,13 @@ class UsuarioController extends Controller
                 $detalle->activodet = !$detalle->activodet;
                 $detalle->save();
 
+                $cliente = $detalle->venta->cliente ?? null;
                 Historial::create([
-                    'accion' => 'Cuenta-Quitada',
-                    'descripcion' => 'Cliente: ' . ($detalle->venta->cliente->nombrecli ?? 'N/A') . ' - Usuario que se quitó: ' . json_encode($detalle),
+                    'accion' => $detalle->activodet ? 'Cuenta-Reactivada' : 'Cuenta-Quitada',
+                    'descripcion' => 'Cliente: ' . ($cliente->nombrecli ?? 'N/A') . ' - Usuario que se ' . ($detalle->activodet ? 'reactivó' : 'quitó') . ': ' . json_encode($detalle),
                     'empleado_id' => Auth::user()->idemp,
+                    'idcli' => $cliente->idcli ?? null,
+                    'iddet' => $detalle->iddet,
                     'created_at' => now(),
                 ]);
 

@@ -258,6 +258,26 @@
             </div>
         </div>
     </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-red shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-user-slash"></i></div>
+            <div>
+                <div class="kpi-label">Clientes perdidos hoy</div>
+                <div class="kpi-value">{{ $clientes_perdidos }}</div>
+                <div class="kpi-sub">Quedaron con 0 usuarios activos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-orange shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-user-minus"></i></div>
+            <div>
+                <div class="kpi-label">Usuarios removidos hoy</div>
+                <div class="kpi-value">{{ $usuarios_removidos }}</div>
+                <div class="kpi-sub">Veces que se quitó un usuario</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- ══ Tabla de resultados ════════════════════════════════ --}}
@@ -376,6 +396,7 @@ document.addEventListener("DOMContentLoaded", function () {
         brown:  { line:'#78716c', fill:'rgba(120,113,108,.12)' },
         teal:   { line:'#14b8a6', fill:'rgba(20,184,166,.12)' },
         indigo: { line:'#6366f1', fill:'rgba(99,102,241,.12)' },
+        rose:   { line:'#e11d48', fill:'rgba(225,29,72,.12)' },
     };
 
     const gridColor = 'rgba(150,150,150,.1)';
@@ -406,7 +427,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const DS_KEYS = [
         'ingresos', 'costos', 'gastos', 'ganancias',
         'ventasChart', 'newCustomers', 'users', 'accounts',
-        'dangerAccounts', 'pendingPayments', 'affectedCustomers'
+        'dangerAccounts', 'pendingPayments', 'affectedCustomers', 'clientesPerdidos'
     ];
 
     let activeInterval = '1d';
@@ -503,6 +524,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     dataset('Cuentas riesgo',     C.teal,   sl('dangerAccounts'),    true, false),
                     dataset('Pagos pendientes',   C.indigo, sl('pendingPayments'),   true, false),
                     dataset('Clientes afectados', C.orange, sl('affectedCustomers'), true, false),
+                    dataset('Clientes perdidos',  C.rose,   sl('clientesPerdidos'),  true, false),
                 ],
             },
             options: {

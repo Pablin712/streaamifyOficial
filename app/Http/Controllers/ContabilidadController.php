@@ -127,7 +127,10 @@ class ContabilidadController extends Controller
             'costos_otros',
 
             'totalDisponible',
-            'totalDeudasPendientes'
+            'totalDeudasPendientes',
+
+            'usuarios_removidos',
+            'clientes_perdidos'
         ));
     }
     public function filterData(Request $request)
