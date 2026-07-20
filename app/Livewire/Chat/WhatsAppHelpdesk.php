@@ -529,34 +529,18 @@ class WhatsAppHelpdesk extends Component
     {
         abort_if(Gate::denies('chat.responder'), 403, 'No tienes permiso para reenviar mensajes.');
 
-        \Illuminate\Support\Facades\Log::info('forward.debug.start', [
-            'forwardingIdmsg' => $this->forwardingIdmsg,
-            'targetIdconv' => $targetIdconv,
-            'operator' => $this->operator()?->idemp,
-        ]);
-
         if (! $this->forwardingIdmsg) {
-            \Illuminate\Support\Facades\Log::warning('forward.debug.no_forwarding_idmsg');
             return;
         }
 
         $original = Mensaje::query()->where('idmsg', $this->forwardingIdmsg)->first();
         $target = Conversacion::query()->where('canal_principal', 'whatsapp')->find($targetIdconv);
 
-        \Illuminate\Support\Facades\Log::info('forward.debug.resolved', [
-            'original_found' => (bool) $original,
-            'target_found' => (bool) $target,
-        ]);
-
         if ($original && $target) {
-            try {
-                $nuevo = app(WhatsAppHelpdeskService::class)->forwardMessage($original, $target, $this->operator());
-                \Illuminate\Support\Facades\Log::info('forward.debug.success', ['new_idmsg' => $nuevo->idmsg]);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('forward.debug.exception', [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
+            $nuevo = app(WhatsAppHelpdeskService::class)->forwardMessage($original, $target, $this->operator());
+
+            if ($nuevo->throttled_until) {
+                $this->dispatch('chat-throttled', seconds: max(1, (int) now()->diffInSeconds($nuevo->throttled_until, false)));
             }
         }
 
@@ -590,6 +574,8 @@ class WhatsAppHelpdesk extends Component
 
     public function refreshChat(): void
     {
+        app(WhatsAppHelpdeskService::class)->dispatchDueThrottledMessages();
+
         $currentUnread = $this->unreadConversationsCount();
 
         if ($currentUnread > $this->lastUnreadConversations) {
@@ -1058,7 +1044,7 @@ class WhatsAppHelpdesk extends Component
             default => null,
         };
 
-        app(WhatsAppHelpdeskService::class)->sendOperatorMessage(
+        $message = app(WhatsAppHelpdeskService::class)->sendOperatorMessage(
             $this->activeConversation(),
             $this->operator(),
             $type,
@@ -1074,6 +1060,10 @@ class WhatsAppHelpdesk extends Component
 
         $this->dispatch('chat-clear-composer');
         $this->dispatch('chat-scroll-bottom');
+
+        if ($message->throttled_until) {
+            $this->dispatch('chat-throttled', seconds: max(1, (int) now()->diffInSeconds($message->throttled_until, false)));
+        }
     }
 
     private function conversationQuery()

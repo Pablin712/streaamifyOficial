@@ -42,6 +42,7 @@ class Mensaje extends Model
         'leido',
         'leido_at',
         'eliminado_at',
+        'throttled_until',
         'respondido_por_ai',
         'metadata',
     ];
@@ -55,6 +56,7 @@ class Mensaje extends Model
         'delivered_at' => 'datetime',
         'read_at' => 'datetime',
         'eliminado_at' => 'datetime',
+        'throttled_until' => 'datetime',
     ];
 
     /**

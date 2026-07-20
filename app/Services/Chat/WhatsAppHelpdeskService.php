@@ -32,7 +32,8 @@ class WhatsAppHelpdeskService
 {
     public function __construct(
         private readonly ChatSettingsService $settings,
-        private readonly WhatsAppOutboundService $outbound
+        private readonly WhatsAppOutboundService $outbound,
+        private readonly WhatsAppRateLimiter $rateLimiter
     ) {}
 
     /**
@@ -290,7 +291,6 @@ class WhatsAppHelpdeskService
         $storedUrl = null;
             $mimeType = null;
             $fileName = null;
-            $audioBase64 = null;
 
         if ($file) {
             $folder = match ($type) {
@@ -310,14 +310,10 @@ class WhatsAppHelpdeskService
             if ($type === 'audio' && str_starts_with((string) $mimeType, 'video/')) {
                 $mimeType = 'audio/'.substr($mimeType, strlen('video/'));
             }
-
-            // El audio se manda en base64 puro en vez de URL: el hosting bloquea con
-            // 403 el fetch que hace Evolution hacia nuestro dominio para archivos de
-            // audio (aunque para imágenes sí funciona), así que evitamos que Evolution
-            // tenga que descargar nada.
-            if ($type === 'audio') {
-                $audioBase64 = base64_encode(Storage::disk('public')->get($path));
-            }
+            // El base64 para el envío de audio (Evolution no puede descargarlo desde
+            // nuestro dominio) se calcula en dispatchMessageNow() a partir del archivo
+            // ya guardado, no acá -- así el mismo cálculo sirve tanto para el envío
+            // inmediato como para el catch-up de mensajes que quedaron en cola.
         }
 
         $content = trim(strip_tags($content));
@@ -326,7 +322,17 @@ class WhatsAppHelpdeskService
             throw new \InvalidArgumentException('Mensaje vacío');
         }
 
-        $result = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType, $fileName, $replyToMensaje) {
+        // Límite anti-spam: si la instancia de WhatsApp está cerca del límite de
+        // envíos configurado, el mensaje se crea pero no se despacha todavía --
+        // queda "en cola" (throttled_until) y dispatchDueThrottledMessages() lo
+        // manda apenas haya lugar (enganchado al wire:poll del chat).
+        $credentials = $this->resolveOutboundCredentials($conversation);
+        $rateCheck = ! empty($credentials['instance'])
+            ? $this->rateLimiter->check($credentials['instance'])
+            : ['allowed' => true, 'retry_after' => 0];
+        $throttledUntil = $rateCheck['allowed'] ? null : now()->addSeconds($rateCheck['retry_after']);
+
+        $message = DB::transaction(function () use ($conversation, $operator, $type, $content, $storedUrl, $mimeType, $fileName, $replyToMensaje, $throttledUntil) {
             // 1. Crear mensaje
             $message = Mensaje::create([
                 'idconv' => $conversation->idconv,
@@ -337,7 +343,9 @@ class WhatsAppHelpdeskService
                 'tipo' => $type, // Para compatibilidad con tests existentes
                 'media_url' => $storedUrl,
                 'mime_type' => $mimeType,
+                'media_file_name' => $fileName,
                 'reply_to_idmsg' => $replyToMensaje?->idmsg,
+                'throttled_until' => $throttledUntil,
                 'leido' => true,
             ]);
 
@@ -368,69 +376,16 @@ class WhatsAppHelpdeskService
 
             event(new ChatMessageSent($conversation, $message));
 
-            return [
-                'message' => $message,
-                'conversation_id' => (int) $conversation->idconv,
-                'canal_mensaje_id' => (int) $canalMensaje->id,
-                'type' => $type,
-                'content' => $content,
-                'media_url' => $storedUrl,
-                // URL firmada servida por Laravel: el hosting bloquea /storage directo,
-                // así que Evolution API necesita esta ruta para poder descargar el archivo.
-                'external_media_url' => $storedUrl ? $message->media_playable_url : null,
-                'mime_type' => $mimeType,
-                'file_name' => $fileName,
-            ];
+            return $message;
         });
 
-        $result['audio_base64'] = $audioBase64;
-        $result['quoted'] = ($replyToMensaje && $replyToMensaje->external_id) ? [
-            'id' => $replyToMensaje->external_id,
-            'fromMe' => $replyToMensaje->tipo_remitente !== 'cliente',
-            'preview' => $replyToMensaje->quoted_preview,
-        ] : null;
+        if (! $throttledUntil) {
+            app()->terminating(function () use ($message) {
+                $this->dispatchMessageNow($message);
+            });
+        }
 
-        app()->terminating(function () use ($result) {
-            $conversation = Conversacion::query()->with('contactoCanal')->find($result['conversation_id']);
-            $canalMensaje = ChatMensajeCanal::query()->find($result['canal_mensaje_id']);
-
-            if (!$conversation || !$canalMensaje) {
-                return;
-            }
-
-            $dispatch = $this->sendMessageToWhatsApp(
-                $conversation,
-                $result['type'],
-                $result['content'],
-                $result['external_media_url'],
-                $result['mime_type'],
-                $result['file_name'],
-                $result['audio_base64'],
-                $result['quoted']
-            );
-
-            $dispatchOk = (bool) ($dispatch['ok'] ?? false);
-
-            $canalMensaje->update([
-                'external_status' => $dispatchOk ? 'sent' : 'failed',
-                'external_message_id' => $dispatch['external_message_id'] ?? $canalMensaje->external_message_id,
-                'payload' => array_merge($canalMensaje->payload ?? [], [
-                    'dispatch' => [
-                        'ok' => $dispatchOk,
-                        'status' => $dispatch['status'] ?? null,
-                        'error' => $dispatch['error'] ?? null,
-                        'sent_at' => now()->toIso8601String(),
-                    ],
-                ]),
-            ]);
-
-            $result['message']->update([
-                'external_id' => $dispatch['external_message_id'] ?? null,
-                'error_message' => $dispatchOk ? null : ($dispatch['error'] ?? 'Error enviando WhatsApp.'),
-            ]);
-        });
-
-        return $result['message'];
+        return $message;
     }
 
     /**
@@ -458,7 +413,6 @@ class WhatsAppHelpdeskService
         $storedUrl = null;
         $mimeType = $original->mime_type;
         $fileName = $original->media_file_name;
-        $audioBase64 = null;
 
         if ($type !== 'texto') {
             $relativePath = $original->resolveRelativeMediaPath();
@@ -468,17 +422,22 @@ class WhatsAppHelpdeskService
             }
 
             $storedUrl = asset(Storage::url($relativePath));
-
-            if ($type === 'audio') {
-                $audioBase64 = base64_encode(Storage::disk('public')->get($relativePath));
-            }
+            // El base64 de audio (si aplica) se calcula en dispatchMessageNow() a
+            // partir del archivo ya guardado, no acá -- mismo motivo que en
+            // sendOperatorMessage().
         }
 
         if ($content === '' && ! $storedUrl) {
             throw new \InvalidArgumentException('Mensaje vacío');
         }
 
-        $result = DB::transaction(function () use ($target, $operator, $type, $content, $storedUrl, $mimeType, $fileName) {
+        $credentials = $this->resolveOutboundCredentials($target);
+        $rateCheck = ! empty($credentials['instance'])
+            ? $this->rateLimiter->check($credentials['instance'])
+            : ['allowed' => true, 'retry_after' => 0];
+        $throttledUntil = $rateCheck['allowed'] ? null : now()->addSeconds($rateCheck['retry_after']);
+
+        $message = DB::transaction(function () use ($target, $operator, $type, $content, $storedUrl, $mimeType, $fileName, $throttledUntil) {
             $message = Mensaje::create([
                 'idconv' => $target->idconv,
                 'tipo_remitente' => 'empleado',
@@ -489,6 +448,7 @@ class WhatsAppHelpdeskService
                 'media_url' => $storedUrl,
                 'mime_type' => $mimeType,
                 'media_file_name' => $fileName,
+                'throttled_until' => $throttledUntil,
                 'leido' => true,
             ]);
 
@@ -517,63 +477,118 @@ class WhatsAppHelpdeskService
 
             event(new ChatMessageSent($target, $message));
 
-            return [
-                'message' => $message,
-                'conversation_id' => (int) $target->idconv,
-                'canal_mensaje_id' => (int) $canalMensaje->id,
-                'type' => $type,
-                'content' => $content,
-                'media_url' => $storedUrl,
-                'external_media_url' => $storedUrl ? $message->media_playable_url : null,
-                'mime_type' => $mimeType,
-                'file_name' => $fileName,
-            ];
+            return $message;
         });
 
-        $result['audio_base64'] = $audioBase64;
-        $result['quoted'] = null;
+        if (! $throttledUntil) {
+            app()->terminating(function () use ($message) {
+                $this->dispatchMessageNow($message);
+            });
+        }
 
-        app()->terminating(function () use ($result) {
-            $conversation = Conversacion::query()->with('contactoCanal')->find($result['conversation_id']);
-            $canalMensaje = ChatMensajeCanal::query()->find($result['canal_mensaje_id']);
+        return $message;
+    }
 
-            if (!$conversation || !$canalMensaje) {
-                return;
+    /**
+     * Despacha un mensaje ya persistido a WhatsApp ahora mismo y actualiza su estado.
+     * Deriva todo lo que necesita (media, base64 de audio, cita) directamente del
+     * $message persistido en vez de recibir un payload aparte -- así sirve tanto para
+     * el envío inmediato (sendOperatorMessage/forwardMessage) como para el catch-up
+     * de mensajes que quedaron "en cola" por el límite anti-spam
+     * (dispatchDueThrottledMessages), sin duplicar la lógica de armado del mensaje.
+     */
+    private function dispatchMessageNow(Mensaje $message): void
+    {
+        $conversation = Conversacion::query()->with('contactoCanal')->find($message->idconv);
+        $canalMensaje = ChatMensajeCanal::query()->where('idmsg', $message->idmsg)->latest('id')->first();
+
+        if (!$conversation || !$canalMensaje) {
+            return;
+        }
+
+        $mediaUrl = $message->media_url ? $message->media_playable_url : null;
+        $audioBase64 = null;
+
+        if ($message->tipo_contenido === 'audio' && $message->media_url) {
+            $relativePath = $message->resolveRelativeMediaPath();
+            if ($relativePath && Storage::disk('public')->exists($relativePath)) {
+                $audioBase64 = base64_encode(Storage::disk('public')->get($relativePath));
             }
+        }
 
-            $dispatch = $this->sendMessageToWhatsApp(
-                $conversation,
-                $result['type'],
-                $result['content'],
-                $result['external_media_url'],
-                $result['mime_type'],
-                $result['file_name'],
-                $result['audio_base64'],
-                $result['quoted']
-            );
+        $replyToMensaje = $message->reply_to_idmsg
+            ? Mensaje::query()->where('idmsg', $message->reply_to_idmsg)->first()
+            : null;
 
-            $dispatchOk = (bool) ($dispatch['ok'] ?? false);
+        $quoted = ($replyToMensaje && $replyToMensaje->external_id) ? [
+            'id' => $replyToMensaje->external_id,
+            'fromMe' => $replyToMensaje->tipo_remitente !== 'cliente',
+            'preview' => $replyToMensaje->quoted_preview,
+        ] : null;
 
-            $canalMensaje->update([
-                'external_status' => $dispatchOk ? 'sent' : 'failed',
-                'external_message_id' => $dispatch['external_message_id'] ?? $canalMensaje->external_message_id,
-                'payload' => array_merge($canalMensaje->payload ?? [], [
-                    'dispatch' => [
-                        'ok' => $dispatchOk,
-                        'status' => $dispatch['status'] ?? null,
-                        'error' => $dispatch['error'] ?? null,
-                        'sent_at' => now()->toIso8601String(),
-                    ],
-                ]),
-            ]);
+        $dispatch = $this->sendMessageToWhatsApp(
+            $conversation,
+            $message->tipo_contenido,
+            $message->contenido,
+            $mediaUrl,
+            $message->mime_type,
+            $message->media_file_name,
+            $audioBase64,
+            $quoted
+        );
 
-            $result['message']->update([
-                'external_id' => $dispatch['external_message_id'] ?? null,
-                'error_message' => $dispatchOk ? null : ($dispatch['error'] ?? 'Error enviando WhatsApp.'),
-            ]);
-        });
+        $dispatchOk = (bool) ($dispatch['ok'] ?? false);
 
-        return $result['message'];
+        $canalMensaje->update([
+            'external_status' => $dispatchOk ? 'sent' : 'failed',
+            'external_message_id' => $dispatch['external_message_id'] ?? $canalMensaje->external_message_id,
+            'payload' => array_merge($canalMensaje->payload ?? [], [
+                'dispatch' => [
+                    'ok' => $dispatchOk,
+                    'status' => $dispatch['status'] ?? null,
+                    'error' => $dispatch['error'] ?? null,
+                    'sent_at' => now()->toIso8601String(),
+                ],
+            ]),
+        ]);
+
+        $message->update([
+            'external_id' => $dispatch['external_message_id'] ?? null,
+            'error_message' => $dispatchOk ? null : ($dispatch['error'] ?? 'Error enviando WhatsApp.'),
+            'throttled_until' => null,
+        ]);
+    }
+
+    /**
+     * Catch-up de mensajes que quedaron "en cola" por el límite anti-spam: se llama
+     * desde el wire:poll del chat (WhatsAppHelpdesk::refreshChat), no depende de
+     * ningún worker de colas. Vuelve a chequear el límite por si todavía no hay
+     * lugar -- en ese caso empuja throttled_until de nuevo en vez de forzar el envío.
+     */
+    public function dispatchDueThrottledMessages(): void
+    {
+        $due = Mensaje::query()
+            ->where('tipo_remitente', 'empleado')
+            ->whereNotNull('throttled_until')
+            ->where('throttled_until', '<=', now())
+            ->orderBy('throttled_until')
+            ->limit(20)
+            ->get();
+
+        foreach ($due as $message) {
+            $conversation = Conversacion::query()->find($message->idconv);
+            $credentials = $conversation ? $this->resolveOutboundCredentials($conversation) : null;
+
+            $rateCheck = ! empty($credentials['instance'])
+                ? $this->rateLimiter->check($credentials['instance'])
+                : ['allowed' => true, 'retry_after' => 0];
+
+            if ($rateCheck['allowed']) {
+                $this->dispatchMessageNow($message);
+            } else {
+                $message->update(['throttled_until' => now()->addSeconds($rateCheck['retry_after'])]);
+            }
+        }
     }
 
     /**

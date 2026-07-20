@@ -1689,6 +1689,27 @@
             padding: var(--wa-space-6);
         }
 
+        /* Aviso chico no bloqueante cuando un mensaje queda "en cola" por el límite
+           anti-spam (ver WhatsAppRateLimiter) -- se autoesconde solo, no bloquea al
+           empleado. Visibilidad controlada por JS (Livewire.on('chat-throttled', ...)). */
+        .wa-toast {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            z-index: 10000;
+            max-width: 90vw;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: var(--wa-radius-md);
+            background: var(--wa-text);
+            color: var(--wa-panel);
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: var(--wa-shadow-lg);
+        }
+
         .wa-back {
             display: none;
         }
@@ -2175,6 +2196,8 @@
         }
     </style>
 
+    <div id="wa-toast" class="wa-toast" wire:ignore.self style="display:none;"></div>
+
     <aside class="wa-column">
          <div class="wa-toolbar">
              <div class="wa-header-row">
@@ -2597,7 +2620,7 @@
                         <div class="wa-message-time">
                             {{ optional($message->created_at)->format('H:i') }}
                             @if(in_array($message->tipo_remitente, ['empleado', 'ia'], true))
-                                · {{ $message->error_message ? '⚠️ Error' : ($message->delivered_at ? '✓✓ Enviado' : '✓ Pendiente') }}
+                                · {{ $message->throttled_until?->isFuture() ? '⏳ En cola' : ($message->error_message ? '⚠️ Error' : ($message->delivered_at ? '✓✓ Enviado' : '✓ Pendiente')) }}
                             @endif
                         </div>
                     </article>
@@ -3196,6 +3219,31 @@
 
                  <hr style="border: 0; border-top: 1px solid var(--wa-border); margin: 4px 0;">
 
+                 <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Límite anti-spam de envíos</h3>
+                 <div class="wa-card">
+                     <div style="font-size: 12px; color: var(--wa-text-secondary); margin-bottom: 4px;">
+                         Si se supera cualquiera de estos límites, el siguiente mensaje queda "En cola" unos segundos en vez de mandarse al toque, para evitar que WhatsApp marque la cuenta por actividad de spam/automatización.
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Máx. mensajes en ráfaga corta</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_burst_limit" wire:change="saveSetting('chat_outbound_burst_limit', $event.target.value)" min="1" max="100">
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Ventana de ráfaga (segundos)</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_burst_window_seconds" wire:change="saveSetting('chat_outbound_burst_window_seconds', $event.target.value)" min="1" max="600">
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Máx. mensajes sostenidos</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_rate_limit" wire:change="saveSetting('chat_outbound_rate_limit', $event.target.value)" min="1" max="1000">
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                         <span>Ventana sostenida (segundos)</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_rate_window_seconds" wire:change="saveSetting('chat_outbound_rate_window_seconds', $event.target.value)" min="1" max="3600">
+                     </div>
+                 </div>
+
+                 <hr style="border: 0; border-top: 1px solid var(--wa-border); margin: 4px 0;">
+
                  <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Respuestas rápidas</h3>
                  <div class="wa-card">
                      <div style="display: grid; gap: 10px;">
@@ -3680,6 +3728,20 @@
                 } catch (e) {
                     // Ignorar si el navegador bloquea audio sin interacción previa.
                 }
+            });
+
+            let waToastTimer = null;
+            Livewire.on('chat-throttled', ({ seconds }) => {
+                const toast = document.getElementById('wa-toast');
+                if (!toast) return;
+
+                toast.textContent = `⏳ Mensaje en cola para evitar que WhatsApp restrinja la cuenta. Se envía en ~${seconds}s.`;
+                toast.style.display = 'flex';
+
+                clearTimeout(waToastTimer);
+                waToastTimer = setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 4000);
             });
 
             const bindConversationInfiniteScroll = () => {
