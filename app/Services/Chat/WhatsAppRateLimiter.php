@@ -54,7 +54,7 @@ class WhatsAppRateLimiter
             ? $burstWindow - $now->diffInSeconds($inBurst->min())
             : $rateWindow - $now->diffInSeconds($timestamps->min());
 
-        return ['allowed' => false, 'retry_after' => max(1, $retryAfter)];
+        return ['allowed' => false, 'retry_after' => max(1, (int) ceil($retryAfter))];
     }
 
     private function cacheKey(string $instance): string
