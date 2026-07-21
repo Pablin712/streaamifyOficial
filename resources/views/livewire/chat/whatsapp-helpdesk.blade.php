@@ -3236,9 +3236,24 @@
                          <span>Máx. mensajes sostenidos</span>
                          <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_rate_limit" wire:change="saveSetting('chat_outbound_rate_limit', $event.target.value)" min="1" max="1000">
                      </div>
-                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                          <span>Ventana sostenida (segundos)</span>
                          <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_rate_window_seconds" wire:change="saveSetting('chat_outbound_rate_window_seconds', $event.target.value)" min="1" max="3600">
+                     </div>
+                     <div style="font-size: 12px; color: var(--wa-text-secondary); margin: 8px 0 4px;">
+                         Espaciado real entre cada envío (aunque no se supere lo de arriba), para que salgan de a uno en vez de casi juntos.
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Espera mínima entre envíos (segundos)</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_min_gap_seconds" wire:change="saveSetting('chat_outbound_min_gap_seconds', $event.target.value)" min="0" max="120">
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                         <span>Espera máxima entre envíos (segundos)</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_max_gap_seconds" wire:change="saveSetting('chat_outbound_max_gap_seconds', $event.target.value)" min="0" max="300">
+                     </div>
+                     <div style="display: flex; justify-content: space-between; align-items: center;">
+                         <span>Espera máx. en botones de Cuentas/Usuarios (segundos)</span>
+                         <input type="number" class="wa-search" style="width: 100px;" wire:model.blur="settings.chat_outbound_admin_max_wait_seconds" wire:change="saveSetting('chat_outbound_admin_max_wait_seconds', $event.target.value)" min="1" max="60">
                      </div>
                  </div>
 

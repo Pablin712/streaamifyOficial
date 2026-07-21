@@ -24,6 +24,8 @@ use App\Services\BancoService;
 use App\Services\TareaService;
 use App\Services\NetflixCodigoService;
 use App\Services\Chat\WhatsAppOutboundService;
+use App\Services\Chat\WhatsAppRateLimiter;
+use App\Services\Chat\ChatSettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -43,13 +45,17 @@ class CuentaController extends Controller
     protected $bancoService;
     protected $netflixCodigoService;
     protected $whatsAppOutboundService;
+    protected $whatsAppRateLimiter;
+    protected $chatSettingsService;
 
-    public function __construct(CuentaService $cuentaService, BancoService $bancoService, NetflixCodigoService $netflixCodigoService, WhatsAppOutboundService $whatsAppOutboundService)
+    public function __construct(CuentaService $cuentaService, BancoService $bancoService, NetflixCodigoService $netflixCodigoService, WhatsAppOutboundService $whatsAppOutboundService, WhatsAppRateLimiter $whatsAppRateLimiter, ChatSettingsService $chatSettingsService)
     {
         $this->cuentaService = $cuentaService;
         $this->bancoService = $bancoService;
         $this->netflixCodigoService = $netflixCodigoService;
         $this->whatsAppOutboundService = $whatsAppOutboundService;
+        $this->whatsAppRateLimiter = $whatsAppRateLimiter;
+        $this->chatSettingsService = $chatSettingsService;
     }
     public function index(Request $request)
     {
@@ -822,6 +828,16 @@ class CuentaController extends Controller
             ], 422);
         }
 
+        // Mismo embudo anti-spam del chat: este botón también manda por bot-pagos,
+        // así que compite por el mismo espacio/espaciado que el resto del tráfico.
+        $maxWait = (int) $this->chatSettingsService->get('chat_outbound_admin_max_wait_seconds', 12);
+        if (! $this->whatsAppRateLimiter->awaitSlot($channel->instance_name, $maxWait)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hay mucho tráfico de mensajes en este momento. Esperá unos segundos y volvé a intentar.',
+            ], 429);
+        }
+
         $empleado = Auth::user();
 
         // 1. Enviar por Evolution API
@@ -1018,6 +1034,14 @@ class CuentaController extends Controller
                 'success' => false,
                 'message' => 'No se encontró el canal WhatsApp bot-pagos para enviar el inventario.',
             ], 422);
+        }
+
+        $maxWait = (int) $this->chatSettingsService->get('chat_outbound_admin_max_wait_seconds', 12);
+        if (! $this->whatsAppRateLimiter->awaitSlot($channel->instance_name, $maxWait)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hay mucho tráfico de mensajes en este momento. Esperá unos segundos y volvé a intentar.',
+            ], 429);
         }
 
         $empleado = Auth::user();

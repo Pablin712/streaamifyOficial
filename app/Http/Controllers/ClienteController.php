@@ -320,7 +320,7 @@ class ClienteController extends Controller
 
         $payload = $this->clienteMensajeMasivoService->buildWebhookPayload($validated['segmento'], $validated['mensaje'], $user);
 
-        if (empty($payload['clientes'])) {
+        if (empty($payload['destinatarios'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'No se encontraron clientes activos con telefono valido para enviar el mensaje.',

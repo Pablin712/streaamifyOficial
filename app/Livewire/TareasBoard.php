@@ -9,6 +9,7 @@ use App\Models\Historial;
 use App\Models\Soporte;
 use App\Models\Tarea;
 use App\Models\ViewUsuarioActivo;
+use App\Services\MessageVariationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -51,7 +52,21 @@ class TareasBoard extends Component
     public string $plantillaCobro      = '';
     public bool   $showPlantillaEditor = false;
 
-    const PLANTILLA_DEFAULT = "Hola {nombre}, te recordamos que tu membresía vence el {fecha}. Por favor renueva para mantener el servicio. ¡Gracias! 🙏";
+    /**
+     * Varias versiones completas del mismo recordatorio (no solo la plantilla
+     * de siempre con el nombre cambiado) -- se elige una al azar por
+     * destinatario en resolverDatosWspBatch() para que un lote de cobros no
+     * mande texto idéntico a todo el mundo, otra señal de spam que WhatsApp
+     * detecta además del volumen/ritmo de envíos.
+     */
+    const DEFAULT_TEMPLATE_VARIANTS = [
+        "Hola {nombre}, te recordamos que tu membresía vence el {fecha}. Por favor renueva para mantener el servicio. ¡Gracias! 🙏",
+        "¡Hola {nombre}! 👋 Tu membresía está por vencer el {fecha}. Te invitamos a renovarla para no perder el acceso al servicio. ¡Gracias por tu preferencia!",
+        "Hola {nombre}, un recordatorio rápido: tu servicio vence el {fecha}. Podés renovarlo cuando gustes para seguir disfrutándolo sin interrupciones. 🙌",
+        "{nombre}, te avisamos que tu suscripción vence el {fecha}. Renueva a tiempo para evitar que se corte el servicio. ¡Cualquier consulta, escribinos! 😊",
+        "Hola {nombre} 👋 Este es un recordatorio de que tu membresía finaliza el {fecha}. Renovala pronto para mantener todo activo. ¡Gracias!",
+        "Hola {nombre}, tu plan vence el {fecha}. Te recomendamos renovar antes de esa fecha para no perder el servicio. ¡Saludos! ✅",
+    ];
 
     protected function rules(): array
     {
@@ -645,7 +660,8 @@ class TareasBoard extends Component
             ->groupBy('idcli')
             ->map(fn($g) => $g->first()->telefono);
 
-        $template = trim($this->user()->plantilla_cobro ?? '') ?: self::PLANTILLA_DEFAULT;
+        $plantillaPersonal = trim($this->user()->plantilla_cobro ?? '');
+        $variador = app(MessageVariationService::class);
         $result   = [];
 
         foreach ($tareas as $tarea) {
@@ -662,11 +678,27 @@ class TareasBoard extends Component
                 ? (string) ($contactos->get($idcli) ?? $usuario?->cliente?->telefonocli ?? '')
                 : '';
 
+            // Plantilla personal del empleado: se respeta su redacción, solo se
+            // varía un poco el remate. Plantilla por defecto: se elige una
+            // variante completa al azar por destinatario -- así un mismo lote
+            // de cobros no manda el texto idéntico a todo el mundo.
+            if ($plantillaPersonal !== '') {
+                $mensaje = $variador->lightlyVary(
+                    str_replace(['{nombre}', '{fecha}'], [$nombre, $fecha], $plantillaPersonal)
+                );
+            } else {
+                $mensaje = str_replace(
+                    ['{nombre}', '{fecha}'],
+                    [$nombre, $fecha],
+                    $variador->pickVariant(self::DEFAULT_TEMPLATE_VARIANTS)
+                );
+            }
+
             $result[$tarea->id] = [
                 'nombre'   => $nombre,
                 'telefono' => $telefono,
                 'idcli'    => (int) ($idcli ?? 0),
-                'mensaje'  => str_replace(['{nombre}', '{fecha}'], [$nombre, $fecha], $template),
+                'mensaje'  => $mensaje,
             ];
         }
 

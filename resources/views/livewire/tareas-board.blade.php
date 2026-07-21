@@ -401,7 +401,7 @@
             @if($showPlantillaEditor)
             <div class="wsp-template-editor">
                 <textarea wire:model="plantillaCobro"
-                          placeholder="{{ \App\Livewire\TareasBoard::PLANTILLA_DEFAULT }}"></textarea>
+                          placeholder="{{ \App\Livewire\TareasBoard::DEFAULT_TEMPLATE_VARIANTS[0] }}"></textarea>
                 <div class="wsp-vars">
                     Variables disponibles: <code>{nombre}</code> = nombre del cliente,
                     <code>{fecha}</code> = fecha de vencimiento.

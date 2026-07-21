@@ -18,6 +18,8 @@ use App\Services\CuentaService;
 use App\Services\EntregaMensajeService;
 use App\Services\TareaService;
 use App\Services\Chat\WhatsAppOutboundService;
+use App\Services\Chat\WhatsAppRateLimiter;
+use App\Services\Chat\ChatSettingsService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,16 +32,22 @@ class UsuarioController extends Controller
     protected $cuentaService;
     protected $entregaMensajeService;
     protected $whatsAppOutboundService;
+    protected $whatsAppRateLimiter;
+    protected $chatSettingsService;
 
     public function __construct(
         CuentaService $cuentaService,
         EntregaMensajeService $entregaMensajeService,
-        WhatsAppOutboundService $whatsAppOutboundService
+        WhatsAppOutboundService $whatsAppOutboundService,
+        WhatsAppRateLimiter $whatsAppRateLimiter,
+        ChatSettingsService $chatSettingsService
     )
     {
         $this->cuentaService = $cuentaService;
         $this->entregaMensajeService = $entregaMensajeService;
         $this->whatsAppOutboundService = $whatsAppOutboundService;
+        $this->whatsAppRateLimiter = $whatsAppRateLimiter;
+        $this->chatSettingsService = $chatSettingsService;
     }
 
     public function index(Request $request)
@@ -353,6 +361,18 @@ class UsuarioController extends Controller
                     ? 'No hay un canal WhatsApp alterno configurado para salida.'
                     : 'No hay un canal WhatsApp verde configurado para salida.',
             ], 422);
+        }
+
+        // Mismo embudo anti-spam del chat -- importante acá porque este endpoint
+        // también se usa para mandar "mensaje de renovación" en tandas (un request
+        // por cliente desde el JS de la vista de usuarios), que es justo el tipo de
+        // ráfaga que se quiere evitar.
+        $maxWait = (int) $this->chatSettingsService->get('chat_outbound_admin_max_wait_seconds', 12);
+        if (! $this->whatsAppRateLimiter->awaitSlot($channel->instance_name, $maxWait)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hay mucho tráfico de mensajes en este momento. Esperá unos segundos y volvé a intentar.',
+            ], 429);
         }
 
         $empleado = Auth::user();
