@@ -52,7 +52,11 @@ class WhatsAppRateLimiter
 
         $lastSend = $timestamps->max();
         $requiredGap = random_int($minGap, $maxGap);
-        $gapOk = ! $lastSend || $now->diffInSeconds($lastSend) >= $requiredGap;
+        // diffInSeconds() en Carbon 3 devuelve un valor CON SIGNO por defecto
+        // (negativo cuando el otro momento es pasado) -- hay que pedir el
+        // absoluto explícitamente, si no esta cuenta de "cuánto pasó desde el
+        // último envío" sale invertida.
+        $gapOk = ! $lastSend || $now->diffInSeconds($lastSend, true) >= $requiredGap;
 
         $allowed = $gapOk && $inBurst->count() < $burstLimit && $timestamps->count() < $rateLimit;
 
@@ -66,13 +70,13 @@ class WhatsAppRateLimiter
         $retryAfterCandidates = [];
 
         if (! $gapOk) {
-            $retryAfterCandidates[] = $requiredGap - $now->diffInSeconds($lastSend);
+            $retryAfterCandidates[] = $requiredGap - $now->diffInSeconds($lastSend, true);
         }
         if ($inBurst->count() >= $burstLimit) {
-            $retryAfterCandidates[] = $burstWindow - $now->diffInSeconds($inBurst->min());
+            $retryAfterCandidates[] = $burstWindow - $now->diffInSeconds($inBurst->min(), true);
         }
         if ($timestamps->count() >= $rateLimit) {
-            $retryAfterCandidates[] = $rateWindow - $now->diffInSeconds($timestamps->min());
+            $retryAfterCandidates[] = $rateWindow - $now->diffInSeconds($timestamps->min(), true);
         }
 
         return ['allowed' => false, 'retry_after' => max(1, (int) ceil(max($retryAfterCandidates)))];
