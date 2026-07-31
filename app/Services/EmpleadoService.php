@@ -169,17 +169,18 @@ class EmpleadoService
             ->orderBy('created_at')
             ->get();
 
-        $porDia = $asistencias->groupBy(fn($a) => $a->created_at->format('Y-m-d'));
+        // Lapsos calculados sobre la serie completa y ordenada (no agrupada por día)
+        // para no cortar artificialmente un lapso que cruza la medianoche local
+        // (ej. turno de 23:50 a 00:10): calcularLapsos ya corta por gaps > 5 min,
+        // que es el criterio correcto sin importar si cae en días distintos.
+        $totalMinutos = $this->calcularLapsos($asistencias)['total_conexion'];
 
-        $totalMinutos = 0.0;
-        foreach ($porDia as $grupoDelDia) {
-            $totalMinutos += $this->calcularLapsos($grupoDelDia)['total_conexion'];
-        }
+        $diasConectado = $asistencias->groupBy(fn($a) => $a->created_at->format('Y-m-d'))->count();
 
         return [
             'total_minutos'  => round($totalMinutos, 2),
             'total_horas'    => round($totalMinutos / 60, 2),
-            'dias_conectado' => $porDia->count(),
+            'dias_conectado' => $diasConectado,
         ];
     }
     public function obtenerVentasPorDia(int $idemp, string $fecha)
