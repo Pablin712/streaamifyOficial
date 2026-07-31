@@ -205,10 +205,14 @@
         const form = document.getElementById('createCostoForm');
         if (form) form.reset();
 
-        // Resetear fecha a hoy
+        // Resetear fecha a hoy (hora local, no UTC)
         const fechaInput = document.getElementById('fechacos');
         if (fechaInput) {
-            fechaInput.value = new Date().toISOString().split('T')[0];
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            fechaInput.value = `${year}-${month}-${day}`;
         }
 
         // Marcar checkbox como pagado por defecto
