@@ -29,6 +29,13 @@ class ConversacionSatisfaccionAnalyzer
     private const SIN_SERVICIO = 'SIN_SERVICIO_IDENTIFICADO';
     private const MOTIVOS_CONTACTO = ['soporte_tecnico', 'solicitar_codigo', 'compra', 'renovacion', 'consulta_general', 'otro'];
 
+    // Muchas "conversaciones" en este sistema son un hilo continuo por cliente que
+    // puede durar semanas (no una sesion acotada a un solo tema). Un hueco mayor a
+    // esto entre un mensaje de cliente y la siguiente respuesta casi seguro es un
+    // tema nuevo despues de dias de silencio, no al cliente esperando esa respuesta
+    // puntual -- se excluye del promedio para que el numero sea utilizable.
+    private const MAX_GAP_RESPUESTA_SEGUNDOS = 6 * 3600;
+
     private ?Collection $servicios = null;
 
     public function __construct(private ClaudeClient $claude)
@@ -104,7 +111,10 @@ class ConversacionSatisfaccionAnalyzer
                 });
 
                 if ($siguienteRespuesta && $siguienteRespuesta->created_at !== $ultimaRespuestaVista) {
-                    $tiempos[] = $mensaje->created_at->diffInSeconds($siguienteRespuesta->created_at);
+                    $gap = $mensaje->created_at->diffInSeconds($siguienteRespuesta->created_at);
+                    if ($gap <= self::MAX_GAP_RESPUESTA_SEGUNDOS) {
+                        $tiempos[] = $gap;
+                    }
                     $ultimaRespuestaVista = $siguienteRespuesta->created_at;
                 }
             }
