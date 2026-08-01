@@ -382,6 +382,8 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::delete('/usuarios/{id}', 'destroy')->name('usuarios.destroy');
     });
 
+    Route::get('/whatsapp/analisis', [\App\Http\Controllers\WhatsAppAnalisisController::class, 'index'])->name('whatsapp.analisis');
+
     Route::controller(EmpleadoController::class)->group(function () {
         Route::get('/empleados', 'index')->name('empleados');
         Route::get('/empleados/rendimiento', 'rendimiento')->name('empleados.rendimiento');

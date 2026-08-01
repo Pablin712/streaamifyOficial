@@ -57,6 +57,7 @@
                                     <a class="nav-link" href="{{ route('empleados') }}">Empleados</a>
                                     <a class="nav-link" href="{{ route('asistencias.index') }}">Control</a>
                                     <a class="nav-link" href="{{ route('empleados.rendimiento') }}">Rendimiento</a>
+                                    <a class="nav-link" href="{{ route('whatsapp.analisis') }}">WhatsApp (IA)</a>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('roles.index'))
                                     <a class="nav-link" href="{{ route('roles.index') }}">Roles</a>

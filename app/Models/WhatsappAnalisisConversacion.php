@@ -18,6 +18,8 @@ class WhatsappAnalisisConversacion extends Model
         'idcli',
         'empleados_involucrados',
         'empleado_principal_idemp',
+        'servicio_idser',
+        'motivo_contacto',
         'mensajes_cliente_count',
         'respondido',
         'tiempo_respuesta_promedio_segundos',
@@ -53,5 +55,10 @@ class WhatsappAnalisisConversacion extends Model
     public function empleadoPrincipal()
     {
         return $this->belongsTo(Empleado::class, 'empleado_principal_idemp', 'idemp');
+    }
+
+    public function servicio()
+    {
+        return $this->belongsTo(Servicio::class, 'servicio_idser', 'idser');
     }
 }

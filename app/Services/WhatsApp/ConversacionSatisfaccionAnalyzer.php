@@ -3,8 +3,10 @@
 namespace App\Services\WhatsApp;
 
 use App\Models\Conversacion;
+use App\Models\Servicio;
 use App\Models\WhatsappAnalisisConversacion;
 use App\Services\Anthropic\ClaudeClient;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -24,9 +26,19 @@ class ConversacionSatisfaccionAnalyzer
     private const TOOL_NAME = 'registrar_analisis_conversacion';
     private const MAX_MENSAJES_EN_PROMPT = 200;
     private const MAX_CONTENIDO_CHARS = 500;
+    private const SIN_SERVICIO = 'SIN_SERVICIO_IDENTIFICADO';
+    private const MOTIVOS_CONTACTO = ['soporte_tecnico', 'solicitar_codigo', 'compra', 'renovacion', 'consulta_general', 'otro'];
+
+    private ?Collection $servicios = null;
 
     public function __construct(private ClaudeClient $claude)
     {
+    }
+
+    /** @return Collection<string,string> idser => nombreser */
+    private function servicios(): Collection
+    {
+        return $this->servicios ??= Servicio::pluck('nombreser', 'idser');
     }
 
     /**
@@ -51,6 +63,8 @@ class ConversacionSatisfaccionAnalyzer
                 'idcli' => $conversacion->idcli,
                 'empleados_involucrados' => $metricas['empleados_involucrados'],
                 'empleado_principal_idemp' => $metricas['empleado_principal_idemp'],
+                'servicio_idser' => $juicioIa['servicio_idser'],
+                'motivo_contacto' => $juicioIa['motivo_contacto'],
                 'mensajes_cliente_count' => $metricas['mensajes_cliente_count'],
                 'respondido' => $metricas['respondido'],
                 'tiempo_respuesta_promedio_segundos' => $metricas['tiempo_respuesta_promedio_segundos'],
@@ -59,7 +73,7 @@ class ConversacionSatisfaccionAnalyzer
                 'motivo_perdida' => $juicioIa['motivo_perdida'],
                 'cruce_empleados' => $juicioIa['cruce_empleados'],
                 'cruce_detalle' => $juicioIa['cruce_detalle'],
-                'fecha_conversacion' => ($conversacion->closed_at ?? $conversacion->ultima_actividad)?->toDateString(),
+                'fecha_conversacion' => ($conversacion->closed_at ?? $conversacion->last_message_at ?? $conversacion->ultima_actividad)?->toDateString(),
                 'modelo_ia' => $juicioIa['modelo_ia'],
                 'raw_response' => $juicioIa['raw_response'],
                 'analizado_en' => now(),
@@ -111,6 +125,9 @@ class ConversacionSatisfaccionAnalyzer
     {
         $transcript = $this->construirTranscript($mensajes);
         $empleadosResumen = $this->resumenEmpleados($metricas['empleados_involucrados']);
+        $servicios = $this->servicios();
+        $serviciosResumen = $servicios->map(fn ($nombre, $idser) => "{$idser} = {$nombre}")->implode(' | ');
+        $serviciosEnum = array_merge($servicios->keys()->all(), [self::SIN_SERVICIO]);
 
         $system = <<<TXT
         Sos un analista de calidad de atencion al cliente para Streamify, un negocio que revende
@@ -133,6 +150,15 @@ class ConversacionSatisfaccionAnalyzer
           empleado inicio la atencion y otro distinto la resolvio, de forma coordinada.
         - cruce_detalle: breve explicacion (1-2 lineas) SOLO si cruce_empleados no es "ninguno". Si es
           "ninguno" dejalo vacio.
+        - servicio_idser: identifica sobre que servicio de streaming trata la conversacion, usando
+          EXACTAMENTE uno de los codigos de esta lista (codigo = nombre): {$serviciosResumen}
+          Si la conversacion no menciona un servicio identificable (saludo, pregunta general, etc.)
+          usa "{$this->sinServicio()}".
+        - motivo_contacto: por que escribio el cliente. "soporte_tecnico" = problema con la cuenta/servicio
+          (no carga, contrasena, cuenta caida, etc.). "solicitar_codigo" = pidio un codigo de acceso/inicio
+          de sesion. "compra" = quiere comprar una cuenta/servicio nuevo. "renovacion" = quiere renovar o
+          extender una cuenta que ya tiene. "consulta_general" = pregunta informativa sin problema tecnico
+          ni intencion de compra clara. "otro" si no encaja en ninguna de las anteriores.
 
         Metadatos ya calculados (no los recalcules, son exactos):
         - Empleados que participaron: {$empleadosResumen}
@@ -169,8 +195,20 @@ class ConversacionSatisfaccionAnalyzer
                         'type' => 'string',
                         'description' => 'Explicacion breve si hubo cruce; string vacio si no.',
                     ],
+                    'servicio_idser' => [
+                        'type' => 'string',
+                        'enum' => $serviciosEnum,
+                        'description' => 'Codigo del servicio sobre el que trata la conversacion, o ' . self::SIN_SERVICIO . ' si no aplica.',
+                    ],
+                    'motivo_contacto' => [
+                        'type' => 'string',
+                        'enum' => self::MOTIVOS_CONTACTO,
+                    ],
                 ],
-                'required' => ['satisfaccion_score', 'satisfaccion_justificacion', 'motivo_perdida', 'cruce_empleados'],
+                'required' => [
+                    'satisfaccion_score', 'satisfaccion_justificacion', 'motivo_perdida', 'cruce_empleados',
+                    'servicio_idser', 'motivo_contacto',
+                ],
             ],
         ];
 
@@ -187,9 +225,20 @@ class ConversacionSatisfaccionAnalyzer
                 ? $input['cruce_empleados']
                 : 'ninguno',
             'cruce_detalle' => $input['cruce_detalle'] ?? null,
+            'servicio_idser' => $servicios->has($input['servicio_idser'] ?? null)
+                ? $input['servicio_idser']
+                : null,
+            'motivo_contacto' => in_array($input['motivo_contacto'] ?? null, self::MOTIVOS_CONTACTO, true)
+                ? $input['motivo_contacto']
+                : 'otro',
             'modelo_ia' => $resultado['raw']['model'] ?? config('services.anthropic.model'),
             'raw_response' => $resultado['raw'],
         ];
+    }
+
+    private function sinServicio(): string
+    {
+        return self::SIN_SERVICIO;
     }
 
     private function construirTranscript($mensajes): string
