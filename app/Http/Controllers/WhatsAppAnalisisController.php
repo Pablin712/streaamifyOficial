@@ -52,6 +52,7 @@ class WhatsAppAnalisisController extends Controller
             $delServicio = $analisis->where('servicio_idser', $servicio->idser);
             $cuentasActivas = (int) ($cuentasActivasPorServicio[$servicio->idser] ?? 0);
             $totalConversaciones = $delServicio->count();
+            $tiempos = $delServicio->pluck('tiempo_respuesta_promedio_segundos')->filter();
 
             return [
                 'servicio' => $servicio,
@@ -59,6 +60,9 @@ class WhatsAppAnalisisController extends Controller
                 'total_conversaciones' => $totalConversaciones,
                 'satisfaccion_promedio' => $totalConversaciones > 0
                     ? round($delServicio->avg('satisfaccion_score'), 2)
+                    : null,
+                'tiempo_respuesta_promedio_min' => $tiempos->isNotEmpty()
+                    ? round($tiempos->avg() / 60, 1)
                     : null,
                 'por_motivo' => collect(['soporte_tecnico', 'solicitar_codigo', 'compra', 'renovacion', 'consulta_general', 'otro'])
                     ->mapWithKeys(fn ($motivo) => [$motivo => $delServicio->where('motivo_contacto', $motivo)->count()]),
@@ -74,14 +78,43 @@ class WhatsAppAnalisisController extends Controller
           ->values();
 
         $sinServicio = $analisis->whereNull('servicio_idser')->count();
+        $total = $analisis->count();
+
+        $distribucionSatisfaccion = collect(range(1, 5))->mapWithKeys(
+            fn ($score) => [$score => $analisis->where('satisfaccion_score', $score)->count()]
+        );
+        $moda = $total > 0 ? $distribucionSatisfaccion->sortDesc()->keys()->first() : null;
+
+        $motivoContactoGlobal = collect(['soporte_tecnico', 'solicitar_codigo', 'compra', 'renovacion', 'consulta_general', 'otro'])
+            ->mapWithKeys(fn ($motivo) => [$motivo => $analisis->where('motivo_contacto', $motivo)->count()]);
+
+        $motivoPerdidaGlobal = collect(['mala_atencion', 'sin_respuesta', 'sin_presupuesto', 'no_continuara', 'otro_servicio', 'otro'])
+            ->mapWithKeys(fn ($motivo) => [$motivo => $analisis->where('motivo_perdida', $motivo)->count()])
+            ->filter();
+
+        $cruceEmpleados = collect(['ninguno', 'tardado', 'dividido'])
+            ->mapWithKeys(fn ($tipo) => [$tipo => $analisis->where('cruce_empleados', $tipo)->count()]);
+
+        $tiemposGlobal = $analisis->pluck('tiempo_respuesta_promedio_segundos')->filter();
 
         return view('whatsapp.analisis', [
             'periodo' => $periodo,
             'desde' => $desde,
             'porServicio' => $porServicio,
-            'totalAnalizadas' => $analisis->count(),
+            'totalAnalizadas' => $total,
             'sinServicio' => $sinServicio,
-            'satisfaccionGlobal' => $analisis->count() > 0 ? round($analisis->avg('satisfaccion_score'), 2) : null,
+            'satisfaccionGlobal' => $total > 0 ? round($analisis->avg('satisfaccion_score'), 2) : null,
+            'distribucionSatisfaccion' => $distribucionSatisfaccion,
+            'moda' => $moda,
+            'buenas' => $analisis->whereIn('satisfaccion_score', [4, 5])->count(),
+            'regulares' => $analisis->where('satisfaccion_score', 3)->count(),
+            'malas' => $analisis->whereIn('satisfaccion_score', [1, 2])->count(),
+            'motivoContactoGlobal' => $motivoContactoGlobal,
+            'motivoPerdidaGlobal' => $motivoPerdidaGlobal,
+            'totalPerdidas' => $analisis->where('motivo_perdida', '!=', 'no_aplica')->count(),
+            'cruceEmpleados' => $cruceEmpleados,
+            'tiempoRespuestaPromedioMin' => $tiemposGlobal->isNotEmpty() ? round($tiemposGlobal->avg() / 60, 1) : null,
+            'sinRespuesta' => $analisis->where('respondido', false)->count(),
         ]);
     }
 }
