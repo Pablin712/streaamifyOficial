@@ -30,6 +30,7 @@ class DailyStatistic extends Model
         'daily_revenue',
         'daily_cost',
         'daily_bill',
+        'daily_bill_personal',
         'daily_sales',
         'daily_tasks',
         'new_customers',
