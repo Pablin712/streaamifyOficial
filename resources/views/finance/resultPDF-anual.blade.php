@@ -195,7 +195,7 @@
         </div>
         <div class="header-right">
             <div class="balance">${{ number_format($datosAnuales['balance_anual'], 2) }}</div>
-            <div class="balance-label">Balance Anual</div>
+            <div class="balance-label">Utilidad Real Anual</div>
         </div>
     </div>
 
@@ -211,12 +211,16 @@
             <div class="card-value">${{ number_format($datosAnuales['costos_totales'], 2) }}</div>
         </div>
         <div class="card warning">
-            <div class="card-title">Gastos Totales</div>
+            <div class="card-title">Gastos Operativos Totales</div>
             <div class="card-value">${{ number_format($datosAnuales['gastos_totales'], 2) }}</div>
         </div>
         <div class="card info">
             <div class="card-title">Ventas Totales</div>
             <div class="card-value">{{ number_format($datosAnuales['ventas_totales']) }}</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Retiro / Personal (informativo)</div>
+            <div class="card-value">${{ number_format($datosAnuales['gastos_personal_totales'] ?? 0, 2) }}</div>
         </div>
     </div>
 

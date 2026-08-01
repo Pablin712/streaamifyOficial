@@ -13,6 +13,13 @@
                 <label for="edit_detalletip">Detalle del Tipo de Gasto</label>
                 <input type="text" name="detalletip" id="edit_detalletip" class="form-control" required>
             </div>
+            <div class="form-check mb-2">
+                <input type="checkbox" name="excluir_de_ganancia" id="edit_excluir_de_ganancia" class="form-check-input" value="1">
+                <label class="form-check-label" for="edit_excluir_de_ganancia">
+                    Excluir de la utilidad del negocio
+                </label>
+                <div class="form-text">Úsalo para pagos que no son gasto operativo (ej: pago de personal, tu retiro/sueldo como dueño). No se restará de la ganancia mostrada en el dashboard, solo aparecerá como dato informativo aparte.</div>
+            </div>
         </div>
 
         <div class="modal-footer">

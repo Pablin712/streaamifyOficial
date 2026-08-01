@@ -168,6 +168,16 @@
             </div>
         </div>
     </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="kpi-card kpi-yellow shadow-sm h-100 d-flex align-items-center gap-3">
+            <div class="kpi-icon"><i class="fas fa-user-tie"></i></div>
+            <div>
+                <div class="kpi-label">Retiro / personal este mes</div>
+                <div class="kpi-value">${{ number_format($gastos_personal_mes ?? 0, 2) }}</div>
+                <div class="kpi-sub">Informativo, no afecta la utilidad</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- ══ ROW 2: Operaciones ═════════════════════════════════ --}}
@@ -297,14 +307,20 @@
                     <tbody>
                         <tr><td><strong>Ingresos</strong></td><td class="text-end">${{ number_format($ingresos_mes,2) }}</td><td class="text-end fw-bold">100%</td></tr>
                         <tr><td>Costos</td><td class="text-end">${{ number_format($costos_mes,2) }}</td><td class="text-end">{{ number_format($costos_pct,1) }}%</td></tr>
-                        <tr><td>Gastos</td><td class="text-end">${{ number_format($gastos_mes,2) }}</td><td class="text-end">{{ number_format($gastos_pct,1) }}%</td></tr>
+                        <tr><td>Gastos operativos</td><td class="text-end">${{ number_format($gastos_mes,2) }}</td><td class="text-end">{{ number_format($gastos_pct,1) }}%</td></tr>
                         <tr class="table-{{ $balance>=0?'success':'danger' }} fw-bold">
-                            <td>Balance</td>
+                            <td>Utilidad real del negocio</td>
                             <td class="text-end">${{ number_format($balance,2) }}</td>
                             <td class="text-end">{{ number_format($balance_pct,1) }}%</td>
                         </tr>
+                        <tr class="text-muted">
+                            <td><i class="fas fa-user-tie me-1"></i>Retiro / personal (informativo)</td>
+                            <td class="text-end">${{ number_format($gastos_personal_mes ?? 0,2) }}</td>
+                            <td class="text-end">—</td>
+                        </tr>
                     </tbody>
                 </table>
+                <p class="text-muted small mb-0"><i class="fas fa-circle-info me-1"></i>El retiro/personal no se resta de la utilidad real; es dinero que sale de esa utilidad, no un gasto del negocio.</p>
             </div>
             <div class="col-md-6">
                 <h6 class="fw-bold mb-3 small text-uppercase opacity-75"><i class="fas fa-receipt me-1"></i>Desglose de gastos</h6>
@@ -312,7 +328,11 @@
                     <thead><tr><th>Concepto</th><th class="text-end">Monto</th><th class="text-end">%</th></tr></thead>
                     <tbody>
                         @foreach($gastos as $g)
-                        <tr><td>{{ $g['concepto'] }}</td><td class="text-end">${{ number_format($g['total'],2) }}</td><td class="text-end">{{ $g['porcentaje'] }}%</td></tr>
+                        <tr class="{{ $g['excluido_de_ganancia'] ? 'text-muted' : '' }}">
+                            <td>{{ $g['concepto'] }} @if($g['excluido_de_ganancia'])<span class="badge bg-secondary ms-1" style="font-size:.65rem;">informativo</span>@endif</td>
+                            <td class="text-end">${{ number_format($g['total'],2) }}</td>
+                            <td class="text-end">{{ $g['porcentaje'] }}%</td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>

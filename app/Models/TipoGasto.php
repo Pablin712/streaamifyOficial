@@ -15,6 +15,11 @@ class TipoGasto extends Model
     // Campos que se pueden llenar masivamente
     protected $fillable = [
         'detalletip', // Detalle del tipo de gasto
+        'excluir_de_ganancia', // Si es true, no cuenta como gasto operativo (ej: retiro/sueldo del dueño, nómina)
+    ];
+
+    protected $casts = [
+        'excluir_de_ganancia' => 'boolean',
     ];
 
     // Relación con los gastos

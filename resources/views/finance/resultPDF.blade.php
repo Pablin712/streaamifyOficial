@@ -117,7 +117,7 @@
             <div class="company">Streamify HQ — Generado el {{ now()->format('d/m/Y H:i') }}</div>
         </div>
         <div class="balance-box">
-            <div class="balance-label">Balance del mes</div>
+            <div class="balance-label">Utilidad real del mes</div>
             <div class="balance-val" style="color:{{ $balance >= 0 ? '#bbf7d0' : '#fecaca' }}">
                 ${{ number_format($balance, 2) }}
             </div>
@@ -202,14 +202,19 @@
                         <td class="text-right">{{ number_format($costos_pct, 1) }}%</td>
                     </tr>
                     <tr>
-                        <td>Gastos</td>
+                        <td>Gastos operativos</td>
                         <td class="text-right">${{ number_format($gastos_mes, 2) }}</td>
                         <td class="text-right">{{ number_format($gastos_pct, 1) }}%</td>
                     </tr>
                     <tr style="background:#1e3a8a;color:white;">
-                        <td><strong>Balance</strong></td>
+                        <td><strong>Utilidad real</strong></td>
                         <td class="text-right"><strong>${{ number_format($balance, 2) }}</strong></td>
                         <td class="text-right"><strong>{{ number_format($balance_pct, 1) }}%</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Retiro / personal (informativo)</td>
+                        <td class="text-right">${{ number_format($gastos_personal_mes ?? 0, 2) }}</td>
+                        <td class="text-right">—</td>
                     </tr>
                 </tbody>
             </table>
@@ -226,7 +231,7 @@
                 <tbody>
                     @foreach($gastos as $g)
                     <tr>
-                        <td>{{ $g['concepto'] }}</td>
+                        <td>{{ $g['concepto'] }}@if($g['excluido_de_ganancia'] ?? false) <span style="color:#64748b;font-size:8px;">(informativo)</span>@endif</td>
                         <td class="text-right">${{ number_format($g['total'], 2) }}</td>
                         <td class="text-right">{{ $g['porcentaje'] }}%</td>
                     </tr>

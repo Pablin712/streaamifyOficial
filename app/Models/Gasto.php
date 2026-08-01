@@ -27,6 +27,22 @@ class Gasto extends Model
         return $this->belongsTo(TipoGasto::class, 'idtip');
     }
 
+    // Gastos operativos del negocio (afectan la utilidad real)
+    public function scopeOperativos($query)
+    {
+        return $query->whereHas('tipoGasto', function ($q) {
+            $q->where('excluir_de_ganancia', false);
+        });
+    }
+
+    // Gastos excluidos de la utilidad (ej: pago de personal / retiro del dueño)
+    public function scopePersonal($query)
+    {
+        return $query->whereHas('tipoGasto', function ($q) {
+            $q->where('excluir_de_ganancia', true);
+        });
+    }
+
     public function transaccion()
     {
         return $this->belongsTo(Transaccion::class, 'transaccion_id', 'id');

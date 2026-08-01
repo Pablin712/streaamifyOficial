@@ -38,7 +38,9 @@ class DashboardService
 
         $ingresos_mes = Venta::whereMonth('fechaven', $month)->whereYear('fechaven', $year)->sum('totalpagoven');
         $costos_mes = Costo::whereMonth('fechacos', $month)->whereYear('fechacos', $year)->sum('montocos');
-        $gastos_mes = Gasto::whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas');
+        // Gastos operativos: excluyen los tipos marcados como "excluir_de_ganancia" (ej: pago de personal / retiro del dueño)
+        $gastos_mes = Gasto::operativos()->whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas');
+        $gastos_personal_mes = Gasto::personal()->whereMonth('fechagas', $month)->whereYear('fechagas', $year)->sum('montogas');
         $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1; // Evita división por cero
         $costos_pct = ($costos_mes / $ingresos) * 100;
         $gastos_pct = ($gastos_mes / $ingresos) * 100;
@@ -53,6 +55,7 @@ class DashboardService
             'costos_pct' => $costos_pct,
             'gastos_mes' => $gastos_mes,
             'gastos_pct' => $gastos_pct,
+            'gastos_personal_mes' => $gastos_personal_mes,
             'balance' => $balance,
             'balance_pct' => $balance_pct,
             'clientes_activos' => ViewClientesUsuarios::count(),
@@ -149,6 +152,9 @@ class DashboardService
         $gastos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
             ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
             ->sum('daily_bill');
+        $gastos_personal_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
+            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->sum('daily_bill_personal');
         $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1; // Evita división por cero
         $costos_pct = ($costos_mes / $ingresos) * 100;
         $gastos_pct = ($gastos_mes / $ingresos) * 100;
@@ -180,6 +186,7 @@ class DashboardService
             'costos_pct' => $costos_pct,
             'gastos_mes' => $gastos_mes,
             'gastos_pct' => $gastos_pct,
+            'gastos_personal_mes' => $gastos_personal_mes,
             'balance' => $balance,
             'balance_pct' => $balance_pct,
             'clientes_activos' => $total_customers->count(),
@@ -1167,7 +1174,9 @@ class DashboardService
         $dailyRevenue = Venta::whereDate('fechaven', $date)->sum('totalpagoven');
         $dailyCost = Costo::whereDate('fechacos', $date)->sum('montocos');
         // CORREGIDO: Usar fechagas en lugar de created_at para gastos
-        $dailyBill = Gasto::whereDate('fechagas', $date)->sum('montogas');
+        // daily_bill = solo gastos operativos (afectan la utilidad); daily_bill_personal = pago de personal/retiro del dueño (informativo)
+        $dailyBill = Gasto::operativos()->whereDate('fechagas', $date)->sum('montogas');
+        $dailyBillPersonal = Gasto::personal()->whereDate('fechagas', $date)->sum('montogas');
         $dailySales = Venta::whereDate('fechaven', $date)->count();
         $dailyTasks = Tarea::whereDate('created_at', $date)->count();
         $newCustomers = Cliente::whereDate('created_at', $date)->count();
@@ -1188,6 +1197,7 @@ class DashboardService
                 'daily_revenue' => $dailyRevenue,
                 'daily_cost' => $dailyCost,
                 'daily_bill' => $dailyBill,
+                'daily_bill_personal' => $dailyBillPersonal,
                 'daily_sales' => $dailySales,
                 'daily_tasks' => $dailyTasks,
                 'new_customers' => $newCustomers,
@@ -1210,6 +1220,7 @@ class DashboardService
                 'daily_revenue' => $dailyRevenue,
                 'daily_cost' => $dailyCost,
                 'daily_bill' => $dailyBill,
+                'daily_bill_personal' => $dailyBillPersonal,
                 'daily_sales' => $dailySales,
                 'balance' => $dailyRevenue - $dailyCost - $dailyBill,
                 'usuarios_removidos' => $churn['usuarios_removidos'],
@@ -1238,6 +1249,7 @@ class DashboardService
                 'concepto' => $gasto->tipoGasto->detalletip ?? 'Desconocido', // Nombre del tipo de gasto
                 'porcentaje' => round(($gasto->total / $ingresos) * 100, 2),  // % sobre ingresos
                 'total' => $gasto->total, // Total gastado
+                'excluido_de_ganancia' => (bool) ($gasto->tipoGasto->excluir_de_ganancia ?? false), // No cuenta como gasto operativo
             ];
         });
         return $gastosData->toArray();
@@ -1277,7 +1289,20 @@ class DashboardService
      */
     public function getGastosMensuales(int $month, int $year): float
     {
-        return Gasto::whereMonth('fechagas', $month)
+        return Gasto::operativos()->whereMonth('fechagas', $month)
+            ->whereYear('fechagas', $year)
+            ->sum('montogas');
+    }
+
+    /**
+     * Obtener gastos de personal/retiro del dueño mensuales (informativo, no afecta la utilidad)
+     * @param int $month
+     * @param int $year
+     * @return float
+     */
+    public function getGastosPersonalMensuales(int $month, int $year): float
+    {
+        return Gasto::personal()->whereMonth('fechagas', $month)
             ->whereYear('fechagas', $year)
             ->sum('montogas');
     }
@@ -1306,6 +1331,7 @@ class DashboardService
             'ingresos_totales' => 0,
             'costos_totales' => 0,
             'gastos_totales' => 0,
+            'gastos_personal_totales' => 0,
             'ventas_totales' => 0,
             'balance_anual' => 0,
             'meses_data' => []
@@ -1319,6 +1345,7 @@ class DashboardService
             $ingresosMes = $this->getIngresosMensuales($month, $year);
             $costosMes = $this->getCostosMensuales($month, $year);
             $gastosMes = $this->getGastosMensuales($month, $year);
+            $gastosPersonalMes = $this->getGastosPersonalMensuales($month, $year);
             $ventasMes = $this->getVentasMensuales($month, $year);
             $balanceMes = $ingresosMes - $costosMes - $gastosMes;
 
@@ -1326,6 +1353,7 @@ class DashboardService
             $datosAnuales['ingresos_totales'] += $ingresosMes;
             $datosAnuales['costos_totales'] += $costosMes;
             $datosAnuales['gastos_totales'] += $gastosMes;
+            $datosAnuales['gastos_personal_totales'] += $gastosPersonalMes;
             $datosAnuales['ventas_totales'] += $ventasMes;
 
             // Guardar datos del mes
@@ -1334,6 +1362,7 @@ class DashboardService
                 'ingresos' => round($ingresosMes, 2),
                 'costos' => round($costosMes, 2),
                 'gastos' => round($gastosMes, 2),
+                'gastos_personal' => round($gastosPersonalMes, 2),
                 'ventas' => $ventasMes,
                 'balance' => round($balanceMes, 2)
             ];
@@ -1350,6 +1379,7 @@ class DashboardService
         $datosAnuales['ingresos_totales'] = round($datosAnuales['ingresos_totales'], 2);
         $datosAnuales['costos_totales'] = round($datosAnuales['costos_totales'], 2);
         $datosAnuales['gastos_totales'] = round($datosAnuales['gastos_totales'], 2);
+        $datosAnuales['gastos_personal_totales'] = round($datosAnuales['gastos_personal_totales'], 2);
 
         return $datosAnuales;
     }

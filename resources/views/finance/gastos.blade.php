@@ -246,6 +246,7 @@
                                 </svg>
                             </span>
                         </th>
+                        <th>Afecta utilidad</th>
                         @if (Auth::user()->hasAnyPermission(['tipos.update', 'tipos.destroy']))
                             <th data-type="actions">Acciones</th>
                         @endif
@@ -256,13 +257,20 @@
                         <tr>
                             <td>{{ $tipoGasto->idtip }}</td>
                             <td>{{ $tipoGasto->detalletip }}</td>
+                            <td>
+                                @if ($tipoGasto->excluir_de_ganancia)
+                                    <span class="badge bg-secondary">No (informativo)</span>
+                                @else
+                                    <span class="badge bg-success">Sí (operativo)</span>
+                                @endif
+                            </td>
                             @if (Auth::user()->hasAnyPermission(['tipos.update', 'tipos.destroy']))
                                 <td>
                                     @if (Auth::user()->hasPermissionTo('tipos.update'))
                                         <!-- Editar Tipo de Gasto -->
                                         <button type="button"
                                             class="btn btn-warning fas fa-edit"
-                                            onclick="editarTipoGasto({{ $tipoGasto->idtip }}, '{{ $tipoGasto->detalletip }}')">
+                                            onclick="editarTipoGasto({{ $tipoGasto->idtip }}, '{{ $tipoGasto->detalletip }}', {{ $tipoGasto->excluir_de_ganancia ? 'true' : 'false' }})">
                                             Editar
                                         </button>
                                     @endif
@@ -429,11 +437,12 @@
         // ============================================================================
         // FUNCIONES DE MODAL - EDITAR TIPO GASTO
         // ============================================================================
-        window.editarTipoGasto = function(idtip, detalletip) {
+        window.editarTipoGasto = function(idtip, detalletip, excluirDeGanancia) {
             console.log('🔷 Abriendo modal de editar tipo gasto:', idtip);
 
             // Llenar el formulario
             document.getElementById('edit_detalletip').value = detalletip;
+            document.getElementById('edit_excluir_de_ganancia').checked = !!excluirDeGanancia;
 
             // Actualizar la acción del formulario
             const form = document.getElementById('editarTipoGastoForm');

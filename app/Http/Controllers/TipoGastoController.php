@@ -31,6 +31,7 @@ class TipoGastoController extends Controller
 
         $tipogasto = TipoGasto::create([
             'detalletip' => $request->detalletip,
+            'excluir_de_ganancia' => $request->boolean('excluir_de_ganancia'),
         ]);
 
         Historial::create([
@@ -75,6 +76,7 @@ class TipoGastoController extends Controller
 
         $tipoGasto->update([
             'detalletip' => $request->detalletip,
+            'excluir_de_ganancia' => $request->boolean('excluir_de_ganancia'),
         ]);
 
         return redirect()->route('gastos')->with('success', 'Tipo de Gasto actualizado con éxito');
