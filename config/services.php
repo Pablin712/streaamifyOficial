@@ -84,6 +84,14 @@ return [
         'api_key' => env('OPENAI_API_KEY'),
     ],
 
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+        // Modelo por defecto para el analisis de calidad de WhatsApp (Fase 1 - prototipo).
+        // Ver docs/optimizacion/idea-soporte.md.
+        'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5'),
+        'version' => env('ANTHROPIC_API_VERSION', '2023-06-01'),
+    ],
+
     'netflix_code' => [
         'provider_name' => env('NETFLIX_CODE_PROVIDER_NAME', 'Alejandro Guevara'),
         'service_id' => env('NETFLIX_CODE_SERVICE_ID', 'NETFLIX'),
