@@ -39,7 +39,9 @@
     <!-- Sistema de Temas Dinámicos -->
     <link rel="stylesheet" href="{{ asset('css/themes.css') }}?v={{ filemtime(public_path('css/themes.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}?v={{ filemtime(public_path('css/enhanced-table-global.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/modal-system.css') }}?v={{ filemtime(public_path('css/modal-system.css')) }}">
+    {{-- modal-system.css quedo con cache de servidor (LSCache) que ignora el ?v= de cache-busting;
+         se renombra el archivo fisico cada vez que cambia su contenido para forzar una URL nueva. --}}
+    <link rel="stylesheet" href="{{ asset('css/modal-system.v2.css') }}?v={{ filemtime(public_path('css/modal-system.v2.css')) }}">
 
     @yield('styles')
     @livewireStyles

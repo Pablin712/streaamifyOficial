@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Select2 Dark Mode -->
     <link href="{{ asset('css/select2-dark-mode.css') }}" rel="stylesheet" />
-    <link href="{{ asset('css/modal-system.css') }}" rel="stylesheet" />
+    <link href="{{ asset('css/modal-system.v2.css') }}" rel="stylesheet" />
 
     <style>
         /* KPI cards */
