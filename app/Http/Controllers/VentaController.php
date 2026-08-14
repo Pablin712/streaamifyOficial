@@ -219,6 +219,9 @@ class VentaController extends Controller
         }
         $descripcionDetalles .= "Cuentas vendidas: {$totalDetalles}. Total de la venta: {$totalVenta}.";
 
+        $venta->tipo_venta = $this->clasificarTipoVenta($venta);
+        $venta->save();
+
         // Registrar transacción bancaria (ingreso) o descontar saldo del cliente
         if ($sePago) {
             if ($metodoPago === 'saldo') {
@@ -372,6 +375,9 @@ class VentaController extends Controller
             ->orderBy('idven', 'desc')
             ->value('idven');
 
+        $ventaNueva->tipo_venta = 'renovacion';
+        $ventaNueva->save();
+
         if ($ventaNueva->cliente->email) {
             //Mail::to($ventaNueva->cliente->email)->send(new facturaMail($ventaNueva));
         }
@@ -456,6 +462,27 @@ class VentaController extends Controller
     public function show(string $id)
     {
         // Implementa si es necesario
+    }
+
+    /**
+     * Clasifica una venta recién creada (flujo store(), no storeRenew()):
+     * 'nueva' si es la primera compra del cliente; si no, 'ampliacion' cuando
+     * el cliente ya tenía algo vigente a la fecha de esta venta, o
+     * 'reactivacion' cuando no tenía nada vigente (volvió después de irse).
+     */
+    private function clasificarTipoVenta(Venta $venta): string
+    {
+        if (!$venta->cliente->ya_compro) {
+            return 'nueva';
+        }
+
+        $teniaVigente = DetalleVenta::where('fechavendet', '>', $venta->fechaven)
+            ->whereIn('idven', Venta::where('idcli', $venta->idcli)
+                ->where('idven', '!=', $venta->idven)
+                ->pluck('idven'))
+            ->exists();
+
+        return $teniaVigente ? 'ampliacion' : 'reactivacion';
     }
 
     public function edit($idven)

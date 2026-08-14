@@ -244,6 +244,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::get('/dashboard/filter', 'filterData')->name('dashboard.filter');
         Route::match(['get','post'], '/dashboard/pdf', 'generarPDF')->name('dashboard.pdf');
     });
+    Route::get('/inteligencia-negocio', [\App\Http\Controllers\InteligenciaNegocioController::class, 'index'])->name('inteligencia-negocio');
     Route::controller(CalendarController::class)->group(function () {
         Route::get('/calendario', 'index')->name('calendario');
     });

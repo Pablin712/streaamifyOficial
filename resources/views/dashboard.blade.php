@@ -12,9 +12,14 @@
             <h4 class="mb-1">Bienvenido, <strong>{{ Auth::user()->nombreemp }}</strong></h4>
             <p class="mb-0 text-muted">Resumen del rendimiento financiero y operativo de Streamify HQ</p>
         </div>
-        <button type="button" class="btn btn-danger" onclick="abrirModalReportes()">
-            <i class="fas fa-file-pdf me-1"></i> Generar Reporte
-        </button>
+        <div class="d-flex gap-2">
+            <a href="{{ route('inteligencia-negocio') }}" class="btn btn-outline-primary">
+                <i class="fas fa-brain me-1"></i> Inteligencia de Negocio
+            </a>
+            <button type="button" class="btn btn-danger" onclick="abrirModalReportes()">
+                <i class="fas fa-file-pdf me-1"></i> Generar Reporte
+            </button>
+        </div>
     </div>
 @endsection
 
@@ -390,7 +395,22 @@
             <div class="card-body p-3 d-flex align-items-center justify-content-center">
                 <canvas id="myPieChart" style="width:100%;max-height:260px;"></canvas>
             </div>
-            <div class="card-footer text-muted">Distribución de ganancias del mes</div>
+            <div class="card-footer text-muted">Distribución de ganancias del mes, de mayor a menor</div>
+        </div>
+    </div>
+</div>
+
+{{-- ══ Pie de usuarios por servicio ═══════════════════════ --}}
+<div class="row g-3 mb-4">
+    <div class="col-lg-5 mx-auto">
+        <div class="card chart-card shadow-sm h-100">
+            <div class="card-header">
+                <span><i class="fas fa-users me-1"></i>Usuarios activos por servicio</span>
+            </div>
+            <div class="card-body p-3 d-flex align-items-center justify-content-center">
+                <canvas id="myUsersPieChart" style="width:100%;max-height:260px;"></canvas>
+            </div>
+            <div class="card-footer text-muted">Cuántos usuarios activos tiene cada plataforma, de mayor a menor</div>
         </div>
     </div>
 </div>
@@ -648,23 +668,42 @@ document.addEventListener("DOMContentLoaded", function () {
         },
     });
 
-    /* ── Pie Chart ──────────────────────────────────────── */
+    /* ── Pie Chart (helper: ordena labels/valores de mayor a menor) ── */
     const pieColors = ['#ef4444','#06b6d4','#3b82f6','#6366f1','#f59e0b','#fde047','#0ea5e9','#10b981','#a855f7'];
-    new Chart(document.getElementById('myPieChart').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: servicios,
-            datasets: [{ data:gan, backgroundColor:pieColors, borderColor:'#fff', borderWidth:2 }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: { position:'right', labels:{ usePointStyle:true, boxWidth:8, padding:10, font:{ size:11 } } },
-                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${money(ctx.parsed)}` } },
+
+    function sortedPieData(labels, values) {
+        const rows = labels.map((label, i) => ({ label, value: values[i] || 0 }))
+            .sort((a, b) => b.value - a.value);
+        return {
+            labels: rows.map(r => r.label),
+            values: rows.map(r => r.value),
+            colors: rows.map((r, i) => pieColors[i % pieColors.length]),
+        };
+    }
+
+    function buildPieChart(canvasId, labels, values, tooltipFormatter) {
+        const sorted = sortedPieData(labels, values);
+        new Chart(document.getElementById(canvasId).getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: sorted.labels,
+                datasets: [{ data: sorted.values, backgroundColor: sorted.colors, borderColor: '#fff', borderWidth: 2 }]
             },
-        },
-    });
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8, padding: 10, font: { size: 11 } } },
+                    tooltip: { callbacks: { label: ctx => tooltipFormatter(ctx.label, ctx.parsed) } },
+                },
+            },
+        });
+    }
+
+    buildPieChart('myPieChart', servicios, gan, (label, value) => ` ${label}: ${money(value)}`);
+
+    const usu = [@json($usuarios_netflix),@json($usuarios_disney),@json($usuarios_prime),@json($usuarios_max),@json($usuarios_magis),@json($usuarios_crunchy),@json($usuarios_paramount),@json($usuarios_spotify),@json($usuarios_otros)];
+    buildPieChart('myUsersPieChart', servicios, usu, (label, value) => ` ${label}: ${value} usuarios`);
 });
 </script>
 
@@ -678,7 +717,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function captureCharts() {
         const charts = {};
-        ['myAreaChart','myBarChart','myPieChart'].forEach(id => {
+        ['myAreaChart','myBarChart','myPieChart','myUsersPieChart'].forEach(id => {
             const canvas = document.getElementById(id);
             if (canvas) {
                 try { charts[id] = canvas.toDataURL('image/png', 0.85); } catch(e) {}
