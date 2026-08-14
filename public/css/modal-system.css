@@ -188,8 +188,12 @@
     gap: 0.5rem;
 }
 
-/* INPUTS Y CONTROLES */
-.modal-content input,
+/* INPUTS Y CONTROLES
+   Excluye checkbox/radio a proposito: son el input de un .form-check /
+   .form-switch / .btn-check y Bootstrap ya los dibuja como cuadrado/circulo
+   pequeno via background-image. Si heredan width:100% + padding grande de
+   aca terminan viendose como una barra horizontal en vez de una casilla. */
+.modal-content input:not([type="checkbox"]):not([type="radio"]),
 .modal-content textarea,
 .modal-content select {
     background-color: var(--bg-card, #ffffff);
@@ -201,7 +205,7 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.modal-content input:focus,
+.modal-content input:not([type="checkbox"]):not([type="radio"]):focus,
 .modal-content textarea:focus,
 .modal-content select:focus {
     background-color: var(--bg-card, #ffffff);
@@ -250,7 +254,7 @@
     border-top-color: var(--border-color);
 }
 
-[data-dark-mode="true"] .modal-content input,
+[data-dark-mode="true"] .modal-content input:not([type="checkbox"]):not([type="radio"]),
 [data-dark-mode="true"] .modal-content textarea,
 [data-dark-mode="true"] .modal-content select {
     background-color: var(--bg-card);
@@ -258,7 +262,7 @@
     border-color: var(--border-color);
 }
 
-[data-dark-mode="true"] .modal-content input:focus,
+[data-dark-mode="true"] .modal-content input:not([type="checkbox"]):not([type="radio"]):focus,
 [data-dark-mode="true"] .modal-content textarea:focus,
 [data-dark-mode="true"] .modal-content select:focus {
     border-color: var(--primary-color);

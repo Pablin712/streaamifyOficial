@@ -7,9 +7,10 @@
         @csrf
         <div class="modal-body">
 
-            <div class="mb-2 form-check">
-                <input type="checkbox" class="form-check-input" id="prestamo_deudor_nuevo_toggle">
-                <label class="form-check-label" for="prestamo_deudor_nuevo_toggle">Es un deudor nuevo</label>
+            <div class="mb-3 form-check form-switch ps-0 d-flex align-items-center justify-content-between">
+                <label class="form-check-label mb-0" for="prestamo_deudor_nuevo_toggle">Es un deudor nuevo</label>
+                <input type="checkbox" class="form-check-input flex-shrink-0" role="switch" id="prestamo_deudor_nuevo_toggle"
+                       style="width:2.5em;height:1.35em;margin-left:0.75rem !important;">
             </div>
 
             <div class="mb-3" id="prestamo_deudor_existente_wrap">
