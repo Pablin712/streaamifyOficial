@@ -66,7 +66,7 @@
                         </div>
                     @endif
                     {{-- Reemplazamos @canany(['bancos.index', 'empleado.recargas.index', 'costos', 'gastos']) --}}
-                    @if (Auth::user()->hasAnyPermission(['bancos.index', 'empleado.recargas.index', 'costos', 'gastos']))
+                    @if (Auth::user()->hasAnyPermission(['bancos.index', 'mne.index', 'empleado.recargas.index', 'costos', 'gastos']))
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseFinance" aria-expanded="false" aria-controls="collapseFinance">
                             <div class="sb-nav-link-icon"><i class="fas fa-wallet"></i></div>
@@ -78,6 +78,9 @@
                             <nav class="sb-sidenav-menu-nested nav">
                                 @if (Auth::user()->hasPermissionTo('bancos.index'))
                                     <a class="nav-link" href="{{ route('bancos.index') }}">Bancos</a>
+                                @endif
+                                @if (Auth::user()->hasPermissionTo('mne.index'))
+                                    <a class="nav-link" href="{{ route('mne.index') }}">Mi Negocio Efectivo</a>
                                 @endif
                                 @if (Auth::user()->hasPermissionTo('empleado.recargas.index'))
                                     <a class="nav-link" href="{{ route('empleado.recargas.index') }}">Recargas</a>

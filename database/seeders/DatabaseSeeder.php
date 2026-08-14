@@ -50,6 +50,7 @@ class DatabaseSeeder extends Seeder
             ChatMemoriaNegocioSeeder::class,
             ChatSoportePlaybooksSeeder::class,
             BancosPermisosSeeder::class,
+            FinanzasAvanzadasPermisosSeeder::class,
         ]);
     }
 }

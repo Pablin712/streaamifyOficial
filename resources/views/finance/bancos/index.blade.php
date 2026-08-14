@@ -12,10 +12,14 @@
     --kpi-red-icon: #fecaca;   --kpi-red-text: #b91c1c;
     --kpi-teal-bg1: #f0fdfa;  --kpi-teal-bg2: #ccfbf1;
     --kpi-teal-icon: #99f6e4;  --kpi-teal-text: #0f766e;
+    --kpi-indigo-bg1: #eef2ff; --kpi-indigo-bg2: #e0e7ff;
+    --kpi-indigo-icon: #c7d2fe; --kpi-indigo-text: #4338ca;
     /* Bank card colors (brand identity — light only) */
     --bancos-ahorros-bg:   linear-gradient(135deg,#1e3a8a,#3b82f6);
     --bancos-corriente-bg: linear-gradient(135deg,#4c1d95,#7c3aed);
     --bancos-efectivo-bg:  linear-gradient(135deg,#065f46,#059669);
+    /* Fondos — dinero NO disponible: paleta deslavada + candado, a proposito distinta de bancos */
+    --fondo-card-bg: linear-gradient(135deg,#475569,#64748b);
 }
 [data-dark-mode="true"] {
     --kpi-green-bg1: #0d2e1a; --kpi-green-bg2: #0a2415;
@@ -24,6 +28,9 @@
     --kpi-red-icon: #5a1a1a;   --kpi-red-text: #f87171;
     --kpi-teal-bg1: #0b2929;  --kpi-teal-bg2: #0d3535;
     --kpi-teal-icon: #164040;  --kpi-teal-text: #2dd4bf;
+    --kpi-indigo-bg1: #1e1b4b; --kpi-indigo-bg2: #201c50;
+    --kpi-indigo-icon: #312e81; --kpi-indigo-text: #a5b4fc;
+    --fondo-card-bg: linear-gradient(135deg,#334155,#475569);
 }
 
 /* ── KPI Cards ──────────────────────────────────── */
@@ -57,6 +64,9 @@
 .kpi-teal   { background:linear-gradient(135deg,var(--kpi-teal-bg1),var(--kpi-teal-bg2)); color:var(--kpi-teal-text); }
 .kpi-teal   .kpi-icon { background:var(--kpi-teal-icon); }
 .kpi-teal::after   { background:var(--kpi-teal-text); }
+.kpi-indigo { background:linear-gradient(135deg,var(--kpi-indigo-bg1),var(--kpi-indigo-bg2)); color:var(--kpi-indigo-text); }
+.kpi-indigo .kpi-icon { background:var(--kpi-indigo-icon); }
+.kpi-indigo::after { background:var(--kpi-indigo-text); }
 
 /* ── Bank Cards ─────────────────────────────────── */
 .bank-card {
@@ -97,6 +107,37 @@
 }
 .bank-card .card-actions { position:relative; z-index:2; }
 
+/* ── Fondo Cards (dinero NO disponible) ────────────
+   Misma familia visual que bank-card, pero deslavada + candado:
+   a proposito se ve "menos liquida" que un banco real. ── */
+.fondo-card {
+    border:none; border-radius:18px; padding:22px;
+    color:#fff; position:relative; overflow:hidden;
+    background: var(--fondo-card-bg);
+    transition: transform .2s, box-shadow .2s;
+    min-height:180px;
+}
+.fondo-card:hover { transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,.18)!important; }
+.fondo-card::before {
+    content:''; position:absolute; top:-30px; right:-30px;
+    width:110px; height:110px; border-radius:50%;
+    background:rgba(255,255,255,.07);
+}
+.fondo-card .fondo-lock {
+    width:40px; height:40px; border-radius:10px;
+    background:rgba(255,255,255,.15); display:flex;
+    align-items:center; justify-content:center; font-size:1.1rem;
+}
+.fondo-card .fondo-amount { font-size:1.8rem; font-weight:800; letter-spacing:-.02em; margin:10px 0 4px; }
+.fondo-card .fondo-name   { font-size:.85rem; font-weight:600; opacity:.9; }
+.fondo-card .fondo-desc   { font-size:.72rem; opacity:.65; }
+.fondo-card .fondo-badge  {
+    display:inline-block; background:rgba(255,255,255,.16);
+    padding:2px 10px; border-radius:20px; font-size:.65rem;
+    font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+}
+.fondo-card .card-actions { position:relative; z-index:2; }
+
 /* ── Tabs ───────────────────────────────────────── */
 .fin-tabs .nav-link {
     border:none; border-bottom:3px solid transparent;
@@ -132,7 +173,7 @@
             alerts.forEach(a => setTimeout(() => { const b = new bootstrap.Alert(a); b.close(); }, 5000));
 
             @if (session('success') || session('error'))
-                ['crear-banco','editar-banco','registrar-transaccion','pagar-deuda','transferir'].forEach(m =>
+                ['crear-banco','editar-banco','registrar-transaccion','pagar-deuda','transferir','registrar-fondo-transaccion','recargar-fondo','nuevo-prestamo','abonar-prestamo'].forEach(m =>
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: m }))
                 );
             @endif
@@ -160,6 +201,16 @@
                 <i class="fas fa-arrows-alt-h me-1"></i> Transferir
             </button>
             @endif
+            @if(Auth::user()->hasPermissionTo('fondos.transacciones.store'))
+            <button class="btn btn-outline-secondary btn-sm" onclick="openRecargarFondoModal()">
+                <i class="fas fa-wallet me-1"></i> Recargar Fondo
+            </button>
+            @endif
+            @if(Auth::user()->hasPermissionTo('prestamos.store'))
+            <button class="btn btn-outline-secondary btn-sm" onclick="openNuevoPrestamoModal()">
+                <i class="fas fa-hand-holding-dollar me-1"></i> Nuevo Préstamo
+            </button>
+            @endif
             <button class="btn btn-outline-primary btn-sm" onclick="window.dispatchEvent(new CustomEvent('open-modal',{detail:'exportar-transacciones'}))">
                 <i class="fas fa-file-export me-1"></i> Exportar
             </button>
@@ -180,19 +231,29 @@
     </div>
     @endif
 
-    {{-- ── KPI Row ─────────────────────────────────────── --}}
+    {{-- ── KPI Row — modelo "disponible vs no disponible", ver docs/finanzas/modeloFinanciero.md ── --}}
     <div class="row g-3 mt-2 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3 col-sm-6">
             <div class="kpi-card kpi-green shadow-sm d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="fas fa-coins"></i></div>
                 <div>
-                    <div class="kpi-label">Total en bancos</div>
+                    <div class="kpi-label">Disponible</div>
                     <div class="kpi-value">${{ number_format($totalDisponible ?? 0, 2) }}</div>
-                    <div class="kpi-sub">{{ $bancos->count() }} banco{{ $bancos->count() !== 1 ? 's' : '' }} registrado{{ $bancos->count() !== 1 ? 's' : '' }}</div>
+                    <div class="kpi-sub">{{ $bancos->count() }} banco{{ $bancos->count() !== 1 ? 's' : '' }} — se puede usar ya</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="kpi-card kpi-indigo shadow-sm d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="fas fa-lock"></i></div>
+                <div>
+                    <div class="kpi-label">No disponible</div>
+                    <div class="kpi-value">${{ number_format($totalNoDisponible ?? 0, 2) }}</div>
+                    <div class="kpi-sub">Fondos ${{ number_format($totalFondos ?? 0, 2) }} · Prestado ${{ number_format($totalPrestado ?? 0, 2) }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
             <div class="kpi-card kpi-red shadow-sm d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="fas fa-file-invoice-dollar"></i></div>
                 <div>
@@ -202,14 +263,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            @php $bal = ($totalDisponible ?? 0) - ($totalDeudasPendientes ?? 0); @endphp
+        <div class="col-md-3 col-sm-6">
+            @php $bal = $patrimonioTotal ?? 0; @endphp
             <div class="kpi-card {{ $bal >= 0 ? 'kpi-teal' : 'kpi-red' }} shadow-sm d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="fas fa-balance-scale"></i></div>
                 <div>
-                    <div class="kpi-label">Balance neto</div>
+                    <div class="kpi-label">Patrimonio total</div>
                     <div class="kpi-value">${{ number_format($bal, 2) }}</div>
-                    <div class="kpi-sub">Disponible − Deudas</div>
+                    <div class="kpi-sub">Disponible + no disponible − deudas</div>
                 </div>
             </div>
         </div>
@@ -221,6 +282,18 @@
             <button class="nav-link active" id="bancos-tab" data-bs-toggle="tab" data-bs-target="#bancos" type="button" role="tab">
                 <i class="fas fa-university me-1"></i> Bancos
                 <span class="badge bg-primary ms-1 rounded-pill" style="font-size:.65rem;">{{ $bancos->count() }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="fondos-tab" data-bs-toggle="tab" data-bs-target="#fondos" type="button" role="tab">
+                <i class="fas fa-wallet me-1"></i> Fondos
+                <span class="badge bg-secondary ms-1 rounded-pill" style="font-size:.65rem;">{{ $fondos->count() }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="deudores-tab" data-bs-toggle="tab" data-bs-target="#deudores" type="button" role="tab">
+                <i class="fas fa-hand-holding-dollar me-1"></i> Deudores
+                <span class="badge bg-secondary ms-1 rounded-pill" style="font-size:.65rem;">{{ $prestamos->count() }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -309,6 +382,130 @@
                 @endforeach
             </div>
             @endif
+        </div>
+
+        {{-- ═══ TAB FONDOS (dinero NO disponible) ═══════════ --}}
+        <div class="tab-pane fade" id="fondos" role="tabpanel">
+            <div class="alert alert-secondary d-flex align-items-center gap-2 mb-4">
+                <i class="fas fa-circle-info"></i>
+                <div>Este dinero es de Pablo, pero no está en un banco: efectivo en caja o saldo dentro de una app. No cuenta como "Disponible".</div>
+            </div>
+            @if($fondos->isEmpty())
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-wallet fa-3x mb-3 opacity-25"></i>
+                <p class="mb-0">No hay fondos registrados</p>
+            </div>
+            @else
+            <div class="row g-4">
+                @foreach($fondos as $fondo)
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <div class="fondo-card shadow h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="fondo-lock"><i class="fas fa-lock"></i></div>
+                            <span class="fondo-badge">No disponible</span>
+                        </div>
+                        <div class="fondo-amount">${{ number_format($fondo->saldo, 2) }}</div>
+                        <div class="fondo-name mb-1">{{ $fondo->nombre }}</div>
+                        <div class="fondo-desc mb-3">{{ $fondo->descripcion ?? '—' }}</div>
+                        <div class="card-actions d-flex gap-2 flex-wrap">
+                            @if(Auth::user()->hasPermissionTo('fondos.transacciones.store'))
+                            <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);"
+                                    onclick="openFondoTransaccionModal({{ $fondo->id }}, '{{ addslashes($fondo->nombre) }}')" title="Ajustar saldo">
+                                <i class="fas fa-plus-circle me-1"></i> Ajustar
+                            </button>
+                            <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);"
+                                    onclick="openRecargarFondoModal({{ $fondo->id }})" title="Recargar desde un banco">
+                                <i class="fas fa-arrow-right-arrow-left me-1"></i> Recargar
+                            </button>
+                            @endif
+                            @if($fondo->nombre === 'Mi Negocio Efectivo' && Auth::user()->hasPermissionTo('mne.index'))
+                            <a href="{{ route('mne.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);" title="Ver panel completo">
+                                <i class="fas fa-chart-line me-1"></i> Panel
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+
+        {{-- ═══ TAB DEUDORES (prestamos personales pendientes de cobro) ═══ --}}
+        <div class="tab-pane fade" id="deudores" role="tabpanel">
+            <div class="fin-card card mb-4">
+                <div class="fin-card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-hand-holding-dollar text-primary me-2"></i> Préstamos Pendientes de Cobro</span>
+                    <span class="badge bg-primary rounded-pill">{{ $prestamos->count() }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3 align-items-end">
+                        <div class="col-lg-8 col-md-7">
+                            <label class="form-label fw-semibold small"><i class="fas fa-search text-primary me-1"></i> Buscar</label>
+                            <input id="deudores-table-search" type="text" placeholder="Deudor, monto..." class="form-control">
+                        </div>
+                        <div class="col-lg-4 col-md-5">
+                            <label class="form-label fw-semibold small"><i class="fas fa-list text-primary me-1"></i> Mostrar</label>
+                            <select id="deudores-table-rows-per-page" class="form-select">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="deudores-table" data-table="deudores-table" class="table table-hover align-middle">
+                            <thead style="background:var(--bg-light);">
+                                <tr>
+                                    <th class="sortable" data-type="number" data-col="0">#<span class="sort-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
+                                    <th>Deudor</th>
+                                    <th>Origen</th>
+                                    <th>Prestado</th>
+                                    <th>Pagado</th>
+                                    <th>Pendiente</th>
+                                    <th>Fecha</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($prestamos as $prestamo)
+                                <tr>
+                                    <td class="fw-semibold text-muted">{{ $prestamo->id }}</td>
+                                    <td>
+                                        {{ $prestamo->deudor->nombre ?? 'N/A' }}
+                                        @if($prestamo->deudor?->telefono)
+                                            <div class="text-muted small">{{ $prestamo->deudor->telefono }}</div>
+                                        @endif
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ $prestamo->origen_nombre }}</span></td>
+                                    <td>${{ number_format($prestamo->monto, 2) }}</td>
+                                    <td class="text-success fw-semibold">${{ number_format($prestamo->monto_pagado, 2) }}</td>
+                                    <td class="text-danger fw-bold">${{ number_format($prestamo->monto_restante, 2) }}</td>
+                                    <td class="text-muted small">{{ \Carbon\Carbon::parse($prestamo->fecha)->format('d/m/Y') }}</td>
+                                    <td>
+                                        @if(Auth::user()->hasPermissionTo('prestamos.abonar'))
+                                        <button class="btn btn-sm btn-success"
+                                                onclick="abonarPrestamo({{ $prestamo->id }}, '{{ addslashes($prestamo->deudor->nombre ?? '') }}', {{ $prestamo->monto }}, {{ $prestamo->monto_restante }})">
+                                            <i class="fas fa-dollar-sign me-1"></i> Abonar
+                                        </button>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="fas fa-check-circle text-success me-2"></i> Sin préstamos pendientes de cobro
+                                </td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row mt-3 align-items-center">
+                        <div class="col-md-6"><div id="deudores-table-row-info" class="text-muted small"></div></div>
+                        <div class="col-md-6"><div id="deudores-table-pagination" class="d-flex justify-content-end flex-wrap"></div></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- ═══ TAB DEUDAS ══════════════════════════════════ --}}
@@ -472,12 +669,17 @@
 @include('finance.bancos.modals.pagar-deuda')
 @include('finance.bancos.modals.transferir')
 @include('finance.bancos.modals.exportar')
+@include('finance.bancos.modals.fondo-transaccion')
+@include('finance.bancos.modals.recargar-fondo')
+@include('finance.bancos.modals.nuevo-prestamo')
+@include('finance.bancos.modals.abonar-prestamo')
 
 <script src="{{ asset('js/enhanced-table-v2.js') }}?v={{ filemtime(public_path('js/enhanced-table-v2.js')) }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     if (typeof window.enhancedTable !== 'undefined') {
         window.enhancedTable.init('deudas-table');
+        window.enhancedTable.init('deudores-table');
         window.enhancedTable.init('transacciones-table');
     }
 });

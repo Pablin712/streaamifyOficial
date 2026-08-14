@@ -30,6 +30,9 @@ use App\Http\Controllers\TipoProductoController;
 use App\Http\Controllers\LoginClienteController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\BancoController;
+use App\Http\Controllers\FondoController;
+use App\Http\Controllers\PrestamoController;
+use App\Http\Controllers\MneController;
 use App\Http\Controllers\SoporteController;
 
 // === RUTAS DE DEMO CHAT ===
@@ -254,6 +257,23 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::put('/bancos/deudas/{id}/pagar', 'pagarDeuda')->name('bancos.pagar-deuda')->middleware('permission:bancos.transacciones.store');
         Route::get('/bancos/transacciones/exportar-pdf', 'exportarTransaccionesPDF')->name('bancos.transacciones.exportar-pdf')->middleware('permission:bancos.index');
         Route::get('/bancos/transacciones/exportar-excel', 'exportarTransaccionesExcel')->name('bancos.transacciones.exportar-excel')->middleware('permission:bancos.index');
+    });
+
+    Route::controller(FondoController::class)->group(function () {
+        Route::post('/fondos', 'store')->name('fondos.store')->middleware('permission:fondos.store');
+        Route::post('/fondos/{fondo_id}/transacciones', 'registrarTransaccion')->name('fondos.transacciones.store')->middleware('permission:fondos.transacciones.store');
+        Route::post('/fondos/recargar', 'recargar')->name('fondos.recargar')->middleware('permission:fondos.transacciones.store');
+    });
+
+    Route::controller(PrestamoController::class)->group(function () {
+        Route::post('/prestamos', 'store')->name('prestamos.store')->middleware('permission:prestamos.store');
+        Route::put('/prestamos/{id}/abonar', 'abonar')->name('prestamos.abonar')->middleware('permission:prestamos.abonar');
+    });
+
+    Route::controller(MneController::class)->group(function () {
+        Route::get('/finanzas/mi-negocio-efectivo', 'index')->name('mne.index')->middleware('permission:mne.index');
+        Route::post('/finanzas/mi-negocio-efectivo/recargas', 'storeRecarga')->name('mne.recargas.store')->middleware('permission:mne.store');
+        Route::put('/finanzas/mi-negocio-efectivo/recargas/{id}/anular', 'anularRecarga')->name('mne.recargas.anular')->middleware('permission:mne.store');
     });
 
     Route::controller(CostoController::class)->group(function () {

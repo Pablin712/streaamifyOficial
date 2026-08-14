@@ -88,15 +88,35 @@ class BancoController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
+        // Fondos: dinero NO disponible (efectivo, Mi Negocio Efectivo, futuros)
+        $fondos = \App\Models\Fondo::where('activo', true)->orderBy('saldo', 'desc')->get();
+
+        // Prestamos pendientes: dinero NO disponible (prestado, pendiente de cobro)
+        $prestamos = \App\Models\Prestamo::with('deudor')
+            ->where('estado', 'pendiente')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $deudores = \App\Models\Deudor::where('activo', true)->orderBy('nombre')->get();
+
         // Calcular totales financieros
-        $totalDisponible = $bancos->sum('monto'); // Total de dinero en todos los bancos
-        $totalDeudasMonto = $deudas->sum('monto'); // Total acumulado de deudas
-        $totalDeudasPagado = $deudas->sum('monto_pagado'); // Total pagado de deudas
-        $totalDeudasPendientes = $totalDeudasMonto - $totalDeudasPagado; // Deuda restante
+        $totalDisponible = $bancos->sum('monto'); // Solo bancos reales = disponible
+        $totalDeudasMonto = $deudas->sum('monto');
+        $totalDeudasPagado = $deudas->sum('monto_pagado');
+        $totalDeudasPendientes = $totalDeudasMonto - $totalDeudasPagado;
+
+        $totalFondos = $fondos->sum('saldo');
+        $totalPrestado = $prestamos->sum(fn ($p) => $p->monto_restante);
+        $totalNoDisponible = $totalFondos + $totalPrestado;
+
+        $patrimonioTotal = $totalDisponible + $totalNoDisponible - $totalDeudasPendientes;
 
         // Para la vista inicial, no cargar todas las transacciones
         // La tabla usará modo servidor y las cargará vía AJAX
-        return view('finance.bancos.index', compact('bancos', 'deudas', 'totalDisponible', 'totalDeudasPendientes'));
+        return view('finance.bancos.index', compact(
+            'bancos', 'deudas', 'totalDisponible', 'totalDeudasPendientes',
+            'fondos', 'prestamos', 'deudores', 'totalFondos', 'totalPrestado', 'totalNoDisponible', 'patrimonioTotal'
+        ));
     }
 
     // Cargar transacciones con paginación (AJAX)
@@ -236,7 +256,7 @@ class BancoController extends Controller
             'propietarioban' => 'required|string|max:255',
             'cedulaban' => 'required|string|max:20',
             'numeroban' => 'required|string|max:50',
-            'tipoban' => 'required|in:Ahorros,Corriente,Efectivo',
+            'tipoban' => 'required|in:Ahorros,Corriente',
             'detalleban' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -270,7 +290,7 @@ class BancoController extends Controller
     {
         $request->validate([
             'nombreban' => 'required|string|max:255',
-            'tipoban' => 'required|in:Ahorros,Corriente,Efectivo',
+            'tipoban' => 'required|in:Ahorros,Corriente',
             'detalleban' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
