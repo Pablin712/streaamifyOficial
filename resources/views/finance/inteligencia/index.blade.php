@@ -223,6 +223,7 @@
                         <tr>
                             <th>Cliente</th>
                             <th>Segmento</th>
+                            <th class="text-center">Vigente</th>
                             <th class="text-end">Compras</th>
                             <th class="text-end">Total gastado</th>
                             <th class="text-end">Última compra</th>
@@ -230,20 +231,33 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $segmentoColor = [
+                                'fiel' => 'success', 'gastador' => 'success', 'nuevo' => 'info', 'regular' => 'secondary',
+                                'en_riesgo' => 'danger', 'ocasional' => 'warning', 'temporada' => 'dark',
+                            ];
+                        @endphp
                         @forelse($clientesRFM as $c)
                         <tr>
                             <td>
                                 <div class="fw-semibold">{{ $c['nombre'] }}</div>
                                 <div class="text-muted" style="font-size:.75rem;">{{ $c['telefono'] }}</div>
                             </td>
-                            <td><span class="badge bg-secondary-subtle text-body border">{{ $segmentos[$c['segmento']] ?? $c['segmento'] }}</span></td>
+                            <td><span class="badge bg-{{ $segmentoColor[$c['segmento']] ?? 'secondary' }}-subtle text-{{ $segmentoColor[$c['segmento']] ?? 'secondary' }} border">{{ $segmentos[$c['segmento']] ?? $c['segmento'] }}</span></td>
+                            <td class="text-center">
+                                @if($c['vigente'])
+                                    <i class="fas fa-circle-check text-success" title="Tiene algo pagado y vigente"></i>
+                                @else
+                                    <i class="fas fa-circle-xmark text-danger" title="Ya venció y no ha vuelto a comprar"></i>
+                                @endif
+                            </td>
                             <td class="text-end">{{ $c['frequency'] }}</td>
                             <td class="text-end fw-semibold">${{ number_format($c['monetary'], 2) }}</td>
                             <td class="text-end">{{ $c['ultima_compra'] }} <span class="text-muted">({{ $c['recency_dias'] }}d)</span></td>
                             <td class="text-end">{{ $c['primera_compra'] }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="text-center text-muted py-4">No hay clientes que coincidan con el filtro.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-4">No hay clientes que coincidan con el filtro.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -668,8 +668,20 @@ document.addEventListener("DOMContentLoaded", function () {
         },
     });
 
-    /* ── Pie Chart (helper: ordena labels/valores de mayor a menor) ── */
-    const pieColors = ['#ef4444','#06b6d4','#3b82f6','#6366f1','#f59e0b','#fde047','#0ea5e9','#10b981','#a855f7'];
+    /* ── Pie Chart (helper: ordena labels/valores de mayor a menor) ──
+       Color fijo por servicio (no por posición), para que el color de
+       cada plataforma no cambie aunque cambie su lugar en el ranking. ── */
+    const SERVICIO_COLORS = {
+        Netflix:    '#ef4444', // rojo
+        Disney:     '#2563eb', // azul
+        Prime:      '#38bdf8', // celeste
+        Max:        '#7c3aed', // morado
+        Magis:      '#f97316', // naranja
+        Crunchy:    '#eab308', // amarillo
+        Paramount:  '#0891b2', // entre azul y celeste
+        Spotify:    '#1db954', // verde
+        Otros:      '#94a3b8', // gris, fuera de los 8 principales
+    };
 
     function sortedPieData(labels, values) {
         const rows = labels.map((label, i) => ({ label, value: values[i] || 0 }))
@@ -677,7 +689,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return {
             labels: rows.map(r => r.label),
             values: rows.map(r => r.value),
-            colors: rows.map((r, i) => pieColors[i % pieColors.length]),
+            colors: rows.map(r => SERVICIO_COLORS[r.label] || '#94a3b8'),
         };
     }
 

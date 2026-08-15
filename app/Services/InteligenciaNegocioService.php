@@ -13,13 +13,13 @@ use Illuminate\Support\Facades\Request as RequestFacade;
 class InteligenciaNegocioService
 {
     private const SEGMENTOS = [
-        'fiel' => 'Más fieles',
-        'comprador' => 'Más compradores',
-        'gastador' => 'Los que más gastan',
-        'ocasional' => 'Compran rara vez',
-        'temporada' => 'De una temporada',
-        'nuevo' => 'Nuevo (sin definir)',
-        'regular' => 'Activo regular',
+        'fiel' => 'Más fieles (vigentes)',
+        'gastador' => 'Los que más gastan (vigentes)',
+        'nuevo' => 'Nuevos (primera compra vigente)',
+        'regular' => 'Activos regulares',
+        'en_riesgo' => 'En riesgo (eran fieles, dejaron de comprar)',
+        'ocasional' => 'Compraban rara vez (inactivos)',
+        'temporada' => 'De una temporada (se fueron)',
     ];
 
     /**
@@ -249,15 +249,25 @@ class InteligenciaNegocioService
             ->groupBy('c.idcli', 'c.nombrecli', 'c.telefonocli')
             ->get();
 
+        // Vencimiento real de la ultima suscripcion (aparte, para no multiplicar
+        // totalpagoven al hacer join 1-a-muchos con detalles_venta).
+        $vencimientos = DB::table('detalles_venta as dv')
+            ->join('ventas as v', 'v.idven', '=', 'dv.idven')
+            ->select('v.idcli', DB::raw('MAX(dv.fechavendet) as vencimiento_max'))
+            ->groupBy('v.idcli')
+            ->pluck('vencimiento_max', 'idcli');
+
         $hoy = Carbon::today();
 
-        $cache = $filas->map(function ($f) use ($hoy) {
+        $cache = $filas->map(function ($f) use ($hoy, $vencimientos) {
             $ultima = Carbon::parse($f->ultima_compra);
             $primera = Carbon::parse($f->primera_compra);
             $recency = $ultima->diffInDays($hoy);
             $antiguedad = $primera->diffInDays($hoy);
             $frequency = (int) $f->frequency;
             $monetary = (float) $f->monetary;
+            $vencimiento = $vencimientos[$f->idcli] ?? null;
+            $vigente = $vencimiento && Carbon::parse($vencimiento)->gte($hoy);
 
             return [
                 'idcli' => $f->idcli,
@@ -269,17 +279,20 @@ class InteligenciaNegocioService
                 'antiguedad_dias' => $antiguedad,
                 'primera_compra' => $primera->toDateString(),
                 'ultima_compra' => $ultima->toDateString(),
-                'segmento' => null, // se llena abajo, necesita el umbral de monetary
+                'vigente' => $vigente,
+                'segmento' => null, // se llena abajo, necesita los umbrales
             ];
         });
 
-        // Umbral de "los que mas gastan": top 20% por monto total.
+        // Umbrales relativos (top 20%) sobre toda la base, para "los que mas
+        // gastan" y "los mas fieles" — se combinan con un piso fijo razonable
+        // para este negocio (compras de bajo monto y ciclos cortos).
         $umbralGastador = $cache->sortByDesc('monetary')
             ->values()
             ->get((int) floor($cache->count() * 0.2))['monetary'] ?? 0;
-        $umbralFrequency = $cache->sortByDesc('frequency')
+        $umbralFrequency = max(4, $cache->sortByDesc('frequency')
             ->values()
-            ->get((int) floor($cache->count() * 0.2))['frequency'] ?? 0;
+            ->get((int) floor($cache->count() * 0.2))['frequency'] ?? 4);
 
         $cache = $cache->map(function ($c) use ($umbralGastador, $umbralFrequency) {
             $c['segmento'] = $this->clasificarSegmento($c, $umbralGastador, $umbralFrequency);
@@ -289,27 +302,36 @@ class InteligenciaNegocioService
         return $cache;
     }
 
+    /**
+     * Clasificacion basada en si el cliente sigue con algo vigente (pagado y no
+     * vencido) o no, en vez de umbrales de dias fijos: en este negocio los
+     * ciclos de suscripcion varian (mensual, trimestral, anual...), asi que "se
+     * fue" solo se puede afirmar con certeza cuando su ultima suscripcion ya
+     * vencio y no volvio a comprar — no por una cantidad arbitraria de dias.
+     */
     private function clasificarSegmento(array $c, float $umbralGastador, int $umbralFrequency): string
     {
-        if ($c['frequency'] === 1 && $c['recency_dias'] > 90) {
-            return 'temporada';
+        if ($c['vigente']) {
+            if ($c['frequency'] >= $umbralFrequency) {
+                return 'fiel';
+            }
+            if ($c['monetary'] >= $umbralGastador && $umbralGastador > 0) {
+                return 'gastador';
+            }
+            if ($c['frequency'] === 1) {
+                return 'nuevo';
+            }
+            return 'regular';
         }
-        if ($c['antiguedad_dias'] <= 30) {
-            return 'nuevo';
+
+        // Ya vencio y no ha vuelto a comprar.
+        if ($c['frequency'] === 1) {
+            return 'temporada'; // compro una sola vez y no volvio
         }
-        if ($c['frequency'] >= max(4, $umbralFrequency) && $c['recency_dias'] <= 45) {
-            return 'fiel';
+        if ($c['frequency'] >= $umbralFrequency) {
+            return 'en_riesgo'; // era un cliente frecuente/fiel y dejo de comprar
         }
-        if ($c['frequency'] >= max(4, $umbralFrequency)) {
-            return 'comprador';
-        }
-        if ($c['monetary'] >= $umbralGastador && $umbralGastador > 0) {
-            return 'gastador';
-        }
-        if ($c['frequency'] <= 3 && $c['antiguedad_dias'] > 365) {
-            return 'ocasional';
-        }
-        return 'regular';
+        return 'ocasional'; // compraba de vez en cuando, ahora inactivo
     }
 
     /**
