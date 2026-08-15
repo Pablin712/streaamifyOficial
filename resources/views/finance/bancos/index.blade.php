@@ -293,7 +293,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="deudores-tab" data-bs-toggle="tab" data-bs-target="#deudores" type="button" role="tab">
                 <i class="fas fa-hand-holding-dollar me-1"></i> Deudores
-                <span class="badge bg-secondary ms-1 rounded-pill" style="font-size:.65rem;">{{ $prestamos->count() }}</span>
+                <span class="badge bg-secondary ms-1 rounded-pill" style="font-size:.65rem;">{{ $deudoresConDeuda->count() }}</span>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -436,7 +436,7 @@
             <div class="fin-card card mb-4">
                 <div class="fin-card-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-hand-holding-dollar text-primary me-2"></i> Préstamos Pendientes de Cobro</span>
-                    <span class="badge bg-primary rounded-pill">{{ $prestamos->count() }}</span>
+                    <span class="badge bg-primary rounded-pill">{{ $deudoresConDeuda->count() }}</span>
                 </div>
                 <div class="card-body">
                     <div class="row mb-3 align-items-end">
@@ -460,33 +460,36 @@
                                 <tr>
                                     <th class="sortable" data-type="number" data-col="0">#<span class="sort-arrow"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
                                     <th>Deudor</th>
-                                    <th>Origen</th>
-                                    <th>Prestado</th>
-                                    <th>Pagado</th>
-                                    <th>Pendiente</th>
-                                    <th>Fecha</th>
+                                    <th>Préstamos</th>
+                                    <th>Prestado (total)</th>
+                                    <th>Pagado (total)</th>
+                                    <th>Pendiente (total)</th>
+                                    <th>Último préstamo</th>
                                     <th>Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($prestamos as $prestamo)
+                                @forelse($deudoresConDeuda as $d)
                                 <tr>
-                                    <td class="fw-semibold text-muted">{{ $prestamo->id }}</td>
+                                    <td class="fw-semibold text-muted">{{ $d['deudor']->id ?? '' }}</td>
                                     <td>
-                                        {{ $prestamo->deudor->nombre ?? 'N/A' }}
-                                        @if($prestamo->deudor?->telefono)
-                                            <div class="text-muted small">{{ $prestamo->deudor->telefono }}</div>
+                                        {{ $d['deudor']->nombre ?? 'N/A' }}
+                                        @if($d['deudor']?->telefono)
+                                            <div class="text-muted small">{{ $d['deudor']->telefono }}</div>
                                         @endif
                                     </td>
-                                    <td><span class="badge bg-light text-dark border">{{ $prestamo->origen_nombre }}</span></td>
-                                    <td>${{ number_format($prestamo->monto, 2) }}</td>
-                                    <td class="text-success fw-semibold">${{ number_format($prestamo->monto_pagado, 2) }}</td>
-                                    <td class="text-danger fw-bold">${{ number_format($prestamo->monto_restante, 2) }}</td>
-                                    <td class="text-muted small">{{ \Carbon\Carbon::parse($prestamo->fecha)->format('d/m/Y') }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">{{ $d['prestamos']->count() }}</span>
+                                        <span class="text-muted small">{{ $d['prestamos']->pluck('origen_nombre')->unique()->implode(', ') }}</span>
+                                    </td>
+                                    <td>${{ number_format($d['total_prestado'], 2) }}</td>
+                                    <td class="text-success fw-semibold">${{ number_format($d['total_pagado'], 2) }}</td>
+                                    <td class="text-danger fw-bold">${{ number_format($d['total_pendiente'], 2) }}</td>
+                                    <td class="text-muted small">{{ \Carbon\Carbon::parse($d['ultima_fecha'])->format('d/m/Y') }}</td>
                                     <td>
                                         @if(Auth::user()->hasPermissionTo('prestamos.abonar'))
                                         <button class="btn btn-sm btn-success"
-                                                onclick="abonarPrestamo({{ $prestamo->id }}, '{{ addslashes($prestamo->deudor->nombre ?? '') }}', {{ $prestamo->monto }}, {{ $prestamo->monto_restante }})">
+                                                onclick="abonarDeudorTotal({{ $d['deudor']->id }}, '{{ addslashes($d['deudor']->nombre ?? '') }}', {{ $d['total_prestado'] }}, {{ $d['total_pendiente'] }})">
                                             <i class="fas fa-dollar-sign me-1"></i> Abonar
                                         </button>
                                         @endif

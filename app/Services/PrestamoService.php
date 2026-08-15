@@ -105,4 +105,67 @@ class PrestamoService
             return $prestamo;
         });
     }
+
+    /**
+     * Abona contra la deuda TOTAL de un deudor (puede tener varios prestamos
+     * otorgados por separado). Se registra una sola transaccion de ingreso por
+     * el monto total y se reparte internamente entre sus prestamos pendientes,
+     * del mas antiguo al mas reciente (FIFO), hasta agotar el abono.
+     */
+    public function abonarDeudor(int $deudorId, float $monto, ?string $bancoId, ?string $fondoId): array
+    {
+        if (empty($bancoId) && empty($fondoId)) {
+            throw new Exception('El abono debe ingresar a un banco o a un fondo.');
+        }
+        if (!empty($bancoId) && !empty($fondoId)) {
+            throw new Exception('El abono debe ingresar a un banco o a un fondo, no a ambos.');
+        }
+
+        return DB::transaction(function () use ($deudorId, $monto, $bancoId, $fondoId) {
+            $deudor = \App\Models\Deudor::findOrFail($deudorId);
+
+            $prestamosPendientes = Prestamo::where('deudor_id', $deudorId)
+                ->where('estado', 'pendiente')
+                ->orderBy('fecha')
+                ->lockForUpdate()
+                ->get();
+
+            $totalPendiente = $prestamosPendientes->sum(fn ($p) => $p->monto_restante);
+
+            if ($prestamosPendientes->isEmpty() || $totalPendiente <= 0) {
+                throw new Exception($deudor->nombre . ' no tiene préstamos pendientes de cobro.');
+            }
+            if ($monto > $totalPendiente) {
+                throw new Exception('El monto a abonar ($' . number_format($monto, 2) . ') no puede ser mayor a la deuda total pendiente ($' . number_format($totalPendiente, 2) . ').');
+            }
+
+            $referencia = 'Abono de ' . $deudor->nombre . ' - deuda total';
+
+            if ($bancoId) {
+                $this->bancoService->registrarTransaccion($bancoId, $monto, 'ingreso', $referencia);
+            } else {
+                $this->fondoService->registrarTransaccion($fondoId, $monto, 'ingreso', $referencia);
+            }
+
+            $restanteAbono = $monto;
+            foreach ($prestamosPendientes as $prestamo) {
+                if ($restanteAbono <= 0) {
+                    break;
+                }
+                $aplicar = min($restanteAbono, $prestamo->monto_restante);
+                $prestamo->monto_pagado += $aplicar;
+                if ($prestamo->monto_pagado >= $prestamo->monto) {
+                    $prestamo->estado = 'pagado';
+                }
+                $prestamo->save();
+                $restanteAbono -= $aplicar;
+            }
+
+            return [
+                'deudor' => $deudor,
+                'monto_abonado' => $monto,
+                'restante' => $totalPendiente - $monto,
+            ];
+        });
+    }
 }

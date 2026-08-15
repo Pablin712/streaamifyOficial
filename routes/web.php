@@ -269,6 +269,7 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
     Route::controller(PrestamoController::class)->group(function () {
         Route::post('/prestamos', 'store')->name('prestamos.store')->middleware('permission:prestamos.store');
         Route::put('/prestamos/{id}/abonar', 'abonar')->name('prestamos.abonar')->middleware('permission:prestamos.abonar');
+        Route::put('/deudores/{deudorId}/abonar', 'abonarDeudor')->name('deudores.abonar')->middleware('permission:prestamos.abonar');
     });
 
     Route::controller(MneController::class)->group(function () {

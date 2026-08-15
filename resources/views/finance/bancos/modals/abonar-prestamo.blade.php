@@ -74,7 +74,10 @@
         fondoRadio.addEventListener('change', syncDestino);
     })();
 
-    window.abonarPrestamo = function (prestamoId, deudorNombre, montoTotal, montoRestante) {
+    // Abona contra la deuda TOTAL de un deudor (puede tener varios prestamos
+    // otorgados por separado); el backend reparte el abono entre sus prestamos
+    // pendientes del mas antiguo al mas reciente.
+    window.abonarDeudorTotal = function (deudorId, deudorNombre, montoTotal, montoRestante) {
         document.getElementById('abono_deudor_display').textContent = deudorNombre;
         document.getElementById('abono_monto_total_display').textContent = parseFloat(montoTotal).toFixed(2);
         document.getElementById('abono_monto_restante_display').textContent = parseFloat(montoRestante).toFixed(2);
@@ -85,7 +88,7 @@
         document.getElementById('abono_fondo_wrap').classList.add('d-none');
 
         const form = document.getElementById('abonarPrestamoForm');
-        form.action = "{{ route('prestamos.abonar', ['id' => ':ID:']) }}".replace(':ID:', prestamoId);
+        form.action = "{{ route('deudores.abonar', ['deudorId' => ':ID:']) }}".replace(':ID:', deudorId);
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'abonar-prestamo' }));
     };
 </script>

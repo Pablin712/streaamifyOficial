@@ -99,6 +99,20 @@ class BancoController extends Controller
 
         $deudores = \App\Models\Deudor::where('activo', true)->orderBy('nombre')->get();
 
+        // Una fila por deudor con el total prestado/pagado/pendiente entre TODOS
+        // sus prestamos (un deudor puede tener varios prestamos otorgados por
+        // separado, en distintas fechas u origenes).
+        $deudoresConDeuda = $prestamos->groupBy('deudor_id')->map(function ($grupo) {
+            return [
+                'deudor' => $grupo->first()->deudor,
+                'prestamos' => $grupo->sortBy('fecha')->values(),
+                'total_prestado' => $grupo->sum('monto'),
+                'total_pagado' => $grupo->sum('monto_pagado'),
+                'total_pendiente' => $grupo->sum(fn ($p) => $p->monto_restante),
+                'ultima_fecha' => $grupo->max('fecha'),
+            ];
+        })->sortByDesc('total_pendiente')->values();
+
         // Calcular totales financieros
         $totalDisponible = $bancos->sum('monto'); // Solo bancos reales = disponible
         $totalDeudasMonto = $deudas->sum('monto');
@@ -115,7 +129,7 @@ class BancoController extends Controller
         // La tabla usará modo servidor y las cargará vía AJAX
         return view('finance.bancos.index', compact(
             'bancos', 'deudas', 'totalDisponible', 'totalDeudasPendientes',
-            'fondos', 'prestamos', 'deudores', 'totalFondos', 'totalPrestado', 'totalNoDisponible', 'patrimonioTotal'
+            'fondos', 'prestamos', 'deudoresConDeuda', 'deudores', 'totalFondos', 'totalPrestado', 'totalNoDisponible', 'patrimonioTotal'
         ));
     }
 

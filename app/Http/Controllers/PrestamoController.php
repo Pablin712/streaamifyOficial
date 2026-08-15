@@ -87,4 +87,33 @@ class PrestamoController extends Controller
             return redirect()->route('bancos.index')->with('error', $e->getMessage());
         }
     }
+
+    // Registrar abono contra la deuda TOTAL de un deudor (todos sus prestamos pendientes)
+    public function abonarDeudor(Request $request, $deudorId)
+    {
+        $request->validate([
+            'monto_abono' => 'required|numeric|min:0.01',
+            'banco_id' => 'nullable|required_without:fondo_id|exists:bancos,idban',
+            'fondo_id' => 'nullable|required_without:banco_id|exists:fondos,id',
+        ]);
+
+        try {
+            $resultado = $this->prestamoService->abonarDeudor($deudorId, (float) $request->monto_abono, $request->banco_id, $request->fondo_id);
+
+            $mensaje = $resultado['restante'] <= 0
+                ? 'Deuda de ' . $resultado['deudor']->nombre . ' saldada completamente.'
+                : 'Abono registrado. Restante: $' . number_format($resultado['restante'], 2);
+
+            Historial::create([
+                'accion' => 'Abono de Prestamo',
+                'descripcion' => 'Deudor: ' . $resultado['deudor']->nombre . ' - Abono a deuda total: $' . number_format($resultado['monto_abonado'], 2) . ' - Restante: $' . number_format($resultado['restante'], 2),
+                'empleado_id' => Auth::user()->idemp,
+                'created_at' => now(),
+            ]);
+
+            return redirect()->route('bancos.index')->with('success', $mensaje);
+        } catch (\Exception $e) {
+            return redirect()->route('bancos.index')->with('error', $e->getMessage());
+        }
+    }
 }
