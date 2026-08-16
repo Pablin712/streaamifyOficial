@@ -74,8 +74,12 @@ class InteligenciaNegocioController extends Controller
         $cohortes = $this->service->cohortesRetencion(12);
 
         // ── Tab Cuentas (salud operativa: activas/vencidas/dañadas) ──
+        // inicio/fin de cuenta_incidencias son datetime (con hora), a diferencia de
+        // fechaven que es solo fecha: si el limite superior se trunca a "00:00:00"
+        // del ultimo dia del mes, se pierden las incidencias de ese dia despues de
+        // medianoche. Por eso aca sí se necesita la hora completa (23:59:59).
         $desdeMes = Carbon::now()->startOfMonth()->toDateString();
-        $hastaMes = Carbon::now()->endOfMonth()->toDateString();
+        $hastaMes = Carbon::now()->endOfMonth()->toDateTimeString();
         $cuentasResumen = $this->cuentaSaludService->resumenPorServicio();
         $incidenciasPorServicio = $this->cuentaSaludService->incidenciasPorServicio($desdeMes, $hastaMes);
         $incidenciasDetalle = $this->cuentaSaludService->incidenciasDetalle($desdeMes, $hastaMes);
