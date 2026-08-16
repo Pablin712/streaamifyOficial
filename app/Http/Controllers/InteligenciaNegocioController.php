@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\CuentaSaludService;
 use App\Services\DashboardService;
 use App\Services\InteligenciaNegocioService;
 use Carbon\Carbon;
@@ -13,6 +14,7 @@ class InteligenciaNegocioController extends Controller
     public function __construct(
         private InteligenciaNegocioService $service,
         private DashboardService $dashboardService,
+        private CuentaSaludService $cuentaSaludService,
     ) {
     }
 
@@ -71,6 +73,14 @@ class InteligenciaNegocioController extends Controller
         // ── Tab Retención ────────────────────────────────────────────
         $cohortes = $this->service->cohortesRetencion(12);
 
+        // ── Tab Cuentas (salud operativa: activas/vencidas/dañadas) ──
+        $desdeMes = Carbon::now()->startOfMonth()->toDateString();
+        $hastaMes = Carbon::now()->endOfMonth()->toDateString();
+        $cuentasResumen = $this->cuentaSaludService->resumenPorServicio();
+        $incidenciasPorServicio = $this->cuentaSaludService->incidenciasPorServicio($desdeMes, $hastaMes);
+        $incidenciasDetalle = $this->cuentaSaludService->incidenciasDetalle($desdeMes, $hastaMes);
+        $timelineServicios = $this->cuentaSaludService->timelinePorServicio();
+
         return view('finance.inteligencia.index', compact(
             'comparativaServicios',
             'desgloseVentasMes',
@@ -81,7 +91,11 @@ class InteligenciaNegocioController extends Controller
             'segmentos',
             'segmento',
             'search',
-            'cohortes'
+            'cohortes',
+            'cuentasResumen',
+            'incidenciasPorServicio',
+            'incidenciasDetalle',
+            'timelineServicios'
         ));
     }
 }

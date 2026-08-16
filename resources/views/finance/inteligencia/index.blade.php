@@ -73,6 +73,15 @@
             <i class="fas fa-chart-line me-1"></i> Retención
         </button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="cuentas-tab" data-bs-toggle="tab" data-bs-target="#cuentas" type="button" role="tab">
+            <i class="fas fa-tv me-1"></i> Cuentas
+            @php $totalDanadas = collect($cuentasResumen)->sum('danadas'); @endphp
+            @if($totalDanadas > 0)
+            <span class="badge bg-danger ms-1 rounded-pill" style="font-size:.65rem;">{{ $totalDanadas }}</span>
+            @endif
+        </button>
+    </li>
 </ul>
 
 <div class="tab-content" id="biTabsContent">
@@ -310,6 +319,151 @@
         </div>
     </div>
 
+    {{-- ═══ TAB CUENTAS ═══════════════════════════════════ --}}
+    <div class="tab-pane fade" id="cuentas" role="tabpanel">
+        @php
+            $totalDanadasHoy = collect($cuentasResumen)->sum('danadas');
+            $totalVencidasHoy = collect($cuentasResumen)->sum('vencidas');
+            $totalNuevasMes = collect($incidenciasPorServicio)->sum('nuevas');
+            $totalReparadasMes = collect($incidenciasPorServicio)->sum('reparadas');
+            $reparadasConTiempo = collect($incidenciasPorServicio)->filter(fn($f) => $f['promedio_horas'] !== null);
+            $promedioGeneralHoras = $reparadasConTiempo->isNotEmpty()
+                ? round($reparadasConTiempo->sum(fn($f) => $f['promedio_horas'] * $f['reparadas']) / $reparadasConTiempo->sum('reparadas'), 1)
+                : null;
+        @endphp
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-red shadow-sm h-100">
+                    <div class="kpi-label"><i class="fas fa-triangle-exclamation me-1"></i>Dañadas ahora</div>
+                    <div class="kpi-value">{{ $totalDanadasHoy }}</div>
+                    <div class="kpi-sub">De todos los servicios</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-orange shadow-sm h-100">
+                    <div class="kpi-label"><i class="fas fa-clock me-1"></i>Tiempo prom. reparación</div>
+                    <div class="kpi-value">{{ $promedioGeneralHoras !== null ? $promedioGeneralHoras . 'h' : '—' }}</div>
+                    <div class="kpi-sub">Reparadas este mes</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-purple shadow-sm h-100">
+                    <div class="kpi-label"><i class="fas fa-plug-circle-xmark me-1"></i>Se dañaron este mes</div>
+                    <div class="kpi-value">{{ $totalNuevasMes }}</div>
+                    <div class="kpi-sub">Reparadas: {{ $totalReparadasMes }}</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-teal shadow-sm h-100">
+                    <div class="kpi-label"><i class="fas fa-hourglass-half me-1"></i>Vencidas sin renovar</div>
+                    <div class="kpi-value">{{ $totalVencidasHoy }}</div>
+                    <div class="kpi-sub">No cuentan como dañadas</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info" style="font-size:.82rem;">
+            <i class="fas fa-circle-info me-1"></i>
+            El seguimiento de "cuánto tiempo dura dañada" recién empieza a registrarse desde hoy — antes no existía este dato.
+            Los KPIs de arriba y la línea de tiempo van a ganar precisión con cada día que pase.
+        </div>
+
+        <div class="card chart-card shadow-sm mb-4">
+            <div class="card-header"><i class="fas fa-chart-bar me-1"></i> Estado de cuentas por servicio (hoy)</div>
+            <div class="card-body p-3" style="height:300px;">
+                <canvas id="cuentasEstadoChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card chart-card shadow-sm mb-4">
+            <div class="card-header"><i class="fas fa-table me-1"></i> Incidencias por servicio (mes actual)</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Servicio</th>
+                            <th class="text-end">Se dañaron</th>
+                            <th class="text-end">Se repararon</th>
+                            <th class="text-end">Tiempo prom. reparación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($incidenciasPorServicio as $f)
+                        <tr>
+                            <td class="fw-semibold">{{ $f['nombre'] }}</td>
+                            <td class="text-end">{{ $f['nuevas'] }}</td>
+                            <td class="text-end text-success">{{ $f['reparadas'] }}</td>
+                            <td class="text-end">{{ $f['promedio_horas'] !== null ? $f['promedio_horas'] . 'h' : '—' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card chart-card shadow-sm mb-4">
+            <div class="card-header"><i class="fas fa-list me-1"></i> Incidencias del mes (detalle)</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Cuenta</th>
+                            <th>Servicio</th>
+                            <th>Se dañó</th>
+                            <th>Se reparó</th>
+                            <th class="text-end">Duración</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($incidenciasDetalle as $inc)
+                        <tr>
+                            <td class="fw-semibold">{{ $inc['idcue'] }}</td>
+                            <td>{{ $inc['servicio'] }}</td>
+                            <td class="text-muted small">{{ $inc['inicio']->format('d/m/Y H:i') }}</td>
+                            <td class="text-muted small">{{ $inc['fin']?->format('d/m/Y H:i') ?? '—' }}</td>
+                            <td class="text-end">{{ $inc['duracion_horas'] !== null ? $inc['duracion_horas'] . 'h' : '—' }}</td>
+                            <td>
+                                @if($inc['estado'] === 'reparada')
+                                    <span class="badge bg-success-subtle text-success border">Reparada</span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger border">En curso</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="6" class="text-center text-muted py-4">Sin incidencias este mes.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card chart-card shadow-sm mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span><i class="fas fa-timeline me-1"></i> Línea de tiempo de cuentas por servicio</span>
+                <div class="d-flex gap-1 flex-wrap" id="timelineServicioSelector">
+                    @foreach($timelineServicios as $key => $t)
+                    <button class="servicio-btn timeline-btn {{ $loop->first ? 'active' : '' }}" data-servicio="{{ $key }}">{{ $t['nombre'] }} ({{ count($t['cuentas']) }})</button>
+                    @endforeach
+                </div>
+            </div>
+            <div class="d-flex gap-3 align-items-center px-3 pt-3" style="font-size:.78rem;">
+                <span><span class="d-inline-block rounded-1" style="width:12px;height:12px;background:#10b981;"></span> Activa (pagada)</span>
+                <span><span class="d-inline-block rounded-1" style="width:12px;height:12px;background:#cbd5e1;"></span> Vencida sin renovar</span>
+                <span><span class="d-inline-block rounded-1" style="width:12px;height:12px;background:#ef4444;"></span> Dañada</span>
+                <span class="text-muted" id="timelineRango"></span>
+            </div>
+            <div class="card-body p-3" style="overflow-x:auto;">
+                <div id="timelineContainer" style="min-width:900px;"></div>
+            </div>
+            <div class="card-footer text-muted" style="font-size:.75rem;">
+                El tramo "Activa" es aproximado (desde que se creó la cuenta hasta que venció por última vez, sin distinguir cada renovación puntual).
+                El tramo "Dañada" es exacto desde que se activó este seguimiento; antes de esa fecha no queda registro aunque haya estado dañada.
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @endsection
@@ -388,11 +542,87 @@ document.addEventListener('DOMContentLoaded', function () {
     const primerIdser = Object.keys(nuevosPerdidos.servicios)[0];
     if (primerIdser) renderServicioChart(primerIdser);
 
-    document.querySelectorAll('.servicio-btn').forEach(btn => {
+    document.querySelectorAll('#servicioSelector .servicio-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            document.querySelectorAll('.servicio-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#servicioSelector .servicio-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             renderServicioChart(this.dataset.idser);
+        });
+    });
+
+    /* ── Estado de cuentas por servicio (barras) ─────────── */
+    const cuentasResumen = @json($cuentasResumen);
+    new Chart(document.getElementById('cuentasEstadoChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: cuentasResumen.map(s => s.nombre),
+            datasets: [
+                { label: 'Activas', data: cuentasResumen.map(s => s.activas), backgroundColor: '#10b981', borderRadius: 3 },
+                { label: 'Vencidas sin renovar', data: cuentasResumen.map(s => s.vencidas), backgroundColor: '#cbd5e1', borderRadius: 3 },
+                { label: 'Dañadas', data: cuentasResumen.map(s => s.danadas), backgroundColor: '#ef4444', borderRadius: 3 },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, grid: { color: gridColor } },
+            },
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
+        },
+    });
+
+    /* ── Linea de tiempo de cuentas por servicio ─────────── */
+    const timelineServicios = @json($timelineServicios);
+    const timelineContainer = document.getElementById('timelineContainer');
+    const timelineRango = document.getElementById('timelineRango');
+    const segmentoColor = { activa: '#10b981', vencida: '#cbd5e1', danada: '#ef4444' };
+
+    function renderTimeline(key) {
+        const data = timelineServicios[key];
+        timelineContainer.innerHTML = '';
+        if (!data) return;
+
+        timelineRango.textContent = data.desde ? `${data.desde} → ${data.hasta}` : '';
+
+        if (!data.cuentas.length) {
+            timelineContainer.innerHTML = '<p class="text-muted text-center py-4 mb-0">Sin cuentas activas en este servicio.</p>';
+            return;
+        }
+
+        data.cuentas.forEach(cuenta => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:4px;';
+
+            const label = document.createElement('div');
+            label.style.cssText = 'width:130px; flex-shrink:0; font-size:.72rem; font-family:monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+            label.textContent = cuenta.idcue;
+            if (cuenta.caida_ahora) label.style.color = '#ef4444';
+            row.appendChild(label);
+
+            const track = document.createElement('div');
+            track.style.cssText = 'position:relative; flex:1; height:16px; background:var(--bs-tertiary-bg); border-radius:3px; overflow:hidden;';
+
+            cuenta.segmentos.forEach(seg => {
+                const bar = document.createElement('div');
+                bar.title = `${seg.tipo} — ${seg.desde} a ${seg.hasta}`;
+                bar.style.cssText = `position:absolute; top:0; bottom:0; left:${seg.left}%; width:${seg.width}%; background:${segmentoColor[seg.tipo]};`;
+                track.appendChild(bar);
+            });
+
+            row.appendChild(track);
+            timelineContainer.appendChild(row);
+        });
+    }
+
+    const primerServicioTimeline = Object.keys(timelineServicios)[0];
+    if (primerServicioTimeline) renderTimeline(primerServicioTimeline);
+
+    document.querySelectorAll('#timelineServicioSelector .timeline-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('#timelineServicioSelector .timeline-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            renderTimeline(this.dataset.servicio);
         });
     });
 });

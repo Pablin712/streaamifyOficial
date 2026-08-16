@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Costo;
+use App\Models\Cuenta;
 use App\Models\Gasto;
 use App\Models\Venta;
 use App\Observers\CostoObserver;
+use App\Observers\CuentaObserver;
 use App\Observers\GastoObserver;
 use App\Observers\VentaObserver;
 use Dedoc\Scramble\Scramble;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         Venta::observe(VentaObserver::class);
         Costo::observe(CostoObserver::class);
         Gasto::observe(GastoObserver::class);
+        Cuenta::observe(CuentaObserver::class);
 
         // El resto de las vistas admin usan Bootstrap; el partial de paginacion por
         // defecto de Laravel trae SVG con clases de Tailwind (h-5 w-5) que no existen

@@ -16,6 +16,7 @@ use App\Models\Contabilidad;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Services\DashboardService;
+use App\Services\CuentaSaludService;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
@@ -23,10 +24,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class ContabilidadController extends Controller
 {
     protected $dashboardService;
+    protected $cuentaSaludService;
 
-    public function __construct(DashboardService $dashboardService)
+    public function __construct(DashboardService $dashboardService, CuentaSaludService $cuentaSaludService)
     {
         $this->dashboardService = $dashboardService;
+        $this->cuentaSaludService = $cuentaSaludService;
     }
     public function index(Request $request)
     {
@@ -57,7 +60,10 @@ class ContabilidadController extends Controller
             return $deuda->monto - $deuda->monto_pagado;
         });
 
+        $cuentasEstadoResumen = $this->cuentaSaludService->resumenPorServicio();
+
         return view('dashboard', compact(
+            'cuentasEstadoResumen',
             'ingresos_mes',
             'ingresos_ano',
             'clientes_activos',

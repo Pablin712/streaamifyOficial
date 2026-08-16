@@ -415,6 +415,24 @@
     </div>
 </div>
 
+{{-- ══ Estado de cuentas por servicio ══════════════════════ --}}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card chart-card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-tv me-1"></i>Estado de cuentas por servicio</span>
+                <a href="{{ route('inteligencia-negocio') }}#cuentas" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-magnifying-glass me-1"></i> Ver detalle y tiempos de reparación
+                </a>
+            </div>
+            <div class="card-body p-3" style="height:280px;">
+                <canvas id="cuentasEstadoChart"></canvas>
+            </div>
+            <div class="card-footer text-muted">Activas, vencidas sin renovar y dañadas — foto de hoy</div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('pie') Streamify HQ @endsection
@@ -716,6 +734,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const usu = [@json($usuarios_netflix),@json($usuarios_disney),@json($usuarios_prime),@json($usuarios_max),@json($usuarios_magis),@json($usuarios_crunchy),@json($usuarios_paramount),@json($usuarios_spotify),@json($usuarios_otros)];
     buildPieChart('myUsersPieChart', servicios, usu, (label, value) => ` ${label}: ${value} usuarios`);
+
+    /* ── Estado de cuentas por servicio (barras apiladas) ── */
+    const cuentasEstadoResumen = @json($cuentasEstadoResumen);
+    new Chart(document.getElementById('cuentasEstadoChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: cuentasEstadoResumen.map(s => s.nombre),
+            datasets: [
+                { label: 'Activas', data: cuentasEstadoResumen.map(s => s.activas), backgroundColor: '#10b981', borderRadius: 3 },
+                { label: 'Vencidas sin renovar', data: cuentasEstadoResumen.map(s => s.vencidas), backgroundColor: '#cbd5e1', borderRadius: 3 },
+                { label: 'Dañadas', data: cuentasEstadoResumen.map(s => s.danadas), backgroundColor: '#ef4444', borderRadius: 3 },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, grid: { color: gridColor } },
+            },
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } },
+        },
+    });
 });
 </script>
 
