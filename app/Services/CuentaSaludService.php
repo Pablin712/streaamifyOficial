@@ -166,28 +166,26 @@ class CuentaSaludService
             }
 
             $desde = Carbon::parse($grupo->min('created_at'))->startOfDay();
-            $rangoDias = max(1, $desde->diffInDays($hoy));
 
-            $filas = $grupo->map(function (Cuenta $cuenta) use ($hoy, $desde, $rangoDias, $incidenciasPorCuenta) {
+            // Fechas crudas, no porcentajes: la ventana visible (ultimos 2 meses,
+            // deslizable) se calcula en el navegador, no aca — asi no hay que
+            // recargar la pagina para navegar el historial.
+            $filas = $grupo->map(function (Cuenta $cuenta) use ($hoy, $incidenciasPorCuenta) {
                 $segmentos = $this->segmentosCuenta($cuenta, $incidenciasPorCuenta->get($cuenta->idcue, collect()), $hoy);
 
-                $segmentosPct = array_map(function (array $s) use ($desde, $rangoDias) {
-                    $offsetDias = max(0, $desde->diffInDays($s['inicio']));
-                    $anchoDias = max(0.4, $s['inicio']->diffInDays($s['fin']));
-
+                $segmentosOut = array_map(function (array $s) {
                     return [
                         'tipo' => $s['tipo'],
-                        'left' => round($offsetDias / $rangoDias * 100, 2),
-                        'width' => round($anchoDias / $rangoDias * 100, 2),
-                        'desde' => $s['inicio']->format('d/m/Y'),
-                        'hasta' => $s['fin_es_hoy'] ? 'ahora' : $s['fin']->format('d/m/Y'),
+                        'inicio' => $s['inicio']->toDateString(),
+                        'fin' => $s['fin']->toDateString(),
+                        'en_curso' => $s['fin_es_hoy'],
                     ];
                 }, $segmentos);
 
                 return [
                     'idcue' => $cuenta->idcue,
                     'caida_ahora' => (bool) $cuenta->caidacue,
-                    'segmentos' => $segmentosPct,
+                    'segmentos' => $segmentosOut,
                 ];
             })->values();
 

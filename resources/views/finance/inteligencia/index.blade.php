@@ -448,16 +448,26 @@
                     @endforeach
                 </div>
             </div>
-            <div class="d-flex gap-3 align-items-center px-3 pt-3" style="font-size:.78rem;">
+            <div class="d-flex gap-3 align-items-center px-3 pt-3 flex-wrap" style="font-size:.78rem;">
                 <span><span class="d-inline-block rounded-1" style="width:12px;height:12px;background:#10b981;"></span> Activa (pagada)</span>
                 <span><span class="d-inline-block rounded-1" style="width:12px;height:12px;background:#cbd5e1;"></span> Vencida sin renovar</span>
                 <span><span class="d-inline-block rounded-1" style="width:12px;height:12px;background:#ef4444;"></span> Dañada</span>
-                <span class="text-muted" id="timelineRango"></span>
             </div>
-            <div class="card-body p-3" style="overflow-x:auto;">
-                <div id="timelineContainer" style="min-width:900px;"></div>
+            <div class="d-flex justify-content-between align-items-center gap-2 px-3 pt-2">
+                <button type="button" id="timelinePrev" class="btn btn-sm btn-outline-secondary" title="Ver más atrás">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="fw-semibold small" id="timelineRango"></span>
+                <button type="button" id="timelineNext" class="btn btn-sm btn-outline-secondary" title="Ver más reciente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="card-body p-3">
+                <div id="timelineAxis" style="position:relative; height:20px; margin-left:138px; border-bottom:1px solid var(--bs-border-color); margin-bottom:6px;"></div>
+                <div id="timelineContainer" style="cursor:ew-resize;"></div>
             </div>
             <div class="card-footer text-muted" style="font-size:.75rem;">
+                Por defecto se ven los últimos 2 meses — deslizá con la rueda del mouse, arrastrá, o usá las flechas para ver más atrás.
                 El tramo "Activa" es aproximado (desde que se creó la cuenta hasta que venció por última vez, sin distinguir cada renovación puntual).
                 El tramo "Dañada" es exacto desde que se activó este seguimiento; antes de esa fecha no queda registro aunque haya estado dañada.
             </div>
@@ -572,18 +582,74 @@ document.addEventListener('DOMContentLoaded', function () {
         },
     });
 
-    /* ── Linea de tiempo de cuentas por servicio ─────────── */
+    /* ── Linea de tiempo de cuentas por servicio (ventana deslizable) ── */
     const timelineServicios = @json($timelineServicios);
     const timelineContainer = document.getElementById('timelineContainer');
+    const timelineAxis = document.getElementById('timelineAxis');
     const timelineRango = document.getElementById('timelineRango');
     const segmentoColor = { activa: '#10b981', vencida: '#cbd5e1', danada: '#ef4444' };
+    const MS_DIA = 86400000;
+    const VENTANA_DIAS = 60; // 2 meses por defecto
 
-    function renderTimeline(key) {
-        const data = timelineServicios[key];
+    let timelineServicioActual = null;
+    let timelineMinDate = null;   // limite: cuenta mas antigua del servicio actual
+    let timelineWindowEnd = hoyMedianoche();
+
+    function hoyMedianoche() {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function parseFecha(str) {
+        return new Date(str + 'T00:00:00');
+    }
+
+    function fmtFecha(d) {
+        return d.toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function clampVentana() {
+        const hoy = hoyMedianoche();
+        if (timelineWindowEnd > hoy) timelineWindowEnd = hoy;
+        if (timelineMinDate) {
+            const minFin = new Date(timelineMinDate.getTime() + VENTANA_DIAS * MS_DIA);
+            if (timelineWindowEnd < minFin) timelineWindowEnd = new Date(Math.min(hoy.getTime(), minFin.getTime()));
+        }
+    }
+
+    function renderEjeTiempo(inicio, fin) {
+        timelineAxis.innerHTML = '';
+        const totalMs = fin - inicio;
+        const totalDias = totalMs / MS_DIA;
+        const pasoDias = totalDias <= 75 ? 7 : (totalDias <= 400 ? 30 : 90);
+
+        let cursor = new Date(inicio);
+        while (cursor <= fin) {
+            const pct = (cursor - inicio) / totalMs * 100;
+            const tick = document.createElement('div');
+            tick.style.cssText = `position:absolute; left:${pct}%; top:0; bottom:0; border-left:1px solid var(--bs-border-color); padding-left:4px; font-size:.68rem; color:var(--bs-secondary-color); white-space:nowrap;`;
+            tick.textContent = cursor.toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
+            timelineAxis.appendChild(tick);
+            cursor = new Date(cursor.getTime() + pasoDias * MS_DIA);
+        }
+    }
+
+    function renderTimeline() {
+        const data = timelineServicios[timelineServicioActual];
         timelineContainer.innerHTML = '';
+        timelineAxis.innerHTML = '';
         if (!data) return;
 
-        timelineRango.textContent = data.desde ? `${data.desde} → ${data.hasta}` : '';
+        timelineMinDate = data.desde ? parseFecha(data.desde) : null;
+        clampVentana();
+
+        const inicioVentana = new Date(timelineWindowEnd.getTime() - VENTANA_DIAS * MS_DIA);
+        const finVentana = timelineWindowEnd;
+        const totalMs = finVentana - inicioVentana;
+
+        timelineRango.textContent = `${fmtFecha(inicioVentana)} → ${fmtFecha(finVentana)}`;
+        renderEjeTiempo(inicioVentana, finVentana);
 
         if (!data.cuentas.length) {
             timelineContainer.innerHTML = '<p class="text-muted text-center py-4 mb-0">Sin cuentas activas en este servicio.</p>';
@@ -604,9 +670,18 @@ document.addEventListener('DOMContentLoaded', function () {
             track.style.cssText = 'position:relative; flex:1; height:16px; background:var(--bs-tertiary-bg); border-radius:3px; overflow:hidden;';
 
             cuenta.segmentos.forEach(seg => {
+                const segInicio = parseFecha(seg.inicio);
+                const segFin = seg.en_curso ? finVentana : parseFecha(seg.fin);
+                if (segFin < inicioVentana || segInicio > finVentana) return; // fuera de la ventana visible
+
+                const clipInicio = segInicio < inicioVentana ? inicioVentana : segInicio;
+                const clipFin = segFin > finVentana ? finVentana : segFin;
+                const left = (clipInicio - inicioVentana) / totalMs * 100;
+                const width = Math.max(0.4, (clipFin - clipInicio) / totalMs * 100);
+
                 const bar = document.createElement('div');
-                bar.title = `${seg.tipo} — ${seg.desde} a ${seg.hasta}`;
-                bar.style.cssText = `position:absolute; top:0; bottom:0; left:${seg.left}%; width:${seg.width}%; background:${segmentoColor[seg.tipo]};`;
+                bar.title = `${seg.tipo} — ${seg.inicio} a ${seg.en_curso ? 'ahora' : seg.fin}`;
+                bar.style.cssText = `position:absolute; top:0; bottom:0; left:${left}%; width:${width}%; background:${segmentoColor[seg.tipo]};`;
                 track.appendChild(bar);
             });
 
@@ -615,14 +690,43 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function desplazarVentana(deltaDias) {
+        timelineWindowEnd = new Date(timelineWindowEnd.getTime() + deltaDias * MS_DIA);
+        renderTimeline();
+    }
+
+    document.getElementById('timelinePrev').addEventListener('click', () => desplazarVentana(-14));
+    document.getElementById('timelineNext').addEventListener('click', () => desplazarVentana(14));
+
+    timelineContainer.addEventListener('wheel', e => {
+        e.preventDefault();
+        const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        desplazarVentana(Math.sign(raw) * 5);
+    }, { passive: false });
+
+    let timelineTouchX = 0;
+    timelineContainer.addEventListener('touchstart', e => { timelineTouchX = e.touches[0].clientX; }, { passive: true });
+    timelineContainer.addEventListener('touchmove', e => {
+        const dx = timelineTouchX - e.touches[0].clientX;
+        if (Math.abs(dx) > 15) {
+            desplazarVentana(Math.sign(dx) * 3);
+            timelineTouchX = e.touches[0].clientX;
+        }
+    }, { passive: true });
+
     const primerServicioTimeline = Object.keys(timelineServicios)[0];
-    if (primerServicioTimeline) renderTimeline(primerServicioTimeline);
+    if (primerServicioTimeline) {
+        timelineServicioActual = primerServicioTimeline;
+        renderTimeline();
+    }
 
     document.querySelectorAll('#timelineServicioSelector .timeline-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             document.querySelectorAll('#timelineServicioSelector .timeline-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            renderTimeline(this.dataset.servicio);
+            timelineServicioActual = this.dataset.servicio;
+            timelineWindowEnd = hoyMedianoche(); // reiniciar a "ultimos 2 meses" al cambiar de servicio
+            renderTimeline();
         });
     });
 });
