@@ -73,6 +73,11 @@ document
     .addEventListener("submit", function (event) {
         event.preventDefault(); // Evitar que se envíe el formulario inmediatamente
 
+        const submitBtn = document.getElementById("registrar-venta");
+        if (submitBtn.disabled) {
+            return; // Ya se envió, evita doble clic / doble submit
+        }
+
         // Crear un arreglo para almacenar los detalles de venta
         let detalles = [];
 
@@ -105,6 +110,7 @@ document
             JSON.stringify(detalles);
 
         // Ahora enviamos el formulario
+        submitBtn.disabled = true;
         this.submit();
     });
 

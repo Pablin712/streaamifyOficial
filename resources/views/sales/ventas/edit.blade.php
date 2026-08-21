@@ -343,6 +343,11 @@ $estado = $detalle->activodet @endphp
         document.getElementById('form-venta').addEventListener('submit', function(event) {
             event.preventDefault();
 
+            const submitBtn = document.getElementById('registrar-venta');
+            if (submitBtn.disabled) {
+                return; // Ya se envió, evita doble clic / doble submit
+            }
+
             let detalles = [];
             document.querySelectorAll('#tabla-detalles tr').forEach(function(row) {
                 let cuenta = row.cells[0].innerText;
@@ -364,6 +369,7 @@ $estado = $detalle->activodet @endphp
             });
 
             document.getElementById('detalles_venta').value = JSON.stringify(detalles);
+            submitBtn.disabled = true;
             this.submit();
         });
 

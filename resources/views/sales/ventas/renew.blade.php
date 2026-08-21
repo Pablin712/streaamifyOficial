@@ -317,6 +317,13 @@
 
         // Enviar los detalles al backend
         $('#form-venta').on('submit', function(event) {
+            event.preventDefault(); // Evitar el envío nativo: se envía explícitamente con this.submit() más abajo
+
+            const submitBtn = document.getElementById('registrar-venta');
+            if (submitBtn.disabled) {
+                return; // Ya se envió, evita doble clic / doble submit
+            }
+
             const detalles = [];
             $('#tabla-detalles tr').each(function() {
                 const detalleValido = parseInt($(this).find('td').eq(5).attr('data-detalle-valido') || '1', 10) === 1;
@@ -342,12 +349,12 @@
             });
 
             if (detalles.length === 0) {
-                event.preventDefault();
                 alert('No hay detalles válidos para renovar. Elimina los incompletos y agrega nuevos detalles.');
                 return;
             }
 
             $('#detalles_venta').val(JSON.stringify(detalles));
+            submitBtn.disabled = true;
             this.submit();
         });
 
