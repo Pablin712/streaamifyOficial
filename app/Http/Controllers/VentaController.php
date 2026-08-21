@@ -601,83 +601,86 @@ class VentaController extends Controller
             return redirect()->route('ventas.edit', $idven)->with('error', 'El cliente no puede modificarse.');
         }
 
-        $montoAnterior = $venta->totalpagoven;
-        // Obtener banco anterior desde la transacción
-        $bancoAnterior = $venta->transaccion ? $venta->transaccion->banco_id : null;
-        $transaccionAnterior = $venta->transaccion_id;
-
-        $venta->totalpagoven = 0;
-        $venta->save();
-
-        $detalles = json_decode($request->detalles_venta, true);
-
-        $venta->detalles_venta()->delete();
-
-        $totalVenta = 0;
-        foreach ($detalles as $detalle) {
-            $idcue = $detalle['cuenta'];
-            $numeroper = $detalle['perfil'];
-            $idper = $idcue . '.' . $numeroper;
-            \App\Models\DetalleVenta::create([
-                'idven' => $venta->idven,
-                'idper' => $idper,
-                'descripciondet' => $detalle['descripcion'],
-                'fechavendet' => $detalle['fecha_vencimiento'],
-                'montodet' => $detalle['monto'],
-                'activodet' => $detalle['estado'],
-            ]);
-            $totalVenta += $detalle['monto'];
-        }
-        $venta->totalpagoven = $totalVenta;
-        $venta->save();
-
-        // Verificar si se pagó y registrar transacción
         $sePago = $request->has('se_pago') && $request->se_pago == '1';
-
         if ($sePago) {
             $request->validate([
                 'banco_id' => 'required|exists:bancos,idban'
             ]);
-
-            $bancoChanged = (int) $bancoAnterior !== (int) $request->banco_id;
-            $montoChanged = (float) $montoAnterior !== (float) $totalVenta;
-
-            if (!$transaccionAnterior || $bancoChanged || $montoChanged) {
-                // Anular transacción anterior si existe antes de crear la nueva
-                if ($transaccionAnterior) {
-                    $this->bancoService->anularTransaccion($transaccionAnterior);
-                }
-
-                try {
-                    $transaccion = $this->bancoService->registrarTransaccion(
-                        $request->banco_id,
-                        $totalVenta,
-                        'ingreso',
-                        'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
-                    );
-
-                    $venta->transaccion_id = $transaccion->id;
-                    $venta->save();
-                } catch (\Exception $e) {
-                    return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
-                }
-            }
-            // mismo banco y mismo monto → transacción existente ya es correcta, sin cambios
-        } else {
-            // Si no se pagó y había transacción anterior, anularla
-            if ($transaccionAnterior) {
-                $this->bancoService->anularTransaccion($transaccionAnterior);
-                $venta->transaccion_id = null;
-                $venta->save();
-            }
         }
 
-        Historial::create([
-            'accion' => 'Actualización de venta ' . $venta->idven,
-            'descripcion' => 'Datos: ' . json_encode($venta),
-            'empleado_id' => Auth::user()->idemp,
-            'created_at' => now(),
-        ]);
+        try {
+            DB::transaction(function () use ($request, $venta, $sePago) {
+                $montoAnterior = $venta->totalpagoven;
+                // Obtener banco anterior desde la transacción
+                $bancoAnterior = $venta->transaccion ? $venta->transaccion->banco_id : null;
+                $transaccionAnterior = $venta->transaccion_id;
+
+                $venta->totalpagoven = 0;
+                $venta->save();
+
+                $detalles = json_decode($request->detalles_venta, true);
+
+                $venta->detalles_venta()->delete();
+
+                $totalVenta = 0;
+                foreach ($detalles as $detalle) {
+                    $idcue = $detalle['cuenta'];
+                    $numeroper = $detalle['perfil'];
+                    $idper = $idcue . '.' . $numeroper;
+                    \App\Models\DetalleVenta::create([
+                        'idven' => $venta->idven,
+                        'idper' => $idper,
+                        'descripciondet' => $detalle['descripcion'],
+                        'fechavendet' => $detalle['fecha_vencimiento'],
+                        'montodet' => $detalle['monto'],
+                        'activodet' => $detalle['estado'],
+                    ]);
+                    $totalVenta += $detalle['monto'];
+                }
+                $venta->totalpagoven = $totalVenta;
+                $venta->save();
+
+                // Verificar si se pagó y registrar transacción
+                if ($sePago) {
+                    $bancoChanged = (int) $bancoAnterior !== (int) $request->banco_id;
+                    $montoChanged = (float) $montoAnterior !== (float) $totalVenta;
+
+                    if (!$transaccionAnterior || $bancoChanged || $montoChanged) {
+                        // Anular transacción anterior si existe antes de crear la nueva
+                        if ($transaccionAnterior) {
+                            $this->bancoService->anularTransaccion($transaccionAnterior);
+                        }
+
+                        $transaccion = $this->bancoService->registrarTransaccion(
+                            $request->banco_id,
+                            $totalVenta,
+                            'ingreso',
+                            'Actualización Venta #' . $venta->idven . ' - Cliente: ' . $venta->cliente->nombrecli
+                        );
+
+                        $venta->transaccion_id = $transaccion->id;
+                        $venta->save();
+                    }
+                    // mismo banco y mismo monto → transacción existente ya es correcta, sin cambios
+                } else {
+                    // Si no se pagó y había transacción anterior, anularla
+                    if ($transaccionAnterior) {
+                        $this->bancoService->anularTransaccion($transaccionAnterior);
+                        $venta->transaccion_id = null;
+                        $venta->save();
+                    }
+                }
+
+                Historial::create([
+                    'accion' => 'Actualización de venta ' . $venta->idven,
+                    'descripcion' => 'Datos: ' . json_encode($venta),
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
+            });
+        } catch (\Exception $e) {
+            return redirect()->route('ventas.edit', $idven)->with('error', $e->getMessage());
+        }
 
         return redirect()->route('ventas')->with('success', 'Venta actualizada correctamente');
     }
@@ -803,22 +806,24 @@ class VentaController extends Controller
         }
 
         try {
-            $venta = Venta::findOrFail($idven);
+            DB::transaction(function () use ($idven) {
+                $venta = Venta::findOrFail($idven);
 
-            // Anular transacción si existe
-            if ($venta->transaccion_id) {
-                $this->bancoService->anularTransaccion($venta->transaccion_id);
-            }
+                // Anular transacción si existe
+                if ($venta->transaccion_id) {
+                    $this->bancoService->anularTransaccion($venta->transaccion_id);
+                }
 
-            Historial::create([
-                'accion' => 'Eliminación de Venta',
-                'descripcion' => 'Datos Eliminados: ' . json_encode($venta),
-                'empleado_id' => Auth::user()->idemp,
-                'created_at' => now(),
-            ]);
+                Historial::create([
+                    'accion' => 'Eliminación de Venta',
+                    'descripcion' => 'Datos Eliminados: ' . json_encode($venta),
+                    'empleado_id' => Auth::user()->idemp,
+                    'created_at' => now(),
+                ]);
 
-            $venta->detalles_venta()->delete();
-            $venta->delete();
+                $venta->detalles_venta()->delete();
+                $venta->delete();
+            });
 
             if (request()->ajax() || request()->wantsJson() || request()->header('Accept') === 'application/json') {
                 return response()->json([
