@@ -225,7 +225,7 @@
 
     <!-- Scripts específicos de la vista -->
     <script src="{{asset('js/ventasClienteHelper.js')}}"></script>
-    <script src="{{asset('js/createVenta.js')}}"></script>
+    <script src="{{asset('js/createVenta.v2.js')}}"></script>
 
     <!-- Toggle del campo Banco según checkbox "¿Se pagó?" -->
     <script>
