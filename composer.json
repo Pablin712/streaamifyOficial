@@ -17,6 +17,7 @@
         "phpoffice/phpword": "^1.4",
         "smalot/pdfparser": "^2.12",
         "spatie/laravel-permission": "^6.14",
+        "stancl/tenancy": "^3.10",
         "tymon/jwt-auth": "^2.1"
     },
     "require-dev": {

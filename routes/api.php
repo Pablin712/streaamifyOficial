@@ -52,8 +52,8 @@ Route::prefix('daily-statistics')->group(function () {
 // === RUTAS ANTIGUAS (mantener temporalmente para compatibilidad) ===
 Route::post('login', [LoginController::class, 'loginApi']);
 Route::post('logout', [LoginController::class, 'logoutApi']);
-Route::middleware('auth:api')->get('ventas', [VentaApiController::class, 'index']);
-Route::middleware('auth:api')->get('clientes', [ClienteApiController::class, 'index']);
+Route::middleware(['auth:api', 'jwt.tenant'])->get('ventas', [VentaApiController::class, 'index']);
+Route::middleware(['auth:api', 'jwt.tenant'])->get('clientes', [ClienteApiController::class, 'index']);
 
 // === API v1 - Con autenticación por API Key ===
 Route::prefix('v1')->group(function () {
@@ -153,7 +153,7 @@ Route::prefix('v2')->group(function () {
         Route::post('/auth/empleado/login', 'loginEmpleado')->name('api.v2.auth.empleado.login');
     });
 
-    Route::middleware('auth:api')->controller(AuthController::class)->group(function () {
+    Route::middleware(['auth:api', 'jwt.tenant'])->controller(AuthController::class)->group(function () {
         Route::get('/auth/empleado/me', 'empleadoMe')->name('api.v2.auth.empleado.me');
         Route::post('/auth/empleado/logout', 'logoutEmpleado')->name('api.v2.auth.empleado.logout');
     });
@@ -179,7 +179,7 @@ Route::prefix('v2')->group(function () {
     });
 
     // Ventas v2 autenticadas por login de empleado (JWT)
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api', 'jwt.tenant'])->group(function () {
         Route::get('/empleado/ventas', [TecnicoVentasController::class, 'listar'])->name('api.v2.empleado.ventas.index');
         Route::get('/empleado/ventas/{idven}', [TecnicoVentasController::class, 'detalle'])->name('api.v2.empleado.ventas.show');
     });

@@ -100,6 +100,11 @@ class Empleado extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            // Ata el token al tenant activo al momento del login para que
+            // no pueda reutilizarse contra la BD de otro tenant. Ver
+            // EnsureJwtTenantMatches, que valida este claim en cada request.
+            'tenant_id' => tenant('id'),
+        ];
     }
 }

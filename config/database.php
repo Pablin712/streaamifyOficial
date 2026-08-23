@@ -65,6 +65,31 @@ return [
             ]) : [],
         ],
 
+        // Conexion "landlord": solo tablas centrales de tenancy (tenants, domains).
+        // Los modelos de negocio (Empleado, Cliente, Venta, etc.) siguen usando
+        // la conexion 'mysql' de arriba, cuya base de datos stancl/tenancy
+        // reescribe en runtime segun el tenant resuelto por subdominio.
+        'central' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('TENANCY_CENTRAL_DATABASE', 'streamify_central'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'timezone' => env('DB_TIMEZONE', '-05:00'),
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
