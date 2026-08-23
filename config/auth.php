@@ -52,6 +52,12 @@ return [
             'driver' => 'jwt',
             'provider' => 'users',
         ],
+        // Panel central (gestion de Tenants). Nunca se usa dentro de un
+        // Tenant — solo en el dominio central (ver tenancy.central_admin_domain).
+        'central' => [
+            'driver' => 'session',
+            'provider' => 'super_admins',
+        ],
     ],
 
     /*
@@ -85,6 +91,10 @@ return [
         'clientes' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL',App\Models\Cliente::class), // Modelo Cliente
+        ],
+        'super_admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\SuperAdmin::class,
         ],
     ],
 

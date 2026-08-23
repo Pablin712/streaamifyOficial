@@ -42,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.key'    => \App\Http\Middleware\AuthenticateApiKey::class,
             'donna.api'  => \App\Http\Middleware\DonnaApiKeyMiddleware::class,
             'jwt.tenant' => \App\Http\Middleware\EnsureJwtTenantMatches::class,
+            'auth.central' => \App\Http\Middleware\AuthCentral::class,
             'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,

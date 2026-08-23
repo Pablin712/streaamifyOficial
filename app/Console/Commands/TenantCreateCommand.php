@@ -2,16 +2,18 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Tenant;
+use App\Services\TenantProvisioningService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
-use Stancl\Tenancy\Database\Models\Domain;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Aprovisiona un Tenant nuevo (un "Vendedor"): crea su BD desde cero
  * (via el listener TenantCreated -> CreateDatabase + MigrateDatabase,
  * ver TenancyServiceProvider), su Domain, y lo siembra con el esqueleto
  * generico TenantSeeder (roles, catalogos base — nunca datos de Streamify).
+ *
+ * Misma logica que usa el panel central (Fase 2) — ver
+ * App\Services\TenantProvisioningService.
  */
 class TenantCreateCommand extends Command
 {
@@ -21,46 +23,21 @@ class TenantCreateCommand extends Command
 
     protected $description = 'Crea un Tenant nuevo: BD aislada, dominio y datos base';
 
-    public function handle(): int
+    public function handle(TenantProvisioningService $provisioning): int
     {
         $nombre = (string) $this->argument('nombre');
-        $subdominio = Str::of((string) $this->argument('subdominio'))
-            ->lower()
-            ->before('.'.config('tenancy.base_domain'))
-            ->slug();
+        $subdominio = (string) $this->argument('subdominio');
 
-        if ($subdominio === '') {
-            $this->error('Subdominio invalido.');
+        $this->line("Creando tenant '{$nombre}'...");
+
+        try {
+            $tenant = $provisioning->create($nombre, $subdominio);
+        } catch (ValidationException $e) {
+            $this->error(collect($e->errors())->flatten()->first());
             return self::FAILURE;
         }
 
-        if (Domain::where('domain', $subdominio)->exists()) {
-            $this->error("El subdominio '{$subdominio}' ya esta en uso.");
-            return self::FAILURE;
-        }
-
-        $id = Str::slug($nombre).'-'.Str::random(6);
-
-        $this->line("Creando tenant '{$nombre}' (id: {$id})...");
-
-        $tenant = Tenant::create([
-            'id' => $id,
-            'nombre' => $nombre,
-        ]);
-
-        Domain::create([
-            'domain' => (string) $subdominio,
-            'tenant_id' => $tenant->id,
-        ]);
-
-        $this->info('BD creada y migrada. Sembrando datos base (TenantSeeder)...');
-
-        $this->call('tenants:seed', [
-            '--tenants' => [$id],
-            '--class' => 'TenantSeeder',
-        ]);
-
-        $this->info("Tenant '{$nombre}' listo en: {$subdominio}.".config('tenancy.base_domain'));
+        $this->info("Tenant '{$nombre}' (id: {$tenant->id}) listo.");
 
         return self::SUCCESS;
     }
