@@ -29,7 +29,7 @@ class ChatWhatsappChannelController extends Controller
             'display_name' => 'nullable|string|max:120',
             'api_key' => 'required|string|max:191',
             'server_url' => 'nullable|string|max:191',
-            'color' => 'nullable|in:verde,azul,otro',
+            'color' => 'nullable|in:verde,azul,naranja,otro',
             'is_active' => 'nullable|boolean',
             'outbound_enabled' => 'nullable|boolean',
             'metadata' => 'nullable|array',

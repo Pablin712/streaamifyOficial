@@ -910,7 +910,7 @@ class WhatsAppHelpdeskService
                     'display_name' => $payload['display_name'] ?? $instance,
                     'api_key' => $apiKey,
                     'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
-                    'color' => in_array(($payload['color'] ?? null), ['verde', 'azul', 'otro'], true)
+                    'color' => in_array(($payload['color'] ?? null), ['verde', 'azul', 'naranja', 'otro'], true)
                         ? $payload['color']
                         : (strtolower($instance) === 'bot-pagos' ? 'verde' : 'azul'),
                     'is_active' => true,

@@ -41,6 +41,8 @@ class WhatsAppHelpdesk extends Component
 
     public ?int $etiquetaFilter = null;
 
+    public ?int $channelFilter = null;
+
     public bool $showEtiquetaCreator = false;
 
     public string $newEtiquetaNombre = '';
@@ -186,6 +188,17 @@ class WhatsAppHelpdesk extends Component
 
     public function updatingEtiquetaFilter(): void
     {
+        $this->conversationsLimit = 25;
+    }
+
+    public function updatingChannelFilter(): void
+    {
+        $this->conversationsLimit = 25;
+    }
+
+    public function setChannelFilter(?int $channelId): void
+    {
+        $this->channelFilter = $this->channelFilter === $channelId ? null : $channelId;
         $this->conversationsLimit = 25;
     }
 
@@ -700,7 +713,7 @@ class WhatsAppHelpdesk extends Component
             'channelDisplayName' => ['nullable', 'string', 'max:120'],
             'channelApiKey' => ['required', 'string', 'max:191'],
             'channelServerUrl' => ['nullable', 'string', 'max:191'],
-            'channelColor' => ['required', Rule::in(['verde', 'azul', 'otro'])],
+            'channelColor' => ['required', Rule::in(['verde', 'azul', 'naranja', 'otro'])],
             'channelIsActive' => ['boolean'],
             'channelOutboundEnabled' => ['boolean'],
         ]);
@@ -1157,6 +1170,16 @@ class WhatsAppHelpdesk extends Component
         if ($this->etiquetaFilter) {
             $query->whereHas('etiquetas', function ($q) {
                 $q->where('chat_etiquetas.id', $this->etiquetaFilter);
+            });
+        }
+
+        if ($this->channelFilter) {
+            $channelId = (string) $this->channelFilter;
+            $query->where(function ($q) use ($channelId) {
+                $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.whatsapp_channel_id')) = ?", [$channelId])
+                    ->orWhereHas('contactoCanal', function ($cc) use ($channelId) {
+                        $cc->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.whatsapp_channel_id')) = ?", [$channelId]);
+                    });
             });
         }
 

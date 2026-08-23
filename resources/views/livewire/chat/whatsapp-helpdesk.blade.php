@@ -276,6 +276,10 @@
             background: #2563eb;
         }
 
+        .wa-channel-dot.naranja {
+            background: #f97316;
+        }
+
         .wa-channel-dot.otro {
             background: #94a3b8;
         }
@@ -2241,6 +2245,29 @@
                  @endforeach
              </div>
 
+             @if($whatsappChannels->isNotEmpty())
+                 <div class="wa-filters wa-channel-filters">
+                     @foreach($whatsappChannels as $channel)
+                         @php
+                             $dotColor = match ($channel->color) {
+                                 'verde' => '#10b981',
+                                 'azul' => '#2563eb',
+                                 'naranja' => '#f97316',
+                                 default => '#64748b',
+                             };
+                         @endphp
+                         <button
+                             wire:click="setChannelFilter({{ $channel->id }})"
+                             class="wa-filter {{ $channelFilter === $channel->id ? 'active' : '' }}"
+                             title="Filtrar por {{ $channel->display_name ?: $channel->instance_name }}"
+                         >
+                             <span style="display:inline-block; width:8px; height:8px; border-radius:9999px; background:{{ $dotColor }}; margin-right:6px;"></span>
+                             {{ $channel->display_name ?: $channel->instance_name }}
+                         </button>
+                     @endforeach
+                 </div>
+             @endif
+
              @if($allEtiquetas->isNotEmpty())
                  <div class="wa-filters wa-etiqueta-filters">
                      @foreach($allEtiquetas as $etiqueta)
@@ -2394,6 +2421,7 @@
                 $activeChannelLabel = match ($activeChannelColor) {
                     'verde' => 'WA Verde',
                     'azul' => 'WA Azul',
+                    'naranja' => 'WA Naranja',
                     default => 'WhatsApp',
                 };
                 $assignedOperatorName = $activeConversation->operadorAsignado?->nombreemp ?? 'Sin asignar';
@@ -3149,6 +3177,7 @@
                              <select class="wa-search" wire:model.defer="channelColor">
                                  <option value="verde">Verde</option>
                                  <option value="azul">Azul</option>
+                                 <option value="naranja">Naranja</option>
                                  <option value="otro">Otro</option>
                              </select>
                              <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--wa-text-secondary);">
@@ -3176,7 +3205,7 @@
                              <div style="display: grid; gap: 6px; padding: 10px; border: 1px solid var(--wa-border); border-radius: 8px;">
                                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                      <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
-                                         <span style="width: 10px; height: 10px; border-radius: 9999px; display: inline-block; background: {{ $channel->color === 'verde' ? '#10b981' : ($channel->color === 'azul' ? '#2563eb' : '#64748b') }};"></span>
+                                         <span style="width: 10px; height: 10px; border-radius: 9999px; display: inline-block; background: {{ $channel->color === 'verde' ? '#10b981' : ($channel->color === 'azul' ? '#2563eb' : ($channel->color === 'naranja' ? '#f97316' : '#64748b')) }};"></span>
                                          <strong style="font-size: 13px;">{{ $channel->display_name ?: $channel->instance_name }}</strong>
                                      </div>
                                      <div style="display: flex; gap: 6px;">
