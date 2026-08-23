@@ -897,33 +897,58 @@ class WhatsAppHelpdeskService
         return PhoneNumber::canonicalEc($phone);
     }
 
+    /**
+     * Auto-registra una instancia la primera vez que se ve. Si ya existe, NUNCA se
+     * pisan api_key/color/server_url desde aca -- son configuracion administrada a
+     * mano en el panel de Instancias, y confiar en lo que reenvia el emisor del
+     * payload es peligroso: un flujo compartido (n8n) puede reenviar el apikey de
+     * OTRO numero, corrompiendo las credenciales reales del canal.
+     */
     private function resolveChannelFromPayload(array $payload): ?ChatWhatsappChannel
     {
         $instance = trim((string) ($payload['instance'] ?? $payload['instance_name'] ?? ''));
-        $apiKey = trim((string) ($payload['apikey'] ?? $payload['instance_apikey'] ?? ''));
-        $serverUrl = trim((string) ($payload['server_url'] ?? config('services.evoapi.base_url')));
 
-        if ($instance !== '' && $apiKey !== '') {
-            ChatWhatsappChannel::query()->updateOrCreate(
-                ['instance_name' => $instance],
-                [
-                    'display_name' => $payload['display_name'] ?? $instance,
-                    'api_key' => $apiKey,
-                    'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
-                    'color' => in_array(($payload['color'] ?? null), ['verde', 'azul', 'naranja', 'otro'], true)
-                        ? $payload['color']
-                        : (strtolower($instance) === 'bot-pagos' ? 'verde' : 'azul'),
-                    'is_active' => true,
-                    'outbound_enabled' => true,
-                    'metadata' => [
-                        'source' => 'helpdesk-auto-sync',
-                        'last_seen_at' => now()->toIso8601String(),
-                    ],
-                ]
-            );
+        if ($instance === '') {
+            return null;
         }
 
-        return $this->outbound->resolveChannelByInstance($instance !== '' ? $instance : null);
+        $existing = ChatWhatsappChannel::query()
+            ->whereRaw('LOWER(instance_name) = ?', [strtolower($instance)])
+            ->first();
+
+        if ($existing) {
+            $existing->update([
+                'metadata' => array_merge($existing->metadata ?? [], [
+                    'last_seen_at' => now()->toIso8601String(),
+                ]),
+            ]);
+
+            return $existing;
+        }
+
+        $apiKey = trim((string) ($payload['apikey'] ?? $payload['instance_apikey'] ?? ''));
+
+        if ($apiKey === '') {
+            return null;
+        }
+
+        $serverUrl = trim((string) ($payload['server_url'] ?? config('services.evoapi.base_url')));
+
+        return ChatWhatsappChannel::query()->create([
+            'instance_name' => $instance,
+            'display_name' => $payload['display_name'] ?? $instance,
+            'api_key' => $apiKey,
+            'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
+            'color' => in_array(($payload['color'] ?? null), ['verde', 'azul', 'naranja', 'otro'], true)
+                ? $payload['color']
+                : (strtolower($instance) === 'bot-pagos' ? 'verde' : 'otro'),
+            'is_active' => true,
+            'outbound_enabled' => true,
+            'metadata' => [
+                'source' => 'helpdesk-auto-sync',
+                'last_seen_at' => now()->toIso8601String(),
+            ],
+        ]);
     }
 
     private function buildChannelMetadata(array $payload, ?ChatWhatsappChannel $channel): array
@@ -976,9 +1001,13 @@ class WhatsAppHelpdeskService
             $channel = $this->outbound->resolveChannelByInstance((string) $instance);
         }
 
-        $instance = $instance ?: $channel?->instance_name;
-        $apiKey = $apiKey ?: $channel?->api_key;
-        $serverUrl = $serverUrl ?: $channel?->server_url;
+        // La tabla chat_whatsapp_channels es la fuente de verdad para las credenciales:
+        // si se resolvio el canal, su api_key/server_url ganan por sobre lo cacheado en
+        // metadata (que puede haber quedado con el apikey de OTRO numero si algun flujo
+        // externo lo reenvio mal -- ver ChatRouterController::recibirMensaje()).
+        $instance = $channel?->instance_name ?: $instance;
+        $apiKey = $channel?->api_key ?: $apiKey;
+        $serverUrl = $channel?->server_url ?: $serverUrl;
 
         if ($number === '') {
             return null;

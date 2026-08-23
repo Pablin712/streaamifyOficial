@@ -228,13 +228,21 @@ class ChatRouterController extends Controller
                     'subagente_codigo' => $subagenteCodigo ?: $conversacion->subagente_codigo,
                     'ultima_actividad' => now(),
                     'last_message_at' => now(),
+                    // OJO: siempre se prefiere el canal recien resuelto ($whatsappChannel, en base
+                    // al 'instance' de ESTE mensaje) por sobre lo que ya tuviera guardado la
+                    // conversacion. Antes era al reves (?: con el valor viejo primero), lo que
+                    // dejaba pegado el channel_id/color original para siempre en conversaciones
+                    // viejas aunque el contacto empezara a escribir por otro numero -- y el
+                    // apikey nunca debe confiar en lo que reenvia n8n (puede venir hardcodeado
+                    // de otro flujo/numero), la tabla chat_whatsapp_channels es la fuente de
+                    // verdad.
                     'metadata' => array_merge($conversacion->metadata ?? [], [
                         'canal_user_id' => $canalUserId,
-                        'instance' => $request->input('instance', data_get($conversacion->metadata, 'instance') ?: $whatsappChannel?->instance_name),
-                        'apikey' => $request->input('apikey', data_get($conversacion->metadata, 'apikey') ?: $whatsappChannel?->api_key),
-                        'server_url' => $request->input('server_url', data_get($conversacion->metadata, 'server_url') ?: $whatsappChannel?->server_url),
-                        'whatsapp_channel_id' => data_get($conversacion->metadata, 'whatsapp_channel_id') ?: $whatsappChannel?->id,
-                        'whatsapp_color' => data_get($conversacion->metadata, 'whatsapp_color') ?: $whatsappColor,
+                        'instance' => $whatsappChannel?->instance_name ?: $request->input('instance', data_get($conversacion->metadata, 'instance')),
+                        'apikey' => $whatsappChannel?->api_key ?: $request->input('apikey', data_get($conversacion->metadata, 'apikey')),
+                        'server_url' => $whatsappChannel?->server_url ?: $request->input('server_url', data_get($conversacion->metadata, 'server_url')),
+                        'whatsapp_channel_id' => $whatsappChannel?->id ?: data_get($conversacion->metadata, 'whatsapp_channel_id'),
+                        'whatsapp_color' => $whatsappColor ?: data_get($conversacion->metadata, 'whatsapp_color'),
                     ]),
                 ]);
 
@@ -1982,15 +1990,18 @@ class ChatRouterController extends Controller
             $instance = $whatsappChannel?->instance_name;
         }
 
-        $apiKey = $request->input('apikey')
+        // La tabla chat_whatsapp_channels es la fuente de verdad: si se pudo resolver
+        // el canal, su api_key/server_url ganan por sobre lo cacheado en metadata (que
+        // puede haber quedado con datos de otro numero -- ver nota en recibirMensaje()).
+        $apiKey = $whatsappChannel?->api_key
+            ?? $request->input('apikey')
             ?? data_get($metadata, 'apikey')
-            ?? data_get($contactMetadata, 'apikey')
-            ?? $whatsappChannel?->api_key;
+            ?? data_get($contactMetadata, 'apikey');
 
-        $serverUrl = $request->input('server_url')
+        $serverUrl = $whatsappChannel?->server_url
+            ?? $request->input('server_url')
             ?? data_get($metadata, 'server_url')
-            ?? data_get($contactMetadata, 'server_url')
-            ?? $whatsappChannel?->server_url;
+            ?? data_get($contactMetadata, 'server_url');
 
         return [$instance, $apiKey, $serverUrl];
     }
@@ -2006,15 +2017,48 @@ class ChatRouterController extends Controller
             return null;
         }
 
-        return strtolower(trim((string) $instance)) === 'bot-pagos' ? 'verde' : 'azul';
+        // Unico caso confiable de adivinar el color por nombre de instancia. Con 3+
+        // numeros ya no se puede asumir "todo lo que no es bot-pagos es azul" -- eso
+        // pintaba de azul cualquier instancia nueva (ej. naranja). Si no es bot-pagos,
+        // que se quede sin adivinar (cae a 'otro' en el caller) hasta que alguien lo
+        // configure explicitamente en el panel de instancias.
+        return strtolower(trim((string) $instance)) === 'bot-pagos' ? 'verde' : null;
     }
 
+    /**
+     * Auto-registra una instancia de WhatsApp la PRIMERA vez que se ve (para que
+     * aparezca en el panel sin tener que darla de alta a mano). Si la instancia ya
+     * existe, NUNCA se pisan api_key/color/server_url desde aca -- esos son
+     * configuracion administrada a mano en el panel de Instancias, y confiar en lo
+     * que reenvia n8n es peligroso: un flujo compartido puede reenviar el apikey de
+     * OTRO numero (ej. un trigger de "azul" reusado para varios numeros), corrompiendo
+     * las credenciales reales del canal y rompiendo el envio saliente.
+     */
     private function upsertWhatsappChannelFromRequest(Request $request): ?ChatWhatsappChannel
     {
         $instance = trim((string) $request->input('instance'));
+
+        if ($instance === '') {
+            return null;
+        }
+
+        $existing = ChatWhatsappChannel::query()
+            ->whereRaw('LOWER(instance_name) = ?', [strtolower($instance)])
+            ->first();
+
+        if ($existing) {
+            $existing->update([
+                'metadata' => array_merge($existing->metadata ?? [], [
+                    'last_seen_at' => now()->toIso8601String(),
+                ]),
+            ]);
+
+            return $existing;
+        }
+
         $apiKey = trim((string) $request->input('apikey'));
 
-        if ($instance === '' || $apiKey === '') {
+        if ($apiKey === '') {
             return null;
         }
 
@@ -2024,20 +2068,18 @@ class ChatRouterController extends Controller
             ?: $this->resolveWhatsappColorByInstance($instance)
             ?: 'otro';
 
-        return ChatWhatsappChannel::query()->updateOrCreate(
-            ['instance_name' => $instance],
-            [
-                'display_name' => $request->input('display_name') ?: $instance,
-                'api_key' => $apiKey,
-                'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
-                'color' => in_array($color, ['verde', 'azul', 'otro'], true) ? $color : 'otro',
-                'is_active' => true,
-                'outbound_enabled' => true,
-                'metadata' => array_filter([
-                    'source' => 'router-auto-sync',
-                    'last_seen_at' => now()->toIso8601String(),
-                ]),
-            ]
-        );
+        return ChatWhatsappChannel::query()->create([
+            'instance_name' => $instance,
+            'display_name' => $request->input('display_name') ?: $instance,
+            'api_key' => $apiKey,
+            'server_url' => $serverUrl !== '' ? $serverUrl : config('services.evoapi.base_url'),
+            'color' => in_array($color, ['verde', 'azul', 'naranja', 'otro'], true) ? $color : 'otro',
+            'is_active' => true,
+            'outbound_enabled' => true,
+            'metadata' => array_filter([
+                'source' => 'router-auto-sync',
+                'last_seen_at' => now()->toIso8601String(),
+            ]),
+        ]);
     }
 }
