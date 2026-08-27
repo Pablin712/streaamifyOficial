@@ -243,6 +243,15 @@ class ClienteDonnaController extends Controller
 
     public function saveConfig(Request $request)
     {
+        // El navegador normaliza los saltos de línea de un <textarea> a CRLF al armar
+        // el FormData, pero el contador de caracteres en el front usa .value.length
+        // (que cuenta \n como 1). Sin esto, un texto que el cliente ve "por debajo del
+        // límite" puede llegar al backend con más caracteres de los que contó y fallar
+        // la validación max: aquí lo igualamos a LF antes de validar/guardar.
+        $request->merge([
+            'personal_context' => str_replace(["\r\n", "\r"], "\n", (string) $request->input('personal_context')),
+        ]);
+
         $request->validate([
             'agent_name'       => 'nullable|string|max:80',
             'personal_context' => 'nullable|string|max:1000',
@@ -290,6 +299,14 @@ class ClienteDonnaController extends Controller
 
     public function saveBusinessConfig(Request $request)
     {
+        // Ver comentario en saveConfig(): igualamos CRLF -> LF antes de validar para
+        // que el conteo coincida con el contador de caracteres del front (main_prompt
+        // y business_description son <textarea> con contador de 5000/2000).
+        $request->merge([
+            'main_prompt'           => str_replace(["\r\n", "\r"], "\n", (string) $request->input('main_prompt')),
+            'business_description'  => str_replace(["\r\n", "\r"], "\n", (string) $request->input('business_description')),
+        ]);
+
         $request->validate([
             'agent_name'           => 'nullable|string|max:80',
             'business_name'        => 'nullable|string|max:120',

@@ -484,6 +484,11 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::post('/suscripciones/{id}/suspend', [DonnaSubscriptionController::class, 'suspend'])->name('donna.suscripciones.suspend');
         Route::post('/suscripciones/{id}/renew', [DonnaSubscriptionController::class, 'renew'])->name('donna.suscripciones.renew');
 
+        // Canal WhatsApp (Business)
+        Route::get('/suscripciones/{id}/channel', [DonnaSubscriptionController::class, 'channel'])->name('donna.suscripciones.channel');
+        Route::post('/suscripciones/{id}/channel', [DonnaSubscriptionController::class, 'updateChannel'])->name('donna.suscripciones.channel.update');
+        Route::delete('/suscripciones/{id}/channel', [DonnaSubscriptionController::class, 'destroyChannel'])->name('donna.suscripciones.channel.destroy');
+
         // Configuración del agente
         Route::get('/suscripciones/{id}/config', [DonnaAgentConfigController::class, 'edit'])->name('donna.suscripciones.config');
         Route::post('/suscripciones/{id}/config', [DonnaAgentConfigController::class, 'update'])->name('donna.suscripciones.config.update');

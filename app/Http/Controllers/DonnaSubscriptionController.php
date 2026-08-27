@@ -200,6 +200,122 @@ class DonnaSubscriptionController extends Controller
         return redirect()->route('donna.suscripciones.index')->with('success', 'Suscripción renovada.');
     }
 
+    public function channel(Request $request, string $id)
+    {
+        if (!Gate::allows('donna.suscripciones')) {
+            return $this->jsonOrAbort($request, 403, 'Sin permiso.');
+        }
+
+        $sub = DonnaSubscription::findOrFail($id);
+        $channel = DonnaChannel::where('subscription_id', $sub->id)
+            ->where('channel_type', 'whatsapp')
+            ->first();
+
+        return response()->json([
+            'exists'        => (bool) $channel,
+            'instance_name' => $channel->instance_name ?? '',
+            'api_base_url'  => $channel->api_base_url ?? '',
+            'phone_number'  => $channel->phone_number ?? '',
+            'status'        => $channel->status ?? 'pending',
+            'has_api_key'   => (bool) ($channel->api_key_encrypted ?? false),
+        ]);
+    }
+
+    public function updateChannel(Request $request, string $id)
+    {
+        if (!Gate::allows('donna.suscripciones.store')) {
+            return $this->jsonOrAbort($request, 403, 'Sin permiso para configurar el canal.');
+        }
+
+        $sub = DonnaSubscription::findOrFail($id);
+
+        if ($sub->service_type !== 'business') {
+            return $this->jsonOrAbort($request, 422, 'Solo las suscripciones Business tienen canal de WhatsApp.');
+        }
+
+        $request->validate([
+            'instance_name' => 'required|string|max:100',
+            'api_base_url'  => 'required|url|max:255',
+            'api_key'       => 'nullable|string',
+            'phone_number'  => 'nullable|string|max:50',
+        ]);
+
+        $channel = DonnaChannel::firstOrNew([
+            'subscription_id' => $sub->id,
+            'channel_type'    => 'whatsapp',
+        ]);
+
+        $channel->client_id     = $sub->client_id;
+        $channel->service_type  = 'business';
+        $channel->provider      = $channel->provider ?: 'evolution_api';
+        $channel->instance_name = $request->instance_name;
+        $channel->api_base_url  = rtrim($request->api_base_url, '/');
+        $channel->phone_number  = $request->phone_number;
+        $channel->is_default    = true;
+
+        if ($request->filled('api_key')) {
+            $channel->api_key_encrypted = Crypt::encryptString($request->api_key);
+        }
+
+        if (!$channel->api_key_encrypted) {
+            return $this->jsonOrAbort($request, 422, 'Falta la API Key de Evo API.');
+        }
+
+        $channel->status = 'active';
+        $channel->metadata_json = null;
+        $channel->save();
+
+        // Un mismo instance_name no puede quedar activo en más de un canal a la vez
+        // (si no, /api/donna/business/resolve-webhook puede resolver al canal equivocado).
+        DonnaChannel::where('instance_name', $channel->instance_name)
+            ->where('channel_type', 'whatsapp')
+            ->where('id', '!=', $channel->id)
+            ->where('status', 'active')
+            ->update(['status' => 'inactive']);
+
+        Historial::create([
+            'accion'      => 'Canal WhatsApp Donna configurado',
+            'descripcion' => 'Suscripción #' . $sub->id . ' | Cliente: ' . ($sub->cliente?->nombrecli ?? $sub->client_id) . ' | Instancia: ' . $channel->instance_name,
+            'empleado_id' => Auth::user()->idemp,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Canal de WhatsApp configurado correctamente.']);
+        }
+        return redirect()->route('donna.suscripciones.index')->with('success', 'Canal de WhatsApp configurado.');
+    }
+
+    public function destroyChannel(Request $request, string $id)
+    {
+        if (!Gate::allows('donna.suscripciones.store')) {
+            return $this->jsonOrAbort($request, 403, 'Sin permiso para eliminar el canal.');
+        }
+
+        $sub = DonnaSubscription::findOrFail($id);
+
+        $channel = DonnaChannel::where('subscription_id', $sub->id)
+            ->where('channel_type', 'whatsapp')
+            ->first();
+
+        if (!$channel) {
+            return $this->jsonOrAbort($request, 404, 'Esta suscripción no tiene un canal de WhatsApp configurado.');
+        }
+
+        $instanceName = $channel->instance_name;
+        $channel->delete();
+
+        Historial::create([
+            'accion'      => 'Canal WhatsApp Donna eliminado',
+            'descripcion' => 'Suscripción #' . $sub->id . ' | Cliente: ' . ($sub->cliente?->nombrecli ?? $sub->client_id) . ' | Instancia: ' . ($instanceName ?? '—'),
+            'empleado_id' => Auth::user()->idemp,
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Canal de WhatsApp eliminado.']);
+        }
+        return redirect()->route('donna.suscripciones.index')->with('success', 'Canal de WhatsApp eliminado.');
+    }
+
     private function jsonOrAbort(Request $request, int $code, string $message)
     {
         if ($request->expectsJson()) {

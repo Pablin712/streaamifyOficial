@@ -37,6 +37,24 @@ class DonnaAgentConfigController extends Controller
 
         $sub = DonnaSubscription::findOrFail($id);
 
+        // El navegador normaliza los saltos de línea de un <textarea> a CRLF al armar
+        // el body de la petición, pero el atributo maxlength (y cualquier contador en
+        // el front) cuenta .value.length, donde \n es 1 carácter. Igualamos a LF antes
+        // de validar para que el límite max: de cada campo sea consistente con lo que
+        // el usuario ve escrito en pantalla.
+        $multilineFields = [
+            'personal_context', 'business_description', 'business_context', 'business_logic',
+            'sales_rules', 'support_rules', 'main_prompt', 'fallback_prompt',
+            'welcome_message', 'out_of_hours_message', 'human_handoff_msg',
+        ];
+        $request->merge(array_combine(
+            $multilineFields,
+            array_map(
+                fn ($field) => str_replace(["\r\n", "\r"], "\n", (string) $request->input($field)),
+                $multilineFields
+            )
+        ));
+
         $rules = [
             'agent_name'            => 'nullable|string|max:50',
             'business_name'         => 'nullable|string|max:150',

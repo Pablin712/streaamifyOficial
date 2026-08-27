@@ -48,173 +48,40 @@
 @endsection
 
 @section('table1')
-    <div class="row mb-3 align-items-end">
-        <div class="col-lg-8 col-md-7 col-12 mb-3 mb-md-0">
-            <label for="donna-subs-table-search" class="form-label fw-semibold">
-                <i class="fas fa-search text-primary"></i> Buscar:
-            </label>
-            <input id="donna-subs-table-search" type="text"
-                   placeholder="Buscar cliente, plan, estado..." class="form-control">
-        </div>
-        <div class="col-lg-4 col-md-5 col-12">
-            <label for="donna-subs-table-rows-per-page" class="form-label fw-semibold">
-                <i class="fas fa-list text-primary"></i> Mostrar:
-            </label>
-            <select id="donna-subs-table-rows-per-page" class="form-select">
-                <option value="5">5 registros</option>
-                <option value="10" selected>10 registros</option>
-                <option value="25">25 registros</option>
-            </select>
-        </div>
-    </div>
+    @php
+        $subsActivas = $suscripciones->where('status', 'active')->values();
+        $subsHistorial = $suscripciones->whereNotIn('status', ['active'])->values();
+    @endphp
 
-    <div class="table-responsive">
-        <table id="donna-subs-table" data-table="donna-subs-table"
-               class="table table-striped table-bordered align-middle">
-            <thead>
-                <tr>
-                    <th class="sortable" data-type="number" data-col="0">ID <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
-                    <th class="sortable" data-type="string" data-col="1">Cliente <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
-                    <th class="sortable" data-type="string" data-col="2">Plan <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
-                    <th>Tipo</th>
-                    <th>Google</th>
-                    <th class="sortable" data-type="string" data-col="5">Estado <span class="sort-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 11l5-5 5 5M7 13l5 5 5-5"/></svg></span></th>
-                    <th>Vencimiento</th>
-                    <th>Días restantes</th>
-                    @if (Auth::user()->hasPermissionTo('donna.suscripciones.store'))
-                        <th data-type="actions">Acciones</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($suscripciones as $sub)
-                    @php
-                        $dias = $sub->daysRemaining();
-                        $badgeColor = $sub->status_color;
-                        if ($sub->status === 'active' && $dias !== null && $dias <= 7) $badgeColor = 'warning';
-                        $integ = $integraciones->get($sub->client_id);
-                        $avatar = $integ?->metadata_json['avatar'] ?? null;
-                    @endphp
-                    <tr>
-                        <td>{{ $sub->id }}</td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                @if($avatar)
-                                    <img src="{{ $avatar }}" alt=""
-                                         class="rounded-circle flex-shrink-0"
-                                         style="width:36px;height:36px;object-fit:cover;border:2px solid #dee2e6;"
-                                         onerror="this.replaceWith(this.nextElementSibling)">
-                                    <span class="rounded-circle bg-light border d-none flex-shrink-0 align-items-center justify-content-center" style="width:36px;height:36px;">
-                                        <i class="bi bi-person text-muted"></i>
-                                    </span>
-                                @else
-                                    <span class="rounded-circle bg-light border d-flex flex-shrink-0 align-items-center justify-content-center" style="width:36px;height:36px;">
-                                        <i class="bi bi-person text-muted"></i>
-                                    </span>
-                                @endif
-                                <div>
-                                    <div class="fw-semibold">{{ $sub->cliente?->nombrecli ?? 'ID '.$sub->client_id }}</div>
-                                    <div class="text-muted small">{{ $sub->cliente?->telefonocli }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="fw-semibold">{{ $sub->plan?->name ?? 'ID '.$sub->plan_id }}</div>
-                            <div class="text-muted small">${{ number_format($sub->price_paid, 2) }} {{ $sub->currency }}</div>
-                        </td>
-                        <td>
-                            @if ($sub->service_type === 'personal')
-                                <span class="badge badge-donna-personal">Personal</span>
-                            @else
-                                <span class="badge badge-donna-business">Business</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($integ && $integ->isActive())
-                                <div class="d-flex align-items-center gap-1">
-                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Conectado</span>
-                                </div>
-                                <div class="text-muted small mt-1" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                                    title="{{ $integ->metadata_json['email'] ?? '' }}">
-                                    {{ $integ->metadata_json['email'] ?? '' }}
-                                </div>
-                                @if($integ->isTokenExpired())
-                                    <span class="badge bg-warning text-dark mt-1"><i class="bi bi-exclamation-triangle me-1"></i>Token expirado</span>
-                                @endif
-                            @elseif($integ && $integ->status === 'revoked')
-                                <span class="badge bg-secondary">Revocado</span>
-                            @else
-                                <span class="badge bg-light text-muted border">Sin conectar</span>
-                            @endif
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ $badgeColor }}">{{ $sub->status_label }}</span>
-                            @if (!$sub->is_enabled && $sub->status === 'suspended')
-                                <div class="text-muted small mt-1">{{ Str::limit($sub->suspended_reason, 40) }}</div>
-                            @endif
-                        </td>
-                        <td class="small">
-                            {{ $sub->expires_at?->format('d/m/Y') ?? '—' }}
-                        </td>
-                        <td class="text-center">
-                            @if ($dias === null)
-                                <span class="text-muted small">Sin límite</span>
-                            @elseif ($dias < 0)
-                                <span class="badge bg-danger">Vencida</span>
-                            @elseif ($dias <= 7)
-                                <span class="badge bg-warning text-dark">{{ $dias }} días</span>
-                            @else
-                                <span class="text-success fw-semibold">{{ $dias }} días</span>
-                            @endif
-                        </td>
-                        @if (Auth::user()->hasPermissionTo('donna.suscripciones.store'))
-                            <td>
-                                <div class="d-flex gap-1 flex-wrap">
-                                    <a href="{{ route('donna.suscripciones.config', $sub->id) }}" class="btn btn-outline-primary btn-sm" title="Configurar agente">
-                                        <i class="bi bi-sliders"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-success btn-sm"
-                                        onclick="openRenewModal({{ $sub->id }}, '{{ addslashes($sub->cliente?->nombrecli ?? '') }}', '{{ $sub->expires_at?->format('Y-m-d') }}')">
-                                        <i class="fas fa-redo" title="Renovar"></i>
-                                    </button>
-                                    @if ($sub->status === 'active')
-                                        <button type="button" class="btn btn-secondary btn-sm"
-                                            onclick="openSuspendModal({{ $sub->id }}, '{{ addslashes($sub->cliente?->nombrecli ?? '') }}')">
-                                            <i class="fas fa-ban" title="Suspender"></i>
-                                        </button>
-                                    @endif
-                                    @if($integ && $integ->isActive())
-                                        <form method="POST" action="{{ route('donna.integraciones.revoke', $integ->id) }}"
-                                            onsubmit="return confirm('¿Revocar Google de {{ addslashes($sub->cliente?->nombrecli ?? '') }}?')">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Revocar Google">
-                                                <i class="bi bi-google"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </td>
-                        @endif
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
-                            <i class="bi bi-robot fs-1 d-block mb-3" style="color:#274698;opacity:0.3;"></i>
-                            No hay suscripciones registradas.<br>
-                            <small>Usa el botón <strong>Nueva Suscripción</strong> para empezar.</small>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+    <ul class="nav nav-tabs mb-3" id="donnaSubsTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="subs-activas-tab" data-bs-toggle="tab" data-bs-target="#subs-activas" type="button" role="tab">
+                <i class="bi bi-check-circle me-1"></i> Activas <span class="badge bg-secondary ms-1">{{ $subsActivas->count() }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="subs-historial-tab" data-bs-toggle="tab" data-bs-target="#subs-historial" type="button" role="tab">
+                <i class="bi bi-archive me-1"></i> Historial <span class="badge bg-secondary ms-1">{{ $subsHistorial->count() }}</span>
+            </button>
+        </li>
+    </ul>
 
-    <div class="row mt-3 align-items-center">
-        <div class="col-md-6 col-12 mb-2 mb-md-0">
-            <div id="donna-subs-table-row-info" class="text-muted"></div>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="subs-activas" role="tabpanel">
+            @include('donna.suscripciones._tabla', [
+                'tableId' => 'donna-subs-table',
+                'rows' => $subsActivas,
+                'integraciones' => $integraciones,
+                'placeholder' => 'No hay suscripciones activas. Usa el botón Nueva Suscripción para empezar.',
+            ])
         </div>
-        <div class="col-md-6 col-12">
-            <div id="donna-subs-table-pagination" class="d-flex justify-content-end flex-wrap"></div>
+        <div class="tab-pane fade" id="subs-historial" role="tabpanel">
+            @include('donna.suscripciones._tabla', [
+                'tableId' => 'donna-subs-table-hist',
+                'rows' => $subsHistorial,
+                'integraciones' => $integraciones,
+                'placeholder' => 'No hay suscripciones suspendidas, vencidas o canceladas.',
+            ])
         </div>
     </div>
 
@@ -222,6 +89,7 @@
     @include('donna.suscripciones.modals.create')
     @include('donna.suscripciones.modals.renew')
     @include('donna.suscripciones.modals.suspend')
+    @include('donna.suscripciones.modals.channel')
 @endsection
 
 @section('scripts')
@@ -281,6 +149,102 @@ async function submitRenewSub(event) {
             setTimeout(() => location.reload(), 800);
         } else {
             alert(data.message || 'Error al renovar.');
+        }
+    } catch (e) {
+        alert('Error de conexión.');
+    }
+}
+
+// ── Modal CANAL WHATSAPP ───────────────────────────────────────────────────
+async function openChannelModal(id, nombre) {
+    document.getElementById('channel_sub_id').value = id;
+    document.getElementById('channel_cliente_nombre').textContent = nombre;
+    document.getElementById('channelDonnaSubForm').reset();
+    document.getElementById('channel_sub_id').value = id;
+
+    const banner = document.getElementById('channel_status_banner');
+    banner.className = 'alert alert-secondary mb-3';
+    banner.textContent = 'Cargando...';
+    banner.classList.remove('d-none');
+
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'channelDonnaSubModal' }));
+
+    try {
+        const response = await fetch(`/admin/donna/suscripciones/${id}/channel`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+
+        document.getElementById('channel_instance_name').value = data.instance_name || '';
+        document.getElementById('channel_api_base_url').value = data.api_base_url || '';
+        document.getElementById('channel_phone_number').value = data.phone_number || '';
+
+        const keyHint = document.getElementById('channel_api_key_hint');
+        if (data.has_api_key) {
+            keyHint.textContent = 'Ya hay una API Key guardada. Déjalo vacío para mantenerla, o escribe una nueva para reemplazarla.';
+        } else {
+            keyHint.textContent = 'Se guarda encriptada.';
+        }
+        document.getElementById('channel_api_key').required = !data.has_api_key;
+
+        if (!data.exists) {
+            banner.className = 'alert alert-warning mb-3';
+            banner.textContent = 'Este canal aún no está configurado. Completa los datos de Evo API para activarlo.';
+        } else if (data.status === 'pending') {
+            banner.className = 'alert alert-warning mb-3';
+            banner.textContent = 'Canal pendiente de configuración manual. Completa los datos y se activará al guardar.';
+        } else if (data.status === 'active') {
+            banner.className = 'alert alert-success mb-3';
+            banner.textContent = 'Canal activo.';
+        } else {
+            banner.className = 'alert alert-secondary mb-3';
+            banner.textContent = 'Estado del canal: ' + data.status;
+        }
+    } catch (e) {
+        banner.className = 'alert alert-danger mb-3';
+        banner.textContent = 'No se pudo cargar la información del canal.';
+    }
+}
+
+async function submitChannelSub(event) {
+    event.preventDefault();
+    const id = document.getElementById('channel_sub_id').value;
+    const formData = new FormData(document.getElementById('channelDonnaSubForm'));
+
+    try {
+        const response = await fetch(`/admin/donna/suscripciones/${id}/channel`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.dispatchEvent(new CustomEvent('close-modal', { detail: 'channelDonnaSubModal' }));
+            setTimeout(() => location.reload(), 800);
+        } else {
+            alert(data.message || 'Error al guardar el canal.');
+        }
+    } catch (e) {
+        alert('Error de conexión.');
+    }
+}
+
+// ── Eliminar canal WhatsApp ────────────────────────────────────────────────
+async function deleteChannel(id, nombre) {
+    if (!confirm(`¿Eliminar el canal de WhatsApp de ${nombre}? Donna dejará de responder por ese número hasta reconfigurarlo.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/donna/suscripciones/${id}/channel`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error al eliminar el canal.');
         }
     } catch (e) {
         alert('Error de conexión.');

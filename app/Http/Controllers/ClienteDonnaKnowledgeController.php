@@ -106,6 +106,14 @@ class ClienteDonnaKnowledgeController extends Controller
 
     public function store(Request $request)
     {
+        // El contador de caracteres del front usa .value.length (\n = 1 char), pero el
+        // navegador normaliza los saltos de línea del <textarea> a CRLF al armar el
+        // FormData. Igualamos a LF antes de validar para que el límite de 5000 sea
+        // consistente con lo que el cliente ve en pantalla.
+        $request->merge([
+            'content_text' => str_replace(["\r\n", "\r"], "\n", (string) $request->input('content_text')),
+        ]);
+
         $validated = $request->validate([
             'type'         => 'required|in:product,service,faq,policy,table',
             'title'        => 'required|string|max:200',
@@ -141,6 +149,10 @@ class ClienteDonnaKnowledgeController extends Controller
 
     public function update(Request $request, int $id)
     {
+        $request->merge([
+            'content_text' => str_replace(["\r\n", "\r"], "\n", (string) $request->input('content_text')),
+        ]);
+
         $validated = $request->validate([
             'type'         => 'required|in:product,service,faq,policy,table',
             'title'        => 'required|string|max:200',
@@ -232,6 +244,12 @@ class ClienteDonnaKnowledgeController extends Controller
      */
     public function importConfirm(Request $request)
     {
+        $items = $request->input('items', []);
+        foreach ($items as $key => $item) {
+            $items[$key]['content_text'] = str_replace(["\r\n", "\r"], "\n", (string) ($item['content_text'] ?? ''));
+        }
+        $request->merge(['items' => $items]);
+
         $validated = $request->validate([
             'items'                     => 'required|array|min:1|max:40',
             'items.*.type'              => 'required|in:product,service,faq,policy,table',
