@@ -41,9 +41,10 @@
                 <div class="col-md-6">
                     <label class="form-label required"><i class="fas fa-hand-holding-dollar me-1"></i>Comisión del partner</label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input type="number" name="commission_amount" id="edit_partner_commission" class="form-control" step="0.01" min="0" required>
+                        <input type="number" name="commission_percent" id="edit_partner_commission" class="form-control" step="0.01" min="0.01" max="100" required>
+                        <span class="input-group-text">%</span>
                     </div>
+                    <small class="text-muted">% de lo que el cliente paga (ya con descuento).</small>
                 </div>
 
                 <div class="col-12">

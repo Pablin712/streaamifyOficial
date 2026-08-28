@@ -12,15 +12,15 @@ class DonnaReferralPartner extends Model
         'client_id',
         'code',
         'discount_amount',
-        'commission_amount',
+        'commission_percent',
         'is_active',
         'notes',
     ];
 
     protected $casts = [
-        'discount_amount'   => 'decimal:2',
-        'commission_amount' => 'decimal:2',
-        'is_active'         => 'boolean',
+        'discount_amount'    => 'decimal:2',
+        'commission_percent' => 'decimal:2',
+        'is_active'          => 'boolean',
     ];
 
     public function cliente()
@@ -44,5 +44,15 @@ class DonnaReferralPartner extends Model
     public function discountedPrice(DonnaPlan $plan): float
     {
         return max(0, (float) $plan->price - (float) $this->discount_amount);
+    }
+
+    /**
+     * Comisión en $ para un pago dado, como porcentaje de lo que el cliente
+     * referido realmente pagó (tras su descuento) — escala igual entre
+     * planes mensuales y anuales.
+     */
+    public function commissionForPayment(float $paymentAmount): float
+    {
+        return round($paymentAmount * (float) $this->commission_percent / 100, 2);
     }
 }

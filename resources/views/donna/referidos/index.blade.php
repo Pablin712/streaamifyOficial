@@ -112,7 +112,7 @@
                                 </td>
                                 <td><span class="badge bg-light text-dark border font-monospace">{{ $partner->code }}</span></td>
                                 <td>${{ number_format($partner->discount_amount, 2) }}</td>
-                                <td>${{ number_format($partner->commission_amount, 2) }}</td>
+                                <td>{{ number_format($partner->commission_percent, 2) }}%</td>
                                 <td class="fw-bold text-success">
                                     ${{ number_format($partner->earnings_sum_commission_amount ?? 0, 2) }}
                                     <div class="text-muted small fw-normal">{{ $partner->earnings_count }} pago(s)</div>
@@ -294,7 +294,7 @@ function openEditPartnerModal(id) {
         document.getElementById('edit_partner_client_id').value = partner.client_id;
         document.getElementById('edit_partner_code').value = partner.code;
         document.getElementById('edit_partner_discount').value = partner.discount_amount;
-        document.getElementById('edit_partner_commission').value = partner.commission_amount;
+        document.getElementById('edit_partner_commission').value = partner.commission_percent;
         document.getElementById('edit_partner_is_active').value = partner.is_active ? '1' : '0';
         document.getElementById('edit_partner_notes').value = partner.notes ?? '';
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'editReferralPartnerModal' }));

@@ -44,7 +44,7 @@ class DonnaReferralPartnerController extends Controller
             'client_id'         => 'required|exists:clientes,idcli',
             'code'              => 'required|string|max:30|unique:donna_referral_partners,code',
             'discount_amount'   => 'required|numeric|min:0',
-            'commission_amount' => 'required|numeric|min:0',
+            'commission_percent' => 'required|numeric|min:0.01|max:100',
             'is_active'         => 'required|boolean',
             'notes'             => 'nullable|string|max:1000',
         ]);
@@ -53,7 +53,7 @@ class DonnaReferralPartnerController extends Controller
             'client_id'         => $request->client_id,
             'code'              => strtoupper($request->code),
             'discount_amount'   => $request->discount_amount,
-            'commission_amount' => $request->commission_amount,
+            'commission_percent' => $request->commission_percent,
             'is_active'         => $request->is_active,
             'notes'             => $request->notes,
         ]);
@@ -64,7 +64,7 @@ class DonnaReferralPartnerController extends Controller
             'accion'      => 'Partner de referido Donna creado',
             'descripcion' => 'Cliente: ' . $cliente->nombrecli . ' | Código: ' . $partner->code
                 . ' | Descuento: $' . number_format($partner->discount_amount, 2)
-                . ' | Comisión: $' . number_format($partner->commission_amount, 2),
+                . ' | Comisión: ' . $partner->commission_percent . '%',
             'empleado_id' => Auth::user()->idemp,
         ]);
 
@@ -88,8 +88,8 @@ class DonnaReferralPartnerController extends Controller
                 'client_id'         => $partner->client_id,
                 'client_name'       => $partner->cliente?->nombrecli,
                 'code'              => $partner->code,
-                'discount_amount'   => (float) $partner->discount_amount,
-                'commission_amount' => (float) $partner->commission_amount,
+                'discount_amount'    => (float) $partner->discount_amount,
+                'commission_percent' => (float) $partner->commission_percent,
                 'is_active'         => $partner->is_active,
                 'notes'             => $partner->notes,
             ]);
@@ -110,7 +110,7 @@ class DonnaReferralPartnerController extends Controller
             'client_id'         => 'required|exists:clientes,idcli',
             'code'              => 'required|string|max:30|unique:donna_referral_partners,code,' . $id,
             'discount_amount'   => 'required|numeric|min:0',
-            'commission_amount' => 'required|numeric|min:0',
+            'commission_percent' => 'required|numeric|min:0.01|max:100',
             'is_active'         => 'required|boolean',
             'notes'             => 'nullable|string|max:1000',
         ]);
@@ -119,7 +119,7 @@ class DonnaReferralPartnerController extends Controller
             'client_id'         => $request->client_id,
             'code'              => strtoupper($request->code),
             'discount_amount'   => $request->discount_amount,
-            'commission_amount' => $request->commission_amount,
+            'commission_percent' => $request->commission_percent,
             'is_active'         => $request->is_active,
             'notes'             => $request->notes,
         ]);
@@ -128,7 +128,7 @@ class DonnaReferralPartnerController extends Controller
             'accion'      => 'Partner de referido Donna editado',
             'descripcion' => 'Partner #' . $partner->id . ' | Código: ' . $partner->code
                 . ' | Descuento: $' . number_format($partner->discount_amount, 2)
-                . ' | Comisión: $' . number_format($partner->commission_amount, 2),
+                . ' | Comisión: ' . $partner->commission_percent . '%',
             'empleado_id' => Auth::user()->idemp,
         ]);
 

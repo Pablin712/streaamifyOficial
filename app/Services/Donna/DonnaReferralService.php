@@ -45,10 +45,12 @@ class DonnaReferralService
         DonnaReferralPartner $partner,
         DonnaSubscription $subscription,
         float $paymentAmount,
-        float $commissionAmount,
+        float $commissionPercent,
         string $eventType,
         ?int $empleadoId = null
     ): void {
+        $commissionAmount = round($paymentAmount * $commissionPercent / 100, 2);
+
         Cliente::where('idcli', $partner->client_id)->increment('saldo', $commissionAmount);
 
         DonnaReferralEarning::create([
@@ -64,7 +66,7 @@ class DonnaReferralService
             'accion'      => 'Comisión de referido Donna acreditada',
             'descripcion' => 'Partner cliente ID: ' . $partner->client_id . ' (código ' . $partner->code . ') | '
                 . 'Suscripción #' . $subscription->id . ' | Evento: ' . $eventType . ' | '
-                . 'Comisión: $' . number_format($commissionAmount, 2),
+                . 'Comisión: ' . $commissionPercent . '% de $' . number_format($paymentAmount, 2) . ' = $' . number_format($commissionAmount, 2),
             'empleado_id' => $empleadoId ?? (\App\Models\Empleado::where('nombreemp', 'Laravel')->value('idemp')),
         ]);
     }

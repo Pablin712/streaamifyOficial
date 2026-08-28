@@ -72,7 +72,7 @@ class DonnaRequestController extends Controller
                 'activated_by'    => Auth::user()->idemp,
                 'referral_partner_id'        => $partner?->id,
                 'referral_discount_amount'   => $partner?->discount_amount,
-                'referral_commission_amount' => $partner?->commission_amount,
+                'referral_commission_percent' => $partner?->commission_percent,
             ]);
 
             $solicitud->update([
@@ -90,7 +90,7 @@ class DonnaRequestController extends Controller
             ]);
 
             if ($partner) {
-                $referrals->creditCommission($partner, $sub, $finalPrice, (float) $partner->commission_amount, 'activation', Auth::user()->idemp);
+                $referrals->creditCommission($partner, $sub, $finalPrice, (float) $partner->commission_percent, 'activation', Auth::user()->idemp);
             }
 
             DB::commit();

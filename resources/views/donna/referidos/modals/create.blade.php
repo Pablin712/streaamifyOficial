@@ -44,10 +44,10 @@
                 <div class="col-md-6">
                     <label class="form-label required"><i class="fas fa-hand-holding-dollar me-1"></i>Comisión del partner</label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
-                        <input type="number" name="commission_amount" class="form-control" step="0.01" min="0" placeholder="3.00" required>
+                        <input type="number" name="commission_percent" class="form-control" step="0.01" min="0.01" max="100" placeholder="15.00" required>
+                        <span class="input-group-text">%</span>
                     </div>
-                    <small class="text-muted">Se acredita al saldo del partner en cada pago del referido.</small>
+                    <small class="text-muted">% de lo que el cliente paga (ya con descuento). Se acredita al saldo del partner en cada pago.</small>
                 </div>
 
                 <div class="col-12">

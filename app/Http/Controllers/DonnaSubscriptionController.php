@@ -202,7 +202,7 @@ class DonnaSubscriptionController extends Controller
                 $sub->referralPartner,
                 $sub,
                 (float) $sub->price_paid,
-                (float) $sub->referral_commission_amount,
+                (float) $sub->referral_commission_percent,
                 'renewal',
                 Auth::user()->idemp
             );

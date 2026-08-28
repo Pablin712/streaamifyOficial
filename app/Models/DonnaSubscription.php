@@ -26,7 +26,7 @@ class DonnaSubscription extends Model
         'activated_by',
         'referral_partner_id',
         'referral_discount_amount',
-        'referral_commission_amount',
+        'referral_commission_percent',
     ];
 
     protected $casts = [
@@ -37,7 +37,7 @@ class DonnaSubscription extends Model
         'is_enabled'      => 'boolean',
         'price_paid'      => 'decimal:2',
         'referral_discount_amount'   => 'decimal:2',
-        'referral_commission_amount' => 'decimal:2',
+        'referral_commission_percent' => 'decimal:2',
     ];
 
     public function plan()
