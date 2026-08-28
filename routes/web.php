@@ -104,9 +104,55 @@ Route::get('/condiciones-de-servicio', function () {
 Route::get('/cliente/donna/google/callback', [DonnaGoogleController::class, 'callback'])->name('cliente.donna.google.callback');
 
 Route::get('/donna', function () {
-    $planes = \App\Models\DonnaPlan::active()->get()->groupBy('service_type');
-    $planPersonal = $planes->get('personal')?->first();
-    $planBusiness = $planes->get('business')?->first();
+    $cycleOrder = ['monthly' => 0, 'yearly' => 1, 'one_time' => 2];
+    $planes = \App\Models\DonnaPlan::active()->get()
+        ->sortBy(fn ($p) => $cycleOrder[$p->billing_cycle] ?? 9)
+        ->groupBy('service_type');
+
+    $personalPlans = $planes->get('personal') ?? collect();
+    $businessPlans = $planes->get('business') ?? collect();
+
+    // Plan "canónico" (mensual, o el primero disponible) para descripción/features —
+    // así un plan anual creado con la misma descripción no la duplica en la vista.
+    $planPersonal = $personalPlans->firstWhere('billing_cycle', 'monthly') ?? $personalPlans->first();
+    $planBusiness = $businessPlans->firstWhere('billing_cycle', 'monthly') ?? $businessPlans->first();
+    $planPersonalYearly = $personalPlans->firstWhere('billing_cycle', 'yearly');
+    $planBusinessYearly = $businessPlans->firstWhere('billing_cycle', 'yearly');
+
+    $calcSavingsPct = function ($monthly, $yearly) {
+        if (!$monthly || !$yearly || $monthly->billing_cycle !== 'monthly' || (float) $monthly->price <= 0) {
+            return null;
+        }
+        $annualized = (float) $monthly->price * 12;
+        $pct = round((1 - ((float) $yearly->price / $annualized)) * 100);
+        return $pct > 0 ? $pct : null;
+    };
+    $personalSavingsPct = $calcSavingsPct($planPersonal, $planPersonalYearly);
+    $businessSavingsPct = $calcSavingsPct($planBusiness, $planBusinessYearly);
+
+    $toPlanJs = function ($plan) {
+        if (!$plan) {
+            return null;
+        }
+        return [
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'price' => (float) $plan->price,
+            'currency' => $plan->currency,
+            'cycle_label' => $plan->billing_cycle_label,
+        ];
+    };
+    $donnaPricingData = [
+        'personal' => [
+            'monthly' => $toPlanJs($planPersonal),
+            'yearly'  => $toPlanJs($planPersonalYearly),
+        ],
+        'business' => [
+            'monthly' => $toPlanJs($planBusiness),
+            'yearly'  => $toPlanJs($planBusinessYearly),
+        ],
+    ];
+
     $googleConnected = false;
     $googleInfo = null;
     $subPersonal = null;
@@ -130,7 +176,11 @@ Route::get('/donna', function () {
             ->latest()
             ->first();
     }
-    return view('donna', compact('planPersonal', 'planBusiness', 'googleConnected', 'googleInfo', 'subPersonal', 'subBusiness'));
+    return view('donna', compact(
+        'planPersonal', 'planBusiness', 'planPersonalYearly', 'planBusinessYearly',
+        'personalSavingsPct', 'businessSavingsPct', 'donnaPricingData',
+        'googleConnected', 'googleInfo', 'subPersonal', 'subBusiness'
+    ));
 })->name('donna');
 
 // Imagen de bancos servida por Laravel (compatible con hostings que bloquean /storage directo)

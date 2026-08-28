@@ -547,13 +547,27 @@
                             </div>
                         </div>
 
-                        {{-- Precio dinámico --}}
+                        {{-- Precio dinámico — con toggle Mensual/Anual si existen ambas modalidades --}}
                         @if ($planPersonal)
+                            @if ($planPersonalYearly)
+                                <div class="btn-group donna-billing-toggle mb-3" role="group" aria-label="Modalidad de pago Donna Personal">
+                                    <input type="radio" class="btn-check" name="personal_cycle" id="personal_cycle_monthly" autocomplete="off" checked onchange="donnaSwitchCycle('personal','monthly')">
+                                    <label class="btn btn-outline-primary btn-sm rounded-pill me-2" for="personal_cycle_monthly">Mensual</label>
+
+                                    <input type="radio" class="btn-check" name="personal_cycle" id="personal_cycle_yearly" autocomplete="off" onchange="donnaSwitchCycle('personal','yearly')">
+                                    <label class="btn btn-outline-primary btn-sm rounded-pill" for="personal_cycle_yearly">
+                                        Anual
+                                        @if ($personalSavingsPct)
+                                            <span class="badge bg-success ms-1">Ahorra {{ $personalSavingsPct }}%</span>
+                                        @endif
+                                    </label>
+                                </div>
+                            @endif
                             <div class="mb-3 d-flex align-items-end gap-2">
-                                <span class="display-6 fw-bold" style="color:var(--donna-blue);">
+                                <span class="display-6 fw-bold" id="personal_price_display" style="color:var(--donna-blue);">
                                     ${{ number_format($planPersonal->price, 2) }}
                                 </span>
-                                <span class="text-muted mb-1">
+                                <span class="text-muted mb-1" id="personal_cycle_label">
                                     {{ $planPersonal->currency }} / {{ $planPersonal->billing_cycle_label }}
                                 </span>
                             </div>
@@ -656,22 +670,11 @@
                                     </div>
                                 </div>
                             @elseif ($planPersonal)
-                                @if ($googleConnected)
-                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
-                                        style="background-color:var(--donna-blue);color:#fff;"
-                                        data-bs-toggle="modal" data-bs-target="#modalConfirmarPersonal">
-                                        @if ($clienteSaldo >= $planPersonal->price)
-                                            <i class="bi bi-lightning-fill me-2"></i>Activar ahora — ${{ number_format($planPersonal->price, 2) }}
-                                        @else
-                                            <i class="bi bi-send me-2"></i>Solicitar Donna Personal
-                                        @endif
-                                    </button>
-                                @else
-                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
-                                        style="background-color:var(--donna-blue);color:#fff;opacity:0.5;" disabled>
-                                        <i class="bi bi-lock me-2"></i>Conecta Google primero
-                                    </button>
-                                @endif
+                                <div id="personal_cta_area"
+                                     data-google-connected="{{ $googleConnected ? '1' : '0' }}"
+                                     data-saldo="{{ $clienteSaldo }}"
+                                     data-color="var(--donna-blue)"
+                                     data-color-text="#fff"></div>
                             @endif
                         @else
                             <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Personal"
@@ -698,13 +701,27 @@
                             </div>
                         </div>
 
-                        {{-- Precio dinámico --}}
+                        {{-- Precio dinámico — con toggle Mensual/Anual si existen ambas modalidades --}}
                         @if ($planBusiness)
+                            @if ($planBusinessYearly)
+                                <div class="btn-group donna-billing-toggle mb-3" role="group" aria-label="Modalidad de pago Donna Business">
+                                    <input type="radio" class="btn-check" name="business_cycle" id="business_cycle_monthly" autocomplete="off" checked onchange="donnaSwitchCycle('business','monthly')">
+                                    <label class="btn btn-outline-warning btn-sm rounded-pill me-2" for="business_cycle_monthly">Mensual</label>
+
+                                    <input type="radio" class="btn-check" name="business_cycle" id="business_cycle_yearly" autocomplete="off" onchange="donnaSwitchCycle('business','yearly')">
+                                    <label class="btn btn-outline-warning btn-sm rounded-pill" for="business_cycle_yearly">
+                                        Anual
+                                        @if ($businessSavingsPct)
+                                            <span class="badge bg-success ms-1">Ahorra {{ $businessSavingsPct }}%</span>
+                                        @endif
+                                    </label>
+                                </div>
+                            @endif
                             <div class="mb-3 d-flex align-items-end gap-2">
-                                <span class="display-6 fw-bold" style="color:#c9890a;">
+                                <span class="display-6 fw-bold" id="business_price_display" style="color:#c9890a;">
                                     ${{ number_format($planBusiness->price, 2) }}
                                 </span>
-                                <span class="text-muted mb-1">
+                                <span class="text-muted mb-1" id="business_cycle_label">
                                     {{ $planBusiness->currency }} / {{ $planBusiness->billing_cycle_label }}
                                 </span>
                             </div>
@@ -801,22 +818,11 @@
                                     </div>
                                 </div>
                             @elseif ($planBusiness)
-                                @if ($googleConnected)
-                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
-                                        style="background-color:var(--donna-yellow);color:var(--donna-dark);"
-                                        data-bs-toggle="modal" data-bs-target="#modalConfirmarBusiness">
-                                        @if ($clienteSaldo >= $planBusiness->price)
-                                            <i class="bi bi-lightning-fill me-2"></i>Activar ahora — ${{ number_format($planBusiness->price, 2) }}
-                                        @else
-                                            <i class="bi bi-send me-2"></i>Solicitar Donna Business
-                                        @endif
-                                    </button>
-                                @else
-                                    <button type="button" class="btn fw-bold w-100 rounded-pill py-2"
-                                        style="background-color:var(--donna-yellow);color:var(--donna-dark);opacity:0.5;" disabled>
-                                        <i class="bi bi-lock me-2"></i>Conecta Google primero
-                                    </button>
-                                @endif
+                                <div id="business_cta_area"
+                                     data-google-connected="{{ $googleConnected ? '1' : '0' }}"
+                                     data-saldo="{{ $clienteSaldo }}"
+                                     data-color="var(--donna-yellow)"
+                                     data-color-text="var(--donna-dark)"></div>
                             @endif
                         @else
                             <a href="https://wa.me/593961412826?text=Quiero%20información%20sobre%20Donna%20Business"
@@ -836,7 +842,7 @@
     @auth('cliente')
     @php $clienteSaldo = Auth::guard('cliente')->user()->saldo; @endphp
 
-    {{-- Modal Donna Personal --}}
+    {{-- Modal Donna Personal — contenido de precio/saldo se rellena por JS según el ciclo elegido (mensual/anual) --}}
     @if ($planPersonal && $googleConnected)
     <div class="modal fade" id="modalConfirmarPersonal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -855,9 +861,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background:#f0f4ff;">
                         <div>
                             <div class="fw-semibold">{{ $planPersonal->name }}</div>
-                            <div class="text-muted small">{{ ucfirst($planPersonal->billing_cycle_label) }}</div>
+                            <div class="text-muted small" id="modalPersonalSummaryCycle"></div>
                         </div>
-                        <div class="fw-bold fs-5" style="color:#274698;">${{ number_format($planPersonal->price, 2) }}</div>
+                        <div class="fw-bold fs-5" style="color:#274698;" id="modalPersonalSummaryPrice"></div>
                     </div>
 
                     {{-- Google --}}
@@ -866,51 +872,54 @@
                         <span class="small fw-semibold text-success">Google Calendar & Sheets conectado</span>
                     </div>
 
-                    {{-- Saldo --}}
-                    @if ($clienteSaldo >= $planPersonal->price)
+                    {{-- Saldo suficiente --}}
+                    <div id="modalPersonalEnoughBlock" class="d-none">
                         <div class="d-flex justify-content-between small text-muted mb-1">
                             <span>Tu saldo disponible</span>
-                            <span class="fw-semibold text-success">${{ number_format($clienteSaldo, 2) }}</span>
+                            <span class="fw-semibold text-success" id="modalPersonalSaldoActual"></span>
                         </div>
                         <div class="d-flex justify-content-between small text-muted mb-3">
                             <span>Se descuenta</span>
-                            <span class="fw-semibold text-danger">− ${{ number_format($planPersonal->price, 2) }}</span>
+                            <span class="fw-semibold text-danger" id="modalPersonalSaldoDescuenta"></span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold mb-4">
                             <span>Saldo tras activación</span>
-                            <span>${{ number_format($clienteSaldo - $planPersonal->price, 2) }}</span>
+                            <span id="modalPersonalSaldoResultante"></span>
                         </div>
                         <form method="POST" action="{{ route('cliente.donna.activar') }}">
                             @csrf
-                            <input type="hidden" name="plan_id" value="{{ $planPersonal->id }}">
+                            <input type="hidden" name="plan_id" id="modalPersonalActivarPlanId">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#274698;color:#fff;">
                                 <i class="bi bi-lightning-fill me-2"></i>Confirmar activación
                             </button>
                         </form>
-                    @else
+                    </div>
+
+                    {{-- Saldo insuficiente --}}
+                    <div id="modalPersonalInsufficientBlock" class="d-none">
                         <div class="alert alert-warning small mb-3">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            Saldo insuficiente: tienes ${{ number_format($clienteSaldo, 2) }} y necesitas ${{ number_format($planPersonal->price, 2) }}.
+                            Saldo insuficiente: tienes <span id="modalPersonalSaldoActual2"></span> y necesitas <span id="modalPersonalNecesitas"></span>.
                             <a href="{{ route('recargar.index') }}" class="alert-link">Recargar saldo →</a>
                         </div>
                         <form method="POST" action="{{ route('cliente.donna.solicitar') }}">
                             @csrf
-                            <input type="hidden" name="plan_id" value="{{ $planPersonal->id }}">
+                            <input type="hidden" name="plan_id" id="modalPersonalSolicitarPlanId">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#274698;color:#fff;">
                                 <i class="bi bi-send me-2"></i>Confirmar solicitud
                             </button>
                         </form>
                         <p class="text-center small text-muted mt-2">El equipo activará Donna una vez confirmado el pago.</p>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     @endif
 
-    {{-- Modal Donna Business --}}
+    {{-- Modal Donna Business — contenido de precio/saldo se rellena por JS según el ciclo elegido (mensual/anual) --}}
     @if ($planBusiness && $googleConnected)
     <div class="modal fade" id="modalConfirmarBusiness" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -928,9 +937,9 @@
                     <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-3" style="background:#fffbea;">
                         <div>
                             <div class="fw-semibold">{{ $planBusiness->name }}</div>
-                            <div class="text-muted small">{{ ucfirst($planBusiness->billing_cycle_label) }}</div>
+                            <div class="text-muted small" id="modalBusinessSummaryCycle"></div>
                         </div>
-                        <div class="fw-bold fs-5" style="color:#c9890a;">${{ number_format($planBusiness->price, 2) }}</div>
+                        <div class="fw-bold fs-5" style="color:#c9890a;" id="modalBusinessSummaryPrice"></div>
                     </div>
 
                     <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded-3" style="background:#e8f5e9;">
@@ -938,49 +947,143 @@
                         <span class="small fw-semibold text-success">Google Calendar & Sheets conectado</span>
                     </div>
 
-                    @if ($clienteSaldo >= $planBusiness->price)
+                    {{-- Saldo suficiente --}}
+                    <div id="modalBusinessEnoughBlock" class="d-none">
                         <div class="d-flex justify-content-between small text-muted mb-1">
                             <span>Tu saldo disponible</span>
-                            <span class="fw-semibold text-success">${{ number_format($clienteSaldo, 2) }}</span>
+                            <span class="fw-semibold text-success" id="modalBusinessSaldoActual"></span>
                         </div>
                         <div class="d-flex justify-content-between small text-muted mb-3">
                             <span>Se descuenta</span>
-                            <span class="fw-semibold text-danger">− ${{ number_format($planBusiness->price, 2) }}</span>
+                            <span class="fw-semibold text-danger" id="modalBusinessSaldoDescuenta"></span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold mb-4">
                             <span>Saldo tras activación</span>
-                            <span>${{ number_format($clienteSaldo - $planBusiness->price, 2) }}</span>
+                            <span id="modalBusinessSaldoResultante"></span>
                         </div>
                         <form method="POST" action="{{ route('cliente.donna.activar') }}">
                             @csrf
-                            <input type="hidden" name="plan_id" value="{{ $planBusiness->id }}">
+                            <input type="hidden" name="plan_id" id="modalBusinessActivarPlanId">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#E4B100;color:#1D1D1B;">
                                 <i class="bi bi-lightning-fill me-2"></i>Confirmar activación
                             </button>
                         </form>
-                    @else
+                    </div>
+
+                    {{-- Saldo insuficiente --}}
+                    <div id="modalBusinessInsufficientBlock" class="d-none">
                         <div class="alert alert-warning small mb-3">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            Saldo insuficiente: tienes ${{ number_format($clienteSaldo, 2) }} y necesitas ${{ number_format($planBusiness->price, 2) }}.
+                            Saldo insuficiente: tienes <span id="modalBusinessSaldoActual2"></span> y necesitas <span id="modalBusinessNecesitas"></span>.
                             <a href="{{ route('recargar.index') }}" class="alert-link">Recargar saldo →</a>
                         </div>
                         <form method="POST" action="{{ route('cliente.donna.solicitar') }}">
                             @csrf
-                            <input type="hidden" name="plan_id" value="{{ $planBusiness->id }}">
+                            <input type="hidden" name="plan_id" id="modalBusinessSolicitarPlanId">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#E4B100;color:#1D1D1B;">
                                 <i class="bi bi-send me-2"></i>Confirmar solicitud
                             </button>
                         </form>
                         <p class="text-center small text-muted mt-2">El equipo activará Donna una vez confirmado el pago.</p>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     @endif
     @endauth
+
+    {{-- Datos de precios (mensual/anual) para el toggle de modalidad — sin datos sensibles --}}
+    <script>
+        const donnaPricingData = @json($donnaPricingData);
+
+        const donnaSelectedCycle = { personal: 'monthly', business: 'monthly' };
+
+        function donnaGetSelectedPlan(service) {
+            const cycle = donnaSelectedCycle[service] || 'monthly';
+            return donnaPricingData[service][cycle] || donnaPricingData[service].monthly || donnaPricingData[service].yearly;
+        }
+
+        function donnaSwitchCycle(service, cycle) {
+            const plan = donnaPricingData[service][cycle];
+            if (!plan) return;
+            donnaSelectedCycle[service] = cycle;
+
+            const priceEl = document.getElementById(service + '_price_display');
+            const cycleEl = document.getElementById(service + '_cycle_label');
+            if (priceEl) priceEl.textContent = '$' + plan.price.toFixed(2);
+            if (cycleEl) cycleEl.textContent = plan.currency + ' / ' + plan.cycle_label;
+
+            donnaRenderCta(service);
+        }
+
+        function donnaRenderCta(service) {
+            const area = document.getElementById(service + '_cta_area');
+            if (!area) return;
+            const plan = donnaGetSelectedPlan(service);
+            if (!plan) return;
+
+            const googleConnected = area.dataset.googleConnected === '1';
+            const saldo = parseFloat(area.dataset.saldo || '0');
+            const color = area.dataset.color;
+            const colorText = area.dataset.colorText || '#fff';
+
+            if (!googleConnected) {
+                area.innerHTML = '<button type="button" class="btn fw-bold w-100 rounded-pill py-2" '
+                    + 'style="background-color:' + color + ';color:' + colorText + ';opacity:0.5;" disabled>'
+                    + '<i class="bi bi-lock me-2"></i>Conecta Google primero</button>';
+                return;
+            }
+
+            const cap = service.charAt(0).toUpperCase() + service.slice(1);
+            const label = saldo >= plan.price
+                ? '<i class="bi bi-lightning-fill me-2"></i>Activar ahora — $' + plan.price.toFixed(2)
+                : '<i class="bi bi-send me-2"></i>Solicitar ' + plan.name;
+
+            area.innerHTML = '<button type="button" class="btn fw-bold w-100 rounded-pill py-2" '
+                + 'style="background-color:' + color + ';color:' + colorText + ';" '
+                + 'onclick="donnaOpenConfirmModal(\'' + service + '\')">' + label + '</button>';
+        }
+
+        function donnaOpenConfirmModal(service) {
+            const plan = donnaGetSelectedPlan(service);
+            if (!plan) return;
+            const area = document.getElementById(service + '_cta_area');
+            const saldo = parseFloat(area.dataset.saldo || '0');
+            const cap = service.charAt(0).toUpperCase() + service.slice(1);
+
+            const cycleLabel = plan.cycle_label.charAt(0).toUpperCase() + plan.cycle_label.slice(1);
+            document.getElementById('modal' + cap + 'SummaryCycle').textContent = cycleLabel;
+            document.getElementById('modal' + cap + 'SummaryPrice').textContent = '$' + plan.price.toFixed(2);
+
+            const enoughBlock = document.getElementById('modal' + cap + 'EnoughBlock');
+            const insufficientBlock = document.getElementById('modal' + cap + 'InsufficientBlock');
+
+            if (saldo >= plan.price) {
+                enoughBlock.classList.remove('d-none');
+                insufficientBlock.classList.add('d-none');
+                document.getElementById('modal' + cap + 'SaldoActual').textContent = '$' + saldo.toFixed(2);
+                document.getElementById('modal' + cap + 'SaldoDescuenta').textContent = '− $' + plan.price.toFixed(2);
+                document.getElementById('modal' + cap + 'SaldoResultante').textContent = '$' + (saldo - plan.price).toFixed(2);
+                document.getElementById('modal' + cap + 'ActivarPlanId').value = plan.id;
+            } else {
+                insufficientBlock.classList.remove('d-none');
+                enoughBlock.classList.add('d-none');
+                document.getElementById('modal' + cap + 'SaldoActual2').textContent = '$' + saldo.toFixed(2);
+                document.getElementById('modal' + cap + 'Necesitas').textContent = '$' + plan.price.toFixed(2);
+                document.getElementById('modal' + cap + 'SolicitarPlanId').value = plan.id;
+            }
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirmar' + cap)).show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            donnaRenderCta('personal');
+            donnaRenderCta('business');
+        });
+    </script>
 
     <!-- Cómo funciona -->
     <section id="como-funciona" class="py-5 bg-white">
