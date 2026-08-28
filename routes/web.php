@@ -71,6 +71,7 @@ use App\Http\Controllers\DonnaPlanController;
 use App\Http\Controllers\DonnaSubscriptionController;
 use App\Http\Controllers\DonnaAgentConfigController;
 use App\Http\Controllers\DonnaRequestController;
+use App\Http\Controllers\DonnaReferralPartnerController;
 use App\Http\Controllers\DonnaDashboardController;
 use App\Http\Controllers\ClienteDonnaController;
 use App\Http\Controllers\ClienteDonnaKnowledgeController;
@@ -240,6 +241,7 @@ Route::prefix('/cliente')->middleware([AuthCliente::class])->group(function () {
         Route::post('/donna/config-business', 'saveBusinessConfig')->name('cliente.donna.config-business');
         Route::post('/donna/connect-whatsapp', 'connectWhatsApp')->name('cliente.donna.connect-whatsapp');
         Route::post('/donna/test-mode', 'saveTestMode')->name('cliente.donna.test-mode');
+        Route::post('/donna/referral-preview', 'referralPreview')->name('cliente.donna.referral-preview');
     });
     Route::controller(ClienteDonnaKnowledgeController::class)->group(function () {
         Route::post('/donna/knowledge', 'store')->name('cliente.donna.knowledge.store');
@@ -550,6 +552,13 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
         // Integraciones Google
         Route::post('/integraciones/{id}/revoke', [DonnaGoogleController::class, 'adminRevoke'])->name('donna.integraciones.revoke');
+
+        // Referidos (partners con código de descuento + comisión)
+        Route::get('/referidos', [DonnaReferralPartnerController::class, 'index'])->name('donna.referidos.index');
+        Route::post('/referidos', [DonnaReferralPartnerController::class, 'store'])->name('donna.referidos.store');
+        Route::get('/referidos/{id}', [DonnaReferralPartnerController::class, 'show'])->name('donna.referidos.show');
+        Route::put('/referidos/{id}', [DonnaReferralPartnerController::class, 'update'])->name('donna.referidos.update');
+        Route::delete('/referidos/{id}', [DonnaReferralPartnerController::class, 'destroy'])->name('donna.referidos.destroy');
     });
     // ── Fin Donna Hub ───────────────────────────────────────────
 

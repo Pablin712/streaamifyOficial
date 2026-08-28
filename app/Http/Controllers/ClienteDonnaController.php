@@ -12,6 +12,7 @@ use App\Models\DonnaSubscription;
 use App\Models\DonnaIntegration;
 use App\Models\Empleado;
 use App\Models\Historial;
+use App\Services\Donna\DonnaReferralService;
 use App\Services\Donna\Google\DonnaGoogleTokenService;
 use App\Services\Donna\Google\DonnaBusinessKnowledgeSheetService;
 use App\Services\Donna\Google\DonnaSpreadsheetSetupService;
@@ -19,10 +20,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ClienteDonnaController extends Controller
 {
-    public function solicitar(Request $request)
+    public function solicitar(Request $request, DonnaReferralService $referrals)
     {
         $request->validate(['plan_id' => 'required|exists:donna_plans,id']);
 
@@ -51,17 +53,24 @@ class ClienteDonnaController extends Controller
             );
         }
 
+        try {
+            $partner = $referrals->resolveCode($request->input('referral_code'), $cliente->idcli);
+        } catch (ValidationException $e) {
+            return back()->with('donna_error', $e->getMessage());
+        }
+
         DonnaRequest::create([
-            'client_id' => $cliente->idcli,
-            'plan_id'   => $plan->id,
-            'status'    => 'pending',
-            'message'   => $request->input('message'),
+            'client_id'           => $cliente->idcli,
+            'plan_id'             => $plan->id,
+            'status'              => 'pending',
+            'message'             => $request->input('message'),
+            'referral_partner_id' => $partner?->id,
         ]);
 
         return back()->with('donna_success', '¡Solicitud enviada! El equipo de Streamify se pondrá en contacto contigo pronto para activar Donna.');
     }
 
-    public function activar(Request $request)
+    public function activar(Request $request, DonnaReferralService $referrals)
     {
         $request->validate(['plan_id' => 'required|exists:donna_plans,id']);
 
@@ -73,9 +82,17 @@ class ClienteDonnaController extends Controller
             return back()->with('donna_error', 'Debes conectar tu cuenta de Google antes de activar Donna Personal.');
         }
 
-        if ($cliente->saldo < $plan->price) {
+        try {
+            $partner = $referrals->resolveCode($request->input('referral_code'), $cliente->idcli);
+        } catch (ValidationException $e) {
+            return back()->with('donna_error', $e->getMessage());
+        }
+
+        $finalPrice = $partner ? $partner->discountedPrice($plan) : (float) $plan->price;
+
+        if ($cliente->saldo < $finalPrice) {
             return back()->with('donna_error',
-                'Saldo insuficiente. Necesitas $' . number_format($plan->price, 2) .
+                'Saldo insuficiente. Necesitas $' . number_format($finalPrice, 2) .
                 ' pero tienes $' . number_format($cliente->saldo, 2) . '.'
             );
         }
@@ -139,12 +156,15 @@ class ClienteDonnaController extends Controller
                 'service_type'    => $plan->service_type,
                 'status'          => 'active',
                 'billing_cycle'   => $plan->billing_cycle,
-                'price_paid'      => $plan->price,
+                'price_paid'      => $finalPrice,
                 'currency'        => $plan->currency,
                 'starts_at'       => $now,
                 'expires_at'      => $expiresAt,
                 'last_payment_at' => $now,
                 'is_enabled'      => true,
+                'referral_partner_id'         => $partner?->id,
+                'referral_discount_amount'    => $partner?->discount_amount,
+                'referral_commission_amount'  => $partner?->commission_amount,
             ]);
 
             $activationCode = null;
@@ -175,15 +195,20 @@ class ClienteDonnaController extends Controller
                 ]);
             }
 
-            Cliente::where('idcli', $cliente->idcli)->decrement('saldo', $plan->price);
+            Cliente::where('idcli', $cliente->idcli)->decrement('saldo', $finalPrice);
 
             $sistemaEmp = Empleado::where('nombreemp', 'Laravel')->value('idemp');
 
             Historial::create([
                 'accion'      => 'Donna activada (autoservicio)',
-                'descripcion' => $cliente->nombrecli . ' activó ' . $plan->name . ' por $' . number_format($plan->price, 2),
+                'descripcion' => $cliente->nombrecli . ' activó ' . $plan->name . ' por $' . number_format($finalPrice, 2)
+                    . ($partner ? ' (código de referido ' . $partner->code . ', descuento $' . number_format($partner->discount_amount, 2) . ')' : ''),
                 'empleado_id' => $sistemaEmp,
             ]);
+
+            if ($partner) {
+                $referrals->creditCommission($partner, $sub, $finalPrice, (float) $partner->commission_amount, 'activation', $sistemaEmp);
+            }
 
             DB::commit();
 
@@ -210,6 +235,33 @@ class ClienteDonnaController extends Controller
             DB::rollBack();
             return back()->with('donna_error', 'Error al procesar el pago. Intenta nuevamente.');
         }
+    }
+
+    public function referralPreview(Request $request, DonnaReferralService $referrals)
+    {
+        $request->validate([
+            'plan_id'       => 'required|exists:donna_plans,id',
+            'referral_code' => 'required|string|max:30',
+        ]);
+
+        $cliente = Auth::guard('cliente')->user();
+        $plan    = DonnaPlan::where('id', $request->plan_id)->where('is_active', true)->firstOrFail();
+
+        try {
+            $partner = $referrals->resolveCode($request->input('referral_code'), $cliente->idcli);
+        } catch (ValidationException $e) {
+            return response()->json(['valid' => false, 'message' => $e->getMessage()]);
+        }
+
+        if (!$partner) {
+            return response()->json(['valid' => false, 'message' => 'El código de referido no es válido.']);
+        }
+
+        return response()->json([
+            'valid'            => true,
+            'discount_amount'  => (float) $partner->discount_amount,
+            'discounted_price' => $partner->discountedPrice($plan),
+        ]);
     }
 
     public function connectWhatsApp(Request $request)

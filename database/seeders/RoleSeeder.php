@@ -193,6 +193,9 @@ class RoleSeeder extends Seeder
         $this->syncPermission('donna.suscripciones.store', [$admin, $gerente, $trabajador, $vendedor]);
         $this->syncPermission('donna.solicitudes', [$admin, $gerente, $trabajador, $vendedor, $visitante]);
         $this->syncPermission('donna.solicitudes.manage', [$admin, $gerente, $trabajador, $vendedor]);
+        $this->syncPermission('donna.referidos', [$admin, $gerente]);
+        $this->syncPermission('donna.referidos.store', [$admin, $gerente]);
+        $this->syncPermission('donna.referidos.destroy', [$admin, $gerente]);
 
         // Permisos para vista de cuentas por servicios
         $this->syncPermission('todas_las_cuentas', [$admin, $gerente]);

@@ -10,6 +10,7 @@ use App\Models\DonnaSubscription;
 use App\Models\DonnaRequest;
 use App\Models\Cliente;
 use App\Models\Historial;
+use App\Services\Donna\DonnaReferralService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Gate;
@@ -171,7 +172,7 @@ class DonnaSubscriptionController extends Controller
         return redirect()->route('donna.suscripciones.index')->with('success', 'Suscripción suspendida.');
     }
 
-    public function renew(Request $request, string $id)
+    public function renew(Request $request, string $id, DonnaReferralService $referrals)
     {
         if (!Gate::allows('donna.suscripciones.store')) {
             return $this->jsonOrAbort($request, 403, 'Sin permiso.');
@@ -193,6 +194,19 @@ class DonnaSubscriptionController extends Controller
             'descripcion' => 'Suscripción #' . $sub->id . ' | Nueva fecha de vencimiento: ' . $request->expires_at,
             'empleado_id' => Auth::user()->idemp,
         ]);
+
+        // Comisión de referido recurrente: cada renovación de una suscripción
+        // contratada con código de referido vuelve a acreditar al partner.
+        if ($sub->referral_partner_id && $sub->referralPartner) {
+            $referrals->creditCommission(
+                $sub->referralPartner,
+                $sub,
+                (float) $sub->price_paid,
+                (float) $sub->referral_commission_amount,
+                'renewal',
+                Auth::user()->idemp
+            );
+        }
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Suscripción renovada hasta ' . $request->expires_at . '.']);

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\DonnaPlan;
+use App\Models\DonnaReferralPartner;
 use App\Models\DonnaRequest;
 use App\Models\DonnaSubscription;
 use App\Models\Historial;
+use App\Services\Donna\DonnaReferralService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +29,7 @@ class DonnaRequestController extends Controller
         return view('donna.solicitudes.index', compact('solicitudes'));
     }
 
-    public function approve(Request $request, string $id)
+    public function approve(Request $request, string $id, DonnaReferralService $referrals)
     {
         if (!Gate::allows('donna.solicitudes.manage')) {
             return $this->jsonOrAbort($request, 403, 'Sin permiso para aprobar solicitudes.');
@@ -40,6 +42,10 @@ class DonnaRequestController extends Controller
 
         $solicitud = DonnaRequest::where('status', 'pending')->findOrFail($id);
         $plan = DonnaPlan::findOrFail($solicitud->plan_id);
+        $partner = $solicitud->referral_partner_id
+            ? DonnaReferralPartner::find($solicitud->referral_partner_id)
+            : null;
+        $finalPrice = $partner ? $partner->discountedPrice($plan) : (float) $plan->price;
 
         DB::beginTransaction();
         try {
@@ -50,13 +56,13 @@ class DonnaRequestController extends Controller
                 default    => null,
             };
 
-            DonnaSubscription::create([
+            $sub = DonnaSubscription::create([
                 'client_id'       => $solicitud->client_id,
                 'plan_id'         => $plan->id,
                 'service_type'    => $plan->service_type,
                 'status'          => 'active',
                 'billing_cycle'   => $plan->billing_cycle,
-                'price_paid'      => $plan->price,
+                'price_paid'      => $finalPrice,
                 'currency'        => $plan->currency,
                 'starts_at'       => $now,
                 'expires_at'      => $expiresAt,
@@ -64,6 +70,9 @@ class DonnaRequestController extends Controller
                 'is_enabled'      => true,
                 'notes'           => $request->employee_notes,
                 'activated_by'    => Auth::user()->idemp,
+                'referral_partner_id'        => $partner?->id,
+                'referral_discount_amount'   => $partner?->discount_amount,
+                'referral_commission_amount' => $partner?->commission_amount,
             ]);
 
             $solicitud->update([
@@ -75,9 +84,14 @@ class DonnaRequestController extends Controller
 
             Historial::create([
                 'accion'      => 'Solicitud Donna aprobada',
-                'descripcion' => 'Solicitud #' . $solicitud->id . ' | Cliente ID: ' . $solicitud->client_id . ' | Plan: ' . $plan->name,
+                'descripcion' => 'Solicitud #' . $solicitud->id . ' | Cliente ID: ' . $solicitud->client_id . ' | Plan: ' . $plan->name
+                    . ($partner ? ' | Referido código ' . $partner->code . ', precio $' . number_format($finalPrice, 2) : ''),
                 'empleado_id' => Auth::user()->idemp,
             ]);
+
+            if ($partner) {
+                $referrals->creditCommission($partner, $sub, $finalPrice, (float) $partner->commission_amount, 'activation', Auth::user()->idemp);
+            }
 
             DB::commit();
 

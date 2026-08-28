@@ -24,6 +24,9 @@ class DonnaSubscription extends Model
         'suspended_reason',
         'notes',
         'activated_by',
+        'referral_partner_id',
+        'referral_discount_amount',
+        'referral_commission_amount',
     ];
 
     protected $casts = [
@@ -33,6 +36,8 @@ class DonnaSubscription extends Model
         'next_payment_due'=> 'date',
         'is_enabled'      => 'boolean',
         'price_paid'      => 'decimal:2',
+        'referral_discount_amount'   => 'decimal:2',
+        'referral_commission_amount' => 'decimal:2',
     ];
 
     public function plan()
@@ -43,6 +48,11 @@ class DonnaSubscription extends Model
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'client_id', 'idcli');
+    }
+
+    public function referralPartner()
+    {
+        return $this->belongsTo(DonnaReferralPartner::class, 'referral_partner_id');
     }
 
     public function activatedByEmployee()

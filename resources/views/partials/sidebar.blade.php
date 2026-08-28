@@ -158,7 +158,7 @@
                         </div>
                     @endif
                     {{-- Donna Hub --}}
-                    @if (Auth::user()->hasAnyPermission(['donna.planes', 'donna.suscripciones', 'donna.solicitudes']))
+                    @if (Auth::user()->hasAnyPermission(['donna.planes', 'donna.suscripciones', 'donna.solicitudes', 'donna.referidos']))
                         <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                             data-bs-target="#collapseDonna" aria-expanded="false" aria-controls="collapseDonna">
                             <div class="sb-nav-link-icon"><i class="bi bi-robot"></i></div>
@@ -189,6 +189,11 @@
                                 @if (Auth::user()->hasPermissionTo('donna.solicitudes'))
                                     <a class="nav-link" href="{{ route('donna.solicitudes.index') }}">
                                         <i class="bi bi-inbox me-1"></i> Solicitudes
+                                    </a>
+                                @endif
+                                @if (Auth::user()->hasPermissionTo('donna.referidos'))
+                                    <a class="nav-link" href="{{ route('donna.referidos.index') }}">
+                                        <i class="bi bi-people me-1"></i> Referidos
                                     </a>
                                 @endif
                             </nav>

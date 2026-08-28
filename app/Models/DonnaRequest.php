@@ -16,6 +16,7 @@ class DonnaRequest extends Model
         'employee_notes',
         'reviewed_by',
         'reviewed_at',
+        'referral_partner_id',
     ];
 
     protected $casts = [
@@ -25,6 +26,11 @@ class DonnaRequest extends Model
     public function plan()
     {
         return $this->belongsTo(DonnaPlan::class, 'plan_id');
+    }
+
+    public function referralPartner()
+    {
+        return $this->belongsTo(DonnaReferralPartner::class, 'referral_partner_id');
     }
 
     public function cliente()

@@ -872,6 +872,16 @@
                         <span class="small fw-semibold text-success">Google Calendar & Sheets conectado</span>
                     </div>
 
+                    {{-- Código de referido (opcional) --}}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold mb-1">¿Tienes un código de referido? (opcional)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="modalPersonalReferralInput" class="form-control text-uppercase" placeholder="Código" maxlength="30">
+                            <button type="button" class="btn btn-outline-primary" onclick="donnaApplyReferralCode('personal')">Aplicar</button>
+                        </div>
+                        <div id="modalPersonalReferralMsg" class="small mt-1"></div>
+                    </div>
+
                     {{-- Saldo suficiente --}}
                     <div id="modalPersonalEnoughBlock" class="d-none">
                         <div class="d-flex justify-content-between small text-muted mb-1">
@@ -889,6 +899,7 @@
                         <form method="POST" action="{{ route('cliente.donna.activar') }}">
                             @csrf
                             <input type="hidden" name="plan_id" id="modalPersonalActivarPlanId">
+                            <input type="hidden" name="referral_code" id="modalPersonalActivarReferralCode">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#274698;color:#fff;">
                                 <i class="bi bi-lightning-fill me-2"></i>Confirmar activación
@@ -906,6 +917,7 @@
                         <form method="POST" action="{{ route('cliente.donna.solicitar') }}">
                             @csrf
                             <input type="hidden" name="plan_id" id="modalPersonalSolicitarPlanId">
+                            <input type="hidden" name="referral_code" id="modalPersonalSolicitarReferralCode">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#274698;color:#fff;">
                                 <i class="bi bi-send me-2"></i>Confirmar solicitud
@@ -947,6 +959,16 @@
                         <span class="small fw-semibold text-success">Google Calendar & Sheets conectado</span>
                     </div>
 
+                    {{-- Código de referido (opcional) --}}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold mb-1">¿Tienes un código de referido? (opcional)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="modalBusinessReferralInput" class="form-control text-uppercase" placeholder="Código" maxlength="30">
+                            <button type="button" class="btn btn-outline-warning" onclick="donnaApplyReferralCode('business')">Aplicar</button>
+                        </div>
+                        <div id="modalBusinessReferralMsg" class="small mt-1"></div>
+                    </div>
+
                     {{-- Saldo suficiente --}}
                     <div id="modalBusinessEnoughBlock" class="d-none">
                         <div class="d-flex justify-content-between small text-muted mb-1">
@@ -964,6 +986,7 @@
                         <form method="POST" action="{{ route('cliente.donna.activar') }}">
                             @csrf
                             <input type="hidden" name="plan_id" id="modalBusinessActivarPlanId">
+                            <input type="hidden" name="referral_code" id="modalBusinessActivarReferralCode">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#E4B100;color:#1D1D1B;">
                                 <i class="bi bi-lightning-fill me-2"></i>Confirmar activación
@@ -981,6 +1004,7 @@
                         <form method="POST" action="{{ route('cliente.donna.solicitar') }}">
                             @csrf
                             <input type="hidden" name="plan_id" id="modalBusinessSolicitarPlanId">
+                            <input type="hidden" name="referral_code" id="modalBusinessSolicitarReferralCode">
                             <button type="submit" class="btn fw-bold w-100 rounded-pill py-2"
                                 style="background-color:#E4B100;color:#1D1D1B;">
                                 <i class="bi bi-send me-2"></i>Confirmar solicitud
@@ -1047,36 +1071,112 @@
                 + 'onclick="donnaOpenConfirmModal(\'' + service + '\')">' + label + '</button>';
         }
 
+        const donnaAppliedReferral = { personal: null, business: null };
+
         function donnaOpenConfirmModal(service) {
             const plan = donnaGetSelectedPlan(service);
             if (!plan) return;
-            const area = document.getElementById(service + '_cta_area');
-            const saldo = parseFloat(area.dataset.saldo || '0');
             const cap = service.charAt(0).toUpperCase() + service.slice(1);
 
             const cycleLabel = plan.cycle_label.charAt(0).toUpperCase() + plan.cycle_label.slice(1);
             document.getElementById('modal' + cap + 'SummaryCycle').textContent = cycleLabel;
-            document.getElementById('modal' + cap + 'SummaryPrice').textContent = '$' + plan.price.toFixed(2);
+
+            // Reset del código de referido cada vez que se abre el modal
+            donnaAppliedReferral[service] = null;
+            const referralInput = document.getElementById('modal' + cap + 'ReferralInput');
+            const referralMsg = document.getElementById('modal' + cap + 'ReferralMsg');
+            if (referralInput) referralInput.value = '';
+            if (referralMsg) { referralMsg.textContent = ''; referralMsg.className = 'small mt-1'; }
+
+            donnaRefreshModalPricing(service);
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirmar' + cap)).show();
+        }
+
+        function donnaRefreshModalPricing(service) {
+            const plan = donnaGetSelectedPlan(service);
+            if (!plan) return;
+            const cap = service.charAt(0).toUpperCase() + service.slice(1);
+            const area = document.getElementById(service + '_cta_area');
+            const saldo = parseFloat(area.dataset.saldo || '0');
+            const applied = donnaAppliedReferral[service];
+            const finalPrice = applied ? applied.discounted_price : plan.price;
+
+            document.getElementById('modal' + cap + 'SummaryPrice').textContent = '$' + finalPrice.toFixed(2);
 
             const enoughBlock = document.getElementById('modal' + cap + 'EnoughBlock');
             const insufficientBlock = document.getElementById('modal' + cap + 'InsufficientBlock');
+            const activarCodeInput = document.getElementById('modal' + cap + 'ActivarReferralCode');
+            const solicitarCodeInput = document.getElementById('modal' + cap + 'SolicitarReferralCode');
+            if (activarCodeInput) activarCodeInput.value = applied ? applied.code : '';
+            if (solicitarCodeInput) solicitarCodeInput.value = applied ? applied.code : '';
 
-            if (saldo >= plan.price) {
+            if (saldo >= finalPrice) {
                 enoughBlock.classList.remove('d-none');
                 insufficientBlock.classList.add('d-none');
                 document.getElementById('modal' + cap + 'SaldoActual').textContent = '$' + saldo.toFixed(2);
-                document.getElementById('modal' + cap + 'SaldoDescuenta').textContent = '− $' + plan.price.toFixed(2);
-                document.getElementById('modal' + cap + 'SaldoResultante').textContent = '$' + (saldo - plan.price).toFixed(2);
+                document.getElementById('modal' + cap + 'SaldoDescuenta').textContent = '− $' + finalPrice.toFixed(2);
+                document.getElementById('modal' + cap + 'SaldoResultante').textContent = '$' + (saldo - finalPrice).toFixed(2);
                 document.getElementById('modal' + cap + 'ActivarPlanId').value = plan.id;
             } else {
                 insufficientBlock.classList.remove('d-none');
                 enoughBlock.classList.add('d-none');
                 document.getElementById('modal' + cap + 'SaldoActual2').textContent = '$' + saldo.toFixed(2);
-                document.getElementById('modal' + cap + 'Necesitas').textContent = '$' + plan.price.toFixed(2);
+                document.getElementById('modal' + cap + 'Necesitas').textContent = '$' + finalPrice.toFixed(2);
                 document.getElementById('modal' + cap + 'SolicitarPlanId').value = plan.id;
             }
+        }
 
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalConfirmar' + cap)).show();
+        async function donnaApplyReferralCode(service) {
+            const cap = service.charAt(0).toUpperCase() + service.slice(1);
+            const input = document.getElementById('modal' + cap + 'ReferralInput');
+            const msgEl = document.getElementById('modal' + cap + 'ReferralMsg');
+            const code = input.value.trim();
+
+            if (!code) {
+                donnaAppliedReferral[service] = null;
+                msgEl.textContent = '';
+                msgEl.className = 'small mt-1';
+                donnaRefreshModalPricing(service);
+                return;
+            }
+
+            const plan = donnaGetSelectedPlan(service);
+            msgEl.className = 'small mt-1 text-muted';
+            msgEl.textContent = 'Verificando...';
+
+            try {
+                const response = await fetch('{{ route("cliente.donna.referral-preview") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ plan_id: plan.id, referral_code: code }),
+                });
+                const data = await response.json();
+
+                if (data.valid) {
+                    donnaAppliedReferral[service] = {
+                        code: code,
+                        discount_amount: data.discount_amount,
+                        discounted_price: data.discounted_price,
+                    };
+                    msgEl.className = 'small mt-1 text-success';
+                    msgEl.textContent = '¡Código válido! Ahorras $' + data.discount_amount.toFixed(2) + '.';
+                } else {
+                    donnaAppliedReferral[service] = null;
+                    msgEl.className = 'small mt-1 text-danger';
+                    msgEl.textContent = data.message || 'Código no válido.';
+                }
+            } catch (e) {
+                donnaAppliedReferral[service] = null;
+                msgEl.className = 'small mt-1 text-danger';
+                msgEl.textContent = 'Error de conexión.';
+            }
+
+            donnaRefreshModalPricing(service);
         }
 
         document.addEventListener('DOMContentLoaded', function () {
