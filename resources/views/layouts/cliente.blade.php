@@ -27,22 +27,21 @@
     <link href="{{ asset('css/styles2.css') }}" rel="stylesheet" />
     <!-- Mundial 2026 -->
     <link href="{{ asset('css/mundial-2026.css') }}?v=1" rel="stylesheet" />
-    @yield('styles')
-    <style>
-        .btn-outline-primary {
-            border-color: #274698;
-            color: #274698;
-            background-color: transparent;
-        }
 
-        .btn-outline-primary:hover {
-            background-color: #274698;
-            /* Color de fondo al pasar el mouse */
-            color: white;
-            /* Color del texto al pasar el mouse */
-            border-color: #274698;
-        }
-    </style>
+    {{-- Sistema de diseño Streamify: tipografía + tokens + puente Bootstrap.
+         Va SIEMPRE al final de los CSS de framework y antes de @yield('styles')
+         para que una vista pueda seguir sobrescribiendo puntualmente. --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet"
+        href="{{ asset('css/streamify-ui.css') }}?v={{ filemtime(public_path('css/streamify-ui.css')) }}">
+
+    @yield('styles')
+    {{-- Nota: el antiguo override de .btn-outline-primary con #274698 incrustado
+         se eliminó — streamify-ui.css ya lo resuelve con el token --sf-brand. --}}
 </head>
 
 <body id="page-top">
@@ -85,26 +84,23 @@
                 <div class="d-flex align-items-center">
                     @if (Auth::guard('cliente')->check())
                         <!-- Mostrar saldo del cliente -->
-                        <span class="me-3 text-dark fw-bold">
+                        <span class="me-3 sf-saldo">
                             Saldo: ${{ number_format(Auth::guard('cliente')->user()->saldo, 2) }}
                         </span>
                         <!-- Menú de usuario autenticado -->
                         <div class="dropdown">
-                            <button class="btn btn-light border rounded-pill text-dark fw-bold dropdown-toggle"
-                                type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false"
-                                style="background-color: #E4B100;">
-                                <i
-                                    class="bi bi-person-circle me-2 text-dark"></i>{{ Auth::guard('cliente')->user()->nombrecli }}
+                            <button class="btn border rounded-pill fw-bold dropdown-toggle sf-account-btn"
+                                type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle me-2"></i>{{ Auth::guard('cliente')->user()->nombrecli }}
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu"
-                                style="background-color: #FFFFFF; border-color: #E4B100;">
-                                <li><a class="dropdown-item text-dark fw-semibold"
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
+                                <li><a class="dropdown-item fw-semibold"
                                         href="{{ route('cliente.perfil') }}">Perfil</a></li>
-                                <li><a class="dropdown-item text-dark fw-semibold"
+                                <li><a class="dropdown-item fw-semibold"
                                         href="{{ route('recargar.index') }}">Recargar saldo</a></li>
-                                <li><a class="dropdown-item text-dark fw-semibold"
+                                <li><a class="dropdown-item fw-semibold"
                                         href="{{ route('historial.cliente') }}">Actividad</a></li>
-                                <li><a class="dropdown-item text-dark fw-semibold"
+                                <li><a class="dropdown-item fw-semibold"
                                         href="{{ route('codigo.index') }}">Códigos</a></li>
                                 <li><a class="dropdown-item text-danger fw-semibold"
                                         onclick="document.getElementById('logout-form').submit();">
@@ -120,12 +116,11 @@
                     @else
                         <!-- Opciones de Sign Up y Login -->
                         <a href="{{ route('cliente.login') }}"
-                            class="btn btn-outline-primary me-2 rounded-pill fw-bold"> {{-- style="border-color: #274698; color: #274698; --}}
+                            class="btn btn-outline-primary me-2 rounded-pill fw-bold">
                             <i class="bi bi-box-arrow-in-right me-1"></i>Login
                         </a>
-                        <a href="{{ route('register') }}" class="btn rounded-pill fw-bold text-white"
-                            style="background-color: #D41216;">
-                            <i class="bi bi-person-plus-fill me-1"></i>Sign Up
+                        <a href="{{ route('register') }}" class="btn btn-danger rounded-pill fw-bold">
+                            <i class="bi bi-person-plus-fill me-1"></i>Registrarme
                         </a>
                     @endif
                 </div>
@@ -138,34 +133,31 @@
     </header>
     @yield('sections')
     <!-- Mashead header-->
-    <footer id="pie" class="bg-dark text-white text-center py-4">
-        <div class="container">
+    <footer id="pie" class="text-center py-5">
+        <div class="sf-container">
             <div class="mb-3">
-                <a href="{{ route('donna') }}" class="text-warning fw-semibold small me-3 text-decoration-none">
+                <a href="{{ route('donna') }}" class="sf-footer-highlight fw-semibold me-3">
                     <i class="bi bi-robot me-1"></i>Donna AI
                 </a>
-                <a href="{{ route('tutorial') }}" class="text-white-50 small text-decoration-none">
-                    Tutorial
-                </a>
+                <a href="{{ route('tutorial') }}">Tutorial</a>
             </div>
-            <div class="mb-2 small">
-                <a href="{{ route('legal.privacidad') }}" class="text-white-50 text-decoration-none me-3">Política de Privacidad</a>
-                <a href="{{ route('legal.terminos') }}" class="text-white-50 text-decoration-none">Condiciones de Servicio</a>
+            <div class="mb-3">
+                <a href="{{ route('legal.privacidad') }}" class="me-3">Política de Privacidad</a>
+                <a href="{{ route('legal.terminos') }}">Condiciones de Servicio</a>
             </div>
-            <p class="mb-2">© <span id="currentYear"></span> Streamify. Todos los derechos reservados.</p>
-            <p class="small">Diseñado por Pablo Jiménez</p>
-            <div>
-                <a href="https://www.facebook.com/share/1Cco5izY9Y/?mibextid=wwXIfr" class="text-white me-3"
-                    target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook"></i></a>
-                {{-- <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a> --}}
-                <a href="https://www.instagram.com/stribarra" class="text-white me-3" target="_blank"
-                    rel="noopener noreferrer"><i class="bi bi-instagram"></i></a>
-                <a href="https://www.tiktok.com/@lv_pablin" class="text-white" target="_blank"
-                    rel="noopener noreferrer"><i class="bi bi-tiktok"></i></a>
-                <a href="https://t.me/Streamifyhq" class="text-white" target="_blank" rel="noopener noreferrer">
+            <div class="sf-footer-social mb-3">
+                <a href="https://www.facebook.com/share/1Cco5izY9Y/?mibextid=wwXIfr" class="me-3" target="_blank"
+                    rel="noopener noreferrer" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                <a href="https://www.instagram.com/stribarra" class="me-3" target="_blank"
+                    rel="noopener noreferrer" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                <a href="https://www.tiktok.com/@lv_pablin" class="me-3" target="_blank"
+                    rel="noopener noreferrer" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+                <a href="https://t.me/Streamifyhq" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
                     <i class="bi bi-telegram"></i>
                 </a>
             </div>
+            <p class="mb-1">© <span id="currentYear"></span> Streamify. Todos los derechos reservados.</p>
+            <p class="mb-0 small">Diseñado por Pablo Jiménez</p>
         </div>
     </footer>
     <!-- Bootstrap core JS-->

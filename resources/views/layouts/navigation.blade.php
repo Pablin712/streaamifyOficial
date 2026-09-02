@@ -43,6 +43,19 @@
          se renombra el archivo fisico cada vez que cambia su contenido para forzar una URL nueva. --}}
     <link rel="stylesheet" href="{{ asset('css/modal-system.v2.css') }}?v={{ filemtime(public_path('css/modal-system.v2.css')) }}">
 
+    {{-- Sistema de diseño Streamify: tipografía + tokens + puente Bootstrap.
+         Va SIEMPRE al final de los CSS de framework y antes de @yield('styles')
+         para que una vista pueda seguir sobrescribiendo puntualmente.
+         Comparte tokens con el layout público (layouts/cliente.blade.php),
+         así que panel y landing quedan visualmente idénticos. --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet"
+        href="{{ asset('css/streamify-ui.css') }}?v={{ filemtime(public_path('css/streamify-ui.css')) }}">
+
     @yield('styles')
     @livewireStyles
 </head>

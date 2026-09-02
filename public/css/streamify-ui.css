@@ -1,0 +1,787 @@
+/* ============================================================================
+   STREAMIFY UI — Sistema de diseño unificado
+   ----------------------------------------------------------------------------
+   Fuente única de verdad visual para TODA la aplicación: landing pública,
+   tienda, panel administrativo, Donna y correos.
+
+   Estructura tomada del artefacto "Streamify Metrics" (tipografía editorial,
+   tarjetas de 12px, bordes finos de 1px, micro-etiquetas en versalitas,
+   números tabulares, dark mode por tokens) con la PALETA DE MARCA Streamify
+   (azul #274698, dorado #E4B100, rojo #D41216, tinta #1D1D1B).
+
+   ORDEN DE CARGA: este archivo se carga SIEMPRE al final, después de
+   Bootstrap / styles.css / styles2.css / themes.css, para poder reescribir
+   los componentes heredados sin usar !important salvo donde es inevitable.
+
+   Se divide en cuatro capas:
+     1. TOKENS           — variables de diseño (lo único que se debería tocar)
+     2. BASE             — tipografía y ritmo del documento
+     3. PUENTE BOOTSTRAP — reescribe .btn/.card/.table/.modal/... heredados
+     4. COMPONENTES SF   — primitivas nuevas (.sf-*) para vistas nuevas
+   ========================================================================== */
+
+/* ==========================================================================
+   1. TOKENS
+   ========================================================================== */
+:root {
+    /* --- Marca ------------------------------------------------------------ */
+    --sf-brand:          #274698;   /* azul corporativo — acción primaria     */
+    --sf-brand-strong:   #1d3576;   /* hover / pressed                        */
+    --sf-brand-soft:     #eaeefa;   /* fondo suave de acento                  */
+    --sf-brand-contrast: #ffffff;
+
+    --sf-gold:           #E4B100;   /* dorado — destaques comerciales, promos */
+    --sf-gold-strong:    #c69a00;
+    --sf-gold-soft:      #fdf5db;
+    --sf-gold-contrast:  #1D1D1B;
+
+    --sf-red:            #D41216;   /* rojo — urgencia comercial, destructivo */
+    --sf-red-strong:     #ad0e11;
+    --sf-red-soft:       #fdeaea;
+    --sf-red-contrast:   #ffffff;
+
+    /* --- Superficies ------------------------------------------------------ */
+    --sf-surface-page:   #fcfbf8;   /* fondo de página, off-white cálido      */
+    --sf-surface-card:   #ffffff;   /* tarjetas y paneles                     */
+    --sf-surface-sunken: #f5f3ee;   /* secciones alternas, tracks, thead      */
+    --sf-surface-inverse:#1D1D1B;   /* bloques oscuros (hero, footer, CTA)    */
+
+    /* --- Tinta ------------------------------------------------------------ */
+    --sf-ink:            #1D1D1B;   /* texto principal                        */
+    --sf-ink-secondary:  #575756;   /* texto de apoyo                         */
+    --sf-ink-muted:      #8a8884;   /* metadatos, micro-etiquetas             */
+    --sf-ink-inverse:    #f7f6f3;   /* texto sobre superficie oscura          */
+
+    /* --- Bordes ----------------------------------------------------------- */
+    --sf-border:         #e4e1d9;   /* borde estructural                      */
+    --sf-border-soft:    #eeece6;   /* separador interno entre filas          */
+    --sf-border-strong:  #d3cfc4;   /* inputs, foco visible                   */
+
+    /* --- Estado ----------------------------------------------------------- */
+    --sf-good:           #0f8a4d;
+    --sf-good-soft:      #e6f4ec;
+    --sf-warning:        #d99206;
+    --sf-warning-soft:   #fdf1dc;
+    --sf-critical:       #c62828;
+    --sf-critical-soft:  #fbeaea;
+    --sf-info:           #1a6fa8;
+    --sf-info-soft:      #e7f1f8;
+
+    /* --- Tipografía ------------------------------------------------------- */
+    --sf-font-display: 'Fraunces', 'Newsreader', Georgia, 'Times New Roman', serif;
+    --sf-font-sans:    'IBM Plex Sans', 'Mulish', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --sf-font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+
+    --sf-text-xs:   0.72rem;
+    --sf-text-sm:   0.82rem;
+    --sf-text-base: 0.94rem;
+    --sf-text-lg:   1.08rem;
+    --sf-text-xl:   1.3rem;
+    --sf-text-2xl:  1.7rem;
+    --sf-text-3xl:  2.3rem;
+    --sf-text-4xl:  3.1rem;
+
+    /* --- Forma ------------------------------------------------------------ */
+    --sf-radius-sm:   8px;
+    --sf-radius:      12px;   /* radio canónico de tarjetas y paneles         */
+    --sf-radius-lg:   18px;
+    --sf-radius-pill: 999px;
+
+    /* --- Elevación (sutil: la jerarquía la da el borde, no la sombra) ------ */
+    --sf-shadow-sm: 0 1px 2px rgba(29, 29, 27, 0.05);
+    --sf-shadow:    0 4px 14px rgba(29, 29, 27, 0.08);
+    --sf-shadow-lg: 0 12px 34px rgba(29, 29, 27, 0.12);
+
+    /* --- Ritmo ------------------------------------------------------------ */
+    --sf-space-1: 4px;
+    --sf-space-2: 8px;
+    --sf-space-3: 12px;
+    --sf-space-4: 16px;
+    --sf-space-5: 22px;
+    --sf-space-6: 32px;
+    --sf-space-7: 48px;
+    --sf-space-8: 72px;
+
+    --sf-transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    --sf-container:  1180px;
+}
+
+/* --- Dark mode ------------------------------------------------------------
+   Opt-in mediante los atributos que la app YA usa (theme-manager.js):
+   <html data-dark-mode="true"> y/o <html data-bs-theme="dark">.
+   No se usa prefers-color-scheme porque las vistas legacy tienen colores
+   incrustados que se romperían sin aviso.                                   */
+[data-dark-mode="true"],
+[data-bs-theme="dark"] {
+    --sf-brand:          #7b9aed;
+    --sf-brand-strong:   #9ab2f3;
+    --sf-brand-soft:     #21294a;
+    --sf-brand-contrast: #10131f;
+
+    --sf-gold:           #f0c435;
+    --sf-gold-strong:    #f7d668;
+    --sf-gold-soft:      #3a2f10;
+    --sf-gold-contrast:  #17160f;
+
+    --sf-red:            #f06b6e;
+    --sf-red-strong:     #f58e90;
+    --sf-red-soft:       #3d1a1b;
+    --sf-red-contrast:   #1a0e0e;
+
+    --sf-surface-page:   #16151a;
+    --sf-surface-card:   #1f1e25;
+    --sf-surface-sunken: #26252d;
+    --sf-surface-inverse:#0f0e12;
+
+    --sf-ink:            #edece9;
+    --sf-ink-secondary:  #b6b3ad;
+    --sf-ink-muted:      #8a8781;
+    --sf-ink-inverse:    #edece9;
+
+    --sf-border:         #33323b;
+    --sf-border-soft:    #2b2a32;
+    --sf-border-strong:  #45444f;
+
+    --sf-good-soft:      #12301f;
+    --sf-warning-soft:   #362a10;
+    --sf-critical-soft:  #3a1a1a;
+    --sf-info-soft:      #14293a;
+
+    --sf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sf-shadow:    0 4px 14px rgba(0, 0, 0, 0.45);
+    --sf-shadow-lg: 0 12px 34px rgba(0, 0, 0, 0.55);
+}
+
+/* ==========================================================================
+   2. BASE
+   ========================================================================== */
+body {
+    font-family: var(--sf-font-sans);
+    font-size: var(--sf-text-base);
+    line-height: 1.6;
+    color: var(--sf-ink);
+    background-color: var(--sf-surface-page);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-family: var(--sf-font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    color: var(--sf-ink);
+}
+
+h1, .h1 { font-size: clamp(2rem, 4vw, var(--sf-text-4xl)); }
+h2, .h2 { font-size: clamp(1.6rem, 3vw, var(--sf-text-3xl)); }
+h3, .h3 { font-size: var(--sf-text-2xl); }
+h4, .h4 { font-size: var(--sf-text-xl); }
+h5, .h5 { font-size: var(--sf-text-lg); }
+h6, .h6 { font-size: var(--sf-text-base); }
+
+.lead { font-size: var(--sf-text-lg); color: var(--sf-ink-secondary); font-weight: 400; }
+.text-muted { color: var(--sf-ink-secondary) !important; }
+small, .small { font-size: var(--sf-text-sm); }
+
+a { color: var(--sf-brand); text-decoration: none; transition: color var(--sf-transition); }
+a:hover { color: var(--sf-brand-strong); }
+
+hr { border-color: var(--sf-border); opacity: 1; }
+
+::selection { background: var(--sf-gold); color: var(--sf-gold-contrast); }
+
+:focus-visible {
+    outline: 2px solid var(--sf-brand);
+    outline-offset: 2px;
+    border-radius: var(--sf-radius-sm);
+}
+
+/* Números: siempre monoespaciados y tabulares — dinero, fechas, contadores.  */
+.sf-num, .num, td.sf-num, .sf-money {
+    font-family: var(--sf-font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+}
+
+/* ==========================================================================
+   3. PUENTE BOOTSTRAP
+   Reescribe los componentes que ya usan las 204 vistas Blade existentes,
+   para que hereden el sistema sin tocar su HTML.
+   ========================================================================== */
+
+/* --- Variables nativas de Bootstrap 5 ------------------------------------ */
+:root,
+[data-bs-theme="light"],
+[data-bs-theme="dark"] {
+    --bs-primary:        var(--sf-brand);
+    --bs-primary-rgb:    39, 70, 152;
+    --bs-secondary:      var(--sf-ink-secondary);
+    --bs-success:        var(--sf-good);
+    --bs-danger:         var(--sf-red);
+    --bs-warning:        var(--sf-gold);
+    --bs-info:           var(--sf-info);
+    --bs-body-color:     var(--sf-ink);
+    --bs-body-bg:        var(--sf-surface-page);
+    --bs-border-color:   var(--sf-border);
+    --bs-border-radius:  var(--sf-radius);
+    --bs-font-sans-serif: var(--sf-font-sans);
+    --bs-link-color:     var(--sf-brand);
+    --bs-link-hover-color: var(--sf-brand-strong);
+}
+
+/* --- Botones ------------------------------------------------------------- */
+.btn {
+    --sf-btn-bg: transparent;
+    --sf-btn-fg: var(--sf-ink);
+    --sf-btn-border: transparent;
+    --sf-btn-bg-hover: transparent;
+
+    font-family: var(--sf-font-sans);
+    font-size: var(--sf-text-sm);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    line-height: 1.4;
+    padding: 0.55rem 1.05rem;
+    border-radius: var(--sf-radius-sm);
+    border: 1px solid var(--sf-btn-border);
+    background-color: var(--sf-btn-bg);
+    color: var(--sf-btn-fg);
+    transition: background-color var(--sf-transition), border-color var(--sf-transition),
+                color var(--sf-transition), transform var(--sf-transition);
+    box-shadow: none;
+}
+.btn:hover  { background-color: var(--sf-btn-bg-hover); color: var(--sf-btn-fg); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled, .btn.disabled { opacity: 0.5; }
+.btn-lg { font-size: var(--sf-text-base); padding: 0.75rem 1.5rem; }
+.btn-sm { font-size: var(--sf-text-xs); padding: 0.38rem 0.75rem; }
+.btn.rounded-pill { border-radius: var(--sf-radius-pill); }
+
+.btn-primary {
+    --sf-btn-bg: var(--sf-brand); --sf-btn-bg-hover: var(--sf-brand-strong);
+    --sf-btn-fg: var(--sf-brand-contrast); --sf-btn-border: var(--sf-brand);
+}
+.btn-primary:hover { border-color: var(--sf-brand-strong); }
+
+.btn-secondary {
+    --sf-btn-bg: var(--sf-surface-card); --sf-btn-bg-hover: var(--sf-surface-sunken);
+    --sf-btn-fg: var(--sf-ink); --sf-btn-border: var(--sf-border-strong);
+}
+.btn-success {
+    --sf-btn-bg: var(--sf-good); --sf-btn-bg-hover: #0c7341;
+    --sf-btn-fg: #fff; --sf-btn-border: var(--sf-good);
+}
+.btn-danger {
+    --sf-btn-bg: var(--sf-red); --sf-btn-bg-hover: var(--sf-red-strong);
+    --sf-btn-fg: var(--sf-red-contrast); --sf-btn-border: var(--sf-red);
+}
+.btn-warning {
+    --sf-btn-bg: var(--sf-gold); --sf-btn-bg-hover: var(--sf-gold-strong);
+    --sf-btn-fg: var(--sf-gold-contrast); --sf-btn-border: var(--sf-gold);
+}
+.btn-info {
+    --sf-btn-bg: var(--sf-info); --sf-btn-bg-hover: #155a89;
+    --sf-btn-fg: #fff; --sf-btn-border: var(--sf-info);
+}
+.btn-dark {
+    --sf-btn-bg: var(--sf-surface-inverse); --sf-btn-bg-hover: #333330;
+    --sf-btn-fg: var(--sf-ink-inverse); --sf-btn-border: var(--sf-surface-inverse);
+}
+.btn-light {
+    --sf-btn-bg: var(--sf-surface-card); --sf-btn-bg-hover: var(--sf-surface-sunken);
+    --sf-btn-fg: var(--sf-ink); --sf-btn-border: var(--sf-border);
+}
+.btn-outline-primary {
+    --sf-btn-fg: var(--sf-brand); --sf-btn-border: var(--sf-brand);
+    --sf-btn-bg: transparent; --sf-btn-bg-hover: var(--sf-brand);
+}
+.btn-outline-primary:hover { color: var(--sf-brand-contrast); }
+.btn-outline-secondary {
+    --sf-btn-fg: var(--sf-ink-secondary); --sf-btn-border: var(--sf-border-strong);
+    --sf-btn-bg: transparent; --sf-btn-bg-hover: var(--sf-surface-sunken);
+}
+.btn-outline-danger {
+    --sf-btn-fg: var(--sf-red); --sf-btn-border: var(--sf-red);
+    --sf-btn-bg: transparent; --sf-btn-bg-hover: var(--sf-red);
+}
+.btn-outline-danger:hover { color: var(--sf-red-contrast); }
+.btn-outline-success {
+    --sf-btn-fg: var(--sf-good); --sf-btn-border: var(--sf-good);
+    --sf-btn-bg: transparent; --sf-btn-bg-hover: var(--sf-good);
+}
+.btn-outline-success:hover { color: #fff; }
+.btn-outline-light {
+    --sf-btn-fg: #fff; --sf-btn-border: rgba(255, 255, 255, 0.5);
+    --sf-btn-bg: transparent; --sf-btn-bg-hover: rgba(255, 255, 255, 0.14);
+}
+.btn-outline-light:hover { color: #fff; }
+.btn-link { --sf-btn-fg: var(--sf-brand); text-decoration: none; }
+.btn-link:hover { text-decoration: underline; }
+
+/* --- Tarjetas ------------------------------------------------------------ */
+.card {
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    box-shadow: none;
+}
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--sf-border);
+    font-family: var(--sf-font-sans);
+    font-weight: 600;
+    font-size: var(--sf-text-sm);
+    color: var(--sf-ink);
+    padding: var(--sf-space-4) var(--sf-space-5);
+}
+.card-body   { padding: var(--sf-space-5); }
+.card-footer { background-color: transparent; border-top: 1px solid var(--sf-border); }
+.card-title  { font-family: var(--sf-font-display); font-weight: 600; }
+
+/* Las sombras de utilidad de Bootstrap se vuelven sutiles, no se anulan. */
+.shadow-sm { box-shadow: var(--sf-shadow-sm) !important; }
+.shadow    { box-shadow: var(--sf-shadow) !important; }
+.shadow-lg { box-shadow: var(--sf-shadow-lg) !important; }
+
+/* --- Tablas (patrón "ledger" del artefacto) ------------------------------ */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--sf-ink);
+    --bs-table-border-color: var(--sf-border-soft);
+    --bs-table-striped-bg: var(--sf-surface-sunken);
+    --bs-table-hover-bg: var(--sf-brand-soft);
+    font-size: var(--sf-text-sm);
+    margin-bottom: 0;
+}
+.table > thead > tr > th {
+    font-family: var(--sf-font-sans);
+    font-size: var(--sf-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sf-ink-muted);
+    background-color: transparent;
+    border-bottom: 1px solid var(--sf-border);
+    white-space: nowrap;
+    padding: 0.4rem 0.85rem 0.7rem;
+    vertical-align: bottom;
+}
+.table > tbody > tr > td {
+    border-bottom: 1px solid var(--sf-border-soft);
+    border-top: 0;
+    padding: 0.7rem 0.85rem;
+    vertical-align: middle;
+    color: var(--sf-ink);
+}
+.table > tbody > tr:last-child > td { border-bottom: 0; }
+
+/* --- Formularios --------------------------------------------------------- */
+.form-control, .form-select, .input-group-text, textarea.form-control {
+    font-family: var(--sf-font-sans);
+    font-size: var(--sf-text-sm);
+    color: var(--sf-ink);
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border-strong);
+    border-radius: var(--sf-radius-sm);
+    padding: 0.55rem 0.8rem;
+    transition: border-color var(--sf-transition), box-shadow var(--sf-transition);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--sf-brand);
+    box-shadow: 0 0 0 3px var(--sf-brand-soft);
+    background-color: var(--sf-surface-card);
+    color: var(--sf-ink);
+}
+.form-control::placeholder { color: var(--sf-ink-muted); }
+.form-label {
+    font-size: var(--sf-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sf-ink-muted);
+    margin-bottom: 0.35rem;
+}
+.form-text { font-size: var(--sf-text-xs); color: var(--sf-ink-muted); }
+.input-group-text { background-color: var(--sf-surface-sunken); color: var(--sf-ink-secondary); }
+.form-check-input:checked { background-color: var(--sf-brand); border-color: var(--sf-brand); }
+
+/* --- Modales ------------------------------------------------------------- */
+.modal-content {
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    box-shadow: var(--sf-shadow-lg);
+}
+.modal-header {
+    border-bottom: 1px solid var(--sf-border);
+    padding: var(--sf-space-4) var(--sf-space-5);
+}
+.modal-title  { font-family: var(--sf-font-display); font-size: var(--sf-text-lg); font-weight: 600; }
+.modal-body   { padding: var(--sf-space-5); }
+.modal-footer { border-top: 1px solid var(--sf-border); padding: var(--sf-space-4) var(--sf-space-5); gap: var(--sf-space-2); }
+
+/* --- Badges -------------------------------------------------------------- */
+.badge {
+    font-family: var(--sf-font-sans);
+    font-size: var(--sf-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.32em 0.7em;
+    border-radius: var(--sf-radius-pill);
+}
+.badge.bg-primary   { background-color: var(--sf-brand-soft) !important; color: var(--sf-brand) !important; }
+.badge.bg-success   { background-color: var(--sf-good-soft) !important; color: var(--sf-good) !important; }
+.badge.bg-danger    { background-color: var(--sf-critical-soft) !important; color: var(--sf-critical) !important; }
+.badge.bg-warning   { background-color: var(--sf-warning-soft) !important; color: var(--sf-warning) !important; }
+.badge.bg-info      { background-color: var(--sf-info-soft) !important; color: var(--sf-info) !important; }
+.badge.bg-secondary { background-color: var(--sf-surface-sunken) !important; color: var(--sf-ink-secondary) !important; }
+
+/* --- Alertas ------------------------------------------------------------- */
+.alert {
+    border-radius: var(--sf-radius);
+    border: 1px solid transparent;
+    border-left-width: 3px;
+    font-size: var(--sf-text-sm);
+    padding: var(--sf-space-3) var(--sf-space-4);
+}
+.alert-success { background: var(--sf-good-soft);     border-color: var(--sf-good);     color: var(--sf-ink); }
+.alert-danger  { background: var(--sf-critical-soft); border-color: var(--sf-critical); color: var(--sf-ink); }
+.alert-warning { background: var(--sf-warning-soft);  border-color: var(--sf-warning);  color: var(--sf-ink); }
+.alert-info    { background: var(--sf-info-soft);     border-color: var(--sf-info);     color: var(--sf-ink); }
+
+/* --- Navegación, dropdowns, breadcrumb, acordeón, paginación ------------- */
+.dropdown-menu {
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    box-shadow: var(--sf-shadow);
+    padding: var(--sf-space-2);
+    font-size: var(--sf-text-sm);
+}
+.dropdown-item {
+    border-radius: var(--sf-radius-sm);
+    padding: 0.5rem 0.7rem;
+    color: var(--sf-ink);
+    font-weight: 500;
+}
+.dropdown-item:hover, .dropdown-item:focus { background-color: var(--sf-brand-soft); color: var(--sf-brand); }
+.dropdown-divider { border-color: var(--sf-border-soft); }
+
+.breadcrumb { font-size: var(--sf-text-xs); text-transform: uppercase; letter-spacing: 0.05em; }
+.breadcrumb-item, .breadcrumb-item.active { color: var(--sf-ink-muted); }
+.breadcrumb-item a { color: var(--sf-ink-secondary); }
+
+.accordion {
+    --bs-accordion-bg: var(--sf-surface-card);
+    --bs-accordion-border-color: var(--sf-border);
+    --bs-accordion-border-radius: var(--sf-radius);
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 3px var(--sf-brand-soft);
+    --bs-accordion-active-bg: var(--sf-brand-soft);
+    --bs-accordion-active-color: var(--sf-brand);
+}
+.accordion-button {
+    font-family: var(--sf-font-sans);
+    font-weight: 600;
+    font-size: var(--sf-text-base);
+    box-shadow: none;
+}
+.accordion-body { color: var(--sf-ink-secondary); font-size: var(--sf-text-sm); }
+
+.page-link { color: var(--sf-brand); border-color: var(--sf-border); font-size: var(--sf-text-sm); }
+.page-item.active .page-link { background-color: var(--sf-brand); border-color: var(--sf-brand); }
+
+.nav-tabs { border-bottom-color: var(--sf-border); }
+.nav-tabs .nav-link {
+    font-size: var(--sf-text-sm); font-weight: 600; color: var(--sf-ink-secondary);
+    border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+}
+.nav-tabs .nav-link.active {
+    color: var(--sf-brand); background: transparent; border-bottom-color: var(--sf-brand);
+}
+
+/* --- Utilidades de fondo heredadas: se reconducen a tokens --------------- */
+.bg-light { background-color: var(--sf-surface-sunken) !important; }
+.bg-white { background-color: var(--sf-surface-card) !important; }
+.bg-dark  { background-color: var(--sf-surface-inverse) !important; color: var(--sf-ink-inverse); }
+
+/* Colores de marca heredados de principal.blade.php, ahora tokenizados */
+.bg-streamify-yellow { background-color: var(--sf-gold);  color: var(--sf-gold-contrast); }
+.bg-streamify-red    { background-color: var(--sf-red);   color: var(--sf-red-contrast); }
+.bg-streamify-blue   { background-color: var(--sf-brand); color: var(--sf-brand-contrast); }
+.bg-streamify-black  { background-color: var(--sf-surface-inverse); color: var(--sf-ink-inverse); }
+.bg-streamify-gray   { background-color: var(--sf-ink-secondary); color: #fff; }
+
+/* ==========================================================================
+   4. COMPONENTES SF — primitivas para todo lo nuevo
+   ========================================================================== */
+
+/* --- Contenedor y secciones --------------------------------------------- */
+.sf-container { width: 100%; max-width: var(--sf-container); margin-inline: auto; padding-inline: var(--sf-space-5); }
+.sf-section   { padding-block: var(--sf-space-8); }
+.sf-section--sunken  { background-color: var(--sf-surface-sunken); }
+.sf-section--inverse { background-color: var(--sf-surface-inverse); color: var(--sf-ink-inverse); }
+.sf-section--inverse h1,
+.sf-section--inverse h2,
+.sf-section--inverse h3 { color: #fff; }
+.sf-section--inverse .sf-eyebrow { color: var(--sf-gold); }
+.sf-section--inverse p,
+.sf-section--inverse .sf-lead { color: rgba(255, 255, 255, 0.72); }
+
+/* --- Micro-etiqueta en versalitas (firma del sistema) -------------------- */
+.sf-eyebrow {
+    display: block;
+    font-family: var(--sf-font-sans);
+    font-size: var(--sf-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--sf-ink-muted);
+    margin-bottom: var(--sf-space-2);
+}
+
+.sf-section-head { max-width: 46rem; margin-bottom: var(--sf-space-6); }
+.sf-section-head--center { margin-inline: auto; text-align: center; }
+.sf-title { font-family: var(--sf-font-display); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.sf-lead  { font-size: var(--sf-text-lg); color: var(--sf-ink-secondary); margin-top: var(--sf-space-3); }
+
+/* --- Panel: la caja canónica --------------------------------------------- */
+.sf-panel {
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    padding: var(--sf-space-5);
+}
+.sf-panel--flush  { padding: 0; overflow: hidden; }
+.sf-panel--accent { background-color: var(--sf-brand-soft); border-color: var(--sf-brand); }
+.sf-panel-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: var(--sf-space-3); flex-wrap: wrap; margin-bottom: var(--sf-space-4);
+}
+.sf-panel-title { font-weight: 600; font-size: var(--sf-text-lg); font-family: var(--sf-font-display); margin: 0; }
+.sf-panel-meta  { font-size: var(--sf-text-xs); color: var(--sf-ink-muted); }
+
+/* --- Tarjeta interactiva (feature, combo, producto) ---------------------- */
+.sf-card {
+    display: flex; flex-direction: column; gap: var(--sf-space-3);
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    padding: var(--sf-space-5);
+    height: 100%;
+    transition: border-color var(--sf-transition), transform var(--sf-transition), box-shadow var(--sf-transition);
+}
+a.sf-card, .sf-card--link { color: inherit; }
+a.sf-card:hover, .sf-card--link:hover {
+    border-color: var(--sf-brand);
+    transform: translateY(-2px);
+    box-shadow: var(--sf-shadow);
+    color: inherit;
+}
+.sf-card-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; flex: none;
+    border-radius: var(--sf-radius-sm);
+    background-color: var(--sf-brand-soft);
+    color: var(--sf-brand);
+    font-size: 1.15rem;
+}
+.sf-card-icon--gold { background-color: var(--sf-gold-soft); color: var(--sf-gold-strong); }
+.sf-card-icon--red  { background-color: var(--sf-red-soft);  color: var(--sf-red); }
+.sf-card-icon--good { background-color: var(--sf-good-soft); color: var(--sf-good); }
+.sf-card-title { font-family: var(--sf-font-sans); font-weight: 600; font-size: var(--sf-text-base); margin: 0; }
+.sf-card-text  { font-size: var(--sf-text-sm); color: var(--sf-ink-secondary); margin: 0; }
+
+/* --- Rejilla ------------------------------------------------------------- */
+.sf-grid { display: grid; gap: var(--sf-space-4); }
+.sf-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sf-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sf-grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sf-split {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: var(--sf-space-7); align-items: center;
+}
+
+/* --- KPI ----------------------------------------------------------------- */
+.sf-kpi {
+    display: flex; flex-direction: column; gap: var(--sf-space-2);
+    background-color: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    padding: var(--sf-space-4) var(--sf-space-5);
+}
+.sf-kpi--primary { background-color: var(--sf-brand-soft); border-color: var(--sf-brand); }
+.sf-kpi-label { font-size: var(--sf-text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--sf-ink-muted); }
+.sf-kpi-value { font-family: var(--sf-font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: var(--sf-text-2xl); letter-spacing: -0.02em; }
+.sf-kpi-sub   { font-size: var(--sf-text-sm); color: var(--sf-ink-secondary); }
+.sf-kpi-delta { font-size: var(--sf-text-sm); font-weight: 600; }
+.sf-kpi-delta.is-up   { color: var(--sf-good); }
+.sf-kpi-delta.is-down { color: var(--sf-critical); }
+
+/* --- Estado -------------------------------------------------------------- */
+.sf-status { display: inline-flex; align-items: center; gap: var(--sf-space-2); font-size: var(--sf-text-sm); color: var(--sf-ink-secondary); white-space: nowrap; }
+.sf-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.sf-dot--good     { background: var(--sf-good); }
+.sf-dot--warning  { background: var(--sf-warning); }
+.sf-dot--critical { background: var(--sf-critical); }
+.sf-dot--muted    { background: var(--sf-ink-muted); }
+
+.sf-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: var(--sf-text-xs); font-weight: 600;
+    padding: 4px 10px; border-radius: var(--sf-radius-pill);
+    background: var(--sf-surface-sunken); color: var(--sf-ink-secondary);
+}
+.sf-tag--brand    { background: var(--sf-brand-soft);    color: var(--sf-brand); }
+.sf-tag--gold     { background: var(--sf-gold-soft);     color: var(--sf-gold-strong); }
+.sf-tag--good     { background: var(--sf-good-soft);     color: var(--sf-good); }
+.sf-tag--critical { background: var(--sf-critical-soft); color: var(--sf-critical); }
+
+/* --- Botones SF (equivalentes sin depender de Bootstrap) ----------------- */
+.sf-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--sf-space-2);
+    font-family: var(--sf-font-sans); font-size: var(--sf-text-sm); font-weight: 600;
+    padding: 0.62rem 1.15rem;
+    border: 1px solid transparent; border-radius: var(--sf-radius-sm);
+    cursor: pointer; text-align: center;
+    transition: background-color var(--sf-transition), border-color var(--sf-transition), color var(--sf-transition);
+}
+.sf-btn--primary { background: var(--sf-brand); border-color: var(--sf-brand); color: var(--sf-brand-contrast); }
+.sf-btn--primary:hover { background: var(--sf-brand-strong); border-color: var(--sf-brand-strong); color: #fff; }
+.sf-btn--gold { background: var(--sf-gold); border-color: var(--sf-gold); color: var(--sf-gold-contrast); }
+.sf-btn--gold:hover { background: var(--sf-gold-strong); border-color: var(--sf-gold-strong); color: var(--sf-gold-contrast); }
+.sf-btn--ghost { background: transparent; border-color: var(--sf-border-strong); color: var(--sf-ink); }
+.sf-btn--ghost:hover { background: var(--sf-surface-sunken); color: var(--sf-ink); }
+.sf-btn--onDark { background: transparent; border-color: rgba(255, 255, 255, 0.45); color: #fff; }
+.sf-btn--onDark:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.sf-btn--lg { font-size: var(--sf-text-base); padding: 0.8rem 1.6rem; }
+
+/* --- Lista de filas separadas ------------------------------------------- */
+.sf-rows > * + * { border-top: 1px solid var(--sf-border-soft); }
+.sf-row { display: flex; justify-content: space-between; align-items: center; gap: var(--sf-space-3); padding: var(--sf-space-3) 0; }
+.sf-row-name { font-weight: 600; font-size: var(--sf-text-sm); }
+.sf-row-meta { font-size: var(--sf-text-xs); color: var(--sf-ink-muted); margin-top: 2px; }
+
+/* --- Barra de progreso --------------------------------------------------- */
+.sf-bar-track { background: var(--sf-border-soft); border-radius: 5px; height: 8px; overflow: hidden; }
+.sf-bar-fill  { height: 100%; border-radius: 5px; background: var(--sf-brand); }
+
+/* --- Scroll horizontal seguro (tablas anchas, nunca el body) ------------ */
+.sf-scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ==========================================================================
+   4b. COMPATIBILIDAD CON themes.css (temas de temporada)
+   --------------------------------------------------------------------------
+   themes.css define `body { background: var(--bg-body) }` y
+   `.card { background: var(--bg-card) }` con selectores planos. Como este
+   archivo se carga DESPUÉS, ganaría siempre y dejaría muertos los temas de
+   navidad, año nuevo, mundial2026, etc.
+
+   Cuando hay un tema de temporada activo (`<html data-theme="…">`) le
+   devolvemos el mando a themes.css. Sin tema activo —el caso normal— manda
+   el sistema de diseño.
+
+   El dark mode de themes.css usa `!important` bajo [data-dark-mode="true"],
+   así que sigue ganando por sí solo y no hace falta tocarlo aquí.
+   ========================================================================== */
+html[data-theme] body          { background-color: var(--bg-body); }
+html[data-theme] .card         { background-color: var(--bg-card); }
+html[data-theme] .modal-content { background-color: var(--bg-card); }
+
+/* ==========================================================================
+   4c. SHELL PÚBLICO (layouts/cliente.blade.php)
+   --------------------------------------------------------------------------
+   Navbar y footer compartidos por las 11 vistas públicas (landing, tienda,
+   perfil, recargas, códigos, historial, tutorial, legales, Donna).
+   El tema New Age los deja con Kanit y un azul #2937f0 que no es de marca.
+   `#mainNav` y `#pie` son IDs, así que hay que igualar la especificidad.
+   El ScrollSpy de scripts2.js sigue funcionando: solo cambian colores.
+   ========================================================================== */
+#mainNav {
+    background-color: var(--sf-surface-card);
+    border-bottom: 1px solid var(--sf-border);
+    padding-block: 0.85rem;
+}
+#mainNav .navbar-brand {
+    font-family: var(--sf-font-display);
+    font-weight: 600;
+    font-size: var(--sf-text-xl);
+    letter-spacing: -0.02em;
+    color: var(--sf-ink);
+}
+#mainNav .navbar-brand:hover,
+#mainNav .navbar-brand:active { color: var(--sf-brand); }
+
+#mainNav .navbar-nav .nav-item .nav-link {
+    font-size: var(--sf-text-sm);
+    font-weight: 600;
+    color: var(--sf-ink-secondary);
+}
+#mainNav .navbar-nav .nav-item .nav-link:hover { color: var(--sf-ink); }
+#mainNav .navbar-nav .nav-item .nav-link.active { color: var(--sf-brand); }
+#mainNav .navbar-toggler {
+    font-size: var(--sf-text-sm);
+    color: var(--sf-ink);
+    border-color: var(--sf-border);
+}
+
+/* Saldo del cliente en la barra: es una cifra, va en mono tabular. */
+#mainNav .sf-saldo {
+    font-family: var(--sf-font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--sf-text-sm);
+    font-weight: 600;
+    color: var(--sf-ink);
+}
+
+/* Botón de cuenta: dorado de marca, sin hex incrustado en el Blade. */
+#mainNav .sf-account-btn {
+    background-color: var(--sf-gold);
+    border-color: var(--sf-gold);
+    color: var(--sf-gold-contrast);
+}
+#mainNav .sf-account-btn:hover {
+    background-color: var(--sf-gold-strong);
+    border-color: var(--sf-gold-strong);
+    color: var(--sf-gold-contrast);
+}
+
+/* Footer */
+#pie {
+    background-color: var(--sf-surface-inverse) !important;
+    color: rgba(255, 255, 255, 0.72);
+    border-top: 1px solid var(--sf-border);
+    font-size: var(--sf-text-sm);
+}
+#pie a { color: rgba(255, 255, 255, 0.72); }
+#pie a:hover { color: #fff; }
+#pie .sf-footer-highlight { color: var(--sf-gold); }
+#pie .sf-footer-social { font-size: 1.15rem; }
+
+/* ==========================================================================
+   5. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 991.98px) {
+    .sf-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sf-split   { grid-template-columns: 1fr; gap: var(--sf-space-5); }
+    .sf-section { padding-block: var(--sf-space-7); }
+}
+@media (max-width: 575.98px) {
+    .sf-grid--2, .sf-grid--3, .sf-grid--4 { grid-template-columns: 1fr; }
+    .sf-container { padding-inline: var(--sf-space-4); }
+    .sf-panel, .sf-card { padding: var(--sf-space-4); }
+}
+
+@media print {
+    .sf-panel, .card { border-color: #ccc; box-shadow: none; }
+    body { background: #fff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
