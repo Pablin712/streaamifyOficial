@@ -229,17 +229,30 @@
             ],
         ];
 
-        // Crear directamente, sin pasar por el listado.
+        /*
+         * Crear rapido.
+         *
+         * Casi ningun modulo tiene ya vista `create` propia: se crea desde un
+         * modal dentro del listado. Las rutas *.create siguen declaradas pero
+         * apuntan a vistas que ya no existen, asi que enlazarlas daba un 500.
+         *
+         * Por eso cada entrada lleva el listado + el nombre de su modal, y el
+         * puente del layout (?modal=) lo abre al llegar. Las dos excepciones
+         * que si tienen pagina propia -ventas y roles- van directas.
+         *
+         * Formato: [ruta, modal|null, icono, acento, etiqueta, permiso]
+         */
         $crear = [
-            ['ventas.create',        'fa-cart-plus',      'brand',    'Nueva venta',         'ventas.create'],
-            ['clientes.create',      'fa-user-plus',      'good',     'Nuevo cliente',       'clientes.create'],
-            ['cuentas.create',       'fa-plus',           'brand',    'Nueva cuenta',        'cuentas.create'],
-            ['productos.create',     'fa-box-open',       'info',     'Nuevo producto',      'productos.create'],
-            ['servicios.create',     'fa-bell-concierge', 'gold',     'Nuevo servicio',      'servicios.create'],
-            ['proveedores.create',   'fa-truck-ramp-box', 'warning',  'Nuevo proveedor',     'proveedores.create'],
-            ['valores.create',       'fa-tag',            'gold',     'Nuevo valor',         'valores.create'],
-            ['mantenimientos.create','fa-wrench',         'critical', 'Nuevo mantenimiento', 'mantenimientos.create'],
-            ['empleados.create',     'fa-user-tie',       'brand',    'Nuevo empleado',      'empleados.create'],
+            ['ventas.create',  null,                   'fa-cart-plus',      'brand',    'Nueva venta',         'ventas.create'],
+            ['clientes',       'createClienteModal',   'fa-user-plus',      'good',     'Nuevo cliente',       'clientes.store'],
+            ['cuentas',        'createCuentaModal',    'fa-plus',           'brand',    'Nueva cuenta',        'cuentas.store'],
+            ['productos.index','createProductoModal',  'fa-box-open',       'info',     'Nuevo producto',      'productos.store'],
+            ['servicios',      'createServicioModal',  'fa-bell-concierge', 'gold',     'Nuevo servicio',      'servicios.store'],
+            ['proveedores',    'createProveedorModal', 'fa-truck-ramp-box', 'warning',  'Nuevo proveedor',     'proveedores.store'],
+            ['valores',        'createValorModal',     'fa-tag',            'gold',     'Nuevo valor',         'valores.store'],
+            ['mantenimientos', 'create-mantenimiento', 'fa-wrench',         'critical', 'Nuevo mantenimiento', 'mantenimientos.store'],
+            ['empleados',      'createEmpleadoModal',  'fa-user-tie',       'brand',    'Nuevo empleado',      'empleados.store'],
+            ['roles.create',   null,                   'fa-user-shield',    'critical', 'Nuevo rol',           'roles.store'],
         ];
 
         $esAdmin = Auth::user()->hasRole('Admin');
@@ -303,7 +316,7 @@
     @endif
 
     @php
-        $crearVisibles = array_filter($crear, fn($c) => Auth::user()->can($c[4]) && Route::has($c[0]));
+        $crearVisibles = array_filter($crear, fn($c) => Auth::user()->can($c[5]) && Route::has($c[0]));
     @endphp
 
     @if (count($crearVisibles))
@@ -314,12 +327,17 @@
             </div>
             <div class="ini-rejilla">
                 @foreach ($crearVisibles as $c)
-                    <a href="{{ route($c[0]) }}" class="ini-acceso ini-acceso--crear sf-tint--{{ $c[2] }}"
-                       data-buscar="{{ Str::lower('crear rapido nuevo ' . $c[3]) }}">
-                        <span class="ini-icono"><i class="fas {{ $c[1] }}"></i></span>
+                    @php
+                        // Con modal: se abre solo al llegar al listado.
+                        $destino = $c[1] ? route($c[0]) . '?modal=' . $c[1] : route($c[0]);
+                    @endphp
+                    <a href="{{ $destino }}" class="ini-acceso ini-acceso--crear sf-tint--{{ $c[3] }}"
+                       data-buscar="{{ Str::lower('crear rapido nuevo ' . $c[4]) }}"
+                       title="{{ $c[4] }}">
+                        <span class="ini-icono"><i class="fas {{ $c[2] }}"></i></span>
                         <span class="ini-texto">
-                            <span class="ini-nombre">{{ $c[3] }}</span>
-                            <span class="ini-desc">Crear directamente</span>
+                            <span class="ini-nombre">{{ $c[4] }}</span>
+                            <span class="ini-desc">{{ $c[1] ? 'Abre el formulario' : 'Página completa' }}</span>
                         </span>
                     </a>
                 @endforeach

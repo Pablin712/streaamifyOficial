@@ -9,6 +9,7 @@ use App\Support\ClienteAuth;
 use App\Services\ClienteMensajeMasivoService;
 use App\Services\ConcentracionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -121,14 +122,19 @@ class ClienteController extends Controller
     }
 
     // Mostrar formulario para crear un cliente (para el caso general)
+    /**
+     * Ya no existe una vista `create` para clientes: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
-        /** @var \App\Models\Empleado $user */
-        $user = Auth::user();
-        if (!$user->hasPermissionTo('clientes.store')) {
+        if (!Gate::allows('clientes.store')) {
             abort(403, 'No tienes permiso para crear clientes.');
         }
-        return view('sales.clientes.create');
+
+        return redirect()->route('clientes', ['modal' => 'createClienteModal']);
     }
 
     public function store(Request $request)

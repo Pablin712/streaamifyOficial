@@ -69,15 +69,19 @@ class ProductoController extends Controller
         return $serviciosConfig;
     }
 
+    /**
+     * Ya no existe una vista `create` para productos: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
         if (!Gate::allows('productos.store')) {
             abort(403, 'No tienes permiso para crear productos.');
         }
-        $categorias = Categoria::all();
-        $tipos_producto = TipoProducto::all();
-        $servicios = Servicio::all();
-        return view('inventory.productos.create', compact('categorias', 'tipos_producto', 'servicios'));
+
+        return redirect()->route('productos.index', ['modal' => 'createProductoModal']);
     }
 
     public function store(Request $request)

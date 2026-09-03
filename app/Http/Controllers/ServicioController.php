@@ -31,13 +31,19 @@ class ServicioController extends Controller
         return view('inventory.servicios.index', compact('servicios'));
     }
 
+    /**
+     * Ya no existe una vista `create` para servicios: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
         if (!Gate::allows('servicios.store')) {
             abort(403, 'No tienes permiso para crear servicios.');
         }
 
-        return view('inventory.servicios.create');
+        return redirect()->route('servicios', ['modal' => 'createServicioModal']);
     }
 
     public function store(Request $request)

@@ -121,6 +121,46 @@
     <!-- Alpine.js para modales - DEBE cargarse ANTES de jQuery y Select2 -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <script>
+        /*
+         * Abrir un modal desde la URL:  /admin/servicios?modal=createServicioModal
+         *
+         * La mayoría de los módulos ya no tienen vista `create` propia — se crea
+         * desde un modal dentro del listado. Sin esto, un acceso directo de
+         * "crear" solo podía llevar al listado y el usuario tenía que buscar el
+         * botón. Los modales escuchan `open-modal` (ver components/modal),
+         * así que basta con emitirlo cuando Alpine ya está listo.
+         *
+         * El parámetro se borra de la URL después: si no, recargar la página
+         * volvería a abrir el modal.
+         */
+        (function () {
+            const modal = new URLSearchParams(window.location.search).get('modal');
+            if (!modal) return;
+
+            let abierto = false;
+
+            function abrir() {
+                if (abierto) return;
+                abierto = true;
+
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: modal }));
+
+                const url = new URL(window.location);
+                url.searchParams.delete('modal');
+                window.history.replaceState({}, '', url);
+            }
+
+            // Alpine avisa cuando ya ha montado los componentes.
+            document.addEventListener('alpine:initialized', abrir);
+
+            // Reserva: si Alpine ya se había inicializado antes de registrar el
+            // listener (Livewire también lo arranca), el evento no vuelve a
+            // dispararse y el modal nunca se abriria.
+            window.addEventListener('load', () => setTimeout(abrir, 300));
+        })();
+    </script>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 

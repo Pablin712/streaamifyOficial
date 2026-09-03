@@ -20,12 +20,19 @@ class ProveedorController extends Controller
         return view('inventory.proveedores.index', compact('proveedores'));
     }
 
+    /**
+     * Ya no existe una vista `create` para proveedores: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
         if (!Gate::allows('proveedores.store')) {
             abort(403, 'No tienes permiso para crear proveedores.');
         }
-        return view('inventory.proveedores.create');
+
+        return redirect()->route('proveedores', ['modal' => 'createProveedorModal']);
     }
 
     public function store(Request $request)

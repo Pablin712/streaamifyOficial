@@ -184,13 +184,19 @@ class CuentaController extends Controller
         ];
     }
 
+    /**
+     * Ya no existe una vista `create` para cuentas: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
         if (!Gate::allows('cuentas.store')) {
             abort(403, 'No tienes permiso para crear cuentas.');
         }
-        $valores = Valor::where('activoval', true)->get();
-        return view('inventory.cuentas.create', compact('valores'));
+
+        return redirect()->route('cuentas', ['modal' => 'createCuentaModal']);
     }
     public function show($idcue)
     {

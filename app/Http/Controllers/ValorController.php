@@ -49,14 +49,19 @@ class ValorController extends Controller
         return view('inventory.valores.index', compact('valores', 'serviciosPrincipales', 'servicios', 'proveedores'));
     }
 
+    /**
+     * Ya no existe una vista `create` para valores: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
         if (!Gate::allows('valores.store')) {
             abort(403, 'No tienes permiso para crear valores.');
         }
-        $proveedores = Proveedor::where('activopro', true)->get();
-        $servicios = Servicio::all();
-        return view('inventory.valores.create', compact('servicios', 'proveedores'));
+
+        return redirect()->route('valores', ['modal' => 'createValorModal']);
     }
 
     public function store(Request $request)

@@ -221,12 +221,19 @@ class EmpleadoController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+    /**
+     * Ya no existe una vista `create` para empleados: se crean desde un modal
+     * dentro del listado. Esta ruta devolvia "View not found" (error 500), asi
+     * que ahora redirige al listado con el modal ya abierto. Se conserva para
+     * que enlaces antiguos y marcadores sigan funcionando.
+     */
     public function create()
     {
         if (!Gate::allows('empleados.store')) {
             abort(403, 'No tienes permiso para crear empleados.');
         }
-        return view('employee.create');
+
+        return redirect()->route('empleados', ['modal' => 'createEmpleadoModal']);
     }
 
     /**
