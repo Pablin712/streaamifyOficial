@@ -4,26 +4,10 @@
 
 @section('styles')
 <style>
-:root {
-    --kpi-green-bg1: #e3f9ee; --kpi-green-bg2: #d1f5e4;
-    --kpi-green-icon: #bbf0d6; --kpi-green-text: #057a55;
-    --kpi-teal-bg1: #f0fdfa;  --kpi-teal-bg2: #ccfbf1;
-    --kpi-teal-icon: #99f6e4;  --kpi-teal-text: #0f766e;
-    --kpi-indigo-bg1: #eef2ff; --kpi-indigo-bg2: #e0e7ff;
-    --kpi-indigo-icon: #c7d2fe; --kpi-indigo-text: #4338ca;
-    --kpi-amber-bg1: #fffbeb;  --kpi-amber-bg2: #fef3c7;
-    --kpi-amber-icon: #fde68a; --kpi-amber-text: #b45309;
-}
-[data-dark-mode="true"] {
-    --kpi-green-bg1: #0d2e1a; --kpi-green-bg2: #0a2415;
-    --kpi-green-icon: #164a28; --kpi-green-text: #4ade80;
-    --kpi-teal-bg1: #0b2929;  --kpi-teal-bg2: #0d3535;
-    --kpi-teal-icon: #164040;  --kpi-teal-text: #2dd4bf;
-    --kpi-indigo-bg1: #1e1b4b; --kpi-indigo-bg2: #201c50;
-    --kpi-indigo-icon: #312e81; --kpi-indigo-text: #a5b4fc;
-    --kpi-amber-bg1: #3a2a06;  --kpi-amber-bg2: #402d08;
-    --kpi-amber-icon: #5c4108; --kpi-amber-text: #fbbf24;
-}
+/* Los colores de las tarjetas KPI viven una sola vez en streamify-ui.css,
+   derivados de tokens: siguen al tema y se invierten solos en oscuro.
+   Aqui habia dos paletas fijas duplicadas (clara y oscura) que los dejaban
+   fuera del tema. */
 .kpi-card {
     border: none; border-radius: 14px; padding: 20px 22px;
     position: relative; overflow: hidden;
@@ -42,14 +26,6 @@
     content:''; position:absolute; bottom:-16px; right:-16px;
     width:80px; height:80px; border-radius:50%; opacity:.07;
 }
-.kpi-green  { background:linear-gradient(135deg,var(--kpi-green-bg1),var(--kpi-green-bg2)); color:var(--kpi-green-text); }
-.kpi-green  .kpi-icon { background:var(--kpi-green-icon); } .kpi-green::after  { background:var(--kpi-green-text); }
-.kpi-teal   { background:linear-gradient(135deg,var(--kpi-teal-bg1),var(--kpi-teal-bg2)); color:var(--kpi-teal-text); }
-.kpi-teal   .kpi-icon { background:var(--kpi-teal-icon); } .kpi-teal::after   { background:var(--kpi-teal-text); }
-.kpi-indigo { background:linear-gradient(135deg,var(--kpi-indigo-bg1),var(--kpi-indigo-bg2)); color:var(--kpi-indigo-text); }
-.kpi-indigo .kpi-icon { background:var(--kpi-indigo-icon); } .kpi-indigo::after { background:var(--kpi-indigo-text); }
-.kpi-amber  { background:linear-gradient(135deg,var(--kpi-amber-bg1),var(--kpi-amber-bg2)); color:var(--kpi-amber-text); }
-.kpi-amber  .kpi-icon { background:var(--kpi-amber-icon); } .kpi-amber::after  { background:var(--kpi-amber-text); }
 
 .fin-card { border:none; border-radius:14px; box-shadow:var(--shadow-md); background:var(--bg-card); }
 .fin-card .fin-card-header {
@@ -59,9 +35,9 @@
 }
 .ganancia-preview {
     border-radius:10px; padding:12px 16px; font-weight:700; font-size:1.1rem;
-    background:var(--kpi-green-bg1); color:var(--kpi-green-text); text-align:center;
+    background:var(--sf-good-soft); color:var(--sf-good); text-align:center;
 }
-.ganancia-preview.negativa { background:var(--kpi-red-bg1, #fef2f2); color:#b91c1c; }
+.ganancia-preview.negativa { background:var(--sf-critical-soft); color:var(--sf-critical); }
 </style>
 @endsection
 

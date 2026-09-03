@@ -106,11 +106,12 @@
     --sf-container:  1180px;
 }
 
-/* --- Dark mode ------------------------------------------------------------
-   Opt-in mediante los atributos que la app YA usa (theme-manager.js):
-   <html data-dark-mode="true"> y/o <html data-bs-theme="dark">.
-   No se usa prefers-color-scheme porque las vistas legacy tienen colores
-   incrustados que se romperían sin aviso.                                   */
+/* --- Modo oscuro ----------------------------------------------------------
+   Es preferencia PERSONAL de cada quien, no un ajuste global. Tres estados:
+   'system' (sigue al sistema operativo, el de fábrica), 'light' y 'dark'.
+   El atributo data-dark-mode que consumen estas reglas lo resuelve el script
+   de partials/apariencia-esquema.blade.php antes del primer pintado.       */
+
 /* Red de seguridad para navegadores con JavaScript desactivado: si la persona
    sigue al sistema ('system') y su sistema está en oscuro, los tokens ya se
    invierten aunque el script en línea no llegue a correr. Los componentes que
@@ -135,6 +136,14 @@
         --sf-border:         #33323b;
         --sf-border-soft:    #2b2a32;
         --sf-border-strong:  #45444f;
+        --sf-good:           #4ade80;
+        --sf-good-soft:      #12301f;
+        --sf-warning:        #fbbf24;
+        --sf-warning-soft:   #362a10;
+        --sf-critical:       #f87171;
+        --sf-critical-soft:  #3a1a1a;
+        --sf-info:           #60b8ec;
+        --sf-info-soft:      #14293a;
     }
 }
 
@@ -169,9 +178,13 @@
     --sf-border-soft:    #2b2a32;
     --sf-border-strong:  #45444f;
 
+    --sf-good:           #4ade80;
     --sf-good-soft:      #12301f;
+    --sf-warning:        #fbbf24;
     --sf-warning-soft:   #362a10;
+    --sf-critical:       #f87171;
     --sf-critical-soft:  #3a1a1a;
+    --sf-info:           #60b8ec;
     --sf-info-soft:      #14293a;
 
     --sf-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -404,6 +417,30 @@ hr { border-color: var(--sf-border); opacity: 1; }
     color: var(--sf-ink);
 }
 .table > tbody > tr:last-child > td { border-bottom: 0; }
+
+/* Filas resaltadas (`table-success`, `table-danger`…). Bootstrap las pinta con
+   verdes y rojos fijos que no se aclaran en oscuro: es lo que dejaba la fila de
+   "Utilidad real del negocio" como un recuadro chillón fuera del tema. */
+.table > :not(caption) > tr.table-success > *,
+.table > :not(caption) > * > tr.table-success > * { --bs-table-bg-state: var(--sf-good-soft);     color: var(--sf-good); }
+.table > :not(caption) > tr.table-danger > *,
+.table > :not(caption) > * > tr.table-danger > *  { --bs-table-bg-state: var(--sf-critical-soft); color: var(--sf-critical); }
+.table > :not(caption) > tr.table-warning > *,
+.table > :not(caption) > * > tr.table-warning > * { --bs-table-bg-state: var(--sf-warning-soft);  color: var(--sf-warning); }
+.table > :not(caption) > tr.table-info > *,
+.table > :not(caption) > * > tr.table-info > *    { --bs-table-bg-state: var(--sf-info-soft);     color: var(--sf-info); }
+.table > :not(caption) > tr.table-primary > *,
+.table > :not(caption) > * > tr.table-primary > * { --bs-table-bg-state: var(--sf-brand-soft);    color: var(--sf-brand); }
+.table > :not(caption) > tr.table-light > *,
+.table > :not(caption) > * > tr.table-light > *   { --bs-table-bg-state: var(--sf-surface-sunken); color: var(--sf-ink); }
+
+/* --- Utilidades de color de texto ---------------------------------------
+   Bootstrap las fija en hexadecimal y en oscuro quedaban ilegibles. */
+.text-primary { color: var(--sf-brand) !important; }
+.text-success { color: var(--sf-good) !important; }
+.text-danger  { color: var(--sf-critical) !important; }
+.text-warning { color: var(--sf-warning) !important; }
+.text-info    { color: var(--sf-info) !important; }
 
 /* --- Formularios --------------------------------------------------------- */
 .form-control, .form-select, .input-group-text, textarea.form-control {
@@ -647,6 +684,103 @@ a.sf-card:hover, .sf-card--link:hover {
 .sf-kpi-delta.is-up   { color: var(--sf-good); }
 .sf-kpi-delta.is-down { color: var(--sf-critical); }
 
+/* --- Acentos de superficie ----------------------------------------------
+   Los recuadros de color (tarjetas de KPI de los dashboards, cajas de
+   "utilidad del negocio", tarjetas de bancos…) llevaban cada uno su propia
+   paleta fija en hexadecimal, con un bloque aparte para el modo oscuro. Eso
+   los dejaba fuera del tema y descoordinados entre sí.
+
+   Aquí se define UNA sola escala de acentos. El "tinte" es el fondo suave, el
+   "chip" es la pastilla del icono (un paso más saturado) y la "tinta" es el
+   texto. Todo se deriva de los tokens, así que sigue al tema y se invierte
+   solo en oscuro: ya no hace falta duplicar la paleta por vista.
+   ------------------------------------------------------------------------ */
+.sf-tint {
+    --sf-tint-bg: var(--sf-surface-sunken);
+    --sf-tint-ink: var(--sf-ink);
+    --sf-tint-chip: var(--sf-border);
+
+    background: var(--sf-tint-bg);
+    color: var(--sf-tint-ink);
+    border: 1px solid transparent;
+    border-radius: var(--sf-radius);
+}
+.sf-tint--good     { --sf-tint-bg: var(--sf-good-soft);     --sf-tint-ink: var(--sf-good);     --sf-tint-chip: color-mix(in srgb, var(--sf-good) 22%, var(--sf-surface-card)); }
+.sf-tint--critical { --sf-tint-bg: var(--sf-critical-soft); --sf-tint-ink: var(--sf-critical); --sf-tint-chip: color-mix(in srgb, var(--sf-critical) 22%, var(--sf-surface-card)); }
+.sf-tint--warning  { --sf-tint-bg: var(--sf-warning-soft);  --sf-tint-ink: var(--sf-warning);  --sf-tint-chip: color-mix(in srgb, var(--sf-warning) 22%, var(--sf-surface-card)); }
+.sf-tint--info     { --sf-tint-bg: var(--sf-info-soft);     --sf-tint-ink: var(--sf-info);     --sf-tint-chip: color-mix(in srgb, var(--sf-info) 22%, var(--sf-surface-card)); }
+.sf-tint--brand    { --sf-tint-bg: var(--sf-brand-soft);    --sf-tint-ink: var(--sf-brand);    --sf-tint-chip: color-mix(in srgb, var(--sf-brand) 22%, var(--sf-surface-card)); }
+.sf-tint--gold     { --sf-tint-bg: var(--sf-gold-soft);     --sf-tint-ink: var(--sf-gold-strong); --sf-tint-chip: color-mix(in srgb, var(--sf-gold) 26%, var(--sf-surface-card)); }
+
+/* --- Tarjetas KPI de los dashboards -------------------------------------
+   Las clases .kpi-<color> las comparten dashboard, bancos, inteligencia, MNE
+   y el panel de Donna. Cada vista tenía SU PROPIA copia en hexadecimal —el
+   dashboard ni siquiera traía variante oscura— y por eso los recuadros de
+   color no combinaban entre sí ni con el tema.
+
+   Aquí quedan definidas UNA sola vez y derivadas de tokens. Los nombres son
+   de color por herencia, pero el significado es semántico:
+     verde = bueno · rojo = crítico · naranja/amarillo/ámbar = atención
+     azul/teal = informativo · índigo/morado = color de marca
+   Solo se define el COLOR; la geometría (tamaño, radio, sombra) sigue en
+   cada vista, que es donde varía.
+
+   Amarillo y ámbar usan el color semántico de ATENCIÓN, no el dorado del
+   tema: con el tema Neón el dorado es cian, y una tarjeta "amarilla"
+   turquesa desorienta más de lo que aporta.
+   ------------------------------------------------------------------------ */
+.kpi-green,
+.kpi-red,
+.kpi-orange,
+.kpi-yellow,
+.kpi-blue,
+.kpi-teal,
+.kpi-indigo,
+.kpi-purple,
+.kpi-amber {
+    background: var(--sf-kpi-bg);
+    color: var(--sf-kpi-ink);
+}
+.kpi-green .kpi-icon,
+.kpi-red .kpi-icon,
+.kpi-orange .kpi-icon,
+.kpi-yellow .kpi-icon,
+.kpi-blue .kpi-icon,
+.kpi-teal .kpi-icon,
+.kpi-indigo .kpi-icon,
+.kpi-purple .kpi-icon,
+.kpi-amber .kpi-icon { background: var(--sf-kpi-chip); color: var(--sf-kpi-ink); }
+
+.kpi-green::after,
+.kpi-red::after,
+.kpi-orange::after,
+.kpi-yellow::after,
+.kpi-blue::after,
+.kpi-teal::after,
+.kpi-indigo::after,
+.kpi-purple::after,
+.kpi-amber::after { background: var(--sf-kpi-ink); }
+
+.kpi-green  { --sf-kpi-bg: var(--sf-good-soft);     --sf-kpi-ink: var(--sf-good);        --sf-kpi-chip: color-mix(in srgb, var(--sf-good) 22%, var(--sf-surface-card)); }
+.kpi-red    { --sf-kpi-bg: var(--sf-critical-soft); --sf-kpi-ink: var(--sf-critical);    --sf-kpi-chip: color-mix(in srgb, var(--sf-critical) 22%, var(--sf-surface-card)); }
+.kpi-orange { --sf-kpi-bg: var(--sf-warning-soft);  --sf-kpi-ink: var(--sf-warning);     --sf-kpi-chip: color-mix(in srgb, var(--sf-warning) 24%, var(--sf-surface-card)); }
+.kpi-yellow { --sf-kpi-bg: var(--sf-warning-soft);  --sf-kpi-ink: var(--sf-warning);     --sf-kpi-chip: color-mix(in srgb, var(--sf-warning) 24%, var(--sf-surface-card)); }
+.kpi-blue   { --sf-kpi-bg: var(--sf-info-soft);     --sf-kpi-ink: var(--sf-info);        --sf-kpi-chip: color-mix(in srgb, var(--sf-info) 22%, var(--sf-surface-card)); }
+.kpi-teal   { --sf-kpi-bg: var(--sf-info-soft);     --sf-kpi-ink: var(--sf-info);        --sf-kpi-chip: color-mix(in srgb, var(--sf-info) 22%, var(--sf-surface-card)); }
+.kpi-indigo { --sf-kpi-bg: var(--sf-brand-soft);    --sf-kpi-ink: var(--sf-brand);       --sf-kpi-chip: color-mix(in srgb, var(--sf-brand) 22%, var(--sf-surface-card)); }
+.kpi-purple { --sf-kpi-bg: var(--sf-brand-soft);    --sf-kpi-ink: var(--sf-brand);       --sf-kpi-chip: color-mix(in srgb, var(--sf-brand) 22%, var(--sf-surface-card)); }
+.kpi-amber  { --sf-kpi-bg: var(--sf-warning-soft);  --sf-kpi-ink: var(--sf-warning);     --sf-kpi-chip: color-mix(in srgb, var(--sf-warning) 24%, var(--sf-surface-card)); }
+
+/* Pastilla del icono dentro de un acento */
+.sf-tint-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; flex: none;
+    border-radius: var(--sf-radius-sm);
+    background: var(--sf-tint-chip);
+    color: var(--sf-tint-ink);
+    font-size: 1.3rem;
+}
+
 /* --- Estado -------------------------------------------------------------- */
 .sf-status { display: inline-flex; align-items: center; gap: var(--sf-space-2); font-size: var(--sf-text-sm); color: var(--sf-ink-secondary); white-space: nowrap; }
 .sf-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
@@ -699,23 +833,25 @@ a.sf-card:hover, .sf-card--link:hover {
 .sf-scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* ==========================================================================
-   4b. COMPATIBILIDAD CON themes.css (temas de temporada)
+   4b. (ELIMINADA) Compatibilidad con themes.css
    --------------------------------------------------------------------------
-   themes.css define `body { background: var(--bg-body) }` y
-   `.card { background: var(--bg-card) }` con selectores planos. Como este
-   archivo se carga DESPUÉS, ganaría siempre y dejaría muertos los temas de
-   navidad, año nuevo, mundial2026, etc.
+   Aquí vivían reglas `html[data-theme] body/.card/.modal-content` que le
+   devolvían el mando a themes.css cuando había un tema de temporada activo.
 
-   Cuando hay un tema de temporada activo (`<html data-theme="…">`) le
-   devolvemos el mando a themes.css. Sin tema activo —el caso normal— manda
-   el sistema de diseño.
+   Ya no hacen falta y además hacían daño:
 
-   El dark mode de themes.css usa `!important` bajo [data-dark-mode="true"],
-   así que sigue ganando por sí solo y no hace falta tocarlo aquí.
+   1. Son redundantes. La sección 0 de streamify-themes.css redirige
+      `--bg-card`, `--bg-body`… a los tokens `--sf-*`, así que ambas reglas
+      resolvían exactamente al mismo color.
+
+   2. Rompían los acentos. El servidor pinta `data-theme` en el <html>
+      SIEMPRE (no solo en temporada), así que `html[data-theme] .card`
+      —especificidad (0,2,1)— ganaba a cualquier `.kpi-*` (0,1,0) y dejaba
+      todas las tarjetas de KPI en blanco, sin su fondo de color.
+
+   Si alguna vez hace falta volver a dar prioridad a themes.css, hay que
+   hacerlo sin subir la especificidad por encima de los componentes.
    ========================================================================== */
-html[data-theme] body          { background-color: var(--bg-body); }
-html[data-theme] .card         { background-color: var(--bg-card); }
-html[data-theme] .modal-content { background-color: var(--bg-card); }
 
 /* ==========================================================================
    4c. SHELL PÚBLICO (layouts/cliente.blade.php)

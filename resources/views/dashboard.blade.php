@@ -59,37 +59,6 @@
 }
 
 /* Color variants */
-.kpi-blue   { background: linear-gradient(135deg,#e8f0fe,#dce8fd); color:#1a56db; }
-.kpi-blue   .kpi-icon { background:#c7d9fb; }
-.kpi-blue::after { background:#1a56db; }
-
-.kpi-green  { background: linear-gradient(135deg,#e3f9ee,#d1f5e4); color:#057a55; }
-.kpi-green  .kpi-icon { background:#bbf0d6; }
-.kpi-green::after { background:#057a55; }
-
-.kpi-purple { background: linear-gradient(135deg,#ede9fe,#e4dffd); color:#6d28d9; }
-.kpi-purple .kpi-icon { background:#d4c8fb; }
-.kpi-purple::after { background:#6d28d9; }
-
-.kpi-orange { background: linear-gradient(135deg,#fff3e0,#ffe8c4); color:#b45309; }
-.kpi-orange .kpi-icon { background:#fcd59a; }
-.kpi-orange::after { background:#b45309; }
-
-.kpi-red    { background: linear-gradient(135deg,#fef2f2,#fee2e2); color:#b91c1c; }
-.kpi-red    .kpi-icon { background:#fecaca; }
-.kpi-red::after { background:#b91c1c; }
-
-.kpi-teal   { background: linear-gradient(135deg,#f0fdfa,#ccfbf1); color:#0f766e; }
-.kpi-teal   .kpi-icon { background:#99f6e4; }
-.kpi-teal::after { background:#0f766e; }
-
-.kpi-indigo { background: linear-gradient(135deg,#eef2ff,#e0e7ff); color:#3730a3; }
-.kpi-indigo .kpi-icon { background:#c7d2fe; }
-.kpi-indigo::after { background:#3730a3; }
-
-.kpi-yellow { background: linear-gradient(135deg,#fffbeb,#fef3c7); color:#92400e; }
-.kpi-yellow .kpi-icon { background:#fde68a; }
-.kpi-yellow::after { background:#92400e; }
 
 /* ── Section headers ─────────────────────────────────────── */
 .dash-section-label {

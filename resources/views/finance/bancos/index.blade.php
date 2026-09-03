@@ -4,33 +4,20 @@
 
 @section('styles')
 <style>
-/* ── Bancos — variables locales con soporte dark mode ── */
+/* ── Bancos — acentos derivados del sistema de diseño ──
+   Antes había aquí dos paletas KPI fijas en hexadecimal (una clara y otra
+   oscura) que ignoraban el tema activo: el celeste de las tarjetas no
+   combinaba con nada. Los colores de .kpi-* viven ahora una sola vez en
+   streamify-ui.css, derivados de tokens, así que siguen al tema y se
+   invierten solos en oscuro. Aquí solo quedan los degradados propios. */
 :root {
-    --kpi-green-bg1: #e3f9ee; --kpi-green-bg2: #d1f5e4;
-    --kpi-green-icon: #bbf0d6; --kpi-green-text: #057a55;
-    --kpi-red-bg1: #fef2f2;   --kpi-red-bg2: #fee2e2;
-    --kpi-red-icon: #fecaca;   --kpi-red-text: #b91c1c;
-    --kpi-teal-bg1: #f0fdfa;  --kpi-teal-bg2: #ccfbf1;
-    --kpi-teal-icon: #99f6e4;  --kpi-teal-text: #0f766e;
-    --kpi-indigo-bg1: #eef2ff; --kpi-indigo-bg2: #e0e7ff;
-    --kpi-indigo-icon: #c7d2fe; --kpi-indigo-text: #4338ca;
-    /* Bank card colors (brand identity — light only) */
-    --bancos-ahorros-bg:   linear-gradient(135deg,#1e3a8a,#3b82f6);
-    --bancos-corriente-bg: linear-gradient(135deg,#4c1d95,#7c3aed);
-    --bancos-efectivo-bg:  linear-gradient(135deg,#065f46,#059669);
-    /* Fondos — dinero NO disponible: paleta deslavada + candado, a proposito distinta de bancos */
-    --fondo-card-bg: linear-gradient(135deg,#475569,#64748b);
-}
-[data-dark-mode="true"] {
-    --kpi-green-bg1: #0d2e1a; --kpi-green-bg2: #0a2415;
-    --kpi-green-icon: #164a28; --kpi-green-text: #4ade80;
-    --kpi-red-bg1: #2d0e0e;   --kpi-red-bg2: #3a1010;
-    --kpi-red-icon: #5a1a1a;   --kpi-red-text: #f87171;
-    --kpi-teal-bg1: #0b2929;  --kpi-teal-bg2: #0d3535;
-    --kpi-teal-icon: #164040;  --kpi-teal-text: #2dd4bf;
-    --kpi-indigo-bg1: #1e1b4b; --kpi-indigo-bg2: #201c50;
-    --kpi-indigo-icon: #312e81; --kpi-indigo-text: #a5b4fc;
-    --fondo-card-bg: linear-gradient(135deg,#334155,#475569);
+    /* Tarjetas de cuenta: el degradado usa el color del tema, no un azul fijo. */
+    --bancos-ahorros-bg:   linear-gradient(135deg, var(--sf-brand-strong), var(--sf-brand));
+    --bancos-corriente-bg: linear-gradient(135deg, var(--sf-ink), var(--sf-brand-strong));
+    --bancos-efectivo-bg:  linear-gradient(135deg, #0b5c3c, var(--sf-good));
+
+    /* Fondos — dinero NO disponible: gris a propósito, para distinguirlos. */
+    --fondo-card-bg: linear-gradient(135deg, var(--sf-ink-secondary), var(--sf-ink-muted));
 }
 
 /* ── KPI Cards ──────────────────────────────────── */
@@ -55,18 +42,6 @@
     content:''; position:absolute; bottom:-16px; right:-16px;
     width:80px; height:80px; border-radius:50%; opacity:.07;
 }
-.kpi-green  { background:linear-gradient(135deg,var(--kpi-green-bg1),var(--kpi-green-bg2)); color:var(--kpi-green-text); }
-.kpi-green  .kpi-icon { background:var(--kpi-green-icon); }
-.kpi-green::after  { background:var(--kpi-green-text); }
-.kpi-red    { background:linear-gradient(135deg,var(--kpi-red-bg1),var(--kpi-red-bg2)); color:var(--kpi-red-text); }
-.kpi-red    .kpi-icon { background:var(--kpi-red-icon); }
-.kpi-red::after    { background:var(--kpi-red-text); }
-.kpi-teal   { background:linear-gradient(135deg,var(--kpi-teal-bg1),var(--kpi-teal-bg2)); color:var(--kpi-teal-text); }
-.kpi-teal   .kpi-icon { background:var(--kpi-teal-icon); }
-.kpi-teal::after   { background:var(--kpi-teal-text); }
-.kpi-indigo { background:linear-gradient(135deg,var(--kpi-indigo-bg1),var(--kpi-indigo-bg2)); color:var(--kpi-indigo-text); }
-.kpi-indigo .kpi-icon { background:var(--kpi-indigo-icon); }
-.kpi-indigo::after { background:var(--kpi-indigo-text); }
 
 /* ── Bank Cards ─────────────────────────────────── */
 .bank-card {

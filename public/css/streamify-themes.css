@@ -408,6 +408,74 @@
     background-color: var(--sf-brand-soft) !important;
 }
 
+/* --- Utilidades de estado en modo oscuro --------------------------------
+   themes.css fija en oscuro un ámbar propio (#3a2f12 / #d6a83f) para
+   .bg-warning, .badge.bg-warning, .alert-warning, .text-warning y
+   .btn-warning, con !important y especificidad (0,2,0). Se redirige a los
+   tokens para que no haya dos amarillos distintos conviviendo.
+   ------------------------------------------------------------------------ */
+[data-dark-mode="true"] .bg-warning,
+[data-dark-mode="true"] .badge.bg-warning,
+[data-dark-mode="true"] .alert-warning {
+    background-color: var(--sf-warning-soft) !important;
+    color: var(--sf-warning) !important;
+    border-color: var(--sf-warning) !important;
+}
+[data-dark-mode="true"] .text-warning,
+[data-dark-mode="true"] .border-warning {
+    color: var(--sf-warning) !important;
+    border-color: var(--sf-warning) !important;
+}
+[data-dark-mode="true"] .btn-warning {
+    background-color: var(--sf-warning) !important;
+    border-color: var(--sf-warning) !important;
+    color: var(--sf-gold-contrast) !important;
+}
+[data-dark-mode="true"] .text-success { color: var(--sf-good) !important; }
+[data-dark-mode="true"] .text-danger  { color: var(--sf-critical) !important; }
+[data-dark-mode="true"] .text-info    { color: var(--sf-info) !important; }
+[data-dark-mode="true"] .text-primary { color: var(--sf-brand) !important; }
+
+/* --- Tarjetas KPI en modo oscuro ----------------------------------------
+   themes.css declara `[data-dark-mode="true"] .card { background/color …
+   !important }` con especificidad (0,2,0). Como las tarjetas KPI llevan
+   también la clase .card, esa regla les borraba el fondo y el color de
+   acento y las dejaba a todas iguales, grises. Hay que igualar la
+   especificidad para devolverles su tinte.
+   ------------------------------------------------------------------------ */
+[data-dark-mode="true"] .kpi-green,
+[data-dark-mode="true"] .kpi-red,
+[data-dark-mode="true"] .kpi-orange,
+[data-dark-mode="true"] .kpi-yellow,
+[data-dark-mode="true"] .kpi-blue,
+[data-dark-mode="true"] .kpi-teal,
+[data-dark-mode="true"] .kpi-indigo,
+[data-dark-mode="true"] .kpi-purple,
+[data-dark-mode="true"] .kpi-amber {
+    background: var(--sf-kpi-bg) !important;
+    color: var(--sf-kpi-ink) !important;
+    border-color: transparent !important;
+}
+[data-dark-mode="true"] .kpi-green .kpi-icon,
+[data-dark-mode="true"] .kpi-red .kpi-icon,
+[data-dark-mode="true"] .kpi-orange .kpi-icon,
+[data-dark-mode="true"] .kpi-yellow .kpi-icon,
+[data-dark-mode="true"] .kpi-blue .kpi-icon,
+[data-dark-mode="true"] .kpi-teal .kpi-icon,
+[data-dark-mode="true"] .kpi-indigo .kpi-icon,
+[data-dark-mode="true"] .kpi-purple .kpi-icon,
+[data-dark-mode="true"] .kpi-amber .kpi-icon {
+    background: var(--sf-kpi-chip) !important;
+    color: var(--sf-kpi-ink) !important;
+}
+/* El valor y la etiqueta heredan el acento, no la tinta genérica. */
+[data-dark-mode="true"] [class*="kpi-"] .kpi-value,
+[data-dark-mode="true"] [class*="kpi-"] .kpi-label,
+[data-dark-mode="true"] [class*="kpi-"] .kpi-val,
+[data-dark-mode="true"] [class*="kpi-"] .kpi-sub {
+    color: inherit !important;
+}
+
 /* --- Contenedores de las plantillas static / table ---------------------- */
 [data-dark-mode="true"] .breadcrumb,
 [data-dark-mode="true"] .card-header,

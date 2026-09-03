@@ -4,18 +4,16 @@
 
 @section('styles')
 <style>
+    /* Derivado de los tokens: sigue al tema y se invierte solo en oscuro.
+       Antes eran hexadecimales fijos con un bloque [data-dark-mode] aparte. */
     :root {
-        --donna-blue: #274698;
-        --donna-gold: #E4B100;
-        --donna-nav-bg: #f0f2f8;
-    }
-    [data-dark-mode="true"] {
-        --donna-nav-bg: rgba(39, 70, 152, 0.15);
+        --donna-blue: var(--sf-brand);
+        --donna-gold: var(--sf-gold);
+        --donna-nav-bg: var(--sf-brand-soft);
     }
     .donna-kpi {
         border-radius: 18px;
         padding: 1.25rem 1.4rem;
-        color: #fff;
         position: relative;
         overflow: hidden;
     }
@@ -28,11 +26,7 @@
     }
     .donna-kpi .kpi-val { font-size: 2.4rem; font-weight: 800; line-height: 1; }
     .donna-kpi .kpi-label { font-size: 0.85rem; opacity: 0.88; margin-top: 0.3rem; }
-    .kpi-blue   { background: linear-gradient(135deg, var(--donna-blue), #3a5bbf); }
-    .kpi-yellow { background: linear-gradient(135deg, #b88a00, var(--donna-gold)); color: #1D1D1B !important; }
-    .kpi-green  { background: linear-gradient(135deg, #1a7a4a, var(--success-color, #28a745)); }
-    .kpi-purple { background: linear-gradient(135deg, #5a3c9a, #7952cc); }
-    .donna-kpi.kpi-yellow .kpi-label { color: #1D1D1B; opacity: 0.75; }
+
 
     .rank-badge {
         width: 28px; height: 28px;
@@ -41,9 +35,9 @@
         font-weight: 800; font-size: 0.8rem;
         background: var(--donna-nav-bg); color: var(--donna-blue);
     }
-    .rank-badge.top1 { background: var(--donna-gold); color: #1D1D1B; }
-    .rank-badge.top2 { background: var(--donna-blue); color: #fff; }
-    .rank-badge.top3 { background: #5a3c9a; color: #fff; }
+    .rank-badge.top1 { background: var(--donna-gold); color: var(--sf-gold-contrast); }
+    .rank-badge.top2 { background: var(--donna-blue); color: var(--sf-brand-contrast); }
+    .rank-badge.top3 { background: var(--sf-ink-secondary); color: var(--sf-surface-card); }
 
     .conv-preview {
         display: -webkit-box;
