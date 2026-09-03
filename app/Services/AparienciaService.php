@@ -179,10 +179,24 @@ class AparienciaService
      * entre subir los archivos y correr la migracion en produccion) devuelve
      * el respaldo, para no tumbar todas las vistas del sitio.
      */
+    /** Memoria dentro de la peticion: evita repetir la consulta y el aviso. */
+    private ?array $ajustesMemo = null;
+
+    /** El aviso de respaldo se escribe una vez por proceso, no por llamada. */
+    private static bool $avisoEmitido = false;
+
     public function ajustes(): array
     {
+        // paraVista() consulta los ajustes dos veces (directamente y a traves
+        // de temaEfectivo). Sin esta memoria eran dos consultas y, cuando la
+        // base fallaba, dos avisos en el log por cada peticion: 823 lineas en
+        // un solo dia sobre un laravel.log de 400 MB.
+        if ($this->ajustesMemo !== null) {
+            return $this->ajustesMemo;
+        }
+
         try {
-            return Cache::rememberForever(self::CACHE_KEY, function () {
+            return $this->ajustesMemo = Cache::rememberForever(self::CACHE_KEY, function () {
                 $fila = AjusteApariencia::query()->first();
 
                 if (!$fila) {
@@ -196,9 +210,16 @@ class AparienciaService
                 ];
             });
         } catch (Throwable $e) {
-            Log::warning('AparienciaService: usando respaldo', ['error' => $e->getMessage()]);
+            // Una sola linea por proceso: el mensaje se repetia identico cientos
+            // de veces al dia y engordaba el log sin aportar nada nuevo.
+            if (!self::$avisoEmitido) {
+                self::$avisoEmitido = true;
+                Log::warning('AparienciaService: usando apariencia por defecto', [
+                    'error' => substr($e->getMessage(), 0, 120),
+                ]);
+            }
 
-            return self::RESPALDO;
+            return $this->ajustesMemo = self::RESPALDO;
         }
     }
 
@@ -336,6 +357,7 @@ class AparienciaService
         $fila->save();
 
         Cache::forget(self::CACHE_KEY);
+        $this->ajustesMemo = null;
 
         return $this->paraVista();
     }

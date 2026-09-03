@@ -210,18 +210,47 @@
         });
     </script>
     <script>
-        setInterval(() => {
-            fetch("{{ route('asistencias.ping') }}", {
-                method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    ruta_actual: window.location.pathname
-                })
-            });
-        }, 300000); // 5 minutos = 300,000 ms
+        /*
+         * Ping de asistencia cada 5 minutos.
+         *
+         * El token CSRF se incrusta al cargar la página, así que en cuanto la
+         * sesión caduca este ping empieza a devolver 419 indefinidamente. Antes
+         * no se comprobaba la respuesta ni había `catch`, así que se acumulaban
+         * fallos en la consola y en el log del servidor.
+         */
+        (function () {
+            const RUTA_PING = @json(route('asistencias.ping'));
+            const RUTA_LOGIN = @json(route('login'));
+            let temporizador = null;
+
+            async function registrarPresencia() {
+                try {
+                    const respuesta = await fetch(RUTA_PING, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': @json(csrf_token()),
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ ruta_actual: window.location.pathname }),
+                    });
+
+                    // Sesión caducada: se deja de insistir y se va al login.
+                    if (respuesta.status === 419 || respuesta.status === 401) {
+                        clearInterval(temporizador);
+                        window.location.href = RUTA_LOGIN;
+                    }
+                } catch (e) {
+                    // Sin conexión o servidor caído: se ignora, el siguiente
+                    // intento lo resolverá. No tiene sentido molestar por esto.
+                }
+            }
+
+            // Sin sentido registrar presencia con la pestaña en segundo plano.
+            temporizador = setInterval(() => {
+                if (document.visibilityState === 'visible') registrarPresencia();
+            }, 300000); // 5 minutos
+        })();
     </script>
     {{-- js/sistema.js retirado: registraba un SEGUNDO manejador sobre el mismo
          botón #toggleDarkMode que navbar.js (doble alternancia) y llamaba a
@@ -230,6 +259,43 @@
 
     {{-- Livewire Scripts (REQUERIDO para notificador global y otros componentes) --}}
     @livewireScripts
+
+    <script>
+        /*
+         * Livewire, cuando una petición falla, inyecta la página de error del
+         * servidor en un modal a pantalla completa. Como el notificador sondea
+         * en segundo plano, al caducar la sesión o al fallar la base de datos
+         * ese cuadro le saltaba al empleado una y otra vez, y había que
+         * cerrarlo a mano para poder seguir.
+         *
+         * Aquí se interceptan los fallos: si la sesión caducó se va al login
+         * directamente; si es un problema temporal del servidor se ignora y el
+         * siguiente sondeo lo reintenta solo.
+         */
+        document.addEventListener('livewire:init', () => {
+            let avisoCaducada = false;
+
+            Livewire.hook('request', ({ fail }) => {
+                fail(({ status, preventDefault }) => {
+                    // Sesión caducada: al login, sin cuadro de error.
+                    if (status === 419 || status === 401) {
+                        preventDefault();
+                        if (avisoCaducada) return;
+                        avisoCaducada = true;
+                        window.location.href = @json(route('login'));
+                        return;
+                    }
+
+                    // Caída temporal del servidor o de la base de datos: se
+                    // ignora en silencio, el siguiente sondeo reintenta.
+                    if (status === 0 || status >= 500) {
+                        preventDefault();
+                        console.warn('[Livewire] petición fallida (' + status + '); se reintentará.');
+                    }
+                });
+            });
+        });
+    </script>
 
     {{-- Widget de Chat con IA (solo para empleados) --}}
     @if(Auth::check())

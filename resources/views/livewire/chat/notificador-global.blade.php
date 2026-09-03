@@ -1,5 +1,20 @@
-<div wire:poll.1s="verificarNuevosMensajes" style="display: none;">
-    <!-- Notificador invisible que verifica nuevos mensajes cada segundo -->
+{{--
+    Sondeo cada 15 s, no cada segundo.
+
+    Con `wire:poll.1s` este componente invisible hacía UNA petición completa por
+    segundo y por empleado conectado: hidratación del componente, lectura y
+    escritura de la sesión, comprobación de permisos y una consulta agregada
+    sobre conversaciones. Con once empleados eran unas 45 consultas por segundo
+    de forma continua, y eso agotaba las conexiones de MySQL del hosting
+    ([2002] Operation not permitted) — el origen de los errores 500 que salían
+    "cada instante".
+
+    Un aviso de mensajes nuevos no necesita latencia de un segundo. Además
+    `keep-alive` evita que el sondeo se detenga al cambiar de pestaña, pero
+    Livewire lo pausa cuando la pestaña no está visible, que es lo que se quiere.
+--}}
+<div wire:poll.15s="verificarNuevosMensajes" style="display: none;">
+    <!-- Notificador invisible: comprueba si hay mensajes nuevos -->
 </div>
 
 <script>
