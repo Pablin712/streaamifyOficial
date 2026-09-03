@@ -268,6 +268,152 @@ class DashboardService
         ];
     }
 
+
+    /**
+     * Palabra clave -> nombre de servicio. Se usa tanto para el resumen de
+     * resultados como para la rotacion de clientes, para que ambos cuadros
+     * hablen exactamente de los mismos servicios.
+     */
+    private function reglasDeServicio(): array
+    {
+        return [
+            'netflix'   => 'Netflix',
+            'disney'    => 'Disney+',
+            'prime'     => 'Prime Video',
+            'paramount' => 'Paramount+',
+            'spotify'   => 'Spotify',
+            'crunchy'   => 'Crunchyroll',
+            'magis'     => 'Magis TV',
+            'flujo'     => 'Magis TV',
+            'vix'       => 'Vix',
+            'canva'     => 'Canva',
+            'max'       => 'HBO Max',
+            'hbo'       => 'HBO Max',
+        ];
+    }
+
+    /** Primer candidato con valor decide el servicio; si ninguno encaja, "Otros". */
+    private function clasificarServicio(?string ...$candidatos): string
+    {
+        foreach ($candidatos as $texto) {
+            if (empty($texto)) {
+                continue;
+            }
+            foreach ($this->reglasDeServicio() as $clave => $nombre) {
+                if (stripos($texto, $clave) !== false) {
+                    return $nombre;
+                }
+            }
+        }
+        return 'Otros';
+    }
+
+    /**
+     * Clientes distintos que compraron cada servicio en un mes.
+     *
+     * Devuelve ['Netflix' => [idcli => true, ...], ...]
+     */
+    private function clientesPorServicioEnMes(int $month, int $year): array
+    {
+        $inicio = Carbon::create($year, $month, 1)->startOfMonth()->toDateString();
+        $fin    = Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
+
+        $mapa = [];
+
+        /*
+         * Activo = la suscripcion CUBRE el mes, no que se haya comprado dentro
+         * de el. `fechavendet` es la fecha de vencimiento de cada linea y de
+         * media dura 41 dias, con casos de mas de un ano: contar solo las
+         * compras del mes marcaba como perdido a quien habia pagado varios
+         * meses por adelantado y hundia la retencion artificialmente.
+         *
+         * Si la linea no tiene vencimiento se le supone un mes desde la venta,
+         * que es la duracion habitual.
+         */
+        DetalleVenta::query()
+            ->join('ventas', 'ventas.idven', '=', 'detalles_venta.idven')
+            ->where('ventas.fechaven', '<=', $fin)
+            ->whereRaw(
+                'COALESCE(detalles_venta.fechavendet, DATE_ADD(ventas.fechaven, INTERVAL 1 MONTH)) >= ?',
+                [$inicio]
+            )
+            ->whereNotNull('ventas.idcli')
+            ->select([
+                'ventas.idcli',
+                'detalles_venta.idper',
+                'detalles_venta.idper_snapshot',
+                'detalles_venta.servicio_snapshot',
+            ])
+            ->chunk(2000, function ($filas) use (&$mapa) {
+                foreach ($filas as $f) {
+                    $s = $this->clasificarServicio($f->servicio_snapshot, $f->idper, $f->idper_snapshot);
+                    $mapa[$s][$f->idcli] = true;
+                }
+            });
+
+        return $mapa;
+    }
+
+    /**
+     * Rotacion de clientes POR SERVICIO en el mes pedido.
+     *
+     * La tabla daily_statistics solo guarda totales del negocio
+     * (clientes_perdidos, new_customers): no dice de que servicio se fue cada
+     * cliente, que es justo lo que hace falta para decidir donde actuar.
+     *
+     * Se deduce comparando quien compro cada servicio este mes y el anterior,
+     * que es la definicion habitual en un negocio de suscripcion mensual:
+     *
+     *   activo en S el mes M  =  el cliente compro S dentro de M
+     *   nuevo    =  activo en M y no en M-1
+     *   perdido  =  activo en M-1 y no en M
+     *   retenido =  activo en los dos
+     *
+     * OJO: estas cifras no tienen por que cuadrar con los totales de
+     * daily_statistics. Aquellos cuentan clientes del negocio entero; estos
+     * cuentan altas y bajas servicio por servicio, y un mismo cliente puede
+     * darse de baja en uno y seguir en otro. Sirven para comparar servicios
+     * entre si, que es para lo que se piden.
+     */
+    public function obtenerRotacionPorServicio($month, $year): array
+    {
+        $ahora  = $this->clientesPorServicioEnMes((int) $month, (int) $year);
+
+        $ant    = Carbon::create($year, $month, 1)->subMonth();
+        $antes  = $this->clientesPorServicioEnMes((int) $ant->month, (int) $ant->year);
+
+        $servicios = array_unique(array_merge(array_keys($ahora), array_keys($antes)));
+
+        $filas = [];
+        foreach ($servicios as $s) {
+            $hoy  = $ahora[$s] ?? [];
+            $prev = $antes[$s] ?? [];
+
+            $nuevos   = count(array_diff_key($hoy, $prev));
+            $perdidos = count(array_diff_key($prev, $hoy));
+            $retenidos = count(array_intersect_key($hoy, $prev));
+
+            $filas[] = [
+                'servicio'   => $s,
+                'activos'    => count($hoy),
+                'previos'    => count($prev),
+                'nuevos'     => $nuevos,
+                'perdidos'   => $perdidos,
+                'retenidos'  => $retenidos,
+                'neto'       => $nuevos - $perdidos,
+                // Retencion: de los que estaban el mes pasado, cuantos siguen.
+                'retencion'  => count($prev) > 0 ? ($retenidos / count($prev)) * 100 : null,
+                // Fuga: cuantos de los que estaban se fueron.
+                'fuga'       => count($prev) > 0 ? ($perdidos / count($prev)) * 100 : null,
+            ];
+        }
+
+        // Los que mas clientes pierden, primero: es donde hay que mirar.
+        usort($filas, fn($a, $b) => $b['perdidos'] <=> $a['perdidos']);
+
+        return $filas;
+    }
+
     /**
      * Resultados por servicio DEL MES PEDIDO.
      *
@@ -289,36 +435,8 @@ class DashboardService
      */
     public function obtenerResumenPorServicio($month, $year): array
     {
-        // Palabra clave -> nombre visible. El orden importa: "max" antes que
-        // nada que pueda contenerlo, y "flujo"/"magis" son el mismo servicio.
-        $reglas = [
-            'netflix'   => 'Netflix',
-            'disney'    => 'Disney+',
-            'prime'     => 'Prime Video',
-            'paramount' => 'Paramount+',
-            'spotify'   => 'Spotify',
-            'crunchy'   => 'Crunchyroll',
-            'magis'     => 'Magis TV',
-            'flujo'     => 'Magis TV',
-            'vix'       => 'Vix',
-            'canva'     => 'Canva',
-            'max'       => 'HBO Max',
-            'hbo'       => 'HBO Max',
-        ];
-
-        $clasificar = function (?string ...$candidatos) use ($reglas): string {
-            foreach ($candidatos as $texto) {
-                if (empty($texto)) {
-                    continue;
-                }
-                foreach ($reglas as $clave => $nombre) {
-                    if (stripos($texto, $clave) !== false) {
-                        return $nombre;
-                    }
-                }
-            }
-            return 'Otros';
-        };
+        // Se usa el mismo clasificador que la rotacion de clientes.
+        $clasificar = fn(...$c) => $this->clasificarServicio(...$c);
 
         $inicio = Carbon::create($year, $month, 1)->startOfMonth();
         $fin    = Carbon::create($year, $month, 1)->endOfMonth();

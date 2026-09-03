@@ -174,6 +174,11 @@ class ContabilidadController extends Controller
         // no del periodo.
         $por_servicio = $this->dashboardService->obtenerResumenPorServicio($month, $year);
 
+        // Altas y bajas de clientes servicio por servicio. daily_statistics
+        // solo guarda el total del negocio, y con eso no se puede saber de que
+        // servicio se esta yendo la gente ni cual esta creciendo.
+        $rotacion = $this->dashboardService->obtenerRotacionPorServicio($month, $year);
+
         // Los graficos ya NO llegan como imagenes del navegador. Antes se
         // capturaban del dashboard en pantalla, asi que un reporte de junio
         // generado en septiembre mostraba las cifras de septiembre. Ahora la
@@ -190,6 +195,7 @@ class ContabilidadController extends Controller
             'year'         => $year,
             'gastos'       => $gastos,
             'por_servicio' => $por_servicio,
+            'rotacion'     => $rotacion,
         ]));
         return $pdf->download('contabilidad-'.$mes.'-'.$year.'.pdf');
     }

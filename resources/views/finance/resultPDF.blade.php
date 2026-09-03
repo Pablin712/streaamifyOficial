@@ -534,6 +534,124 @@
         es dinero que sale de esa utilidad, no un gasto del negocio.
     </div>
 
+    {{-- ── Altas y bajas por servicio ──────────────────────────
+         Va lo antes posible, justo tras el resumen financiero: es la
+         informacion que se usa para decidir donde actuar. Sin salto de
+         pagina forzado, para que empiece en la segunda y no en la tercera. --}}
+    <h2>Movimiento de clientes por servicio</h2>
+
+    @php
+        $rot = $rotacion ?? [];
+        $totNuevos   = array_sum(array_column($rot, 'nuevos'));
+        $totPerdidos = array_sum(array_column($rot, 'perdidos'));
+        $totPrevios  = array_sum(array_column($rot, 'previos'));
+        $retGlobal   = $totPrevios > 0 ? (($totPrevios - $totPerdidos) / $totPrevios) * 100 : null;
+
+        // El que mas pierde y el que mas gana, para el resumen de arriba.
+        $peor  = collect($rot)->sortByDesc('perdidos')->first();
+        $mejor = collect($rot)->sortByDesc('neto')->first();
+    @endphp
+
+    @if (count($rot))
+        <table class="kpis">
+            <tr>
+                <td>
+                    <div class="kpi-etq">Altas del mes</div>
+                    <div class="kpi-val sube">{{ $fmt($totNuevos, 0) }}</div>
+                    <div class="kpi-sub">clientes que entraron</div>
+                </td>
+                <td>
+                    <div class="kpi-etq">Bajas del mes</div>
+                    <div class="kpi-val baja">{{ $fmt($totPerdidos, 0) }}</div>
+                    <div class="kpi-sub">clientes que se fueron</div>
+                </td>
+                <td>
+                    <div class="kpi-etq">Saldo neto</div>
+                    <div class="kpi-val {{ $totNuevos - $totPerdidos >= 0 ? 'sube' : 'baja' }}">
+                        {{ ($totNuevos - $totPerdidos >= 0 ? '+' : '') . $fmt($totNuevos - $totPerdidos, 0) }}
+                    </div>
+                    <div class="kpi-sub">altas menos bajas</div>
+                </td>
+                <td>
+                    <div class="kpi-etq">Retención global</div>
+                    <div class="kpi-val">{{ $retGlobal !== null ? $fmt($retGlobal, 0) . '%' : '—' }}</div>
+                    <div class="kpi-sub">siguen del mes anterior</div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- Lectura directa: donde duele y donde crece --}}
+        <table style="width:100%; border-collapse:separate; border-spacing:5pt 0; margin-top:8pt">
+            <tr>
+                <td style="border:0.8pt solid #b3261e; border-left:3pt solid #b3261e; background:#fdf3f2; padding:8pt 10pt; vertical-align:top">
+                    <div class="kpi-etq" style="color:#b3261e">Donde más se pierde</div>
+                    <div style="font-size:12pt; font-weight:bold">{{ $peor['servicio'] }}</div>
+                    <div class="kpi-sub">
+                        {{ $fmt($peor['perdidos'], 0) }} bajas ·
+                        retención {{ $peor['retencion'] !== null ? $fmt($peor['retencion'], 0) . '%' : '—' }} ·
+                        pasó de {{ $fmt($peor['previos'], 0) }} a {{ $fmt($peor['activos'], 0) }} clientes
+                    </div>
+                </td>
+                <td style="border:0.8pt solid #0f7a45; border-left:3pt solid #0f7a45; background:#f1f8f4; padding:8pt 10pt; vertical-align:top">
+                    <div class="kpi-etq" style="color:#0f7a45">Donde más se gana</div>
+                    <div style="font-size:12pt; font-weight:bold">{{ $mejor['servicio'] }}</div>
+                    <div class="kpi-sub">
+                        {{ ($mejor['neto'] >= 0 ? '+' : '') . $fmt($mejor['neto'], 0) }} neto ·
+                        {{ $fmt($mejor['nuevos'], 0) }} altas ·
+                        pasó de {{ $fmt($mejor['previos'], 0) }} a {{ $fmt($mejor['activos'], 0) }} clientes
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="datos" style="margin-top:12pt">
+            <thead>
+                <tr>
+                    <th>Servicio</th>
+                    <th class="der">{{ ucfirst($comparativa['mes_anterior'] ?? 'Mes anterior') }}</th>
+                    <th class="der">{{ ucfirst($mes) }}</th>
+                    <th class="der">Altas</th>
+                    <th class="der">Bajas</th>
+                    <th class="der">Neto</th>
+                    <th class="der">Retención</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($rot as $r)
+                    <tr>
+                        <td>{{ $r['servicio'] }}</td>
+                        <td class="der">{{ $fmt($r['previos'], 0) }}</td>
+                        <td class="der">{{ $fmt($r['activos'], 0) }}</td>
+                        <td class="der sube">{{ $r['nuevos'] ? '+' . $fmt($r['nuevos'], 0) : '—' }}</td>
+                        <td class="der baja">{{ $r['perdidos'] ? '−' . $fmt($r['perdidos'], 0) : '—' }}</td>
+                        <td class="der {{ $r['neto'] >= 0 ? 'sube' : 'baja' }}">
+                            {{ ($r['neto'] >= 0 ? '+' : '') . $fmt($r['neto'], 0) }}
+                        </td>
+                        <td class="der">{{ $r['retencion'] !== null ? $fmt($r['retencion'], 0) . '%' : '—' }}</td>
+                    </tr>
+                @endforeach
+                <tr class="total">
+                    <td>Total</td>
+                    <td class="der">{{ $fmt($totPrevios, 0) }}</td>
+                    <td class="der">{{ $fmt(array_sum(array_column($rot, 'activos')), 0) }}</td>
+                    <td class="der">+{{ $fmt($totNuevos, 0) }}</td>
+                    <td class="der">−{{ $fmt($totPerdidos, 0) }}</td>
+                    <td class="der">{{ ($totNuevos - $totPerdidos >= 0 ? '+' : '') . $fmt($totNuevos - $totPerdidos, 0) }}</td>
+                    <td class="der">{{ $retGlobal !== null ? $fmt($retGlobal, 0) . '%' : '—' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="aviso">
+            Un cliente cuenta como activo en un servicio cuando su suscripción cubre el mes, aunque la
+            haya pagado antes. «Altas» son quienes no estaban el mes anterior y «bajas» quienes estaban
+            y ya no. Un mismo cliente puede darse de baja en un servicio y seguir en otro, por eso estos
+            totales no coinciden con las altas y bajas del negocio en conjunto.
+        </div>
+    @else
+        <div class="aviso">No hay datos suficientes para comparar con el mes anterior.</div>
+    @endif
+
     @if (!empty($gastos))
         <h2>Desglose de gastos operativos</h2>
         <table class="datos">
@@ -560,6 +678,7 @@
             </tbody>
         </table>
     @endif
+
 
     {{-- ── Graficos ────────────────────────────────────────────── --}}
     <div class="salto"></div>
