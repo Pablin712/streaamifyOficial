@@ -69,10 +69,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null; // otros errores de SQL siguen su curso normal
             }
 
-            Log::warning('BD no disponible temporalmente', [
-                'ruta' => $request->path(),
-            ]);
-
             if ($request->expectsJson() || $request->hasHeader('X-Livewire')) {
                 return response()->json(['message' => 'Servicio no disponible, reintentando.'], 503);
             }
@@ -80,6 +76,24 @@ return Application::configure(basePath: dirname(__DIR__))
             return null;
         });
 
-        // Los fallos de conexión no necesitan volcado de pila: son ruido.
+        /*
+         * El volcado de pila de un fallo de conexión no aporta nada —siempre es
+         * el mismo— y ocupa unos 25 KB cada vez. Seis de estos llenaban 154 KB
+         * de log en una sola ráfaga. Se sustituye por una línea y se corta el
+         * informe por defecto devolviendo false.
+         */
+        $exceptions->report(function (QueryException $e) {
+            if (!str_contains($e->getMessage(), '2002')) {
+                return null; // el resto se informa como siempre
+            }
+
+            Log::warning('BD no disponible temporalmente', [
+                'ruta' => request()->path(),
+            ]);
+
+            return false;
+        });
+
+        // Una sesión caducada es algo normal, no un incidente que investigar.
         $exceptions->dontReport(TokenMismatchException::class);
     })->create();
