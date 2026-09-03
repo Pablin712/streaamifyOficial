@@ -1,0 +1,646 @@
+/* ============================================================================
+   STREAMIFY THEMES — temas dinámicos sobre los tokens del sistema
+   ----------------------------------------------------------------------------
+   Se carga DESPUÉS de streamify-ui.css y de themes.css.
+
+   Cada tema redefine los tokens `--sf-*` (que consumen los componentes nuevos
+   y el puente Bootstrap) y, para los temas que themes.css no conoce, también
+   los `--primary-color` / `--bg-*` heredados, para que las vistas antiguas
+   sigan al mismo tema.
+
+   PATRÓN DE SELECTORES — importante:
+     [data-theme="x"]:not([data-dark-mode="true"])  → variante clara
+     [data-theme="x"][data-dark-mode="true"]        → variante oscura
+   Ambos tienen especificidad (0,2,0) y el oscuro va después, así que gana
+   cuando el modo oscuro está activo. Sin el `:not(...)` la variante clara
+   pisaría los tokens oscuros de streamify-ui.css y el modo oscuro se rompería
+   en cuanto hubiera un tema activo.
+
+   El tema y el modo oscuro los fija el administrador en /admin/sistema y se
+   guardan en la base de datos (AparienciaService), así que son GLOBALES: los
+   ven todos los empleados, en todos los dispositivos, y también los clientes
+   en las vistas públicas.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. COBERTURA UNIVERSAL DE MODO OSCURO
+   --------------------------------------------------------------------------
+   streamify-ui.css ya vuelve oscuros los componentes que usan tokens. Aquí se
+   cubren las utilidades de Bootstrap con color incrustado que siguen vivas en
+   las vistas legacy — sobre todo en las públicas, que nunca tuvieron modo
+   oscuro. Sin esto quedan islas blancas sobre fondo negro.
+   ========================================================================== */
+[data-dark-mode="true"] .bg-white,
+[data-dark-mode="true"] .bg-body,
+[data-dark-mode="true"] .bg-body-tertiary {
+    background-color: var(--sf-surface-card) !important;
+    color: var(--sf-ink);
+}
+
+[data-dark-mode="true"] .bg-light {
+    background-color: var(--sf-surface-sunken) !important;
+    color: var(--sf-ink);
+}
+
+[data-dark-mode="true"] .text-dark,
+[data-dark-mode="true"] .text-black,
+[data-dark-mode="true"] .text-body {
+    color: var(--sf-ink) !important;
+}
+
+[data-dark-mode="true"] .text-muted,
+[data-dark-mode="true"] .text-secondary {
+    color: var(--sf-ink-secondary) !important;
+}
+
+[data-dark-mode="true"] .border,
+[data-dark-mode="true"] .border-top,
+[data-dark-mode="true"] .border-bottom,
+[data-dark-mode="true"] .border-start,
+[data-dark-mode="true"] .border-end {
+    border-color: var(--sf-border) !important;
+}
+
+/* Superficies estructurales de ambos layouts */
+[data-dark-mode="true"] body,
+[data-dark-mode="true"] main,
+[data-dark-mode="true"] #layoutSidenav_content,
+[data-dark-mode="true"] .masthead {
+    background-color: var(--sf-surface-page);
+    color: var(--sf-ink);
+}
+
+/* Secciones del sitio público: cada contenedor sigue su token, no un color fijo */
+[data-dark-mode="true"] .sf-section { background-color: var(--sf-surface-page); }
+[data-dark-mode="true"] .sf-section--sunken { background-color: var(--sf-surface-sunken); }
+[data-dark-mode="true"] .sf-panel,
+[data-dark-mode="true"] .sf-card,
+[data-dark-mode="true"] .sf-kpi,
+[data-dark-mode="true"] .combo-card,
+[data-dark-mode="true"] .social-link,
+[data-dark-mode="true"] .media-frame,
+[data-dark-mode="true"] .platform-chip,
+[data-dark-mode="true"] .hero-figure {
+    background-color: var(--sf-surface-card);
+    border-color: var(--sf-border);
+    color: var(--sf-ink);
+}
+
+/* Las variantes de acento deben SEGUIR destacando en oscuro. La regla general
+   de arriba las igualaría a una tarjeta normal y perderían su jerarquía. */
+[data-dark-mode="true"] .sf-panel--accent,
+[data-dark-mode="true"] .sf-kpi--primary {
+    background-color: var(--sf-brand-soft);
+    border-color: var(--sf-brand);
+}
+
+/* El hero usa degradados de acento: en oscuro se atenúan para no vibrar. */
+[data-dark-mode="true"] .hero {
+    background:
+        radial-gradient(60rem 32rem at 82% -10%, var(--sf-brand-soft), transparent 70%),
+        radial-gradient(44rem 26rem at 6% 108%, var(--sf-gold-soft), transparent 72%),
+        var(--sf-surface-page);
+    border-bottom-color: var(--sf-border);
+}
+
+/* Imágenes de producto sobre fondo oscuro: se bajan un punto para no deslumbrar. */
+[data-dark-mode="true"] .media-frame img,
+[data-dark-mode="true"] .combo-card img { filter: brightness(0.92); }
+
+/* Los bloques que YA son oscuros por diseño no deben "oscurecerse" otra vez. */
+[data-dark-mode="true"] .sf-section--inverse {
+    background-color: #000;
+}
+
+/* Barra pública y footer */
+[data-dark-mode="true"] #mainNav {
+    background-color: var(--sf-surface-card);
+    border-bottom-color: var(--sf-border);
+}
+[data-dark-mode="true"] #pie { background-color: #0d0c10 !important; }
+
+/* Sidebar y navbar del panel */
+[data-dark-mode="true"] .sidebar,
+[data-dark-mode="true"] #layoutSidenav_nav,
+[data-dark-mode="true"] .sb-sidenav {
+    background-color: var(--sf-surface-card);
+    border-right: 1px solid var(--sf-border);
+}
+
+/* Select2 y otros widgets de terceros que quedan blancos */
+[data-dark-mode="true"] .select2-container--default .select2-selection--single,
+[data-dark-mode="true"] .select2-container--default .select2-selection--multiple,
+[data-dark-mode="true"] .select2-dropdown {
+    background-color: var(--sf-surface-card) !important;
+    border-color: var(--sf-border-strong) !important;
+    color: var(--sf-ink) !important;
+}
+
+/* ==========================================================================
+   2. TEMAS
+   ========================================================================== */
+
+/* --- default: la marca Streamify. Los tokens base ya son este tema, así que
+       solo se declara la variante oscura para dejar constancia. ------------ */
+
+/* --- Medianoche: oscuro permanente, sobrio ------------------------------- */
+[data-theme="midnight"]:not([data-dark-mode="true"]),
+[data-theme="midnight"][data-dark-mode="true"] {
+    --sf-brand: #8ba3f0;
+    --sf-brand-strong: #a8bbf5;
+    --sf-brand-soft: #1e2440;
+    --sf-brand-contrast: #0d1020;
+    --sf-gold: #f0c435;
+    --sf-gold-strong: #f7d668;
+    --sf-gold-soft: #38300f;
+    --sf-gold-contrast: #16150e;
+    --sf-red: #f07276;
+    --sf-red-soft: #3a191b;
+
+    --sf-surface-page: #101018;
+    --sf-surface-card: #191924;
+    --sf-surface-sunken: #21212e;
+    --sf-surface-inverse: #08080d;
+
+    --sf-ink: #eceaf3;
+    --sf-ink-secondary: #b3b0c2;
+    --sf-ink-muted: #83809a;
+    --sf-ink-inverse: #eceaf3;
+
+    --sf-border: #2e2e3d;
+    --sf-border-soft: #262633;
+    --sf-border-strong: #414055;
+
+    --sf-good-soft: #10301e;
+    --sf-warning-soft: #33290f;
+    --sf-critical-soft: #381819;
+    --sf-info-soft: #132738;
+
+    /* puente con las vistas legacy */
+    --primary-color: #8ba3f0;
+    --bg-body: #101018;
+    --bg-card: #191924;
+    --bg-light: #21212e;
+    --text-primary: #eceaf3;
+    --text-secondary: #b3b0c2;
+    --text-muted: #83809a;
+    --border-color: #2e2e3d;
+}
+
+/* --- Neón: violeta y cian eléctrico -------------------------------------- */
+[data-theme="neon"]:not([data-dark-mode="true"]) {
+    --sf-brand: #7c3aed;
+    --sf-brand-strong: #6425d0;
+    --sf-brand-soft: #f1e9fe;
+    --sf-gold: #06b6d4;
+    --sf-gold-strong: #0891b2;
+    --sf-gold-soft: #e0f7fb;
+    --sf-gold-contrast: #06222a;
+    --sf-red: #f43f7e;
+    --sf-red-strong: #d61f61;
+    --sf-red-soft: #fde8f0;
+
+    --sf-surface-page: #fbfaff;
+    --sf-surface-card: #ffffff;
+    --sf-surface-sunken: #f4f1fd;
+    --sf-surface-inverse: #1a0f2e;
+
+    --sf-ink: #1a1030;
+    --sf-ink-secondary: #574a6e;
+    --sf-ink-muted: #8b7fa5;
+
+    --sf-border: #e6dff7;
+    --sf-border-soft: #efeafb;
+    --sf-border-strong: #d3c6ef;
+
+    --primary-color: #7c3aed;
+    --bg-body: #fbfaff;
+    --bg-card: #ffffff;
+    --text-primary: #1a1030;
+    --border-color: #e6dff7;
+}
+[data-theme="neon"][data-dark-mode="true"] {
+    --sf-brand: #b794f6;
+    --sf-brand-strong: #cbb2fa;
+    --sf-brand-soft: #2b1b4d;
+    --sf-brand-contrast: #14092b;
+    --sf-gold: #22d3ee;
+    --sf-gold-strong: #67e8f9;
+    --sf-gold-soft: #0d3944;
+    --sf-gold-contrast: #04181d;
+    --sf-red: #fb7bab;
+    --sf-red-soft: #3d1229;
+
+    --sf-surface-page: #140d24;
+    --sf-surface-card: #1f1636;
+    --sf-surface-sunken: #281c44;
+    --sf-surface-inverse: #0a0514;
+
+    --sf-ink: #f0eafc;
+    --sf-ink-secondary: #bcaddb;
+    --sf-ink-muted: #8b7cb0;
+
+    --sf-border: #372a56;
+    --sf-border-soft: #2e2348;
+    --sf-border-strong: #4c3b74;
+
+    --primary-color: #b794f6;
+    --bg-body: #140d24;
+    --bg-card: #1f1636;
+    --text-primary: #f0eafc;
+    --border-color: #372a56;
+}
+
+/* --- Océano: azules profundos y turquesa --------------------------------- */
+[data-theme="oceano"]:not([data-dark-mode="true"]) {
+    --sf-brand: #0369a1;
+    --sf-brand-strong: #025582;
+    --sf-brand-soft: #e2f2fb;
+    --sf-gold: #0d9488;
+    --sf-gold-strong: #0b7c72;
+    --sf-gold-soft: #dff5f2;
+    --sf-gold-contrast: #ffffff;
+
+    --sf-surface-page: #f8fbfd;
+    --sf-surface-card: #ffffff;
+    --sf-surface-sunken: #eef6fa;
+    --sf-surface-inverse: #062b3f;
+
+    --sf-ink: #0b2432;
+    --sf-ink-secondary: #4a6472;
+    --sf-ink-muted: #7d95a1;
+
+    --sf-border: #d8e7ef;
+    --sf-border-soft: #e6f0f6;
+    --sf-border-strong: #bcd4e1;
+
+    --primary-color: #0369a1;
+    --bg-body: #f8fbfd;
+    --bg-card: #ffffff;
+    --text-primary: #0b2432;
+    --border-color: #d8e7ef;
+}
+[data-theme="oceano"][data-dark-mode="true"] {
+    --sf-brand: #5eb8e8;
+    --sf-brand-strong: #86ccf0;
+    --sf-brand-soft: #10344a;
+    --sf-brand-contrast: #041a27;
+    --sf-gold: #2dd4bf;
+    --sf-gold-strong: #5eead4;
+    --sf-gold-soft: #0b3b37;
+    --sf-gold-contrast: #04211e;
+
+    --sf-surface-page: #0a1a24;
+    --sf-surface-card: #122734;
+    --sf-surface-sunken: #183241;
+    --sf-surface-inverse: #04121a;
+
+    --sf-ink: #e4f1f7;
+    --sf-ink-secondary: #a9c3d0;
+    --sf-ink-muted: #7893a3;
+
+    --sf-border: #23404f;
+    --sf-border-soft: #1c3441;
+    --sf-border-strong: #345666;
+
+    --primary-color: #5eb8e8;
+    --bg-body: #0a1a24;
+    --bg-card: #122734;
+    --text-primary: #e4f1f7;
+    --border-color: #23404f;
+}
+
+/* --- Fiestas Patrias (Ecuador) ------------------------------------------- */
+[data-theme="patrias"]:not([data-dark-mode="true"]) {
+    --sf-brand: #0033a0;
+    --sf-brand-strong: #002678;
+    --sf-brand-soft: #e5ebf7;
+    --sf-gold: #ffd100;
+    --sf-gold-strong: #d9b100;
+    --sf-gold-soft: #fff8db;
+    --sf-gold-contrast: #1d1d1b;
+    --sf-red: #ef3340;
+    --sf-red-strong: #cb1f2b;
+    --sf-red-soft: #fdeaeb;
+
+    --sf-surface-page: #fffdf5;
+    --sf-surface-card: #ffffff;
+    --sf-surface-sunken: #fff8e3;
+    --sf-surface-inverse: #14213d;
+
+    --sf-ink: #1a1a1a;
+    --sf-ink-secondary: #55565a;
+    --sf-ink-muted: #8a8b90;
+
+    --sf-border: #ebe4cd;
+    --sf-border-soft: #f3eddc;
+    --sf-border-strong: #d8cfae;
+
+    --primary-color: #ffd100;
+    --bg-body: #fffdf5;
+    --bg-card: #ffffff;
+    --text-primary: #1a1a1a;
+    --border-color: #ebe4cd;
+}
+[data-theme="patrias"][data-dark-mode="true"] {
+    --sf-brand: #7d9ceb;
+    --sf-brand-strong: #9db4f1;
+    --sf-brand-soft: #1a2745;
+    --sf-brand-contrast: #0b1226;
+    --sf-gold: #ffd94d;
+    --sf-gold-strong: #ffe57a;
+    --sf-gold-soft: #3d3208;
+    --sf-gold-contrast: #17150a;
+    --sf-red: #f4737d;
+    --sf-red-soft: #3d1a1d;
+
+    --sf-surface-page: #14151c;
+    --sf-surface-card: #1e2029;
+    --sf-surface-sunken: #262934;
+    --sf-surface-inverse: #0b0d14;
+
+    --sf-ink: #eeecea;
+    --sf-ink-secondary: #b5b3af;
+    --sf-ink-muted: #888681;
+
+    --sf-border: #33353f;
+    --sf-border-soft: #2b2d36;
+    --sf-border-strong: #464956;
+
+    --primary-color: #ffd94d;
+    --bg-body: #14151c;
+    --bg-card: #1e2029;
+    --text-primary: #eeecea;
+    --border-color: #33353f;
+}
+
+/* --- Halloween ----------------------------------------------------------- */
+[data-theme="halloween"]:not([data-dark-mode="true"]) {
+    --sf-brand: #6a0dad;
+    --sf-brand-strong: #540a8a;
+    --sf-brand-soft: #f0e6f9;
+    --sf-gold: #ff7518;
+    --sf-gold-strong: #dd5f0c;
+    --sf-gold-soft: #fff0e4;
+    --sf-gold-contrast: #1d1207;
+
+    --sf-surface-page: #fdfaf6;
+    --sf-surface-card: #ffffff;
+    --sf-surface-sunken: #f7f0e8;
+    --sf-surface-inverse: #140c1c;
+
+    --sf-ink: #1f1526;
+    --sf-ink-secondary: #5a4a63;
+    --sf-ink-muted: #8d7f95;
+
+    --sf-border: #ebe0d5;
+    --sf-border-soft: #f3ebe2;
+    --sf-border-strong: #d5c6b7;
+
+    --primary-color: #ff7518;
+    --bg-body: #fdfaf6;
+    --bg-card: #ffffff;
+    --text-primary: #1f1526;
+    --border-color: #ebe0d5;
+}
+[data-theme="halloween"][data-dark-mode="true"] {
+    --sf-brand: #c084fc;
+    --sf-brand-strong: #d5aafd;
+    --sf-brand-soft: #2c1642;
+    --sf-brand-contrast: #150a20;
+    --sf-gold: #ff9040;
+    --sf-gold-strong: #ffab6b;
+    --sf-gold-soft: #40230c;
+    --sf-gold-contrast: #1a0e04;
+
+    --sf-surface-page: #120c18;
+    --sf-surface-card: #1c1426;
+    --sf-surface-sunken: #251a31;
+    --sf-surface-inverse: #08050c;
+
+    --sf-ink: #f0e9f5;
+    --sf-ink-secondary: #b8a9c4;
+    --sf-ink-muted: #8a7a97;
+
+    --sf-border: #342644;
+    --sf-border-soft: #2b1f39;
+    --sf-border-strong: #4a3860;
+
+    --primary-color: #ff9040;
+    --bg-body: #120c18;
+    --bg-card: #1c1426;
+    --text-primary: #f0e9f5;
+    --border-color: #342644;
+}
+
+/* --- Black Friday: alto contraste, negro y dorado ------------------------ */
+[data-theme="blackfriday"]:not([data-dark-mode="true"]) {
+    --sf-brand: #111111;
+    --sf-brand-strong: #000000;
+    --sf-brand-soft: #f0f0f0;
+    --sf-brand-contrast: #f5c518;
+    --sf-gold: #f5c518;
+    --sf-gold-strong: #d6a904;
+    --sf-gold-soft: #fdf6d9;
+    --sf-gold-contrast: #111111;
+
+    --sf-surface-page: #fafafa;
+    --sf-surface-card: #ffffff;
+    --sf-surface-sunken: #f0f0f0;
+    --sf-surface-inverse: #000000;
+
+    --sf-ink: #111111;
+    --sf-ink-secondary: #4d4d4d;
+    --sf-ink-muted: #808080;
+
+    --sf-border: #e0e0e0;
+    --sf-border-soft: #ededed;
+    --sf-border-strong: #c4c4c4;
+
+    --primary-color: #f5c518;
+    --bg-body: #fafafa;
+    --bg-card: #ffffff;
+    --text-primary: #111111;
+    --border-color: #e0e0e0;
+}
+[data-theme="blackfriday"][data-dark-mode="true"] {
+    --sf-brand: #f5c518;
+    --sf-brand-strong: #ffd944;
+    --sf-brand-soft: #332a06;
+    --sf-brand-contrast: #111111;
+    --sf-gold: #f5c518;
+    --sf-gold-strong: #ffd944;
+    --sf-gold-soft: #332a06;
+    --sf-gold-contrast: #111111;
+
+    --sf-surface-page: #0a0a0a;
+    --sf-surface-card: #161616;
+    --sf-surface-sunken: #1f1f1f;
+    --sf-surface-inverse: #000000;
+
+    --sf-ink: #f5f5f5;
+    --sf-ink-secondary: #b0b0b0;
+    --sf-ink-muted: #7d7d7d;
+
+    --sf-border: #2b2b2b;
+    --sf-border-soft: #232323;
+    --sf-border-strong: #3d3d3d;
+
+    --primary-color: #f5c518;
+    --bg-body: #0a0a0a;
+    --bg-card: #161616;
+    --text-primary: #f5f5f5;
+    --border-color: #2b2b2b;
+}
+
+/* ==========================================================================
+   3. TEMAS DE TEMPORADA YA EXISTENTES
+   --------------------------------------------------------------------------
+   themes.css ya define sus variables heredadas (--primary-color, --bg-*).
+   Aquí solo se mapean a los tokens `--sf-*` para que los componentes nuevos
+   y el puente Bootstrap sigan el mismo tema, más su variante oscura.
+   ========================================================================== */
+
+/* --- Navidad ------------------------------------------------------------- */
+[data-theme="christmas"]:not([data-dark-mode="true"]) {
+    --sf-brand: #c92a2a; --sf-brand-strong: #a61e1e; --sf-brand-soft: #fdeaea;
+    --sf-gold: #2f9e44; --sf-gold-strong: #268038; --sf-gold-soft: #e6f5ea; --sf-gold-contrast: #ffffff;
+    --sf-surface-page: #fffafa; --sf-surface-card: #ffffff; --sf-surface-sunken: #fdf0f0;
+    --sf-surface-inverse: #16261a;
+    --sf-ink: #2d2d2d; --sf-ink-secondary: #5c5c5c; --sf-ink-muted: #8a8a8a;
+    --sf-border: #f0dcdc; --sf-border-soft: #f7ebeb; --sf-border-strong: #e0c0c0;
+}
+[data-theme="christmas"][data-dark-mode="true"] {
+    --sf-brand: #ff8787; --sf-brand-strong: #ffa8a8; --sf-brand-soft: #3d1a1a; --sf-brand-contrast: #1a0a0a;
+    --sf-gold: #69db7c; --sf-gold-strong: #8ce99a; --sf-gold-soft: #12331b; --sf-gold-contrast: #08170c;
+    --sf-surface-page: #14100f; --sf-surface-card: #1e1817; --sf-surface-sunken: #271f1e;
+    --sf-surface-inverse: #0a0807;
+    --sf-ink: #f2eae9; --sf-ink-secondary: #b8adab; --sf-ink-muted: #8a807e;
+    --sf-border: #362c2b; --sf-border-soft: #2c2423; --sf-border-strong: #4a3d3b;
+}
+
+/* --- Año Nuevo ----------------------------------------------------------- */
+[data-theme="newyear"]:not([data-dark-mode="true"]) {
+    --sf-brand: #1a1a2e; --sf-brand-strong: #0f0f1f; --sf-brand-soft: #e8e8f0;
+    --sf-gold: #d4af37; --sf-gold-strong: #b8952c; --sf-gold-soft: #faf3dd; --sf-gold-contrast: #1a1a2e;
+    --sf-surface-page: #fcfbf7; --sf-surface-card: #ffffff; --sf-surface-sunken: #f5f2e8;
+    --sf-surface-inverse: #10101f;
+    --sf-ink: #1a1a2e; --sf-ink-secondary: #54546b; --sf-ink-muted: #8a8a9c;
+    --sf-border: #e8e3d2; --sf-border-soft: #f2eee2; --sf-border-strong: #d0c8ae;
+}
+[data-theme="newyear"][data-dark-mode="true"] {
+    --sf-brand: #9fa8f0; --sf-brand-strong: #bcc2f5; --sf-brand-soft: #1e2043; --sf-brand-contrast: #0d0e22;
+    --sf-gold: #e9c75a; --sf-gold-strong: #f2d982; --sf-gold-soft: #3a2f10; --sf-gold-contrast: #17130a;
+    --sf-surface-page: #0f0f1c; --sf-surface-card: #191927; --sf-surface-sunken: #212134;
+    --sf-surface-inverse: #07070f;
+    --sf-ink: #eeeef5; --sf-ink-secondary: #b2b2c4; --sf-ink-muted: #82829a;
+    --sf-border: #2e2e42; --sf-border-soft: #262637; --sf-border-strong: #414159;
+}
+
+/* --- San Valentín -------------------------------------------------------- */
+[data-theme="valentine"]:not([data-dark-mode="true"]) {
+    --sf-brand: #c2185b; --sf-brand-strong: #a01449; --sf-brand-soft: #fce4ec;
+    --sf-gold: #e91e63; --sf-gold-strong: #c2185b; --sf-gold-soft: #fdeaf1; --sf-gold-contrast: #ffffff;
+    --sf-surface-page: #fffafb; --sf-surface-card: #ffffff; --sf-surface-sunken: #fdeff3;
+    --sf-surface-inverse: #2a0f1b;
+    --sf-ink: #3a2129; --sf-ink-secondary: #6b5058; --sf-ink-muted: #9a838b;
+    --sf-border: #f5dbe3; --sf-border-soft: #faeaef; --sf-border-strong: #e8bdcb;
+}
+[data-theme="valentine"][data-dark-mode="true"] {
+    --sf-brand: #f48fb1; --sf-brand-strong: #f8b4cb; --sf-brand-soft: #3d1526; --sf-brand-contrast: #1e0912;
+    --sf-gold: #ff6f9c; --sf-gold-strong: #ff94b6; --sf-gold-soft: #3d1526; --sf-gold-contrast: #1e0912;
+    --sf-surface-page: #170f13; --sf-surface-card: #21171c; --sf-surface-sunken: #2b1f25;
+    --sf-surface-inverse: #0c0709;
+    --sf-ink: #f5e9ed; --sf-ink-secondary: #bfacb3; --sf-ink-muted: #8f7f86;
+    --sf-border: #3a2b32; --sf-border-soft: #2f232a; --sf-border-strong: #503c45;
+}
+
+/* --- Primavera ----------------------------------------------------------- */
+[data-theme="spring"]:not([data-dark-mode="true"]) {
+    --sf-brand: #43a047; --sf-brand-strong: #357d38; --sf-brand-soft: #e8f5e9;
+    --sf-gold: #f48fb1; --sf-gold-strong: #e06f97; --sf-gold-soft: #fdeaf1; --sf-gold-contrast: #3a2129;
+    --sf-surface-page: #fbfdf9; --sf-surface-card: #ffffff; --sf-surface-sunken: #f0f7ef;
+    --sf-surface-inverse: #14261a;
+    --sf-ink: #1e2b20; --sf-ink-secondary: #4f5f52; --sf-ink-muted: #849184;
+    --sf-border: #dfeade; --sf-border-soft: #ebf3ea; --sf-border-strong: #c2d6c1;
+}
+[data-theme="spring"][data-dark-mode="true"] {
+    --sf-brand: #81c784; --sf-brand-strong: #a5d6a7; --sf-brand-soft: #17331a; --sf-brand-contrast: #0a1a0c;
+    --sf-gold: #f8a8c4; --sf-gold-strong: #fbc4d7; --sf-gold-soft: #3a1d28; --sf-gold-contrast: #1c0c12;
+    --sf-surface-page: #0f1610; --sf-surface-card: #182018; --sf-surface-sunken: #202a20;
+    --sf-surface-inverse: #070c08;
+    --sf-ink: #eaf2e9; --sf-ink-secondary: #b0bdaf; --sf-ink-muted: #808d80;
+    --sf-border: #2b352b; --sf-border-soft: #232c23; --sf-border-strong: #3d4a3d;
+}
+
+/* --- Verano -------------------------------------------------------------- */
+[data-theme="summer"]:not([data-dark-mode="true"]) {
+    --sf-brand: #0097a7; --sf-brand-strong: #007b8a; --sf-brand-soft: #e0f7fa;
+    --sf-gold: #ff9800; --sf-gold-strong: #e07f00; --sf-gold-soft: #fff4e0; --sf-gold-contrast: #24170a;
+    --sf-surface-page: #fffdf8; --sf-surface-card: #ffffff; --sf-surface-sunken: #fef6e9;
+    --sf-surface-inverse: #10333a;
+    --sf-ink: #23241f; --sf-ink-secondary: #575a52; --sf-ink-muted: #8b8e85;
+    --sf-border: #eee5d4; --sf-border-soft: #f6efe3; --sf-border-strong: #d8cbb2;
+}
+[data-theme="summer"][data-dark-mode="true"] {
+    --sf-brand: #4dd0e1; --sf-brand-strong: #80deea; --sf-brand-soft: #0d3339; --sf-brand-contrast: #04191d;
+    --sf-gold: #ffb74d; --sf-gold-strong: #ffcc80; --sf-gold-soft: #3d2c0d; --sf-gold-contrast: #1a1206;
+    --sf-surface-page: #131410; --sf-surface-card: #1d1e19; --sf-surface-sunken: #262822;
+    --sf-surface-inverse: #080906;
+    --sf-ink: #f0f0e9; --sf-ink-secondary: #b5b6ac; --sf-ink-muted: #868880;
+    --sf-border: #33352d; --sf-border-soft: #2a2c25; --sf-border-strong: #474a3f;
+}
+
+/* --- Otoño --------------------------------------------------------------- */
+[data-theme="autumn"]:not([data-dark-mode="true"]) {
+    --sf-brand: #8b4513; --sf-brand-strong: #6f370f; --sf-brand-soft: #f6ece2;
+    --sf-gold: #d2691e; --sf-gold-strong: #b25617; --sf-gold-soft: #fbeee2; --sf-gold-contrast: #ffffff;
+    --sf-surface-page: #fdfaf5; --sf-surface-card: #ffffff; --sf-surface-sunken: #f7efe4;
+    --sf-surface-inverse: #2a1a0d;
+    --sf-ink: #2b1f14; --sf-ink-secondary: #5e4d3d; --sf-ink-muted: #93826f;
+    --sf-border: #ece0cf; --sf-border-soft: #f4ebde; --sf-border-strong: #d6c3aa;
+}
+[data-theme="autumn"][data-dark-mode="true"] {
+    --sf-brand: #d9a066; --sf-brand-strong: #e6bb8c; --sf-brand-soft: #3a2716; --sf-brand-contrast: #1c1209;
+    --sf-gold: #e8874a; --sf-gold-strong: #f0a475; --sf-gold-soft: #3d2312; --sf-gold-contrast: #1a0f07;
+    --sf-surface-page: #16120d; --sf-surface-card: #201a14; --sf-surface-sunken: #2a221a;
+    --sf-surface-inverse: #0b0806;
+    --sf-ink: #f2ebe1; --sf-ink-secondary: #bcaf9f; --sf-ink-muted: #8c8172;
+    --sf-border: #382e23; --sf-border-soft: #2e261c; --sf-border-strong: #4d4132;
+}
+
+/* --- Mundial 2026 -------------------------------------------------------- */
+[data-theme="mundial2026"]:not([data-dark-mode="true"]) {
+    --sf-brand: #0b6e4f; --sf-brand-strong: #08573e; --sf-brand-soft: #e3f3ed;
+    --sf-gold: #e4b100; --sf-gold-strong: #c69a00; --sf-gold-soft: #fdf5db; --sf-gold-contrast: #1d1d1b;
+    --sf-surface-page: #fafdfb; --sf-surface-card: #ffffff; --sf-surface-sunken: #eef7f2;
+    --sf-surface-inverse: #06301f;
+    --sf-ink: #10211a; --sf-ink-secondary: #47594f; --sf-ink-muted: #7d8f84;
+    --sf-border: #dcebe3; --sf-border-soft: #e9f3ee; --sf-border-strong: #bcd6c8;
+}
+[data-theme="mundial2026"][data-dark-mode="true"] {
+    --sf-brand: #4ec49a; --sf-brand-strong: #7ad6b6; --sf-brand-soft: #0d3527; --sf-brand-contrast: #041a11;
+    --sf-gold: #f0c435; --sf-gold-strong: #f7d668; --sf-gold-soft: #3a2f10; --sf-gold-contrast: #17160f;
+    --sf-surface-page: #0c1611; --sf-surface-card: #14211a; --sf-surface-sunken: #1c2b23;
+    --sf-surface-inverse: #060d09;
+    --sf-ink: #e8f2ec; --sf-ink-secondary: #adbdb4; --sf-ink-muted: #7e8f85;
+    --sf-border: #26362d; --sf-border-soft: #1f2c25; --sf-border-strong: #384d40;
+}
+
+/* ==========================================================================
+   4. INDICADOR DE TEMA GLOBAL
+   --------------------------------------------------------------------------
+   El selector de temas ya no es una preferencia personal: cambia la
+   apariencia de toda la plataforma. La interfaz debe decirlo.
+   ========================================================================== */
+.sf-alcance-global {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--sf-text-xs);
+    font-weight: 600;
+    color: var(--sf-brand);
+    background: var(--sf-brand-soft);
+    border-radius: var(--sf-radius-pill);
+    padding: 4px 10px;
+}
