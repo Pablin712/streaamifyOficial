@@ -164,101 +164,33 @@ class ContabilidadController extends Controller
         $month = $request->get('mes', Carbon::now()->subMonth()->month);
         $year = $request->get('ano', Carbon::now()->year);
 
-        extract($this->dashboardService->obtenerDatosDashboardMensuales($month, $year));
+        $datos  = $this->dashboardService->obtenerDatosDashboardMensuales($month, $year);
+        extract($datos);
         $gastos = $this->dashboardService->getGastos($ingresos_mes, $month, $year);
 
-        extract($this->dashboardService->getNetflix($month, $year));
-        extract($this->dashboardService->getDisney($month, $year));
-        extract($this->dashboardService->getPrime($month, $year));
-        extract($this->dashboardService->getMax($month, $year));
-        extract($this->dashboardService->getMagis($month, $year));
-        extract($this->dashboardService->getCrunchyroll($month, $year));
-        extract($this->dashboardService->getParamount($month, $year));
-        extract($this->dashboardService->getSpotify($month, $year));
-        extract($this->dashboardService->getOtros($month, $year));
+        // Resultados por servicio DEL MES pedido. Los metodos getNetflix(),
+        // getDisney()... siguen usandose en el dashboard, pero para el reporte
+        // no sirven: sus cuentas y usuarios son del estado actual del negocio,
+        // no del periodo.
+        $por_servicio = $this->dashboardService->obtenerResumenPorServicio($month, $year);
 
-        // Capturar imágenes de gráficos enviadas desde el frontend (base64)
-        $chartArea = $request->input('chart_area', '');
-        $chartBar  = $request->input('chart_bar',  '');
-        $chartPie  = $request->input('chart_pie',  '');
+        // Los graficos ya NO llegan como imagenes del navegador. Antes se
+        // capturaban del dashboard en pantalla, asi que un reporte de junio
+        // generado en septiembre mostraba las cifras de septiembre. Ahora la
+        // vista los dibuja con las series del periodo (serie_diaria y
+        // serie_meses) que devuelve el servicio.
 
-        $mes = Carbon::create($year, $month, 1)->translatedFormat('F');
-        $pdf = PDF::loadView('finance.resultPDF', compact(
-            'mes',
-            'year',
+        $mes = Carbon::create($year, $month, 1)->locale('es')->translatedFormat('F');
 
-            'ingresos_mes',
-            'ingresos_ano',
-            'clientes_activos',
-            'total_usuarios_activos',
-            'cuentas_caidas',
-            'usuarios_acobrar',
-            'num_cuentas',
-
-            'ingresos',
-            'costos_mes',
-            'costos_pct',
-            'gastos_mes',
-            'gastos_pct',
-            'gastos_personal_mes',
-            'balance',
-            'balance_pct',
-            'gastos',
-
-            'promedio_pagos_mes',
-            'cliente_mas_facturado',
-            'ventas_mes',
-            'ventas_ano',
-            'espacios',
-
-            'cuentas_netflix',
-            'usuarios_netflix',
-            'ingresos_netflix',
-            'costos_netflix',
-
-            'cuentas_disney',
-            'usuarios_disney',
-            'ingresos_disney',
-            'costos_disney',
-
-            'cuentas_prime', // Aquí es donde agregas las variables correspondientes
-            'usuarios_prime',
-            'ingresos_prime',
-            'costos_prime',
-
-            'cuentas_max',
-            'usuarios_max',
-            'ingresos_max',
-            'costos_max',
-
-            'cuentas_magis',
-            'usuarios_magis',
-            'ingresos_magis',
-            'costos_magis',
-
-            'cuentas_crunchy',
-            'usuarios_crunchy',
-            'ingresos_crunchy',
-            'costos_crunchy',
-
-            'cuentas_paramount',
-            'usuarios_paramount',
-            'ingresos_paramount',
-            'costos_paramount',
-
-            'cuentas_spotify',
-            'usuarios_spotify',
-            'ingresos_spotify',
-            'costos_spotify',
-
-            'cuentas_otros',
-            'usuarios_otros',
-            'ingresos_otros',
-            'costos_otros',
-            'chartArea',
-            'chartBar',
-            'chartPie'
-        ));
+        // En vez de un compact() con cincuenta variables sueltas -donde era
+        // facil olvidar una y que Blade fallara-, se pasa el arreglo del
+        // servicio mas lo que se calcula aqui.
+        $pdf = PDF::loadView('finance.resultPDF', array_merge($datos, [
+            'mes'          => $mes,
+            'year'         => $year,
+            'gastos'       => $gastos,
+            'por_servicio' => $por_servicio,
+        ]));
         return $pdf->download('contabilidad-'.$mes.'-'.$year.'.pdf');
     }
 

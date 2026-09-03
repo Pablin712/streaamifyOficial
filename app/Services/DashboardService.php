@@ -103,104 +103,298 @@ class DashboardService
         ];
     }
 
+    /**
+     * Resumen mensual completo, con los datos del MES SOLICITADO.
+     *
+     * La version anterior tenia dos fallos de fondo:
+     *
+     *  1. Para las metricas de estado (cuentas, usuarios, clientes) hacia
+     *     pluck()->unique()->count(), que cuenta VALORES DISTINTOS a lo largo
+     *     del mes, no la magnitud. Por eso el reporte de junio decia
+     *     "1 cuenta activa" y "1 usuario activo" cuando habia 299 y 1854.
+     *  2. Para `espacios` y `usuarios_a_cobrar` devolvia la coleccion entera,
+     *     y Blade la imprimia como "[212]" y "[188]".
+     *
+     * daily_statistics es una foto diaria, asi que:
+     *   - lo que es un ESTADO (cuentas, usuarios, clientes, espacios) se toma
+     *     del ultimo dia del mes;
+     *   - lo que es un FLUJO (ingresos, costos, ventas, clientes nuevos y
+     *     perdidos) se suma a lo largo del mes.
+     *
+     * Devuelve ademas la comparacion con el mes anterior y las series que
+     * necesitan los graficos del PDF, para que se generen del periodo pedido
+     * y no del momento en que se imprime.
+     */
     public function obtenerDatosDashboardMensuales($month, $year)
     {
-        $usuarios = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('active_users')
-            ->unique();
-        $cuentas = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('accounts')
-            ->unique();
-        $usuarios_acobrar = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('usuarios_a_cobrar')
-            ->unique();
-        $espacios = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('espacios')
-            ->unique();
+        $inicio = Carbon::create($year, $month, 1)->startOfMonth();
+        $fin    = Carbon::create($year, $month, 1)->endOfMonth();
 
-        $cliente_mas_facturado = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->orderByDesc('cliente_mas_facturado')
+        $dias = DailyStatistic::whereBetween('date', [$inicio, $fin])
+            ->orderBy('date')
+            ->get();
+
+        $ultimo = $dias->last();          // foto de cierre del mes
+
+        // --- Flujos del mes ---
+        $ingresos_mes        = (float) $dias->sum('daily_revenue');
+        $costos_mes          = (float) $dias->sum('daily_cost');
+        $gastos_mes          = (float) $dias->sum('daily_bill');
+        $gastos_personal_mes = (float) $dias->sum('daily_bill_personal');
+        $ventas_mes          = (int) $dias->sum('daily_sales');
+        $clientes_nuevos     = (int) $dias->sum('new_customers');
+        $clientes_perdidos   = (int) $dias->sum('clientes_perdidos');
+        $usuarios_removidos  = (int) $dias->sum('usuarios_removidos');
+
+        $ingresos    = $ingresos_mes > 0 ? $ingresos_mes : 1; // evita division por cero
+        $balance     = $ingresos_mes - $costos_mes - $gastos_mes;
+        $costos_pct  = ($costos_mes / $ingresos) * 100;
+        $gastos_pct  = ($gastos_mes / $ingresos) * 100;
+        $balance_pct = ($balance / $ingresos) * 100;
+
+        // --- Estado al cierre del mes ---
+        $num_cuentas            = (int) ($ultimo->accounts ?? 0);
+        $total_usuarios_activos = (int) ($ultimo->active_users ?? 0);
+        $clientes_activos       = (int) ($ultimo->total_customers ?? 0);
+        $cuentas_caidas         = (int) ($ultimo->danger_accounts ?? 0);
+        $espacios               = (int) ($ultimo->espacios ?? 0);
+        $usuarios_acobrar       = (int) ($ultimo->usuarios_a_cobrar ?? 0);
+        $clientes_afectados     = (int) ($ultimo->affected_customers ?? 0);
+        $pagos_pendientes       = (int) ($ultimo->pending_payments ?? 0);
+
+        // --- Comparacion con el mes anterior ---
+        $antInicio = $inicio->copy()->subMonth()->startOfMonth();
+        $antFin    = $antInicio->copy()->endOfMonth();
+        $diasAnt   = DailyStatistic::whereBetween('date', [$antInicio, $antFin])->orderBy('date')->get();
+        $ultimoAnt = $diasAnt->last();
+
+        $ingresos_ant = (float) $diasAnt->sum('daily_revenue');
+        $balance_ant  = $ingresos_ant - (float) $diasAnt->sum('daily_cost') - (float) $diasAnt->sum('daily_bill');
+
+        $variacion = function ($actual, $anterior) {
+            if (empty($anterior)) {
+                return null; // sin mes anterior no hay porcentaje que mostrar
+            }
+            return (($actual - $anterior) / abs($anterior)) * 100;
+        };
+
+        $comparativa = [
+            'ingresos'     => $variacion($ingresos_mes, $ingresos_ant),
+            'utilidad'     => $variacion($balance, $balance_ant),
+            'ventas'       => $variacion($ventas_mes, (int) $diasAnt->sum('daily_sales')),
+            'clientes'     => $variacion($clientes_activos, (int) ($ultimoAnt->total_customers ?? 0)),
+            'usuarios'     => $variacion($total_usuarios_activos, (int) ($ultimoAnt->active_users ?? 0)),
+            'mes_anterior' => $antInicio->locale('es')->translatedFormat('F'),
+        ];
+
+        // --- Series para los graficos del PDF (del periodo pedido) ---
+        $serie_diaria = $dias->map(function ($d) {
+            $ing = (float) $d->daily_revenue;
+            return [
+                'dia'      => Carbon::parse($d->date)->day,
+                'ingresos' => $ing,
+                'costos'   => (float) $d->daily_cost,
+                'gastos'   => (float) $d->daily_bill,
+                'utilidad' => $ing - (float) $d->daily_cost - (float) $d->daily_bill,
+            ];
+        })->values()->all();
+
+        // Seis meses hasta el mes solicitado (no hasta hoy).
+        $serie_meses = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $m  = $inicio->copy()->subMonths($i);
+            $ds = DailyStatistic::whereBetween('date', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()])->get();
+            $ing = (float) $ds->sum('daily_revenue');
+            $serie_meses[] = [
+                'etiqueta' => ucfirst($m->locale('es')->translatedFormat('M')),
+                'ingresos' => $ing,
+                'utilidad' => $ing - (float) $ds->sum('daily_cost') - (float) $ds->sum('daily_bill'),
+            ];
+        }
+
+        $ingresos_ano = (float) DailyStatistic::whereBetween('date', [
+            Carbon::create($year, 1, 1)->startOfYear(),
+            Carbon::create($year, 12, 31)->endOfYear(),
+        ])->sum('daily_revenue');
+
+        $ventas_ano = (int) DailyStatistic::whereBetween('date', [
+            Carbon::create($year, 1, 1)->startOfYear(),
+            Carbon::create($year, 12, 31)->endOfYear(),
+        ])->sum('daily_sales');
+
+        // Cliente que mas facturo dentro del mes: el valor mas repetido.
+        $cliente_mas_facturado = $dias->pluck('cliente_mas_facturado')
+            ->filter()
+            ->countBy()
+            ->sortDesc()
+            ->keys()
             ->first();
 
-        $total_customers = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('total_customers')
-            ->unique();
-
-        $cuentas_caidas = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('danger_accounts')
-            ->unique();
-
-        $ingresos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->sum('daily_revenue');
-        $costos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->sum('daily_cost');
-        $gastos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->sum('daily_bill');
-        $gastos_personal_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->sum('daily_bill_personal');
-        $ingresos = $ingresos_mes > 0 ? $ingresos_mes : 1; // Evita división por cero
-        $costos_pct = ($costos_mes / $ingresos) * 100;
-        $gastos_pct = ($gastos_mes / $ingresos) * 100;
-        $balance = $ingresos_mes - $costos_mes - $gastos_mes;
-        $balance_pct = ($balance / $ingresos) * 100;
-        $ingresos_ano = DailyStatistic::where('date', '>=', Carbon::create($year, 1, 1)->startOfYear())
-            ->where('date', '<=', Carbon::create($year, 12, 31)->endOfYear())
-            ->sum('daily_revenue');
-        $num_cuentas = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->get()
-            ->pluck('accounts')
-            ->unique();
-        $ventas_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->sum('daily_sales');
-        $ventas_ano = DailyStatistic::where('date', '>=', Carbon::create($year, 1, 1)->startOfYear())
-            ->where('date', '<=', Carbon::create($year, 12, 31)->endOfYear())
-            ->sum('daily_sales');
-        $promedio_pagos_mes = DailyStatistic::where('date', '>=', Carbon::create($year, $month, 1)->startOfMonth())
-            ->where('date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
-            ->avg('daily_revenue');
         return [
-            'total_usuarios_activos' => $usuarios->count(),
-            'ingresos_mes' => $ingresos_mes,
-            'ingresos_ano' => $ingresos_ano,
-            'ingresos' => $ingresos,
-            'costos_mes' => $costos_mes,
-            'costos_pct' => $costos_pct,
-            'gastos_mes' => $gastos_mes,
-            'gastos_pct' => $gastos_pct,
-            'gastos_personal_mes' => $gastos_personal_mes,
-            'balance' => $balance,
-            'balance_pct' => $balance_pct,
-            'clientes_activos' => $total_customers->count(),
-            'cuentas_caidas' => $cuentas_caidas->count(),
-            'num_cuentas' => $num_cuentas->count(),
-            'ventas_mes' => $ventas_mes,
-            'ventas_ano' => $ventas_ano,
-            'usuarios_acobrar' => $usuarios_acobrar,
-            'promedio_pagos_mes' => $promedio_pagos_mes,
-            'cliente_mas_facturado' => $cliente_mas_facturado,
-            'cuentas' => $cuentas,
-            'espacios' => $espacios,
+            'total_usuarios_activos' => $total_usuarios_activos,
+            'ingresos_mes'           => $ingresos_mes,
+            'ingresos_ano'           => $ingresos_ano,
+            'ingresos'               => $ingresos,
+            'costos_mes'             => $costos_mes,
+            'costos_pct'             => $costos_pct,
+            'gastos_mes'             => $gastos_mes,
+            'gastos_pct'             => $gastos_pct,
+            'gastos_personal_mes'    => $gastos_personal_mes,
+            'balance'                => $balance,
+            'balance_pct'            => $balance_pct,
+            'clientes_activos'       => $clientes_activos,
+            'cuentas_caidas'         => $cuentas_caidas,
+            'num_cuentas'            => $num_cuentas,
+            'ventas_mes'             => $ventas_mes,
+            'ventas_ano'             => $ventas_ano,
+            'usuarios_acobrar'       => $usuarios_acobrar,
+            'promedio_pagos_mes'     => $dias->count() ? $ingresos_mes / $dias->count() : 0,
+            'cliente_mas_facturado'  => $cliente_mas_facturado,
+            'espacios'               => $espacios,
+
+            // Nuevos indicadores del periodo
+            'clientes_nuevos'        => $clientes_nuevos,
+            'clientes_perdidos'      => $clientes_perdidos,
+            'usuarios_removidos'     => $usuarios_removidos,
+            'clientes_afectados'     => $clientes_afectados,
+            'pagos_pendientes'       => $pagos_pendientes,
+            'ticket_promedio'        => $ventas_mes ? $ingresos_mes / $ventas_mes : 0,
+            'ingreso_por_cliente'    => $clientes_activos ? $ingresos_mes / $clientes_activos : 0,
+            'dias_con_datos'         => $dias->count(),
+
+            'comparativa'            => $comparativa,
+            'serie_diaria'           => $serie_diaria,
+            'serie_meses'            => $serie_meses,
         ];
     }
+
+    /**
+     * Resultados por servicio DEL MES PEDIDO.
+     *
+     * Dos problemas del calculo anterior:
+     *
+     *  1. Los metodos getNetflix(), getDisney()... sacan las cuentas y los
+     *     usuarios del estado ACTUAL del negocio. En el reporte de junio salian
+     *     los 463 usuarios de Netflix de hoy junto a los ingresos de junio.
+     *
+     *  2. Clasificar por el prefijo de `idper` se dejaba fuera mas de la mitad
+     *     del dinero: las ventas nuevas guardan `idper` en nulo y ponen el
+     *     nombre del servicio en `servicio_snapshot`. En junio de 2026 eran 953
+     *     de 1.753 detalles, 3.455 USD que no aparecian en ninguna fila.
+     *
+     * Aqui se clasifica por palabra clave sobre el primer campo que tenga
+     * valor: servicio_snapshot, idper o idper_snapshot. Asi entran las ventas
+     * de las dos epocas, y todo lo que no encaja cae en "Otros" en vez de
+     * desaparecer.
+     */
+    public function obtenerResumenPorServicio($month, $year): array
+    {
+        // Palabra clave -> nombre visible. El orden importa: "max" antes que
+        // nada que pueda contenerlo, y "flujo"/"magis" son el mismo servicio.
+        $reglas = [
+            'netflix'   => 'Netflix',
+            'disney'    => 'Disney+',
+            'prime'     => 'Prime Video',
+            'paramount' => 'Paramount+',
+            'spotify'   => 'Spotify',
+            'crunchy'   => 'Crunchyroll',
+            'magis'     => 'Magis TV',
+            'flujo'     => 'Magis TV',
+            'vix'       => 'Vix',
+            'canva'     => 'Canva',
+            'max'       => 'HBO Max',
+            'hbo'       => 'HBO Max',
+        ];
+
+        $clasificar = function (?string ...$candidatos) use ($reglas): string {
+            foreach ($candidatos as $texto) {
+                if (empty($texto)) {
+                    continue;
+                }
+                foreach ($reglas as $clave => $nombre) {
+                    if (stripos($texto, $clave) !== false) {
+                        return $nombre;
+                    }
+                }
+            }
+            return 'Otros';
+        };
+
+        $inicio = Carbon::create($year, $month, 1)->startOfMonth();
+        $fin    = Carbon::create($year, $month, 1)->endOfMonth();
+
+        // --- Ingresos y perfiles facturados, por servicio ---
+        $acumulado = [];
+
+        DetalleVenta::query()
+            ->join('ventas', 'ventas.idven', '=', 'detalles_venta.idven')
+            ->whereBetween('ventas.fechaven', [$inicio->toDateString(), $fin->toDateString()])
+            ->select([
+                'detalles_venta.idper',
+                'detalles_venta.idper_snapshot',
+                'detalles_venta.servicio_snapshot',
+                'detalles_venta.montodet',
+            ])
+            ->chunk(2000, function ($filas) use (&$acumulado, $clasificar) {
+                foreach ($filas as $f) {
+                    $servicio = $clasificar($f->servicio_snapshot, $f->idper, $f->idper_snapshot);
+
+                    $acumulado[$servicio] ??= ['ingresos' => 0.0, 'costos' => 0.0, 'perfiles' => []];
+                    $acumulado[$servicio]['ingresos'] += (float) $f->montodet;
+
+                    $perfil = $f->idper ?: $f->idper_snapshot;
+                    if ($perfil) {
+                        $acumulado[$servicio]['perfiles'][$perfil] = true;
+                    }
+                }
+            });
+
+        // --- Costos, clasificados igual por la cuenta ---
+        Costo::query()
+            ->whereBetween('fechacos', [$inicio->toDateString(), $fin->toDateString()])
+            ->select(['idcue', 'montocos'])
+            ->chunk(2000, function ($filas) use (&$acumulado, $clasificar) {
+                foreach ($filas as $c) {
+                    $servicio = $clasificar($c->idcue);
+
+                    // Un costo que no corresponde a ningun servicio no debe
+                    // caer en la fila "Otros": alli hay ingresos de servicios
+                    // sueltos y el margen salia en -25.970%. Va a su propia
+                    // linea, sin margen, para que el total siga cuadrando.
+                    if ($servicio === 'Otros') {
+                        $servicio = 'Costos generales';
+                    }
+
+                    $acumulado[$servicio] ??= ['ingresos' => 0.0, 'costos' => 0.0, 'perfiles' => []];
+                    $acumulado[$servicio]['costos'] += (float) $c->montocos;
+                }
+            });
+
+        $totalIngresos = array_sum(array_column($acumulado, 'ingresos'));
+
+        $filas = [];
+        foreach ($acumulado as $servicio => $d) {
+            $ganancia = $d['ingresos'] - $d['costos'];
+            $perfiles = count($d['perfiles']);
+
+            $filas[] = [
+                'servicio'   => $servicio,
+                'perfiles'   => $perfiles,
+                'ingresos'   => $d['ingresos'],
+                'costos'     => $d['costos'],
+                'ganancia'   => $ganancia,
+                'margen'     => $d['ingresos'] > 0 ? ($ganancia / $d['ingresos']) * 100 : null,
+                'peso'       => $totalIngresos > 0 ? ($d['ingresos'] / $totalIngresos) * 100 : 0,
+                'por_perfil' => $perfiles > 0 ? $d['ingresos'] / $perfiles : 0,
+            ];
+        }
+
+        // De mayor a menor ingreso: lo importante arriba.
+        usort($filas, fn($a, $b) => $b['ingresos'] <=> $a['ingresos']);
+
+        return $filas;
+    }
+
     public function getNetflix($month, $year)
     {
         $cuentas = $this->cuentaService->obtenerCuentas();
