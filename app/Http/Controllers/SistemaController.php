@@ -37,7 +37,6 @@ class SistemaController extends Controller
 
         $datos = $request->validate([
             'tema'           => ['sometimes', 'string', 'max:40'],
-            'modo_oscuro'    => ['sometimes', 'boolean'],
             'auto_temporada' => ['sometimes', 'boolean'],
         ]);
 
@@ -57,6 +56,38 @@ class SistemaController extends Controller
             'success'    => true,
             'message'    => 'Apariencia actualizada para toda la plataforma.',
             'apariencia' => $apariencia,
+        ]);
+    }
+
+    /**
+     * Guardar la preferencia PERSONAL de modo claro/oscuro.
+     *
+     * A diferencia del tema, esto no es global: solo afecta a quien lo pide.
+     * Cualquier empleado puede hacerlo, no hace falta ser administrador. Se
+     * guarda en el servidor para que la preferencia le siga entre dispositivos.
+     */
+    public function guardarEsquema(Request $request): JsonResponse
+    {
+        $datos = $request->validate([
+            'esquema' => ['required', 'string', 'in:system,light,dark'],
+        ]);
+
+        if (!Auth::check()) {
+            // Un visitante anonimo no tiene donde guardarlo en el servidor;
+            // su navegador lo recuerda por su cuenta.
+            return response()->json([
+                'success' => true,
+                'esquema' => $datos['esquema'],
+                'guardado' => false,
+            ]);
+        }
+
+        $esquema = $this->apariencia->guardarEsquema($datos['esquema']);
+
+        return response()->json([
+            'success'  => true,
+            'esquema'  => $esquema,
+            'guardado' => true,
         ]);
     }
 

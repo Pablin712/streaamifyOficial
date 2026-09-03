@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-{{-- El tema y el modo oscuro se pintan desde el SERVIDOR (AparienciaService).
-     Antes venian de localStorage, asi que cada navegador y cada sesion de
-     empleado tenia el suyo. Ahora es global y ademas no hay parpadeo. --}}
+{{-- data-theme  = tema GLOBAL que fija el administrador (lo ve todo el mundo).
+     data-color-scheme = preferencia PERSONAL de claro/oscuro de quien mira.
+     El atributo data-dark-mode lo resuelve partials/apariencia-esquema. --}}
 <html lang="es" data-theme="{{ $apariencia['tema'] }}"
-    @if ($apariencia['modoOscuro']) data-dark-mode="true" data-bs-theme="dark" @else data-bs-theme="light" @endif>
+    data-color-scheme="{{ $apariencia['esquema'] }}"
+    @if ($apariencia['esquema'] === 'dark') data-dark-mode="true" data-bs-theme="dark" @endif>
 
 <head>
+    @include('partials.apariencia-esquema')
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />

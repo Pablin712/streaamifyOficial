@@ -10,55 +10,50 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /* ---------------------------------------------------------------------
-       Modo oscuro
+       Modo claro / oscuro — PREFERENCIA PERSONAL
        ---------------------------------------------------------------------
-       El modo oscuro es GLOBAL: lo fija el administrador y lo ven todos los
-       empleados en todos sus dispositivos (ver AparienciaService). Por eso el
-       botón solo se muestra a quien puede cambiarlo; al resto se le oculta en
-       vez de dejarle un botón que respondería "no tienes permiso".
+       Cualquier empleado puede cambiarlo: solo le afecta a él, y se guarda en
+       el servidor para que le siga entre dispositivos. (El TEMA, en cambio, es
+       global y solo lo cambia un administrador desde /admin/sistema.)
 
-       El icono NO se actualiza aquí tras el clic: el guardado es asíncrono y
-       puede revertirse si el servidor falla. Se escucha el evento que emite
-       ThemeManager cuando el estado queda confirmado.
+       El botón cicla tres estados, como en cualquier aplicación:
+         Automático (sigue al sistema operativo) → Claro → Oscuro → Automático
        --------------------------------------------------------------------- */
-    const puedeEditar = !!(window.StreamifyApariencia && window.StreamifyApariencia.puedeEditar);
-
     const btnEscritorio = document.getElementById('toggleDarkMode');
     const iconoEscritorio = document.getElementById('darkModeIcon');
     const btnMovil = document.getElementById('toggleDarkModeMobile');
     const iconoMovil = document.getElementById('darkModeIconMobile');
     const textoMovil = document.getElementById('darkModeTextMobile');
 
-    if (!puedeEditar) {
-        [btnEscritorio, btnMovil].forEach(function (btn) {
-            if (btn) btn.closest('li, div, .nav-item')?.style.setProperty('display', 'none');
-            if (btn) btn.style.display = 'none';
-        });
-        return;
+    const ETIQUETAS = {
+        system: { icono: 'fa-circle-half-stroke', texto: 'Tema: automático', titulo: 'Sigue al sistema — clic para forzar claro' },
+        light:  { icono: 'fa-sun',                texto: 'Tema: claro',      titulo: 'Modo claro — clic para forzar oscuro' },
+        dark:   { icono: 'fa-moon',               texto: 'Tema: oscuro',     titulo: 'Modo oscuro — clic para volver a automático' },
+    };
+
+    function esquemaActual() {
+        return document.documentElement.getAttribute('data-color-scheme') || 'system';
     }
 
     function pintarIconos() {
-        const esOscuro = typeof ThemeManager !== 'undefined' && ThemeManager.isDarkMode();
+        const info = ETIQUETAS[esquemaActual()] || ETIQUETAS.system;
 
-        if (iconoEscritorio) {
-            // Sol cuando ya está oscuro (la acción es volver a claro), luna si no.
-            iconoEscritorio.className = esOscuro ? 'fas fa-sun fa-lg' : 'fas fa-moon fa-lg';
-        }
-        if (iconoMovil && textoMovil) {
-            iconoMovil.className = esOscuro ? 'fas fa-sun me-2' : 'fas fa-moon me-2';
-            textoMovil.textContent = esOscuro ? 'Modo Claro' : 'Modo Oscuro';
-        }
+        if (iconoEscritorio) iconoEscritorio.className = 'fas ' + info.icono + ' fa-lg';
+        if (btnEscritorio) btnEscritorio.setAttribute('title', info.titulo);
+        if (iconoMovil) iconoMovil.className = 'fas ' + info.icono + ' me-2';
+        if (textoMovil) textoMovil.textContent = info.texto;
     }
 
-    function alternar() {
-        if (typeof ThemeManager !== 'undefined') ThemeManager.toggleDarkMode();
+    function ciclar() {
+        if (typeof ThemeManager !== 'undefined') ThemeManager.cicloEsquema();
     }
 
-    if (btnEscritorio) btnEscritorio.addEventListener('click', alternar);
-    if (btnMovil) btnMovil.addEventListener('click', alternar);
+    if (btnEscritorio) btnEscritorio.addEventListener('click', ciclar);
+    if (btnMovil) btnMovil.addEventListener('click', ciclar);
 
-    // ThemeManager avisa cuando el estado ya está confirmado (o revertido).
-    window.addEventListener('aparienciaCambiada', pintarIconos);
+    // Se repinta cuando cambia la preferencia y también cuando cambia el modo
+    // del sistema operativo con la pestaña abierta.
+    window.addEventListener('esquemaCambiado', pintarIconos);
 
     pintarIconos();
 });

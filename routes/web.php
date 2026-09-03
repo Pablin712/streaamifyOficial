@@ -91,6 +91,12 @@ Route::get('/', function () {
 // de cliente tambien necesitan el tema.
 Route::get('/apariencia', [SistemaController::class, 'apariencia'])->name('apariencia.actual');
 
+// Preferencia PERSONAL de modo claro/oscuro. No es global: solo afecta a quien
+// la envia. Cualquiera puede hacerlo (no requiere ser administrador); si hay
+// sesion se guarda en el servidor para que le siga entre dispositivos.
+Route::post('/apariencia/esquema', [SistemaController::class, 'guardarEsquema'])
+    ->name('apariencia.esquema');
+
 Route::controller(AlyssonController::class)->group(function (){
     Route::get('/alysson', 'exclusive')->name('alysson.exclusive');
 });

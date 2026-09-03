@@ -33,6 +33,9 @@ class Empleado extends Authenticatable implements JWTSubject
         'foto_url',
         'email',
         'plantilla_cobro',
+        // Modo claro/oscuro: preferencia personal, no global.
+        // 'system' (sigue al sistema operativo) | 'light' | 'dark'
+        'preferencia_tema',
     ];
 
 

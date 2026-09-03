@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-{{-- Mismo sistema de apariencia que el panel: el tema y el modo oscuro los
-     define el administrador desde /admin/sistema y se pintan desde el servidor.
-     Hasta ahora las vistas de cliente no tenian modo oscuro en absoluto. --}}
+{{-- El tema es global (lo fija el administrador); el modo claro/oscuro sigue
+     al sistema operativo de cada visitante. Hasta ahora las vistas de cliente
+     no tenian modo oscuro en absoluto. --}}
 <html lang="es" data-theme="{{ $apariencia['tema'] }}"
-    @if ($apariencia['modoOscuro']) data-dark-mode="true" data-bs-theme="dark" @else data-bs-theme="light" @endif>
+    data-color-scheme="{{ $apariencia['esquema'] }}"
+    @if ($apariencia['esquema'] === 'dark') data-dark-mode="true" data-bs-theme="dark" @endif>
 
 <head>
+    @include('partials.apariencia-esquema')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />

@@ -9,15 +9,18 @@
 --}}
 <script>
     window.StreamifyApariencia = {
+        // Global: lo fija el administrador, lo ve todo el mundo
         tema: @json($apariencia['tema']),
         temaBase: @json($apariencia['temaBase']),
-        modoOscuro: @json($apariencia['modoOscuro']),
         autoTemporada: @json($apariencia['autoTemporada']),
         temaTemporada: @json($apariencia['temaTemporada']),
         decoracion: @json($apariencia['decoracion']),
         catalogo: @json($apariencia['catalogo']),
+        // Personal: preferencia de quien está mirando
+        esquema: @json($apariencia['esquema']),
         rutas: {
             leer: @json(route('apariencia.actual')),
+            esquema: @json(route('apariencia.esquema')),
             @auth
                 guardar: @json(route('sistema.apariencia.guardar')),
             @else

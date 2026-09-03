@@ -3,10 +3,10 @@
    ----------------------------------------------------------------------------
    Se carga DESPUÉS de streamify-ui.css y de themes.css.
 
-   Cada tema redefine los tokens `--sf-*` (que consumen los componentes nuevos
-   y el puente Bootstrap) y, para los temas que themes.css no conoce, también
-   los `--primary-color` / `--bg-*` heredados, para que las vistas antiguas
-   sigan al mismo tema.
+   Cada tema redefine ÚNICAMENTE los tokens `--sf-*`. Las variables heredadas
+   (--primary-color, --bg-card, --text-primary…) ya no se declaran por tema:
+   la sección 0 las redirige a los tokens de una vez para todos, así que el
+   chrome del panel sigue al tema sin duplicar valores.
 
    PATRÓN DE SELECTORES — importante:
      [data-theme="x"]:not([data-dark-mode="true"])  → variante clara
@@ -16,11 +16,90 @@
    pisaría los tokens oscuros de streamify-ui.css y el modo oscuro se rompería
    en cuanto hubiera un tema activo.
 
-   El tema y el modo oscuro los fija el administrador en /admin/sistema y se
-   guardan en la base de datos (AparienciaService), así que son GLOBALES: los
-   ven todos los empleados, en todos los dispositivos, y también los clientes
-   en las vistas públicas.
+   QUÉ ES GLOBAL Y QUÉ ES PERSONAL:
+     - El TEMA lo fija el administrador en /admin/sistema y lo ve todo el
+       mundo: empleados en cualquier dispositivo y clientes en el sitio
+       público.
+     - El MODO CLARO / OSCURO es de cada persona. Por defecto sigue al sistema
+       operativo, igual que cualquier aplicación. Lo resuelve
+       partials/apariencia-esquema.blade.php antes del primer pintado.
    ========================================================================== */
+
+/* ==========================================================================
+   0. PUENTE DE VARIABLES HEREDADAS  ← la pieza que hace que el tema llegue
+      a TODO el panel
+   --------------------------------------------------------------------------
+   El chrome del panel (sidebar.css, navbar.css, enhanced-table-global.css,
+   modal-system.v2.css, styles.css) no conoce los tokens `--sf-*`: lee las
+   variables antiguas que definía themes.css (--primary-color, --bg-card,
+   --text-primary, --border-color…). Por eso, hasta ahora, cambiar de tema no
+   movía ni la barra lateral, ni la superior, ni las tablas, ni los modales.
+
+   En vez de reescribir esos ~2000 renglones de CSS, aquí se REDIRIGEN las
+   variables antiguas a los tokens del sistema. Como las custom properties se
+   resuelven en el momento de usarse, cada componente heredado pasa a seguir
+   automáticamente el tema activo y el modo oscuro, sin tocar su código.
+
+   Lleva `!important` a propósito: themes.css declara varias de estas mismas
+   variables con `!important` dentro de su bloque [data-dark-mode="true"], y
+   si no ganáramos aquí el panel se quedaría con su gris fijo de siempre en
+   lugar de los colores del tema.
+
+   Consecuencia: los tokens `--sf-*` son la ÚNICA fuente de verdad de color.
+   ========================================================================== */
+:root,
+[data-theme],
+[data-dark-mode="true"] {
+    /* Marca */
+    --primary-color:    var(--sf-brand) !important;
+    --primary-dark:     var(--sf-brand-strong) !important;
+    --primary-light:    var(--sf-brand-soft) !important;
+    --primary-gradient: linear-gradient(135deg, var(--sf-brand) 0%, var(--sf-brand-strong) 100%) !important;
+    --secondary-color:  var(--sf-ink) !important;
+    --secondary-light:  var(--sf-ink-secondary) !important;
+    --accent-color:     var(--sf-gold) !important;
+
+    /* Estado */
+    --success-color: var(--sf-good) !important;
+    --danger-color:  var(--sf-critical) !important;
+    --warning-color: var(--sf-warning) !important;
+    --info-color:    var(--sf-info) !important;
+
+    /* Superficies */
+    --bg-body:       var(--sf-surface-page) !important;
+    --bg-card:       var(--sf-surface-card) !important;
+    --bg-light:      var(--sf-surface-sunken) !important;
+    --bg-overlay:    var(--sf-surface-card) !important;
+    --bg-table-odd:  var(--sf-surface-sunken) !important;
+    --bg-table-even: var(--sf-surface-card) !important;
+    --bg-hover:      var(--sf-brand-soft) !important;
+
+    /* Tinta */
+    --text-primary:    var(--sf-ink) !important;
+    --text-secondary:  var(--sf-ink-secondary) !important;
+    --text-muted:      var(--sf-ink-muted) !important;
+    --text-on-primary: var(--sf-brand-contrast) !important;
+
+    /* Bordes y sombras */
+    --border-color:   var(--sf-border) !important;
+    --border-primary: var(--sf-brand) !important;
+    --shadow-sm:      var(--sf-shadow-sm) !important;
+    --shadow-md:      var(--sf-shadow) !important;
+    --shadow-lg:      var(--sf-shadow-lg) !important;
+    --shadow-hover:   var(--sf-shadow) !important;
+
+    /* Bootstrap: themes.css las fija con !important en su bloque oscuro y
+       dejaba el panel en un gris que ignoraba el tema. */
+    --bs-body-bg:                  var(--sf-surface-page) !important;
+    --bs-body-color:               var(--sf-ink) !important;
+    --bs-border-color:             var(--sf-border) !important;
+    --bs-border-color-translucent: var(--sf-border) !important;
+    --bs-secondary-bg:             var(--sf-surface-sunken) !important;
+    --bs-tertiary-bg:              var(--sf-surface-sunken) !important;
+    --bs-emphasis-color:           var(--sf-ink) !important;
+    --bs-link-color:               var(--sf-brand) !important;
+    --bs-link-hover-color:         var(--sf-brand-strong) !important;
+}
 
 /* ==========================================================================
    1. COBERTURA UNIVERSAL DE MODO OSCURO
@@ -137,6 +216,221 @@
 }
 
 /* ==========================================================================
+   1b. CHROME DEL PANEL — barra superior, barra lateral, tablas y modales
+   --------------------------------------------------------------------------
+   El puente de la sección 0 ya hace que todo lo que lee variables heredadas
+   siga al tema. Aquí se rematan los sitios donde navbar.css y sidebar.css
+   escribieron colores a pelo (y con `!important`), que por eso se quedaban
+   fuera del tema: sobre todo sus propios bloques de modo oscuro.
+
+   Se usa `!important` porque hay que ganarle a un `!important` previo; la
+   especificidad es la misma y este archivo se carga después.
+   ========================================================================== */
+
+/* --- Barra superior ------------------------------------------------------ */
+/* La barra lleva el degradado de marca de fondo pero no fijaba color de texto,
+   así que heredaba la tinta oscura del body: texto oscuro sobre color fuerte.
+   Todo lo que va dentro usa el color de contraste del tema. */
+.sb-topnav,
+.sb-topnav .navbar-text,
+.sb-topnav .dropdown-toggle {
+    color: var(--sf-brand-contrast) !important;
+}
+
+[data-dark-mode="true"] .sb-topnav {
+    background: linear-gradient(135deg, var(--sf-surface-card) 0%, var(--sf-surface-sunken) 100%) !important;
+    border-bottom-color: var(--sf-border) !important;
+}
+/* En oscuro la barra ya no lleva el color de marca de fondo, sino una
+   superficie oscura: el texto vuelve a la tinta normal. */
+[data-dark-mode="true"] .sb-topnav,
+[data-dark-mode="true"] .navbar-brand,
+[data-dark-mode="true"] .sb-topnav .nav-link,
+[data-dark-mode="true"] .sb-topnav .navbar-text,
+[data-dark-mode="true"] .sb-topnav .dropdown-toggle {
+    color: var(--sf-ink) !important;
+}
+
+/* Botones de la barra superior: seguían un azul grisáceo fijo en oscuro. */
+[data-dark-mode="true"] .navbar-icon-btn,
+[data-dark-mode="true"] .navbar-user-btn,
+[data-dark-mode="true"] .navbar-user-pill,
+[data-dark-mode="true"] #sidebarToggle,
+[data-dark-mode="true"] .btn-navbar-menu {
+    background-color: var(--sf-surface-sunken) !important;
+    border-color: var(--sf-border) !important;
+    color: var(--sf-ink) !important;
+}
+[data-dark-mode="true"] .navbar-icon-btn:hover,
+[data-dark-mode="true"] .navbar-user-btn:hover,
+[data-dark-mode="true"] .navbar-user-pill:hover,
+[data-dark-mode="true"] #sidebarToggle:hover,
+[data-dark-mode="true"] .btn-navbar-menu:hover {
+    background-color: var(--sf-brand-soft) !important;
+    border-color: var(--sf-brand) !important;
+    color: var(--sf-brand) !important;
+}
+[data-dark-mode="true"] .navbar-mobile-menu,
+[data-dark-mode="true"] .navbar .dropdown-menu {
+    background-color: var(--sf-surface-card) !important;
+    border-color: var(--sf-border) !important;
+}
+[data-dark-mode="true"] .navbar .dropdown-item {
+    color: var(--sf-ink) !important;
+}
+[data-dark-mode="true"] .navbar .dropdown-item:hover,
+[data-dark-mode="true"] .navbar-mobile-menu .dropdown-item:hover {
+    background-color: var(--sf-brand-soft) !important;
+    color: var(--sf-brand) !important;
+}
+[data-dark-mode="true"] .navbar .dropdown-divider {
+    border-color: var(--sf-border-soft) !important;
+}
+
+/* --- Barra lateral ------------------------------------------------------- */
+/* Los encabezados de sección y los enlaces anidados llevaban gris fijo. */
+.sb-sidenav-menu-heading,
+.white-sidebar .sb-sidenav-menu-heading {
+    color: var(--sf-ink-muted) !important;
+}
+.sb-sidenav-menu-nested .nav-link,
+.white-sidebar .nav-link {
+    color: var(--sf-ink-secondary) !important;
+}
+.sb-sidenav-menu-nested .nav-link:hover,
+.white-sidebar .nav-link:hover {
+    color: var(--sf-brand) !important;
+    background: var(--sf-brand-soft) !important;
+}
+.white-sidebar {
+    background: var(--sf-surface-card) !important;
+}
+.white-sidebar .nav-link.active {
+    background: var(--sf-brand) !important;
+    color: var(--sf-brand-contrast) !important;
+}
+.white-sidebar .sb-nav-link-icon {
+    color: var(--sf-brand) !important;
+}
+.sb-sidenav-collapse-arrow,
+.white-sidebar .sb-sidenav-collapse-arrow {
+    color: var(--sf-ink-muted) !important;
+}
+
+[data-dark-mode="true"] .sidebar,
+[data-dark-mode="true"] .sb-sidenav,
+[data-dark-mode="true"] #layoutSidenav_nav {
+    background-color: var(--sf-surface-card) !important;
+    border-right-color: var(--sf-border) !important;
+}
+[data-dark-mode="true"] .sb-sidenav-footer {
+    background-color: var(--sf-surface-sunken) !important;
+    color: var(--sf-ink-secondary) !important;
+    border-top-color: var(--sf-border) !important;
+}
+
+/* sidebar.css fija en su bloque oscuro una paleta azul pizarra completa
+   (#5a6a7e, #94a3b8, #4b6584, degradado #1e40af…) con !important y
+   especificidad (0,2,0). Hay que igualarla selector por selector, o la barra
+   lateral se queda en ese azul sin importar el tema elegido. */
+[data-dark-mode="true"] .sb-sidenav-menu-heading {
+    color: var(--sf-ink-muted) !important;
+}
+[data-dark-mode="true"] .sidebar .nav-link,
+[data-dark-mode="true"] .sb-sidenav .nav-link,
+[data-dark-mode="true"] .sb-sidenav-menu-nested .nav-link {
+    color: var(--sf-ink-secondary) !important;
+}
+[data-dark-mode="true"] .sidebar .nav-link:hover,
+[data-dark-mode="true"] .sb-sidenav .nav-link:hover {
+    background: var(--sf-brand-soft) !important;
+    color: var(--sf-brand) !important;
+    border-left-color: var(--sf-brand) !important;
+}
+[data-dark-mode="true"] .sidebar .nav-link.active,
+[data-dark-mode="true"] .sb-sidenav .nav-link.active {
+    background: var(--sf-brand) !important;
+    color: var(--sf-brand-contrast) !important;
+    border-left-color: var(--sf-brand-strong) !important;
+    box-shadow: none !important;
+}
+[data-dark-mode="true"] .sb-nav-link-icon,
+[data-dark-mode="true"] .sb-sidenav-collapse-arrow {
+    color: var(--sf-ink-muted) !important;
+}
+[data-dark-mode="true"] .sb-sidenav .nav-link:hover .sb-nav-link-icon {
+    color: var(--sf-brand) !important;
+}
+[data-dark-mode="true"] .sb-sidenav .nav-link.active .sb-nav-link-icon {
+    color: var(--sf-brand-contrast) !important;
+}
+/* Las variantes de barra lateral heredadas (white/blue/dark/orange/…) también
+   se fijaban a #0f1318 en oscuro. */
+[data-dark-mode="true"] .white-sidebar,
+[data-dark-mode="true"] .blue-sidebar,
+[data-dark-mode="true"] .dark-sidebar,
+[data-dark-mode="true"] .orange-sidebar,
+[data-dark-mode="true"] .yellow-sidebar,
+[data-dark-mode="true"] .green-sidebar,
+[data-dark-mode="true"] .purple-sidebar,
+[data-dark-mode="true"] .inverted-blue-sidebar {
+    background-color: var(--sf-surface-card) !important;
+}
+
+/* Enlace activo de la barra lateral: el degradado del tema, en ambos modos. */
+.sidebar .nav-link.active,
+.sb-sidenav .nav-link.active,
+[data-dark-mode="true"] .sb-sidenav .nav-link.active {
+    background: var(--sf-brand) !important;
+    color: var(--sf-brand-contrast) !important;
+    border-left-color: var(--sf-brand-strong) !important;
+}
+.sb-sidenav .nav-link.active .sb-nav-link-icon,
+[data-dark-mode="true"] .sb-sidenav .nav-link.active .sb-nav-link-icon {
+    color: var(--sf-brand-contrast) !important;
+}
+
+/* --- Tablas mejoradas y modales ----------------------------------------- */
+[data-dark-mode="true"] .enhanced-table-wrapper,
+[data-dark-mode="true"] .enhanced-table-controls,
+[data-dark-mode="true"] .modal-content,
+[data-dark-mode="true"] .modal-header,
+[data-dark-mode="true"] .modal-footer {
+    background-color: var(--sf-surface-card) !important;
+    border-color: var(--sf-border) !important;
+    color: var(--sf-ink) !important;
+}
+[data-dark-mode="true"] .table > tbody > tr:nth-of-type(odd) > * {
+    background-color: var(--sf-surface-sunken) !important;
+    color: var(--sf-ink) !important;
+}
+[data-dark-mode="true"] .table > tbody > tr:hover > * {
+    background-color: var(--sf-brand-soft) !important;
+}
+
+/* --- Contenedores de las plantillas static / table ---------------------- */
+[data-dark-mode="true"] .breadcrumb,
+[data-dark-mode="true"] .card-header,
+[data-dark-mode="true"] .card-footer,
+[data-dark-mode="true"] .list-group-item,
+[data-dark-mode="true"] .accordion-item,
+[data-dark-mode="true"] .offcanvas,
+[data-dark-mode="true"] .toast,
+[data-dark-mode="true"] .popover,
+[data-dark-mode="true"] .tooltip-inner {
+    background-color: var(--sf-surface-card) !important;
+    border-color: var(--sf-border) !important;
+    color: var(--sf-ink) !important;
+}
+[data-dark-mode="true"] .form-control,
+[data-dark-mode="true"] .form-select,
+[data-dark-mode="true"] .input-group-text {
+    background-color: var(--sf-surface-page) !important;
+    border-color: var(--sf-border-strong) !important;
+    color: var(--sf-ink) !important;
+}
+
+/* ==========================================================================
    2. TEMAS
    ========================================================================== */
 
@@ -176,15 +470,6 @@
     --sf-critical-soft: #381819;
     --sf-info-soft: #132738;
 
-    /* puente con las vistas legacy */
-    --primary-color: #8ba3f0;
-    --bg-body: #101018;
-    --bg-card: #191924;
-    --bg-light: #21212e;
-    --text-primary: #eceaf3;
-    --text-secondary: #b3b0c2;
-    --text-muted: #83809a;
-    --border-color: #2e2e3d;
 }
 
 /* --- Neón: violeta y cian eléctrico -------------------------------------- */
@@ -213,11 +498,6 @@
     --sf-border-soft: #efeafb;
     --sf-border-strong: #d3c6ef;
 
-    --primary-color: #7c3aed;
-    --bg-body: #fbfaff;
-    --bg-card: #ffffff;
-    --text-primary: #1a1030;
-    --border-color: #e6dff7;
 }
 [data-theme="neon"][data-dark-mode="true"] {
     --sf-brand: #b794f6;
@@ -244,11 +524,6 @@
     --sf-border-soft: #2e2348;
     --sf-border-strong: #4c3b74;
 
-    --primary-color: #b794f6;
-    --bg-body: #140d24;
-    --bg-card: #1f1636;
-    --text-primary: #f0eafc;
-    --border-color: #372a56;
 }
 
 /* --- Océano: azules profundos y turquesa --------------------------------- */
@@ -274,11 +549,6 @@
     --sf-border-soft: #e6f0f6;
     --sf-border-strong: #bcd4e1;
 
-    --primary-color: #0369a1;
-    --bg-body: #f8fbfd;
-    --bg-card: #ffffff;
-    --text-primary: #0b2432;
-    --border-color: #d8e7ef;
 }
 [data-theme="oceano"][data-dark-mode="true"] {
     --sf-brand: #5eb8e8;
@@ -303,11 +573,6 @@
     --sf-border-soft: #1c3441;
     --sf-border-strong: #345666;
 
-    --primary-color: #5eb8e8;
-    --bg-body: #0a1a24;
-    --bg-card: #122734;
-    --text-primary: #e4f1f7;
-    --border-color: #23404f;
 }
 
 /* --- Fiestas Patrias (Ecuador) ------------------------------------------- */
@@ -336,11 +601,6 @@
     --sf-border-soft: #f3eddc;
     --sf-border-strong: #d8cfae;
 
-    --primary-color: #ffd100;
-    --bg-body: #fffdf5;
-    --bg-card: #ffffff;
-    --text-primary: #1a1a1a;
-    --border-color: #ebe4cd;
 }
 [data-theme="patrias"][data-dark-mode="true"] {
     --sf-brand: #7d9ceb;
@@ -367,11 +627,6 @@
     --sf-border-soft: #2b2d36;
     --sf-border-strong: #464956;
 
-    --primary-color: #ffd94d;
-    --bg-body: #14151c;
-    --bg-card: #1e2029;
-    --text-primary: #eeecea;
-    --border-color: #33353f;
 }
 
 /* --- Halloween ----------------------------------------------------------- */
@@ -397,11 +652,6 @@
     --sf-border-soft: #f3ebe2;
     --sf-border-strong: #d5c6b7;
 
-    --primary-color: #ff7518;
-    --bg-body: #fdfaf6;
-    --bg-card: #ffffff;
-    --text-primary: #1f1526;
-    --border-color: #ebe0d5;
 }
 [data-theme="halloween"][data-dark-mode="true"] {
     --sf-brand: #c084fc;
@@ -426,11 +676,6 @@
     --sf-border-soft: #2b1f39;
     --sf-border-strong: #4a3860;
 
-    --primary-color: #ff9040;
-    --bg-body: #120c18;
-    --bg-card: #1c1426;
-    --text-primary: #f0e9f5;
-    --border-color: #342644;
 }
 
 /* --- Black Friday: alto contraste, negro y dorado ------------------------ */
@@ -457,11 +702,6 @@
     --sf-border-soft: #ededed;
     --sf-border-strong: #c4c4c4;
 
-    --primary-color: #f5c518;
-    --bg-body: #fafafa;
-    --bg-card: #ffffff;
-    --text-primary: #111111;
-    --border-color: #e0e0e0;
 }
 [data-theme="blackfriday"][data-dark-mode="true"] {
     --sf-brand: #f5c518;
@@ -486,11 +726,6 @@
     --sf-border-soft: #232323;
     --sf-border-strong: #3d3d3d;
 
-    --primary-color: #f5c518;
-    --bg-body: #0a0a0a;
-    --bg-card: #161616;
-    --text-primary: #f5f5f5;
-    --border-color: #2b2b2b;
 }
 
 /* ==========================================================================

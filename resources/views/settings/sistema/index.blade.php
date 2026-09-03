@@ -23,18 +23,22 @@
         </div>
     </div>
 
-    {{-- El alcance del cambio tiene que quedar explícito: esto NO es una
-         preferencia personal. --}}
+    {{-- El alcance de cada ajuste tiene que quedar explícito: el tema afecta a
+         todo el mundo, el modo claro/oscuro solo a quien lo cambia. --}}
     <div class="alert alert-info d-flex align-items-start gap-3 mb-4">
         <i class="fas fa-globe mt-1"></i>
         <div>
-            <strong>Estos ajustes son globales.</strong>
-            Lo que elijas aquí lo verán todos los empleados, en todos sus dispositivos,
+            <strong>El tema es global.</strong>
+            El tema que elijas aquí lo verán todos los empleados, en todos sus dispositivos,
             y también los clientes en el sitio público. Las pestañas que ya estén abiertas
             se actualizan solas en menos de un minuto.
+            <div class="mt-1">
+                El <strong>modo claro u oscuro</strong>, en cambio, es preferencia de cada persona
+                y no se le impone a nadie.
+            </div>
             @if (!empty($apariencia['actualizadoPor']))
                 <div class="small text-muted mt-1">
-                    Último cambio hecho por {{ $apariencia['actualizadoPor'] }}.
+                    Último cambio de tema hecho por {{ $apariencia['actualizadoPor'] }}.
                 </div>
             @endif
         </div>
@@ -45,26 +49,35 @@
         {{-- ── COLUMNA PRINCIPAL ─────────────────────────────── --}}
         <div class="col-xl-8">
 
-            {{-- Dark Mode Toggle --}}
+            {{-- Modo claro / oscuro: PERSONAL, no global --}}
             <div class="sistema-card mb-4">
                 <div class="sistema-card-header">
                     <span><i class="fas fa-adjust me-2"></i>Modo de visualización</span>
+                    <span class="badge-active-theme">Solo para ti</span>
                 </div>
                 <div class="sistema-card-body">
-                    <div class="dark-mode-toggle-row">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="toggle-icon-wrap" id="darkModeIconWrap">
-                                <i class="fas fa-sun" id="darkModeIcon"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold" id="darkModeLabel">Modo Claro</div>
-                                <div class="small text-muted">Se aplica sobre cualquier tema activo</div>
-                            </div>
-                        </div>
-                        <label class="sistema-switch">
-                            <input type="checkbox" id="darkModeToggle">
-                            <span class="sistema-switch-slider"></span>
-                        </label>
+                    <p class="small text-muted mb-3">
+                        Esta preferencia es tuya y no la ve nadie más. Se guarda en tu cuenta,
+                        así que te sigue en cualquier dispositivo donde entres.
+                    </p>
+
+                    <div class="esquema-opciones">
+                        @php
+                            $esquemas = [
+                                'system' => ['icono' => 'fa-circle-half-stroke', 'titulo' => 'Automático', 'desc' => 'Sigue a tu sistema'],
+                                'light'  => ['icono' => 'fa-sun',                'titulo' => 'Claro',      'desc' => 'Siempre claro'],
+                                'dark'   => ['icono' => 'fa-moon',               'titulo' => 'Oscuro',     'desc' => 'Siempre oscuro'],
+                            ];
+                        @endphp
+                        @foreach ($esquemas as $id => $e)
+                            <button type="button"
+                                    class="esquema-opcion {{ $apariencia['esquema'] === $id ? 'active' : '' }}"
+                                    data-esquema="{{ $id }}">
+                                <i class="fas {{ $e['icono'] }}"></i>
+                                <span class="esquema-titulo">{{ $e['titulo'] }}</span>
+                                <span class="esquema-desc">{{ $e['desc'] }}</span>
+                            </button>
+                        @endforeach
                     </div>
 
                     <hr class="my-3">
@@ -264,6 +277,39 @@
 .sistema-card-body { padding: 20px; }
 
 /* ── Dark mode toggle ────────────────────────────────────── */
+/* Selector de modo claro/oscuro: tres estados, preferencia personal */
+.esquema-opciones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.esquema-opcion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 10px;
+    background: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    color: var(--sf-ink);
+    cursor: pointer;
+    transition: border-color .16s, background-color .16s, transform .16s;
+}
+.esquema-opcion:hover {
+    border-color: var(--sf-brand);
+    transform: translateY(-1px);
+}
+.esquema-opcion.active {
+    border-color: var(--sf-brand);
+    background: var(--sf-brand-soft);
+    color: var(--sf-brand);
+}
+.esquema-opcion i { font-size: 1.25rem; }
+.esquema-titulo { font-weight: 600; font-size: .85rem; }
+.esquema-desc { font-size: .72rem; color: var(--sf-ink-muted); }
+.esquema-opcion.active .esquema-desc { color: var(--sf-brand); opacity: .8; }
+
 .dark-mode-toggle-row {
     display: flex; align-items: center; justify-content: space-between;
     gap: 12px; flex-wrap: wrap;
@@ -519,17 +565,13 @@
 document.addEventListener('DOMContentLoaded', function () {
     const cfg = window.StreamifyApariencia || { catalogo: {} };
 
-    const darkModeIcon     = document.getElementById('darkModeIcon');
-    const darkModeIconWrap = document.getElementById('darkModeIconWrap');
-    const darkModeLabel    = document.getElementById('darkModeLabel');
-    const darkModeToggle   = document.getElementById('darkModeToggle');
-
-    function pintarModoOscuro(esOscuro) {
-        if (darkModeToggle) darkModeToggle.checked = esOscuro;
-        if (!darkModeIcon) return;
-        darkModeIcon.className = esOscuro ? 'fas fa-moon' : 'fas fa-sun';
-        darkModeIconWrap.classList.toggle('dark', esOscuro);
-        darkModeLabel.textContent = esOscuro ? 'Modo Oscuro' : 'Modo Claro';
+    // El selector de modo claro/oscuro (tres estados) lo maneja ThemeManager
+    // por delegacion; aqui solo se marca cual esta activo.
+    function pintarEsquema() {
+        var actual = document.documentElement.getAttribute('data-color-scheme') || 'system';
+        document.querySelectorAll('[data-esquema]').forEach(function (btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-esquema') === actual);
+        });
     }
 
     function pintarTemaActivo(temaId) {
@@ -554,13 +596,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    window.addEventListener('aparienciaCambiada', function (e) {
-        pintarTemaActivo(e.detail.tema);
-        pintarModoOscuro(e.detail.modoOscuro);
-    });
+    window.addEventListener('temaCambiado', function (e) { pintarTemaActivo(e.detail.tema); });
+    window.addEventListener('esquemaCambiado', pintarEsquema);
 
     pintarTemaActivo(cfg.tema || 'default');
-    pintarModoOscuro(!!cfg.modoOscuro);
+    pintarEsquema();
 
     // Interruptor de temas automáticos por temporada.
     const autoToggle = document.getElementById('autoTemporadaToggle');

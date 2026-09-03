@@ -1,50 +1,48 @@
 /**
- * STREAMIFY — GESTOR DE APARIENCIA GLOBAL
- * Versión: 2.0
+ * STREAMIFY — GESTOR DE APARIENCIA
+ * Versión: 3.0
  *
- * QUÉ CAMBIÓ RESPECTO A LA v1
- * ---------------------------
- * Antes el tema y el modo oscuro vivían en localStorage. Eso significaba que
- * cada navegador y cada sesión de empleado tenía su propia copia: si el
- * administrador cambiaba el tema, nadie más lo veía. Ese era el bug.
+ * DOS COSAS DISTINTAS, Y NO SE MEZCLAN
+ * ------------------------------------
  *
- * Ahora la fuente de verdad es el SERVIDOR (tabla ajustes_apariencia, vía
- * AparienciaService). Este script ya no decide nada por su cuenta:
+ *  1. EL TEMA (Navidad, Neón, Mundial, Océano…) es GLOBAL. Lo fija el
+ *     administrador en /admin/sistema y lo ve todo el mundo: cualquier
+ *     empleado, en cualquier dispositivo, y los clientes en el sitio público.
+ *     Vive en la base de datos. Antes vivía en localStorage y por eso lo que
+ *     elegía el administrador no le llegaba a nadie.
  *
- *   1. El layout pinta data-theme y data-dark-mode en el <html> desde PHP,
- *      así que la apariencia correcta se ve desde el primer frame (sin
- *      parpadeo) y sin depender de JavaScript.
- *   2. Este módulo solo refleja ese estado y, cuando un administrador cambia
- *      algo, lo MANDA al servidor.
- *   3. Un sondeo ligero detecta cambios hechos desde otro dispositivo y los
- *      aplica en caliente, sin recargar.
+ *  2. EL MODO CLARO / OSCURO es PERSONAL, como en cualquier aplicación.
+ *     Tres estados: 'system' (sigue al sistema operativo, es el de fábrica),
+ *     'light' y 'dark'. Si hay sesión se guarda en el servidor para que le
+ *     siga entre dispositivos; si no, en el navegador.
  *
- * El catálogo de temas ya no está duplicado aquí: llega desde PHP en
- * window.StreamifyApariencia.catalogo.
+ * El atributo data-dark-mode que consume el CSS lo resuelve el script en línea
+ * de partials/apariencia-esquema.blade.php, que corre antes del primer pintado
+ * para que no haya parpadeo. Aquí solo se cambia data-color-scheme y se le
+ * pide que vuelva a resolver.
  */
 
 const ThemeManager = {
     config: null,
     currentTheme: 'default',
-    darkMode: false,
+    esquema: 'system',
     _sondeo: null,
 
-    /** Cada cuánto se comprueba si otro dispositivo cambió la apariencia. */
+    /** Cada cuánto se comprueba si el administrador cambió el tema global. */
     INTERVALO_SONDEO: 60000,
+
+    ESQUEMAS: ['system', 'light', 'dark'],
 
     init() {
         this.config = window.StreamifyApariencia || null;
 
         if (!this.config) {
-            // Sin configuración del servidor no hay nada que gestionar. Puede
-            // pasar en una vista que no incluya partials/apariencia-config.
             console.warn('[Apariencia] window.StreamifyApariencia no está definido; el gestor queda inactivo.');
             return;
         }
 
-        // El servidor ya aplicó los atributos en el <html>; solo los leemos.
         this.currentTheme = this.config.tema || 'default';
-        this.darkMode = !!this.config.modoOscuro;
+        this.esquema = document.documentElement.getAttribute('data-color-scheme') || 'system';
 
         this.actualizarUI();
         this.aplicarDecoracion();
@@ -56,71 +54,100 @@ const ThemeManager = {
         return (this.config && this.config.catalogo) || {};
     },
 
-    /* ---------------------------------------------------------------------
-       Aplicación local (sin persistir)
-       --------------------------------------------------------------------- */
+    /** ¿Se está viendo oscuro ahora mismo? (resultado, no preferencia) */
+    isDarkMode() {
+        return document.documentElement.hasAttribute('data-dark-mode');
+    },
+
+    /* =====================================================================
+       PERSONAL — modo claro / oscuro
+       ===================================================================== */
 
     /**
-     * Pinta un estado en el documento. No habla con el servidor.
-     * Se usa al recibir la respuesta del guardado y al detectar un cambio
-     * remoto durante el sondeo.
+     * Cambia la preferencia personal. No afecta a nadie más.
      */
-    aplicar(tema, modoOscuro) {
-        const html = document.documentElement;
+    async setEsquema(esquema) {
+        if (this.ESQUEMAS.indexOf(esquema) === -1) esquema = 'system';
 
-        if (tema && this.temas[tema]) {
-            html.setAttribute('data-theme', tema);
-            this.currentTheme = tema;
-        }
+        const previo = this.esquema;
+        this.esquema = esquema;
 
-        this.darkMode = !!modoOscuro;
-        if (this.darkMode) {
-            html.setAttribute('data-dark-mode', 'true');
-            html.setAttribute('data-bs-theme', 'dark');
-        } else {
-            html.removeAttribute('data-dark-mode');
-            html.setAttribute('data-bs-theme', 'light');
-        }
+        // Aplicar al momento: es una preferencia personal, no hay que esperar
+        // al servidor para que se vea.
+        document.documentElement.setAttribute('data-color-scheme', esquema);
+        if (typeof window.__sfAplicarEsquema === 'function') window.__sfAplicarEsquema();
 
         this.actualizarUI();
-        this.aplicarDecoracion();
-
-        window.dispatchEvent(new CustomEvent('aparienciaCambiada', {
-            detail: { tema: this.currentTheme, modoOscuro: this.darkMode }
+        window.dispatchEvent(new CustomEvent('esquemaCambiado', {
+            detail: { esquema: esquema, oscuro: this.isDarkMode() }
         }));
+
+        // Un visitante sin sesión lo guarda en su propio navegador.
+        if (!window.__sfAutenticado) {
+            try { localStorage.setItem('streamify_esquema', esquema); } catch (e) {}
+            return true;
+        }
+
+        // Con sesión, al servidor, para que le siga entre dispositivos.
+        try {
+            const respuesta = await fetch(this.config.rutas.esquema, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.config.csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ esquema: esquema }),
+            });
+            const datos = await respuesta.json().catch(() => ({}));
+            if (!respuesta.ok || !datos.success) throw new Error(datos.message || respuesta.status);
+            return true;
+        } catch (error) {
+            console.error('[Apariencia] No se pudo guardar la preferencia:', error);
+            // Se deja aplicado en esta pestaña, pero se avisa de que no
+            // persistirá: mentir sería peor.
+            this.avisar('Se aplicó aquí, pero no se pudo guardar tu preferencia.', 'error');
+            this.esquema = previo;
+            return false;
+        }
+    },
+
+    /** system → light → dark → system */
+    cicloEsquema() {
+        const orden = this.ESQUEMAS;
+        const siguiente = orden[(orden.indexOf(this.esquema) + 1) % orden.length];
+        return this.setEsquema(siguiente);
+    },
+
+    /* =====================================================================
+       GLOBAL — tema de la plataforma (solo administradores)
+       ===================================================================== */
+
+    aplicarTema(tema) {
+        if (!tema || !this.temas[tema]) return;
+        document.documentElement.setAttribute('data-theme', tema);
+        this.currentTheme = tema;
+        this.actualizarUI();
+        this.aplicarDecoracion();
+        window.dispatchEvent(new CustomEvent('temaCambiado', { detail: { tema: tema } }));
     },
 
     aplicarDecoracion() {
         if (typeof Decorations === 'undefined') return;
-
         const decoracion = (this.temas[this.currentTheme] || {}).decoracion;
-        if (decoracion) {
-            Decorations.activate(decoracion);
-        } else {
-            Decorations.deactivateAll();
-        }
+        if (decoracion) Decorations.activate(decoracion);
+        else Decorations.deactivateAll();
     },
 
-    /* ---------------------------------------------------------------------
-       Persistencia en el servidor
-       --------------------------------------------------------------------- */
-
-    /**
-     * Guarda en el servidor. Solo funciona para administradores; el resto
-     * recibe 403 y se les avisa en vez de dejar la interfaz mintiendo.
-     */
-    async guardar(cambios) {
+    async guardarGlobal(cambios) {
         if (!this.config.puedeEditar || !this.config.rutas.guardar) {
-            this.avisar('Solo un administrador puede cambiar la apariencia de la plataforma.', 'error');
+            this.avisar('Solo un administrador puede cambiar el tema de la plataforma.', 'error');
             return false;
         }
 
-        // Optimista: se aplica ya para que la interfaz responda al instante.
-        const previo = { tema: this.currentTheme, modoOscuro: this.darkMode };
-        this.aplicar(
-            cambios.tema !== undefined ? cambios.tema : previo.tema,
-            cambios.modo_oscuro !== undefined ? cambios.modo_oscuro : previo.modoOscuro
-        );
+        const previo = this.currentTheme;
+        if (cambios.tema) this.aplicarTema(cambios.tema);
 
         try {
             const respuesta = await fetch(this.config.rutas.guardar, {
@@ -133,28 +160,24 @@ const ThemeManager = {
                 },
                 body: JSON.stringify(cambios),
             });
-
             const datos = await respuesta.json().catch(() => ({}));
-
             if (!respuesta.ok || !datos.success) {
                 throw new Error(datos.message || `El servidor respondió ${respuesta.status}`);
             }
 
-            // El servidor manda: puede haber resuelto un tema de temporada
-            // distinto al que se pidió.
             this.config.tema = datos.apariencia.tema;
             this.config.temaBase = datos.apariencia.temaBase;
-            this.config.modoOscuro = datos.apariencia.modoOscuro;
             this.config.autoTemporada = datos.apariencia.autoTemporada;
 
-            this.aplicar(datos.apariencia.tema, datos.apariencia.modoOscuro);
-            this.avisar('Apariencia actualizada para toda la plataforma.', 'ok');
+            // El servidor manda: puede haber resuelto un tema de temporada
+            // distinto al que se pidió.
+            this.aplicarTema(datos.apariencia.tema);
+            this.avisar('Tema actualizado para toda la plataforma.', 'ok');
             return true;
 
         } catch (error) {
-            // Revertir: no dejar la pantalla mostrando algo que no se guardó.
             console.error('[Apariencia] No se pudo guardar:', error);
-            this.aplicar(previo.tema, previo.modoOscuro);
+            this.aplicarTema(previo);
             this.avisar('No se pudo guardar el cambio. Revisa tu conexión e inténtalo de nuevo.', 'error');
             return false;
         }
@@ -165,36 +188,25 @@ const ThemeManager = {
             console.error(`[Apariencia] Tema desconocido: ${temaId}`);
             return;
         }
-        return this.guardar({ tema: temaId });
-    },
-
-    setDarkMode(activo) {
-        return this.guardar({ modo_oscuro: !!activo });
-    },
-
-    toggleDarkMode() {
-        return this.setDarkMode(!this.darkMode);
+        return this.guardarGlobal({ tema: temaId });
     },
 
     setAutoTemporada(activo) {
-        return this.guardar({ auto_temporada: !!activo });
+        return this.guardarGlobal({ auto_temporada: !!activo });
     },
 
     resetToDefault() {
-        return this.guardar({ tema: 'default' });
+        return this.guardarGlobal({ tema: 'default' });
     },
 
-    /* ---------------------------------------------------------------------
-       Sondeo: propagar cambios entre dispositivos
-       --------------------------------------------------------------------- */
+    /* =====================================================================
+       Sondeo: propagar el tema global entre dispositivos
+       ===================================================================== */
 
     iniciarSondeo() {
         if (this._sondeo) clearInterval(this._sondeo);
-
         this._sondeo = setInterval(() => this.comprobarCambios(), this.INTERVALO_SONDEO);
 
-        // Al volver a la pestaña, comprobar de inmediato: es cuando más
-        // probable es que algo haya cambiado mientras no mirabas.
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') this.comprobarCambios();
         });
@@ -202,51 +214,48 @@ const ThemeManager = {
 
     async comprobarCambios() {
         try {
-            const respuesta = await fetch(this.config.rutas.leer, {
-                headers: { 'Accept': 'application/json' },
-            });
+            const respuesta = await fetch(this.config.rutas.leer, { headers: { 'Accept': 'application/json' } });
             if (!respuesta.ok) return;
 
             const datos = await respuesta.json();
             const remoto = datos.apariencia;
             if (!remoto) return;
 
-            if (remoto.tema !== this.currentTheme || !!remoto.modoOscuro !== this.darkMode) {
-                console.log('[Apariencia] Cambio detectado desde otro dispositivo; aplicando.');
+            // Solo el tema: el modo claro/oscuro es personal y no se sincroniza.
+            if (remoto.tema !== this.currentTheme) {
+                console.log('[Apariencia] El administrador cambió el tema; aplicando.');
                 this.config.tema = remoto.tema;
-                this.config.modoOscuro = remoto.modoOscuro;
-                this.aplicar(remoto.tema, remoto.modoOscuro);
+                this.aplicarTema(remoto.tema);
             }
         } catch (error) {
             // Un fallo de red en el sondeo no debe molestar al usuario.
         }
     },
 
-    /* ---------------------------------------------------------------------
+    /* =====================================================================
        Interfaz
-       --------------------------------------------------------------------- */
+       ===================================================================== */
 
     actualizarUI() {
         const tema = this.temas[this.currentTheme];
-        if (!tema) return;
+        if (tema) {
+            const icono = document.getElementById('currentThemeIcon');
+            if (icono) icono.textContent = tema.icono;
+        }
 
-        const icono = document.getElementById('currentThemeIcon');
-        if (icono) icono.textContent = tema.icono;
-
-        document.querySelectorAll('.theme-option').forEach((opcion) => {
-            const id = opcion.getAttribute('data-theme');
-            opcion.classList.toggle('active', id === this.currentTheme);
+        document.querySelectorAll('.theme-option').forEach((o) => {
+            o.classList.toggle('active', o.getAttribute('data-theme') === this.currentTheme);
+        });
+        document.querySelectorAll('.theme-card').forEach((c) => {
+            c.classList.toggle('active', c.getAttribute('data-theme') === this.currentTheme);
         });
 
-        document.querySelectorAll('.theme-card').forEach((tarjeta) => {
-            tarjeta.classList.toggle('active', tarjeta.getAttribute('data-theme') === this.currentTheme);
+        // Selector de esquema (3 opciones) en la vista de sistema.
+        document.querySelectorAll('[data-esquema]').forEach((el) => {
+            el.classList.toggle('active', el.getAttribute('data-esquema') === this.esquema);
         });
-
-        const toggle = document.getElementById('darkModeToggle');
-        if (toggle) toggle.checked = this.darkMode;
     },
 
-    /** Aviso discreto; usa el toast del panel si existe. */
     avisar(mensaje, tipo = 'ok') {
         if (typeof window.mostrarToast === 'function') {
             window.mostrarToast(mensaje, tipo);
@@ -274,25 +283,32 @@ const ThemeManager = {
     },
 
     initEventListeners() {
+        // Tarjetas de tema (global, solo administradores)
         document.addEventListener('click', (e) => {
             const opcion = e.target.closest('[data-theme]');
-            if (!opcion) return;
-            if (!opcion.matches('.theme-option, .theme-card, .theme-apply-btn')) return;
+            if (opcion && opcion.matches('.theme-option, .theme-card, .theme-apply-btn')) {
+                e.preventDefault();
+                this.setTheme(opcion.getAttribute('data-theme'));
+                return;
+            }
 
-            e.preventDefault();
-            this.setTheme(opcion.getAttribute('data-theme'));
+            // Botones de esquema personal
+            const esq = e.target.closest('[data-esquema]');
+            if (esq) {
+                e.preventDefault();
+                this.setEsquema(esq.getAttribute('data-esquema'));
+            }
         });
 
-        const toggle = document.getElementById('darkModeToggle');
-        if (toggle) {
-            toggle.addEventListener('change', (e) => this.setDarkMode(e.target.checked));
-        }
+        // Si el sistema operativo cambia y la preferencia es 'system',
+        // el script en línea ya reaplica; aquí solo se refresca la interfaz.
+        window.addEventListener('esquemaCambiado', () => this.actualizarUI());
     },
 
-    /* --- API pública (compatibilidad con la v1) -------------------------- */
+    /* --- API pública ----------------------------------------------------- */
     getAvailableThemes() { return Object.keys(this.temas); },
     getCurrentTheme() { return this.currentTheme; },
-    isDarkMode() { return this.darkMode; },
+    getEsquema() { return this.esquema; },
 };
 
 if (document.readyState === 'loading') {

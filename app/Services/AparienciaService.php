@@ -8,13 +8,19 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Apariencia global: tema y modo oscuro para TODA la plataforma.
+ * Apariencia de la plataforma. Hay DOS cosas distintas y no se mezclan:
  *
- * Antes esto vivia en localStorage, asi que cada navegador y cada sesion de
- * empleado tenia su propia copia y lo que elegia el administrador no llegaba
- * a los demas. Ahora la fuente de verdad es la base de datos y el navegador
- * solo la refleja: un cambio se ve en todos los dispositivos y sesiones en
- * cuanto recargan.
+ *  1. EL TEMA (Navidad, Neon, Mundial, Oceano...) es GLOBAL. Lo fija el
+ *     administrador en /admin/sistema y lo ve todo el mundo: empleados en
+ *     cualquier dispositivo y clientes en el sitio publico. Vive en la tabla
+ *     ajustes_apariencia. Antes vivia en localStorage y por eso no se
+ *     propagaba a nadie.
+ *
+ *  2. EL MODO CLARO / OSCURO es PERSONAL, como en cualquier aplicacion.
+ *     Cada empleado elige entre 'system' (seguir al sistema operativo),
+ *     'light' o 'dark', y se guarda en su propia fila de empleados para que
+ *     le siga entre dispositivos. Los visitantes anonimos no tienen cuenta:
+ *     siguen al sistema operativo, con un ajuste local opcional.
  *
  * El catalogo de temas vive aqui, en PHP, y se entrega a JavaScript desde el
  * layout. Antes estaba duplicado en theme-manager.js y en la vista de sistema,
@@ -27,10 +33,12 @@ class AparienciaService
     /** Valores usados si la tabla todavia no existe (p. ej. durante un deploy). */
     private const RESPALDO = [
         'tema'            => 'default',
-        'modo_oscuro'     => false,
         'auto_temporada'  => true,
         'actualizado_por' => null,
     ];
+
+    /** Valores admitidos para la preferencia personal de modo claro/oscuro. */
+    public const ESQUEMAS = ['system', 'light', 'dark'];
 
     /**
      * Catalogo de temas.
@@ -183,7 +191,6 @@ class AparienciaService
 
                 return [
                     'tema'            => $fila->tema,
-                    'modo_oscuro'     => (bool) $fila->modo_oscuro,
                     'auto_temporada'  => (bool) $fila->auto_temporada,
                     'actualizado_por' => $fila->actualizado_por,
                 ];
@@ -249,17 +256,65 @@ class AparienciaService
     public function paraVista(): array
     {
         $ajustes = $this->ajustes();
+        $tema    = $this->temaEfectivo();
 
         return [
-            'tema'           => $this->temaEfectivo(),
+            // --- Global: lo fija el administrador, lo ve todo el mundo ---
+            'tema'           => $tema,
             'temaBase'       => $ajustes['tema'],
-            'modoOscuro'     => $ajustes['modo_oscuro'],
             'autoTemporada'  => $ajustes['auto_temporada'],
             'temaTemporada'  => $this->temaDeTemporada(),
             'actualizadoPor' => $ajustes['actualizado_por'],
-            'decoracion'     => self::temas()[$this->temaEfectivo()]['decoracion'] ?? null,
+            'decoracion'     => self::temas()[$tema]['decoracion'] ?? null,
             'catalogo'       => self::temas(),
+
+            // --- Personal: preferencia de quien esta mirando ---
+            'esquema'        => $this->esquemaDe(),
         ];
+    }
+
+    /**
+     * Preferencia personal de modo claro/oscuro.
+     *
+     * Devuelve 'system', 'light' o 'dark'. Para un empleado autenticado sale
+     * de su fila; para un visitante anonimo es 'system' y el navegador puede
+     * afinarlo localmente.
+     *
+     * 'system' NO se resuelve aqui a claro u oscuro: solo el navegador sabe
+     * como tiene configurado el sistema operativo quien esta mirando. Lo
+     * resuelve el script en linea del layout, antes del primer pintado.
+     */
+    public function esquemaDe(): string
+    {
+        try {
+            $usuario = auth()->user();
+        } catch (Throwable $e) {
+            return 'system';
+        }
+
+        $preferencia = $usuario->preferencia_tema ?? null;
+
+        return in_array($preferencia, self::ESQUEMAS, true) ? $preferencia : 'system';
+    }
+
+    /**
+     * Guardar la preferencia PERSONAL de quien esta autenticado.
+     * No toca la apariencia de nadie mas.
+     */
+    public function guardarEsquema(string $esquema): string
+    {
+        if (!in_array($esquema, self::ESQUEMAS, true)) {
+            $esquema = 'system';
+        }
+
+        $usuario = auth()->user();
+
+        if ($usuario) {
+            $usuario->preferencia_tema = $esquema;
+            $usuario->save();
+        }
+
+        return $esquema;
     }
 
     /**
@@ -271,10 +326,6 @@ class AparienciaService
 
         if (array_key_exists('tema', $datos) && self::temaValido($datos['tema'])) {
             $fila->tema = $datos['tema'];
-        }
-
-        if (array_key_exists('modo_oscuro', $datos)) {
-            $fila->modo_oscuro = filter_var($datos['modo_oscuro'], FILTER_VALIDATE_BOOLEAN);
         }
 
         if (array_key_exists('auto_temporada', $datos)) {

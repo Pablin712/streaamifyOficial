@@ -111,6 +111,33 @@
    <html data-dark-mode="true"> y/o <html data-bs-theme="dark">.
    No se usa prefers-color-scheme porque las vistas legacy tienen colores
    incrustados que se romperían sin aviso.                                   */
+/* Red de seguridad para navegadores con JavaScript desactivado: si la persona
+   sigue al sistema ('system') y su sistema está en oscuro, los tokens ya se
+   invierten aunque el script en línea no llegue a correr. Los componentes que
+   usan tokens quedan bien; los que traen color incrustado necesitan el script. */
+@media (prefers-color-scheme: dark) {
+    :root[data-color-scheme="system"] {
+        --sf-brand:          #7b9aed;
+        --sf-brand-strong:   #9ab2f3;
+        --sf-brand-soft:     #21294a;
+        --sf-brand-contrast: #10131f;
+        --sf-gold:           #f0c435;
+        --sf-gold-soft:      #3a2f10;
+        --sf-red:            #f06b6e;
+        --sf-red-soft:       #3d1a1b;
+        --sf-surface-page:   #16151a;
+        --sf-surface-card:   #1f1e25;
+        --sf-surface-sunken: #26252d;
+        --sf-surface-inverse:#0f0e12;
+        --sf-ink:            #edece9;
+        --sf-ink-secondary:  #b6b3ad;
+        --sf-ink-muted:      #8a8781;
+        --sf-border:         #33323b;
+        --sf-border-soft:    #2b2a32;
+        --sf-border-strong:  #45444f;
+    }
+}
+
 [data-dark-mode="true"],
 [data-bs-theme="dark"] {
     --sf-brand:          #7b9aed;
