@@ -23,6 +23,23 @@
         </div>
     </div>
 
+    {{-- El alcance del cambio tiene que quedar explícito: esto NO es una
+         preferencia personal. --}}
+    <div class="alert alert-info d-flex align-items-start gap-3 mb-4">
+        <i class="fas fa-globe mt-1"></i>
+        <div>
+            <strong>Estos ajustes son globales.</strong>
+            Lo que elijas aquí lo verán todos los empleados, en todos sus dispositivos,
+            y también los clientes en el sitio público. Las pestañas que ya estén abiertas
+            se actualizan solas en menos de un minuto.
+            @if (!empty($apariencia['actualizadoPor']))
+                <div class="small text-muted mt-1">
+                    Último cambio hecho por {{ $apariencia['actualizadoPor'] }}.
+                </div>
+            @endif
+        </div>
+    </div>
+
     <div class="row g-4">
 
         {{-- ── COLUMNA PRINCIPAL ─────────────────────────────── --}}
@@ -49,6 +66,35 @@
                             <span class="sistema-switch-slider"></span>
                         </label>
                     </div>
+
+                    <hr class="my-3">
+
+                    {{-- Temas automáticos por temporada --}}
+                    <div class="dark-mode-toggle-row">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="toggle-icon-wrap">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Temas automáticos por temporada</div>
+                                <div class="small text-muted">
+                                    Activa solo el tema de la fecha (Navidad, Halloween, Fiestas Patrias…)
+                                    por encima del tema elegido.
+                                    @if (!empty($apariencia['temaTemporada']))
+                                        <span class="d-block mt-1">
+                                            Hoy corresponde:
+                                            <strong>{{ $apariencia['catalogo'][$apariencia['temaTemporada']]['nombre'] }}</strong>
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <label class="sistema-switch">
+                            <input type="checkbox" id="autoTemporadaToggle"
+                                   @checked($apariencia['autoTemporada'])>
+                            <span class="sistema-switch-slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -61,193 +107,51 @@
                 <div class="sistema-card-body">
                     <div class="themes-grid" id="themesGrid">
 
-                        {{-- DEFAULT --}}
-                        <div class="theme-card" data-theme="default">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#ffe226,#341806);">
-                                    <span class="theme-emoji">🎨</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#ffe226"></span>
-                                        <span style="background:#341806"></span>
-                                        <span style="background:#fffb50"></span>
+                        {{-- Las tarjetas se generan desde el catálogo de
+                             AparienciaService (PHP). Antes estaban escritas a
+                             mano aquí Y en theme-manager.js, y se desincronizaban
+                             cada vez que se añadía un tema. --}}
+                        @foreach ($apariencia['catalogo'] as $id => $tema)
+                            @php
+                                $activo = $id === $apariencia['tema'];
+                                $esTemporada = (bool) $tema['auto'];
+                                $meses = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                            @endphp
+                            <div class="theme-card {{ $activo ? 'active' : '' }}" data-theme="{{ $id }}">
+                                @if ($id === $apariencia['temaTemporada'])
+                                    <div class="theme-new-ribbon">EN TEMPORADA</div>
+                                @endif
+                                <div class="theme-preview-wrap">
+                                    <div class="theme-preview"
+                                         style="background:linear-gradient(135deg,{{ $tema['paleta'][0] }},{{ $tema['paleta'][1] }});">
+                                        <span class="theme-emoji">{{ $tema['icono'] }}</span>
+                                        <div class="theme-preview-dots">
+                                            @foreach ($tema['paleta'] as $color)
+                                                <span style="background:{{ $color }}"></span>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">Streamify Original</div>
-                                <div class="theme-desc">Amarillo & Marrón</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-permanent">Permanente</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- MUNDIAL 2026 --}}
-                        <div class="theme-card theme-featured" data-theme="mundial2026">
-                            <div class="theme-new-ribbon">¡NUEVO!</div>
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview mundial-preview">
-                                    <span class="theme-emoji">🏆</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#FFD100"></span>
-                                        <span style="background:#003893"></span>
-                                        <span style="background:#D30000"></span>
-                                    </div>
-                                    <div class="mundial-flag-stripe"></div>
-                                </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">⚽ Mundial 2026</div>
-                                <div class="theme-desc">Ecuador 🇪🇨 · USA · México · Canadá</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">11 Jun – 19 Jul</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- NAVIDAD --}}
-                        <div class="theme-card" data-theme="christmas">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#c92a2a,#2f9e44);">
-                                    <span class="theme-emoji">🎄</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#c92a2a"></span>
-                                        <span style="background:#2f9e44"></span>
-                                        <span style="background:#ffd43b"></span>
+                                <div class="theme-body">
+                                    <div class="theme-name">{{ $tema['nombre'] }}</div>
+                                    <div class="theme-desc">{{ $tema['descripcion'] }}</div>
+                                    <div class="theme-badges">
+                                        @if ($esTemporada)
+                                            <span class="tbadge tbadge-event">
+                                                {{ $tema['auto']['diaInicio'] }} {{ $meses[$tema['auto']['mesInicio']] }}
+                                                – {{ $tema['auto']['diaFin'] }} {{ $meses[$tema['auto']['mesFin']] }}
+                                            </span>
+                                            <span class="tbadge tbadge-auto">Auto</span>
+                                        @else
+                                            <span class="tbadge tbadge-permanent">Permanente</span>
+                                        @endif
                                     </div>
                                 </div>
+                                <button class="theme-select-btn" type="button">
+                                    {{ $activo ? 'Activo' : 'Seleccionar' }}
+                                </button>
                             </div>
-                            <div class="theme-body">
-                                <div class="theme-name">Navidad</div>
-                                <div class="theme-desc">Rojo & Verde festivo</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">2–26 Dic</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                    <span class="tbadge tbadge-fx">❄️ Nieve</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- AÑO NUEVO --}}
-                        <div class="theme-card" data-theme="newyear">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#1a1a1a,#ffd43b);">
-                                    <span class="theme-emoji">🎆</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#ffd43b"></span>
-                                        <span style="background:#1a1a1a"></span>
-                                        <span style="background:#ffe066"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">Año Nuevo</div>
-                                <div class="theme-desc">Dorado & Negro</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">1–7 Ene</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                    <span class="tbadge tbadge-fx">🎇 Fuegos</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- SAN VALENTÍN --}}
-                        <div class="theme-card" data-theme="valentine">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#e64980,#f06595);">
-                                    <span class="theme-emoji">💝</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#e64980"></span>
-                                        <span style="background:#f06595"></span>
-                                        <span style="background:#ffc9da"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">San Valentín</div>
-                                <div class="theme-desc">Rosa romántico</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">10–15 Feb</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                    <span class="tbadge tbadge-fx">💕 Corazones</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- PRIMAVERA --}}
-                        <div class="theme-card" data-theme="spring">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#51cf66,#37b24d);">
-                                    <span class="theme-emoji">🌸</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#51cf66"></span>
-                                        <span style="background:#fab005"></span>
-                                        <span style="background:#d8f5a2"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">Primavera</div>
-                                <div class="theme-desc">Verde fresco</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">20–21 Mar</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- VERANO --}}
-                        <div class="theme-card" data-theme="summer">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#22b8cf,#1098ad);">
-                                    <span class="theme-emoji">☀️</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#22b8cf"></span>
-                                        <span style="background:#ff922b"></span>
-                                        <span style="background:#a5d8ff"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">Verano</div>
-                                <div class="theme-desc">Azul cielo & sol</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">21–23 Jun</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
-
-                        {{-- OTOÑO --}}
-                        <div class="theme-card" data-theme="autumn">
-                            <div class="theme-preview-wrap">
-                                <div class="theme-preview" style="background:linear-gradient(135deg,#fd7e14,#e8590c);">
-                                    <span class="theme-emoji">🍂</span>
-                                    <div class="theme-preview-dots">
-                                        <span style="background:#fd7e14"></span>
-                                        <span style="background:#862e9c"></span>
-                                        <span style="background:#ffd8a8"></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="theme-body">
-                                <div class="theme-name">Otoño</div>
-                                <div class="theme-desc">Naranja cálido</div>
-                                <div class="theme-badges">
-                                    <span class="tbadge tbadge-event">22–24 Sep</span>
-                                    <span class="tbadge tbadge-auto">Auto</span>
-                                </div>
-                            </div>
-                            <button class="theme-select-btn">Seleccionar</button>
-                        </div>
+                        @endforeach
 
                     </div>{{-- /themes-grid --}}
                 </div>
@@ -604,81 +508,66 @@
 
 @section('scripts')
 <script>
+/*
+ * Vista de sistema: solo refleja el estado. Quien manda es ThemeManager
+ * (theme-manager.js), que a su vez obedece al servidor.
+ *
+ * Ojo: aquí NO se registran manejadores de clic ni del interruptor de modo
+ * oscuro. ThemeManager ya los tiene, y duplicarlos hacía que cada clic
+ * enviara dos peticiones de guardado.
+ */
 document.addEventListener('DOMContentLoaded', function () {
-    const darkModeToggle   = document.getElementById('darkModeToggle');
+    const cfg = window.StreamifyApariencia || { catalogo: {} };
+
     const darkModeIcon     = document.getElementById('darkModeIcon');
     const darkModeIconWrap = document.getElementById('darkModeIconWrap');
     const darkModeLabel    = document.getElementById('darkModeLabel');
+    const darkModeToggle   = document.getElementById('darkModeToggle');
 
-    const themesInfo = {
-        default:      { icon:'🎨', name:'Streamify Original',  description:'Amarillo & Marrón' },
-        mundial2026:  { icon:'🏆', name:'Mundial 2026 ⚽',      description:'Ecuador 🇪🇨 · USA · México · Canadá' },
-        christmas:    { icon:'🎄', name:'Navidad',              description:'Rojo & Verde festivo' },
-        newyear:      { icon:'🎆', name:'Año Nuevo',            description:'Dorado & Negro' },
-        valentine:    { icon:'💝', name:'San Valentín',         description:'Rosa romántico' },
-        spring:       { icon:'🌸', name:'Primavera',            description:'Verde fresco' },
-        summer:       { icon:'☀️', name:'Verano',               description:'Azul cielo & sol' },
-        autumn:       { icon:'🍂', name:'Otoño',                description:'Naranja cálido' },
-    };
-
-    function updateDarkModeUI(isDark) {
-        if (!darkModeToggle) return;
-        darkModeToggle.checked = isDark;
-        if (isDark) {
-            darkModeIcon.className   = 'fas fa-moon';
-            darkModeIconWrap.classList.add('dark');
-            darkModeLabel.textContent = 'Modo Oscuro';
-        } else {
-            darkModeIcon.className   = 'fas fa-sun';
-            darkModeIconWrap.classList.remove('dark');
-            darkModeLabel.textContent = 'Modo Claro';
-        }
+    function pintarModoOscuro(esOscuro) {
+        if (darkModeToggle) darkModeToggle.checked = esOscuro;
+        if (!darkModeIcon) return;
+        darkModeIcon.className = esOscuro ? 'fas fa-moon' : 'fas fa-sun';
+        darkModeIconWrap.classList.toggle('dark', esOscuro);
+        darkModeLabel.textContent = esOscuro ? 'Modo Oscuro' : 'Modo Claro';
     }
 
-    function updateCurrentThemeDisplay(themeId) {
-        const info = themesInfo[themeId];
-        if (!info) return;
-        document.getElementById('currentThemeIcon').textContent        = info.icon;
-        document.getElementById('currentThemeName').textContent        = info.name;
-        document.getElementById('currentThemeDescription').textContent = info.description;
-        document.getElementById('activeThemeBadge').textContent        = info.name;
-    }
+    function pintarTemaActivo(temaId) {
+        const tema = cfg.catalogo[temaId];
+        if (!tema) return;
 
-    function markActiveCard(themeId) {
-        document.querySelectorAll('.theme-card').forEach(card => {
-            const isActive = card.dataset.theme === themeId;
-            card.classList.toggle('active', isActive);
+        const icono  = document.getElementById('currentThemeIcon');
+        const nombre = document.getElementById('currentThemeName');
+        const desc   = document.getElementById('currentThemeDescription');
+        const badge  = document.getElementById('activeThemeBadge');
+
+        if (icono)  icono.textContent  = tema.icono;
+        if (nombre) nombre.textContent = tema.nombre;
+        if (desc)   desc.textContent   = tema.descripcion;
+        if (badge)  badge.textContent  = tema.nombre;
+
+        document.querySelectorAll('.theme-card').forEach(function (card) {
+            const activa = card.dataset.theme === temaId;
+            card.classList.toggle('active', activa);
             const btn = card.querySelector('.theme-select-btn');
-            if (btn) btn.textContent = isActive ? '✓ Activo' : 'Seleccionar';
+            if (btn) btn.textContent = activa ? '✓ Activo' : 'Seleccionar';
         });
     }
 
-    // Clicks en tarjetas
-    document.getElementById('themesGrid').addEventListener('click', function (e) {
-        const btn  = e.target.closest('.theme-select-btn');
-        const card = e.target.closest('.theme-card');
-        if ((btn || card) && typeof ThemeManager !== 'undefined') {
-            const themeId = (btn || card).closest('.theme-card').dataset.theme;
-            ThemeManager.setTheme(themeId);
-        }
+    window.addEventListener('aparienciaCambiada', function (e) {
+        pintarTemaActivo(e.detail.tema);
+        pintarModoOscuro(e.detail.modoOscuro);
     });
 
-    // Toggle dark mode
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('change', function () {
-            if (typeof ThemeManager !== 'undefined') ThemeManager.setDarkMode(this.checked);
+    pintarTemaActivo(cfg.tema || 'default');
+    pintarModoOscuro(!!cfg.modoOscuro);
+
+    // Interruptor de temas automáticos por temporada.
+    const autoToggle = document.getElementById('autoTemporadaToggle');
+    if (autoToggle) {
+        autoToggle.addEventListener('change', function () {
+            if (typeof ThemeManager !== 'undefined') ThemeManager.setAutoTemporada(this.checked);
         });
-    }
-
-    // Eventos del ThemeManager
-    window.addEventListener('themeChanged',   e => { updateCurrentThemeDisplay(e.detail.theme); markActiveCard(e.detail.theme); });
-    window.addEventListener('darkModeChanged', e => updateDarkModeUI(e.detail.darkMode));
-
-    // Inicializar
-    if (typeof ThemeManager !== 'undefined') {
-        updateCurrentThemeDisplay(ThemeManager.getCurrentTheme() || 'default');
-        markActiveCard(ThemeManager.getCurrentTheme() || 'default');
-        updateDarkModeUI(ThemeManager.isDarkMode());
     }
 });
 </script>

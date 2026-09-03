@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+{{-- El tema y el modo oscuro se pintan desde el SERVIDOR (AparienciaService).
+     Antes venian de localStorage, asi que cada navegador y cada sesion de
+     empleado tenia el suyo. Ahora es global y ademas no hay parpadeo. --}}
+<html lang="es" data-theme="{{ $apariencia['tema'] }}"
+    @if ($apariencia['modoOscuro']) data-dark-mode="true" data-bs-theme="dark" @else data-bs-theme="light" @endif>
 
 <head>
     <meta charset="utf-8" />
@@ -10,24 +14,9 @@
     <meta name="author" content="" />
     <title>@yield('title', 'Streamify')</title>
 
-    <!-- ⚡ APLICACIÓN INMEDIATA DE DARK MODE (antes de cargar CSS) -->
-    <script>
-        (function() {
-            try {
-                const darkMode = localStorage.getItem('streamify_dark_mode');
-                const theme = localStorage.getItem('streamify_theme');
-                if (darkMode === 'true') {
-                    document.documentElement.setAttribute('data-dark-mode', 'true');
-                    document.documentElement.setAttribute('data-bs-theme', 'dark');
-                } else {
-                    document.documentElement.setAttribute('data-bs-theme', 'light');
-                }
-                if (theme) {
-                    document.documentElement.setAttribute('data-theme', theme);
-                }
-            } catch (e) {}
-        })();
-    </script>
+    {{-- La apariencia ya viene aplicada en el <html> desde el servidor, asi que
+         aqui solo se entrega la configuracion a JavaScript. --}}
+    @include('partials.apariencia-config')
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="{{ asset('css/styles.css') }}" rel="stylesheet" />
@@ -55,6 +44,8 @@
         rel="stylesheet" />
     <link rel="stylesheet"
         href="{{ asset('css/streamify-ui.css') }}?v={{ filemtime(public_path('css/streamify-ui.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('css/streamify-themes.css') }}?v={{ filemtime(public_path('css/streamify-themes.css')) }}">
 
     @yield('styles')
     @livewireStyles
@@ -230,7 +221,10 @@
             });
         }, 300000); // 5 minutos = 300,000 ms
     </script>
-    <script src="{{ asset('js/sistema.js') }}?v={{ filemtime(public_path('js/sistema.js')) }}"></script>
+    {{-- js/sistema.js retirado: registraba un SEGUNDO manejador sobre el mismo
+         botón #toggleDarkMode que navbar.js (doble alternancia) y llamaba a
+         ThemeManager.setTheme('dark'), un tema que nunca existió en el
+         catálogo. Su función la cubren navbar.js + theme-manager.js. --}}
 
     {{-- Livewire Scripts (REQUERIDO para notificador global y otros componentes) --}}
     @livewireScripts

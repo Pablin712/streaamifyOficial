@@ -1,430 +1,304 @@
 /**
- * STREAMIFY - GESTOR DE TEMAS DINÁMICOS
- * Versión: 1.0
- * Fecha: 1 de diciembre de 2025
+ * STREAMIFY — GESTOR DE APARIENCIA GLOBAL
+ * Versión: 2.0
  *
- * Controlador central para cambio de temas y persistencia
+ * QUÉ CAMBIÓ RESPECTO A LA v1
+ * ---------------------------
+ * Antes el tema y el modo oscuro vivían en localStorage. Eso significaba que
+ * cada navegador y cada sesión de empleado tenía su propia copia: si el
+ * administrador cambiaba el tema, nadie más lo veía. Ese era el bug.
+ *
+ * Ahora la fuente de verdad es el SERVIDOR (tabla ajustes_apariencia, vía
+ * AparienciaService). Este script ya no decide nada por su cuenta:
+ *
+ *   1. El layout pinta data-theme y data-dark-mode en el <html> desde PHP,
+ *      así que la apariencia correcta se ve desde el primer frame (sin
+ *      parpadeo) y sin depender de JavaScript.
+ *   2. Este módulo solo refleja ese estado y, cuando un administrador cambia
+ *      algo, lo MANDA al servidor.
+ *   3. Un sondeo ligero detecta cambios hechos desde otro dispositivo y los
+ *      aplica en caliente, sin recargar.
+ *
+ * El catálogo de temas ya no está duplicado aquí: llega desde PHP en
+ * window.StreamifyApariencia.catalogo.
  */
 
-// ⚡ APLICACIÓN INMEDIATA DE DARK MODE (antes de que el DOM cargue)
-(function() {
-    try {
-        const savedDarkMode = localStorage.getItem('streamify_dark_mode');
-        if (savedDarkMode === 'true') {
-            document.documentElement.setAttribute('data-dark-mode', 'true');
-            document.documentElement.setAttribute('data-bs-theme', 'dark');
-            console.log('[ThemeManager] Dark mode aplicado inmediatamente (pre-init)');
-        } else {
-            document.documentElement.setAttribute('data-bs-theme', 'light');
-        }
-    } catch (e) {
-        console.warn('[ThemeManager] Error aplicando dark mode temprano:', e);
-    }
-})();
-
 const ThemeManager = {
-    // Configuración
-    STORAGE_KEY: 'streamify_theme',
-    STORAGE_KEY_DARK: 'streamify_dark_mode',
-    DEFAULT_THEME: 'default',
-    currentTheme: null,
+    config: null,
+    currentTheme: 'default',
     darkMode: false,
+    _sondeo: null,
 
-    // Temas disponibles con sus períodos automáticos
-    themes: {
-        default: {
-            name: 'Streamify Original',
-            icon: '🎨',
-            decoration: null,
-            autoActivate: null
-        },
-        christmas: {
-            name: 'Navidad',
-            icon: '🎄',
-            decoration: 'christmas',
-            autoActivate: { month: 12, dayStart: 2, dayEnd: 26 }
-        },
-        newyear: {
-            name: 'Año Nuevo',
-            icon: '🎆',
-            decoration: 'newyear',
-            autoActivate: { month: 1, dayStart: 1, dayEnd: 7 }
-        },
-        valentine: {
-            name: 'San Valentín',
-            icon: '💝',
-            decoration: 'valentine',
-            autoActivate: { month: 2, dayStart: 10, dayEnd: 15 }
-        },
-        spring: {
-            name: 'Primavera',
-            icon: '🌸',
-            decoration: null,
-            autoActivate: { month: 3, dayStart: 20, dayEnd: 21 }
-        },
-        summer: {
-            name: 'Verano',
-            icon: '☀️',
-            decoration: null,
-            autoActivate: { month: 6, dayStart: 21, dayEnd: 23 }
-        },
-        autumn: {
-            name: 'Otoño',
-            icon: '🍂',
-            decoration: null,
-            autoActivate: { month: 9, dayStart: 22, dayEnd: 24 }
-        },
-        mundial2026: {
-            name: 'Mundial 2026 ⚽',
-            icon: '🏆',
-            decoration: 'mundial2026',
-            autoActivate: { monthStart: 6, dayStart: 11, monthEnd: 7, dayEnd: 19 }
-        }
-    },
+    /** Cada cuánto se comprueba si otro dispositivo cambió la apariencia. */
+    INTERVALO_SONDEO: 60000,
 
-    /**
-     * Inicializar sistema de temas
-     */
     init() {
-        console.log('[ThemeManager] Inicializando sistema de temas...');
+        this.config = window.StreamifyApariencia || null;
 
-        // Cargar tema base y dark mode
-        const savedTheme = this.loadSavedTheme();
-        const savedDarkMode = this.loadDarkMode();
-        const autoTheme = this.getAutoTheme();
-
-        // Prioridad: tema guardado > tema automático > default
-        const themeToApply = savedTheme || autoTheme || this.DEFAULT_THEME;
-
-        console.log(`[ThemeManager] Tema guardado: ${savedTheme}, Dark: ${savedDarkMode}, Auto: ${autoTheme}, Aplicando: ${themeToApply}`);
-
-        this.setTheme(themeToApply, false); // false = no guardar (ya está guardado)
-
-        // Aplicar dark mode si estaba activo
-        if (savedDarkMode) {
-            this.setDarkMode(true, false);
+        if (!this.config) {
+            // Sin configuración del servidor no hay nada que gestionar. Puede
+            // pasar en una vista que no incluya partials/apariencia-config.
+            console.warn('[Apariencia] window.StreamifyApariencia no está definido; el gestor queda inactivo.');
+            return;
         }
 
+        // El servidor ya aplicó los atributos en el <html>; solo los leemos.
+        this.currentTheme = this.config.tema || 'default';
+        this.darkMode = !!this.config.modoOscuro;
+
+        this.actualizarUI();
+        this.aplicarDecoracion();
         this.initEventListeners();
-
-        console.log('[ThemeManager] Sistema de temas inicializado ✓');
+        this.iniciarSondeo();
     },
 
+    get temas() {
+        return (this.config && this.config.catalogo) || {};
+    },
+
+    /* ---------------------------------------------------------------------
+       Aplicación local (sin persistir)
+       --------------------------------------------------------------------- */
+
     /**
-     * Cargar tema guardado desde localStorage
+     * Pinta un estado en el documento. No habla con el servidor.
+     * Se usa al recibir la respuesta del guardado y al detectar un cambio
+     * remoto durante el sondeo.
      */
-    loadSavedTheme() {
+    aplicar(tema, modoOscuro) {
+        const html = document.documentElement;
+
+        if (tema && this.temas[tema]) {
+            html.setAttribute('data-theme', tema);
+            this.currentTheme = tema;
+        }
+
+        this.darkMode = !!modoOscuro;
+        if (this.darkMode) {
+            html.setAttribute('data-dark-mode', 'true');
+            html.setAttribute('data-bs-theme', 'dark');
+        } else {
+            html.removeAttribute('data-dark-mode');
+            html.setAttribute('data-bs-theme', 'light');
+        }
+
+        this.actualizarUI();
+        this.aplicarDecoracion();
+
+        window.dispatchEvent(new CustomEvent('aparienciaCambiada', {
+            detail: { tema: this.currentTheme, modoOscuro: this.darkMode }
+        }));
+    },
+
+    aplicarDecoracion() {
+        if (typeof Decorations === 'undefined') return;
+
+        const decoracion = (this.temas[this.currentTheme] || {}).decoracion;
+        if (decoracion) {
+            Decorations.activate(decoracion);
+        } else {
+            Decorations.deactivateAll();
+        }
+    },
+
+    /* ---------------------------------------------------------------------
+       Persistencia en el servidor
+       --------------------------------------------------------------------- */
+
+    /**
+     * Guarda en el servidor. Solo funciona para administradores; el resto
+     * recibe 403 y se les avisa en vez de dejar la interfaz mintiendo.
+     */
+    async guardar(cambios) {
+        if (!this.config.puedeEditar || !this.config.rutas.guardar) {
+            this.avisar('Solo un administrador puede cambiar la apariencia de la plataforma.', 'error');
+            return false;
+        }
+
+        // Optimista: se aplica ya para que la interfaz responda al instante.
+        const previo = { tema: this.currentTheme, modoOscuro: this.darkMode };
+        this.aplicar(
+            cambios.tema !== undefined ? cambios.tema : previo.tema,
+            cambios.modo_oscuro !== undefined ? cambios.modo_oscuro : previo.modoOscuro
+        );
+
         try {
-            const saved = localStorage.getItem(this.STORAGE_KEY);
-            if (saved && this.themes[saved]) {
-                return saved;
+            const respuesta = await fetch(this.config.rutas.guardar, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.config.csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify(cambios),
+            });
+
+            const datos = await respuesta.json().catch(() => ({}));
+
+            if (!respuesta.ok || !datos.success) {
+                throw new Error(datos.message || `El servidor respondió ${respuesta.status}`);
             }
+
+            // El servidor manda: puede haber resuelto un tema de temporada
+            // distinto al que se pidió.
+            this.config.tema = datos.apariencia.tema;
+            this.config.temaBase = datos.apariencia.temaBase;
+            this.config.modoOscuro = datos.apariencia.modoOscuro;
+            this.config.autoTemporada = datos.apariencia.autoTemporada;
+
+            this.aplicar(datos.apariencia.tema, datos.apariencia.modoOscuro);
+            this.avisar('Apariencia actualizada para toda la plataforma.', 'ok');
+            return true;
+
         } catch (error) {
-            console.warn('[ThemeManager] Error cargando tema guardado:', error);
-        }
-        return null;
-    },
-
-    /**
-     * Cargar estado de dark mode
-     */
-    loadDarkMode() {
-        try {
-            const saved = localStorage.getItem(this.STORAGE_KEY_DARK);
-            return saved === 'true';
-        } catch (error) {
-            console.warn('[ThemeManager] Error cargando dark mode:', error);
-        }
-        return false;
-    },
-
-    /**
-     * Guardar tema en localStorage
-     */
-    saveTheme(themeId) {
-        try {
-            localStorage.setItem(this.STORAGE_KEY, themeId);
-            console.log(`[ThemeManager] Tema guardado: ${themeId}`);
-        } catch (error) {
-            console.error('[ThemeManager] Error guardando tema:', error);
+            // Revertir: no dejar la pantalla mostrando algo que no se guardó.
+            console.error('[Apariencia] No se pudo guardar:', error);
+            this.aplicar(previo.tema, previo.modoOscuro);
+            this.avisar('No se pudo guardar el cambio. Revisa tu conexión e inténtalo de nuevo.', 'error');
+            return false;
         }
     },
 
-    /**
-     * Guardar estado de dark mode
-     */
-    saveDarkMode(enabled) {
-        try {
-            localStorage.setItem(this.STORAGE_KEY_DARK, enabled.toString());
-            console.log(`[ThemeManager] Dark mode guardado: ${enabled}`);
-        } catch (error) {
-            console.error('[ThemeManager] Error guardando dark mode:', error);
-        }
-    },
-
-    /**
-     * Determinar tema automático según fecha
-     */
-    getAutoTheme() {
-        const now = new Date();
-        const currentMonth = now.getMonth() + 1;
-        const currentDay   = now.getDate();
-
-        for (const [themeId, config] of Object.entries(this.themes)) {
-            if (!config.autoActivate) continue;
-            const a = config.autoActivate;
-
-            let match = false;
-
-            if (a.monthStart !== undefined) {
-                // Rango multi-mes: monthStart/dayStart → monthEnd/dayEnd
-                const current  = currentMonth * 100 + currentDay;
-                const rangeStart = a.monthStart * 100 + a.dayStart;
-                const rangeEnd   = a.monthEnd   * 100 + a.dayEnd;
-                match = current >= rangeStart && current <= rangeEnd;
-            } else {
-                // Rango de un solo mes
-                match = currentMonth === a.month && currentDay >= a.dayStart && currentDay <= a.dayEnd;
-            }
-
-            if (match) {
-                console.log(`[ThemeManager] Auto-activando tema: ${themeId} (${currentDay}/${currentMonth})`);
-                return themeId;
-            }
-        }
-
-        return null;
-    },
-
-    /**
-     * Establecer tema activo
-     */
-    setTheme(themeId, save = true) {
-        if (!this.themes[themeId]) {
-            console.error(`[ThemeManager] Tema no encontrado: ${themeId}`);
+    setTheme(temaId) {
+        if (!this.temas[temaId]) {
+            console.error(`[Apariencia] Tema desconocido: ${temaId}`);
             return;
         }
-
-        console.log(`[ThemeManager] Aplicando tema base: ${themeId}`);
-
-        // Aplicar tema base al documento
-        document.documentElement.setAttribute('data-theme', themeId);
-        this.currentTheme = themeId;
-
-        // Guardar en localStorage si se requiere
-        if (save) {
-            this.saveTheme(themeId);
-        }
-
-        // Manejar decoraciones
-        const themeConfig = this.themes[themeId];
-        if (typeof Decorations !== 'undefined') {
-            if (themeConfig.decoration) {
-                Decorations.activate(themeConfig.decoration);
-            } else {
-                Decorations.deactivateAll();
-            }
-        }
-
-        // Actualizar selector visual
-        this.updateThemeSelectorUI(themeId);
-
-        // Disparar evento personalizado
-        window.dispatchEvent(new CustomEvent('themeChanged', {
-            detail: { theme: themeId, config: themeConfig }
-        }));
-
-        console.log(`[ThemeManager] Tema base aplicado: ${themeId} ✓`);
+        return this.guardar({ tema: temaId });
     },
 
-    /**
-     * Activar/Desactivar Dark Mode como overlay
-     */
-    setDarkMode(enabled, save = true) {
-        console.log(`[ThemeManager] ${enabled ? 'Activando' : 'Desactivando'} dark mode...`);
-
-        this.darkMode = enabled;
-
-        if (enabled) {
-            // Aplicar dark mode SIN cambiar el tema base
-            document.documentElement.setAttribute('data-dark-mode', 'true');
-            document.documentElement.setAttribute('data-bs-theme', 'dark');
-        } else {
-            // Remover dark mode, volver al tema base
-            document.documentElement.removeAttribute('data-dark-mode');
-            document.documentElement.setAttribute('data-bs-theme', 'light');
-        }
-
-        // Guardar preferencia
-        if (save) {
-            this.saveDarkMode(enabled);
-        }
-
-        // Disparar evento
-        window.dispatchEvent(new CustomEvent('darkModeChanged', {
-            detail: { darkMode: enabled }
-        }));
-
-        console.log(`[ThemeManager] Dark mode ${enabled ? 'activado' : 'desactivado'} ✓`);
+    setDarkMode(activo) {
+        return this.guardar({ modo_oscuro: !!activo });
     },
 
-    /**
-     * Toggle dark mode
-     */
     toggleDarkMode() {
-        this.setDarkMode(!this.darkMode);
+        return this.setDarkMode(!this.darkMode);
     },
 
-    /**
-     * Obtener estado actual
-     */
-    isDarkMode() {
-        return this.darkMode;
-    },
-
-    /**
-     * Crear selector de temas en el navbar
-     */
-    createThemeSelector() {
-        const navbar = document.querySelector('.navbar');
-        if (!navbar) {
-            console.warn('[ThemeManager] Navbar no encontrado');
-            return;
-        }
-
-        const selectorHTML = `
-            <div class="theme-selector-wrapper" style="margin-left: auto;">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                        type="button"
-                        id="themeSelector"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                        title="Cambiar tema">
-                    <span id="currentThemeIcon">${this.themes[this.currentTheme].icon}</span>
-                    <span class="d-none d-md-inline ms-2">Tema</span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeSelector">
-                    ${Object.entries(this.themes).map(([id, config]) => `
-                        <li>
-                            <a class="dropdown-item theme-option ${id === this.currentTheme ? 'active' : ''}"
-                               href="#"
-                               data-theme="${id}">
-                                <span class="me-2">${config.icon}</span>
-                                ${config.name}
-                                ${id === this.currentTheme ? '<span class="badge bg-primary ms-2">Activo</span>' : ''}
-                            </a>
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-
-        // Insertar antes del último elemento del navbar (usualmente el menú de usuario)
-        const navbarNav = navbar.querySelector('.navbar-nav');
-        if (navbarNav) {
-            navbarNav.insertAdjacentHTML('beforeend', selectorHTML);
-        } else {
-            navbar.insertAdjacentHTML('beforeend', selectorHTML);
-        }
-
-        console.log('[ThemeManager] Selector de temas creado ✓');
-    },
-
-    /**
-     * Actualizar UI del selector
-     */
-    updateThemeSelectorUI(themeId) {
-        // Actualizar icono actual
-        const iconElement = document.getElementById('currentThemeIcon');
-        if (iconElement) {
-            iconElement.textContent = this.themes[themeId].icon;
-        }
-
-        // Actualizar opciones del dropdown
-        document.querySelectorAll('.theme-option').forEach(option => {
-            const optionTheme = option.getAttribute('data-theme');
-
-            if (optionTheme === themeId) {
-                option.classList.add('active');
-                option.innerHTML = `
-                    <span class="me-2">${this.themes[optionTheme].icon}</span>
-                    ${this.themes[optionTheme].name}
-                    <span class="badge bg-primary ms-2">Activo</span>
-                `;
-            } else {
-                option.classList.remove('active');
-                option.innerHTML = `
-                    <span class="me-2">${this.themes[optionTheme].icon}</span>
-                    ${this.themes[optionTheme].name}
-                `;
-            }
-        });
-    },
-
-    /**
-     * Inicializar event listeners
-     */
-    initEventListeners() {
-        // Click en opciones de tema
-        document.addEventListener('click', (e) => {
-            const themeOption = e.target.closest('.theme-option');
-            if (themeOption) {
-                e.preventDefault();
-                const themeId = themeOption.getAttribute('data-theme');
-                this.setTheme(themeId);
-            }
-        });
-
-        // Escuchar cambios de fecha (para auto-activar temas)
-        setInterval(() => {
-            const autoTheme = this.getAutoTheme();
-            const savedTheme = this.loadSavedTheme();
-
-            // Solo auto-cambiar si NO hay tema guardado manualmente
-            if (autoTheme && !savedTheme) {
-                if (this.currentTheme !== autoTheme) {
-                    console.log(`[ThemeManager] Auto-cambiando tema a: ${autoTheme}`);
-                    this.setTheme(autoTheme, false);
-                }
-            }
-        }, 60000); // Revisar cada minuto
-
-        console.log('[ThemeManager] Event listeners inicializados ✓');
-    },
-
-    /**
-     * API pública para otros scripts
-     */
-    getAvailableThemes() {
-        return Object.keys(this.themes);
-    },
-
-    getCurrentTheme() {
-        return this.currentTheme;
+    setAutoTemporada(activo) {
+        return this.guardar({ auto_temporada: !!activo });
     },
 
     resetToDefault() {
-        localStorage.removeItem(this.STORAGE_KEY);
-        this.setTheme(this.DEFAULT_THEME, false);
+        return this.guardar({ tema: 'default' });
     },
 
-    enableAutoThemes() {
-        localStorage.removeItem(this.STORAGE_KEY);
-        const autoTheme = this.getAutoTheme();
-        if (autoTheme) {
-            this.setTheme(autoTheme, false);
+    /* ---------------------------------------------------------------------
+       Sondeo: propagar cambios entre dispositivos
+       --------------------------------------------------------------------- */
+
+    iniciarSondeo() {
+        if (this._sondeo) clearInterval(this._sondeo);
+
+        this._sondeo = setInterval(() => this.comprobarCambios(), this.INTERVALO_SONDEO);
+
+        // Al volver a la pestaña, comprobar de inmediato: es cuando más
+        // probable es que algo haya cambiado mientras no mirabas.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') this.comprobarCambios();
+        });
+    },
+
+    async comprobarCambios() {
+        try {
+            const respuesta = await fetch(this.config.rutas.leer, {
+                headers: { 'Accept': 'application/json' },
+            });
+            if (!respuesta.ok) return;
+
+            const datos = await respuesta.json();
+            const remoto = datos.apariencia;
+            if (!remoto) return;
+
+            if (remoto.tema !== this.currentTheme || !!remoto.modoOscuro !== this.darkMode) {
+                console.log('[Apariencia] Cambio detectado desde otro dispositivo; aplicando.');
+                this.config.tema = remoto.tema;
+                this.config.modoOscuro = remoto.modoOscuro;
+                this.aplicar(remoto.tema, remoto.modoOscuro);
+            }
+        } catch (error) {
+            // Un fallo de red en el sondeo no debe molestar al usuario.
         }
-    }
+    },
+
+    /* ---------------------------------------------------------------------
+       Interfaz
+       --------------------------------------------------------------------- */
+
+    actualizarUI() {
+        const tema = this.temas[this.currentTheme];
+        if (!tema) return;
+
+        const icono = document.getElementById('currentThemeIcon');
+        if (icono) icono.textContent = tema.icono;
+
+        document.querySelectorAll('.theme-option').forEach((opcion) => {
+            const id = opcion.getAttribute('data-theme');
+            opcion.classList.toggle('active', id === this.currentTheme);
+        });
+
+        document.querySelectorAll('.theme-card').forEach((tarjeta) => {
+            tarjeta.classList.toggle('active', tarjeta.getAttribute('data-theme') === this.currentTheme);
+        });
+
+        const toggle = document.getElementById('darkModeToggle');
+        if (toggle) toggle.checked = this.darkMode;
+    },
+
+    /** Aviso discreto; usa el toast del panel si existe. */
+    avisar(mensaje, tipo = 'ok') {
+        if (typeof window.mostrarToast === 'function') {
+            window.mostrarToast(mensaje, tipo);
+            return;
+        }
+
+        let aviso = document.getElementById('apariencia-aviso');
+        if (!aviso) {
+            aviso = document.createElement('div');
+            aviso.id = 'apariencia-aviso';
+            aviso.style.cssText =
+                'position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;' +
+                'padding:10px 18px;border-radius:999px;font-size:.85rem;font-weight:600;' +
+                'box-shadow:0 6px 20px rgba(0,0,0,.25);transition:opacity .25s;pointer-events:none;';
+            document.body.appendChild(aviso);
+        }
+
+        aviso.textContent = mensaje;
+        aviso.style.background = tipo === 'error' ? '#c62828' : '#0f8a4d';
+        aviso.style.color = '#fff';
+        aviso.style.opacity = '1';
+
+        clearTimeout(this._avisoTimer);
+        this._avisoTimer = setTimeout(() => { aviso.style.opacity = '0'; }, 3200);
+    },
+
+    initEventListeners() {
+        document.addEventListener('click', (e) => {
+            const opcion = e.target.closest('[data-theme]');
+            if (!opcion) return;
+            if (!opcion.matches('.theme-option, .theme-card, .theme-apply-btn')) return;
+
+            e.preventDefault();
+            this.setTheme(opcion.getAttribute('data-theme'));
+        });
+
+        const toggle = document.getElementById('darkModeToggle');
+        if (toggle) {
+            toggle.addEventListener('change', (e) => this.setDarkMode(e.target.checked));
+        }
+    },
+
+    /* --- API pública (compatibilidad con la v1) -------------------------- */
+    getAvailableThemes() { return Object.keys(this.temas); },
+    getCurrentTheme() { return this.currentTheme; },
+    isDarkMode() { return this.darkMode; },
 };
 
-// Auto-inicializar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => ThemeManager.init());
 } else {
     ThemeManager.init();
 }
 
-// Exponer API global
 window.ThemeManager = ThemeManager;
-
-console.log('[ThemeManager] Módulo cargado');

@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+{{-- Mismo sistema de apariencia que el panel: el tema y el modo oscuro los
+     define el administrador desde /admin/sistema y se pintan desde el servidor.
+     Hasta ahora las vistas de cliente no tenian modo oscuro en absoluto. --}}
+<html lang="es" data-theme="{{ $apariencia['tema'] }}"
+    @if ($apariencia['modoOscuro']) data-dark-mode="true" data-bs-theme="dark" @else data-bs-theme="light" @endif>
 
 <head>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -38,6 +42,14 @@
         rel="stylesheet" />
     <link rel="stylesheet"
         href="{{ asset('css/streamify-ui.css') }}?v={{ filemtime(public_path('css/streamify-ui.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('css/streamify-themes.css') }}?v={{ filemtime(public_path('css/streamify-themes.css')) }}">
+
+    {{-- Aquí NO se incluye partials/apariencia-config ni theme-manager.js.
+         El sitio público solo necesita ver el tema, no cambiarlo: los atributos
+         del <html> ya vienen resueltos por el servidor en cada carga. Enviar el
+         catálogo de temas y un sondeo periódico a cada visitante sería peso
+         inútil en la parte del sitio que más tráfico recibe. --}}
 
     @yield('styles')
     {{-- Nota: el antiguo override de .btn-outline-primary con #274698 incrustado
