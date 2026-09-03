@@ -34,18 +34,29 @@ class AsistenciaController extends Controller
         if (!Gate::allows('empleados')) {
             abort(403, 'No tienes permisos para ver los empleados.');
         }
-        $mes = Carbon::today()->format('m');
-        $anio = Carbon::today()->format('Y');
-        $empleados = Empleado::orderBy('idemp', 'asc')->get();
+        $mes  = (int) Carbon::today()->format('m');
+        $anio = (int) Carbon::today()->format('Y');
 
-        $ordenPersonalizado = [2, 12]; // IDs prioritarios
-        $estadisticas = $this->empleadoService->obtenerEstadisticasDeEmpleados($empleados, $mes, $anio);
-        $estadisticasOrdenadas = collect($estadisticas)->sortBy(function ($_, $id) use ($ordenPersonalizado) {
-            $index = array_search($id, $ordenPersonalizado);
-            return $index === false ? 9999 + $id : $index; // los no encontrados se ordenan después
-        });
-        // Guarda estadísticas de cada empleado
-        return view('employee.statistics', compact('estadisticasOrdenadas', 'empleados'));
+        $empleados = Empleado::orderBy('idemp', 'asc')->get(['idemp', 'nombreemp']);
+
+        // Version en lote: unas pocas consultas en lugar de once por dia y por
+        // empleado (con doce empleados eran ~4.000 consultas por carga).
+        $estadisticas = $this->empleadoService->obtenerEstadisticasMensualesEnLote($empleados, $mes, $anio);
+
+        // Del mas activo al menos activo: primero quien mas horas estuvo
+        // conectado y, a igualdad de horas, quien mas acciones registro.
+        // Antes se usaba una lista fija de IDs prioritarios ([2, 12]), que
+        // dejaba de tener sentido en cuanto cambiaba el equipo.
+        $estadisticasOrdenadas = collect($estadisticas)
+            ->sortByDesc(fn($e) => [$e['total_horas'], $e['total_acciones']])
+            ->all();
+
+        return view('employee.statistics', [
+            'estadisticasOrdenadas' => $estadisticasOrdenadas,
+            'empleados'             => $empleados,
+            'mes'                   => $mes,
+            'anio'                  => $anio,
+        ]);
     }
     /**
      * Registra la asistencia del empleado.

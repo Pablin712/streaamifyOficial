@@ -513,4 +513,187 @@ class EmpleadoService
         }
         return $estadisticas;
     }
+
+    /**
+     * Estadisticas mensuales de TODOS los empleados en unas pocas consultas.
+     *
+     * Reemplaza a obtenerEstadisticasDeEmpleados() para la vista de actividad.
+     * Esa version recorria empleado × dia × metrica y lanzaba once consultas
+     * por dia y por empleado: con doce empleados eran unas cuatro mil consultas
+     * por carga de pagina, y de ahi venia la lentitud.
+     *
+     * Aqui se traen los datos del mes completo de una sola vez —cuatro
+     * consultas en total— y el agrupado por empleado y dia se hace en memoria.
+     *
+     * Devuelve, por cada idemp:
+     *   nombre, dias => [fecha => [asistencias, ventas, ...]],
+     *   total_horas, total_acciones   (para poder ordenar por actividad)
+     */
+    public function obtenerEstadisticasMensualesEnLote($empleados, int $mes, int $anio): array
+    {
+        $inicio = Carbon::createFromDate($anio, $mes, 1)->startOfMonth();
+        $fin    = $inicio->copy()->endOfMonth();
+        $ids    = collect($empleados)->pluck('idemp')->all();
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        // --- 1. Asistencias: se necesitan los pings crudos para calcular lapsos.
+        $asistencias = Asistencia::whereIn('empleado_id', $ids)
+            ->whereBetween('created_at', [$inicio, $fin])
+            ->orderBy('created_at')
+            ->get(['empleado_id', 'created_at'])
+            ->groupBy('empleado_id');
+
+        // --- 2. Ventas: agregadas por empleado y dia.
+        $ventas = Venta::whereIn('idemp', $ids)
+            ->whereBetween('fechaven', [$inicio->toDateString(), $fin->toDateString()])
+            ->selectRaw('idemp, DATE(fechaven) as dia, COUNT(*) as total')
+            ->groupBy('idemp', 'dia')
+            ->get()
+            ->groupBy('idemp');
+
+        // --- 3. Tareas completadas: agregadas por empleado y dia.
+        $tareas = Tarea::whereIn('completada_por', $ids)
+            ->whereBetween('fecha_completada', [$inicio, $fin])
+            ->selectRaw('completada_por, DATE(fecha_completada) as dia, COUNT(*) as total')
+            ->groupBy('completada_por', 'dia')
+            ->get()
+            ->groupBy('completada_por');
+
+        // --- 4. Historial: una sola consulta; la clasificacion por tipo de
+        //        accion se hace en PHP, replicando los LIKE del codigo anterior.
+        $historial = Historial::whereIn('empleado_id', $ids)
+            ->whereBetween('created_at', [$inicio, $fin])
+            ->get(['empleado_id', 'accion', 'created_at'])
+            ->groupBy('empleado_id');
+
+        $estadisticas = [];
+
+        foreach ($empleados as $empleado) {
+            $id = $empleado->idemp;
+
+            $dias           = $this->esqueletoDelMes($inicio, $fin);
+            $totalAcciones  = 0;
+            $totalMinutos   = 0.0;
+
+            // Conexion: se agrupan los pings por dia y se reutiliza el mismo
+            // calculo de lapsos de siempre, para no cambiar las cifras.
+            $pingsDelEmpleado = $asistencias->get($id, collect());
+            foreach ($pingsDelEmpleado->groupBy(fn($a) => $a->created_at->format('Y-m-d')) as $fecha => $pings) {
+                if (!isset($dias[$fecha])) {
+                    continue;
+                }
+                $lapsos = $this->calcularLapsos($pings->values());
+                $dias[$fecha]['asistencias'] = $lapsos['horas_conexion'];
+                $totalMinutos += $lapsos['total_conexion'];
+            }
+
+            foreach ($ventas->get($id, collect()) as $fila) {
+                if (isset($dias[$fila->dia])) {
+                    $dias[$fila->dia]['ventas'] = (int) $fila->total;
+                    $totalAcciones += (int) $fila->total;
+                }
+            }
+
+            foreach ($tareas->get($id, collect()) as $fila) {
+                if (isset($dias[$fila->dia])) {
+                    $dias[$fila->dia]['tareas'] = (int) $fila->total;
+                    $totalAcciones += (int) $fila->total;
+                }
+            }
+
+            foreach ($historial->get($id, collect()) as $registro) {
+                $fecha = $registro->created_at->format('Y-m-d');
+                if (!isset($dias[$fecha])) {
+                    continue;
+                }
+                foreach ($this->clasificarAccion($registro->accion) as $categoria) {
+                    $dias[$fecha][$categoria]++;
+                    $totalAcciones++;
+                }
+            }
+
+            $estadisticas[$id] = [
+                'nombre'         => $empleado->nombreemp,
+                'dias'           => $dias,
+                'total_horas'    => round($totalMinutos / 60, 2),
+                'total_acciones' => $totalAcciones,
+            ];
+        }
+
+        return $estadisticas;
+    }
+
+    /** Un dia por fecha del mes, con todas las metricas en cero. */
+    private function esqueletoDelMes(Carbon $inicio, Carbon $fin): array
+    {
+        $vacio = [
+            'asistencias' => 0, 'ventas' => 0, 'recargas' => 0, 'productos' => 0,
+            'inventario' => 0, 'cuentas' => 0, 'tareas' => 0, 'costos' => 0,
+            'clientes' => 0, 'gastos' => 0,
+        ];
+
+        $dias = [];
+        for ($d = $inicio->copy(); $d->lte($fin); $d->addDay()) {
+            $dias[$d->format('Y-m-d')] = $vacio;
+        }
+
+        return $dias;
+    }
+
+    /**
+     * A que metricas cuenta una accion del historial.
+     *
+     * Replica los LIKE del codigo anterior. Como la colacion de MySQL es
+     * insensible a mayusculas, aqui se usa stripos: por eso el codigo viejo
+     * repetia cada termino en los dos casos sin necesidad.
+     *
+     * Una misma accion puede sumar en varias categorias, igual que antes:
+     * cada contador se calculaba con su propia consulta independiente.
+     */
+    private function clasificarAccion(?string $accion): array
+    {
+        if ($accion === null || $accion === '') {
+            return [];
+        }
+
+        $categorias = [];
+
+        if ($accion === 'Recarga-Procesada') {
+            $categorias[] = 'recargas';
+        }
+        if (stripos($accion, 'producto') !== false) {
+            $categorias[] = 'productos';
+        }
+        if ($this->contieneAlguno($accion, ['servicio', 'valor', 'proveedor'])) {
+            $categorias[] = 'inventario';
+        }
+        if ($this->contieneAlguno($accion, ['cuenta', 'perfil', 'usuario'])) {
+            $categorias[] = 'cuentas';
+        }
+        if (stripos($accion, 'costo') !== false) {
+            $categorias[] = 'costos';
+        }
+        if (stripos($accion, 'cliente') !== false) {
+            $categorias[] = 'clientes';
+        }
+        if (stripos($accion, 'gasto') !== false) {
+            $categorias[] = 'gastos';
+        }
+
+        return $categorias;
+    }
+
+    private function contieneAlguno(string $texto, array $terminos): bool
+    {
+        foreach ($terminos as $termino) {
+            if (stripos($texto, $termino) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
