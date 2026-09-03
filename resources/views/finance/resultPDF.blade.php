@@ -36,6 +36,173 @@
     $maxMes = collect($serieMeses)->max('ingresos') ?: 1;
     $maxSrv = collect($porServicio)->max('ingresos') ?: 1;
 @endphp
+
+@php
+    /*
+     * Generadores de graficos en SVG.
+     *
+     * dompdf trae php-svg-lib, pero NO renderiza SVG en linea: hay que pasarlo
+     * como imagen embebida (data:image/svg+xml;base64). Asi si funciona, y se
+     * pueden hacer graficos de verdad -lineales, de barras y circulares- en vez
+     * de las barras de tabla que se usaban antes.
+     *
+     * Solo se usan atributos de presentacion (fill, stroke...) y elementos
+     * basicos: php-svg-lib no interpreta CSS dentro del SVG.
+     */
+
+    $svg = fn(string $cuerpo, int $w, int $h) =>
+        'data:image/svg+xml;base64,' . base64_encode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' . $w . '" height="' . $h . '" viewBox="0 0 ' . $w . ' ' . $h . '">'
+            . $cuerpo . '</svg>'
+        );
+
+    $AZUL   = '#274698';
+    $AZULC  = '#8fa6d8';
+    $ORO    = '#c9930a';
+    $TINTA  = '#55534e';
+    $REJILLA = '#e2ded5';
+
+    /* ---------- Grafico lineal: evolucion diaria ---------- */
+    $graficoLineal = function (array $serie) use ($svg, $AZUL, $AZULC, $TINTA, $REJILLA, $money) {
+        if (count($serie) < 2) return null;
+
+        // 504 = ancho util en puntos (178 mm). dompdf no escala el <img>
+        // de un SVG, asi que se dibuja ya al tamano final.
+        $w = 504; $h = 190;
+        $mIzq = 46; $mDer = 10; $mSup = 10; $mInf = 24;
+        $pw = $w - $mIzq - $mDer;
+        $ph = $h - $mSup - $mInf;
+
+        $ing = array_column($serie, 'ingresos');
+        $uti = array_column($serie, 'utilidad');
+        $max = max(max($ing), max($uti), 1);
+        // Escala redondeada hacia arriba para que el eje tenga numeros limpios.
+        $paso = pow(10, floor(log10($max))) / 2;
+        $tope = ceil($max / $paso) * $paso;
+
+        $n = count($serie);
+        $x = fn($i) => $mIzq + ($n > 1 ? ($i / ($n - 1)) * $pw : 0);
+        $y = fn($v) => $mSup + $ph - ($tope > 0 ? ($v / $tope) * $ph : 0);
+
+        $out = '';
+
+        // Rejilla horizontal y etiquetas del eje Y
+        for ($k = 0; $k <= 4; $k++) {
+            $v  = $tope * $k / 4;
+            $yy = round($y($v), 1);
+            $out .= '<line x1="' . $mIzq . '" y1="' . $yy . '" x2="' . ($w - $mDer) . '" y2="' . $yy . '" stroke="' . $REJILLA . '" stroke-width="1"/>';
+        }
+
+        // Area bajo ingresos
+        $area = '';
+        foreach ($serie as $i => $d) $area .= round($x($i), 1) . ',' . round($y($d['ingresos']), 1) . ' ';
+        $area .= round($x($n - 1), 1) . ',' . round($y(0), 1) . ' ' . round($x(0), 1) . ',' . round($y(0), 1);
+        $out .= '<polygon points="' . $area . '" fill="' . $AZULC . '" fill-opacity="0.25"/>';
+
+        // Linea de utilidad (debajo, mas clara)
+        $pu = '';
+        foreach ($serie as $i => $d) $pu .= round($x($i), 1) . ',' . round($y($d['utilidad']), 1) . ' ';
+        $out .= '<polyline points="' . trim($pu) . '" fill="none" stroke="' . $AZULC . '" stroke-width="1.6"/>';
+
+        // Linea de ingresos
+        $pi = '';
+        foreach ($serie as $i => $d) $pi .= round($x($i), 1) . ',' . round($y($d['ingresos']), 1) . ' ';
+        $out .= '<polyline points="' . trim($pi) . '" fill="none" stroke="' . $AZUL . '" stroke-width="2.2"/>';
+
+
+        // Ejes
+        $out .= '<line x1="' . $mIzq . '" y1="' . ($mSup + $ph) . '" x2="' . ($w - $mDer) . '" y2="' . ($mSup + $ph) . '" stroke="#b9b5ab" stroke-width="1"/>';
+
+        return ['img' => $svg($out, $w, $h), 'tope' => $tope];
+    };
+
+    /* ---------- Grafico de barras: seis meses ---------- */
+    $graficoBarras = function (array $meses) use ($svg, $AZUL, $AZULC, $TINTA, $REJILLA) {
+        if (!count($meses)) return null;
+
+        $w = 504; $h = 180;
+        $mIzq = 46; $mDer = 10; $mSup = 10; $mInf = 28;
+        $pw = $w - $mIzq - $mDer; $ph = $h - $mSup - $mInf;
+
+        $max = max(max(array_column($meses, 'ingresos')), 1);
+        $paso = pow(10, floor(log10($max))) / 2;
+        $tope = ceil($max / $paso) * $paso;
+        $y = fn($v) => $mSup + $ph - ($tope > 0 ? ($v / $tope) * $ph : 0);
+
+        $n = count($meses);
+        $ancho = $pw / $n;
+        $barra = $ancho * 0.30;
+
+        $out = '';
+        for ($k = 0; $k <= 4; $k++) {
+            $v = $tope * $k / 4; $yy = round($y($v), 1);
+            $out .= '<line x1="' . $mIzq . '" y1="' . $yy . '" x2="' . ($w - $mDer) . '" y2="' . $yy . '" stroke="' . $REJILLA . '" stroke-width="1"/>';
+        }
+
+        foreach ($meses as $i => $m) {
+            $cx = $mIzq + $ancho * $i + $ancho / 2;
+            $y0 = $mSup + $ph;
+
+            $yi = round($y($m['ingresos']), 1);
+            $out .= '<rect x="' . round($cx - $barra - 2, 1) . '" y="' . $yi . '" width="' . round($barra, 1) . '" height="' . round($y0 - $yi, 1) . '" fill="' . $AZUL . '"/>';
+
+            $yu = round($y(max(0, $m['utilidad'])), 1);
+            $out .= '<rect x="' . round($cx + 2, 1) . '" y="' . $yu . '" width="' . round($barra, 1) . '" height="' . round($y0 - $yu, 1) . '" fill="' . $AZULC . '"/>';
+
+        }
+
+        $out .= '<line x1="' . $mIzq . '" y1="' . ($mSup + $ph) . '" x2="' . ($w - $mDer) . '" y2="' . ($mSup + $ph) . '" stroke="#b9b5ab" stroke-width="1"/>';
+        return ['img' => $svg($out, $w, $h), 'tope' => $tope];
+    };
+
+    /* ---------- Grafico circular: reparto de ingresos ---------- */
+    $graficoDona = function (array $servicios) use ($svg) {
+        $conIngreso = array_values(array_filter($servicios, fn($s) => $s['ingresos'] > 0));
+        if (!count($conIngreso)) return null;
+
+        // Con once porciones no se lee nada: se muestran las seis mayores y el
+        // resto se agrupa.
+        $top = array_slice($conIngreso, 0, 6);
+        $resto = array_slice($conIngreso, 6);
+        if ($resto) {
+            $top[] = ['servicio' => 'Resto', 'ingresos' => array_sum(array_column($resto, 'ingresos'))];
+        }
+
+        $total = array_sum(array_column($top, 'ingresos'));
+        if ($total <= 0) return null;
+
+        $paleta = ['#274698', '#4a6fc4', '#8fa6d8', '#c9930a', '#e0b64a', '#9a9186', '#c4bcae'];
+
+        $w = 168; $h = 168; $cx = 84; $cy = 84; $rE = 70; $rI = 40;
+        $out = '';
+        $ang = -M_PI / 2; // arranca arriba
+
+        foreach ($top as $i => $s) {
+            $frac = $s['ingresos'] / $total;
+            $fin  = $ang + $frac * 2 * M_PI;
+            $largo = $frac > 0.5 ? 1 : 0;
+
+            $x1 = $cx + $rE * cos($ang);  $y1 = $cy + $rE * sin($ang);
+            $x2 = $cx + $rE * cos($fin);  $y2 = $cy + $rE * sin($fin);
+            $x3 = $cx + $rI * cos($fin);  $y3 = $cy + $rI * sin($fin);
+            $x4 = $cx + $rI * cos($ang);  $y4 = $cy + $rI * sin($ang);
+
+            // Un anillo completo no se puede dibujar con un solo arco.
+            if ($frac >= 0.999) {
+                $out .= '<circle cx="' . $cx . '" cy="' . $cy . '" r="' . (($rE + $rI) / 2) . '" fill="none" stroke="' . $paleta[$i % 7] . '" stroke-width="' . ($rE - $rI) . '"/>';
+            } else {
+                $out .= '<path d="M ' . round($x1, 2) . ' ' . round($y1, 2)
+                     . ' A ' . $rE . ' ' . $rE . ' 0 ' . $largo . ' 1 ' . round($x2, 2) . ' ' . round($y2, 2)
+                     . ' L ' . round($x3, 2) . ' ' . round($y3, 2)
+                     . ' A ' . $rI . ' ' . $rI . ' 0 ' . $largo . ' 0 ' . round($x4, 2) . ' ' . round($y4, 2)
+                     . ' Z" fill="' . $paleta[$i % 7] . '"/>';
+            }
+            $ang = $fin;
+        }
+
+        return ['img' => $svg($out, $w, $h), 'items' => $top, 'total' => $total, 'paleta' => $paleta];
+    };
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 
@@ -50,7 +217,11 @@
             margin: 26mm 16mm 20mm 16mm;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Reset acotado, NUNCA universal: un `* { margin:0 }` alcanza tambien
+           al elemento raiz y dompdf descarta con el el margen de @page. Era la
+           causa de que el documento saliera pegado al borde del papel pese a
+           tener la regla puesta. */
+        body, h1, h2, h3, p, table, div, ul, ol, li { margin: 0; padding: 0; }
 
         body {
             font-family: "DejaVu Sans", Arial, sans-serif;
@@ -62,7 +233,9 @@
         /* --- Cabecera y pie repetidos en todas las paginas --- */
         .doc-header {
             position: fixed;
-            top: -18mm; left: 0; right: 0;
+            /* El margen superior es de 26 mm; a -17 mm la cabecera
+               queda a unos 9 mm del borde del papel. */
+            top: -17mm; left: 0; right: 0;
             border-bottom: 0.6pt solid #d8d4cb;
             padding-bottom: 5pt;
         }
@@ -73,7 +246,10 @@
 
         .doc-footer {
             position: fixed;
-            bottom: -13mm; left: 0; right: 0;
+            /* Dentro del margen inferior de 20 mm, pero dejando ~11 mm
+               libres hasta el borde: menos que eso y la impresora
+               empieza a comerse el texto. */
+            bottom: -9mm; left: 0; right: 0;
             border-top: 0.6pt solid #d8d4cb;
             padding-top: 4pt;
             font-size: 7.5pt; color: #8a8884;
@@ -115,7 +291,10 @@
         /* --- Rejilla de indicadores (tablas: dompdf no tiene flexbox) --- */
         table.kpis { width: 100%; border-collapse: separate; border-spacing: 5pt 0; margin-bottom: 4pt; }
         table.kpis td {
-            width: 25%;
+            /* Sin `width:25%`: con border-spacing, cuatro celdas al 25% suman
+               100% MAS el espaciado y el bloque se salia 26 mm del papel por la
+               derecha. Dejandolas automaticas, la tabla reparte dentro del
+               100% y respeta el margen. */
             border: 0.6pt solid #ddd9d0;
             padding: 7pt 8pt;
             vertical-align: top;
@@ -180,6 +359,10 @@
         }
 
         .salto { page-break-before: always; }
+
+        /* Un grafico que no cabe debe pasar entero a la pagina
+           siguiente; si se parte, el eje se sale del margen. */
+        .bloque { page-break-inside: avoid; }
     </style>
 </head>
 
@@ -381,84 +564,110 @@
     {{-- ── Graficos ────────────────────────────────────────────── --}}
     <div class="salto"></div>
 
+    <div class="bloque">
     <h2>Evolución diaria de {{ ucfirst($mes) }}</h2>
-    @if (count($serieDiaria))
-        <div class="gr-titulo">Ingresos por día (USD)</div>
-        <table class="gr-dias">
+    @php $gLinea = $graficoLineal($serieDiaria); @endphp
+    @if ($gLinea)
+        <div class="gr-titulo">Ingresos y utilidad, día a día (USD)</div>
+        {{-- Las etiquetas de los ejes van en HTML, no dentro del SVG:
+             php-svg-lib coloca mal el <text> y una acababa fuera del margen. --}}
+        <table style="width:100%; border-collapse:collapse">
             <tr>
-                @foreach ($serieDiaria as $d)
-                    @php $alto = max(1, round(($d['ingresos'] / $maxDia) * 60)); @endphp
-                    <td style="height:62pt">
-                        <div class="barra" style="height:{{ $alto }}pt"></div>
-                    </td>
-                @endforeach
+                <td style="width:34pt; font-size:7pt; color:#8a8884; text-align:right; padding-right:4pt; vertical-align:top">{{ $money($gLinea['tope'], 0) }}</td>
+                <td rowspan="2"><img src="{{ $gLinea['img'] }}"></td>
             </tr>
-            <tr>
-                @foreach ($serieDiaria as $d)
-                    <td class="eje">{{ $d['dia'] % 5 === 0 || $d['dia'] === 1 ? $d['dia'] : '' }}</td>
-                @endforeach
-            </tr>
+            <tr><td style="font-size:7pt; color:#8a8884; text-align:right; padding-right:4pt; vertical-align:bottom">$0</td></tr>
         </table>
+        <div style="font-size:7pt; color:#8a8884; text-align:center">
+            Día 1 &nbsp;·&nbsp; a &nbsp;·&nbsp; Día {{ count($serieDiaria) }} de {{ ucfirst($mes) }}
+        </div>
+        <div class="leyenda">
+            <span class="muestra" style="background:#274698"></span> Ingresos &nbsp;
+            <span class="muestra" style="background:#8fa6d8"></span> Utilidad
+        </div>
         <div class="gr-nota">
-            Día de mayor ingreso: {{ $money($maxDia) }} ·
-            Promedio diario: {{ $money($promedio_pagos_mes) }}
+            Día de mayor ingreso: {{ $money($maxDia) }} · Promedio diario: {{ $money($promedio_pagos_mes) }}
         </div>
     @else
-        <div class="aviso">No hay registros diarios para este mes.</div>
+        <div class="aviso">No hay registros diarios suficientes para este mes.</div>
     @endif
+    </div>
 
+    {{-- Pagina propia: dompdf no corta antes de una imagen alta, asi que
+         si este grafico empieza al final de la pagina anterior sus barras
+         se salen por el borde inferior. --}}
+    <div class="salto"></div>
+    <div class="bloque">
     <h2>Tendencia de los últimos seis meses</h2>
+    @php $maxM = collect($serieMeses)->max('ingresos') ?: 1; @endphp
     @if (count($serieMeses))
         <div class="gr-titulo">Ingresos y utilidad por mes (USD)</div>
-        <table class="gr-barras">
+        {{-- Barras en HTML y no en SVG: dompdf coloca la imagen de un SVG alto
+             al fondo de la pagina, fuera del margen inferior, sin forma fiable
+             de evitarlo. Con tablas la posicion es determinista. --}}
+        <table style="width:100%; border-collapse:collapse">
             @foreach ($serieMeses as $m)
-                @php
-                    $pIng = $maxMes > 0 ? round(($m['ingresos'] / $maxMes) * 100) : 0;
-                    $pUti = $maxMes > 0 ? round((max(0, $m['utilidad']) / $maxMes) * 100) : 0;
-                @endphp
                 <tr>
-                    <td class="etq" rowspan="2">{{ $m['etiqueta'] }}</td>
-                    <td>
-                        <table class="pista"><tr><td class="relleno" style="width:{{ $pIng }}%; background:#274698"></td><td></td></tr></table>
+                    <td style="width:38pt; font-size:8pt; color:#55534e; padding:2pt 0">{{ $m['etiqueta'] }}</td>
+                    <td style="padding:2pt 0">
+                        <table style="width:100%; border-collapse:collapse; background:#eeece6">
+                            <tr><td style="height:9pt; width:{{ round(($m['ingresos'] / $maxM) * 100) }}%; background:#274698"></td><td></td></tr>
+                        </table>
+                        <table style="width:100%; border-collapse:collapse; background:#eeece6; margin-top:1.5pt">
+                            <tr><td style="height:7pt; width:{{ round((max(0, $m['utilidad']) / $maxM) * 100) }}%; background:#8fa6d8"></td><td></td></tr>
+                        </table>
                     </td>
-                    <td class="val">{{ $money($m['ingresos'], 0) }}</td>
-                </tr>
-                <tr>
-                    <td>
-                        <table class="pista"><tr><td class="relleno" style="width:{{ $pUti }}%; background:#7f9bd4"></td><td></td></tr></table>
-                    </td>
-                    <td class="val" style="color:#55534e">{{ $money($m['utilidad'], 0) }}</td>
+                    <td style="width:62pt; font-size:8pt; text-align:right; font-weight:bold; padding:2pt 0 2pt 6pt">{{ $money($m['ingresos'], 0) }}</td>
+                    <td style="width:58pt; font-size:8pt; text-align:right; color:#55534e; padding:2pt 0 2pt 4pt">{{ $money($m['utilidad'], 0) }}</td>
                 </tr>
             @endforeach
         </table>
         <div class="leyenda">
             <span class="muestra" style="background:#274698"></span> Ingresos &nbsp;
-            <span class="muestra" style="background:#7f9bd4"></span> Utilidad
+            <span class="muestra" style="background:#8fa6d8"></span> Utilidad
         </div>
         <div class="gr-nota">
             La serie termina en {{ ucfirst($mes) }} {{ $year }}, el mes de este reporte.
         </div>
     @endif
+    </div>
 
     {{-- ── Resultados por servicio ─────────────────────────────── --}}
+    {{-- Pagina propia: dompdf no respeta page-break-inside, asi que si
+         esta seccion empieza al final de la de graficos, la tabla se
+         sale del margen inferior. --}}
+    <div class="salto"></div>
     <h2>Resultados por servicio</h2>
     @if (count($porServicio))
-        <div class="gr-titulo">Participación en los ingresos del mes</div>
-        <table class="gr-barras">
-            @foreach ($porServicio as $s)
-                @if ($s['ingresos'] > 0)
-                    <tr>
-                        <td class="etq">{{ $s['servicio'] }}</td>
-                        <td>
-                            <table class="pista"><tr>
-                                <td class="relleno" style="width:{{ $maxSrv > 0 ? round(($s['ingresos'] / $maxSrv) * 100) : 0 }}%; background:#274698"></td><td></td>
-                            </tr></table>
-                        </td>
-                        <td class="val">{{ $money($s['ingresos']) }}</td>
-                    </tr>
-                @endif
-            @endforeach
-        </table>
+        @php $dona = $graficoDona($porServicio); @endphp
+        @if ($dona)
+            <div class="gr-titulo">Participación en los ingresos del mes</div>
+            <table style="width:100%">
+                <tr>
+                    <td style="width:180pt; vertical-align:middle">
+                        <img src="{{ $dona['img'] }}">
+                    </td>
+                    <td style="vertical-align:middle">
+                        <table style="width:100%; border-collapse:collapse">
+                            @foreach ($dona['items'] as $i => $it)
+                                <tr>
+                                    <td style="width:14pt; padding:2.5pt 0">
+                                        <div style="width:8pt; height:8pt; background:{{ $dona['paleta'][$i % 7] }}"></div>
+                                    </td>
+                                    <td style="font-size:8.5pt; padding:2.5pt 0">{{ $it['servicio'] }}</td>
+                                    <td style="font-size:8.5pt; padding:2.5pt 0; text-align:right; font-weight:bold">
+                                        {{ $money($it['ingresos']) }}
+                                    </td>
+                                    <td style="font-size:8pt; padding:2.5pt 0 2.5pt 8pt; text-align:right; color:#6e6c66">
+                                        {{ $fmt(($it['ingresos'] / $dona['total']) * 100, 1) }}%
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        @endif
 
         <table class="datos" style="margin-top:10pt">
             <thead>
