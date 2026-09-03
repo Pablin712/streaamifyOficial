@@ -85,6 +85,12 @@ Route::get('/', function () {
     return view('principal');
 })->name('principal');
 
+// Apariencia vigente (solo lectura). La consultan las pestañas abiertas —del
+// panel y del sitio público— para reflejar un cambio de tema hecho desde otro
+// dispositivo sin tener que recargar a mano. Publica a proposito: las vistas
+// de cliente tambien necesitan el tema.
+Route::get('/apariencia', [SistemaController::class, 'apariencia'])->name('apariencia.actual');
+
 Route::controller(AlyssonController::class)->group(function (){
     Route::get('/alysson', 'exclusive')->name('alysson.exclusive');
 });
@@ -574,6 +580,11 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
 
     // Ruta para configuración del sistema (solo administradores)
     Route::get('/sistema', [SistemaController::class, 'index'])->name('sistema.index');
+
+    // Apariencia GLOBAL de la plataforma. Lo que se guarda aqui manda para
+    // todos los empleados, todos los dispositivos y las vistas publicas.
+    Route::post('/sistema/apariencia', [SistemaController::class, 'guardarApariencia'])
+        ->name('sistema.apariencia.guardar');
 
     Route::post('/notificaciones/marcar-como-leidas', function () {
         if (Auth::check()) {

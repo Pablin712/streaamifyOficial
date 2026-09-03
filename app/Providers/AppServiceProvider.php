@@ -10,8 +10,10 @@ use App\Observers\CostoObserver;
 use App\Observers\CuentaObserver;
 use App\Observers\GastoObserver;
 use App\Observers\VentaObserver;
+use App\Services\AparienciaService;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,6 +41,17 @@ class AppServiceProvider extends ServiceProvider
         // aca, asi que los iconos de flecha se ven gigantes. Bootstrap 5 usa markup
         // <ul class="pagination"> plano, ya estilizado en enhanced-table-global.css.
         Paginator::useBootstrapFive();
+
+        // Apariencia global (tema + modo oscuro) disponible en TODAS las vistas,
+        // publicas y del panel, para que los layouts la pinten en el <html> del
+        // lado del servidor. Asi el tema que elige el administrador llega a todos
+        // los dispositivos y sesiones, y no hay parpadeo al cargar.
+        // Es perezoso: el servicio solo consulta la BD cuando la vista lo usa.
+        View::composer('*', function ($view) {
+            static $apariencia = null;
+            $apariencia ??= app(AparienciaService::class)->paraVista();
+            $view->with('apariencia', $apariencia);
+        });
 
         Scramble::configure()->expose('docs/clavesegura/api', 'docs/clavesegura/api.json');
     }
