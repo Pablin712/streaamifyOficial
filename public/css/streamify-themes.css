@@ -109,14 +109,16 @@
    las vistas legacy — sobre todo en las públicas, que nunca tuvieron modo
    oscuro. Sin esto quedan islas blancas sobre fondo negro.
    ========================================================================== */
-[data-dark-mode="true"] .bg-white,
-[data-dark-mode="true"] .bg-body,
-[data-dark-mode="true"] .bg-body-tertiary {
+/* Igual que en streamify-ui.css: no tocar las que llevan bg-opacity-*, o se
+   pierde el modificador de opacidad de Bootstrap. */
+[data-dark-mode="true"] .bg-white:not([class*="bg-opacity"]),
+[data-dark-mode="true"] .bg-body:not([class*="bg-opacity"]),
+[data-dark-mode="true"] .bg-body-tertiary:not([class*="bg-opacity"]) {
     background-color: var(--sf-surface-card) !important;
     color: var(--sf-ink);
 }
 
-[data-dark-mode="true"] .bg-light {
+[data-dark-mode="true"] .bg-light:not([class*="bg-opacity"]) {
     background-color: var(--sf-surface-sunken) !important;
     color: var(--sf-ink);
 }

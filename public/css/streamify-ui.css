@@ -231,6 +231,16 @@ a:hover { color: var(--sf-brand-strong); }
 
 hr { border-color: var(--sf-border); opacity: 1; }
 
+/* Un icono dentro de un titular no debe crecer con la fuente del titular:
+   con Fraunces a 3rem, un <i class="fas"> se convertia en una mancha de 50 px
+   junto al texto. Lo usan dashboard, inicio, inteligencia y employee/edit. */
+h1 > i, h2 > i, h3 > i,
+.h1 > i, .h2 > i, .h3 > i {
+    font-size: 0.55em;
+    vertical-align: 0.06em;
+    color: var(--sf-brand);
+}
+
 ::selection { background: var(--sf-gold); color: var(--sf-gold-contrast); }
 
 :focus-visible {
@@ -567,9 +577,14 @@ hr { border-color: var(--sf-border); opacity: 1; }
 }
 
 /* --- Utilidades de fondo heredadas: se reconducen a tokens --------------- */
-.bg-light { background-color: var(--sf-surface-sunken) !important; }
-.bg-white { background-color: var(--sf-surface-card) !important; }
-.bg-dark  { background-color: var(--sf-surface-inverse) !important; color: var(--sf-ink-inverse); }
+/* El `:not([class*="bg-opacity"])` es imprescindible: Bootstrap construye
+   estas utilidades como rgba(var(--bs-x-rgb), var(--bs-bg-opacity)), asi que un
+   `background-color` plano con !important anula el modificador de opacidad.
+   Sin esta exclusion, `bg-dark bg-opacity-10` pintaba un circulo negro solido
+   y el icono oscuro de dentro desaparecia. */
+.bg-light:not([class*="bg-opacity"]) { background-color: var(--sf-surface-sunken) !important; }
+.bg-white:not([class*="bg-opacity"]) { background-color: var(--sf-surface-card) !important; }
+.bg-dark:not([class*="bg-opacity"])  { background-color: var(--sf-surface-inverse) !important; color: var(--sf-ink-inverse); }
 
 /* Colores de marca heredados de principal.blade.php, ahora tokenizados */
 .bg-streamify-yellow { background-color: var(--sf-gold);  color: var(--sf-gold-contrast); }

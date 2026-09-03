@@ -27,6 +27,12 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}?v={{ filemtime(public_path('css/sidebar.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/navbar.css') }}?v={{ filemtime(public_path('css/navbar.css')) }}">
 
+    {{-- Font Awesome 6, versión CSS. Sustituye a js/all.js, que pesaba ~1 MB y
+         bloqueaba el renderizado desde dentro del <body>. --}}
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     <!-- Sistema de Temas Dinámicos -->
     <link rel="stylesheet" href="{{ asset('css/themes.css') }}?v={{ filemtime(public_path('css/themes.css')) }}">
     <link rel="stylesheet" href="{{ asset('css/enhanced-table-global.css') }}?v={{ filemtime(public_path('css/enhanced-table-global.css')) }}">
@@ -97,7 +103,14 @@
         @csrf
     </form>
 
-    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    {{-- Font Awesome se cargaba aquí como `js/all.js`: un script de ~1 MB, en
+         medio del <body>, que sustituye cada <i> por un <svg> al ejecutarse.
+         Hasta que terminaba, los iconos se veían vacíos — de ahí la sensación
+         de que "no cargan". La hoja de estilos hace lo mismo, pesa una
+         fracción y no bloquea el renderizado. El marcado <i class="fas fa-x">
+         es idéntico en ambas versiones, así que no hay que tocar las vistas.
+         Se carga en el <head> (ver arriba); esta línea queda como referencia
+         del cambio. --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
     </script>
     <script src="{{ asset('js/scripts.js') }}?v={{ filemtime(public_path('js/scripts.js')) }}"></script>
