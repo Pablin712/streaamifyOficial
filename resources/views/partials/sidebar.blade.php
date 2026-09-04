@@ -21,6 +21,14 @@
                             Dashboard
                         </a>
                     @endif
+                    {{-- can() y no hasPermissionTo(): si el permiso aun no esta
+                         sembrado, oculta el enlace en vez de tumbar el panel. --}}
+                    @can('metas')
+                        <a class="nav-link" href="{{ route('metas') }}">
+                            <div class="sb-nav-link-icon"><i class="fas fa-bullseye"></i></div>
+                            Metas
+                        </a>
+                    @endcan
                     {{-- Reemplazamos @can('calendario') --}}
                     @if (Auth::user()->hasPermissionTo('cuentas'))
                         <a class="nav-link" href="{{ route('calendario') }}">

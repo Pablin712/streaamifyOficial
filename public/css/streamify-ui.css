@@ -786,6 +786,166 @@ a.sf-card:hover, .sf-card--link:hover {
 .kpi-purple { --sf-kpi-bg: var(--sf-brand-soft);    --sf-kpi-ink: var(--sf-brand);       --sf-kpi-chip: color-mix(in srgb, var(--sf-brand) 22%, var(--sf-surface-card)); }
 .kpi-amber  { --sf-kpi-bg: var(--sf-warning-soft);  --sf-kpi-ink: var(--sf-warning);     --sf-kpi-chip: color-mix(in srgb, var(--sf-warning) 24%, var(--sf-surface-card)); }
 
+/* --- Tarjeta de META (semáforo de objetivos) -----------------------------
+   El color NO indica si la cifra es alta o baja: indica si se va a cumplir
+   el objetivo al ritmo actual. Verde = logrado o en ritmo, ámbar = ajustado,
+   rojo = fuera de ritmo. Por eso deriva de --sf-good/warning/critical y no
+   de la paleta de marca.
+   ------------------------------------------------------------------------ */
+.meta-card {
+    --meta-ink: var(--sf-good);
+    --meta-soft: var(--sf-good-soft);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sf-space-2);
+    padding: var(--sf-space-4) var(--sf-space-5);
+    padding-left: calc(var(--sf-space-5) + 4px);
+    background: var(--sf-surface-card);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius);
+    height: 100%;
+}
+.meta-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    border-radius: var(--sf-radius) 0 0 var(--sf-radius);
+    background: var(--meta-ink);
+}
+.meta-card--good     { --meta-ink: var(--sf-good);     --meta-soft: var(--sf-good-soft); }
+.meta-card--warning  { --meta-ink: var(--sf-warning);  --meta-soft: var(--sf-warning-soft); }
+.meta-card--critical { --meta-ink: var(--sf-critical); --meta-soft: var(--sf-critical-soft); }
+
+.meta-card-head {
+    display: flex;
+    align-items: center;
+    gap: var(--sf-space-2);
+}
+.meta-card-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; flex: none;
+    border-radius: var(--sf-radius-sm);
+    background: var(--meta-soft);
+    color: var(--meta-ink);
+    font-size: .85rem;
+}
+.meta-card-label {
+    font-size: var(--sf-text-sm);
+    font-weight: 600;
+    color: var(--sf-ink);
+    line-height: 1.2;
+}
+.meta-card-pill {
+    margin-left: auto;
+    flex: none;
+    padding: 2px 9px;
+    border-radius: var(--sf-radius-pill);
+    background: var(--meta-soft);
+    color: var(--meta-ink);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.meta-card-cifras {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sf-space-2);
+    flex-wrap: wrap;
+}
+.meta-card-valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--meta-ink);
+}
+.meta-card-objetivo {
+    font-size: var(--sf-text-sm);
+    color: var(--sf-ink-muted);
+}
+
+.meta-card-barra {
+    display: flex;
+    align-items: center;
+    gap: var(--sf-space-2);
+}
+.meta-card-track {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    border-radius: var(--sf-radius-pill);
+    background: var(--sf-surface-sunken);
+    overflow: hidden;
+}
+.meta-card-fill {
+    height: 100%;
+    border-radius: var(--sf-radius-pill);
+    background: var(--meta-ink);
+    transition: width .35s ease;
+}
+/* Marca de ritmo: dónde debería ir el avance a día de hoy. */
+.meta-card-marca {
+    position: absolute;
+    top: -2px; bottom: -2px;
+    width: 2px;
+    background: var(--sf-ink);
+    opacity: .45;
+}
+.meta-card-pct {
+    flex: none;
+    min-width: 3.2em;
+    text-align: right;
+    font-size: var(--sf-text-sm);
+    font-weight: 700;
+    color: var(--sf-ink-secondary);
+}
+
+.meta-card-mensaje {
+    margin: 0;
+    font-size: var(--sf-text-sm);
+    line-height: 1.45;
+    color: var(--sf-ink-secondary);
+}
+
+.meta-card-pie {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sf-space-1) var(--sf-space-4);
+    padding-top: var(--sf-space-2);
+    border-top: 1px solid var(--sf-border-soft);
+    font-size: .72rem;
+    color: var(--sf-ink-muted);
+}
+.meta-card-pie i { opacity: .7; margin-right: 3px; }
+.meta-card-nota { font-style: italic; }
+
+/* Resumen de una línea: cuántas metas van bien, ajustadas o mal. */
+.meta-resumen {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sf-space-3);
+    flex-wrap: wrap;
+    font-size: var(--sf-text-sm);
+    color: var(--sf-ink-secondary);
+}
+.meta-resumen-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--sf-radius-pill);
+    background: var(--sf-surface-sunken);
+    border: 1px solid var(--sf-border-soft);
+    font-weight: 600;
+}
+.meta-resumen-punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.meta-resumen-punto--good     { background: var(--sf-good); }
+.meta-resumen-punto--warning  { background: var(--sf-warning); }
+.meta-resumen-punto--critical { background: var(--sf-critical); }
+
 /* Pastilla del icono dentro de un acento */
 .sf-tint-chip {
     display: inline-flex; align-items: center; justify-content: center;

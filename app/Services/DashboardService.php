@@ -292,6 +292,21 @@ class DashboardService
         ];
     }
 
+    /**
+     * Nombres de servicio distintos que reconoce el clasificador, mas "Otros".
+     * Lo usa MetaService para ofrecer metas por servicio sin duplicar la lista.
+     *
+     * @return array<int,string>
+     */
+    public function serviciosConocidos(): array
+    {
+        $nombres = array_values(array_unique(array_values($this->reglasDeServicio())));
+        sort($nombres);
+        $nombres[] = 'Otros';
+
+        return $nombres;
+    }
+
     /** Primer candidato con valor decide el servicio; si ninguno encaja, "Otros". */
     private function clasificarServicio(?string ...$candidatos): string
     {

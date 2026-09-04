@@ -309,6 +309,14 @@ Route::prefix('/admin')->middleware(['auth'])->group(function () {
         Route::match(['get','post'], '/dashboard/pdf', 'generarPDF')->name('dashboard.pdf');
     });
     Route::get('/inteligencia-negocio', [\App\Http\Controllers\InteligenciaNegocioController::class, 'index'])->name('inteligencia-negocio');
+
+    // Metas sobre los KPI del dashboard
+    Route::controller(\App\Http\Controllers\MetaController::class)->group(function () {
+        Route::get('/metas', 'index')->name('metas');
+        Route::post('/metas', 'store')->name('metas.store');
+        Route::put('/metas/{idmet}', 'update')->name('metas.update');
+        Route::delete('/metas/{idmet}', 'destroy')->name('metas.destroy');
+    });
     Route::controller(CalendarController::class)->group(function () {
         Route::get('/calendario', 'index')->name('calendario');
     });

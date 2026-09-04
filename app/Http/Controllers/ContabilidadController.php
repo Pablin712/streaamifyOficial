@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Services\DashboardService;
 use App\Services\CuentaSaludService;
+use App\Services\MetaService;
 use App\Models\Historial;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
@@ -25,11 +26,13 @@ class ContabilidadController extends Controller
 {
     protected $dashboardService;
     protected $cuentaSaludService;
+    protected $metaService;
 
-    public function __construct(DashboardService $dashboardService, CuentaSaludService $cuentaSaludService)
+    public function __construct(DashboardService $dashboardService, CuentaSaludService $cuentaSaludService, MetaService $metaService)
     {
         $this->dashboardService = $dashboardService;
         $this->cuentaSaludService = $cuentaSaludService;
+        $this->metaService = $metaService;
     }
     public function index(Request $request)
     {
@@ -62,7 +65,20 @@ class ContabilidadController extends Controller
 
         $cuentasEstadoResumen = $this->cuentaSaludService->resumenPorServicio();
 
+        // Metas del mes en curso. Si algo falla no debe tumbar el dashboard:
+        // el tablero es informativo y el resto de la pagina tiene que cargar.
+        try {
+            $metasTablero = $this->metaService->tablero($month, $year);
+            $metasResumen = $this->metaService->resumen($metasTablero);
+        } catch (\Throwable $e) {
+            report($e);
+            $metasTablero = [];
+            $metasResumen = ['total' => 0, 'bien' => 0, 'atencion' => 0, 'mal' => 0];
+        }
+
         return view('dashboard', compact(
+            'metasTablero',
+            'metasResumen',
             'cuentasEstadoResumen',
             'ingresos_mes',
             'ingresos_ano',

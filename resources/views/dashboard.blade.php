@@ -98,6 +98,56 @@
 
 @section('content')
 
+{{-- ══ ROW 0: Metas del mes ══════════════════════════════ --}}
+@can('metas')
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <p class="dash-section-label mb-0"><i class="fas fa-bullseye me-1"></i>Metas de {{ ucfirst(now()->locale('es')->translatedFormat('F')) }}</p>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if (count($metasTablero))
+                <div class="meta-resumen">
+                    <span class="meta-resumen-chip">
+                        <span class="meta-resumen-punto meta-resumen-punto--good"></span>
+                        <span class="sf-num">{{ $metasResumen['bien'] }}</span> en objetivo
+                    </span>
+                    <span class="meta-resumen-chip">
+                        <span class="meta-resumen-punto meta-resumen-punto--warning"></span>
+                        <span class="sf-num">{{ $metasResumen['atencion'] }}</span> ajustadas
+                    </span>
+                    <span class="meta-resumen-chip">
+                        <span class="meta-resumen-punto meta-resumen-punto--critical"></span>
+                        <span class="sf-num">{{ $metasResumen['mal'] }}</span> fuera de ritmo
+                    </span>
+                </div>
+            @endif
+            <a href="{{ route('metas') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-sliders me-1"></i> Gestionar metas
+            </a>
+        </div>
+    </div>
+
+    @if (count($metasTablero))
+        <div class="row g-3 mb-4">
+            @foreach ($metasTablero as $eval)
+                <div class="col-xl-4 col-md-6">
+                    <x-meta-card :eval="$eval" />
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="sf-panel d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+                <strong>Sin metas definidas.</strong>
+                <span class="text-muted">Fija un objetivo y el dashboard te dirá cada día cuánto falta y a qué ritmo ir.</span>
+            </div>
+            @can('metas.store')
+                <a href="{{ route('metas') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Definir metas
+                </a>
+            @endcan
+        </div>
+    @endif
+@endcan
+
 {{-- ══ ROW 1: Ingresos & Ventas ══════════════════════════ --}}
 <p class="dash-section-label"><i class="fas fa-money-bill-wave me-1"></i>Ingresos y Ventas</p>
 <div class="row g-3 mb-4">
