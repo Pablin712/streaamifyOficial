@@ -185,6 +185,7 @@ class MetaService
                 'acumulativo' => true,
                 'icono'       => 'fa-arrow-trend-down',
                 'ayuda'       => 'Clientes que dejaron ' . $servicio . ' en el periodo. La meta es un techo.',
+                'aviso_parcial' => 'La rotacion por servicio solo cuadra con el mes cerrado: a mitad de mes, un cliente que todavia no ha renovado cuenta como baja y vuelve a contar como retenido en cuanto renueva.',
                 'servicio'    => $servicio,
             ];
             $catalogo['nuevos_servicio:' . $servicio] = [
@@ -195,6 +196,7 @@ class MetaService
                 'acumulativo' => true,
                 'icono'       => 'fa-arrow-trend-up',
                 'ayuda'       => 'Clientes que entraron a ' . $servicio . ' en el periodo.',
+                'aviso_parcial' => 'La rotacion por servicio solo cuadra con el mes cerrado: a mitad de mes, un cliente que todavia no ha renovado cuenta como baja y vuelve a contar como retenido en cuanto renueva.',
                 'servicio'    => $servicio,
             ];
             $catalogo['retencion_servicio:' . $servicio] = [
@@ -205,6 +207,7 @@ class MetaService
                 'acumulativo' => false,
                 'icono'       => 'fa-shield-halved',
                 'ayuda'       => 'Porcentaje de clientes de ' . $servicio . ' que siguen respecto al mes anterior.',
+                'aviso_parcial' => 'La rotacion por servicio solo cuadra con el mes cerrado: a mitad de mes, un cliente que todavia no ha renovado cuenta como baja y vuelve a contar como retenido en cuanto renueva.',
                 'servicio'    => $servicio,
             ];
         }
@@ -391,6 +394,10 @@ class MetaService
             'mensaje'         => $this->mensaje($estado, $def, $subir, $acumula, $actual, $objetivo, $ritmoNecesario, $restantes, $proyeccion),
             'inicio'          => $inicio,
             'fin'             => $fin,
+
+            // Advertencia solo mientras el periodo no ha cerrado: hay metricas
+            // que a mitad de periodo dan una lectura enganosa.
+            'aviso'           => !$cerrado ? ($def['aviso_parcial'] ?? null) : null,
 
             // Ya formateados, para que la vista no tenga que decidir nada.
             'f_actual'        => $this->formatear($actual, $def['unidad']),

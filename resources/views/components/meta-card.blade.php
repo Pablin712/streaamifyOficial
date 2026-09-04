@@ -32,6 +32,10 @@
 
     <p class="meta-card-mensaje">{{ $eval['mensaje'] }}</p>
 
+    @if (!empty($eval['aviso']))
+        <p class="meta-card-aviso"><i class="fas fa-circle-info"></i> {{ $eval['aviso'] }}</p>
+    @endif
+
     <div class="meta-card-pie">
         @if ($eval['en_curso'])
             <span><i class="fas fa-calendar-day"></i> Día <span class="sf-num">{{ $eval['dias_pasados'] }}</span>/<span class="sf-num">{{ $eval['dias_totales'] }}</span></span>

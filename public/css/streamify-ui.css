@@ -912,6 +912,18 @@ a.sf-card:hover, .sf-card--link:hover {
     color: var(--sf-ink-secondary);
 }
 
+/* Advertencia de lectura parcial: una métrica que a mitad de periodo engaña. */
+.meta-card-aviso {
+    margin: 0;
+    padding: var(--sf-space-2);
+    border-radius: var(--sf-radius-sm);
+    background: var(--sf-surface-sunken);
+    font-size: .72rem;
+    line-height: 1.4;
+    color: var(--sf-ink-muted);
+}
+.meta-card-aviso i { margin-right: 4px; opacity: .8; }
+
 .meta-card-pie {
     display: flex;
     flex-wrap: wrap;
