@@ -1,0 +1,5 @@
+[mcp_servers.n8n]
+url = "http://localhost:5678/mcp/TU-WORKFLOW-ID/sse"
+
+[mcp_servers.n8n.http_headers]
+Authorization = "Bearer TU-N8N-API-KEY"
