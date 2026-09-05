@@ -18,6 +18,7 @@
         </span>
     </div>
 
+    @unless ($eval['sin_datos'] ?? false)
     <div class="meta-card-barra">
         <div class="meta-card-track">
             <div class="meta-card-fill" style="width: {{ round($eval['avance_barra'], 1) }}%"></div>
@@ -29,6 +30,7 @@
         </div>
         <span class="meta-card-pct sf-num">{{ number_format($eval['avance'], 0, ',', '.') }}%</span>
     </div>
+    @endunless
 
     <p class="meta-card-mensaje">{{ $eval['mensaje'] }}</p>
 

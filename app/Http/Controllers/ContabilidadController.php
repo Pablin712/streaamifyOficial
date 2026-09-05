@@ -73,7 +73,7 @@ class ContabilidadController extends Controller
         } catch (\Throwable $e) {
             report($e);
             $metasTablero = [];
-            $metasResumen = ['total' => 0, 'bien' => 0, 'atencion' => 0, 'mal' => 0];
+            $metasResumen = ['total' => 0, 'bien' => 0, 'atencion' => 0, 'mal' => 0, 'sin_datos' => 0];
         }
 
         return view('dashboard', compact(

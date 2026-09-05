@@ -304,9 +304,15 @@ class MetaService
             ->selectRaw('COUNT(*) AS total, AVG(TIMESTAMPDIFF(MINUTE, created_at, updated_at)) AS minutos')
             ->first();
 
+        $cerrados = (int) ($atendidos->total ?? 0);
+
         return [
-            'soporte_horas'      => round(((float) ($atendidos->minutos ?? 0)) / 60, 2),
-            'soporte_resueltos'  => (float) ($atendidos->total ?? 0),
+            // Sin tickets cerrados no hay promedio que medir: null, no cero. Un
+            // cero aqui haria pasar por "logrado" una meta que nadie ha medido.
+            'soporte_horas'      => $cerrados > 0
+                                        ? round(((float) $atendidos->minutos) / 60, 2)
+                                        : null,
+            'soporte_resueltos'  => (float) $cerrados,
             'soporte_pendientes' => (float) Soporte::where('estado', 'pendiente')->count(),
         ];
     }
@@ -317,9 +323,12 @@ class MetaService
      * Traduce meta + valor real en el estado del semaforo y en las cifras
      * accionables: cuanto falta, a que ritmo y donde se cierra el periodo.
      */
-    public function evaluar(Meta $meta, array $def, float $actual, ?Carbon $hoy = null): array
+    public function evaluar(Meta $meta, array $def, ?float $actual, ?Carbon $hoy = null): array
     {
         $hoy = $hoy ?: Carbon::now();
+
+        $sinDatos = $actual === null;
+        $actual   = (float) $actual;
 
         [$inicio, $fin] = $this->limitesPeriodo($meta, $hoy);
 
@@ -363,7 +372,9 @@ class MetaService
             ? max(0, $objetivo - $actual) / $restantes
             : null;
 
-        $estado = $this->estado($subir, $acumula, $cerrado, $actual, $objetivo, $proyeccion, $umbral);
+        $estado = $sinDatos
+            ? 'sin_datos'
+            : $this->estado($subir, $acumula, $cerrado, $actual, $objetivo, $proyeccion, $umbral);
 
         return [
             'meta'            => $meta,
@@ -371,8 +382,9 @@ class MetaService
             'definicion'      => $def,
             'objetivo'        => $objetivo,
             'actual'          => $actual,
-            'avance'          => $avance,
-            'avance_barra'    => max(0, min(100, $avance)),
+            'sin_datos'       => $sinDatos,
+            'avance'          => $sinDatos ? 0.0 : $avance,
+            'avance_barra'    => $sinDatos ? 0.0 : max(0, min(100, $avance)),
             'esperado'        => $esperado,
             'marca_ritmo'     => $acumula && $diasTotales > 0
                                     ? max(0, min(100, ($transcurridos / $diasTotales) * 100))
@@ -470,6 +482,7 @@ class MetaService
         return match ($estado) {
             'logrado', 'en_ritmo' => 'good',
             'atencion'            => 'warning',
+            'sin_datos'           => 'neutro',
             default               => 'critical',
         };
     }
@@ -486,8 +499,9 @@ class MetaService
             'atencion' => 'Ajustado',
             'riesgo'   => $acumula ? 'Fuera de ritmo' : 'Fuera de objetivo',
             'excedido' => 'Limite superado',
-            'fallado'  => 'No alcanzada',
-            default    => $estado,
+            'fallado'   => 'No alcanzada',
+            'sin_datos' => 'Sin datos',
+            default     => $estado,
         };
     }
 
@@ -495,6 +509,10 @@ class MetaService
     private function mensaje(string $estado, array $def, bool $subir, bool $acumula, float $actual, float $objetivo, ?float $ritmo, int $restantes, float $proyeccion): string
     {
         $u = fn (float $v) => $this->formatear($v, $def['unidad']);
+
+        if ($estado === 'sin_datos') {
+            return 'Todavia no hay nada medido en este periodo, asi que la meta no se puede evaluar.';
+        }
 
         if ($estado === 'logrado') {
             return $subir
@@ -589,11 +607,18 @@ class MetaService
 
         $orden = [
             'excedido' => 0, 'riesgo'   => 1, 'fallado' => 2,
-            'atencion' => 3, 'en_ritmo' => 4, 'logrado' => 5,
+            'atencion' => 3, 'en_ritmo' => 4, 'logrado' => 5, 'sin_datos' => 6,
         ];
 
         return $metas
-            ->map(fn ($m) => $this->evaluar($m, $catalogo[$m->kpi], (float) ($valores[$m->kpi] ?? 0), $hoy))
+            // array_key_exists y no ??: el null de "sin datos" es significativo
+            // y ?? lo convertiria en 0, que es justo la confusion a evitar.
+            ->map(fn ($m) => $this->evaluar(
+                $m,
+                $catalogo[$m->kpi],
+                array_key_exists($m->kpi, $valores) ? $valores[$m->kpi] : 0.0,
+                $hoy
+            ))
             ->sortBy(fn ($e) => $orden[$e['estado']] ?? 9)
             ->values()
             ->all();
@@ -608,10 +633,11 @@ class MetaService
         ));
 
         return [
-            'total'    => count($tablero),
-            'bien'     => $cuenta(['logrado', 'en_ritmo']),
-            'atencion' => $cuenta(['atencion']),
-            'mal'      => $cuenta(['riesgo', 'excedido', 'fallado']),
+            'total'     => count($tablero),
+            'bien'      => $cuenta(['logrado', 'en_ritmo']),
+            'atencion'  => $cuenta(['atencion']),
+            'mal'       => $cuenta(['riesgo', 'excedido', 'fallado']),
+            'sin_datos' => $cuenta(['sin_datos']),
         ];
     }
 }

@@ -78,6 +78,12 @@
                     <span class="meta-resumen-punto meta-resumen-punto--critical"></span>
                     <span class="sf-num">{{ $resumen['mal'] }}</span> fuera de ritmo
                 </span>
+                @if (($resumen['sin_datos'] ?? 0) > 0)
+                    <span class="meta-resumen-chip">
+                        <span class="meta-resumen-punto meta-resumen-punto--neutro"></span>
+                        <span class="sf-num">{{ $resumen['sin_datos'] }}</span> sin datos
+                    </span>
+                @endif
             </div>
         </div>
 
@@ -198,10 +204,17 @@
 
     {{-- ══ Modal crear / editar ══════════════════════════════════════ --}}
     @canany(['metas.store', 'metas.update'])
+        {{-- Cabecera explicita: el componente x-modal solo pinta {{ $slot }} e
+             ignora <x-slot name="title">, asi que el titulo hay que ponerlo aqui. --}}
+        <div id="metaModalWrap">
         <x-modal name="meta-form" maxWidth="lg">
-            <x-slot name="title">
-                <i class="fas fa-bullseye"></i> <span id="metaFormTitulo">Nueva meta</span>
-            </x-slot>
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-bullseye me-2 text-primary"></i><span id="metaFormTitulo">Nueva meta</span>
+                </h5>
+                <button type="button" class="btn-close" x-on:click="show = false"
+                        onclick="cerrarModalMeta()" aria-label="Cerrar"></button>
+            </div>
 
             <form id="metaForm" method="POST" action="{{ route('metas.store') }}">
                 @csrf
@@ -229,25 +242,25 @@
                     </div>
 
                     <div class="row g-3">
+                        {{-- Sin .input-group: este proyecto no carga el CSS de
+                             Bootstrap que lo hace funcionar y los campos se
+                             apilan. La unidad va en la etiqueta. --}}
                         <div class="col-md-6">
                             <label class="form-label" for="meta_objetivo">
                                 Objetivo <span class="text-danger">*</span>
+                                <span class="text-muted fw-normal" id="meta_unidad_prefijo"></span>
                             </label>
-                            <div class="input-group">
-                                <span class="input-group-text" id="meta_unidad_prefijo">#</span>
-                                <input type="number" step="0.01" min="0" name="objetivo" id="meta_objetivo"
-                                       class="form-control" required>
-                            </div>
+                            <input type="number" step="0.01" min="0" name="objetivo" id="meta_objetivo"
+                                   class="form-control" required>
                             <small class="text-muted" id="meta_direccion_ayuda"></small>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label" for="meta_umbral">Umbral de aviso</label>
-                            <div class="input-group">
-                                <input type="number" min="10" max="100" name="umbral_atencion" id="meta_umbral"
-                                       class="form-control" value="90">
-                                <span class="input-group-text">%</span>
-                            </div>
+                            <label class="form-label" for="meta_umbral">
+                                Umbral de aviso <span class="text-muted fw-normal">(%)</span>
+                            </label>
+                            <input type="number" min="10" max="100" name="umbral_atencion" id="meta_umbral"
+                                   class="form-control" value="90">
                             <small class="text-muted">
                                 Por debajo de este % de la proyección la tarjeta pasa a rojo.
                             </small>
@@ -307,13 +320,15 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" x-on:click="show = false">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" x-on:click="show = false"
+                            onclick="cerrarModalMeta()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-1"></i> Guardar meta
                     </button>
                 </div>
             </form>
         </x-modal>
+        </div>
     @endcanany
 
 @endsection
@@ -336,11 +351,18 @@
         const unidad    = opcion.dataset.unidad;
         const direccion = opcion.dataset.direccion;
 
-        document.getElementById('meta_unidad_prefijo').textContent =
-            unidad === 'dinero' ? '$' : unidad === 'horas' ? 'h' : unidad === 'porcentaje' ? '%' : '#';
+        const pref = document.getElementById('meta_unidad_prefijo');
+        if (pref) pref.textContent =
+            unidad === 'dinero'     ? '(en dólares)'
+          : unidad === 'horas'      ? '(en horas)'
+          : unidad === 'porcentaje' ? '(en %)'
+          :                           '(cantidad)';
 
-        document.getElementById('meta_ayuda').textContent = opcion.dataset.ayuda || '';
-        document.getElementById('meta_direccion_ayuda').textContent = direccion === 'subir'
+        const ayuda = document.getElementById('meta_ayuda');
+        if (ayuda) ayuda.textContent = opcion.dataset.ayuda || '';
+
+        const dir = document.getElementById('meta_direccion_ayuda');
+        if (dir) dir.textContent = direccion === 'subir'
             ? 'Más es mejor: la meta es un mínimo a alcanzar.'
             : 'Menos es mejor: la meta es un techo que no hay que pasar.';
     }
@@ -362,18 +384,20 @@
         metaForm.reset();
         metaForm.action = rutaStore;
         document.getElementById('metaMetodo').value = 'POST';
-        document.getElementById('metaFormTitulo').textContent = 'Nueva meta';
+        const t1 = document.getElementById('metaFormTitulo');
+        if (t1) t1.textContent = 'Nueva meta';
         document.getElementById('meta_umbral').value = 90;
         document.getElementById('meta_activo').checked = true;
         refrescarKpi();
         refrescarAlcance();
-        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'meta-form' }));
+        abrirModalMeta();
     }
 
     function editarMeta(meta) {
         metaForm.action = plantillaPut.replace('__ID__', meta.idmet);
         document.getElementById('metaMetodo').value = 'PUT';
-        document.getElementById('metaFormTitulo').textContent = 'Editar meta';
+        const t2 = document.getElementById('metaFormTitulo');
+        if (t2) t2.textContent = 'Editar meta';
 
         metaKpi.value     = meta.kpi;
         metaPeriodo.value = meta.periodo;
@@ -389,8 +413,46 @@
 
         refrescarKpi();
         refrescarAlcance();
-        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'meta-form' }));
+        abrirModalMeta();
     }
+
+    // La página corre DOS instancias de Alpine (la del CDN y la que trae
+    // Livewire 3) y avisa por consola. Con dos instancias, x-show no siempre
+    // reacciona al evento, así que el botón se quedaba muerto de forma
+    // intermitente. Se abre por el evento y, si a los 150 ms sigue oculto,
+    // se fuerza a mano para que nunca deje de responder.
+    function panelMeta() {
+        const wrap = document.getElementById('metaModalWrap');
+        return wrap ? wrap.querySelector('.modal-overlay') : null;
+    }
+
+    function abrirModalMeta() {
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'meta-form' }));
+        setTimeout(() => {
+            const ov = panelMeta();
+            if (ov && getComputedStyle(ov).display === 'none') {
+                ov.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }, 150);
+    }
+
+    function cerrarModalMeta() {
+        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'meta-form' }));
+        setTimeout(() => {
+            const ov = panelMeta();
+            if (ov && getComputedStyle(ov).display !== 'none') {
+                ov.style.display = 'none';
+            }
+            document.body.style.overflow = '';
+        }, 150);
+    }
+
+    // Escape y clic en el fondo, por el mismo motivo.
+    document.addEventListener('keydown', e => {
+        const ov = panelMeta();
+        if (e.key === 'Escape' && ov && getComputedStyle(ov).display !== 'none') cerrarModalMeta();
+    });
 
     refrescarAlcance();
 </script>

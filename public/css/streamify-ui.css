@@ -818,6 +818,8 @@ a.sf-card:hover, .sf-card--link:hover {
 .meta-card--good     { --meta-ink: var(--sf-good);     --meta-soft: var(--sf-good-soft); }
 .meta-card--warning  { --meta-ink: var(--sf-warning);  --meta-soft: var(--sf-warning-soft); }
 .meta-card--critical { --meta-ink: var(--sf-critical); --meta-soft: var(--sf-critical-soft); }
+/* Sin datos: no es bueno ni malo, es que no hay nada que medir todavia. */
+.meta-card--neutro   { --meta-ink: var(--sf-ink-muted); --meta-soft: var(--sf-surface-sunken); }
 
 .meta-card-head {
     display: flex;
@@ -957,6 +959,7 @@ a.sf-card:hover, .sf-card--link:hover {
 .meta-resumen-punto--good     { background: var(--sf-good); }
 .meta-resumen-punto--warning  { background: var(--sf-warning); }
 .meta-resumen-punto--critical { background: var(--sf-critical); }
+.meta-resumen-punto--neutro   { background: var(--sf-ink-muted); }
 
 /* Pastilla del icono dentro de un acento */
 .sf-tint-chip {

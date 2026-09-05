@@ -117,6 +117,12 @@
                         <span class="meta-resumen-punto meta-resumen-punto--critical"></span>
                         <span class="sf-num">{{ $metasResumen['mal'] }}</span> fuera de ritmo
                     </span>
+                    @if (($metasResumen['sin_datos'] ?? 0) > 0)
+                        <span class="meta-resumen-chip">
+                            <span class="meta-resumen-punto meta-resumen-punto--neutro"></span>
+                            <span class="sf-num">{{ $metasResumen['sin_datos'] }}</span> sin datos
+                        </span>
+                    @endif
                 </div>
             @endif
             <a href="{{ route('metas') }}" class="btn btn-outline-primary btn-sm">
