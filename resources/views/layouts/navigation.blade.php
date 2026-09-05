@@ -118,8 +118,18 @@
     <script src="{{ asset('js/sidebar.js') }}?v={{ filemtime(public_path('js/sidebar.js')) }}"></script>
     <script src="{{ asset('js/navbar.js') }}?v={{ filemtime(public_path('js/navbar.js')) }}"></script>
 
-    <!-- Alpine.js para modales - DEBE cargarse ANTES de jQuery y Select2 -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {{-- Alpine NO se carga aquí a propósito.
+
+         Livewire 3 ya trae Alpine incorporado y lo arranca él mismo en
+         @livewireScripts (al final de este layout). Cargarlo además desde el
+         CDN dejaba DOS instancias corriendo a la vez — la consola avisaba con
+         "Detected multiple instances of Alpine running" — y entonces x-show
+         dejaba de reaccionar de forma intermitente: los modales abrían unas
+         veces sí y otras no, en todo el panel.
+
+         Si alguna vez hace falta un plugin de Alpine, se registra con
+         document.addEventListener('alpine:init', ...) antes de @livewireScripts,
+         nunca volviendo a cargar Alpine por separado. --}}
 
     <script>
         /*

@@ -206,14 +206,12 @@
     @canany(['metas.store', 'metas.update'])
         {{-- Cabecera explicita: el componente x-modal solo pinta {{ $slot }} e
              ignora <x-slot name="title">, asi que el titulo hay que ponerlo aqui. --}}
-        <div id="metaModalWrap">
         <x-modal name="meta-form" maxWidth="lg">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fas fa-bullseye me-2 text-primary"></i><span id="metaFormTitulo">Nueva meta</span>
                 </h5>
-                <button type="button" class="btn-close" x-on:click="show = false"
-                        onclick="cerrarModalMeta()" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" x-on:click="show = false" aria-label="Cerrar"></button>
             </div>
 
             <form id="metaForm" method="POST" action="{{ route('metas.store') }}">
@@ -320,15 +318,13 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" x-on:click="show = false"
-                            onclick="cerrarModalMeta()">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" x-on:click="show = false">Cancelar</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-1"></i> Guardar meta
                     </button>
                 </div>
             </form>
         </x-modal>
-        </div>
     @endcanany
 
 @endsection
@@ -390,7 +386,7 @@
         document.getElementById('meta_activo').checked = true;
         refrescarKpi();
         refrescarAlcance();
-        abrirModalMeta();
+        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'meta-form' }));
     }
 
     function editarMeta(meta) {
@@ -413,46 +409,8 @@
 
         refrescarKpi();
         refrescarAlcance();
-        abrirModalMeta();
-    }
-
-    // La página corre DOS instancias de Alpine (la del CDN y la que trae
-    // Livewire 3) y avisa por consola. Con dos instancias, x-show no siempre
-    // reacciona al evento, así que el botón se quedaba muerto de forma
-    // intermitente. Se abre por el evento y, si a los 150 ms sigue oculto,
-    // se fuerza a mano para que nunca deje de responder.
-    function panelMeta() {
-        const wrap = document.getElementById('metaModalWrap');
-        return wrap ? wrap.querySelector('.modal-overlay') : null;
-    }
-
-    function abrirModalMeta() {
         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'meta-form' }));
-        setTimeout(() => {
-            const ov = panelMeta();
-            if (ov && getComputedStyle(ov).display === 'none') {
-                ov.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-            }
-        }, 150);
     }
-
-    function cerrarModalMeta() {
-        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'meta-form' }));
-        setTimeout(() => {
-            const ov = panelMeta();
-            if (ov && getComputedStyle(ov).display !== 'none') {
-                ov.style.display = 'none';
-            }
-            document.body.style.overflow = '';
-        }, 150);
-    }
-
-    // Escape y clic en el fondo, por el mismo motivo.
-    document.addEventListener('keydown', e => {
-        const ov = panelMeta();
-        if (e.key === 'Escape' && ov && getComputedStyle(ov).display !== 'none') cerrarModalMeta();
-    });
 
     refrescarAlcance();
 </script>
